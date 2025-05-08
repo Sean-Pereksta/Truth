@@ -1,3 +1,4 @@
+<!-- room.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,7 +16,7 @@
 
   <h1>Interbelief Chat</h1>
 
-  <!-- 1) SIGN-UP / LOGIN UI -->
+  <!-- SIGN-UP / LOGIN UI -->
   <fieldset id="auth-fieldset">
     <legend>Account</legend>
 
@@ -44,14 +45,23 @@
     </div>
   </fieldset>
 
-  <!-- 2) ROOM CREATION & LISTING -->
+  <!-- ROOM CREATION & LISTING -->
   <fieldset id="room-fieldset" style="display:none;">
     <legend>Room Dashboard</legend>
 
     <h3>Create a Room</h3>
     <label for="room-target">Looking for:</label>
     <select id="room-target">
-      <!-- options omitted for brevity -->
+      <option value="Christian">✝️ Christian</option>
+      <option value="Catholic">⛪ Catholic</option>
+      <option value="Muslim">☪️ Muslim</option>
+      <option value="Hindu">🕉️ Hindu</option>
+      <option value="Jewish">✡️ Jewish</option>
+      <option value="Buddhist">☸️ Buddhist</option>
+      <option value="Sikh">☬ Sikh</option>
+      <option value="Atheist">🚫 Atheist</option>
+      <option value="Agnostic">❓ Agnostic</option>
+      <option value="Deist">🔆 Deist</option>
     </select>
     <label for="room-cap">Capacity:</label>
     <input id="room-cap" type="number" min="2" max="20" value="4" style="width:4em;" />
@@ -221,15 +231,6 @@
       await db.ref(`rooms/${roomId}`).update({ started: true });
       window.location.href = `Truth/chat/chatroom.html?roomId=${roomId}`;
     }
-
-    // -- LISTENER FOR START FLAG --
-    // (Place at bottom of your <script> in index.html)
-    db.ref(`rooms/${roomId}/started`).on('value', snap => {
-      if (snap.val()) {
-        window.location.href = `Truth/chat/chatroom.html?roomId=${roomId}`;
-      }
-    });
   </script>
 </body>
 </html>
-
