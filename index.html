@@ -45,12 +45,12 @@
   </fieldset>
 
   <!-- 2) ROOM CREATION & LISTING -->
-  <fieldset id="lobby-fieldset" style="display:none;">
+  <fieldset id="room-fieldset" style="display:none;">
     <legend>Room Dashboard</legend>
 
     <h3>Create a Room</h3>
-    <label for="lob-target">Looking for: </label>
-    <select id="lob-target">
+    <label for="room-target">Looking for: </label>
+    <select id="room-target">
       <option value="Christian">✝️ Christian</option>
       <option value="Catholic">⛪ Catholic</option>
       <option value="Muslim">☪️ Muslim</option>
@@ -62,12 +62,12 @@
       <option value="Agnostic">❓ Agnostic</option>
       <option value="Deist">🔆 Deist</option>
     </select>
-    <label for="lob-cap">Capacity: </label>
-    <input id="lob-cap" type="number" min="2" max="20" value="4" style="width:4em;" />
+    <label for="room-cap">Capacity: </label>
+    <input id="room-cap" type="number" min="2" max="20" value="4" style="width:4em;" />
     <button onclick="createRoom()">Create</button>
 
     <h3>Available Rooms</h3>
-    <ul id="lobby-list"></ul>
+    <ul id="room-list"></ul>
   </fieldset>
 
   <!-- Firebase SDKs -->
@@ -75,7 +75,7 @@
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
   <script>
-    // —– CONFIG —–
+    // CONFIG
     const firebaseConfig = {
       apiKey: "AIzaSyB7twY7z31ucB6pGA8JC_HrVMZhA8lNaJA",
       authDomain: "bible-game-246c0.firebaseapp.com",
@@ -98,16 +98,13 @@
       ui.style.display = ui.style.display === 'none' ? 'block' : 'none';
     }
 
-    // —– AUTH HANDLERS —–
+    // AUTH HANDLERS
     function signUp() {
       const username = document.getElementById('su-username').value;
       const email    = document.getElementById('su-email').value;
       const pass     = document.getElementById('su-pass').value;
       auth.createUserWithEmailAndPassword(email, pass)
-        .then(({ user }) => {
-          // save profile with username
-          return db.ref('members/' + user.uid).set({ username });
-        })
+        .then(({ user }) => db.ref(`members/${user.uid}`).set({ username }))
         .catch(err => alert(err.message));
     }
 
@@ -124,38 +121,40 @@
 
     auth.onAuthStateChanged(async user => {
       currentUser = user;
-      document.getElementById('signup-ui').style.display = 'none';
-      document.getElementById('login-ui').style.display   = user ? 'none' : '';
-      document.getElementById('user-info').style.display  = user ? '' : 'none';
-      document.getElementById('lobby-fieldset').style.display = user ? '' : 'none';
+      document.getElementById('signup-ui').style.display   = 'none';
+      document.getElementById('login-ui').style.display    = user ? 'none' : '';
+      document.getElementById('user-info').style.display   = user ? '' : 'none';
+      document.getElementById('room-fieldset').style.display = user ? '' : 'none';
       if (!user) return;
 
-      // display username + email
-      const snap    = await db.ref('members/' + user.uid).once('value');
+      // display user info
+      const snap    = await db.ref(`members/${user.uid}`).once('value');
       const profile = snap.val();
       document.getElementById('user-username').textContent = profile.username;
       document.getElementById('user-email').textContent    = user.email;
 
-      loadRooms(profile.belief);
+      loadRooms(profile.username);
     });
 
-    // —– ROOM LOGIC —–
+    // CREATE ROOM
     async function createRoom() {
-      const target   = document.getElementById('lob-target').value;
-      const capacity = +document.getElementById('lob-cap').value;
+      const target   = document.getElementById('room-target').value;
+      const capacity = +document.getElementById('room-cap').value;
       const roomRef  = db.ref('rooms').push();
       await roomRef.set({
         host: currentUser.uid,
         targetBelief: target,
         capacity,
         members: { [currentUser.uid]: true },
+        started: false,
         createdAt: firebase.database.ServerValue.TIMESTAMP
       });
       loadRooms();
     }
 
+    // LOAD & DISPLAY ROOMS
     async function loadRooms(myBelief) {
-      const listEl = document.getElementById('lobby-list');
+      const listEl = document.getElementById('room-list');
       listEl.innerHTML = '';
       const snap = await db.ref('rooms').once('value');
       const rooms = [];
@@ -163,35 +162,72 @@
         const r = child.val();
         r.id = child.key;
         r.memberCount = r.members ? Object.keys(r.members).length : 0;
-        if (r.memberCount < r.capacity) rooms.push(r);
+        if (r.memberCount < r.capacity || r.host === currentUser.uid) rooms.push(r);
       });
 
-      rooms.sort((a,b) => {
+      rooms.sort((a, b) => {
         const aPref = (a.targetBelief === myBelief) ? 0 : 1;
         const bPref = (b.targetBelief === myBelief) ? 0 : 1;
         return aPref - bPref || (a.createdAt - b.createdAt);
       });
 
-      rooms.forEach(r => {
+      for (const r of rooms) {
         const li = document.createElement('li');
-        li.innerHTML = `
-          Host: ${r.host}<br/>
-          Looking for: ${r.targetBelief} &nbsp;
-          (${r.memberCount}/${r.capacity})<br/>
-        `;
-        const joinBtn = document.createElement('button');
-        joinBtn.textContent = 'Join';
-        joinBtn.onclick = () => joinRoom(r.id);
-        li.appendChild(joinBtn);
+        li.id = `room-${r.id}`;
+        li.innerHTML = `Host: ${r.host}<br/>Looking for: ${r.targetBelief} (${r.memberCount}/${r.capacity})<br/>`;
+
+        if (r.host === currentUser.uid) {
+          // show members
+          li.innerHTML += '<strong>Members:</strong><ul>';
+          for (const uid of Object.keys(r.members)) {
+            const memberSnap = await db.ref(`members/${uid}`).once('value');
+            li.innerHTML += `<li>${memberSnap.val().username}</li>`;
+          }
+          li.innerHTML += '</ul>';
+          // start button
+          if (!r.started) {
+            const startBtn = document.createElement('button');
+            startBtn.textContent = 'Start Lobby';
+            startBtn.onclick = () => startRoom(r.id);
+            li.appendChild(startBtn);
+          }
+        } else if (r.members && r.members[currentUser.uid]) {
+          // joined, wait for start
+          const status = document.createElement('span');
+          status.id = `status-${r.id}`;
+          status.textContent = 'Joined. Waiting for host to start...';
+          li.appendChild(status);
+          waitForStart(r.id);
+        } else {
+          // join button
+          const joinBtn = document.createElement('button');
+          joinBtn.textContent = 'Join';
+          joinBtn.onclick = () => joinRoom(r.id);
+          li.appendChild(joinBtn);
+        }
+
         listEl.appendChild(li);
+      }
+    }
+
+    // JOIN & WAIT
+    function joinRoom(roomId) {
+      db.ref(`rooms/${roomId}/members/${currentUser.uid}`).set(true)
+        .then(() => loadRooms());
+    }
+    function waitForStart(roomId) {
+      db.ref(`rooms/${roomId}/started`).on('value', snap => {
+        if (snap.val()) {
+          window.location.href = `chatroom.html?roomId=${roomId}`;
+        }
       });
     }
 
-    async function joinRoom(roomId) {
-      await db.ref(`rooms/${roomId}/members/${currentUser.uid}`).set(true);
+    // START ROOM
+    async function startRoom(roomId) {
+      await db.ref(`rooms/${roomId}`).update({ started: true });
       window.location.href = `chatroom.html?roomId=${roomId}`;
     }
   </script>
 </body>
 </html>
-
