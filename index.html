@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -77,14 +78,14 @@
   <script>
     // CONFIG
     const firebaseConfig = {
-      apiKey: "AIzaSyB7twY7z31ucB6pGA8JC_HrVMZhA8lNaJA",
-      authDomain: "bible-game-246c0.firebaseapp.com",
-      databaseURL: "https://bible-game-246c0-default-rtdb.firebaseio.com",
-      projectId: "bible-game-246c0",
-      storageBucket: "bible-game-246c0.firebasestorage.app",
-      messagingSenderId: "959619818996",
-      appId: "1:959619818996:web:5a9fbf492e23c765e445a1",
-      measurementId: "G-8PR6LVKSH3"
+      apiKey: "AIzaSyCKy1KVoLdTH_nwpYVr8u_CT5e0hjBpFOc",
+      authDomain: "truth-b65cd.firebaseapp.com",
+      databaseURL: "https://truth-b65cd-default-rtdb.firebaseio.com",
+      projectId: "truth-b65cd",
+      storageBucket: "truth-b65cd.firebasestorage.app",
+      messagingSenderId: "11180463959",
+      appId: "1:11180463959:web:e860d37bdbf8e245e25012",
+      measurementId: "G-HPYS4F4MYJ"
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
@@ -127,7 +128,6 @@
       document.getElementById('room-fieldset').style.display = user ? '' : 'none';
       if (!user) return;
 
-      // display user info
       const snap    = await db.ref(`members/${user.uid}`).once('value');
       const profile = snap.val();
       document.getElementById('user-username').textContent = profile.username;
@@ -178,14 +178,12 @@
 Looking for: ${r.targetBelief} (${r.memberCount}/${r.capacity})<br/>`;
 
         if (r.host === currentUser.uid) {
-          // show members
           li.innerHTML += '<strong>Members:</strong><ul>';
           for (const uid of Object.keys(r.members)) {
             const memberSnap = await db.ref(`members/${uid}`).once('value');
             li.innerHTML += `<li>${memberSnap.val().username}</li>`;
           }
           li.innerHTML += '</ul>';
-          // start button
           if (!r.started) {
             const startBtn = document.createElement('button');
             startBtn.textContent = 'Start Lobby';
@@ -193,14 +191,12 @@ Looking for: ${r.targetBelief} (${r.memberCount}/${r.capacity})<br/>`;
             li.appendChild(startBtn);
           }
         } else if (r.members && r.members[currentUser.uid]) {
-          // joined, wait for start
           const status = document.createElement('span');
           status.id = `status-${r.id}`;
           status.textContent = 'Joined. Waiting for host to start...';
           li.appendChild(status);
           waitForStart(r.id);
         } else {
-          // join button
           const joinBtn = document.createElement('button');
           joinBtn.textContent = 'Join';
           joinBtn.onclick = () => joinRoom(r.id);
@@ -232,3 +228,4 @@ Looking for: ${r.targetBelief} (${r.memberCount}/${r.capacity})<br/>`;
   </script>
 </body>
 </html>
+```
