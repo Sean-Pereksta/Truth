@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Interbelief Chat Lobby</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: auto; }
+    fieldset { margin: 1em 0; }
+    ul { list-style: none; padding: 0; }
+    li { padding: .5em; border: 1px solid #ddd; margin-bottom: .5em; }
+    button { margin-left: .5em; }
+  </style>
+</head>
+<body>
+
+  <h1>Interbelief Chat</h1>
+
+  <!-- 1) SIGN-UP / LOGIN UI -->
+  <fieldset id="auth-fieldset">
+    <legend>Create Account / Log In</legend>
+
+    <div id="signup-ui">
+      <h3>Sign Up</h3>
+      <input id="su-email" type="email" placeholder="Email" /><br/>
+      <input id="su-pass"  type="password" placeholder="Password" /><br/>
+      <label for="su-belief">Belief: </label>
+      <select id="su-belief">
+        <option value="Christian">✝️ Christian</option>
+        <option value="Catholic">⛪ Catholic</option>
+        <option value="Muslim">☪️ Muslim</option>
+        <option value="Hindu">🕉️ Hindu</option>
+        <option value="Jewish">✡️ Jewish</option>
+        <option value="Buddhist">☸️ Buddhist</option>
+        <option value="Sikh">☬ Sikh</option>
+        <option value="Atheist">🚫 Atheist</option>
+        <option value="Agnostic">❓ Agnostic</option>
+        <option value="Deist">🔆 Deist</option>
+      </select><br/>
+      <button onclick="signUp()">Sign Up</button>
+    </div>
+
+    <hr/>
+
+    <div id="login-ui">
+      <h3>Log In</h3>
+      <input id="li-email" type="email" placeholder="Email" /><br/>
+      <input id="li-pass"  type="password" placeholder="Password" /><br/>
+      <button onclick="signIn()">Log In</button>
+    </div>
+
+    <div id="user-info" style="display:none;">
+      Logged in as <span id="user-email"></span> (<span id="user-belief"></span>) 
+      <button onclick="signOut()">Sign Out</button>
+    </div>
+  </fieldset>
+
+  <!-- 2) ROOM CREATION & LISTING -->
+  <fieldset id="lobby-fieldset" style="display:none;">
+    <legend>Room Dashboard</legend>
+
+    <h3>Create a Room</h3>
+    <label for="lob-target">Looking for: </label>
+    <select id="lob-target">
+      <option value="Christian">✝️ Christian</option>
+      <option value="Catholic">⛪ Catholic</option>
+      <option value="Muslim">☪️ Muslim</option>
+      <option value="Hindu">🕉️ Hindu</option>
+      <option value="Jewish">✡️ Jewish</option>
+      <option value="Buddhist">☸️ Buddhist</option>
+      <option value="Sikh">☬ Sikh</option>
+      <option value="Atheist">🚫 Atheist</option>
+      <option value="Agnostic">❓ Agnostic</option>
+      <option value="Deist">🔆 Deist</option>
+    </select>
+    <label for="lob-cap">Capacity: </label>
+    <input id="lob-cap" type="number" min="2" max="20" value="4" style="width:4em;" />
+    <button onclick="createRoom()">Create</button>
+
+    <h3>Available Rooms</h3>
+    <ul id="lobby-list"></ul>
+  </fieldset>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
+  <script>
+    // —–  CONFIG  —–
+    const firebaseConfig = {
+      apiKey: "AIzaSyB7twY7z31ucB6pGA8JC_HrVMZhA8lNaJA",
+      authDomain: "bible-game-246c0.firebaseapp.com",
+      databaseURL: "https://bible-game-246c0-default-rtdb.firebaseio.com",
+      projectId: "bible-game-246c0",
+      storageBucket: "bible-game-246c0.firebasestorage.app",
+      messagingSenderId: "959619818996",
+      appId: "1:959619818996:web:5a9fbf492e23c765e445a1",
+      measurementId: "G-8PR6LVKSH3"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db   = firebase.database();
+
+    let currentUser = null;
+
+    // —– AUTH HANDLERS  —–
+    function signUp() {
+      const email  = document.getElementById('su-email').value;
+      const pass   = document.getElementById('su-pass').value;
+      const belief = document.getElementById('su-belief').value;
+      auth.createUserWithEmailAndPassword(email, pass)
+        .then(({ user }) => {
+          return db.ref('members/' + user.uid).set({ belief });
+        })
+        .catch(console.error);
+    }
+    function signIn() {
+      const email = document.getElementById('li-email').value;
+      const pass  = document.getElementById('li-pass').value;
+      auth.signInWithEmailAndPassword(email, pass)
+        .catch(console.error);
+    }
+    function signOut() {
+      auth.signOut();
+    }
+
+    auth.onAuthStateChanged(async user => {
+      currentUser = user;
+      document.getElementById('signup-ui').style.display = user ? 'none' : '';
+      document.getElementById('login-ui' ).style.display = user ? 'none' : '';
+      document.getElementById('user-info').style.display = user ? '' : 'none';
+      document.getElementById('lobby-fieldset').style.display = user ? '' : 'none';
+      if (!user) return;
+
+      document.getElementById('user-email').textContent = user.email;
+      const snap = await db.ref('members/' + user.uid).once('value');
+      const profile = snap.val();
+      document.getElementById('user-belief').textContent = profile.belief;
+
+      loadRooms(profile.belief);
+    });
+
+    // —– ROOM LOGIC  —–
+    async function createRoom() {
+      const target   = document.getElementById('lob-target').value;
+      const capacity = +document.getElementById('lob-cap').value;
+      const roomRef  = db.ref('rooms').push();
+      await roomRef.set({
+        host: currentUser.uid,
+        targetBelief: target,
+        capacity,
+        members: { [currentUser.uid]: true },
+        createdAt: firebase.database.ServerValue.TIMESTAMP
+      });
+      loadRooms();
+    }
+
+    async function loadRooms(myBelief) {
+      const listEl = document.getElementById('lobby-list');
+      listEl.innerHTML = '';
+      const snap = await db.ref('rooms').once('value');
+      const rooms = [];
+      snap.forEach(child => {
+        const r = child.val();
+        r.id = child.key;
+        r.memberCount = r.members ? Object.keys(r.members).length : 0;
+        if (r.memberCount < r.capacity) rooms.push(r);
+      });
+
+      rooms.sort((a,b) => {
+        const aPref = (a.targetBelief === myBelief) ? 0 : 1;
+        const bPref = (b.targetBelief === myBelief) ? 0 : 1;
+        return aPref - bPref || (a.createdAt - b.createdAt);
+      });
+
+      rooms.forEach(r => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          Host: ${r.host}<br/>
+          Looking for: ${r.targetBelief} &nbsp;
+          (${r.memberCount}/${r.capacity})<br/>
+        `;
+        const joinBtn = document.createElement('button');
+        joinBtn.textContent = 'Join';
+        joinBtn.onclick = () => joinRoom(r.id);
+        li.appendChild(joinBtn);
+        listEl.appendChild(li);
+      });
+    }
+
+    async function joinRoom(roomId) {
+      await db.ref(`rooms/${roomId}/members/${currentUser.uid}`).set(true);
+      window.location.href = `chatroom.html?roomId=${roomId}`;
+    }
+  </script>
+</body>
+</html>
