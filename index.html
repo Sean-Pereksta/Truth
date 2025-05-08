@@ -10,6 +10,7 @@
     ul { list-style: none; padding: 0; }
     li { padding: .5em; border: 1px solid #ddd; margin-bottom: .5em; }
     button { margin-left: .5em; }
+    .member-count { font-weight: bold; }
   </style>
 </head>
 <body>
@@ -50,6 +51,7 @@
     <legend>Room Dashboard</legend>
 
     <h3>Create a Room</h3>
+    <input id="room-name" type="text" placeholder="Lobby Name" /><br/>
     <label for="room-target">Looking for:</label>
     <select id="room-target">
       <option value="Any">🌐 Any</option>
@@ -93,13 +95,11 @@
     const db   = firebase.database();
     let currentUser = null;
 
-    // Toggle signup form
     function toggleSignup() {
       const ui = document.getElementById('signup-ui');
       ui.style.display = ui.style.display === 'none' ? 'block' : 'none';
     }
 
-    // AUTH HANDLERS
     function signUp() {
       const username = document.getElementById('su-username').value;
       const email    = document.getElementById('su-email').value;
@@ -136,16 +136,17 @@
       loadRooms(profile.username);
     });
 
-    // CREATE ROOM
     async function createRoom() {
       if (!auth.currentUser) {
         alert('You must be logged in to create a room.');
         return;
       }
+      const name     = document.getElementById('room-name').value.trim() || 'Untitled';
       const target   = document.getElementById('room-target').value;
       const capacity = +document.getElementById('room-cap').value;
       const roomRef  = db.ref('rooms').push();
       await roomRef.set({
+        name,
         host: auth.currentUser.uid,
         targetBelief: target,
         capacity,
@@ -156,7 +157,6 @@
       loadRooms();
     }
 
-    // LOAD & DISPLAY ROOMS (auto-cleanup and "Any" sorting)
     async function loadRooms(myBelief) {
       const listEl = document.getElementById('room-list');
       listEl.innerHTML = '';
@@ -168,12 +168,8 @@
         const r = child.val();
         r.id = child.key;
         r.memberCount = r.members ? Object.keys(r.members).length : 0;
-
-        // remove empty or stale rooms
-        if (
-          r.memberCount === 0 ||
-          (!r.started && now - r.createdAt > 10 * 60 * 1000)
-        ) {
+        // auto-cleanup
+        if (r.memberCount === 0 || (!r.started && now - r.createdAt > 10*60*1000)) {
           db.ref(`rooms/${r.id}`).remove();
           return;
         }
@@ -181,65 +177,49 @@
       });
 
       rooms.sort((a, b) => {
-        // treat "Any" as matching everyone
         const aPref = (a.targetBelief === myBelief || a.targetBelief === 'Any') ? 0 : 1;
         const bPref = (b.targetBelief === myBelief || b.targetBelief === 'Any') ? 0 : 1;
         return aPref - bPref || (a.createdAt - b.createdAt);
       });
 
-      for (const r of rooms) {
+      rooms.forEach(r => {
         const li = document.createElement('li');
         li.innerHTML = `
+          <strong>${r.name}</strong><br/>
           Host: ${r.host}<br/>
-          Looking for: ${r.targetBelief} (${r.memberCount}/${r.capacity})<br/>
+          Looking for: ${r.targetBelief}<br/>
+          <span class="member-count">${r.memberCount}/${r.capacity}</span><br/>
         `;
-
         if (r.host === auth.currentUser.uid) {
-          // show members & start button
-          li.innerHTML += '<strong>Members:</strong><ul>';
-          for (const uid of Object.keys(r.members)) {
-            const snapM = await db.ref(`members/${uid}`).once('value');
-            li.innerHTML += `<li>${snapM.val().username}</li>`;
-          }
-          li.innerHTML += '</ul>';
-          if (!r.started) {
-            const btn = document.createElement('button');
-            btn.textContent = 'Start Room';
-            btn.onclick = () => startRoom(r.id);
-            li.appendChild(btn);
-          }
-        } else if (r.members && r.members[auth.currentUser.uid]) {
-          // joined participant: wait for start
-          const span = document.createElement('span');
-          span.textContent = 'Joined—waiting for host to start...';
-          li.appendChild(span);
-          waitForStart(r.id);
-        } else {
-          // allow join
+          // show live-updated members count
+          db.ref(`rooms/${r.id}/members`).on('value', snapM => {
+            const count = snapM.numChildren();
+            li.querySelector('.member-count').textContent = count + '/' + r.capacity;
+          });
+          const btn = document.createElement('button');
+          btn.textContent = r.started ? 'Enter Chat' : 'Start Room';
+          btn.onclick = () => startRoom(r.id);
+          li.appendChild(btn);
+        } else if (!r.started) {
           const btn = document.createElement('button');
           btn.textContent = 'Join';
           btn.onclick = () => joinRoom(r.id);
           li.appendChild(btn);
+        } else {
+          const btn = document.createElement('button');
+          btn.textContent = 'Enter Chat';
+          btn.onclick = () => window.location.href = `Truth/chat/chatroom.html?roomId=${r.id}`;
+          li.appendChild(btn);
         }
-
         listEl.appendChild(li);
-      }
-    }
-
-    // JOIN & WAIT FOR START
-    async function joinRoom(roomId) {
-      await db.ref(`rooms/${roomId}/members/${auth.currentUser.uid}`).set(true);
-      waitForStart(roomId);
-    }
-    function waitForStart(roomId) {
-      db.ref(`rooms/${roomId}/started`).on('value', snap => {
-        if (snap.val()) {
-          window.location.href = `Truth/chat/chatroom.html?roomId=${roomId}`;
-        }
       });
     }
 
-    // START ROOM (host)
+    async function joinRoom(roomId) {
+      await db.ref(`rooms/${roomId}/members/${auth.currentUser.uid}`).set(true);
+      window.location.href = `Truth/chat/chatroom.html?roomId=${roomId}`;
+    }
+
     async function startRoom(roomId) {
       await db.ref(`rooms/${roomId}`).update({ started: true });
       window.location.href = `Truth/chat/chatroom.html?roomId=${roomId}`;
