@@ -228,12 +228,13 @@
 
     async function joinRoom(roomId) {
       await db.ref(`rooms/${roomId}/members/${auth.currentUser.uid}`).set(true);
-      window.location.href = `Truth/chat/chatroom.html?roomId=${roomId}`;
+      window.location.href = "/Truth/chat/chatroom.html?roomId=" + roomId;
+
     }
 
     async function startRoom(roomId) {
       await db.ref(`rooms/${roomId}`).update({ started: true });
-      window.location.href = `Truth/chat/chatroom.html?roomId=${roomId}`;
+     window.location.href = "/Truth/chat/chatroom.html?roomId=" + roomId;
     }
   </script>
 </body>
