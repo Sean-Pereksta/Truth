@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Interbelief Chat Room</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: auto; }
+    #jitsi-container { width: 100%; height: 400px; margin-top: 1em; }
+    ul { list-style: none; padding: 0; }
+    li { padding: 0.5em; border-bottom: 1px solid #ddd; }
+    .mic-indicator { margin-left: 0.5em; }
+    button { padding: 0.5em 1em; margin-top: 1em; }
+  </style>
+</head>
+<body>
+  <h1>Chat Room</h1>
+  <button onclick="leaveRoom()">Leave Room</button>
+
+  <h2>Participants</h2>
+  <ul id="participant-list"></ul>
+
+  <div id="jitsi-container"></div>
+
+  <!-- Jitsi API -->
+  <script src="https://meet.jit.si/external_api.js"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
+  <script>
+    // Firebase config (same as index.html)
+    const firebaseConfig = {
+      apiKey: "AIzaSyB7twY7z31ucB6pGA8JC_HrVMZhA8lNaJA",
+      authDomain: "bible-game-246c0.firebaseapp.com",
+      databaseURL: "https://bible-game-246c0-default-rtdb.firebaseio.com",
+      projectId: "bible-game-246c0",
+      storageBucket: "bible-game-246c0.firebasestorage.app",
+      messagingSenderId: "959619818996",
+      appId: "1:959619818996:web:5a9fbf492e23c765e445a1",
+      measurementId: "G-8PR6LVKSH3"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db   = firebase.database();
+
+    let currentUser = null;
+    const params = new URLSearchParams(window.location.search);
+    const roomId = params.get('roomId');
+    let jitsiApi = null;
+
+    // Redirect back to lobby
+    function leaveRoom() {
+      window.location.href = 'index.html';
+    }
+
+    // Wait for auth
+    auth.onAuthStateChanged(async user => {
+      if (!user) return leaveRoom();
+      currentUser = user;
+      const profileSnap = await db.ref(`members/${user.uid}`).once('value');
+      const profile = profileSnap.val();
+      const username = profile.username;
+
+      // Load participant list from Firebase
+      initParticipants();
+      // Initialize Jitsi
+      initJitsi(username);
+    });
+
+    // Fetch and display participants from Firebase room
+    async function initParticipants() {
+      const listEl = document.getElementById('participant-list');
+      listEl.innerHTML = '';
+      const membersSnap = await db.ref(`rooms/${roomId}/members`).once('value');
+      membersSnap.forEach(async child => {
+        const uid = child.key;
+        const prof = (await db.ref(`members/${uid}`).once('value')).val();
+        const li = document.createElement('li');
+        li.id = `participant-${uid}`;
+        li.textContent = prof.username;
+        listEl.appendChild(li);
+      });
+    }
+
+    // Set up Jitsi Meet external API
+    function initJitsi(displayName) {
+      const domain = 'meet.jit.si';
+      const options = {
+        roomName: 'TruthRoom-' + roomId,
+        parentNode: document.getElementById('jitsi-container'),
+        userInfo: { displayName },
+        configOverwrite: { startWithVideoMuted: true },
+        interfaceConfigOverwrite: { filmStripOnly: false }
+      };
+      jitsiApi = new JitsiMeetExternalAPI(domain, options);
+
+      // Track Jitsi participants and dominant speaker
+      jitsiApi.addEventListener('participantJoined', ({ id, displayName }) => {
+        // Tag matching list item with Jitsi id for later
+        const items = document.querySelectorAll('#participant-list li');
+        items.forEach(li => {
+          if (li.textContent === displayName) {
+            li.setAttribute('data-jitsi-id', id);
+          }
+        });
+      });
+      jitsiApi.addEventListener('participantLeft', ({ id }) => {
+        const li = document.querySelector(`#participant-list li[data-jitsi-id="${id}"]`);
+        li?.querySelector('.mic-indicator')?.remove();
+      });
+      jitsiApi.addEventListener('dominantSpeakerChanged', ({ id }) => {
+        // Remove existing indicators
+        document.querySelectorAll('.mic-indicator').forEach(el => el.remove());
+        // Mark new speaker
+        const li = document.querySelector(`#participant-list li[data-jitsi-id="${id}"]`);
+        if (li) {
+          const mic = document.createElement('span');
+          mic.className = 'mic-indicator';
+          mic.textContent = '🎤';
+          li.appendChild(mic);
+        }
+      });
+    }
+  </script>
+</body>
+</html>
