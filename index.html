@@ -121,9 +121,9 @@
 
     auth.onAuthStateChanged(async user => {
       currentUser = user;
-      document.getElementById('signup-ui').style.display   = 'none';
-      document.getElementById('login-ui').style.display    = user ? 'none' : '';
-      document.getElementById('user-info').style.display   = user ? '' : 'none';
+      document.getElementById('signup-ui').style.display    = 'none';
+      document.getElementById('login-ui').style.display     = user ? 'none' : '';
+      document.getElementById('user-info').style.display    = user ? '' : 'none';
       document.getElementById('room-fieldset').style.display = user ? '' : 'none';
       if (!user) return;
 
@@ -174,7 +174,8 @@
       for (const r of rooms) {
         const li = document.createElement('li');
         li.id = `room-${r.id}`;
-        li.innerHTML = `Host: ${r.host}<br/>Looking for: ${r.targetBelief} (${r.memberCount}/${r.capacity})<br/>`;
+        li.innerHTML = `Host: ${r.host}<br/>
+Looking for: ${r.targetBelief} (${r.memberCount}/${r.capacity})<br/>`;
 
         if (r.host === currentUser.uid) {
           // show members
@@ -211,14 +212,14 @@
     }
 
     // JOIN & WAIT
-    function joinRoom(roomId) {
-      db.ref(`rooms/${roomId}/members/${currentUser.uid}`).set(true)
-        .then(() => loadRooms());
+    async function joinRoom(roomId) {
+      await db.ref(`rooms/${roomId}/members/${currentUser.uid}`).set(true);
+      window.location.href = `Truth/chat/chatroom.html?roomId=${roomId}`;
     }
     function waitForStart(roomId) {
       db.ref(`rooms/${roomId}/started`).on('value', snap => {
         if (snap.val()) {
-          window.location.href = `chatroom.html?roomId=${roomId}`;
+          window.location.href = `Truth/chat/chatroom.html?roomId=${roomId}`;
         }
       });
     }
@@ -226,7 +227,7 @@
     // START ROOM
     async function startRoom(roomId) {
       await db.ref(`rooms/${roomId}`).update({ started: true });
-      window.location.href = `chatroom.html?roomId=${roomId}`;
+      window.location.href = `Truth/chat/chatroom.html?roomId=${roomId}`;
     }
   </script>
 </body>
