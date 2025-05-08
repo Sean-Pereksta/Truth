@@ -181,21 +181,31 @@
         const bPref = (b.targetBelief === myBelief || b.targetBelief === 'Any') ? 0 : 1;
         return aPref - bPref || (a.createdAt - b.createdAt);
       });
-
-      rooms.forEach(r => {
+           rooms.forEach(r => {
         const li = document.createElement('li');
         li.innerHTML = `
           <strong>${r.name}</strong><br/>
           Host: ${r.host}<br/>
           Looking for: ${r.targetBelief}<br/>
           <span class="member-count">${r.memberCount}/${r.capacity}</span><br/>
+          <ul class="member-list" id="members-${r.id}"></ul>
         `;
+
+        // Live update usernames
+        db.ref(`rooms/${r.id}/members`).on('value', async snapM => {
+          const ul = li.querySelector(`#members-${r.id}`);
+          ul.innerHTML = '';
+          const uids = Object.keys(snapM.val() || {});
+          for (const uid of uids) {
+            const userSnap = await db.ref(`members/${uid}`).once('value');
+            const liMember = document.createElement('li');
+            liMember.textContent = userSnap.val()?.username || 'Unknown';
+            ul.appendChild(liMember);
+          }
+          li.querySelector('.member-count').textContent = `${uids.length}/${r.capacity}`;
+        });
+
         if (r.host === auth.currentUser.uid) {
-          // show live-updated members count
-          db.ref(`rooms/${r.id}/members`).on('value', snapM => {
-            const count = snapM.numChildren();
-            li.querySelector('.member-count').textContent = count + '/' + r.capacity;
-          });
           const btn = document.createElement('button');
           btn.textContent = r.started ? 'Enter Chat' : 'Start Room';
           btn.onclick = () => startRoom(r.id);
@@ -211,6 +221,7 @@
           btn.onclick = () => window.location.href = `Truth/chat/chatroom.html?roomId=${r.id}`;
           li.appendChild(btn);
         }
+
         listEl.appendChild(li);
       });
     }
