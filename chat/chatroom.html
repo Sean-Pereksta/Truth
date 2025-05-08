@@ -28,16 +28,16 @@
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
   <script>
-    // Firebase config (same as index.html)
+    // CONFIG
     const firebaseConfig = {
-      apiKey: "AIzaSyB7twY7z31ucB6pGA8JC_HrVMZhA8lNaJA",
-      authDomain: "bible-game-246c0.firebaseapp.com",
-      databaseURL: "https://bible-game-246c0-default-rtdb.firebaseio.com",
-      projectId: "bible-game-246c0",
-      storageBucket: "bible-game-246c0.firebasestorage.app",
-      messagingSenderId: "959619818996",
-      appId: "1:959619818996:web:5a9fbf492e23c765e445a1",
-      measurementId: "G-8PR6LVKSH3"
+      apiKey: "AIzaSyCKy1KVoLdTH_nwpYVr8u_CT5e0hjBpFOc",
+      authDomain: "truth-b65cd.firebaseapp.com",
+      databaseURL: "https://truth-b65cd-default-rtdb.firebaseio.com",
+      projectId: "truth-b65cd",
+      storageBucket: "truth-b65cd.firebasestorage.app",
+      messagingSenderId: "11180463959",
+      appId: "1:11180463959:web:e860d37bdbf8e245e25012",
+      measurementId: "G-HPYS4F4MYJ"
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
@@ -50,7 +50,7 @@
 
     // Redirect back to lobby
     function leaveRoom() {
-      window.location.href = 'index.html';
+      window.location.href = '../index.html';
     }
 
     // Wait for auth
@@ -96,9 +96,7 @@
 
       // Track Jitsi participants and dominant speaker
       jitsiApi.addEventListener('participantJoined', ({ id, displayName }) => {
-        // Tag matching list item with Jitsi id for later
-        const items = document.querySelectorAll('#participant-list li');
-        items.forEach(li => {
+        document.querySelectorAll('#participant-list li').forEach(li => {
           if (li.textContent === displayName) {
             li.setAttribute('data-jitsi-id', id);
           }
@@ -109,9 +107,7 @@
         li?.querySelector('.mic-indicator')?.remove();
       });
       jitsiApi.addEventListener('dominantSpeakerChanged', ({ id }) => {
-        // Remove existing indicators
         document.querySelectorAll('.mic-indicator').forEach(el => el.remove());
-        // Mark new speaker
         const li = document.querySelector(`#participant-list li[data-jitsi-id="${id}"]`);
         if (li) {
           const mic = document.createElement('span');
