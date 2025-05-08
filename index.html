@@ -1,4 +1,4 @@
-<!-- room.html -->
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -52,6 +52,7 @@
     <h3>Create a Room</h3>
     <label for="room-target">Looking for:</label>
     <select id="room-target">
+      <option value="Any">🌐 Any</option>
       <option value="Christian">✝️ Christian</option>
       <option value="Catholic">⛪ Catholic</option>
       <option value="Muslim">☪️ Muslim</option>
@@ -155,24 +156,34 @@
       loadRooms();
     }
 
-    // LOAD & DISPLAY ROOMS
+    // LOAD & DISPLAY ROOMS (auto-cleanup and "Any" sorting)
     async function loadRooms(myBelief) {
       const listEl = document.getElementById('room-list');
       listEl.innerHTML = '';
       const snap = await db.ref('rooms').once('value');
       const rooms = [];
+      const now = Date.now();
+
       snap.forEach(child => {
         const r = child.val();
         r.id = child.key;
         r.memberCount = r.members ? Object.keys(r.members).length : 0;
-        if (r.memberCount < r.capacity || r.host === auth.currentUser.uid) {
-          rooms.push(r);
+
+        // remove empty or stale rooms
+        if (
+          r.memberCount === 0 ||
+          (!r.started && now - r.createdAt > 10 * 60 * 1000)
+        ) {
+          db.ref(`rooms/${r.id}`).remove();
+          return;
         }
+        rooms.push(r);
       });
 
       rooms.sort((a, b) => {
-        const aPref = a.targetBelief === myBelief ? 0 : 1;
-        const bPref = b.targetBelief === myBelief ? 0 : 1;
+        // treat "Any" as matching everyone
+        const aPref = (a.targetBelief === myBelief || a.targetBelief === 'Any') ? 0 : 1;
+        const bPref = (b.targetBelief === myBelief || b.targetBelief === 'Any') ? 0 : 1;
         return aPref - bPref || (a.createdAt - b.createdAt);
       });
 
@@ -184,40 +195,42 @@
         `;
 
         if (r.host === auth.currentUser.uid) {
+          // show members & start button
           li.innerHTML += '<strong>Members:</strong><ul>';
           for (const uid of Object.keys(r.members)) {
-            const memberSnap = await db.ref(`members/${uid}`).once('value');
-            li.innerHTML += `<li>${memberSnap.val().username}</li>`;
+            const snapM = await db.ref(`members/${uid}`).once('value');
+            li.innerHTML += `<li>${snapM.val().username}</li>`;
           }
           li.innerHTML += '</ul>';
           if (!r.started) {
-            const startBtn = document.createElement('button');
-            startBtn.textContent = 'Start Lobby';
-            startBtn.onclick = () => startRoom(r.id);
-            li.appendChild(startBtn);
+            const btn = document.createElement('button');
+            btn.textContent = 'Start Room';
+            btn.onclick = () => startRoom(r.id);
+            li.appendChild(btn);
           }
         } else if (r.members && r.members[auth.currentUser.uid]) {
-          const status = document.createElement('span');
-          status.textContent = 'Joined. Waiting for host to start...';
-          li.appendChild(status);
+          // joined participant: wait for start
+          const span = document.createElement('span');
+          span.textContent = 'Joined—waiting for host to start...';
+          li.appendChild(span);
           waitForStart(r.id);
         } else {
-          const joinBtn = document.createElement('button');
-          joinBtn.textContent = 'Join';
-          joinBtn.onclick = () => joinRoom(r.id);
-          li.appendChild(joinBtn);
+          // allow join
+          const btn = document.createElement('button');
+          btn.textContent = 'Join';
+          btn.onclick = () => joinRoom(r.id);
+          li.appendChild(btn);
         }
 
         listEl.appendChild(li);
       }
     }
 
-    // JOIN & WAIT
+    // JOIN & WAIT FOR START
     async function joinRoom(roomId) {
       await db.ref(`rooms/${roomId}/members/${auth.currentUser.uid}`).set(true);
-      window.location.href = `Truth/chat/chatroom.html?roomId=${roomId}`;
+      waitForStart(roomId);
     }
-
     function waitForStart(roomId) {
       db.ref(`rooms/${roomId}/started`).on('value', snap => {
         if (snap.val()) {
@@ -226,7 +239,7 @@
       });
     }
 
-    // START ROOM
+    // START ROOM (host)
     async function startRoom(roomId) {
       await db.ref(`rooms/${roomId}`).update({ started: true });
       window.location.href = `Truth/chat/chatroom.html?roomId=${roomId}`;
