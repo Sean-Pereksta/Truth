@@ -17,26 +17,16 @@
 
   <!-- 1) SIGN-UP / LOGIN UI -->
   <fieldset id="auth-fieldset">
-    <legend>Create Account / Log In</legend>
+    <legend>Account</legend>
 
-    <div id="signup-ui">
+    <!-- Create Account Toggle -->
+    <button onclick="toggleSignup()">Create Account</button>
+    <div id="signup-ui" style="display:none; margin-top:1em;">
       <h3>Sign Up</h3>
+      <input id="su-username" type="text" placeholder="Username" /><br/>
       <input id="su-email" type="email" placeholder="Email" /><br/>
       <input id="su-pass"  type="password" placeholder="Password" /><br/>
-      <label for="su-belief">Belief: </label>
-      <select id="su-belief">
-        <option value="Christian">✝️ Christian</option>
-        <option value="Catholic">⛪ Catholic</option>
-        <option value="Muslim">☪️ Muslim</option>
-        <option value="Hindu">🕉️ Hindu</option>
-        <option value="Jewish">✡️ Jewish</option>
-        <option value="Buddhist">☸️ Buddhist</option>
-        <option value="Sikh">☬ Sikh</option>
-        <option value="Atheist">🚫 Atheist</option>
-        <option value="Agnostic">❓ Agnostic</option>
-        <option value="Deist">🔆 Deist</option>
-      </select><br/>
-      <button onclick="signUp()">Sign Up</button>
+      <button onclick="signUp()">Submit</button>
     </div>
 
     <hr/>
@@ -49,7 +39,7 @@
     </div>
 
     <div id="user-info" style="display:none;">
-      Logged in as <span id="user-email"></span> (<span id="user-belief"></span>) 
+      Logged in as <strong id="user-username"></strong> (<span id="user-email"></span>)
       <button onclick="signOut()">Sign Out</button>
     </div>
   </fieldset>
@@ -85,7 +75,7 @@
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
   <script>
-    // —–  CONFIG  —–
+    // —– CONFIG —–
     const firebaseConfig = {
       apiKey: "AIzaSyB7twY7z31ucB6pGA8JC_HrVMZhA8lNaJA",
       authDomain: "bible-game-246c0.firebaseapp.com",
@@ -102,44 +92,54 @@
 
     let currentUser = null;
 
-    // —– AUTH HANDLERS  —–
+    // Toggle signup form
+    function toggleSignup() {
+      const ui = document.getElementById('signup-ui');
+      ui.style.display = ui.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // —– AUTH HANDLERS —–
     function signUp() {
-      const email  = document.getElementById('su-email').value;
-      const pass   = document.getElementById('su-pass').value;
-      const belief = document.getElementById('su-belief').value;
+      const username = document.getElementById('su-username').value;
+      const email    = document.getElementById('su-email').value;
+      const pass     = document.getElementById('su-pass').value;
       auth.createUserWithEmailAndPassword(email, pass)
         .then(({ user }) => {
-          return db.ref('members/' + user.uid).set({ belief });
+          // save profile with username
+          return db.ref('members/' + user.uid).set({ username });
         })
-        .catch(console.error);
+        .catch(err => alert(err.message));
     }
+
     function signIn() {
       const email = document.getElementById('li-email').value;
       const pass  = document.getElementById('li-pass').value;
       auth.signInWithEmailAndPassword(email, pass)
-        .catch(console.error);
+        .catch(err => alert(err.message));
     }
+
     function signOut() {
       auth.signOut();
     }
 
     auth.onAuthStateChanged(async user => {
       currentUser = user;
-      document.getElementById('signup-ui').style.display = user ? 'none' : '';
-      document.getElementById('login-ui' ).style.display = user ? 'none' : '';
-      document.getElementById('user-info').style.display = user ? '' : 'none';
+      document.getElementById('signup-ui').style.display = 'none';
+      document.getElementById('login-ui').style.display   = user ? 'none' : '';
+      document.getElementById('user-info').style.display  = user ? '' : 'none';
       document.getElementById('lobby-fieldset').style.display = user ? '' : 'none';
       if (!user) return;
 
-      document.getElementById('user-email').textContent = user.email;
-      const snap = await db.ref('members/' + user.uid).once('value');
+      // display username + email
+      const snap    = await db.ref('members/' + user.uid).once('value');
       const profile = snap.val();
-      document.getElementById('user-belief').textContent = profile.belief;
+      document.getElementById('user-username').textContent = profile.username;
+      document.getElementById('user-email').textContent    = user.email;
 
       loadRooms(profile.belief);
     });
 
-    // —– ROOM LOGIC  —–
+    // —– ROOM LOGIC —–
     async function createRoom() {
       const target   = document.getElementById('lob-target').value;
       const capacity = +document.getElementById('lob-cap').value;
@@ -194,3 +194,4 @@
   </script>
 </body>
 </html>
+
