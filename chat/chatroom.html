@@ -83,40 +83,49 @@
     }
 
     // Set up Jitsi Meet external API
-    function initJitsi(displayName) {
-      const domain = 'meet.jit.si';
-      const options = {
-        roomName: 'TruthRoom-' + roomId,
-        parentNode: document.getElementById('jitsi-container'),
-        userInfo: { displayName },
-        configOverwrite: { startWithVideoMuted: true },
-        interfaceConfigOverwrite: { filmStripOnly: false }
-      };
-      jitsiApi = new JitsiMeetExternalAPI(domain, options);
-
-      // Track Jitsi participants and dominant speaker
-      jitsiApi.addEventListener('participantJoined', ({ id, displayName }) => {
-        document.querySelectorAll('#participant-list li').forEach(li => {
-          if (li.textContent === displayName) {
-            li.setAttribute('data-jitsi-id', id);
-          }
-        });
-      });
-      jitsiApi.addEventListener('participantLeft', ({ id }) => {
-        const li = document.querySelector(`#participant-list li[data-jitsi-id="${id}"]`);
-        li?.querySelector('.mic-indicator')?.remove();
-      });
-      jitsiApi.addEventListener('dominantSpeakerChanged', ({ id }) => {
-        document.querySelectorAll('.mic-indicator').forEach(el => el.remove());
-        const li = document.querySelector(`#participant-list li[data-jitsi-id="${id}"]`);
-        if (li) {
-          const mic = document.createElement('span');
-          mic.className = 'mic-indicator';
-          mic.textContent = '🎤';
-          li.appendChild(mic);
-        }
-      });
+   function initJitsi(displayName) {
+  const domain = 'meet.jit.si';
+  const options = {
+    roomName: 'TruthRoom-' + roomId,
+    parentNode: document.getElementById('jitsi-container'),
+    userInfo: { displayName },
+    configOverwrite: {
+      startWithVideoMuted: true,
+      prejoinPageEnabled: false // ✅ disables login/prompt before joining
+    },
+    interfaceConfigOverwrite: {
+      filmStripOnly: false
     }
+  };
+
+  jitsiApi = new JitsiMeetExternalAPI(domain, options);
+
+  // Track Jitsi participants and dominant speaker
+  jitsiApi.addEventListener('participantJoined', ({ id, displayName }) => {
+    document.querySelectorAll('#participant-list li').forEach(li => {
+      if (li.textContent === displayName) {
+        li.setAttribute('data-jitsi-id', id);
+      }
+    });
+  });
+
+  jitsiApi.addEventListener('participantLeft', ({ id }) => {
+    const li = document.querySelector(`#participant-list li[data-jitsi-id="${id}"]`);
+    li?.querySelector('.mic-indicator')?.remove();
+  });
+
+  jitsiApi.addEventListener('dominantSpeakerChanged', ({ id }) => {
+    document.querySelectorAll('.mic-indicator').forEach(el => el.remove());
+    const li = document.querySelector(`#participant-list li[data-jitsi-id="${id}"]`);
+    if (li) {
+      const mic = document.createElement('span');
+      mic.className = 'mic-indicator';
+      mic.textContent = '🎤';
+      li.appendChild(mic);
+    }
+  });
+}
+
   </script>
 </body>
 </html>
