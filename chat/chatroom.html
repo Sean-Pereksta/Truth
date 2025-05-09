@@ -31,6 +31,13 @@
       padding: 0.5em 1em;
       margin-top: 1em;
     }
+    #topicDisplay {
+      background: #eef;
+      padding: 1em;
+      border-radius: 8px;
+      margin-top: 1em;
+      font-size: 1.2em;
+    }
   </style>
 </head>
 <body>
@@ -39,6 +46,9 @@
 
   <h2>Participants</h2>
   <ul id="participant-list"></ul>
+
+  <h2 id="topicDisplay">Topic of the Moment: (waiting...)</h2>
+  <button onclick="shuffleQuestion()">Shuffle Topic</button>
 
   <div id="jitsi-container"></div>
 
@@ -77,6 +87,38 @@
       Any: "#ffffff"
     };
 
+    const questions = [
+      "Does God have to be personal to be real?",
+      "Why do people believe in different gods?",
+      "Can morality exist without God?",
+      "Is doubt part of faith?",
+      "What does it mean to 'hear from God'?",
+      "What makes life meaningful?",
+      "Is purpose something we find or create?",
+      "Can suffering have value?",
+      "If death is inevitable, does it make life more precious—or more pointless?",
+      "What’s the difference between being happy and being fulfilled?",
+      "Is truth discovered or created?",
+      "Can two opposing beliefs both be valid?",
+      "Does absolute truth exist?",
+      "Is reason alone enough to guide us?",
+      "Are humans more rational or emotional at their core?",
+      "Is something good because God says so—or does God say it because it’s good?",
+      "Is it ever okay to lie?",
+      "What makes a hero? What makes a villain?",
+      "Are our morals just shaped by culture?",
+      "Would you sacrifice one to save many?",
+      "Can justice exist without forgiveness?",
+      "Does power always corrupt?",
+      "Is freedom or equality more important?",
+      "How should we treat those who deeply disagree with us?",
+      "Should you obey a law you believe is wrong?",
+      "What do you hope happens when you die?",
+      "If heaven exists, who gets in?",
+      "Would immortality be a blessing or a curse?",
+      "Can someone be good without believing in an afterlife?"
+    ];
+
     const firebaseConfig = {
       apiKey: "AIzaSyCKy1KVoLdTH_nwpYVr8u_CT5e0hjBpFOc",
       authDomain: "truth-b65cd.firebaseapp.com",
@@ -95,6 +137,19 @@
     const params = new URLSearchParams(window.location.search);
     const roomId = params.get('roomId');
     let jitsiApi = null;
+
+    function shuffleQuestion() {
+      const question = questions[Math.floor(Math.random() * questions.length)];
+      db.ref(`rooms/${roomId}/currentQuestion`).set(question);
+    }
+
+    function loadTopicListener() {
+      const topicEl = document.getElementById('topicDisplay');
+      db.ref(`rooms/${roomId}/currentQuestion`).on('value', snap => {
+        const val = snap.val();
+        topicEl.textContent = "Topic of the Moment: " + (val || "(waiting...)");
+      });
+    }
 
     function applyBackgroundGradient(colorList) {
       if (colorList.length === 0) return;
@@ -191,6 +246,7 @@
 
       await initParticipants();
       initJitsi(username);
+      loadTopicListener();
 
       window.addEventListener('beforeunload', async () => {
         try {
@@ -207,3 +263,4 @@
   </script>
 </body>
 </html>
+  
