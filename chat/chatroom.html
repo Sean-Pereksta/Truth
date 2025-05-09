@@ -4,12 +4,33 @@
   <meta charset="UTF-8" />
   <title>Interbelief Chat Room</title>
   <style>
-    body { font-family: sans-serif; max-width: 800px; margin: auto; }
-    #jitsi-container { width: 100%; height: 400px; margin-top: 1em; }
-    ul { list-style: none; padding: 0; }
-    li { padding: 0.5em; border-bottom: 1px solid #ddd; }
-    .mic-indicator { margin-left: 0.5em; }
-    button { padding: 0.5em 1em; margin-top: 1em; }
+    body {
+      font-family: sans-serif;
+      max-width: 800px;
+      margin: auto;
+      background-attachment: fixed;
+      transition: background 1s;
+    }
+    #jitsi-container {
+      width: 100%;
+      height: 400px;
+      margin-top: 1em;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      padding: 0.5em;
+      border-bottom: 1px solid #ddd;
+    }
+    .mic-indicator {
+      margin-left: 0.5em;
+    }
+    button {
+      padding: 0.5em 1em;
+      margin-top: 1em;
+    }
   </style>
 </head>
 <body>
@@ -28,7 +49,34 @@
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
   <script>
-    // Firebase config
+    const beliefEmojis = {
+      Christian: "♱️",
+      Catholic: "⛪",
+      Muslim: "☪",
+      Hindu: "🖉️",
+      Jewish: "✡️",
+      Buddhist: "☸️",
+      Sikh: "☬",
+      Atheist: "🚫",
+      Agnostic: "❓",
+      Deist: "🌆",
+      Any: "🌐"
+    };
+
+    const beliefColors = {
+      Christian: "#7b4fff",
+      Catholic: "#ff5555",
+      Muslim: "#3aa655",
+      Hindu: "#ffa500",
+      Jewish: "#1e90ff",
+      Buddhist: "#f5c518",
+      Sikh: "#8b008b",
+      Atheist: "#aaaaaa",
+      Agnostic: "#cccccc",
+      Deist: "#ffd700",
+      Any: "#ffffff"
+    };
+
     const firebaseConfig = {
       apiKey: "AIzaSyCKy1KVoLdTH_nwpYVr8u_CT5e0hjBpFOc",
       authDomain: "truth-b65cd.firebaseapp.com",
@@ -48,7 +96,13 @@
     const roomId = params.get('roomId');
     let jitsiApi = null;
 
-    // Leave and clean up room
+    function applyBackgroundGradient(colorList) {
+      if (colorList.length === 0) return;
+      const unique = [...new Set(colorList)];
+      const gradient = `linear-gradient(135deg, ${unique.join(', ')})`;
+      document.body.style.background = gradient;
+    }
+
     async function leaveRoom() {
       if (currentUser) {
         await db.ref(`rooms/${roomId}/members/${currentUser.uid}`).remove();
@@ -60,22 +114,30 @@
       window.location.href = '../index.html';
     }
 
-    // Display participants
     async function initParticipants() {
       const listEl = document.getElementById('participant-list');
       listEl.innerHTML = '';
       const membersSnap = await db.ref(`rooms/${roomId}/members`).once('value');
-      membersSnap.forEach(async child => {
-        const uid = child.key;
-        const prof = (await db.ref(`members/${uid}`).once('value')).val();
+      const colors = [];
+
+      for (const uid in membersSnap.val() || {}) {
+        const profSnap = await db.ref(`members/${uid}`).once('value');
+        const prof = profSnap.val();
+        const emoji = beliefEmojis[prof.belief] || '👤';
+
         const li = document.createElement('li');
         li.id = `participant-${uid}`;
-        li.textContent = prof.username;
+        li.textContent = `${emoji} ${prof.username}`;
         listEl.appendChild(li);
-      });
+
+        if (beliefColors[prof.belief]) {
+          colors.push(beliefColors[prof.belief]);
+        }
+      }
+
+      applyBackgroundGradient(colors);
     }
 
-    // Initialize Jitsi
     function initJitsi(displayName) {
       const domain = 'meet.jit.si';
       const options = {
@@ -97,7 +159,7 @@
 
       jitsiApi.addEventListener('participantJoined', ({ id, displayName }) => {
         document.querySelectorAll('#participant-list li').forEach(li => {
-          if (li.textContent === displayName) {
+          if (li.textContent.includes(displayName)) {
             li.setAttribute('data-jitsi-id', id);
           }
         });
@@ -120,7 +182,6 @@
       });
     }
 
-    // On auth, setup participant and cleanup logic
     auth.onAuthStateChanged(async user => {
       if (!user) return leaveRoom();
       currentUser = user;
@@ -131,7 +192,6 @@
       await initParticipants();
       initJitsi(username);
 
-      // Auto-remove user on tab close
       window.addEventListener('beforeunload', async () => {
         try {
           await db.ref(`rooms/${roomId}/members/${currentUser.uid}`).remove();
