@@ -1,241 +1,157 @@
-<!-- index.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Interbelief Chat Lobby</title>
+  <title>Shared Budget Tracker</title>
   <style>
-    body { font-family: sans-serif; max-width: 800px; margin: auto; }
-    fieldset { margin: 1em 0; }
-    ul { list-style: none; padding: 0; }
-    li { padding: .5em; border: 1px solid #ddd; margin-bottom: .5em; }
-    button { margin-left: .5em; }
-    .member-count { font-weight: bold; }
+    body { font-family: sans-serif; margin: 20px; }
+    .over-budget { color: red; font-weight: bold; }
+    .log-item { margin-bottom: 4px; }
+    .groceries { color: green; }
+    .dining { color: orange; }
+    .shopping { color: blue; }
   </style>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
 <body>
+  <h2>Shared Budget Tracker</h2>
 
-  <h1>Interbelief Chat</h1>
+  <label>Who:</label>
+  <select id="who">
+    <option value="Sean">Sean</option>
+    <option value="McKenna">McKenna</option>
+  </select><br><br>
 
-  <!-- SIGN-UP / LOGIN UI -->
-  <fieldset id="auth-fieldset">
-    <legend>Account</legend>
+  <label>Category:</label>
+  <select id="category">
+    <option value="groceries">Groceries</option>
+    <option value="dining">Dining Out</option>
+    <option value="shopping">Shopping</option>
+  </select><br><br>
 
-    <button onclick="toggleSignup()">Create Account</button>
-    <div id="signup-ui" style="display:none; margin-top:1em;">
-      <h3>Sign Up</h3>
-      <input id="su-username" type="text" placeholder="Username" /><br/>
-      <input id="su-email" type="email" placeholder="Email" /><br/>
-      <input id="su-pass"  type="password" placeholder="Password" /><br/>
-      <button onclick="signUp()">Submit</button>
-    </div>
+  <label>Amount:</label>
+  <input type="number" id="amount" /><br><br>
 
-    <hr/>
+  <button onclick="addExpense()">Add Expense</button>
 
-    <div id="login-ui">
-      <h3>Log In</h3>
-      <input id="li-email" type="email" placeholder="Email" /><br/>
-      <input id="li-pass"  type="password" placeholder="Password" /><br/>
-      <button onclick="signIn()">Log In</button>
-    </div>
+  <h3>Remaining Monthly Budget</h3>
+  <div id="monthlySummary"></div>
 
-    <div id="user-info" style="display:none;">
-      Logged in as <strong id="user-username"></strong>
-      (<span id="user-email"></span>)
-      <button onclick="signOut()">Sign Out</button>
-    </div>
-  </fieldset>
+  <h3>Remaining Yearly Budget</h3>
+  <div id="yearlySummary"></div>
 
-  <!-- ROOM CREATION & LISTING -->
-  <fieldset id="room-fieldset" style="display:none;">
-    <legend>Room Dashboard</legend>
+  <h3>Expenses (<span id="filterLabel">All</span>)</h3>
+  <button onclick="filterByType('all')">All</button>
+  <button onclick="filterByType('groceries')">Groceries</button>
+  <button onclick="filterByType('dining')">Dining Out</button>
+  <button onclick="filterByType('shopping')">Shopping</button>
+  <ul id="expenseList"></ul>
 
-    <h3>Create a Room</h3>
-    <input id="room-name" type="text" placeholder="Lobby Name" /><br/>
-    <label for="room-target">Looking for:</label>
-    <select id="room-target">
-      <option value="Any">🌐 Any</option>
-      <option value="Christian">✝️ Christian</option>
-      <option value="Catholic">⛪ Catholic</option>
-      <option value="Muslim">☪️ Muslim</option>
-      <option value="Hindu">🕉️ Hindu</option>
-      <option value="Jewish">✡️ Jewish</option>
-      <option value="Buddhist">☸️ Buddhist</option>
-      <option value="Sikh">☬ Sikh</option>
-      <option value="Atheist">🚫 Atheist</option>
-      <option value="Agnostic">❓ Agnostic</option>
-      <option value="Deist">🔆 Deist</option>
-    </select>
-    <label for="room-cap">Capacity:</label>
-    <input id="room-cap" type="number" min="2" max="20" value="4" style="width:4em;" />
-    <button onclick="createRoom()">Create</button>
-
-    <h3>Available Rooms</h3>
-    <ul id="room-list"></ul>
-  </fieldset>
-
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
   <script>
-    // CONFIG
     const firebaseConfig = {
-      apiKey: "AIzaSyCKy1KVoLdTH_nwpYVr8u_CT5e0hjBpFOc",
-      authDomain: "truth-b65cd.firebaseapp.com",
-      databaseURL: "https://truth-b65cd-default-rtdb.firebaseio.com",
-      projectId: "truth-b65cd",
-      storageBucket: "truth-b65cd.firebasestorage.app",
-      messagingSenderId: "11180463959",
-      appId: "1:11180463959:web:e860d37bdbf8e245e25012",
-      measurementId: "G-HPYS4F4MYJ"
+      apiKey: "AIzaSyB7twY7z31ucB6pGA8JC_HrVMZhA8lNaJA",
+      authDomain: "bible-game-246c0.firebaseapp.com",
+      databaseURL: "https://bible-game-246c0-default-rtdb.firebaseio.com",
+      projectId: "bible-game-246c0",
+      storageBucket: "bible-game-246c0.appspot.com",
+      messagingSenderId: "959619818996",
+      appId: "1:959619818996:web:5a9fbf492e23c765e445a1"
     };
+
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db   = firebase.database();
-    let currentUser = null;
+    const db = firebase.database();
+    const expenseRef = db.ref("expenses");
 
-    function toggleSignup() {
-      const ui = document.getElementById('signup-ui');
-      ui.style.display = ui.style.display === 'none' ? 'block' : 'none';
+    const budgets = {
+      groceries: 500,
+      dining: 180,
+      shopping: 125
+    };
+
+    function getCurrentMonth() {
+      const now = new Date();
+      return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     }
 
-    function signUp() {
-      const username = document.getElementById('su-username').value;
-      const email    = document.getElementById('su-email').value;
-      const pass     = document.getElementById('su-pass').value;
-      auth.createUserWithEmailAndPassword(email, pass)
-        .then(({ user }) => db.ref(`members/${user.uid}`).set({ username }))
-        .catch(err => alert(err.message));
+    function addExpense() {
+      const who = document.getElementById("who").value;
+      const category = document.getElementById("category").value;
+      const amount = parseFloat(document.getElementById("amount").value);
+      const month = getCurrentMonth();
+      if (!amount || amount <= 0) return alert("Enter a valid amount");
+      const expense = { who, category, amount, month, timestamp: Date.now() };
+      expenseRef.push(expense);
     }
 
-    function signIn() {
-      const email = document.getElementById('li-email').value;
-      const pass  = document.getElementById('li-pass').value;
-      auth.signInWithEmailAndPassword(email, pass)
-        .catch(err => alert(err.message));
+    function filterByType(type) {
+      document.getElementById("filterLabel").innerText = type === "all" ? "All" : type;
+      loadExpenses(type);
     }
 
-    function signOut() {
-      auth.signOut();
-    }
-
-    auth.onAuthStateChanged(async user => {
-      currentUser = user;
-      document.getElementById('signup-ui').style.display    = 'none';
-      document.getElementById('login-ui').style.display     = user ? 'none' : '';
-      document.getElementById('user-info').style.display    = user ? '' : 'none';
-      document.getElementById('room-fieldset').style.display = user ? '' : 'none';
-      if (!user) return;
-
-      const snap    = await db.ref(`members/${user.uid}`).once('value');
-      const profile = snap.val();
-      document.getElementById('user-username').textContent = profile.username;
-      document.getElementById('user-email').textContent    = user.email;
-
-      loadRooms(profile.username);
-    });
-
-    async function createRoom() {
-      if (!auth.currentUser) {
-        alert('You must be logged in to create a room.');
-        return;
+    function deleteExpense(key) {
+      if (confirm("Delete this expense?")) {
+        db.ref("expenses/" + key).remove();
       }
-      const name     = document.getElementById('room-name').value.trim() || 'Untitled';
-      const target   = document.getElementById('room-target').value;
-      const capacity = +document.getElementById('room-cap').value;
-      const roomRef  = db.ref('rooms').push();
-      await roomRef.set({
-        name,
-        host: auth.currentUser.uid,
-        targetBelief: target,
-        capacity,
-        members: { [auth.currentUser.uid]: true },
-        started: false,
-        createdAt: firebase.database.ServerValue.TIMESTAMP
-      });
-      loadRooms();
     }
 
-    async function loadRooms(myBelief) {
-      const listEl = document.getElementById('room-list');
-      listEl.innerHTML = '';
-      const snap = await db.ref('rooms').once('value');
-      const rooms = [];
-      const now = Date.now();
+    function editExpense(key, oldData) {
+      const newAmount = prompt("Enter new amount:", oldData.amount);
+      if (newAmount && !isNaN(newAmount)) {
+        db.ref("expenses/" + key).update({ amount: parseFloat(newAmount) });
+      }
+    }
 
-      snap.forEach(child => {
-        const r = child.val();
-        r.id = child.key;
-        r.memberCount = r.members ? Object.keys(r.members).length : 0;
-        // auto-cleanup
-        if (r.memberCount === 0 || (!r.started && now - r.createdAt > 10*60*1000)) {
-          db.ref(`rooms/${r.id}`).remove();
-          return;
-        }
-        rooms.push(r);
-      });
+    function loadExpenses(filter = "all") {
+      expenseRef.orderByChild("timestamp").once("value", snapshot => {
+        const list = document.getElementById("expenseList");
+        list.innerHTML = "";
 
-      rooms.sort((a, b) => {
-        const aPref = (a.targetBelief === myBelief || a.targetBelief === 'Any') ? 0 : 1;
-        const bPref = (b.targetBelief === myBelief || b.targetBelief === 'Any') ? 0 : 1;
-        return aPref - bPref || (a.createdAt - b.createdAt);
-      });
-           rooms.forEach(r => {
-        const li = document.createElement('li');
-        li.innerHTML = `
-          <strong>${r.name}</strong><br/>
-          Host: ${r.host}<br/>
-          Looking for: ${r.targetBelief}<br/>
-          <span class="member-count">${r.memberCount}/${r.capacity}</span><br/>
-          <ul class="member-list" id="members-${r.id}"></ul>
-        `;
+        const currentMonth = getCurrentMonth();
+        const totals = { groceries: 0, dining: 0, shopping: 0 };
+        const yearlyTotals = { groceries: 0, dining: 0, shopping: 0 };
+        const year = new Date().getFullYear();
 
-        // Live update usernames
-        db.ref(`rooms/${r.id}/members`).on('value', async snapM => {
-          const ul = li.querySelector(`#members-${r.id}`);
-          ul.innerHTML = '';
-          const uids = Object.keys(snapM.val() || {});
-          for (const uid of uids) {
-            const userSnap = await db.ref(`members/${uid}`).once('value');
-            const liMember = document.createElement('li');
-            liMember.textContent = userSnap.val()?.username || 'Unknown';
-            ul.appendChild(liMember);
+        snapshot.forEach(child => {
+          const data = child.val();
+          const key = child.key;
+
+          if (data.month.startsWith(year)) {
+            yearlyTotals[data.category] += data.amount;
+            if (data.month === currentMonth) {
+              totals[data.category] += data.amount;
+            }
+
+            if (filter === "all" || data.category === filter) {
+              const li = document.createElement("li");
+              li.className = `log-item ${data.category}`;
+              li.innerHTML = `${data.who} spent $${data.amount.toFixed(2)} on ${data.category} (${data.month}) ` +
+                `<button onclick="editExpense('${key}', ${JSON.stringify(data)})">✏️</button>` +
+                ` <button onclick="deleteExpense('${key}')">🗑️</button>`;
+              list.appendChild(li);
+            }
           }
-          li.querySelector('.member-count').textContent = `${uids.length}/${r.capacity}`;
         });
 
-        if (r.host === auth.currentUser.uid) {
-          const btn = document.createElement('button');
-          btn.textContent = r.started ? 'Enter Chat' : 'Start Room';
-          btn.onclick = () => startRoom(r.id);
-          li.appendChild(btn);
-        } else if (!r.started) {
-          const btn = document.createElement('button');
-          btn.textContent = 'Join';
-          btn.onclick = () => joinRoom(r.id);
-          li.appendChild(btn);
-        } else {
-          const btn = document.createElement('button');
-          btn.textContent = 'Enter Chat';
-          btn.onclick = () => window.location.href = `Truth/chat/chatroom.html?roomId=${r.id}`;
-          li.appendChild(btn);
+        const monthlySummary = document.getElementById("monthlySummary");
+        monthlySummary.innerHTML = "";
+        for (let cat in budgets) {
+          const remaining = budgets[cat] - totals[cat];
+          const over = remaining < 0 ? " over-budget" : "";
+          monthlySummary.innerHTML += `<p class="${cat}${over}">${cat.charAt(0).toUpperCase() + cat.slice(1)}: $${remaining.toFixed(2)} left this month</p>`;
         }
 
-        listEl.appendChild(li);
+        const yearlySummary = document.getElementById("yearlySummary");
+        yearlySummary.innerHTML = "";
+        for (let cat in budgets) {
+          const yearlyLimit = budgets[cat] * 12;
+          const remaining = yearlyLimit - yearlyTotals[cat];
+          yearlySummary.innerHTML += `<p class="${cat}">${cat.charAt(0).toUpperCase() + cat.slice(1)}: $${remaining.toFixed(2)} left this year</p>`;
+        }
       });
     }
 
-    async function joinRoom(roomId) {
-      await db.ref(`rooms/${roomId}/members/${auth.currentUser.uid}`).set(true);
-      window.location.href = "/Truth/chat/chatroom.html?roomId=" + roomId;
-
-    }
-
-    async function startRoom(roomId) {
-      await db.ref(`rooms/${roomId}`).update({ started: true });
-     window.location.href = "/Truth/chat/chatroom.html?roomId=" + roomId;
-    }
+    loadExpenses();
   </script>
 </body>
 </html>
+
