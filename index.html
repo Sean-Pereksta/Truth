@@ -3,15 +3,29 @@
 <head>
   <title>Shared Budget Tracker</title>
   <style>
-    body { font-family: sans-serif; margin: 20px; }
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+      background: linear-gradient(to bottom right, #fce4ec, #e3f2fd);
+    }
     .over-budget { color: red; font-weight: bold; }
     .log-item { margin-bottom: 4px; }
     .groceries { color: green; }
     .dining { color: orange; }
     .shopping { color: blue; }
+    select, input, button {
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin: 5px 0;
+    }
+    button { background: #d1c4e9; cursor: pointer; }
+    button:hover { background: #b39ddb; }
+    canvas { background: white; margin-top: 20px; }
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <h2>Shared Budget Tracker</h2>
@@ -47,15 +61,19 @@
   <button onclick="filterByType('shopping')">Shopping</button>
   <ul id="expenseList"></ul>
 
+  <h3>📊 Monthly Spending per User</h3>
+  <canvas id="userChart" width="400" height="200"></canvas>
+
   <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyB7twY7z31ucB6pGA8JC_HrVMZhA8lNaJA",
-      authDomain: "bible-game-246c0.firebaseapp.com",
-      databaseURL: "https://bible-game-246c0-default-rtdb.firebaseio.com",
-      projectId: "bible-game-246c0",
-      storageBucket: "bible-game-246c0.appspot.com",
-      messagingSenderId: "959619818996",
-      appId: "1:959619818996:web:5a9fbf492e23c765e445a1"
+      apiKey: "AIzaSyCKy1KVoLdTH_nwpYVr8u_CT5e0hjBpFOc",
+      authDomain: "truth-b65cd.firebaseapp.com",
+      databaseURL: "https://truth-b65cd-default-rtdb.firebaseio.com",
+      projectId: "truth-b65cd",
+      storageBucket: "truth-b65cd.firebasestorage.app",
+      messagingSenderId: "11180463959",
+      appId: "1:11180463959:web:e860d37bdbf8e245e25012",
+      measurementId: "G-HPYS4F4MYJ"
     };
 
     firebase.initializeApp(firebaseConfig);
@@ -109,6 +127,7 @@
         const currentMonth = getCurrentMonth();
         const totals = { groceries: 0, dining: 0, shopping: 0 };
         const yearlyTotals = { groceries: 0, dining: 0, shopping: 0 };
+        const userTotals = { Sean: 0, McKenna: 0 };
         const year = new Date().getFullYear();
 
         snapshot.forEach(child => {
@@ -119,6 +138,7 @@
             yearlyTotals[data.category] += data.amount;
             if (data.month === currentMonth) {
               totals[data.category] += data.amount;
+              userTotals[data.who] += data.amount;
             }
 
             if (filter === "all" || data.category === filter) {
@@ -147,6 +167,33 @@
           const remaining = yearlyLimit - yearlyTotals[cat];
           yearlySummary.innerHTML += `<p class="${cat}">${cat.charAt(0).toUpperCase() + cat.slice(1)}: $${remaining.toFixed(2)} left this year</p>`;
         }
+
+        renderChart(userTotals);
+      });
+    }
+
+    function renderChart(userTotals) {
+      const ctx = document.getElementById('userChart').getContext('2d');
+      if (window.userChart) window.userChart.destroy();
+      window.userChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(userTotals),
+          datasets: [{
+            label: 'Total Spent This Month',
+            data: Object.values(userTotals),
+            backgroundColor: ['#ce93d8', '#90caf9']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
       });
     }
 
@@ -154,4 +201,5 @@
   </script>
 </body>
 </html>
+
 
