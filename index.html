@@ -5,8 +5,30 @@
   <style>
     body {
       font-family: sans-serif;
-      margin: 20px;
+      margin: 0;
       background: linear-gradient(to bottom right, #fce4ec, #e3f2fd);
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+    }
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .left-pane {
+      flex: 1;
+      padding: 10px;
+    }
+    .center-pane {
+      flex: 1;
+      padding: 10px;
+    }
+    .right-pane {
+      flex: 1;
+      padding: 10px;
     }
     .over-budget { color: red; font-weight: bold; }
     .log-item { margin-bottom: 4px; }
@@ -22,47 +44,53 @@
     button { background: #d1c4e9; cursor: pointer; }
     button:hover { background: #b39ddb; }
     canvas { background: white; margin-top: 20px; }
+    .tabs button {
+      margin-right: 5px;
+      padding: 6px 10px;
+    }
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <h2>Shared Budget Tracker</h2>
+  <div class="container">
+    <div class="top-row">
+      <div class="left-pane">
+        <div class="tabs">
+          <button onclick="selectUser('Sean')">Sean</button>
+          <button onclick="selectUser('McKenna')">McKenna</button>
+        </div>
+        <label>Category:</label>
+        <select id="category">
+          <option value="groceries">Groceries</option>
+          <option value="dining">Dining Out</option>
+          <option value="shopping">Shopping</option>
+        </select><br>
 
-  <label>Who:</label>
-  <select id="who">
-    <option value="Sean">Sean</option>
-    <option value="McKenna">McKenna</option>
-  </select><br><br>
+        <label>Amount:</label><br>
+        <input type="number" id="amount" /><br>
 
-  <label>Category:</label>
-  <select id="category">
-    <option value="groceries">Groceries</option>
-    <option value="dining">Dining Out</option>
-    <option value="shopping">Shopping</option>
-  </select><br><br>
+        <button onclick="addExpense()">Add Expense</button>
+      </div>
 
-  <label>Amount:</label>
-  <input type="number" id="amount" /><br><br>
+      <div class="center-pane">
+        <h3>Monthly & Yearly Budget</h3>
+        <div id="monthlySummary"></div>
+        <div id="yearlySummary"></div>
+        <canvas id="userChart" width="300" height="200"></canvas>
+      </div>
 
-  <button onclick="addExpense()">Add Expense</button>
-
-  <h3>Remaining Monthly Budget</h3>
-  <div id="monthlySummary"></div>
-
-  <h3>Remaining Yearly Budget</h3>
-  <div id="yearlySummary"></div>
-
-  <h3>Expenses (<span id="filterLabel">All</span>)</h3>
-  <button onclick="filterByType('all')">All</button>
-  <button onclick="filterByType('groceries')">Groceries</button>
-  <button onclick="filterByType('dining')">Dining Out</button>
-  <button onclick="filterByType('shopping')">Shopping</button>
-  <ul id="expenseList"></ul>
-
-  <h3>📊 Monthly Spending per User</h3>
-  <canvas id="userChart" width="400" height="200"></canvas>
+      <div class="right-pane">
+        <h3>Expenses (<span id="filterLabel">All</span>)</h3>
+        <button onclick="filterByType('all')">All</button>
+        <button onclick="filterByType('groceries')">Groceries</button>
+        <button onclick="filterByType('dining')">Dining Out</button>
+        <button onclick="filterByType('shopping')">Shopping</button>
+        <ul id="expenseList"></ul>
+      </div>
+    </div>
+  </div>
 
   <script>
     const firebaseConfig = {
@@ -79,6 +107,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const expenseRef = db.ref("expenses");
+    let selectedUser = "Sean";
 
     const budgets = {
       groceries: 500,
@@ -91,13 +120,16 @@
       return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     }
 
+    function selectUser(user) {
+      selectedUser = user;
+    }
+
     function addExpense() {
-      const who = document.getElementById("who").value;
       const category = document.getElementById("category").value;
       const amount = parseFloat(document.getElementById("amount").value);
       const month = getCurrentMonth();
       if (!amount || amount <= 0) return alert("Enter a valid amount");
-      const expense = { who, category, amount, month, timestamp: Date.now() };
+      const expense = { who: selectedUser, category, amount, month, timestamp: Date.now() };
       expenseRef.push(expense);
     }
 
@@ -201,5 +233,4 @@
   </script>
 </body>
 </html>
-
 
