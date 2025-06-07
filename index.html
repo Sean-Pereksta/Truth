@@ -166,7 +166,12 @@
         const currentMonth = getCurrentMonth();
         const totals = { groceries: 0, dining: 0, shopping: 0 };
         const yearlyTotals = { groceries: 0, dining: 0, shopping: 0 };
-        const userTotals = { Sean: 0, McKenna: 0 };
+        const userTotalsByCategory = {
+  groceries: { Sean: 0, McKenna: 0 },
+  dining: { Sean: 0, McKenna: 0 },
+  shopping: { Sean: 0, McKenna: 0 }
+};
+
         const year = new Date().getFullYear();
 
         snapshot.forEach(child => {
@@ -176,9 +181,12 @@
           if (data.month.startsWith(year)) {
             yearlyTotals[data.category] += data.amount;
             if (data.month === currentMonth) {
-              totals[data.category] += data.amount;
-              userTotals[data.who] += data.amount;
-            }
+  totals[data.category] += data.amount;
+  if (userTotalsByCategory[data.category]) {
+    userTotalsByCategory[data.category][data.who] += data.amount;
+  }
+}
+
 
             if (filter === "all" || data.category === filter) {
               const li = document.createElement("li");
@@ -207,34 +215,66 @@
           yearlySummary.innerHTML += `<p class="${cat}">${cat.charAt(0).toUpperCase() + cat.slice(1)}: $${remaining.toFixed(2)} left this year</p>`;
         }
 
-        renderChart(userTotals);
+        renderChart(userTotalsByCategory);
       });
     }
 
-    function renderChart(userTotals) {
-      const ctx = document.getElementById('userChart').getContext('2d');
-      if (userChart) userChart.destroy();
-      userChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: Object.keys(userTotals),
-          datasets: [{
-            label: 'Total Spent This Month',
-            data: Object.values(userTotals),
-            backgroundColor: ['#ce93d8', '#90caf9']
-          }]
+   function renderChart(userTotalsByCategory) {
+  const ctx = document.getElementById('userChart').getContext('2d');
+  if (userChart) userChart.destroy();
+
+  const categories = ["groceries", "dining", "shopping"];
+  const budgetsArr = categories.map(cat => budgets[cat]);
+
+  const seanData = categories.map(cat => userTotalsByCategory[cat]?.Sean || 0);
+  const mckennaData = categories.map(cat => userTotalsByCategory[cat]?.McKenna || 0);
+
+  userChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: categories.map(c => c.charAt(0).toUpperCase() + c.slice(1)),
+      datasets: [
+        {
+          label: 'Sean',
+          data: seanData,
+          backgroundColor: '#90caf9'
         },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            y: { beginAtZero: true }
-          }
+        {
+          label: 'McKenna',
+          data: mckennaData,
+          backgroundColor: '#f48fb1'
+        },
+        {
+          label: 'Remaining Budget',
+          data: budgetsArr.map((b, i) => Math.max(0, b - seanData[i] - mckennaData[i])),
+          backgroundColor: '#e0e0e0',
+          stack: 'background',
+          hidden: true
         }
-      });
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        tooltip: { mode: 'index', intersect: false },
+        title: { display: true, text: 'Spending per Category' }
+      },
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      scales: {
+        x: { stacked: true },
+        y: {
+          beginAtZero: true,
+          stacked: true,
+          max: Math.max(...budgetsArr) + 50
+        }
+      }
     }
+  });
+}
+
 
     loadExpenses();
   </script>
