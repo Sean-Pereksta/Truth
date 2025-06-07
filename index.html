@@ -16,37 +16,32 @@
     .top-row {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
+      gap: 10px;
+      flex-wrap: wrap;
     }
-    .left-pane {
+    .pane {
       flex: 1;
-      padding: 10px;
-    }
-    .center-pane {
-      flex: 1;
-      padding: 10px;
-    }
-    .right-pane {
-      flex: 1;
-      padding: 10px;
+      min-width: 280px;
     }
     .over-budget { color: red; font-weight: bold; }
-    .log-item { margin-bottom: 4px; }
+    .log-item { margin-bottom: 4px; font-size: 14px; }
     .groceries { color: green; }
     .dining { color: orange; }
     .shopping { color: blue; }
     select, input, button {
-      padding: 8px;
+      padding: 6px;
       border-radius: 6px;
       border: 1px solid #ccc;
       margin: 5px 0;
+      font-size: 14px;
     }
     button { background: #d1c4e9; cursor: pointer; }
     button:hover { background: #b39ddb; }
-    canvas { background: white; margin-top: 20px; }
+    canvas { background: white; max-width: 100%; }
     .tabs button {
       margin-right: 5px;
-      padding: 6px 10px;
+      padding: 4px 8px;
+      font-size: 14px;
     }
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -56,42 +51,36 @@
 <body>
   <div class="container">
     <div class="top-row">
-      <div class="left-pane">
+      <div class="pane">
         <div class="tabs">
           <button onclick="selectUser('Sean')">Sean</button>
           <button onclick="selectUser('McKenna')">McKenna</button>
         </div>
-        <label>Category:</label>
         <select id="category">
           <option value="groceries">Groceries</option>
           <option value="dining">Dining Out</option>
           <option value="shopping">Shopping</option>
         </select><br>
-
-        <label>Amount:</label><br>
-        <input type="number" id="amount" /><br>
-
+        <input type="number" id="amount" placeholder="Amount"/><br>
         <button onclick="addExpense()">Add Expense</button>
+        <canvas id="userChart"></canvas>
       </div>
-
-      <div class="center-pane">
-        <h3>Monthly & Yearly Budget</h3>
+      <div class="pane">
+        <h4>Monthly Budget</h4>
         <div id="monthlySummary"></div>
+        <h4>Yearly Budget</h4>
         <div id="yearlySummary"></div>
-        <canvas id="userChart" width="300" height="200"></canvas>
       </div>
-
-      <div class="right-pane">
-        <h3>Expenses (<span id="filterLabel">All</span>)</h3>
+      <div class="pane">
+        <h4>Expenses (<span id="filterLabel">All</span>)</h4>
         <button onclick="filterByType('all')">All</button>
         <button onclick="filterByType('groceries')">Groceries</button>
-        <button onclick="filterByType('dining')">Dining Out</button>
+        <button onclick="filterByType('dining')">Dining</button>
         <button onclick="filterByType('shopping')">Shopping</button>
         <ul id="expenseList"></ul>
       </div>
     </div>
   </div>
-
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCKy1KVoLdTH_nwpYVr8u_CT5e0hjBpFOc",
@@ -108,6 +97,7 @@
     const db = firebase.database();
     const expenseRef = db.ref("expenses");
     let selectedUser = "Sean";
+    let userChart = null;
 
     const budgets = {
       groceries: 500,
@@ -130,7 +120,7 @@
       const month = getCurrentMonth();
       if (!amount || amount <= 0) return alert("Enter a valid amount");
       const expense = { who: selectedUser, category, amount, month, timestamp: Date.now() };
-      expenseRef.push(expense);
+      expenseRef.push(expense).then(() => loadExpenses());
     }
 
     function filterByType(type) {
@@ -140,14 +130,14 @@
 
     function deleteExpense(key) {
       if (confirm("Delete this expense?")) {
-        db.ref("expenses/" + key).remove();
+        db.ref("expenses/" + key).remove().then(() => loadExpenses());
       }
     }
 
     function editExpense(key, oldData) {
       const newAmount = prompt("Enter new amount:", oldData.amount);
       if (newAmount && !isNaN(newAmount)) {
-        db.ref("expenses/" + key).update({ amount: parseFloat(newAmount) });
+        db.ref("expenses/" + key).update({ amount: parseFloat(newAmount) }).then(() => loadExpenses());
       }
     }
 
@@ -206,8 +196,8 @@
 
     function renderChart(userTotals) {
       const ctx = document.getElementById('userChart').getContext('2d');
-      if (window.userChart) window.userChart.destroy();
-      window.userChart = new Chart(ctx, {
+      if (userChart) userChart.destroy();
+      userChart = new Chart(ctx, {
         type: 'bar',
         data: {
           labels: Object.keys(userTotals),
@@ -233,4 +223,5 @@
   </script>
 </body>
 </html>
+
 
