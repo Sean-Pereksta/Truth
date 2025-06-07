@@ -2,12 +2,13 @@
 <html>
 <head>
   <title>Shared Budget Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      font-family: sans-serif;
-      margin: 0;
-      background: linear-gradient(to bottom right, #fce4ec, #e3f2fd);
-    }
+   body {
+  font-family: sans-serif;
+  margin: 0;
+  background: #e0f0ff; /* Light blue default for Sean */
+}
     .container {
       display: flex;
       flex-direction: column;
@@ -23,6 +24,14 @@
       flex: 1;
       min-width: 280px;
     }
+    @media (max-width: 768px) {
+      .top-row {
+        flex-direction: column;
+      }
+      .pane {
+        min-width: 100%;
+      }
+    }
     .over-budget { color: red; font-weight: bold; }
     .log-item { margin-bottom: 4px; font-size: 14px; }
     .groceries { color: green; }
@@ -34,6 +43,8 @@
       border: 1px solid #ccc;
       margin: 5px 0;
       font-size: 14px;
+      width: 100%;
+      box-sizing: border-box;
     }
     button { background: #d1c4e9; cursor: pointer; }
     button:hover { background: #b39ddb; }
@@ -60,8 +71,8 @@
           <option value="groceries">Groceries</option>
           <option value="dining">Dining Out</option>
           <option value="shopping">Shopping</option>
-        </select><br>
-        <input type="number" id="amount" placeholder="Amount"/><br>
+        </select>
+        <input type="number" id="amount" placeholder="Amount"/>
         <button onclick="addExpense()">Add Expense</button>
         <canvas id="userChart"></canvas>
       </div>
@@ -111,8 +122,14 @@
     }
 
     function selectUser(user) {
-      selectedUser = user;
-    }
+  selectedUser = user;
+  if (user === "McKenna") {
+    document.body.style.background = "#ffe4ec"; // light pink
+  } else if (user === "Sean") {
+    document.body.style.background = "#e0f0ff"; // light blue
+  }
+}
+
 
     function addExpense() {
       const category = document.getElementById("category").value;
