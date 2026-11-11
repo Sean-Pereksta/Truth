@@ -1,0 +1,38 @@
+WESTBRIDGE / TEXTURED HUMAN CHARACTER SOURCES
+
+Characters: Nova, Sky and Kai by VTubeMe
+https://vtubeme.com/free-vrm-avatars/nova
+https://vtubeme.com/free-vrm-avatars/sky
+https://vtubeme.com/free-vrm-avatars/kai
+https://vtubeme.com/media/free/nova/model.glb
+https://vtubeme.com/media/free/sky/model.glb
+https://vtubeme.com/media/free/kai/model.glb
+
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+The creator's model page expressly permits personal/commercial use,
+modification and redistribution with credit and a link to vtubeme.com.
+Source and terms checked November 10, 2026.
+
+Changes made for this game:
+- Embedded original model, photographic maps, full skeleton and facial morphs for offline play.
+- Converted surface shaders to standard PBR materials for the mall's moving lights.
+- Added three restrained garment-color variants while preserving the photographed face and hair.
+- Added articulated idle, walk, panic-running and grab-struggle movements from the original bind pose.
+- Added small blink and open-mouth expression animation using the original facial morphs.
+- Normalized the contained character to approximately 1.85 meters.
+
+Suggested concise game credit (include source and license links):
+Nova, Sky and Kai characters by VTubeMe (https://vtubeme.com), CC BY 4.0.
+https://vtubeme.com/free-vrm-avatars/nova
+Modified garment shades, lighting materials and skeletal movement for this game.
+
+Graphics helpers:
+Official three.js r160 GLTFLoader, SkeletonUtils and BufferGeometryUtils.
+https://github.com/mrdoob/three.js/blob/r160/examples/jsm/loaders/GLTFLoader.js
+https://github.com/mrdoob/three.js/blob/r160/examples/jsm/utils/SkeletonUtils.js
+https://github.com/mrdoob/three.js/blob/r160/examples/jsm/utils/BufferGeometryUtils.js
+Copyright 2010-2023 three.js authors. MIT license, included in THREE-LICENSE.txt.
+
+Previous Michelle, Soldier, HVGirl, Big Vegas and Ch14 investigations are working
+references only. They are not included in the final current character bundle.

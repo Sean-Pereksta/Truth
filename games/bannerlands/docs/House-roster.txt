@@ -1,0 +1,189 @@
+BANNERLANDS — THE SIXTEEN HOUSES
+
+MANUAL RALLY POINTS
+Newly trained and paid troops start beside their recruitment building and defend it until you set a rally point.
+Click one of your buildings to select it. Shift-click adds or removes buildings. Press R, or click All buildings, to select every owned building.
+Right-click land to set a rally for the selected buildings, or click Set rally point and then left-click land. Esc or right-click cancels placement.
+Each building keeps its own rally. Selecting all with R and setting a rally also sets the default for buildings constructed later. A local override changes only the selected buildings.
+Clear rally makes future recruits defend those buildings again; clearing with all buildings selected also clears the future-building default.
+Moving, conquering, expanding, holding, retreating and attacking with your army never change rally points.
+Selected buildings show their rally flags and routes. Rally changes affect future recruits; troops already marching keep their current orders.
+
+SELECTED ABILITIES AND THE WAR TABLE
+Selecting eligible troops shows their active house power with E, readiness and cooldown. Automatic specialist effects are labeled Automatic; spear braces show Hold H.
+The right sidebar keeps the minimap visible below independently scrolling commands. Detailed explanations remain in tooltips, Council house details and the handbook.
+
+CAVALRY CHARGES
+Give cavalry a Conquer or Attack order with roughly three clear tiles for a straight run-up. Charges deal impact damage, throw exposed enemies backward and sideways, and carry riders through several ranks while momentum lasts.
+Tyrell Thorn Lancers, trained at Garden Stables, hit harder, scatter unbraced enemies farther and retain more momentum through a formation.
+Bolton Dread Pikes and Frey Bridge Wardens are dedicated spearmen. Hold them still with H for about half a second, facing the approach, to stop a frontal charge and retaliate. The brace keeps its facing: moving, flanked or rear-attacked spearmen cannot stop the charge. Living braced spears can also stop Thorn Lancers.
+Other houses must deny the run-up, use forests and fortifications, focus missile fire, flank the cavalry or surround riders after momentum is spent. Ordinary swordsmen can resist impact but do not copy the spearwall hard stop. Stark held infantry still benefits from its knockback resistance.
+Move and Hold orders do not initiate a combat charge. Pull riders out and regroup before charging again. Terrain, collisions and exhausted momentum interrupt the run-up.
+
+
+500 LEVEL PROGRESSION AND SLOWER INCOME
+Weapons, armor and Royal treasury each have 500 upgrade levels for every house.
+Weapons add 2% of base damage per level. Armor adds 2% of base troop health per level. These bonuses add together rather than multiplying at every purchase: level 1 gives +2%, level 100 gives +200% (3 times base), and level 500 gives +1,000% (11 times base).
+Armor upgrades preserve a wounded soldier's percentage of remaining health. Existing soldiers and newly recruited troops receive the same maximum health; fallen troops do not return through an upgrade.
+
+Royal treasury has diminishing returns: its total income bonus is 12% multiplied by the square root of the level. Level 1 gives +12% income; level 100 gives +120%; level 500 gives about +268.3%, or 3.683 times the income before Treasury. Each extra level adds less income than the one before it.
+
+Upgrade prices increase more steeply with every level. Before house penalties, the next purchase costs 200 + 160 times your current level + 8 times your current level squared.
+  Purchase level 1: 200 gold.
+  Purchase level 2: 368 gold.
+  Purchase level 10: 2,288 gold.
+  Purchase level 100: 94,448 gold.
+  Purchase level 500: 2,072,048 gold.
+House Tully pays 15% more for weapons upgrades. Free Folk armor now reaches level 500 and costs 20% more gold, replacing its old level-1 restriction. The Council shows the current level, the next price, and the current and next total bonuses.
+
+Conquering more land raises income much more slowly. Rich highlands and completed Bannerlands still help, but give diminishing gains instead of a large increase for every Bannerland. An example 49-tile start now earns about 5.28 gold per second instead of 16.4. A sample realm with 5,000 owned tiles earns about 13.1 per second instead of 285, before Treasury upgrades; exact income depends on terrain and completed Bannerlands.
+Even owning the whole Continent produces only about 16.8 gold per second before Treasury in the sample realm, or about 62 at Treasury level 500. Starting armies, gold and territory remain equal between houses. Rivals pay the same upgrade prices, use the same income rules, and can progress beyond the former low upgrade limit.
+
+HOUSE TROOPS, MOVEMENT AND CASTLES
+Each of the 16 houses has its own specialist troop, production structure, and painted castle appearance. Common troop types remain available, and all houses still start with 70 soldiers, 700 gold and 49 owned tiles.
+Build your house's specialist structure to train its troops automatically and unlock paid specialist companies in Muster. Paid specialist recruitment requires a surviving structure of that exact type. You cannot build or recruit another house's specialists.
+Specialist troops use army supply; their buildings use normal structure slots. Displayed company costs and sizes include house bonuses and weaknesses. The automatic company sizes and training times below are base values before house modifiers.
+Player and rival AI houses use the same movement, recruitment, specialist effects and castle features. Castle artwork does not add starting health.
+Each specialist has its own painted animation sheet, with four walking poses and four attack poses. All artwork is included in the offline game.
+
+AUTOMATIC SPECIALIST EFFECTS
+These effects happen automatically when their stated conditions are met. Holding a formation and building a real cavalry charge matter for several specialists; there is no extra ability button to press.
+Guard auras protect nearby allies without adding their reductions together; only the strongest applicable guard applies. Repeated slow or poison hits refresh their duration rather than multiplying their strength, and weaker poison cannot replace stronger poison. Shock, snares, slows, poison and temporary fury expire after their listed durations.
+Sweeps and piercing shots have a limited number of targets. Their extra hits do not start further sweeps or an endless chain of bolts. River healing is limited for each recipient, so surrounding one soldier with healers cannot bypass its four-second recovery limit.
+Dragonfire Acolytes throw fire pots, Dune Skirmishers throw javelins, and Beacon Engineers launch piercing ballista bolts. Fire zones, charged strikes, guard protection and timed conditions also have their own battle cues.
+Enemy specialist hits and damaging poison or fire interrupt continuous expansion when they actually damage a member of that expansion party. Simply seeing an enemy does not stop it. After an interruption, select the troops and press T again to resume expansion.
+
+HOUSE STARK
+  Specialist: Winter Guard — Frontline infantry.
+  Battlefield effect — Winter Bulwark: While holding, protects other allies within 1.6 tiles from 20% of melee and charge damage. Guard auras do not stack.
+  Production: Winter Hall (360 gold); automatically trains 3 every 34 seconds before bonuses.
+  Castle: Winterfell — distinct house architecture and colors.
+  Movement: Infantry moves 12% faster on owned land.
+  Recruitment: Winter Halls within 6 tiles of your keep train 15% faster.
+
+HOUSE LANNISTER
+  Specialist: Gilded Crossbows — Ranged fighters.
+  Battlefield effect — Gilded Bolts: Crossbow hits deal 35% more damage to troops whose house has armor upgrades.
+  Production: Mercenary Guild (380 gold); automatically trains 3 every 36 seconds before bonuses.
+  Castle: Casterly Rock — distinct house architecture and colors.
+  Movement: Move orders march 12% faster.
+  Recruitment: Paid Gilded Crossbow companies cost 15% less and muster at the guild nearest your rally.
+
+HOUSE TARGARYEN
+  Specialist: Dragonfire Acolytes — Bombardment troops.
+  Battlefield effect — Dragonfire Pots: Impacts leave a larger 1.2-tile fire zone for 4 seconds, dealing 8 weapon-scaled damage per second. Overlapping fire never stacks.
+  Production: Dragonfire Foundry (440 gold); automatically trains 1 every 48 seconds before bonuses.
+  Castle: Dragonstone — distinct house architecture and colors.
+  Movement: Troops within 4 tiles of their commander move 10% faster.
+  Recruitment: Dragonfire Foundries train 15% faster after your first weapons upgrade.
+
+HOUSE BARATHEON
+  Specialist: Storm Riders — Shock cavalry.
+  Battlefield effect — Storm Shock: A genuine charge impact shocks surviving enemies for 0.65 seconds, briefly stopping attacks and nearly stopping movement.
+  Production: Storm Paddock (420 gold); automatically trains 2 every 42 seconds before bonuses.
+  Castle: Storm’s End — distinct house architecture and colors.
+  Movement: Cavalry moves 12% faster outside forests.
+  Recruitment: Paid Storm Rider companies gain 1 rider while you own a regular stables.
+
+HOUSE TYRELL
+  Specialist: Thorn Lancers — Shock cavalry.
+  Battlefield effect — Thorn Breakthrough: Charges hit 20% harder, throw unbraced troops 30% farther and retain more momentum through multiple ranks. Held infantry takes 25% extra impact damage. Living, braced spears still stop a frontal charge.
+  Production: Garden Stables (390 gold); automatically trains 2 every 38 seconds before bonuses.
+  Castle: Highgarden — distinct house architecture and colors.
+  Movement: Troops move 10% faster on owned land.
+  Recruitment: Paid Thorn Lancer companies gain 1 rider at 3 completed Bannerlands.
+
+HOUSE MARTELL
+  Specialist: Dune Skirmishers — Ranged fighters.
+  Battlefield effect — Hamstring Javelins: Javelin hits slow surviving enemy troops by 25% for 2 seconds. Repeated hits refresh the duration without stacking.
+  Production: Sunspear Yard (350 gold); automatically trains 3 every 32 seconds before bonuses.
+  Castle: Sunspear — distinct house architecture and colors.
+  Movement: Troops move 15% faster on open grassland.
+  Recruitment: Paid Dune Skirmisher companies cost 15% less once you own 100 tiles.
+
+HOUSE GREYJOY
+  Specialist: Ironborn Reavers — Frontline infantry.
+  Battlefield effect — Pillage: Melee attacks deal 50% more building damage. Destroying an enemy building awards 15 gold once per building.
+  Production: Raider Longhall (360 gold); automatically trains 3 every 34 seconds before bonuses.
+  Castle: Pyke — distinct house architecture and colors.
+  Movement: Troops move 15% faster on enemy territory.
+  Recruitment: Paid Ironborn Reavers earn a 1% discount per house kill, up to 20%.
+
+HOUSE ARRYN
+  Specialist: Vale Sentinels — Ranged fighters.
+  Battlefield effect — Falcon Overwatch: While holding, gains 1 tile of range and deals 30% more damage to cavalry.
+  Production: Falcon Roost (400 gold); automatically trains 3 every 39 seconds before bonuses.
+  Castle: The Eyrie — distinct house architecture and colors.
+  Movement: Troops move 18% faster on hills.
+  Recruitment: Falcon Roosts train 15% faster while at least 2 watchtowers survive.
+
+HOUSE BOLTON
+  Specialist: Dread Pikes — Spearmen.
+  Battlefield effect — Hooked Pike Brace: After holding still for 0.45 seconds, living Dread Pikes stop frontal cavalry charges, retaliate and snare riders for 0.9 seconds. Flank, rear and moving pikes cannot brace.
+  Production: Dreadfort Yard (370 gold); automatically trains 3 every 35 seconds before bonuses.
+  Castle: The Dreadfort — distinct house architecture and colors.
+  Movement: Attack-ordered troops above half health move 10% faster.
+  Recruitment: Paid Dread Pike companies gain 1 soldier while your army is below half supply.
+
+HOUSE FREY
+  Specialist: Bridge Wardens — Spearmen.
+  Battlefield effect — Spearwall: After holding still for 0.45 seconds, living Bridge Wardens stop frontal cavalry charges and retaliate. While holding, protect nearby allies from 15% of direct hit damage; only the strongest guard aura applies. Flank or outmaneuver their spears.
+  Production: Twin Guardhouse (350 gold); automatically trains 3 every 34 seconds before bonuses.
+  Castle: The Twins — distinct house architecture and colors.
+  Movement: Troops within 4 tiles of a production building move 12% faster.
+  Recruitment: Paid Bridge Wardens split between the 2 nearest Twin Guardhouses when both survive.
+
+HOUSE MORMONT
+  Specialist: Bear Maulers — Frontline infantry.
+  Battlefield effect — Mauling Sweep: Every third melee swing cleaves up to 2 nearby enemies for 40% damage and knocks them aside.
+  Production: Bear Lodge (390 gold); automatically trains 2 every 40 seconds before bonuses.
+  Castle: Bear Island — distinct house architecture and colors.
+  Movement: Troops within 3 tiles of their commander move 14% faster.
+  Recruitment: Bear Lodges within 4 tiles of a living commander train 20% faster.
+
+HOUSE TULLY
+  Specialist: River Rangers — Ranged fighters.
+  Battlefield effect — River Mending: Every 4 seconds, heals the most wounded ally within 3 tiles for 6% of maximum health. Each ally can receive this healing only once per 4 seconds.
+  Production: Riverside Lodge (370 gold); automatically trains 3 every 35 seconds before bonuses.
+  Castle: Riverrun — distinct house architecture and colors.
+  Movement: Troops within 4 tiles of a keep or watchtower move 12% faster.
+  Recruitment: Riverside Lodges within 4 tiles of a keep or watchtower train 15% faster.
+
+HOUSE REED
+  Specialist: Crannog Hunters — Ranged fighters.
+  Battlefield effect — Crannog Toxins: Arrow hits poison troops for 3 seconds, dealing 5 weapon-scaled damage per second. Poison does not stack and weaker toxins cannot replace stronger ones.
+  Production: Marsh Hideout (330 gold); automatically trains 3 every 32 seconds before bonuses.
+  Castle: Greywater Watch — distinct house architecture and colors.
+  Movement: Troops move 20% faster in forests.
+  Recruitment: Marsh Hideouts built in forests train 20% faster.
+
+HOUSE HIGHTOWER
+  Specialist: Beacon Engineers — Bombardment troops.
+  Battlefield effect — Piercing Ballista: Bolts pierce up to 3 enemies in a narrow line, losing 30% damage per target. Buildings take triple damage.
+  Production: Engineers College (460 gold); automatically trains 1 every 50 seconds before bonuses.
+  Castle: The Hightower — distinct house architecture and colors.
+  Movement: Siege troops move 14% faster.
+  Recruitment: Paid Beacon Engineer companies cost 15% less while 2 regular siege workshops survive.
+
+HOUSE TARLY
+  Specialist: Hill Huntsmen — Ranged fighters.
+  Battlefield effect — Hunter’s Finish: Arrow hits deal 40% more damage to enemy troops below 35% health.
+  Production: Huntsman Lodge (390 gold); automatically trains 3 every 38 seconds before bonuses.
+  Castle: Horn Hill — distinct house architecture and colors.
+  Movement: Infantry and archers in Line formation move 12% faster.
+  Recruitment: Huntsman Lodges train 15% faster after both weapons and armor reach level 1.
+
+FREE FOLK
+  Specialist: Free Folk Berserkers — Frontline infantry.
+  Battlefield effect — Blood Fury: Below 40% health, gains 30% melee damage and 15% movement speed. A melee kill sustains this fury for 4 seconds without stacking.
+  Production: Warband Camp (300 gold); automatically trains 4 every 32 seconds before bonuses.
+  Castle: Free Folk Stronghold — distinct house architecture and colors.
+  Movement: Troops move 15% faster in forests and hills.
+  Recruitment: Paid Berserker companies gain 2 additional warriors while you own fewer than 100 tiles.
+
+
+QUICK ORDERS
+U: Muster. B: Build. C: Council.
+Muster Shift+5: your specialist company. Build Shift+6: its production structure.
+Council Shift+1: house power; Shift+2: weapons; Shift+3: armor; Shift+4: Treasury; Shift+5: house guide.
+Q: select your army. T: continuously expand nearby land until given another order or attacked.

@@ -1,0 +1,13 @@
+BANNERLANDS - DRAWN CAPITAL, WATCHTOWER AND FLAG ATLAS
+
+campaign-structures.png contains nine separate painted sprites:
+Top row: Town Hall I, Fortified Keep II, Royal Citadel III.
+Middle row: Frontier Watchtower I, Stone Watchtower II, Royal Tower III.
+Bottom row: Neutral Standard, Battle Standard, Royal Standard.
+
+Each level is an original distinct drawing. The game imports transparent sprite
+frames and colors their blue heraldic cloth for each faction. The final offline
+HTML embeds this atlas; it does not request external artwork.
+
+Artwork created using the built-in image generation tool.
+The original production prompt is recorded in campaign-art-prompt.txt.

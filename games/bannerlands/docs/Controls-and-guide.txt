@@ -1,0 +1,561 @@
+ADAPTIVE BOT PRODUCTION
+Bots plan their production network as part of their invasion strategy. They compare
+barracks, archery ranges, stables, siege works, house specialist buildings and defenses
+instead of following a fixed building rotation. Army shortages, enemy troop types,
+existing training speed, income and territory influence what they choose next.
+They can build multiple useful facilities of the same type, replace destroyed ones,
+and grow larger networks when the economy and army demand support them.
+Bots save for a chosen building, place it on safe owned ground, and use the same
+gold costs, land-based structure limit and army supply rules as the player.
+Near full army supply they stop adding unnecessary training capacity. During capital
+emergencies they prioritize defenders. Production is no longer held behind two town
+hall upgrades or the old fifteen-building ceiling.
+The house roster shows what each bot is building or saving for; hover for its reason.
+
+MOUSE CAMERA MOVEMENT
+Move the mouse to any battlefield edge to pan the camera. Corners pan diagonally.
+Move toward the center or onto the sidebar to stop. The closer you are to the edge,
+the faster the view moves. This also works while paused. Right/middle dragging and
+arrow keys remain available. Edge scrolling stops during drags, menus and dialogs.
+
+DRAWN ARTWORK AND UPGRADEABLE WATCHTOWERS
+This package includes nine new painted sprites: three distinct capital levels,
+three distinct watchtower levels, and neutral, battle and royal capture flags.
+Buildings use their own level artwork on the battlefield and in their portraits.
+Blue cloth and roofs take your faction/team colors. All artwork is embedded in
+the offline game and also included as a transparent PNG atlas in Source/dist/assets.
+The generation prompt is included beside the atlas in campaign-art-prompt.txt.
+
+Click one of YOUR watchtowers to select it, then use Upgrade tower in the sidebar.
+Level 1 Watchtower:    1,150 health, 25 base damage, 4.6 range.
+Level 2 Guard Tower:  2,000 health, 38 base damage, 5.2 range; costs 250 gold.
+Level 3 Royal Bastion:3,200 health, 55 base damage, 5.9 range; costs 450 gold.
+Upgrades preserve the tower's percentage of health remaining. Weapons upgrades
+and House Arryn's Falcon Guard combine with the tower's improved values.
+Bots also upgrade their watchtowers using the same prices and rules.
+
+BANNERLANDS - STRATEGIES, STANDARDS AND ALLIANCES
+
+Open Bannerlands.html to play offline. Start a new campaign to use the new rules.
+
+SIX GAME MODES
+Capital Conquest: destroy every rival capital.
+Bannerfall: first side to capture 5 standards wins; destroying all rival capitals also wins.
+Dominion: hold 65% of the realm after 90 seconds, or destroy all rival capitals.
+Each mode has a team version. Choose 2v2, 3 paired teams, up to 8 paired teams.
+You have one allied bot; opposing houses are paired into their own alliances.
+Allies share a main team color, with lighter shades identifying individual houses.
+Allies do not damage each other or steal one another's land. Their forces support
+each other's territorial captures, flag control and capital defense.
+
+TOWN HALLS - YOUR CAPITAL IS YOUR LIFELINE
+Level 1 Town Hall:       2,500 health, 24 base damage, 5.5 range.
+Level 2 Fortified Keep:  4,500 health, 36 base damage, 6.2 range; costs 500 gold.
+Level 3 Royal Citadel:   7,500 health, 52 base damage, 7.0 range; costs 950 gold.
+Open Council and use Upgrade Town Hall. The portrait and battlefield artwork grow
+through three levels, adding fortified walls, towers and animated banners.
+Upgrades preserve the percentage of health remaining. Ordinary weapons upgrades
+also improve capital firepower. Bots buy the same upgrades with their own gold.
+When a capital is destroyed, its entire faction's troops, buildings and territory
+are wiped immediately. If YOUR capital falls, you lose even if your ally survives.
+Protect it and answer allied calls for defense.
+
+CAPTURE STANDARDS - AVAILABLE IN EVERY MODE
+There are three physical flags on the battlefield. Click an objective in the
+Standards panel to locate it. Its highlighted area has a radius of 4 map cells.
+Have at least 90% of all living troops inside that area to advance your hold timer.
+In a team mode, both allied armies count together. Exactly 90% is sufficient.
+Hold for 30 accumulated seconds to secure the standard. Contested or empty time
+FREEZES your progress; it never erases it. A rival tracks its own saved time.
+Each successful capture awards eight Royal Guard specialist troops at your capital:
+50% extra health and 35% extra weapon damage, plus each house's specialist effects.
+Allied houses split the eight troops. The reward arrives even at full supply;
+ordinary recruitment waits until there is space again. Royal Guard display gold stars.
+The captured flag rearms for 20 seconds. The winner's hold timer resets; other
+sides retain their saved time. Bannerfall counts captures toward a five-flag win.
+In Conquest and Dominion, captures provide reinforcements without ending the game.
+
+STRATEGIC RIVALS
+Five distinct plans appear in the house roster:
+Grand host: gather a large force and invade as one army.
+Flanking raiders: fast, smaller waves take side routes toward exposed production.
+Siege column: gather artillery and escorts to break defended capitals.
+Bastion & counterattack: stronger home guard, fortifications and patient counterattacks.
+Banner guard: prioritize standards and hold their capture areas.
+Bots score targets by distance, guards, towers, damaged buildings, territory and
+nearby threats rather than always choosing the nearest house. They recruit for
+their plan and counter nearby hostile troop types. They muster recruits at home,
+keep reserves, retreat wounded soldiers and regroup between committed waves.
+Small scouting parties expand separately; new recruits do not trickle into an invasion.
+
+COORDINATED TEAM ORDERS
+In a team campaign, use Call assault or Call defense, then click the battlefield.
+Assault: bots gather for 8 seconds before launching toward the chosen position.
+Defense: allied bots respond immediately to protect the selected position.
+Calls appear on the battlefield, minimap and Alliance Orders panel.
+An assault call lasts up to 100 seconds; a defense call lasts 45 seconds.
+Bots also request help for threatened allied capitals and call joint offensives.
+They retain home guards and prioritize emergencies at their own capital.
+Your calls direct allied bots; your own soldiers continue to follow your orders.
+Esc or right-click cancels placing a call.
+
+Existing troop selection, building rally points, formations, house powers,
+specialist production, expansion and 500-level upgrades remain available.
+
+
+EXISTING CONTROLS AND HOUSE GUIDE
+
+BANNERLANDS — THE WAR OF CROWNS
+
+Play the self-contained Bannerlands.html by double-clicking it. All troop, structure and terrain artwork is embedded, so it works offline without installation.
+
+Source version: run `node server.mjs`, then open http://127.0.0.1:4173. Source requires Node; the standalone game does not.
+
+COMMAND YOUR ARMY
+Drag to select soldiers. Shift-click/drag adds to the selection.
+Right-click ground to force selected troops to move immediately, overriding combat and charge orders. They can defend again after reaching the destination.
+Left-click empty ground uses your selected Conquer/Move mode. A gives the attack-nearest order.
+Conquer orders fight enemies and secure connected grid spaces along the route.
+Move orders march directly. Hold defends the current position. Retreat returns to your keep.
+Q selects your entire army; F selects and centers your commander.
+H holds; V retreats; R selects all buildings; X switches Conquer/Move.
+E activates your house's signature power on the selected troops. The always-visible House power button shows readiness; Council explains its effects and cost.
+A attack-moves the selected soldiers toward their nearest living enemy unit or structure, engaging enemies along the way. The Attack nearest button gives the same order.
+Ctrl+1 through Ctrl+5 saves a company; 1 through 5 recalls one.
+Use Line, Wedge, or Spread to position troops. Spread limits artillery losses.
+
+MANUAL RALLY POINTS
+Newly trained and paid troops start beside their recruitment building and defend it until you set a rally point.
+Click one of your buildings to select it. Shift-click adds or removes buildings. Press R, or click All buildings, to select every owned building.
+Right-click land to set a rally for the selected buildings, or click Set rally point and then left-click land. Esc or right-click cancels placement.
+Each building keeps its own rally. Selecting all with R and setting a rally also sets the default for buildings constructed later. A local override changes only the selected buildings.
+Clear rally makes future recruits defend those buildings again; clearing with all buildings selected also clears the future-building default.
+Moving, conquering, expanding, holding, retreating and attacking with your army never change rally points.
+Selected buildings show their rally flags and routes. Rally changes affect future recruits; troops already marching keep their current orders.
+
+SELECTED ABILITIES AND THE WAR TABLE
+Selecting eligible troops shows their active house power with E, readiness and cooldown. Automatic specialist effects are labeled Automatic; spear braces show Hold H.
+The right sidebar keeps the minimap visible below independently scrolling commands. Detailed explanations remain in tooltips, Council house details and the handbook.
+
+CONTINUOUS NEARBY EXPANSION
+Select troops and press T, or click Expand nearby in Battle Orders.
+They capture nearby land connected to your territory, then choose more nearby tiles automatically. They spread across the frontier and keep going without repeated clicks.
+If no connected frontier is available, they wait and check again.
+Move, Conquer, Attack nearest, Hold, or Retreat replaces expansion for the troops receiving that new order.
+An enemy attack stops the expansion party and makes it hold to defend. It does not automatically resume after combat; select the troops and press T again.
+Troops separately assigned to another expansion party keep their own orders.
+The button shows how many selected troops are expanding. You can issue the order while paused.
+
+500 LEVEL PROGRESSION AND SLOWER INCOME
+Weapons, armor and Royal treasury each have 500 upgrade levels for every house.
+Weapons add 2% of base damage per level. Armor adds 2% of base troop health per level. These bonuses add together rather than multiplying at every purchase: level 1 gives +2%, level 100 gives +200% (3 times base), and level 500 gives +1,000% (11 times base).
+Armor upgrades preserve a wounded soldier's percentage of remaining health. Existing soldiers and newly recruited troops receive the same maximum health; fallen troops do not return through an upgrade.
+
+Royal treasury has diminishing returns: its total income bonus is 12% multiplied by the square root of the level. Level 1 gives +12% income; level 100 gives +120%; level 500 gives about +268.3%, or 3.683 times the income before Treasury. Each extra level adds less income than the one before it.
+
+Upgrade prices increase more steeply with every level. Before house penalties, the next purchase costs 200 + 160 times your current level + 8 times your current level squared.
+  Purchase level 1: 200 gold.
+  Purchase level 2: 368 gold.
+  Purchase level 10: 2,288 gold.
+  Purchase level 100: 94,448 gold.
+  Purchase level 500: 2,072,048 gold.
+House Tully pays 15% more for weapons upgrades. Free Folk armor now reaches level 500 and costs 20% more gold, replacing its old level-1 restriction. The Council shows the current level, the next price, and the current and next total bonuses.
+
+Conquering more land raises income much more slowly. Rich highlands and completed Bannerlands still help, but give diminishing gains instead of a large increase for every Bannerland. An example 49-tile start now earns about 5.28 gold per second instead of 16.4. A sample realm with 5,000 owned tiles earns about 13.1 per second instead of 285, before Treasury upgrades; exact income depends on terrain and completed Bannerlands.
+Even owning the whole Continent produces only about 16.8 gold per second before Treasury in the sample realm, or about 62 at Treasury level 500. Starting armies, gold and territory remain equal between houses. Rivals pay the same upgrade prices, use the same income rules, and can progress beyond the former low upgrade limit.
+
+HOUSE TROOPS, MOVEMENT AND CASTLES
+Each of the 16 houses has its own specialist troop, production structure, and painted castle appearance. Common troop types remain available, and all houses still start with 70 soldiers, 700 gold and 49 owned tiles.
+Build your house's specialist structure to train its troops automatically and unlock paid specialist companies in Muster. Paid specialist recruitment requires a surviving structure of that exact type. You cannot build or recruit another house's specialists.
+Specialist troops use army supply; their buildings use normal structure slots. Displayed company costs and sizes include house bonuses and weaknesses. The automatic company sizes and training times below are base values before house modifiers.
+Player and rival AI houses use the same movement, recruitment, specialist effects and castle features. Castle artwork does not add starting health.
+Each specialist has its own painted animation sheet, with four walking poses and four attack poses. All artwork is included in the offline game.
+
+AUTOMATIC SPECIALIST EFFECTS
+These effects happen automatically when their stated conditions are met. Holding a formation and building a real cavalry charge matter for several specialists; there is no extra ability button to press.
+Guard auras protect nearby allies without adding their reductions together; only the strongest applicable guard applies. Repeated slow or poison hits refresh their duration rather than multiplying their strength, and weaker poison cannot replace stronger poison. Shock, snares, slows, poison and temporary fury expire after their listed durations.
+Sweeps and piercing shots have a limited number of targets. Their extra hits do not start further sweeps or an endless chain of bolts. River healing is limited for each recipient, so surrounding one soldier with healers cannot bypass its four-second recovery limit.
+Dragonfire Acolytes throw fire pots, Dune Skirmishers throw javelins, and Beacon Engineers launch piercing ballista bolts. Fire zones, charged strikes, guard protection and timed conditions also have their own battle cues.
+Enemy specialist hits and damaging poison or fire interrupt continuous expansion when they actually damage a member of that expansion party. Simply seeing an enemy does not stop it. After an interruption, select the troops and press T again to resume expansion.
+
+HOUSE STARK
+  Specialist: Winter Guard — Frontline infantry.
+  Battlefield effect — Winter Bulwark: While holding, protects other allies within 1.6 tiles from 20% of melee and charge damage. Guard auras do not stack.
+  Production: Winter Hall (360 gold); automatically trains 3 every 34 seconds before bonuses.
+  Castle: Winterfell — distinct house architecture and colors.
+  Movement: Infantry moves 12% faster on owned land.
+  Recruitment: Winter Halls within 6 tiles of your keep train 15% faster.
+
+HOUSE LANNISTER
+  Specialist: Gilded Crossbows — Ranged fighters.
+  Battlefield effect — Gilded Bolts: Crossbow hits deal 35% more damage to troops whose house has armor upgrades.
+  Production: Mercenary Guild (380 gold); automatically trains 3 every 36 seconds before bonuses.
+  Castle: Casterly Rock — distinct house architecture and colors.
+  Movement: Move orders march 12% faster.
+  Recruitment: Paid Gilded Crossbow companies cost 15% less and muster at the guild nearest your rally.
+
+HOUSE TARGARYEN
+  Specialist: Dragonfire Acolytes — Bombardment troops.
+  Battlefield effect — Dragonfire Pots: Impacts leave a larger 1.2-tile fire zone for 4 seconds, dealing 8 weapon-scaled damage per second. Overlapping fire never stacks.
+  Production: Dragonfire Foundry (440 gold); automatically trains 1 every 48 seconds before bonuses.
+  Castle: Dragonstone — distinct house architecture and colors.
+  Movement: Troops within 4 tiles of their commander move 10% faster.
+  Recruitment: Dragonfire Foundries train 15% faster after your first weapons upgrade.
+
+HOUSE BARATHEON
+  Specialist: Storm Riders — Shock cavalry.
+  Battlefield effect — Storm Shock: A genuine charge impact shocks surviving enemies for 0.65 seconds, briefly stopping attacks and nearly stopping movement.
+  Production: Storm Paddock (420 gold); automatically trains 2 every 42 seconds before bonuses.
+  Castle: Storm’s End — distinct house architecture and colors.
+  Movement: Cavalry moves 12% faster outside forests.
+  Recruitment: Paid Storm Rider companies gain 1 rider while you own a regular stables.
+
+HOUSE TYRELL
+  Specialist: Thorn Lancers — Shock cavalry.
+  Battlefield effect — Thorn Breakthrough: Charges hit 20% harder, throw unbraced troops 30% farther and retain more momentum through multiple ranks. Held infantry takes 25% extra impact damage. Living, braced spears still stop a frontal charge.
+  Production: Garden Stables (390 gold); automatically trains 2 every 38 seconds before bonuses.
+  Castle: Highgarden — distinct house architecture and colors.
+  Movement: Troops move 10% faster on owned land.
+  Recruitment: Paid Thorn Lancer companies gain 1 rider at 3 completed Bannerlands.
+
+HOUSE MARTELL
+  Specialist: Dune Skirmishers — Ranged fighters.
+  Battlefield effect — Hamstring Javelins: Javelin hits slow surviving enemy troops by 25% for 2 seconds. Repeated hits refresh the duration without stacking.
+  Production: Sunspear Yard (350 gold); automatically trains 3 every 32 seconds before bonuses.
+  Castle: Sunspear — distinct house architecture and colors.
+  Movement: Troops move 15% faster on open grassland.
+  Recruitment: Paid Dune Skirmisher companies cost 15% less once you own 100 tiles.
+
+HOUSE GREYJOY
+  Specialist: Ironborn Reavers — Frontline infantry.
+  Battlefield effect — Pillage: Melee attacks deal 50% more building damage. Destroying an enemy building awards 15 gold once per building.
+  Production: Raider Longhall (360 gold); automatically trains 3 every 34 seconds before bonuses.
+  Castle: Pyke — distinct house architecture and colors.
+  Movement: Troops move 15% faster on enemy territory.
+  Recruitment: Paid Ironborn Reavers earn a 1% discount per house kill, up to 20%.
+
+HOUSE ARRYN
+  Specialist: Vale Sentinels — Ranged fighters.
+  Battlefield effect — Falcon Overwatch: While holding, gains 1 tile of range and deals 30% more damage to cavalry.
+  Production: Falcon Roost (400 gold); automatically trains 3 every 39 seconds before bonuses.
+  Castle: The Eyrie — distinct house architecture and colors.
+  Movement: Troops move 18% faster on hills.
+  Recruitment: Falcon Roosts train 15% faster while at least 2 watchtowers survive.
+
+HOUSE BOLTON
+  Specialist: Dread Pikes — Spearmen.
+  Battlefield effect — Hooked Pike Brace: After holding still for 0.45 seconds, living Dread Pikes stop frontal cavalry charges, retaliate and snare riders for 0.9 seconds. Flank, rear and moving pikes cannot brace.
+  Production: Dreadfort Yard (370 gold); automatically trains 3 every 35 seconds before bonuses.
+  Castle: The Dreadfort — distinct house architecture and colors.
+  Movement: Attack-ordered troops above half health move 10% faster.
+  Recruitment: Paid Dread Pike companies gain 1 soldier while your army is below half supply.
+
+HOUSE FREY
+  Specialist: Bridge Wardens — Spearmen.
+  Battlefield effect — Spearwall: After holding still for 0.45 seconds, living Bridge Wardens stop frontal cavalry charges and retaliate. While holding, protect nearby allies from 15% of direct hit damage; only the strongest guard aura applies. Flank or outmaneuver their spears.
+  Production: Twin Guardhouse (350 gold); automatically trains 3 every 34 seconds before bonuses.
+  Castle: The Twins — distinct house architecture and colors.
+  Movement: Troops within 4 tiles of a production building move 12% faster.
+  Recruitment: Paid Bridge Wardens split between the 2 nearest Twin Guardhouses when both survive.
+
+HOUSE MORMONT
+  Specialist: Bear Maulers — Frontline infantry.
+  Battlefield effect — Mauling Sweep: Every third melee swing cleaves up to 2 nearby enemies for 40% damage and knocks them aside.
+  Production: Bear Lodge (390 gold); automatically trains 2 every 40 seconds before bonuses.
+  Castle: Bear Island — distinct house architecture and colors.
+  Movement: Troops within 3 tiles of their commander move 14% faster.
+  Recruitment: Bear Lodges within 4 tiles of a living commander train 20% faster.
+
+HOUSE TULLY
+  Specialist: River Rangers — Ranged fighters.
+  Battlefield effect — River Mending: Every 4 seconds, heals the most wounded ally within 3 tiles for 6% of maximum health. Each ally can receive this healing only once per 4 seconds.
+  Production: Riverside Lodge (370 gold); automatically trains 3 every 35 seconds before bonuses.
+  Castle: Riverrun — distinct house architecture and colors.
+  Movement: Troops within 4 tiles of a keep or watchtower move 12% faster.
+  Recruitment: Riverside Lodges within 4 tiles of a keep or watchtower train 15% faster.
+
+HOUSE REED
+  Specialist: Crannog Hunters — Ranged fighters.
+  Battlefield effect — Crannog Toxins: Arrow hits poison troops for 3 seconds, dealing 5 weapon-scaled damage per second. Poison does not stack and weaker toxins cannot replace stronger ones.
+  Production: Marsh Hideout (330 gold); automatically trains 3 every 32 seconds before bonuses.
+  Castle: Greywater Watch — distinct house architecture and colors.
+  Movement: Troops move 20% faster in forests.
+  Recruitment: Marsh Hideouts built in forests train 20% faster.
+
+HOUSE HIGHTOWER
+  Specialist: Beacon Engineers — Bombardment troops.
+  Battlefield effect — Piercing Ballista: Bolts pierce up to 3 enemies in a narrow line, losing 30% damage per target. Buildings take triple damage.
+  Production: Engineers College (460 gold); automatically trains 1 every 50 seconds before bonuses.
+  Castle: The Hightower — distinct house architecture and colors.
+  Movement: Siege troops move 14% faster.
+  Recruitment: Paid Beacon Engineer companies cost 15% less while 2 regular siege workshops survive.
+
+HOUSE TARLY
+  Specialist: Hill Huntsmen — Ranged fighters.
+  Battlefield effect — Hunter’s Finish: Arrow hits deal 40% more damage to enemy troops below 35% health.
+  Production: Huntsman Lodge (390 gold); automatically trains 3 every 38 seconds before bonuses.
+  Castle: Horn Hill — distinct house architecture and colors.
+  Movement: Infantry and archers in Line formation move 12% faster.
+  Recruitment: Huntsman Lodges train 15% faster after both weapons and armor reach level 1.
+
+FREE FOLK
+  Specialist: Free Folk Berserkers — Frontline infantry.
+  Battlefield effect — Blood Fury: Below 40% health, gains 30% melee damage and 15% movement speed. A melee kill sustains this fury for 4 seconds without stacking.
+  Production: Warband Camp (300 gold); automatically trains 4 every 32 seconds before bonuses.
+  Castle: Free Folk Stronghold — distinct house architecture and colors.
+  Movement: Troops move 15% faster in forests and hills.
+  Recruitment: Paid Berserker companies gain 2 additional warriors while you own fewer than 100 tiles.
+
+MENU ICONS AND HOTKEYS
+The Build menu shows the actual painted artwork for every building. Common structures take house colors; specialist structures have their own house artwork.
+U opens Muster (unit recruitment). B opens Build. C opens Council.
+Shift + 1 through Shift + 6 activates a labeled item in the currently selected menu. Muster and Council have 5 items; Build has 6.
+Each item displays its shortcut; the up-arrow symbol means Shift.
+
+Muster: Shift+1 swordsmen; Shift+2 archers; Shift+3 cavalry; Shift+4 catapults; Shift+5 your house specialist.
+Build: Shift+1 barracks; Shift+2 archery range; Shift+3 stables; Shift+4 watchtower; Shift+5 siege works; Shift+6 your house specialist production structure. Then click owned land to place the chosen building. Escape or right-click cancels placement; Shift-click places multiple buildings.
+Council: Shift+1 house power; Shift+2 weapons; Shift+3 armor; Shift+4 economy; Shift+5 complete house guide.
+E also activates your house power. Q selects your entire army; F selects your commander.
+1 through 5 still recalls a company; Ctrl+1 through Ctrl+5 still saves a company.
+Menu shortcuts work while paused. Unavailable items cannot be activated, and holding a key does not repeatedly spend gold. Shortcuts are inactive while typing or choosing settings, and while a dialog or campaign menu is open.
+
+CAMERA
+Scroll or use +/− to zoom toward the cursor.
+Right-drag or middle-drag to pan; arrow keys also pan. A is reserved for attacking.
+Tab fits the whole map; Home returns to your keep.
+Click or drag the minimap to navigate. G toggles the grid.
+Touch: pinch to zoom, tap a soldier then a destination; drag to select.
+Space/P pauses. Pause still permits orders and construction for planning.
+The Menu button pauses the campaign and opens its settings. Return to the battlefield resumes your existing war; Start a new conquest starts over with the selected settings.
+
+DIFFICULTY
+Easy gives you more time to expand and prepare.
+Normal combines balanced expansion, defenses, and coordinated attacks.
+Hard reacts quickly and organizes stronger attacks.
+Warlord keeps pressure across multiple fronts.
+Difficulty changes strategic decisions. Starting resources stay equal, while every house keeps its own listed advantages and powers.
+
+CONQUEST
+All houses start with 70 soldiers, 700 gold and equal territory.
+Territory produces income and raises army supply. Capture is connected and contested.
+Infantry counters cavalry, cavalry counters archers, archers counter infantry.
+Catapults bombard groups and inflict heavy building damage. Their area impact knocks nearby troops outward, with damage and push fading near the blast edge.
+Buildings automatically recruit over time. Buy extra companies in Muster.
+
+LAND, STRUCTURES AND BATTLE PACE
+Your house has 16 base structure slots, plus 1 for every 8 owned land tiles.
+The keep and all other living structures count toward this total. There is no fixed ceiling.
+Examples: 49 tiles allow 22 structures; 1,000 allow 141; 8,000 allow 1,016.
+The Build panel shows structures used / available and explains how to unlock more slots.
+Build on owned ground and leave room between structures. Losing territory never removes existing structures; if over capacity, reclaim land or wait until enough structures are lost before building again.
+Rival houses use the same land-based capacity.
+
+Automatic recruitment takes twice as long as before, with the same company sizes:
+  Keep: 3 swordsmen every 18 seconds.
+  Barracks: 4 swordsmen every 18 seconds.
+  Archery range: 4 archers every 24 seconds.
+  Stables: 3 riders every 30 seconds.
+  Siege works: 1 catapult every 50 seconds.
+House training bonuses and weaknesses still modify these base times.
+Paid companies and house-power reinforcements still arrive immediately, within army supply.
+Troops have about 25% more base health: swordsmen 132, archers 80, cavalry 175, catapults 194, commander 800. Armor upgrades scale from these new values. Player and rival troops use the same health.
+Build forward production and watchtowers. Every Council upgrade has 500 levels, with steadily increasing prices; Free Folk armor costs 20% more.
+Your commander returns after 35 seconds while a keep survives.
+Enemies expand in parties, defend their capitals, counter troop mixes, retreat and launch coordinated assaults.
+Difficulty changes decision frequency, not enemy combat statistics.
+Choose Capital Conquest, Bannerfall or Dominion, each with a team version. See the update guide above for victory rules.
+Losing your town hall immediately wipes your faction and ends your campaign.
+
+ARTWORK
+assets/troops-atlas.png is the original transparent sprite sheet for common troops. Each house specialist also has its own sheet in assets/houses/.
+Eight columns by five rows. Rows: infantry, archers, cavalry, catapults, commander.
+Columns 1–4: walk cycle. Columns 5–8: attack cycle.
+The renderer crops actual PNG frames, recolors blue cloth for each house, and mirrors facing.
+Adaptive quality thins scenery and minor effects while retaining individual troop sprites.
+No external asset downloads or connections are needed to play the standalone game.
+
+Your original Desktop HTML file was preserved.
+
+STRUCTURE ARTWORK
+The six original building sprites are retained in assets/structures-atlas.png. House keeps and specialist production buildings use their new dedicated artwork atlases.
+Three columns by two rows: Keep, Barracks, Archery range; Stables, Watchtower, Siege workshop.
+Common roofs and banners take your house colors. New house castles and specialist buildings use their own painted palettes. Flags, torchlight, forge smoke, and damage smoke animate during play.
+All common and house troop, castle, and production-building PNGs are embedded in the self-contained game.
+
+LARGER MAPS AND SAFE STARTS
+Standard: 112 x 96 grid spaces. Epic: 160 x 128. Continent: 224 x 176.
+Starting capitals are at least 24 grid spaces apart. Each house has a reserved mustering field, so opposing armies cannot spawn together.
+All houses still start with 70 soldiers, 700 gold and 49 territory tiles.
+Choose the map in Menu before starting a new conquest. Tab shows the whole map; Home returns to your keep.
+
+TEXTURED TERRAIN
+Real PNG textures cover grassland, leaf-covered forest floor, and rocky highlands.
+Textured pine trees, oak trees and mossy boulders use transparent sprite artwork.
+Forests and uplands form coherent regions. The starting mustering grounds stay clear.
+All terrain artwork is embedded alongside the troop and structure atlases for offline play.
+
+DIFFICULTY
+Easy: slower decisions, cautious expansion, later and smaller assaults.
+Normal: balanced expansion, defense, and coordinated attacks.
+Hard: faster decisions and earlier, larger attacks.
+Warlord: rapid decisions, relentless expansion, and frequent large assaults.
+All four levels use identical starting armies and gold. House advantages apply equally to human and AI houses on every difficulty.
+
+HOUSE STRATEGIES AND POWERS
+Choose a house in the menu to see its operational advantages and signature power. Compare all 16 houses opens the complete guide; rival names also show their advantages on hover.
+Press E or the House power button during a campaign. Council lists the exact cost, cooldown and passive advantages of your house. These same house rules apply to human and AI commanders.
+
+HOUSE STARK — Defensive battle lines
+  BONUSES
+  + Held infantry resists charge knockback by an extra 45%.
+  + Troops holding owned ground recover health 2.5× faster.
+  WEAKNESSES
+  - Cavalry needs 25% more time to prepare a charge.
+  Power: Northern Resolve. Heal your selected soldiers by 16% and strengthen their resolve and recovery for 8 seconds. With no selection, affects your army.
+  Cost: 0 gold. Cooldown: 45 seconds.
+
+HOUSE LANNISTER — Forward mercenary warfare
+  BONUSES
+  + Paid companies muster at the owned building closest to your rally point.
+  + Hire a mixed sellsword company at your forward recruitment post.
+  WEAKNESSES
+  - Automatic recruitment runs 10% slower.
+  Power: Sellsword Contract. Spend 150 gold for 8 swordsmen and 4 archers at the building closest to your rally. Requires 12 free supply.
+  Cost: 150 gold. Cooldown: 45 seconds.
+
+HOUSE TARGARYEN — Siege and area denial
+  BONUSES
+  + Catapult impacts leave burning ground for 3 seconds.
+  + Fire zones damage enemies only; overlapping flames do not stack damage.
+  WEAKNESSES
+  - Paid catapult companies cost 25% more.
+  Power: Firestorm. Burn an enemy position within 8 cells of your selected force for 5 seconds. Select a frontline force to aim the fire.
+  Cost: 0 gold. Cooldown: 55 seconds.
+
+HOUSE BARATHEON — Cavalry shock assaults
+  BONUSES
+  + Cavalry loses 25% less momentum on collision.
+  + Charges push enemies 20% farther.
+  WEAKNESSES
+  - Paid cavalry companies cost 15% more.
+  Power: Storm Charge. For 10 seconds, selected cavalry builds its charge faster and retains more momentum on impact. A real run-up is still required.
+  Cost: 0 gold. Cooldown: 45 seconds.
+
+HOUSE TYRELL — Territory and rapid mustering
+  BONUSES
+  + Each completed Bannerland speeds automatic training by 2%, up to 20%.
+  + Muster extra companies across your production network.
+  WEAKNESSES
+  - Automatic catapult training runs 25% slower.
+  Power: Rapid Muster. Immediately train one company at up to 4 production buildings, within your supply limit.
+  Cost: 0 gold. Cooldown: 60 seconds.
+
+HOUSE MARTELL — Mobile archer skirmishing
+  BONUSES
+  + Attack-ordered archers back away from nearby melee troops while firing.
+  + Venom arrows apply a non-stacking poison and a light slow.
+  WEAKNESSES
+  - Paid infantry companies cost 15% more.
+  Power: Viper Venom. For 10 seconds, selected archers poison enemies hit by their arrows for 4 seconds.
+  Cost: 0 gold. Cooldown: 45 seconds.
+
+HOUSE GREYJOY — Raiding and mobile conquest
+  BONUSES
+  + First capture of each enemy-held tile pays 6 gold; recaptures cannot farm the reward.
+  + Use raiding speed to seize ground without stopping to claim each tile.
+  WEAKNESSES
+  - Passive recovery on owned ground is 50% slower.
+  Power: Reaver's Rush. Selected soldiers move 15% faster and keep marching while capturing for 10 seconds.
+  Cost: 0 gold. Cooldown: 45 seconds.
+
+HOUSE ARRYN — Watchtower garrisons
+  BONUSES
+  + New watchtowers deploy 3 archers, subject to supply.
+  + Watchtowers fire 0.7 cells farther.
+  WEAKNESSES
+  - Paid catapult companies cost 20% more.
+  Power: Falcon Guard. For 10 seconds, your watchtowers gain another 1.2 cells of range and fire 40% faster. Requires a watchtower.
+  Cost: 0 gold. Cooldown: 50 seconds.
+
+HOUSE BOLTON — Sustained infantry assaults
+  BONUSES
+  + Swordsmen recover 8 health when they finish an enemy soldier.
+  + Feed a successful close assault with temporary life-stealing strikes.
+  WEAKNESSES
+  - Paid archer companies cost 20% more.
+  Power: Dread Harvest. For 10 seconds, selected swordsmen recover 25% of the melee damage they inflict.
+  Cost: 0 gold. Cooldown: 50 seconds.
+
+HOUSE FREY — Two-front reinforcement
+  BONUSES
+  + Paid companies split between two recruitment posts nearest the rally.
+  + Muster twin garrisons to reinforce separated fronts.
+  WEAKNESSES
+  - Paid cavalry companies cost 20% more.
+  Power: Twin Garrisons. Spend 200 gold to raise 4 swordsmen and 4 archers at each of two owned buildings. Requires two posts and 16 free supply.
+  Cost: 200 gold. Cooldown: 60 seconds.
+
+HOUSE MORMONT — Commander-led infantry
+  BONUSES
+  + Idle infantry near a commander recovers health faster.
+  + A commander anchors nearby infantry against knockback.
+  WEAKNESSES
+  - All paid reinforcement companies cost 10% more.
+  Power: Bear Guard. For 10 seconds, selected infantry takes 30% less damage and strongly resists knockback.
+  Cost: 0 gold. Cooldown: 50 seconds.
+
+HOUSE TULLY — Interlocking strongholds
+  BONUSES
+  + Idle soldiers near friendly towers and keeps recover health faster.
+  + Repair and resupply a network of forts in one rally.
+  WEAKNESSES
+  - Weapons upgrades cost 15% more.
+  Power: River Renewal. Repair all owned buildings by 18% and heal nearby friendly soldiers by 12%.
+  Cost: 0 gold. Cooldown: 60 seconds.
+
+HOUSE REED — Forest ambushes
+  BONUSES
+  + Archers in forests gain 1 extra cell of range and fire 15% faster.
+  + Use woodland paths for fast, uninterrupted flanking marches.
+  WEAKNESSES
+  - Automatic catapult training runs 20% slower.
+  Power: Hidden Paths. For 12 seconds, selected troops ignore forest penalties, gain 30% forest movement speed, and march through forest capture points without stopping.
+  Cost: 0 gold. Cooldown: 45 seconds.
+
+HOUSE HIGHTOWER — A siege production network
+  BONUSES
+  + Siege workshops train catapults 25% faster.
+  + Call engineers to repair workshops and deploy an extra siege company.
+  WEAKNESSES
+  - Paid cavalry companies cost 20% more.
+  Power: Engineering Corps. Spend 120 gold to deploy 2 catapults at a siege workshop and repair your workshops by 20%. Requires 2 free supply.
+  Cost: 120 gold. Cooldown: 65 seconds.
+
+HOUSE TARLY — Disciplined infantry advances
+  BONUSES
+  + Swordsmen in Line formation attack 15% faster.
+  + Advance and strike without breaking the march.
+  WEAKNESSES
+  - Automatic archer training runs 15% slower.
+  Power: Disciplined Advance. For 10 seconds, selected infantry attacks while advancing along its order and captures without stopping.
+  Cost: 0 gold. Cooldown: 45 seconds.
+
+FREE FOLK — Massed war bands
+  BONUSES
+  + Paid infantry and archer companies contain 2 additional soldiers.
+  + Muster a large war band to overwhelm a front.
+  WEAKNESSES
+  - Armor upgrades cost 20% more.
+  Power: Wild Muster. Spend 150 gold to muster 20 swordsmen at your main recruitment post. Requires 20 free supply.
+  Cost: 150 gold. Cooldown: 60 seconds.
+
+CAVALRY CHARGES
+Give cavalry a Conquer or Attack order with roughly three clear tiles for a straight run-up. Charges deal impact damage, throw exposed enemies backward and sideways, and carry riders through several ranks while momentum lasts.
+Tyrell Thorn Lancers, trained at Garden Stables, hit harder, scatter unbraced enemies farther and retain more momentum through a formation.
+Bolton Dread Pikes and Frey Bridge Wardens are dedicated spearmen. Hold them still with H for about half a second, facing the approach, to stop a frontal charge and retaliate. The brace keeps its facing: moving, flanked or rear-attacked spearmen cannot stop the charge. Living braced spears can also stop Thorn Lancers.
+Other houses must deny the run-up, use forests and fortifications, focus missile fire, flank the cavalry or surround riders after momentum is spent. Ordinary swordsmen can resist impact but do not copy the spearwall hard stop. Stark held infantry still benefits from its knockback resistance.
+Move and Hold orders do not initiate a combat charge. Pull riders out and regroup before charging again. Terrain, collisions and exhausted momentum interrupt the run-up.
+
+
+
+

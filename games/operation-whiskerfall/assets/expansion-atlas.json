@@ -1,0 +1,6594 @@
+{
+  "version": 1,
+  "frameOrder": [
+    "idle",
+    "walkA",
+    "walkB",
+    "windup",
+    "attackA",
+    "attackB",
+    "recovery",
+    "hurt"
+  ],
+  "groups": {
+    "enemyVanguard": [
+      "roller",
+      "blinkstalker",
+      "fencer",
+      "burrowrat"
+    ],
+    "enemyElemental": [
+      "cinderbeast",
+      "venomrat",
+      "frostwarden",
+      "voidknight"
+    ],
+    "cavernGuardians": [
+      "ironrat",
+      "gloamwing",
+      "motherbriar",
+      "hollowking"
+    ],
+    "enemyCoastal": [
+      "harpooner",
+      "bellringer",
+      "shellguard",
+      "tideblade"
+    ],
+    "enemyDeep": [
+      "blackglassReaver",
+      "cinderMortar"
+    ]
+  },
+  "sheets": {
+    "roller": {
+      "path": "assets/enemies/roller.png",
+      "cols": 4,
+      "rows": 2
+    },
+    "blinkstalker": {
+      "path": "assets/enemies/blinkstalker.png",
+      "cols": 4,
+      "rows": 2
+    },
+    "fencer": {
+      "path": "assets/enemies/fencer.png",
+      "cols": 4,
+      "rows": 2
+    },
+    "burrowrat": {
+      "path": "assets/enemies/burrowrat.png",
+      "cols": 4,
+      "rows": 2
+    },
+    "cinderbeast": {
+      "path": "assets/enemies/cinderbeast.png",
+      "cols": 4,
+      "rows": 2
+    },
+    "venomrat": {
+      "path": "assets/enemies/venomrat.png",
+      "cols": 4,
+      "rows": 2
+    },
+    "frostwarden": {
+      "path": "assets/enemies/frostwarden.png",
+      "cols": 4,
+      "rows": 2
+    },
+    "voidknight": {
+      "path": "assets/enemies/voidknight.png",
+      "cols": 4,
+      "rows": 2
+    },
+    "ironrat": {
+      "path": "assets/enemies/ironrat.png",
+      "cols": 4,
+      "rows": 2
+    },
+    "gloamwing": {
+      "path": "assets/enemies/gloamwing.png",
+      "cols": 4,
+      "rows": 2
+    },
+    "motherbriar": {
+      "path": "assets/enemies/motherbriar.png",
+      "cols": 4,
+      "rows": 2
+    },
+    "hollowking": {
+      "path": "assets/enemies/hollowking.png",
+      "cols": 4,
+      "rows": 2
+    },
+    "dungeonProps": {
+      "path": "assets/dungeons/dungeonProps.png",
+      "cols": 4,
+      "rows": 4
+    },
+    "puzzleDevices": {
+      "path": "assets/dungeons/puzzleDevices.png",
+      "cols": 4,
+      "rows": 4
+    },
+    "dungeonFloors": {
+      "path": "assets/dungeons/dungeonFloors.png",
+      "cols": 4,
+      "rows": 2
+    },
+    "dungeonFX": {
+      "path": "assets/dungeons/dungeonFX.png",
+      "cols": 4,
+      "rows": 4
+    },
+    "encounterProps": {
+      "path": "assets/dungeons/encounterProps.png",
+      "cols": 4,
+      "rows": 2
+    },
+    "harpooner": {
+      "path": "assets/enemies/harpooner.png",
+      "cols": 4,
+      "rows": 2
+    },
+    "bellringer": {
+      "path": "assets/enemies/bellringer.png",
+      "cols": 4,
+      "rows": 2
+    },
+    "shellguard": {
+      "path": "assets/enemies/shellguard.png",
+      "cols": 4,
+      "rows": 2
+    },
+    "tideblade": {
+      "path": "assets/enemies/tideblade.png",
+      "cols": 4,
+      "rows": 2
+    },
+    "coastalTerrain": {
+      "path": "assets/coast/terrain.png",
+      "cols": 2,
+      "rows": 2
+    },
+    "coastalProps": {
+      "path": "assets/coast/scenery.png",
+      "cols": 4,
+      "rows": 2
+    },
+    "blackglassReaver": {
+      "path": "assets/enemies/blackglass-reaver.png",
+      "cols": 4,
+      "rows": 2
+    },
+    "cinderMortar": {
+      "path": "assets/enemies/cinder-mortar.png",
+      "cols": 4,
+      "rows": 2
+    },
+    "enemyVanguard": {
+      "path": "assets/enemies/roller.png",
+      "cols": 8,
+      "rows": 4,
+      "alias": true
+    },
+    "enemyElemental": {
+      "path": "assets/enemies/cinderbeast.png",
+      "cols": 8,
+      "rows": 4,
+      "alias": true
+    },
+    "cavernGuardians": {
+      "path": "assets/enemies/ironrat.png",
+      "cols": 8,
+      "rows": 4,
+      "alias": true
+    },
+    "enemyCoastal": {
+      "path": "assets/enemies/harpooner.png",
+      "cols": 8,
+      "rows": 4,
+      "alias": true
+    },
+    "enemyDeep": {
+      "path": "assets/enemies/blackglass-reaver.png",
+      "cols": 8,
+      "rows": 2,
+      "alias": true
+    }
+  },
+  "textures": {
+    "roller": {
+      "path": "assets/enemies/roller.png",
+      "width": 1774,
+      "height": 887,
+      "cols": 4,
+      "rows": 2,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            48,
+            97,
+            340,
+            307
+          ],
+          "core": [
+            49,
+            99,
+            319,
+            303
+          ],
+          "anchor": [
+            212,
+            402
+          ],
+          "opaquePixels": 57066,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            454,
+            100,
+            397,
+            299
+          ],
+          "core": [
+            456,
+            102,
+            372,
+            295
+          ],
+          "anchor": [
+            664,
+            397
+          ],
+          "opaquePixels": 55162,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            913,
+            95,
+            387,
+            307
+          ],
+          "core": [
+            914,
+            97,
+            361,
+            303
+          ],
+          "anchor": [
+            1116,
+            400
+          ],
+          "opaquePixels": 59115,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            1366,
+            185,
+            377,
+            226
+          ],
+          "core": [
+            1368,
+            187,
+            355,
+            222
+          ],
+          "anchor": [
+            1573,
+            409
+          ],
+          "opaquePixels": 47456,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            100,
+            528,
+            269,
+            270
+          ],
+          "core": [
+            102,
+            530,
+            266,
+            266
+          ],
+          "anchor": [
+            233,
+            796
+          ],
+          "opaquePixels": 55613,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            529,
+            530,
+            263,
+            267
+          ],
+          "core": [
+            531,
+            532,
+            259,
+            263
+          ],
+          "anchor": [
+            660,
+            795
+          ],
+          "opaquePixels": 53992,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            946,
+            496,
+            330,
+            320
+          ],
+          "core": [
+            948,
+            498,
+            326,
+            316
+          ],
+          "anchor": [
+            1095,
+            814
+          ],
+          "opaquePixels": 54911,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            1387,
+            501,
+            340,
+            304
+          ],
+          "core": [
+            1391,
+            503,
+            335,
+            300
+          ],
+          "anchor": [
+            1540,
+            803
+          ],
+          "opaquePixels": 59250,
+          "trimmed": []
+        }
+      ],
+      "group": "enemyVanguard",
+      "row": 0,
+      "poseMap": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reference": {
+        "h": 303,
+        "w": 397
+      }
+    },
+    "blinkstalker": {
+      "path": "assets/enemies/blinkstalker.png",
+      "width": 1774,
+      "height": 887,
+      "cols": 4,
+      "rows": 2,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            45,
+            47,
+            370,
+            350
+          ],
+          "core": [
+            47,
+            48,
+            366,
+            347
+          ],
+          "anchor": [
+            232,
+            395
+          ],
+          "opaquePixels": 47016,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            476,
+            64,
+            383,
+            329
+          ],
+          "core": [
+            478,
+            65,
+            378,
+            326
+          ],
+          "anchor": [
+            683,
+            391
+          ],
+          "opaquePixels": 44291,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            910,
+            64,
+            372,
+            332
+          ],
+          "core": [
+            911,
+            65,
+            366,
+            329
+          ],
+          "anchor": [
+            1127,
+            394
+          ],
+          "opaquePixels": 43749,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            1367,
+            44,
+            387,
+            355
+          ],
+          "core": [
+            1369,
+            46,
+            383,
+            351
+          ],
+          "anchor": [
+            1551,
+            397
+          ],
+          "opaquePixels": 53897,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            18,
+            519,
+            426,
+            298
+          ],
+          "core": [
+            24,
+            522,
+            420,
+            293
+          ],
+          "anchor": [
+            219,
+            815
+          ],
+          "opaquePixels": 59502,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            473,
+            505,
+            414,
+            311
+          ],
+          "core": [
+            479,
+            507,
+            408,
+            307
+          ],
+          "anchor": [
+            687,
+            814
+          ],
+          "opaquePixels": 53470,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            887,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            943,
+            561,
+            388,
+            241
+          ],
+          "core": [
+            944,
+            563,
+            386,
+            237
+          ],
+          "anchor": [
+            1158,
+            800
+          ],
+          "opaquePixels": 43157,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            1331,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            1331,
+            509,
+            429,
+            309
+          ],
+          "core": [
+            1380,
+            511,
+            378,
+            305
+          ],
+          "anchor": [
+            1601,
+            816
+          ],
+          "opaquePixels": 45959,
+          "trimmed": []
+        }
+      ],
+      "group": "enemyVanguard",
+      "row": 1,
+      "poseMap": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reference": {
+        "h": 347,
+        "w": 429
+      }
+    },
+    "fencer": {
+      "path": "assets/enemies/fencer.png",
+      "width": 1774,
+      "height": 887,
+      "cols": 4,
+      "rows": 2,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            60,
+            78,
+            275,
+            324
+          ],
+          "core": [
+            64,
+            80,
+            269,
+            320
+          ],
+          "anchor": [
+            202,
+            400
+          ],
+          "opaquePixels": 36490,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            471,
+            78,
+            319,
+            320
+          ],
+          "core": [
+            474,
+            80,
+            315,
+            316
+          ],
+          "anchor": [
+            662,
+            396
+          ],
+          "opaquePixels": 38843,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            902,
+            78,
+            314,
+            321
+          ],
+          "core": [
+            905,
+            80,
+            309,
+            317
+          ],
+          "anchor": [
+            1085,
+            397
+          ],
+          "opaquePixels": 40001,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            1349,
+            75,
+            360,
+            327
+          ],
+          "core": [
+            1351,
+            77,
+            356,
+            323
+          ],
+          "anchor": [
+            1541,
+            400
+          ],
+          "opaquePixels": 48476,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            21,
+            518,
+            423,
+            290
+          ],
+          "core": [
+            23,
+            520,
+            421,
+            286
+          ],
+          "anchor": [
+            183,
+            806
+          ],
+          "opaquePixels": 39309,
+          "trimmed": [],
+          "edgeSpill": "rapier tip",
+          "pieces": [
+            {
+              "crop": [
+                444,
+                618,
+                107,
+                9
+              ],
+              "opaquePixels": 435
+            }
+          ]
+        },
+        {
+          "cell": [
+            444,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            551,
+            513,
+            336,
+            292
+          ],
+          "core": [
+            551,
+            515,
+            336,
+            288
+          ],
+          "anchor": [
+            676,
+            803
+          ],
+          "opaquePixels": 37442,
+          "trimmed": [
+            "left"
+          ],
+          "edgeSpill": "rapier tip",
+          "pieces": [
+            {
+              "crop": [
+                887,
+                667,
+                68,
+                25
+              ],
+              "opaquePixels": 247
+            }
+          ]
+        },
+        {
+          "cell": [
+            887,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            954,
+            555,
+            280,
+            254
+          ],
+          "core": [
+            954,
+            557,
+            278,
+            250
+          ],
+          "anchor": [
+            1078,
+            807
+          ],
+          "opaquePixels": 33442,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            1331,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            1369,
+            529,
+            339,
+            291
+          ],
+          "core": [
+            1371,
+            531,
+            335,
+            287
+          ],
+          "anchor": [
+            1559,
+            818
+          ],
+          "opaquePixels": 41010,
+          "trimmed": []
+        }
+      ],
+      "group": "enemyVanguard",
+      "row": 2,
+      "poseMap": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reference": {
+        "h": 320,
+        "w": 530
+      }
+    },
+    "burrowrat": {
+      "path": "assets/enemies/burrowrat.png",
+      "width": 1774,
+      "height": 887,
+      "cols": 4,
+      "rows": 2,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            46,
+            97,
+            343,
+            308
+          ],
+          "core": [
+            48,
+            99,
+            337,
+            304
+          ],
+          "anchor": [
+            226,
+            403
+          ],
+          "opaquePixels": 60487,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            477,
+            100,
+            375,
+            300
+          ],
+          "core": [
+            479,
+            102,
+            361,
+            296
+          ],
+          "anchor": [
+            688,
+            398
+          ],
+          "opaquePixels": 53677,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            909,
+            102,
+            390,
+            301
+          ],
+          "core": [
+            910,
+            104,
+            387,
+            297
+          ],
+          "anchor": [
+            1129,
+            401
+          ],
+          "opaquePixels": 59650,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            1387,
+            71,
+            354,
+            334
+          ],
+          "core": [
+            1389,
+            73,
+            350,
+            331
+          ],
+          "anchor": [
+            1566,
+            404
+          ],
+          "opaquePixels": 65575,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            41,
+            516,
+            397,
+            294
+          ],
+          "core": [
+            43,
+            526,
+            395,
+            281
+          ],
+          "anchor": [
+            303,
+            807
+          ],
+          "opaquePixels": 63407,
+          "trimmed": [
+            "right"
+          ]
+        },
+        {
+          "cell": [
+            444,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            494,
+            555,
+            373,
+            247
+          ],
+          "core": [
+            496,
+            557,
+            371,
+            242
+          ],
+          "anchor": [
+            729,
+            799
+          ],
+          "opaquePixels": 52305,
+          "trimmed": [
+            "left",
+            "right"
+          ]
+        },
+        {
+          "cell": [
+            887,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            887,
+            588,
+            432,
+            225
+          ],
+          "core": [
+            937,
+            590,
+            373,
+            220
+          ],
+          "anchor": [
+            1128,
+            810
+          ],
+          "opaquePixels": 49327,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            1375,
+            499,
+            373,
+            307
+          ],
+          "core": [
+            1377,
+            501,
+            369,
+            303
+          ],
+          "anchor": [
+            1587,
+            804
+          ],
+          "opaquePixels": 53715,
+          "trimmed": []
+        }
+      ],
+      "group": "enemyVanguard",
+      "row": 3,
+      "poseMap": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reference": {
+        "h": 304,
+        "w": 432
+      }
+    },
+    "cinderbeast": {
+      "path": "assets/enemies/cinderbeast.png",
+      "width": 1774,
+      "height": 887,
+      "cols": 4,
+      "rows": 2,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            54,
+            102,
+            390,
+            292
+          ],
+          "core": [
+            56,
+            104,
+            367,
+            288
+          ],
+          "anchor": [
+            244,
+            392
+          ],
+          "opaquePixels": 46897,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            453,
+            161,
+            423,
+            222
+          ],
+          "core": [
+            457,
+            162,
+            415,
+            219
+          ],
+          "anchor": [
+            699,
+            381
+          ],
+          "opaquePixels": 39037,
+          "trimmed": [
+            "right"
+          ]
+        },
+        {
+          "cell": [
+            887,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            898,
+            151,
+            433,
+            238
+          ],
+          "core": [
+            909,
+            153,
+            422,
+            234
+          ],
+          "anchor": [
+            1167,
+            387
+          ],
+          "opaquePixels": 41214,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            1331,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            1355,
+            87,
+            405,
+            309
+          ],
+          "core": [
+            1355,
+            89,
+            370,
+            305
+          ],
+          "anchor": [
+            1539,
+            394
+          ],
+          "opaquePixels": 40366,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            0,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            31,
+            516,
+            413,
+            274
+          ],
+          "core": [
+            34,
+            517,
+            410,
+            271
+          ],
+          "anchor": [
+            214,
+            788
+          ],
+          "opaquePixels": 48117,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            475,
+            525,
+            404,
+            262
+          ],
+          "core": [
+            506,
+            527,
+            373,
+            258
+          ],
+          "anchor": [
+            690,
+            785
+          ],
+          "opaquePixels": 43140,
+          "trimmed": [
+            "left",
+            "right"
+          ]
+        },
+        {
+          "cell": [
+            887,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            939,
+            516,
+            367,
+            267
+          ],
+          "core": [
+            948,
+            517,
+            325,
+            264
+          ],
+          "anchor": [
+            1133,
+            781
+          ],
+          "opaquePixels": 40004,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            1331,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            1364,
+            499,
+            398,
+            288
+          ],
+          "core": [
+            1368,
+            503,
+            375,
+            282
+          ],
+          "anchor": [
+            1628,
+            785
+          ],
+          "opaquePixels": 43407,
+          "trimmed": []
+        }
+      ],
+      "group": "enemyElemental",
+      "row": 0,
+      "poseMap": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reference": {
+        "h": 288,
+        "w": 433
+      }
+    },
+    "venomrat": {
+      "path": "assets/enemies/venomrat.png",
+      "width": 1774,
+      "height": 887,
+      "cols": 4,
+      "rows": 2,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            53,
+            112,
+            321,
+            296
+          ],
+          "core": [
+            55,
+            114,
+            318,
+            292
+          ],
+          "anchor": [
+            228,
+            406
+          ],
+          "opaquePixels": 42157,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            479,
+            123,
+            338,
+            289
+          ],
+          "core": [
+            481,
+            125,
+            334,
+            285
+          ],
+          "anchor": [
+            665,
+            410
+          ],
+          "opaquePixels": 41880,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            917,
+            115,
+            376,
+            293
+          ],
+          "core": [
+            918,
+            118,
+            373,
+            288
+          ],
+          "anchor": [
+            1113,
+            406
+          ],
+          "opaquePixels": 43870,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            1409,
+            69,
+            319,
+            339
+          ],
+          "core": [
+            1411,
+            71,
+            315,
+            335
+          ],
+          "anchor": [
+            1583,
+            406
+          ],
+          "opaquePixels": 43234,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            46,
+            565,
+            398,
+            254
+          ],
+          "core": [
+            47,
+            566,
+            397,
+            250
+          ],
+          "anchor": [
+            196,
+            816
+          ],
+          "opaquePixels": 43138,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            485,
+            571,
+            399,
+            249
+          ],
+          "core": [
+            487,
+            573,
+            391,
+            245
+          ],
+          "anchor": [
+            650,
+            818
+          ],
+          "opaquePixels": 37638,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            887,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            954,
+            569,
+            318,
+            250
+          ],
+          "core": [
+            955,
+            571,
+            315,
+            246
+          ],
+          "anchor": [
+            1129,
+            817
+          ],
+          "opaquePixels": 40700,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            1394,
+            529,
+            328,
+            290
+          ],
+          "core": [
+            1395,
+            531,
+            325,
+            286
+          ],
+          "anchor": [
+            1608,
+            817
+          ],
+          "opaquePixels": 42578,
+          "trimmed": []
+        }
+      ],
+      "group": "enemyElemental",
+      "row": 1,
+      "poseMap": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reference": {
+        "h": 292,
+        "w": 399
+      }
+    },
+    "frostwarden": {
+      "path": "assets/enemies/frostwarden.png",
+      "width": 1774,
+      "height": 887,
+      "cols": 4,
+      "rows": 2,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            40,
+            13,
+            318,
+            388
+          ],
+          "core": [
+            42,
+            16,
+            314,
+            383
+          ],
+          "anchor": [
+            194,
+            399
+          ],
+          "opaquePixels": 44896,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            485,
+            98,
+            402,
+            296
+          ],
+          "core": [
+            487,
+            100,
+            400,
+            292
+          ],
+          "anchor": [
+            645,
+            392
+          ],
+          "opaquePixels": 44430,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            930,
+            99,
+            401,
+            292
+          ],
+          "core": [
+            933,
+            101,
+            398,
+            288
+          ],
+          "anchor": [
+            1103,
+            389
+          ],
+          "opaquePixels": 43259,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            1331,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            1359,
+            25,
+            366,
+            378
+          ],
+          "core": [
+            1363,
+            27,
+            359,
+            374
+          ],
+          "anchor": [
+            1590,
+            401
+          ],
+          "opaquePixels": 46805,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            0,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            17,
+            530,
+            386,
+            264
+          ],
+          "core": [
+            20,
+            534,
+            383,
+            258
+          ],
+          "anchor": [
+            162,
+            792
+          ],
+          "opaquePixels": 41445,
+          "trimmed": [
+            "right"
+          ]
+        },
+        {
+          "cell": [
+            444,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            504,
+            546,
+            294,
+            249
+          ],
+          "core": [
+            504,
+            548,
+            294,
+            245
+          ],
+          "anchor": [
+            642,
+            793
+          ],
+          "opaquePixels": 33438,
+          "trimmed": [
+            "left",
+            "right"
+          ]
+        },
+        {
+          "cell": [
+            887,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            959,
+            582,
+            372,
+            216
+          ],
+          "core": [
+            961,
+            584,
+            370,
+            212
+          ],
+          "anchor": [
+            1174,
+            796
+          ],
+          "opaquePixels": 35333,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            1331,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            1411,
+            531,
+            325,
+            280
+          ],
+          "core": [
+            1417,
+            534,
+            316,
+            275
+          ],
+          "anchor": [
+            1591,
+            809
+          ],
+          "opaquePixels": 37579,
+          "trimmed": [
+            "left"
+          ]
+        }
+      ],
+      "group": "enemyElemental",
+      "row": 2,
+      "poseMap": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reference": {
+        "h": 383,
+        "w": 402
+      }
+    },
+    "voidknight": {
+      "path": "assets/enemies/voidknight.png",
+      "width": 1774,
+      "height": 887,
+      "cols": 4,
+      "rows": 2,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            59,
+            114,
+            344,
+            318
+          ],
+          "core": [
+            61,
+            116,
+            339,
+            314
+          ],
+          "anchor": [
+            272,
+            430
+          ],
+          "opaquePixels": 40677,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            493,
+            124,
+            376,
+            304
+          ],
+          "core": [
+            495,
+            126,
+            369,
+            300
+          ],
+          "anchor": [
+            716,
+            426
+          ],
+          "opaquePixels": 41516,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            920,
+            116,
+            384,
+            314
+          ],
+          "core": [
+            922,
+            118,
+            378,
+            310
+          ],
+          "anchor": [
+            1144,
+            428
+          ],
+          "opaquePixels": 40115,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            1389,
+            60,
+            321,
+            374
+          ],
+          "core": [
+            1390,
+            64,
+            318,
+            368
+          ],
+          "anchor": [
+            1573,
+            432
+          ],
+          "opaquePixels": 48632,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            33,
+            551,
+            411,
+            259
+          ],
+          "core": [
+            35,
+            552,
+            409,
+            256
+          ],
+          "anchor": [
+            182,
+            808
+          ],
+          "opaquePixels": 44100,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            497,
+            531,
+            384,
+            283
+          ],
+          "core": [
+            497,
+            533,
+            384,
+            279
+          ],
+          "anchor": [
+            693,
+            812
+          ],
+          "opaquePixels": 41348,
+          "trimmed": [
+            "left",
+            "right"
+          ]
+        },
+        {
+          "cell": [
+            887,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            931,
+            592,
+            400,
+            215
+          ],
+          "core": [
+            933,
+            594,
+            394,
+            209
+          ],
+          "anchor": [
+            1127,
+            803
+          ],
+          "opaquePixels": 35361,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            1331,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            1401,
+            507,
+            325,
+            337
+          ],
+          "core": [
+            1403,
+            511,
+            322,
+            329
+          ],
+          "anchor": [
+            1627,
+            840
+          ],
+          "opaquePixels": 38482,
+          "trimmed": []
+        }
+      ],
+      "group": "enemyElemental",
+      "row": 3,
+      "poseMap": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reference": {
+        "h": 314,
+        "w": 411
+      }
+    },
+    "ironrat": {
+      "path": "assets/enemies/ironrat.png",
+      "width": 1774,
+      "height": 887,
+      "cols": 4,
+      "rows": 2,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            19,
+            63,
+            387,
+            347
+          ],
+          "core": [
+            20,
+            65,
+            383,
+            343
+          ],
+          "anchor": [
+            233,
+            408
+          ],
+          "opaquePixels": 73554,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            444,
+            81,
+            413,
+            321
+          ],
+          "core": [
+            446,
+            83,
+            409,
+            317
+          ],
+          "anchor": [
+            681,
+            400
+          ],
+          "opaquePixels": 66618,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            904,
+            90,
+            417,
+            320
+          ],
+          "core": [
+            906,
+            92,
+            413,
+            316
+          ],
+          "anchor": [
+            1120,
+            408
+          ],
+          "opaquePixels": 65679,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            1377,
+            10,
+            377,
+            413
+          ],
+          "core": [
+            1379,
+            12,
+            372,
+            409
+          ],
+          "anchor": [
+            1543,
+            421
+          ],
+          "opaquePixels": 77358,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            63,
+            521,
+            332,
+            314
+          ],
+          "core": [
+            65,
+            523,
+            328,
+            310
+          ],
+          "anchor": [
+            225,
+            833
+          ],
+          "opaquePixels": 77555,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            465,
+            526,
+            360,
+            302
+          ],
+          "core": [
+            467,
+            528,
+            357,
+            298
+          ],
+          "anchor": [
+            651,
+            826
+          ],
+          "opaquePixels": 75779,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            887,
+            595,
+            436,
+            228
+          ],
+          "core": [
+            890,
+            597,
+            431,
+            224
+          ],
+          "anchor": [
+            1155,
+            821
+          ],
+          "opaquePixels": 58822,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            1362,
+            480,
+            388,
+            357
+          ],
+          "core": [
+            1364,
+            482,
+            384,
+            353
+          ],
+          "anchor": [
+            1540,
+            835
+          ],
+          "opaquePixels": 64330,
+          "trimmed": []
+        }
+      ],
+      "group": "cavernGuardians",
+      "row": 0,
+      "poseMap": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reference": {
+        "h": 343,
+        "w": 436
+      }
+    },
+    "gloamwing": {
+      "path": "assets/enemies/gloamwing.png",
+      "width": 1774,
+      "height": 887,
+      "cols": 4,
+      "rows": 2,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            38,
+            74,
+            388,
+            351
+          ],
+          "core": [
+            40,
+            76,
+            384,
+            346
+          ],
+          "anchor": [
+            224,
+            422
+          ],
+          "opaquePixels": 69954,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            475,
+            97,
+            372,
+            321
+          ],
+          "core": [
+            477,
+            99,
+            369,
+            317
+          ],
+          "anchor": [
+            673,
+            416
+          ],
+          "opaquePixels": 56586,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            900,
+            98,
+            428,
+            329
+          ],
+          "core": [
+            902,
+            100,
+            425,
+            324
+          ],
+          "anchor": [
+            1132,
+            424
+          ],
+          "opaquePixels": 68369,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            1361,
+            17,
+            373,
+            414
+          ],
+          "core": [
+            1363,
+            19,
+            369,
+            409
+          ],
+          "anchor": [
+            1570,
+            428
+          ],
+          "opaquePixels": 80028,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            18,
+            509,
+            426,
+            331
+          ],
+          "core": [
+            21,
+            511,
+            423,
+            327
+          ],
+          "anchor": [
+            376,
+            838
+          ],
+          "opaquePixels": 61608,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            518,
+            505,
+            369,
+            316
+          ],
+          "core": [
+            518,
+            507,
+            369,
+            312
+          ],
+          "anchor": [
+            727,
+            819
+          ],
+          "opaquePixels": 48795,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            887,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            950,
+            557,
+            369,
+            276
+          ],
+          "core": [
+            952,
+            559,
+            365,
+            271
+          ],
+          "anchor": [
+            1140,
+            830
+          ],
+          "opaquePixels": 61572,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            1331,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            1381,
+            485,
+            370,
+            376
+          ],
+          "core": [
+            1383,
+            487,
+            366,
+            371
+          ],
+          "anchor": [
+            1530,
+            858
+          ],
+          "opaquePixels": 69363,
+          "trimmed": []
+        }
+      ],
+      "group": "cavernGuardians",
+      "row": 1,
+      "poseMap": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reference": {
+        "h": 346,
+        "w": 428
+      }
+    },
+    "motherbriar": {
+      "path": "assets/enemies/motherbriar.png",
+      "width": 1774,
+      "height": 887,
+      "cols": 4,
+      "rows": 2,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            20,
+            70,
+            391,
+            338
+          ],
+          "core": [
+            22,
+            72,
+            387,
+            333
+          ],
+          "anchor": [
+            207,
+            405
+          ],
+          "opaquePixels": 56178,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            459,
+            80,
+            417,
+            328
+          ],
+          "core": [
+            461,
+            83,
+            413,
+            323
+          ],
+          "anchor": [
+            640,
+            406
+          ],
+          "opaquePixels": 51307,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            907,
+            82,
+            409,
+            326
+          ],
+          "core": [
+            909,
+            84,
+            405,
+            322
+          ],
+          "anchor": [
+            1097,
+            406
+          ],
+          "opaquePixels": 51253,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            1353,
+            25,
+            406,
+            383
+          ],
+          "core": [
+            1355,
+            27,
+            402,
+            379
+          ],
+          "anchor": [
+            1510,
+            406
+          ],
+          "opaquePixels": 56572,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            15,
+            520,
+            429,
+            299
+          ],
+          "core": [
+            17,
+            523,
+            427,
+            294
+          ],
+          "anchor": [
+            186,
+            817
+          ],
+          "opaquePixels": 52327,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            460,
+            531,
+            411,
+            288
+          ],
+          "core": [
+            462,
+            534,
+            409,
+            282
+          ],
+          "anchor": [
+            646,
+            816
+          ],
+          "opaquePixels": 46468,
+          "trimmed": [
+            "right",
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            887,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            910,
+            532,
+            419,
+            285
+          ],
+          "core": [
+            912,
+            535,
+            415,
+            280
+          ],
+          "anchor": [
+            1123,
+            815
+          ],
+          "opaquePixels": 51249,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            1331,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            1398,
+            531,
+            351,
+            287
+          ],
+          "core": [
+            1400,
+            532,
+            347,
+            284
+          ],
+          "anchor": [
+            1553,
+            816
+          ],
+          "opaquePixels": 45381,
+          "trimmed": []
+        }
+      ],
+      "group": "cavernGuardians",
+      "row": 2,
+      "poseMap": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reference": {
+        "h": 333,
+        "w": 429
+      }
+    },
+    "hollowking": {
+      "path": "assets/enemies/hollowking.png",
+      "width": 1774,
+      "height": 887,
+      "cols": 4,
+      "rows": 2,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            17,
+            18,
+            380,
+            393
+          ],
+          "core": [
+            18,
+            21,
+            377,
+            388
+          ],
+          "anchor": [
+            208,
+            409
+          ],
+          "opaquePixels": 83776,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            471,
+            50,
+            377,
+            351
+          ],
+          "core": [
+            473,
+            52,
+            374,
+            347
+          ],
+          "anchor": [
+            652,
+            399
+          ],
+          "opaquePixels": 72663,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            912,
+            56,
+            402,
+            357
+          ],
+          "core": [
+            913,
+            59,
+            399,
+            352
+          ],
+          "anchor": [
+            1088,
+            411
+          ],
+          "opaquePixels": 75177,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            1354,
+            12,
+            395,
+            426
+          ],
+          "core": [
+            1356,
+            14,
+            391,
+            422
+          ],
+          "anchor": [
+            1529,
+            436
+          ],
+          "opaquePixels": 91906,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            18,
+            502,
+            426,
+            336
+          ],
+          "core": [
+            20,
+            504,
+            424,
+            333
+          ],
+          "anchor": [
+            242,
+            837
+          ],
+          "opaquePixels": 87180,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            462,
+            459,
+            391,
+            375
+          ],
+          "core": [
+            464,
+            462,
+            389,
+            370
+          ],
+          "anchor": [
+            676,
+            832
+          ],
+          "opaquePixels": 88148,
+          "trimmed": [
+            "right",
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            887,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            924,
+            555,
+            378,
+            280
+          ],
+          "core": [
+            926,
+            558,
+            374,
+            275
+          ],
+          "anchor": [
+            1128,
+            833
+          ],
+          "opaquePixels": 66734,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            1331,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            1357,
+            493,
+            395,
+            343
+          ],
+          "core": [
+            1359,
+            496,
+            391,
+            338
+          ],
+          "anchor": [
+            1530,
+            834
+          ],
+          "opaquePixels": 71048,
+          "trimmed": []
+        }
+      ],
+      "group": "cavernGuardians",
+      "row": 3,
+      "poseMap": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reference": {
+        "h": 388,
+        "w": 426
+      }
+    },
+    "dungeonProps": {
+      "path": "assets/dungeons/dungeonProps.png",
+      "width": 1254,
+      "height": 1254,
+      "cols": 4,
+      "rows": 4,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            314,
+            314
+          ],
+          "crop": [
+            34,
+            23,
+            280,
+            291
+          ],
+          "core": [
+            36,
+            25,
+            278,
+            289
+          ],
+          "anchor": [
+            169,
+            314
+          ],
+          "opaquePixels": 47861,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            314,
+            0,
+            313,
+            314
+          ],
+          "crop": [
+            409,
+            15,
+            157,
+            299
+          ],
+          "core": [
+            410,
+            16,
+            154,
+            298
+          ],
+          "anchor": [
+            487,
+            314
+          ],
+          "opaquePixels": 34296,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            627,
+            0,
+            314,
+            314
+          ],
+          "crop": [
+            705,
+            23,
+            174,
+            291
+          ],
+          "core": [
+            707,
+            30,
+            170,
+            284
+          ],
+          "anchor": [
+            755,
+            314
+          ],
+          "opaquePixels": 23745,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            941,
+            0,
+            313,
+            314
+          ],
+          "crop": [
+            948,
+            31,
+            289,
+            283
+          ],
+          "core": [
+            950,
+            33,
+            286,
+            281
+          ],
+          "anchor": [
+            1098,
+            314
+          ],
+          "opaquePixels": 48633,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            314,
+            314,
+            313
+          ],
+          "crop": [
+            34,
+            340,
+            261,
+            287
+          ],
+          "core": [
+            36,
+            342,
+            257,
+            285
+          ],
+          "anchor": [
+            173,
+            627
+          ],
+          "opaquePixels": 41480,
+          "trimmed": [
+            "top"
+          ]
+        },
+        {
+          "cell": [
+            314,
+            314,
+            313,
+            313
+          ],
+          "crop": [
+            327,
+            374,
+            287,
+            233
+          ],
+          "core": [
+            329,
+            376,
+            284,
+            229
+          ],
+          "anchor": [
+            464,
+            605
+          ],
+          "opaquePixels": 44081,
+          "trimmed": [
+            "top"
+          ]
+        },
+        {
+          "cell": [
+            627,
+            314,
+            314,
+            313
+          ],
+          "crop": [
+            636,
+            363,
+            304,
+            264
+          ],
+          "core": [
+            638,
+            366,
+            300,
+            261
+          ],
+          "anchor": [
+            766,
+            627
+          ],
+          "opaquePixels": 40638,
+          "trimmed": [
+            "top"
+          ]
+        },
+        {
+          "cell": [
+            941,
+            314,
+            313,
+            313
+          ],
+          "crop": [
+            955,
+            352,
+            277,
+            275
+          ],
+          "core": [
+            957,
+            353,
+            273,
+            274
+          ],
+          "anchor": [
+            1099,
+            627
+          ],
+          "opaquePixels": 37607,
+          "trimmed": [
+            "top"
+          ]
+        },
+        {
+          "cell": [
+            0,
+            627,
+            314,
+            314
+          ],
+          "crop": [
+            16,
+            668,
+            298,
+            228
+          ],
+          "core": [
+            17,
+            670,
+            297,
+            224
+          ],
+          "anchor": [
+            156,
+            894
+          ],
+          "opaquePixels": 49269,
+          "trimmed": [
+            "bottom"
+          ]
+        },
+        {
+          "cell": [
+            314,
+            627,
+            313,
+            314
+          ],
+          "crop": [
+            337,
+            637,
+            274,
+            261
+          ],
+          "core": [
+            339,
+            639,
+            270,
+            257
+          ],
+          "anchor": [
+            481,
+            896
+          ],
+          "opaquePixels": 50159,
+          "trimmed": [
+            "bottom"
+          ]
+        },
+        {
+          "cell": [
+            627,
+            627,
+            314,
+            314
+          ],
+          "crop": [
+            638,
+            683,
+            287,
+            203
+          ],
+          "core": [
+            640,
+            685,
+            283,
+            199
+          ],
+          "anchor": [
+            745,
+            884
+          ],
+          "opaquePixels": 44800,
+          "trimmed": [
+            "top"
+          ]
+        },
+        {
+          "cell": [
+            941,
+            627,
+            313,
+            314
+          ],
+          "crop": [
+            941,
+            655,
+            298,
+            233
+          ],
+          "core": [
+            943,
+            657,
+            294,
+            229
+          ],
+          "anchor": [
+            1089,
+            886
+          ],
+          "opaquePixels": 61007,
+          "trimmed": [
+            "top"
+          ]
+        },
+        {
+          "cell": [
+            0,
+            941,
+            314,
+            313
+          ],
+          "crop": [
+            26,
+            941,
+            281,
+            264
+          ],
+          "core": [
+            28,
+            941,
+            277,
+            262
+          ],
+          "anchor": [
+            162,
+            1203
+          ],
+          "opaquePixels": 53762,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            314,
+            941,
+            313,
+            313
+          ],
+          "crop": [
+            319,
+            941,
+            296,
+            279
+          ],
+          "core": [
+            321,
+            941,
+            292,
+            277
+          ],
+          "anchor": [
+            477,
+            1218
+          ],
+          "opaquePixels": 53731,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            627,
+            941,
+            314,
+            313
+          ],
+          "crop": [
+            639,
+            943,
+            294,
+            253
+          ],
+          "core": [
+            641,
+            945,
+            290,
+            249
+          ],
+          "anchor": [
+            786,
+            1194
+          ],
+          "opaquePixels": 49012,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            941,
+            941,
+            313,
+            313
+          ],
+          "crop": [
+            959,
+            941,
+            274,
+            262
+          ],
+          "core": [
+            961,
+            942,
+            270,
+            259
+          ],
+          "anchor": [
+            1099,
+            1201
+          ],
+          "opaquePixels": 37931,
+          "trimmed": []
+        }
+      ]
+    },
+    "puzzleDevices": {
+      "path": "assets/dungeons/puzzleDevices.png",
+      "width": 1254,
+      "height": 1254,
+      "cols": 4,
+      "rows": 4,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            314,
+            314
+          ],
+          "crop": [
+            48,
+            18,
+            233,
+            296
+          ],
+          "core": [
+            51,
+            20,
+            228,
+            294
+          ],
+          "anchor": [
+            166,
+            314
+          ],
+          "opaquePixels": 44394,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            314,
+            0,
+            313,
+            314
+          ],
+          "crop": [
+            356,
+            19,
+            235,
+            295
+          ],
+          "core": [
+            358,
+            21,
+            231,
+            292
+          ],
+          "anchor": [
+            473,
+            313
+          ],
+          "opaquePixels": 43958,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            627,
+            0,
+            314,
+            314
+          ],
+          "crop": [
+            665,
+            21,
+            233,
+            292
+          ],
+          "core": [
+            667,
+            23,
+            229,
+            288
+          ],
+          "anchor": [
+            780,
+            311
+          ],
+          "opaquePixels": 46742,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            941,
+            0,
+            313,
+            314
+          ],
+          "crop": [
+            961,
+            18,
+            252,
+            296
+          ],
+          "core": [
+            963,
+            20,
+            249,
+            294
+          ],
+          "anchor": [
+            1087,
+            314
+          ],
+          "opaquePixels": 47568,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            314,
+            314,
+            313
+          ],
+          "crop": [
+            50,
+            333,
+            228,
+            280
+          ],
+          "core": [
+            52,
+            334,
+            224,
+            277
+          ],
+          "anchor": [
+            155,
+            611
+          ],
+          "opaquePixels": 42964,
+          "trimmed": [
+            "top"
+          ]
+        },
+        {
+          "cell": [
+            314,
+            314,
+            313,
+            313
+          ],
+          "crop": [
+            361,
+            340,
+            204,
+            271
+          ],
+          "core": [
+            363,
+            342,
+            201,
+            267
+          ],
+          "anchor": [
+            463,
+            609
+          ],
+          "opaquePixels": 32836,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            627,
+            314,
+            314,
+            313
+          ],
+          "crop": [
+            663,
+            331,
+            233,
+            282
+          ],
+          "core": [
+            665,
+            332,
+            229,
+            279
+          ],
+          "anchor": [
+            778,
+            611
+          ],
+          "opaquePixels": 41569,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            941,
+            314,
+            313,
+            313
+          ],
+          "crop": [
+            981,
+            314,
+            231,
+            299
+          ],
+          "core": [
+            983,
+            333,
+            227,
+            278
+          ],
+          "anchor": [
+            1095,
+            611
+          ],
+          "opaquePixels": 41091,
+          "trimmed": [
+            "bottom"
+          ]
+        },
+        {
+          "cell": [
+            0,
+            627,
+            314,
+            314
+          ],
+          "crop": [
+            48,
+            664,
+            233,
+            220
+          ],
+          "core": [
+            50,
+            665,
+            229,
+            217
+          ],
+          "anchor": [
+            150,
+            882
+          ],
+          "opaquePixels": 44429,
+          "trimmed": [
+            "bottom"
+          ]
+        },
+        {
+          "cell": [
+            314,
+            627,
+            313,
+            314
+          ],
+          "crop": [
+            329,
+            671,
+            272,
+            199
+          ],
+          "core": [
+            331,
+            673,
+            268,
+            195
+          ],
+          "anchor": [
+            464,
+            868
+          ],
+          "opaquePixels": 45467,
+          "trimmed": [
+            "bottom"
+          ]
+        },
+        {
+          "cell": [
+            627,
+            627,
+            314,
+            314
+          ],
+          "crop": [
+            647,
+            627,
+            273,
+            279
+          ],
+          "core": [
+            650,
+            627,
+            268,
+            277
+          ],
+          "anchor": [
+            775,
+            904
+          ],
+          "opaquePixels": 59833,
+          "trimmed": [
+            "bottom"
+          ]
+        },
+        {
+          "cell": [
+            941,
+            627,
+            313,
+            314
+          ],
+          "crop": [
+            966,
+            627,
+            261,
+            281
+          ],
+          "core": [
+            968,
+            627,
+            257,
+            279
+          ],
+          "anchor": [
+            1095,
+            906
+          ],
+          "opaquePixels": 53657,
+          "trimmed": [
+            "bottom"
+          ]
+        },
+        {
+          "cell": [
+            0,
+            941,
+            314,
+            313
+          ],
+          "crop": [
+            18,
+            941,
+            277,
+            262
+          ],
+          "core": [
+            20,
+            941,
+            273,
+            261
+          ],
+          "anchor": [
+            157,
+            1202
+          ],
+          "opaquePixels": 51497,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            314,
+            941,
+            313,
+            313
+          ],
+          "crop": [
+            317,
+            941,
+            310,
+            262
+          ],
+          "core": [
+            318,
+            941,
+            273,
+            261
+          ],
+          "anchor": [
+            454,
+            1202
+          ],
+          "opaquePixels": 51108,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            627,
+            941,
+            314,
+            313
+          ],
+          "crop": [
+            627,
+            941,
+            300,
+            268
+          ],
+          "core": [
+            627,
+            941,
+            298,
+            267
+          ],
+          "anchor": [
+            776,
+            1208
+          ],
+          "opaquePixels": 59524,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            941,
+            941,
+            313,
+            313
+          ],
+          "crop": [
+            948,
+            941,
+            289,
+            271
+          ],
+          "core": [
+            950,
+            941,
+            285,
+            269
+          ],
+          "anchor": [
+            1092,
+            1210
+          ],
+          "opaquePixels": 58748,
+          "trimmed": []
+        }
+      ]
+    },
+    "dungeonFloors": {
+      "path": "assets/dungeons/dungeonFloors.png",
+      "width": 1774,
+      "height": 887,
+      "cols": 4,
+      "rows": 2,
+      "opaque": true,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            0,
+            0,
+            444,
+            444
+          ],
+          "core": [
+            0,
+            0,
+            444,
+            444
+          ],
+          "anchor": [
+            222,
+            444
+          ],
+          "opaquePixels": 197136,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            444,
+            0,
+            443,
+            444
+          ],
+          "core": [
+            444,
+            0,
+            443,
+            444
+          ],
+          "anchor": [
+            665.5,
+            444
+          ],
+          "opaquePixels": 196692,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            887,
+            0,
+            444,
+            444
+          ],
+          "core": [
+            887,
+            0,
+            444,
+            444
+          ],
+          "anchor": [
+            1109,
+            444
+          ],
+          "opaquePixels": 197136,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            1331,
+            0,
+            443,
+            444
+          ],
+          "core": [
+            1331,
+            0,
+            443,
+            444
+          ],
+          "anchor": [
+            1552.5,
+            444
+          ],
+          "opaquePixels": 196692,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            0,
+            444,
+            444,
+            443
+          ],
+          "core": [
+            0,
+            444,
+            444,
+            443
+          ],
+          "anchor": [
+            222,
+            887
+          ],
+          "opaquePixels": 196692,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            444,
+            444,
+            443,
+            443
+          ],
+          "core": [
+            444,
+            444,
+            443,
+            443
+          ],
+          "anchor": [
+            665.5,
+            887
+          ],
+          "opaquePixels": 196249,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            887,
+            444,
+            444,
+            443
+          ],
+          "core": [
+            887,
+            444,
+            444,
+            443
+          ],
+          "anchor": [
+            1109,
+            887
+          ],
+          "opaquePixels": 196692,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            1331,
+            444,
+            443,
+            443
+          ],
+          "core": [
+            1331,
+            444,
+            443,
+            443
+          ],
+          "anchor": [
+            1552.5,
+            887
+          ],
+          "opaquePixels": 196249,
+          "trimmed": []
+        }
+      ]
+    },
+    "dungeonFX": {
+      "path": "assets/dungeons/dungeonFX.png",
+      "width": 1254,
+      "height": 1254,
+      "cols": 4,
+      "rows": 4,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            314,
+            314
+          ],
+          "crop": [
+            22,
+            123,
+            292,
+            118
+          ],
+          "core": [
+            34,
+            130,
+            280,
+            102
+          ],
+          "anchor": [
+            108,
+            232
+          ],
+          "opaquePixels": 13345,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            314,
+            0,
+            313,
+            314
+          ],
+          "crop": [
+            350,
+            72,
+            242,
+            203
+          ],
+          "core": [
+            407,
+            81,
+            178,
+            181
+          ],
+          "anchor": [
+            528,
+            262
+          ],
+          "opaquePixels": 9123,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            627,
+            0,
+            314,
+            314
+          ],
+          "crop": [
+            646,
+            91,
+            295,
+            170
+          ],
+          "core": [
+            660,
+            98,
+            281,
+            153
+          ],
+          "anchor": [
+            814,
+            251
+          ],
+          "opaquePixels": 16253,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            941,
+            0,
+            313,
+            314
+          ],
+          "crop": [
+            961,
+            39,
+            217,
+            266
+          ],
+          "core": [
+            1056,
+            43,
+            117,
+            255
+          ],
+          "anchor": [
+            1108,
+            298
+          ],
+          "opaquePixels": 13104,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            0,
+            314,
+            314,
+            313
+          ],
+          "crop": [
+            25,
+            419,
+            289,
+            139
+          ],
+          "core": [
+            39,
+            427,
+            275,
+            123
+          ],
+          "anchor": [
+            123,
+            550
+          ],
+          "opaquePixels": 17002,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            314,
+            314,
+            313,
+            313
+          ],
+          "crop": [
+            350,
+            359,
+            268,
+            234
+          ],
+          "core": [
+            370,
+            364,
+            243,
+            221
+          ],
+          "anchor": [
+            496,
+            585
+          ],
+          "opaquePixels": 20149,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            627,
+            314,
+            314,
+            313
+          ],
+          "crop": [
+            667,
+            351,
+            269,
+            246
+          ],
+          "core": [
+            671,
+            356,
+            262,
+            232
+          ],
+          "anchor": [
+            805,
+            588
+          ],
+          "opaquePixels": 27570,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            941,
+            314,
+            313,
+            313
+          ],
+          "crop": [
+            996,
+            337,
+            233,
+            275
+          ],
+          "core": [
+            1006,
+            344,
+            214,
+            260
+          ],
+          "anchor": [
+            1101,
+            604
+          ],
+          "opaquePixels": 27015,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            627,
+            314,
+            314
+          ],
+          "crop": [
+            31,
+            663,
+            276,
+            236
+          ],
+          "core": [
+            39,
+            675,
+            268,
+            213
+          ],
+          "anchor": [
+            179,
+            888
+          ],
+          "opaquePixels": 25770,
+          "trimmed": [
+            "right"
+          ]
+        },
+        {
+          "cell": [
+            314,
+            627,
+            313,
+            314
+          ],
+          "crop": [
+            370,
+            634,
+            248,
+            266
+          ],
+          "core": [
+            377,
+            642,
+            232,
+            249
+          ],
+          "anchor": [
+            493,
+            891
+          ],
+          "opaquePixels": 23574,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            627,
+            627,
+            314,
+            314
+          ],
+          "crop": [
+            648,
+            674,
+            277,
+            224
+          ],
+          "core": [
+            652,
+            675,
+            273,
+            218
+          ],
+          "anchor": [
+            794,
+            893
+          ],
+          "opaquePixels": 21037,
+          "trimmed": [
+            "right"
+          ]
+        },
+        {
+          "cell": [
+            941,
+            627,
+            313,
+            314
+          ],
+          "crop": [
+            970,
+            635,
+            258,
+            264
+          ],
+          "core": [
+            978,
+            668,
+            244,
+            222
+          ],
+          "anchor": [
+            1099,
+            890
+          ],
+          "opaquePixels": 22050,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            0,
+            941,
+            314,
+            313
+          ],
+          "crop": [
+            21,
+            948,
+            293,
+            261
+          ],
+          "core": [
+            31,
+            953,
+            283,
+            250
+          ],
+          "anchor": [
+            156,
+            1203
+          ],
+          "opaquePixels": 20249,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            314,
+            941,
+            313,
+            313
+          ],
+          "crop": [
+            331,
+            1006,
+            296,
+            148
+          ],
+          "core": [
+            385,
+            1012,
+            240,
+            136
+          ],
+          "anchor": [
+            508,
+            1148
+          ],
+          "opaquePixels": 14251,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            627,
+            941,
+            314,
+            313
+          ],
+          "crop": [
+            627,
+            962,
+            254,
+            223
+          ],
+          "core": [
+            693,
+            980,
+            179,
+            197
+          ],
+          "anchor": [
+            773,
+            1177
+          ],
+          "opaquePixels": 8968,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            941,
+            941,
+            313,
+            313
+          ],
+          "crop": [
+            949,
+            967,
+            283,
+            225
+          ],
+          "core": [
+            957,
+            1002,
+            268,
+            178
+          ],
+          "anchor": [
+            1086,
+            1180
+          ],
+          "opaquePixels": 9079,
+          "trimmed": []
+        }
+      ]
+    },
+    "encounterProps": {
+      "path": "assets/dungeons/encounterProps.png",
+      "width": 1774,
+      "height": 887,
+      "cols": 4,
+      "rows": 2,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            50,
+            114,
+            379,
+            268
+          ],
+          "core": [
+            51,
+            116,
+            376,
+            265
+          ],
+          "anchor": [
+            153,
+            381
+          ],
+          "opaquePixels": 61557,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            510,
+            27,
+            335,
+            401
+          ],
+          "core": [
+            514,
+            29,
+            329,
+            397
+          ],
+          "anchor": [
+            680,
+            426
+          ],
+          "opaquePixels": 78302,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            958,
+            8,
+            337,
+            425
+          ],
+          "core": [
+            960,
+            10,
+            333,
+            421
+          ],
+          "anchor": [
+            1124,
+            431
+          ],
+          "opaquePixels": 73891,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            1421,
+            3,
+            288,
+            432
+          ],
+          "core": [
+            1423,
+            9,
+            284,
+            424
+          ],
+          "anchor": [
+            1568,
+            433
+          ],
+          "opaquePixels": 68216,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            48,
+            545,
+            385,
+            272
+          ],
+          "core": [
+            49,
+            547,
+            382,
+            268
+          ],
+          "anchor": [
+            153,
+            815
+          ],
+          "opaquePixels": 63484,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            502,
+            463,
+            348,
+            400
+          ],
+          "core": [
+            505,
+            465,
+            344,
+            396
+          ],
+          "anchor": [
+            687,
+            861
+          ],
+          "opaquePixels": 76173,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            898,
+            469,
+            433,
+            386
+          ],
+          "core": [
+            900,
+            471,
+            431,
+            382
+          ],
+          "anchor": [
+            1029,
+            853
+          ],
+          "opaquePixels": 106507,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            1385,
+            463,
+            352,
+            391
+          ],
+          "core": [
+            1386,
+            465,
+            349,
+            387
+          ],
+          "anchor": [
+            1510,
+            852
+          ],
+          "opaquePixels": 81290,
+          "trimmed": [
+            "left"
+          ]
+        }
+      ]
+    },
+    "harpooner": {
+      "path": "assets/enemies/harpooner.png",
+      "width": 1774,
+      "height": 887,
+      "cols": 4,
+      "rows": 2,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            86,
+            112,
+            312,
+            279
+          ],
+          "core": [
+            88,
+            114,
+            308,
+            275
+          ],
+          "anchor": [
+            213,
+            389
+          ],
+          "opaquePixels": 35809,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            501,
+            132,
+            351,
+            266
+          ],
+          "core": [
+            502,
+            134,
+            347,
+            262
+          ],
+          "anchor": [
+            695,
+            396
+          ],
+          "opaquePixels": 35465,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            962,
+            131,
+            336,
+            263
+          ],
+          "core": [
+            964,
+            133,
+            331,
+            259
+          ],
+          "anchor": [
+            1160,
+            392
+          ],
+          "opaquePixels": 33833,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            1389,
+            105,
+            323,
+            285
+          ],
+          "core": [
+            1391,
+            107,
+            319,
+            281
+          ],
+          "anchor": [
+            1524,
+            388
+          ],
+          "opaquePixels": 37868,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            444,
+            510,
+            443
+          ],
+          "crop": [
+            79,
+            543,
+            409,
+            262
+          ],
+          "core": [
+            81,
+            545,
+            405,
+            258
+          ],
+          "anchor": [
+            204,
+            803
+          ],
+          "opaquePixels": 43323,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            542,
+            538,
+            289,
+            264
+          ],
+          "core": [
+            544,
+            539,
+            286,
+            261
+          ],
+          "anchor": [
+            694,
+            800
+          ],
+          "opaquePixels": 33910,
+          "trimmed": [
+            "left"
+          ]
+        },
+        {
+          "cell": [
+            887,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            995,
+            515,
+            257,
+            290
+          ],
+          "core": [
+            997,
+            517,
+            253,
+            286
+          ],
+          "anchor": [
+            1111,
+            803
+          ],
+          "opaquePixels": 39291,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            1431,
+            514,
+            270,
+            292
+          ],
+          "core": [
+            1433,
+            516,
+            266,
+            288
+          ],
+          "anchor": [
+            1579,
+            804
+          ],
+          "opaquePixels": 39282,
+          "trimmed": []
+        }
+      ],
+      "group": "enemyCoastal",
+      "row": 0,
+      "poseMap": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reference": {
+        "h": 275,
+        "w": 409
+      }
+    },
+    "bellringer": {
+      "path": "assets/enemies/bellringer.png",
+      "width": 1774,
+      "height": 887,
+      "cols": 4,
+      "rows": 2,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            29,
+            29,
+            375,
+            391
+          ],
+          "core": [
+            31,
+            31,
+            344,
+            387
+          ],
+          "anchor": [
+            206,
+            418
+          ],
+          "opaquePixels": 76629,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            463,
+            46,
+            422,
+            369
+          ],
+          "core": [
+            465,
+            48,
+            418,
+            365
+          ],
+          "anchor": [
+            678,
+            413
+          ],
+          "opaquePixels": 73268,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            910,
+            55,
+            384,
+            362
+          ],
+          "core": [
+            912,
+            57,
+            380,
+            358
+          ],
+          "anchor": [
+            1124,
+            415
+          ],
+          "opaquePixels": 70014,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            1371,
+            7,
+            378,
+            415
+          ],
+          "core": [
+            1373,
+            12,
+            374,
+            408
+          ],
+          "anchor": [
+            1553,
+            420
+          ],
+          "opaquePixels": 83708,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            24,
+            468,
+            415,
+            375
+          ],
+          "core": [
+            26,
+            470,
+            406,
+            371
+          ],
+          "anchor": [
+            219,
+            841
+          ],
+          "opaquePixels": 85844,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            467,
+            466,
+            402,
+            377
+          ],
+          "core": [
+            473,
+            468,
+            394,
+            373
+          ],
+          "anchor": [
+            664,
+            841
+          ],
+          "opaquePixels": 81120,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            911,
+            473,
+            401,
+            361
+          ],
+          "core": [
+            912,
+            475,
+            398,
+            357
+          ],
+          "anchor": [
+            1138,
+            832
+          ],
+          "opaquePixels": 72770,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            1361,
+            485,
+            383,
+            347
+          ],
+          "core": [
+            1363,
+            487,
+            379,
+            343
+          ],
+          "anchor": [
+            1553,
+            830
+          ],
+          "opaquePixels": 69650,
+          "trimmed": []
+        }
+      ],
+      "group": "enemyCoastal",
+      "row": 1,
+      "poseMap": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reference": {
+        "h": 387,
+        "w": 422
+      }
+    },
+    "shellguard": {
+      "path": "assets/enemies/shellguard.png",
+      "width": 1774,
+      "height": 887,
+      "cols": 4,
+      "rows": 2,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            59,
+            98,
+            332,
+            293
+          ],
+          "core": [
+            60,
+            100,
+            329,
+            289
+          ],
+          "anchor": [
+            237,
+            389
+          ],
+          "opaquePixels": 54233,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            511,
+            99,
+            324,
+            300
+          ],
+          "core": [
+            513,
+            101,
+            320,
+            296
+          ],
+          "anchor": [
+            682,
+            397
+          ],
+          "opaquePixels": 53043,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            945,
+            100,
+            334,
+            299
+          ],
+          "core": [
+            947,
+            101,
+            330,
+            296
+          ],
+          "anchor": [
+            1127,
+            397
+          ],
+          "opaquePixels": 53511,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            1391,
+            173,
+            345,
+            224
+          ],
+          "core": [
+            1393,
+            175,
+            341,
+            220
+          ],
+          "anchor": [
+            1572,
+            395
+          ],
+          "opaquePixels": 43045,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            51,
+            550,
+            381,
+            252
+          ],
+          "core": [
+            53,
+            557,
+            375,
+            243
+          ],
+          "anchor": [
+            238,
+            800
+          ],
+          "opaquePixels": 53788,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            524,
+            481,
+            314,
+            339
+          ],
+          "core": [
+            526,
+            483,
+            310,
+            335
+          ],
+          "anchor": [
+            668,
+            818
+          ],
+          "opaquePixels": 52841,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            949,
+            539,
+            337,
+            281
+          ],
+          "core": [
+            951,
+            541,
+            333,
+            277
+          ],
+          "anchor": [
+            1129,
+            818
+          ],
+          "opaquePixels": 49247,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            1399,
+            533,
+            305,
+            278
+          ],
+          "core": [
+            1401,
+            535,
+            301,
+            274
+          ],
+          "anchor": [
+            1602,
+            809
+          ],
+          "opaquePixels": 42184,
+          "trimmed": []
+        }
+      ],
+      "group": "enemyCoastal",
+      "row": 2,
+      "poseMap": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reference": {
+        "h": 289,
+        "w": 381
+      }
+    },
+    "tideblade": {
+      "path": "assets/enemies/tideblade.png",
+      "width": 1774,
+      "height": 887,
+      "cols": 4,
+      "rows": 2,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            15,
+            16,
+            421,
+            419
+          ],
+          "core": [
+            17,
+            18,
+            417,
+            415
+          ],
+          "anchor": [
+            223,
+            433
+          ],
+          "opaquePixels": 58646,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            456,
+            71,
+            428,
+            350
+          ],
+          "core": [
+            458,
+            73,
+            423,
+            346
+          ],
+          "anchor": [
+            575,
+            419
+          ],
+          "opaquePixels": 53190,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            900,
+            74,
+            431,
+            344
+          ],
+          "core": [
+            903,
+            76,
+            428,
+            340
+          ],
+          "anchor": [
+            1065,
+            416
+          ],
+          "opaquePixels": 55236,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            1331,
+            137,
+            432,
+            296
+          ],
+          "core": [
+            1372,
+            138,
+            389,
+            293
+          ],
+          "anchor": [
+            1573,
+            431
+          ],
+          "opaquePixels": 50538,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            22,
+            499,
+            418,
+            366
+          ],
+          "core": [
+            34,
+            501,
+            403,
+            362
+          ],
+          "anchor": [
+            234,
+            863
+          ],
+          "opaquePixels": 64265,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            516,
+            466,
+            366,
+            390
+          ],
+          "core": [
+            518,
+            473,
+            354,
+            381
+          ],
+          "anchor": [
+            696,
+            854
+          ],
+          "opaquePixels": 59589,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            934,
+            477,
+            397,
+            382
+          ],
+          "core": [
+            936,
+            479,
+            395,
+            378
+          ],
+          "anchor": [
+            1130,
+            857
+          ],
+          "opaquePixels": 54707,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            1421,
+            487,
+            338,
+            365
+          ],
+          "core": [
+            1423,
+            489,
+            334,
+            362
+          ],
+          "anchor": [
+            1566,
+            851
+          ],
+          "opaquePixels": 47402,
+          "trimmed": [
+            "left"
+          ]
+        }
+      ],
+      "group": "enemyCoastal",
+      "row": 3,
+      "poseMap": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reference": {
+        "h": 415,
+        "w": 432
+      }
+    },
+    "coastalTerrain": {
+      "path": "assets/coast/terrain.png",
+      "width": 1254,
+      "height": 1254,
+      "cols": 2,
+      "rows": 2,
+      "opaque": true,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "crop": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "core": [
+            0,
+            0,
+            627,
+            627
+          ],
+          "anchor": [
+            313.5,
+            627
+          ],
+          "opaquePixels": 393129,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            627,
+            0,
+            627,
+            627
+          ],
+          "crop": [
+            627,
+            0,
+            627,
+            627
+          ],
+          "core": [
+            627,
+            0,
+            627,
+            627
+          ],
+          "anchor": [
+            940.5,
+            627
+          ],
+          "opaquePixels": 393129,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            627,
+            627,
+            627
+          ],
+          "crop": [
+            0,
+            627,
+            627,
+            627
+          ],
+          "core": [
+            0,
+            627,
+            627,
+            627
+          ],
+          "anchor": [
+            313.5,
+            1254
+          ],
+          "opaquePixels": 393129,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            627,
+            627,
+            627,
+            627
+          ],
+          "crop": [
+            627,
+            627,
+            627,
+            627
+          ],
+          "core": [
+            627,
+            627,
+            627,
+            627
+          ],
+          "anchor": [
+            940.5,
+            1254
+          ],
+          "opaquePixels": 393129,
+          "trimmed": []
+        }
+      ]
+    },
+    "coastalProps": {
+      "path": "assets/coast/scenery.png",
+      "width": 1774,
+      "height": 887,
+      "cols": 4,
+      "rows": 2,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            30,
+            0,
+            395,
+            470
+          ],
+          "crop": [
+            67,
+            15,
+            313,
+            443
+          ],
+          "core": [
+            69,
+            17,
+            309,
+            439
+          ],
+          "anchor": [
+            223,
+            456
+          ],
+          "opaquePixels": 80113,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            445,
+            30,
+            390,
+            417
+          ],
+          "crop": [
+            458,
+            74,
+            373,
+            369
+          ],
+          "core": [
+            460,
+            76,
+            369,
+            365
+          ],
+          "anchor": [
+            645,
+            441
+          ],
+          "opaquePixels": 79310,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            850,
+            0,
+            560,
+            465
+          ],
+          "crop": [
+            867,
+            27,
+            528,
+            433
+          ],
+          "core": [
+            869,
+            29,
+            524,
+            429
+          ],
+          "anchor": [
+            1126,
+            458
+          ],
+          "opaquePixels": 107411,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1435,
+            0,
+            320,
+            475
+          ],
+          "crop": [
+            1463,
+            15,
+            240,
+            449
+          ],
+          "core": [
+            1465,
+            17,
+            236,
+            445
+          ],
+          "anchor": [
+            1582,
+            462
+          ],
+          "opaquePixels": 52397,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            470,
+            444,
+            417
+          ],
+          "crop": [
+            15,
+            481,
+            427,
+            376
+          ],
+          "core": [
+            17,
+            484,
+            423,
+            371
+          ],
+          "anchor": [
+            237,
+            855
+          ],
+          "opaquePixels": 87914,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            470,
+            448,
+            350,
+            425
+          ],
+          "crop": [
+            492,
+            452,
+            308,
+            407
+          ],
+          "core": [
+            494,
+            454,
+            304,
+            403
+          ],
+          "anchor": [
+            645,
+            857
+          ],
+          "opaquePixels": 74482,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            900,
+            510,
+            435,
+            365
+          ],
+          "crop": [
+            903,
+            557,
+            417,
+            298
+          ],
+          "core": [
+            905,
+            559,
+            413,
+            295
+          ],
+          "anchor": [
+            1157,
+            854
+          ],
+          "opaquePixels": 94576,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1360,
+            480,
+            414,
+            395
+          ],
+          "crop": [
+            1371,
+            500,
+            379,
+            355
+          ],
+          "core": [
+            1373,
+            502,
+            376,
+            351
+          ],
+          "anchor": [
+            1553,
+            853
+          ],
+          "opaquePixels": 79812,
+          "trimmed": []
+        }
+      ]
+    },
+    "blackglassReaver": {
+      "path": "assets/enemies/blackglass-reaver.png",
+      "width": 1774,
+      "height": 887,
+      "cols": 4,
+      "rows": 2,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            58,
+            76,
+            325,
+            336
+          ],
+          "core": [
+            60,
+            79,
+            321,
+            331
+          ],
+          "anchor": [
+            228,
+            410
+          ],
+          "opaquePixels": 45434,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            452,
+            106,
+            402,
+            305
+          ],
+          "core": [
+            454,
+            108,
+            399,
+            301
+          ],
+          "anchor": [
+            610,
+            409
+          ],
+          "opaquePixels": 40653,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            933,
+            130,
+            389,
+            281
+          ],
+          "core": [
+            936,
+            132,
+            385,
+            277
+          ],
+          "anchor": [
+            1073,
+            409
+          ],
+          "opaquePixels": 38632,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            1430,
+            80,
+            294,
+            330
+          ],
+          "core": [
+            1432,
+            82,
+            291,
+            326
+          ],
+          "anchor": [
+            1584,
+            408
+          ],
+          "opaquePixels": 41634,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            444,
+            480,
+            443
+          ],
+          "crop": [
+            47,
+            510,
+            399,
+            303
+          ],
+          "core": [
+            49,
+            512,
+            395,
+            299
+          ],
+          "anchor": [
+            208,
+            811
+          ],
+          "opaquePixels": 44688,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            480,
+            444,
+            440,
+            443
+          ],
+          "crop": [
+            510,
+            509,
+            381,
+            302
+          ],
+          "core": [
+            512,
+            511,
+            377,
+            298
+          ],
+          "anchor": [
+            690,
+            809
+          ],
+          "opaquePixels": 43392,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            920,
+            444,
+            411,
+            443
+          ],
+          "crop": [
+            967,
+            539,
+            311,
+            273
+          ],
+          "core": [
+            968,
+            541,
+            308,
+            269
+          ],
+          "anchor": [
+            1123,
+            810
+          ],
+          "opaquePixels": 38093,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            1424,
+            500,
+            308,
+            315
+          ],
+          "core": [
+            1426,
+            501,
+            304,
+            312
+          ],
+          "anchor": [
+            1566,
+            813
+          ],
+          "opaquePixels": 45715,
+          "trimmed": []
+        }
+      ],
+      "group": "enemyDeep",
+      "row": 0,
+      "poseMap": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reference": {
+        "h": 331,
+        "w": 402
+      }
+    },
+    "cinderMortar": {
+      "path": "assets/enemies/cinder-mortar.png",
+      "width": 1774,
+      "height": 887,
+      "cols": 4,
+      "rows": 2,
+      "opaque": false,
+      "frames": [
+        {
+          "cell": [
+            0,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            76,
+            57,
+            316,
+            364
+          ],
+          "core": [
+            78,
+            59,
+            312,
+            360
+          ],
+          "anchor": [
+            266,
+            419
+          ],
+          "opaquePixels": 57380,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            444,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            481,
+            57,
+            349,
+            360
+          ],
+          "core": [
+            483,
+            59,
+            345,
+            356
+          ],
+          "anchor": [
+            696,
+            415
+          ],
+          "opaquePixels": 62244,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            0,
+            444,
+            444
+          ],
+          "crop": [
+            932,
+            58,
+            336,
+            358
+          ],
+          "core": [
+            934,
+            60,
+            331,
+            354
+          ],
+          "anchor": [
+            1126,
+            414
+          ],
+          "opaquePixels": 62364,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            0,
+            443,
+            444
+          ],
+          "crop": [
+            1337,
+            58,
+            334,
+            362
+          ],
+          "core": [
+            1339,
+            60,
+            330,
+            358
+          ],
+          "anchor": [
+            1509,
+            418
+          ],
+          "opaquePixels": 57939,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            0,
+            444,
+            480,
+            443
+          ],
+          "crop": [
+            79,
+            484,
+            374,
+            348
+          ],
+          "core": [
+            81,
+            489,
+            363,
+            342
+          ],
+          "anchor": [
+            289,
+            831
+          ],
+          "opaquePixels": 61336,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            480,
+            444,
+            407,
+            443
+          ],
+          "crop": [
+            526,
+            487,
+            319,
+            351
+          ],
+          "core": [
+            528,
+            491,
+            315,
+            345
+          ],
+          "anchor": [
+            753,
+            836
+          ],
+          "opaquePixels": 52372,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            887,
+            444,
+            444,
+            443
+          ],
+          "crop": [
+            936,
+            493,
+            332,
+            342
+          ],
+          "core": [
+            938,
+            495,
+            327,
+            338
+          ],
+          "anchor": [
+            1127,
+            833
+          ],
+          "opaquePixels": 62019,
+          "trimmed": []
+        },
+        {
+          "cell": [
+            1331,
+            444,
+            443,
+            443
+          ],
+          "crop": [
+            1363,
+            536,
+            340,
+            301
+          ],
+          "core": [
+            1365,
+            537,
+            336,
+            298
+          ],
+          "anchor": [
+            1551,
+            835
+          ],
+          "opaquePixels": 50237,
+          "trimmed": []
+        }
+      ],
+      "group": "enemyDeep",
+      "row": 1,
+      "poseMap": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reference": {
+        "h": 360,
+        "w": 374
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+/* Atlas-backed structure icons share the same art as the battlefield. */
+.production-card .building-art{top:2px;left:5px;width:42px;height:42px;border:0;background-color:transparent;background-image:url('assets/buildings.png');background-size:400% 200%;box-shadow:none;transform:none;image-rendering:pixelated;filter:drop-shadow(0 2px 2px #0006)}
+.production-card .building-art::after{display:none}
+@media(max-width:1000px){.production-card .building-art{top:3px;left:3px;width:35px;height:35px}}
+@media(max-width:760px){.production-card .building-art{top:0;left:2px;width:32px;height:32px}}
+@media(max-width:480px){.production-card .building-art{width:25px;height:25px}}

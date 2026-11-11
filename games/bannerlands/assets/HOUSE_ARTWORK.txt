@@ -1,0 +1,53 @@
+BANNERLANDS — HOUSE ARTWORK
+
+SIXTEEN SEPARATE TROOP SHEETS
+houses/wolf-troops.png — House Stark: Winter Guard
+houses/lion-troops.png — House Lannister: Gilded Crossbows
+houses/dragon-troops.png — House Targaryen: Dragonfire Acolytes
+houses/stag-troops.png — House Baratheon: Storm Riders
+houses/rose-troops.png — House Tyrell: Thorn Lancers
+houses/sun-troops.png — House Martell: Dune Skirmishers
+houses/kraken-troops.png — House Greyjoy: Ironborn Reavers
+houses/falcon-troops.png — House Arryn: Vale Sentinels
+houses/flayed-troops.png — House Bolton: Dread Pikes
+houses/bridge-troops.png — House Frey: Bridge Wardens
+houses/bear-troops.png — House Mormont: Bear Maulers
+houses/fish-troops.png — House Tully: River Rangers
+houses/frog-troops.png — House Reed: Crannog Hunters
+houses/beacon-troops.png — House Hightower: Beacon Engineers
+houses/huntsman-troops.png — House Tarly: Hill Huntsmen
+houses/bone-troops.png — Free Folk: Free Folk Berserkers
+
+Every troop PNG has 4 equal columns by 2 equal rows (8 frames).
+Top row, left to right: four walking-cycle poses.
+Bottom row, left to right: four weapon-attack poses.
+Sprites face screen-right; the game mirrors them for the other direction.
+Each sheet depicts its own troop, equipment, silhouette and native house colors.
+
+CASTLE AND PRODUCTION ATLASES
+house-castles.png — 16 different house keeps.
+house-production.png — 16 specialist recruitment structures.
+Both atlases are 4 equal columns by 4 equal rows, read left to right, then top to bottom in this order:
+1. House Stark (wolf)
+2. House Lannister (lion)
+3. House Targaryen (dragon)
+4. House Baratheon (stag)
+5. House Tyrell (rose)
+6. House Martell (sun)
+7. House Greyjoy (kraken)
+8. House Arryn (falcon)
+9. House Bolton (flayed)
+10. House Frey (bridge)
+11. House Mormont (bear)
+12. House Tully (fish)
+13. House Reed (frog)
+14. House Hightower (beacon)
+15. House Tarly (huntsman)
+16. Free Folk (bone)
+
+PROVENANCE AND USE
+The new raster artwork was made with built-in image generation for this game. The existing troops-atlas.png and structures-atlas.png were used as style references so the new art fits the painted medieval RTS style.
+The original common troop, structure and terrain atlases remain preserved.
+Original generated PNGs are retained; the game reads the sprite grids and handles direction, animation and display size.
+See house-art-prompts.json for the prompt set and source image paths. Each specialist has its own original PNG sheet; no common troop sprite is substituted for its house artwork.
+All required PNGs are embedded when building the standalone Bannerlands.html, so play needs no external downloads.

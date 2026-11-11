@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#090f18">
+  <meta name="description" content="Command Pac-Man and his miners or lead the ghost hunt. A real-time strategy game in a living maze with fog of war, base building, and four AI difficulties.">
+  <title>Pac-Man: Blackout — The Maze Is Watching</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23ffd552' d='M29 8A15 15 0 1 0 29 24L15 16Z'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="building-icons.css">
+  <link rel="stylesheet" href="compact.css">
+  <link rel="stylesheet" href="faction-art.css">
+  <link rel="stylesheet" href="fullscreen.css">
+  <link rel="stylesheet" href="training-queue.css">
+  <link rel="stylesheet" href="teams.css">
+</head>
+<body>
+<main id="app" class="pac-theme">
+  <header class="topbar">
+    <button class="brand" id="menu-btn" aria-label="Open command menu"><span class="brand-mark" aria-hidden="true"></span><span>PAC-MAN <strong>BLACKOUT</strong></span></button>
+    <div class="objective"><span class="eyebrow" id="faction-label">PAC ALLIANCE</span><span id="objective-text">Eat every pellet. Keep Pac-Man alive.</span></div>
+    <div class="top-metrics">
+      <div class="metric"><span class="metric-icon pellet-icon" aria-hidden="true"></span><div><strong id="pellet-count">—</strong><span>PELLETS LEFT</span></div></div>
+      <div class="metric"><span class="metric-icon resource-icon" aria-hidden="true">◇</span><div><strong id="resource-count">240</strong><span id="resource-label">SPARK</span></div></div>
+      <div class="metric army-metric"><span class="metric-icon" aria-hidden="true">▥</span><div><strong id="army-count">5 / 18</strong><span>ARMY</span></div></div>
+      <div class="clock"><span id="match-clock">00:00</span><button id="speed-btn" class="quiet" title="Change simulation speed">1×</button></div>
+    </div>
+    <button class="hero-quick" id="hero-quick" title="Focus your commander or hunting party"><span id="quick-hero-name">PAC-MAN</span><strong id="quick-hero-hp">280 HP</strong><i><b id="quick-hp-bar"></b></i></button>
+    <button class="quick-power" id="quick-power" title="Empower nearby allies for 9 seconds"><span class="power-orb" aria-hidden="true"></span><span id="quick-power-text">POWER · 1</span><kbd>E</kbd></button>
+    <div class="top-actions"><button class="icon-btn fullscreen-control" id="fullscreen-btn" type="button" aria-label="Enter fullscreen" aria-pressed="false" title="Enter fullscreen (F10)"><span class="fullscreen-glyph" aria-hidden="true">⛶</span></button><button class="intel-toggle" id="intel-toggle" aria-label="Expand tactical intel" aria-expanded="false" aria-controls="intel-drawer">INTEL</button><button class="icon-btn" id="sound-btn" aria-label="Enable sound" aria-pressed="false">♪</button><button class="icon-btn" id="help-btn" aria-label="How to play">?</button><button class="icon-btn" id="pause-btn" aria-label="Pause match">Ⅱ</button></div>
+  </header>
+
+  <section class="battlefield" aria-label="Battlefield">
+    <canvas id="game-canvas" aria-label="Maze battlefield. Select units with left click. Right click to command. A attacks nearest visible enemies. Move the mouse to the edges to pan; use the wheel to zoom."></canvas>
+    <div class="map-name"><span class="live-dot"></span><span id="map-label">THE HOLLOW ARCHIVE</span><span id="difficulty-tag">NORMAL AI</span></div>
+    <div class="team-roster" id="team-roster" role="group" aria-label="Team commanders"></div>
+    <section class="training-queue" id="training-queue" aria-label="Troop training queue" hidden>
+      <div class="training-queue-caption"><span>TRAINING <b id="training-queue-count" aria-live="polite">0</b></span><span>CLICK TO CANCEL</span></div>
+      <div class="training-queue-orders" id="training-queue-orders" role="group" aria-label="Click a queued troop to cancel it and refund its cost"></div>
+    </section>
+    <div id="placement-note" class="placement-note" hidden></div>
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <div id="pause-label" class="pause-label" hidden><span>SIMULATION PAUSED</span><button id="resume-inline">Resume <kbd>Space</kbd></button></div>
+    <div class="map-tools"><button class="icon-btn" id="zoom-out" aria-label="Zoom out">−</button><span id="zoom-label">100%</span><button class="icon-btn" id="zoom-in" aria-label="Zoom in">+</button><button class="quiet" id="focus-btn">Focus <kbd>F</kbd></button></div>
+    <div class="edge-hint">Mouse edges pan <span>·</span> Wheel zoom <span>·</span> A attacks nearest</div>
+  </section>
+
+  <aside class="command-panel" id="intel-drawer">
+    <section class="intel-panel">
+      <div class="panel-title"><h2>TACTICAL MAP</h2><span class="live-label">FOG ACTIVE</span></div>
+      <canvas id="minimap" width="296" height="200" aria-label="Tactical minimap. Click to move your camera."></canvas>
+      <div class="map-legend"><span><i class="legend-pac"></i> Pac forces</span><span><i class="legend-ghost"></i> Ghosts</span><span><i class="legend-pellet"></i> Pellets</span></div>
+    </section>
+    <section class="hero-status">
+      <div class="panel-title"><h2 id="hero-title">KEEP HIM ALIVE</h2><span id="hero-hp-label">280 / 280</span></div>
+      <div class="health-track"><div id="hero-hp-bar"></div></div>
+      <p id="hero-status-note">One life per commander. Surviving partners can still win.</p>
+    </section>
+    <section class="citadel-status">
+      <div class="panel-title"><h2>GHOST CITADEL</h2><span id="citadel-hp-label">UNSCOUTED</span></div>
+      <div class="health-track"><div id="citadel-hp-bar"></div></div>
+      <p>Destroy the main Citadel to win as Pac. Its armor is massive; it regenerates after escaping damage.</p>
+    </section>
+    <section class="power-panel" id="power-panel">
+      <div class="panel-title"><h2>POWER RESERVE</h2><strong id="power-count">1 CHARGE</strong></div>
+      <button id="power-btn" class="power-btn"><span class="power-orb" aria-hidden="true"></span><span id="power-label">UNLEASH POWER</span><kbd>E</kbd></button>
+      <p id="power-description">Empower nearby allies for 9 seconds. Build a Digestor to forge more charges.</p>
+      <div class="rank-line"><span>FORCE EVOLUTION</span><span id="rank-value">RANK 0</span></div>
+    </section>
+    <section class="activity-panel"><div class="panel-title"><h2>FIELD REPORT</h2><span id="contact-count">NO CONTACT</span></div><div id="activity-log" aria-live="off"></div></section>
+    <div class="side-footer"><button class="quiet" id="menu-link">Command menu</button><span>ONE LIFE. EVERY PELLET.</span></div>
+  </aside>
+
+  <footer class="bottom-panel">
+    <section class="selection-panel">
+      <div class="selection-top"><div class="portrait" id="selection-portrait"><span class="portrait-frame"></span></div><div><span class="eyebrow" id="selection-category">COMMANDER</span><h2 id="selection-title">Pac-Man</h2><p id="selection-description">Your commander. His death ends the match.</p></div></div>
+      <div class="selection-details" id="selection-details"></div>
+      <div class="selection-units" id="selection-units"></div>
+    </section>
+    <section class="orders-panel"><div class="panel-title"><h2>ORDERS</h2><span id="order-hint">SELECT A UNIT</span></div><div class="order-buttons">
+      <button data-order="move"><span>↗</span>Move<kbd>M</kbd></button><button data-order="attack"><span>⌖</span>Attack<kbd>A</kbd></button><button data-order="harvest" id="harvest-order"><span>◈</span>Harvest<kbd>H</kbd></button><button data-order="snare" id="snare-order" hidden><span>⌁</span>Snare<kbd>Q</kbd></button><button data-order="stop"><span>■</span>Stop<kbd>X</kbd></button>
+    </div><p id="command-help">Left click selects · Shift adds · Drag selects a group</p></section>
+    <section class="production-panel"><div class="panel-title"><div class="production-tabs" role="tablist" aria-label="Production"><button id="troops-tab" class="active" role="tab" aria-selected="true" aria-controls="production-grid">SUMMON <kbd>T</kbd></button><button id="buildings-tab" role="tab" aria-selected="false" aria-controls="production-grid">BUILD <kbd>B</kbd></button></div><span id="production-note">SPARK</span></div><div class="production-grid" id="production-grid" role="tabpanel" aria-labelledby="troops-tab"></div></section>
+  </footer>
+
+  <section class="screen-overlay" id="setup-screen" aria-label="New match setup">
+    <div class="setup-shell">
+      <div class="setup-art" aria-label="Selected faction artwork">
+        <div class="faction-keyart faction-keyart-pac" aria-hidden="true"></div>
+        <div class="faction-keyart faction-keyart-ghost" aria-hidden="true"></div>
+        <span class="art-edition">ASYMMETRIC MAZE WARFARE</span>
+        <span class="eyebrow" id="art-faction-name">PAC ALLIANCE</span>
+        <h1>PAC-MAN<br><strong>BLACKOUT</strong></h1>
+        <p id="art-faction-tagline">Outrun the dark.</p>
+        <div class="art-bottom"><span id="art-bottom-left">THREE TEAMS.</span><span id="art-bottom-right">EVERY PELLET.</span></div>
+      </div>
+      <div class="setup-content">
+        <div class="setup-heading"><span class="eyebrow">CHOOSE YOUR COMMAND</span><div class="setup-heading-actions"><button id="setup-fullscreen-btn" class="setup-fullscreen fullscreen-control" type="button" aria-label="Enter fullscreen" aria-pressed="false" title="Enter fullscreen (F10)"><span class="fullscreen-glyph" aria-hidden="true">⛶</span><span class="fullscreen-label">Fullscreen</span><kbd>F10</kbd></button><button id="setup-close" class="icon-btn" aria-label="Return to match" hidden>×</button></div></div>
+        <div class="faction-choices">
+          <button class="faction-choice chosen" data-side="pac" aria-pressed="true"><span class="faction-sprite pac-sprite"></span><span><strong>PAC ALLIANCE</strong><small>Harvest. Expand. Survive.</small></span><span class="choice-check">✓</span></button>
+          <button class="faction-choice" data-side="ghost" aria-pressed="false"><span class="faction-sprite ghost-sprite"></span><span><strong>GHOST LEGION</strong><small>Scout. Surround. Hunt.</small></span><span class="choice-check">✓</span></button>
+        </div>
+        <div class="team-choice-row" id="pac-team-choices" role="group" aria-label="Your Pac team">
+          <span>YOUR TEAM</span>
+          <button type="button" data-team="pac" aria-pressed="true"><i></i>1 · GOLD</button>
+          <button type="button" data-team="pac2" aria-pressed="false"><i></i>2 · JADE</button>
+          <button type="button" data-team="pac3" aria-pressed="false"><i></i>3 · CORAL</button>
+        </div>
+        <p id="matchup-summary" class="matchup-summary">You + 2 AI partners vs 1 Ghost Legion</p>
+        <p class="faction-brief" id="faction-brief">Lead one of three allied Pac teams. Share vision and pellet progress with your AI partners; each team owns its troops and coins.</p>
+        <label class="field-label" for="map-select">BATTLEFIELD</label>
+        <select id="map-select"><option value="catacombs">The Hollow Archive · Vast interconnected maze</option><option value="ruins">Mosslight Ruins · Open chambers and flanking routes</option><option value="crossroads">The Endless Crossroads · Largest map, long avenues</option></select>
+        <div class="field-label difficulty-label">MATCH DIFFICULTY <span id="difficulty-name">MEDIUM</span></div>
+        <div class="difficulty-choices" role="group" aria-label="Match difficulty"><button data-difficulty="easy" aria-pressed="false">EASY</button><button data-difficulty="normal" class="chosen" aria-pressed="true">MEDIUM</button><button data-difficulty="hard" aria-pressed="false">HARD</button><button data-difficulty="nightmare" aria-pressed="false">NIGHTMARE</button></div>
+        <p id="difficulty-description" class="difficulty-description">Balanced expansion, scouting and coordinated attacks.</p>
+        <div class="seed-line"><label for="seed-input">MAZE SEED</label><input type="number" id="seed-input" value="1975" min="1" max="999999999"><button id="seed-random" class="quiet" aria-label="Randomize maze seed">↻ Random</button></div>
+        <button class="launch-btn" id="launch-btn"><span>ENTER THE MAZE</span><span aria-hidden="true">↗</span></button>
+        <div class="setup-bottom"><button class="quiet" id="setup-help">How to play <span>?</span></button><span>3 PAC TEAMS · 1 GHOST LEGION</span></div>
+        <p id="loading-status" role="status">Preparing the maze…</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen-overlay" id="help-screen" hidden aria-label="How to play"><div class="help-dialog"><div class="dialog-header"><div><span class="eyebrow">FIELD MANUAL</span><h2>Command the maze</h2></div><button id="help-close" class="icon-btn" aria-label="Close instructions">×</button></div><div class="manual-grid">
+    <article><span class="manual-number">01</span><h3>Choose your team</h3><p><b>Pac:</b> choose Gold, Jade, or Coral. Two AI partners share your vision and pellet progress. Each team owns its army, Spark, and Power. Eat every pellet OR destroy the Ghost Citadel together.</p><p><b>Ghosts:</b> command a powerful legion from the central Citadel. Hunt troops for Dread. Eliminate all three Pac-Men to win. A commander's death eliminates his team; surviving partners continue.</p></article>
+    <article><span class="manual-number">02</span><h3>Give orders</h3><p>Left click selects. Drag a box for groups; touching a troop with the box includes it. Shift adds units. Right click commands. A attacks each troop’s nearest visible enemy.</p><p>T then 1–4 summons troops. B then 1–4 builds. Groups take separate positions. Mouse edges pan; middle-drag also works. Intel expands optional details.</p></article>
+    <article><span class="manual-number">03</span><h3>Fight through fog</h3><p>All three Pac teams share live vision and explored ground. Every pellet grants ghosts a little local vision; cleared routes and outer lands need ghost scouts. Dim pellet markers are unconfirmed.</p><p>Binders cast an area snare. Watch its ground marker and move out before it lands. Ghost players can select Binders, press Q, and target the ground.</p></article>
+    <article><span class="manual-number">04</span><h3>Build your foothold</h3><p>Settle the broad outer belt. B then 1–4 builds; T then 1–4 summons. Click a top-left troop box to cancel and refund it. Buildings fit on any scouted, clear, unoccupied ground.</p><p>Easy gives Hard AI partners and Easy opponents. Medium makes both equal. Hard gives Easy partners and Hard opponents. Nightmare keeps Easy partners against Nightmare foes.</p></article>
+  </div><div class="shortcut-line"><span><kbd>Arrows</kbd> Pan</span><span><kbd>A</kbd> Attack nearest</span><span><kbd>B 1–4</kbd> Build</span><span><kbd>F</kbd> Focus</span><span><kbd>E</kbd> Power</span><span><kbd>Space</kbd> Pause</span><span><kbd>Esc</kbd> Cancel</span></div><button class="launch-btn" id="help-done"><span>READY TO COMMAND</span><span>↗</span></button></div></section>
+
+  <section class="screen-overlay" id="result-screen" hidden aria-label="Match result"><div class="result-dialog"><span class="eyebrow" id="result-kicker">THE HUNT IS OVER</span><div class="result-symbol" id="result-symbol"></div><h2 id="result-title">VICTORY</h2><p id="result-reason"></p><div class="result-stats" id="result-stats"></div><button id="rematch-btn" class="launch-btn"><span>PLAY AGAIN</span><span>↗</span></button><button id="result-menu" class="quiet">Choose another faction or battlefield</button></div></section>
+</main>
+<div id="fullscreen-feedback" class="fullscreen-feedback" role="status" aria-live="polite" hidden></div>
+<script type="module" src="main.js"></script>
+<script>
+// The source page uses modules and needs its local preview server. The packaged
+// PLAY PACMAN file replaces that module entry with a self-contained script.
+if (location.protocol === 'file:' && document.querySelector('script[type="module"][src="main.js"]')) {
+  const sourceLaunchButton = document.getElementById('launch-btn');
+  sourceLaunchButton.disabled = true;
+  sourceLaunchButton.querySelector('span').textContent = 'OPEN PLAY PACMAN.html';
+  document.getElementById('loading-status').textContent = 'To play, open PLAY PACMAN.html in the main Pacman folder. This page is editable source.';
+}
+</script>
+</body>
+</html>

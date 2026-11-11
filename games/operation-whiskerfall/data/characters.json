@@ -1,0 +1,22 @@
+[
+  {
+    "id": "tabby",
+    "name": "Captain Pip",
+    "color": "#dca26a"
+  },
+  {
+    "id": "blackcat",
+    "name": "Scout Nyx",
+    "color": "#58616f"
+  },
+  {
+    "id": "fox",
+    "name": "Ranger Ember",
+    "color": "#c47b52"
+  },
+  {
+    "id": "snowcat",
+    "name": "Medic Luna",
+    "color": "#d5d9d4"
+  }
+]

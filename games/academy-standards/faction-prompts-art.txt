@@ -1,0 +1,89 @@
+PLAYER
+
+Use case: stylized-concept. Asset type: distinct faction production animation SPRITE ATLAS for an RTS game.
+Create a PORTRAIT transparent PNG with width:height aspect ratio EXACTLY 4:5, ideally1280x1600 pixels. STRICT REGULAR GRID: EIGHT equal columns by TEN equal rows, 80 cells total. ALL CELLS SQUARE. Every cell contains exactly one complete full-body character or mounted rider, entirely within its own cell, with transparent margins. TRUE RGBA alpha0 background with no paper, no checkerboard baked in, no solid background, no scenery, no labels, no grid lines, no text.
+Style: detailed premium hand-painted chibi pixel-art RTS miniatures, top-down three-quarter view, strong readable silhouettes, attractive dimensional shading. Do not make generic identical soldiers with only palette changes: this faction has its own unmistakable armor, headgear, shield shapes, weapon design, clothing shapes and horse tack.
+Columns LEFT TO RIGHT: 0standingidle;1walkleftfootforward;2walkpassing;3walkrightfootforward;4walkreturn;5walkpassingreturn;6attackwindup;7attackstrike/release. Within EVERY row it must be exactly the SAME character with identical face/clothing and scale in meaningful different animation poses. Camera/view never changes within a row.
+Ten rows TOP TO BOTTOM:
+ROW0 sword-and-shield infantry facing FRONT-RIGHT three-quarter.
+ROW1 exactly same sword infantry facing BACK-RIGHT three-quarter.
+ROW2 spear infantry FRONT-RIGHT.
+ROW3 exactly same spear infantry BACK-RIGHT.
+ROW4 bow archer FRONT-RIGHT, attack draws/releasesbow.
+ROW5 exactly same archer BACK-RIGHT.
+ROW6 field medic FRONT-RIGHT, smallstaff/satchel, healingcasting attack.
+ROW7 exactly same medic BACK-RIGHT.
+ROW8 mounted lancer on complete horse FRONT-RIGHT; horse legswalkframes, spear attack.
+ROW9 exactly same mounted lancer and horse BACK-RIGHT.
+Keep all characters fully visible, centered at SAME SCALE across each row, feetbaseline at88percent cellheight. Plenty empty alpha around each character; no neighboring cell overlap. Functional animation atlas, not collection of scenes. Distinct front/back pairs have matching designs. No large cast shadows outside feet. Exactly8columns10rows.
+
+HOUSE AUGUSTUS: blue-and-gold Roman academy legionnaires. Unique silhouettes: polished crested Roman helmets with transverse blue plumes, rectangular curved scutum shields with gold laurel motifs, segmented lorica armor, blue tabards and shoulder capes, brown sandals/greaves. Spears pilum style, bows elegant academy bows. Medic in blue-and-ivory Roman academy robe with laurel circlet and satchel. Horse barding blue/gold and Roman embroidered saddle cloth. Strong disciplined classical academy identity.
+
+================
+
+MARS
+
+Use case: stylized-concept. Asset type: distinct faction production animation SPRITE ATLAS for an RTS game.
+Create a PORTRAIT transparent PNG with width:height aspect ratio EXACTLY 4:5, ideally1280x1600 pixels. STRICT REGULAR GRID: EIGHT equal columns by TEN equal rows, 80 cells total. ALL CELLS SQUARE. Every cell contains exactly one complete full-body character or mounted rider, entirely within its own cell, with transparent margins. TRUE RGBA alpha0 background with no paper, no checkerboard baked in, no solid background, no scenery, no labels, no grid lines, no text.
+Style: detailed premium hand-painted chibi pixel-art RTS miniatures, top-down three-quarter view, strong readable silhouettes, attractive dimensional shading. Do not make generic identical soldiers with only palette changes: this faction has its own unmistakable armor, headgear, shield shapes, weapon design, clothing shapes and horse tack.
+Columns LEFT TO RIGHT: 0standingidle;1walkleftfootforward;2walkpassing;3walkrightfootforward;4walkreturn;5walkpassingreturn;6attackwindup;7attackstrike/release. Within EVERY row it must be exactly the SAME character with identical face/clothing and scale in meaningful different animation poses. Camera/view never changes within a row.
+Ten rows TOP TO BOTTOM:
+ROW0 sword-and-shield infantry facing FRONT-RIGHT three-quarter.
+ROW1 exactly same sword infantry facing BACK-RIGHT three-quarter.
+ROW2 spear infantry FRONT-RIGHT.
+ROW3 exactly same spear infantry BACK-RIGHT.
+ROW4 bow archer FRONT-RIGHT, attack draws/releasesbow.
+ROW5 exactly same archer BACK-RIGHT.
+ROW6 field medic FRONT-RIGHT, smallstaff/satchel, healingcasting attack.
+ROW7 exactly same medic BACK-RIGHT.
+ROW8 mounted lancer on complete horse FRONT-RIGHT; horse legswalkframes, spear attack.
+ROW9 exactly same mounted lancer and horse BACK-RIGHT.
+Keep all characters fully visible, centered at SAME SCALE across each row, feetbaseline at88percent cellheight. Plenty empty alpha around each character; no neighboring cell overlap. Functional animation atlas, not collection of scenes. Distinct front/back pairs have matching designs. No large cast shadows outside feet. Exactly8columns10rows.
+
+HOUSE MARS: crimson-and-black heavy war students. Unique silhouettes: tall red horsehair crests, blackened steel helmets with angular cheekguards, broad layered shoulder plates, heavy crimson surcoats, angular kite shields with black iron rims, thick swords and menacing spearheads, stout warbows. Medic crimson hood and black leather apron. Horse heavy angular black/crimson barding, red plume on armored head. Powerful heavily armored martial identity.
+
+================
+
+MINERVA
+
+Use case: stylized-concept. Asset type: distinct faction production animation SPRITE ATLAS for an RTS game.
+Create a PORTRAIT transparent PNG with width:height aspect ratio EXACTLY 4:5, ideally1280x1600 pixels. STRICT REGULAR GRID: EIGHT equal columns by TEN equal rows, 80 cells total. ALL CELLS SQUARE. Every cell contains exactly one complete full-body character or mounted rider, entirely within its own cell, with transparent margins. TRUE RGBA alpha0 background with no paper, no checkerboard baked in, no solid background, no scenery, no labels, no grid lines, no text.
+Style: detailed premium hand-painted chibi pixel-art RTS miniatures, top-down three-quarter view, strong readable silhouettes, attractive dimensional shading. Do not make generic identical soldiers with only palette changes: this faction has its own unmistakable armor, headgear, shield shapes, weapon design, clothing shapes and horse tack.
+Columns LEFT TO RIGHT: 0standingidle;1walkleftfootforward;2walkpassing;3walkrightfootforward;4walkreturn;5walkpassingreturn;6attackwindup;7attackstrike/release. Within EVERY row it must be exactly the SAME character with identical face/clothing and scale in meaningful different animation poses. Camera/view never changes within a row.
+Ten rows TOP TO BOTTOM:
+ROW0 sword-and-shield infantry facing FRONT-RIGHT three-quarter.
+ROW1 exactly same sword infantry facing BACK-RIGHT three-quarter.
+ROW2 spear infantry FRONT-RIGHT.
+ROW3 exactly same spear infantry BACK-RIGHT.
+ROW4 bow archer FRONT-RIGHT, attack draws/releasesbow.
+ROW5 exactly same archer BACK-RIGHT.
+ROW6 field medic FRONT-RIGHT, smallstaff/satchel, healingcasting attack.
+ROW7 exactly same medic BACK-RIGHT.
+ROW8 mounted lancer on complete horse FRONT-RIGHT; horse legswalkframes, spear attack.
+ROW9 exactly same mounted lancer and horse BACK-RIGHT.
+Keep all characters fully visible, centered at SAME SCALE across each row, feetbaseline at88percent cellheight. Plenty empty alpha around each character; no neighboring cell overlap. Functional animation atlas, not collection of scenes. Distinct front/back pairs have matching designs. No large cast shadows outside feet. Exactly8columns10rows.
+
+HOUSE MINERVA: ochre-and-ivory scholar guards. Unique silhouettes: owl-wing helmets flaring around the temples, elegant ochre tabards over ivory layered robes, bronze/gold light armor, distinctive diamond shields with subtle owl motif, slender swords and leafpoint spears, graceful tall bows. Medic ivory scholar hood, ochre trim, manuscript satchel and ornate small staff. Horse ivory/ochre layered saddlecloth and wing-shaped bronze bridle ornaments. Learned, graceful academy identity.
+
+================
+
+DIANA
+
+Use case: stylized-concept. Asset type: distinct faction production animation SPRITE ATLAS for an RTS game.
+Create a PORTRAIT transparent PNG with width:height aspect ratio EXACTLY 4:5, ideally1280x1600 pixels. STRICT REGULAR GRID: EIGHT equal columns by TEN equal rows, 80 cells total. ALL CELLS SQUARE. Every cell contains exactly one complete full-body character or mounted rider, entirely within its own cell, with transparent margins. TRUE RGBA alpha0 background with no paper, no checkerboard baked in, no solid background, no scenery, no labels, no grid lines, no text.
+Style: detailed premium hand-painted chibi pixel-art RTS miniatures, top-down three-quarter view, strong readable silhouettes, attractive dimensional shading. Do not make generic identical soldiers with only palette changes: this faction has its own unmistakable armor, headgear, shield shapes, weapon design, clothing shapes and horse tack.
+Columns LEFT TO RIGHT: 0standingidle;1walkleftfootforward;2walkpassing;3walkrightfootforward;4walkreturn;5walkpassingreturn;6attackwindup;7attackstrike/release. Within EVERY row it must be exactly the SAME character with identical face/clothing and scale in meaningful different animation poses. Camera/view never changes within a row.
+Ten rows TOP TO BOTTOM:
+ROW0 sword-and-shield infantry facing FRONT-RIGHT three-quarter.
+ROW1 exactly same sword infantry facing BACK-RIGHT three-quarter.
+ROW2 spear infantry FRONT-RIGHT.
+ROW3 exactly same spear infantry BACK-RIGHT.
+ROW4 bow archer FRONT-RIGHT, attack draws/releasesbow.
+ROW5 exactly same archer BACK-RIGHT.
+ROW6 field medic FRONT-RIGHT, smallstaff/satchel, healingcasting attack.
+ROW7 exactly same medic BACK-RIGHT.
+ROW8 mounted lancer on complete horse FRONT-RIGHT; horse legswalkframes, spear attack.
+ROW9 exactly same mounted lancer and horse BACK-RIGHT.
+Keep all characters fully visible, centered at SAME SCALE across each row, feetbaseline at88percent cellheight. Plenty empty alpha around each character; no neighboring cell overlap. Functional animation atlas, not collection of scenes. Distinct front/back pairs have matching designs. No large cast shadows outside feet. Exactly8columns10rows.
+
+HOUSE DIANA: forest-green-and-brown hooded hunters. Unique silhouettes: deep green hoods instead of metal crested helmets, layered leaf-shaped cloaks with antler/leaf trim, brown leather armor and straps, round wooden shields with leaf motif, curved hunting swords, slim woodspears, characteristic recurved bows. Medic green hood and herb-filled leather satchel, wooden healing staff. Horse light leather forest-green tack and leaftrim cloth, unarmored agile brown horse. Woodland ranger identity, athletic silhouettes.

@@ -1,0 +1,271 @@
+{
+  "method": "Built-in image generation",
+  "troops": [
+    {
+      "house": "House Stark",
+      "sigil": "wolf",
+      "unit": "winter_guard",
+      "file": "houses/wolf-troops.png",
+      "columns": 4,
+      "rows": 2,
+      "frames": 8,
+      "prompt": "Use case: stylized-concept. Production-ready medieval RTS animation sprite sheet. Image 1 is STYLE REFERENCE ONLY. Painterly miniature realism matching reference: detailed metal, leather and cloth, crisp small silhouettes, upper-left light, isometric three-quarter camera facing screen-right. EXACT uniform FOUR columns and TWO rows, eight full-body sprites of the SAME character; top row four distinct walking phases, bottom row four weapon-attack phases. Same character design and scale in every cell. Entire body and weapon contained inside individual cell, wide transparent gutters, consistent foot baseline and centers; no overlap or cutoff. ABSOLUTELY TRANSPARENT ZERO-ALPHA EMPTY BACKGROUND outside sprite silhouettes; no white/gray backdrop, haze, vignette, floor scenery, checkerboard, labels, text, borders, gridlines or watermarks. Only small localized contact shadow. Approximately 2:1 canvas.\nHouse Stark Winter Guard: burly adult axeman, silver plate and chain mail, gray-white wolf-fur cloak, muted ice-blue tabard, wolf-head kite shield and heavy steel battle axe. Native silver/gray/iceblue palette, rugged northern silhouette. Bottom row: axe ready, raise axe, cleaving strike, recover. Ensure background is genuinely empty alpha0, absolutely no white wash or gray studio backdrop.",
+      "method": "Built-in image generation"
+    },
+    {
+      "house": "House Lannister",
+      "sigil": "lion",
+      "unit": "gilded_crossbow",
+      "file": "houses/lion-troops.png",
+      "columns": 4,
+      "rows": 2,
+      "frames": 8,
+      "prompt": "Use case: stylized-concept. Production-ready medieval RTS animation sprite sheet. Image 1 is STYLE REFERENCE ONLY. Match its painterly miniature realism, detailed steel/leather/cloth, crisp small silhouettes, soft upper-left light, isometric three-quarter camera facing screen-right. EXACT uniform grid of FOUR columns and TWO rows: eight separate full-body sprites of the SAME character, top row four distinct walking-cycle phases, bottom row four distinct weapon-attack phases. Each cell same scale and floor alignment, generous transparent gutters; all weapons and body inside each cell, no overlaps or cutoffs. ABSOLUTELY TRANSPARENT ZERO-ALPHA EMPTY BACKGROUND outside sprite silhouettes; no white/gray backdrop, haze, vignette, floor, checkerboard, labels, text, borders, gridlines or watermarks. Only tiny localized contact shadow. Approximately 2:1 canvas.\nCreate House Lannister Gilded Crossbowman: disciplined foot soldier in ornate polished gold-trimmed steel armor, deep crimson coat and cloak, small embossed lion crest, red-and-gold pavise strapped to his back, a substantial medieval crossbow. Native crimson and gold palette. Bottom row shows raising crossbow, aiming, firing, reloading; top row walks with lowered crossbow.",
+      "method": "Built-in image generation"
+    },
+    {
+      "house": "House Targaryen",
+      "sigil": "dragon",
+      "unit": "dragonfire_acolyte",
+      "file": "houses/dragon-troops.png",
+      "columns": 4,
+      "rows": 2,
+      "frames": 8,
+      "prompt": "Use case: stylized-concept. Production-ready medieval RTS animation sprite sheet. Image 1 is STYLE REFERENCE ONLY. Match its painterly miniature realism, detailed steel/leather/cloth, crisp small silhouettes, soft upper-left light, isometric three-quarter camera facing screen-right. EXACT uniform grid of FOUR columns and TWO rows: eight separate full-body sprites of the SAME character, top row four distinct walking-cycle phases, bottom row four distinct weapon-attack phases. Each cell same scale and floor alignment, generous transparent gutters; all weapons and body inside each cell, no overlaps or cutoffs. ABSOLUTELY TRANSPARENT ZERO-ALPHA EMPTY BACKGROUND outside sprite silhouettes; no white/gray backdrop, haze, vignette, floor, checkerboard, labels, text, borders, gridlines or watermarks. Only tiny localized contact shadow. Approximately 2:1 canvas.\nCreate House Targaryen Dragonfire Acolyte: human masked medieval alchemist bombardier, dark iron segmented armor, black and deep purple robe panels with crimson accents, dragon sigil, leather bandolier of glass firepots and one small controlled orange flame in a clay throwing vessel. Human foot soldier, NOT a dragon or monster. Bottom row shows take firepot, draw arm back, throw flaming pot, recover; top row walks carrying pot. Keep flames contained inside individual cells.",
+      "method": "Built-in image generation"
+    },
+    {
+      "house": "House Baratheon",
+      "sigil": "stag",
+      "unit": "storm_rider",
+      "file": "houses/stag-troops.png",
+      "columns": 4,
+      "rows": 2,
+      "frames": 8,
+      "prompt": "Use case: stylized-concept. Asset type: one production-ready transparent PNG animation sprite sheet for Bannerlands, matching supplied original troop atlas as STYLE REFERENCE ONLY (not an edit target). Finely painted semi-realistic medieval RTS sprite style, realistic steel/leather/cloth, consistent three-quarter isometric front/right camera, facing slightly toward right, upper-left warm light. EXACT REGULAR FOUR COLUMNS BY TWO ROWS: eight equally sized cells. Top row four visibly different walking/gait poses; bottom row four compact attack poses (prepare, steep diagonal windup, steep diagonal downward strike, recover). Same character, equipment, scale and foot baseline within every cell. No text, labels, numbers, frames, or UI.\nCRITICAL GRID: each complete character WITH ALL WEAPONS, clothing, feet, mounts, antlers and shadows must fit STRICTLY WITHIN THE CENTRAL76% OF ITS OWN CELL WIDTH AND CENTRAL84% OF CELL HEIGHT. Leave at least12%CELLWIDTH transparent gutter on BOTH LEFT AND RIGHT and at least8%CELLHEIGHT empty above and below. Make the character smaller if necessary. No connected pixels can cross any cell boundary. Every weapon must be held STEEPLY DIAGONAL OR VERTICAL WITHIN THE SAME CELL, NEVER extended horizontally toward a neighboring cell. All attack poses stay compact, using upward/downward diagonal strikes close to the body rather than long forward horizontal thrusts. Fully visible objects, no cropping and no neighboring fragments.\nBackground must be genuinely transparent with ALPHA ZERO across all empty space/gutters: no fog, haze, colored wash, backdrop, checkerboard, floor tile, or broad ground shadow. Only a tiny contact shadow directly beneath each character. Strong readable silhouette, detailed native faction colors.\nSubject: ONE Storm Rider of House Baratheon, repeated in the eight animation poses. A heavily armored knight wearing black plate with gold trim, a small golden stag/antler crest on the closed helmet, black-and-gold surcoat and shield displaying stag heraldry, riding a sturdy dark brown/black armored horse with matching black-and-gold caparison. The mounted knight holds a compact silver-tipped cavalry lance steeply upright or diagonally across the body, never horizontal. Top row: four horse walking gait phases, rider steady. Bottom row: rider raises lance diagonally, makes a compact steep downward lance stroke, follows through within horse silhouette, then recovers. Keep ENTIRE HORSE, TAIL, HOOVES, RIDER, ANTLERS, SHIELD AND LANCE within the central76%×84% of EACH cell with large transparent gutters. Do not fill the canvas with oversized riders.",
+      "repair": {
+        "sigil": "stag",
+        "prompt": "Use case: stylized-concept. Asset type: one production-ready transparent PNG animation sprite sheet for Bannerlands, matching supplied original troop atlas as STYLE REFERENCE ONLY (not an edit target). Finely painted semi-realistic medieval RTS sprite style, realistic steel/leather/cloth, consistent three-quarter isometric front/right camera, facing slightly toward right, upper-left warm light. EXACT REGULAR FOUR COLUMNS BY TWO ROWS: eight equally sized cells. Top row four visibly different walking/gait poses; bottom row four compact attack poses (prepare, steep diagonal windup, steep diagonal downward strike, recover). Same character, equipment, scale and foot baseline within every cell. No text, labels, numbers, frames, or UI.\nCRITICAL GRID: each complete character WITH ALL WEAPONS, clothing, feet, mounts, antlers and shadows must fit STRICTLY WITHIN THE CENTRAL76% OF ITS OWN CELL WIDTH AND CENTRAL84% OF CELL HEIGHT. Leave at least12%CELLWIDTH transparent gutter on BOTH LEFT AND RIGHT and at least8%CELLHEIGHT empty above and below. Make the character smaller if necessary. No connected pixels can cross any cell boundary. Every weapon must be held STEEPLY DIAGONAL OR VERTICAL WITHIN THE SAME CELL, NEVER extended horizontally toward a neighboring cell. All attack poses stay compact, using upward/downward diagonal strikes close to the body rather than long forward horizontal thrusts. Fully visible objects, no cropping and no neighboring fragments.\nBackground must be genuinely transparent with ALPHA ZERO across all empty space/gutters: no fog, haze, colored wash, backdrop, checkerboard, floor tile, or broad ground shadow. Only a tiny contact shadow directly beneath each character. Strong readable silhouette, detailed native faction colors.\nSubject: ONE Storm Rider of House Baratheon, repeated in the eight animation poses. A heavily armored knight wearing black plate with gold trim, a small golden stag/antler crest on the closed helmet, black-and-gold surcoat and shield displaying stag heraldry, riding a sturdy dark brown/black armored horse with matching black-and-gold caparison. The mounted knight holds a compact silver-tipped cavalry lance steeply upright or diagonally across the body, never horizontal. Top row: four horse walking gait phases, rider steady. Bottom row: rider raises lance diagonally, makes a compact steep downward lance stroke, follows through within horse silhouette, then recovers. Keep ENTIRE HORSE, TAIL, HOOVES, RIDER, ANTLERS, SHIELD AND LANCE within the central76%×84% of EACH cell with large transparent gutters. Do not fill the canvas with oversized riders.",
+        "destination": "houses/stag-troops.png",
+        "notes": "Initial compact-pose generation had white semitransparent backdrop; selected followup background-extraction PNG removes it."
+      },
+      "method": "Built-in image generation"
+    },
+    {
+      "house": "House Tyrell",
+      "sigil": "rose",
+      "unit": "thorn_lancer",
+      "file": "houses/rose-troops.png",
+      "columns": 4,
+      "rows": 2,
+      "frames": 8,
+      "prompt": "Use case: stylized-concept. Asset type: production-ready transparent medieval RTS troop animation sprite sheet. Image 1 is STYLE REFERENCE ONLY. Match painterly miniature realism, crisp detailed steel/leather/cloth/horse, upper-left light and isometric three-quarter camera, horse and rider facing screen-right in all poses. EXACT FOUR equal columns and TWO equal rows, eight separate full horse-and-rider sprites of the SAME character and horse. First row: four distinct walking horse cycle phases. Second row: four distinct lance-attack phases (ready, couch lance, thrust, recover). Same scale and floor baseline in each cell. Keep ENTIRE horse, rider, tall crest, tail and full lance inside individual cell with generous transparent gutters. No overlaps, cutoff, text, labels, borders or gridlines. ABSOLUTELY TRANSPARENT ZERO-ALPHA EMPTY BACKGROUND outside sprites; no white/gray backdrop, haze, vignette, scenery, checkerboard or watermark; just tiny localized contact shadows. Approximately 2:1 canvas.\nHouse Tyrell Thorn Lancer: elegant chestnut warhorse and chivalric mounted lancer, polished steel and gold filigree, rich moss-green cloth caparison with subtle rose and thorn heraldry, green plume, rose-engraved shield and long lance. Flowing but practical cloth, noble garden knight silhouette, native green and gold palette.",
+      "method": "Built-in image generation"
+    },
+    {
+      "house": "House Martell",
+      "sigil": "sun",
+      "unit": "dune_skirmisher",
+      "file": "houses/sun-troops.png",
+      "columns": 4,
+      "rows": 2,
+      "frames": 8,
+      "prompt": "Use case: stylized-concept. Production-ready medieval RTS animation sprite sheet. Image 1 is STYLE REFERENCE ONLY. Painterly miniature realism matching reference: detailed metal, leather and cloth, crisp small silhouettes, upper-left light, isometric three-quarter camera facing screen-right. EXACT uniform FOUR columns and TWO rows, eight full-body sprites of the SAME character; top row four distinct walking phases, bottom row four weapon-attack phases. Same character design and scale in every cell. Entire body and weapon contained inside individual cell, wide transparent gutters, consistent foot baseline and centers; no overlap or cutoff. ABSOLUTELY TRANSPARENT ZERO-ALPHA EMPTY BACKGROUND outside sprite silhouettes; no white/gray backdrop, haze, vignette, floor scenery, checkerboard, labels, text, borders, gridlines or watermarks. Only small localized contact shadow. Approximately 2:1 canvas.\nHouse Martell Dune Skirmisher: swift adult desert javelin soldier, copper scale armor, burnt-orange and sand-gold lightweight robes, wrapped headcloth, sun-and-spear emblem, small round buckler and bundle of short throwing spears. Native copper/orange palette. Bottom row: ready javelin, draw arm back, throw, recover.",
+      "method": "Built-in image generation"
+    },
+    {
+      "house": "House Greyjoy",
+      "sigil": "kraken",
+      "unit": "ironborn_reaver",
+      "file": "houses/kraken-troops.png",
+      "columns": 4,
+      "rows": 2,
+      "frames": 8,
+      "prompt": "Use case: stylized-concept. Production-ready medieval RTS animation sprite sheet. Image 1 is STYLE REFERENCE ONLY. Painterly miniature realism matching reference: detailed metal, leather and cloth, crisp small silhouettes, upper-left light, isometric three-quarter camera facing screen-right. EXACT uniform FOUR columns and TWO rows, eight full-body sprites of the SAME character; top row four distinct walking phases, bottom row four weapon-attack phases. Same character design and scale in every cell. Entire body and weapon contained inside individual cell, wide transparent gutters, consistent foot baseline and centers; no overlap or cutoff. ABSOLUTELY TRANSPARENT ZERO-ALPHA EMPTY BACKGROUND outside sprite silhouettes; no white/gray backdrop, haze, vignette, floor scenery, checkerboard, labels, text, borders, gridlines or watermarks. Only small localized contact shadow. Approximately 2:1 canvas.\nHouse Greyjoy Ironborn Reaver: rugged adult island raider with dark beard, weathered black leather and chain mail, sea-teal cloth, gray fur shoulders, dark iron sea-squid crest and TWO hand axes. Native black and teal palette, powerful aggressive seafarer silhouette. Bottom row: axes ready, wind up, sweeping dual-axe strike, recover. Not a monster.",
+      "method": "Built-in image generation"
+    },
+    {
+      "house": "House Arryn",
+      "sigil": "falcon",
+      "unit": "vale_sentinel",
+      "file": "houses/falcon-troops.png",
+      "columns": 4,
+      "rows": 2,
+      "frames": 8,
+      "prompt": "Use case: stylized-concept. Production-ready medieval RTS animation sprite sheet. Image 1 is STYLE REFERENCE ONLY. Painterly miniature realism matching reference: detailed metal, leather and cloth, crisp small silhouettes, upper-left light, isometric three-quarter camera facing screen-right. EXACT uniform FOUR columns and TWO rows, eight full-body sprites of the SAME character; top row four distinct walking phases, bottom row four weapon-attack phases. Same character design and scale in every cell. Entire body and weapon contained inside individual cell, wide transparent gutters, consistent foot baseline and centers; no overlap or cutoff. ABSOLUTELY TRANSPARENT ZERO-ALPHA EMPTY BACKGROUND outside sprite silhouettes; no white/gray backdrop, haze, vignette, floor scenery, checkerboard, labels, text, borders, gridlines or watermarks. Only small localized contact shadow. Approximately 2:1 canvas.\nHouse Arryn Vale Sentinel: professional heavily armored foot crossbowman in pale silver steel, white and soft lavender tabard, falcon-and-moon emblem, white kite shield slung at back, steel helmet and precise medieval crossbow. Native white/lavender/silver palette with crisp contrast. Bottom row: raise crossbow, aim, fire, reload.",
+      "method": "Built-in image generation"
+    },
+    {
+      "house": "House Bolton",
+      "sigil": "flayed",
+      "unit": "dread_pike",
+      "file": "houses/flayed-troops.png",
+      "columns": 4,
+      "rows": 2,
+      "frames": 8,
+      "prompt": "Use case: stylized-concept. Asset type: one production-ready transparent PNG animation sprite sheet for Bannerlands, matching supplied original troop atlas as STYLE REFERENCE ONLY (not an edit target). Finely painted semi-realistic medieval RTS sprite style, realistic steel/leather/cloth, consistent three-quarter isometric front/right camera, facing slightly toward right, upper-left warm light. EXACT REGULAR FOUR COLUMNS BY TWO ROWS: eight equally sized cells. Top row four visibly different walking/gait poses; bottom row four compact attack poses (prepare, steep diagonal windup, steep diagonal downward strike, recover). Same character, equipment, scale and foot baseline within every cell. No text, labels, numbers, frames, or UI.\nCRITICAL GRID: each complete character WITH ALL WEAPONS, clothing, feet, mounts, antlers and shadows must fit STRICTLY WITHIN THE CENTRAL76% OF ITS OWN CELL WIDTH AND CENTRAL84% OF CELL HEIGHT. Leave at least12%CELLWIDTH transparent gutter on BOTH LEFT AND RIGHT and at least8%CELLHEIGHT empty above and below. Make the character smaller if necessary. No connected pixels can cross any cell boundary. Every weapon must be held STEEPLY DIAGONAL OR VERTICAL WITHIN THE SAME CELL, NEVER extended horizontally toward a neighboring cell. All attack poses stay compact, using upward/downward diagonal strikes close to the body rather than long forward horizontal thrusts. Fully visible objects, no cropping and no neighboring fragments.\nBackground must be genuinely transparent with ALPHA ZERO across all empty space/gutters: no fog, haze, colored wash, backdrop, checkerboard, floor tile, or broad ground shadow. Only a tiny contact shadow directly beneath each character. Strong readable silhouette, detailed native faction colors.\nSubject: ONE Dread Pike soldier of House Bolton, repeated in the eight animation poses. Closed steel helmet and weathered dark steel armor, dusty rose/burgundy cape and tabard, pale shield with simple dark red flayed-man heraldic silhouette (symbol only; no words; no gore). Carries a distinctive hooked pike/polearm held STEEPLY DIAGONAL OR VERTICAL, pole kept near body so its complete hook and butt stay inside each cell. Four walking poses with alternate legs, shield steady, weapon held compact diagonally. Four attack poses show compact upward diagonal preparation, raised diagonal windup, steep downward sweeping strike, and recovery. Never a horizontally extended pike or a long horizontal forward stab. Whole soldier, weapon, shield and feet inside central76%width×84%height of every cell, leaving large transparent gutters. Do not oversize the soldier.",
+      "repair": {
+        "sigil": "flayed",
+        "prompt": "Use case: stylized-concept. Asset type: one production-ready transparent PNG animation sprite sheet for Bannerlands, matching supplied original troop atlas as STYLE REFERENCE ONLY (not an edit target). Finely painted semi-realistic medieval RTS sprite style, realistic steel/leather/cloth, consistent three-quarter isometric front/right camera, facing slightly toward right, upper-left warm light. EXACT REGULAR FOUR COLUMNS BY TWO ROWS: eight equally sized cells. Top row four visibly different walking/gait poses; bottom row four compact attack poses (prepare, steep diagonal windup, steep diagonal downward strike, recover). Same character, equipment, scale and foot baseline within every cell. No text, labels, numbers, frames, or UI.\nCRITICAL GRID: each complete character WITH ALL WEAPONS, clothing, feet, mounts, antlers and shadows must fit STRICTLY WITHIN THE CENTRAL76% OF ITS OWN CELL WIDTH AND CENTRAL84% OF CELL HEIGHT. Leave at least12%CELLWIDTH transparent gutter on BOTH LEFT AND RIGHT and at least8%CELLHEIGHT empty above and below. Make the character smaller if necessary. No connected pixels can cross any cell boundary. Every weapon must be held STEEPLY DIAGONAL OR VERTICAL WITHIN THE SAME CELL, NEVER extended horizontally toward a neighboring cell. All attack poses stay compact, using upward/downward diagonal strikes close to the body rather than long forward horizontal thrusts. Fully visible objects, no cropping and no neighboring fragments.\nBackground must be genuinely transparent with ALPHA ZERO across all empty space/gutters: no fog, haze, colored wash, backdrop, checkerboard, floor tile, or broad ground shadow. Only a tiny contact shadow directly beneath each character. Strong readable silhouette, detailed native faction colors.\nSubject: ONE Dread Pike soldier of House Bolton, repeated in the eight animation poses. Closed steel helmet and weathered dark steel armor, dusty rose/burgundy cape and tabard, pale shield with simple dark red flayed-man heraldic silhouette (symbol only; no words; no gore). Carries a distinctive hooked pike/polearm held STEEPLY DIAGONAL OR VERTICAL, pole kept near body so its complete hook and butt stay inside each cell. Four walking poses with alternate legs, shield steady, weapon held compact diagonally. Four attack poses show compact upward diagonal preparation, raised diagonal windup, steep downward sweeping strike, and recovery. Never a horizontally extended pike or a long horizontal forward stab. Whole soldier, weapon, shield and feet inside central76%width×84%height of every cell, leaving large transparent gutters. Do not oversize the soldier.",
+        "destination": "houses/flayed-troops.png",
+        "notes": "Compact diagonal polearm poses replace horizontally overlapping pike poses."
+      },
+      "method": "Built-in image generation"
+    },
+    {
+      "house": "House Frey",
+      "sigil": "bridge",
+      "unit": "bridge_warden",
+      "file": "houses/bridge-troops.png",
+      "columns": 4,
+      "rows": 2,
+      "frames": 8,
+      "prompt": "Use case: stylized-concept. Asset: production-ready medieval RTS animated troop sprite sheet matching the detailed painted miniatures in the style-reference sheet. Create NEW character Bridge Warden. House Frey: steel-blue and pale silver armored bridge sentry, rectangular shield with twin-tower motif and long halberd. Medieval infantry, notmounted. EXACT layout: 4 equal columns by 2 equal rows, eight separate full-body poses on a landscape 2:1 PNG sheet. Top row: 4 sequential walking poses. Bottom row: 4 sequential weapon attack poses (ready, attack, impact/release, recovery). Same identical character and equipment and size across all eight frames, isometric elevated three-quarter view facing screen-right. Identical centered registration and feet baseline within each cell, entire weapon/machine inside each cell, generous clear transparent cell gutters. No text, no labels, no numbers, no borders, no scenery. GENUINE fully transparent alpha background (alpha zero outside character and compact ground shadow), absolutely no tinted fog or background sheet. Detailed steel, leather, timber and woven cloth, painterly realistic game miniatures, readable at tiny scale, not pixel art. Reference image is style reference only; do not copy its blue generic sword soldier.",
+      "method": "Built-in image generation"
+    },
+    {
+      "house": "House Mormont",
+      "sigil": "bear",
+      "unit": "bear_mauler",
+      "file": "houses/bear-troops.png",
+      "columns": 4,
+      "rows": 2,
+      "frames": 8,
+      "prompt": "Use case: stylized-concept. Asset: production-ready medieval RTS animated troop sprite sheet matching the detailed painted miniatures in the style-reference sheet. Create NEW character Bear Mauler. House Mormont: broad robust warrior in dark green cloth, bearskin fur shoulders and dark plate, huge two-handed warhammer, bronze bear emblem. Medieval infantry, not an animal. EXACT layout: 4 equal columns by 2 equal rows, eight separate full-body poses on a landscape 2:1 PNG sheet. Top row: 4 sequential walking poses. Bottom row: 4 sequential weapon attack poses (ready, attack, impact/release, recovery). Same identical character and equipment and size across all eight frames, isometric elevated three-quarter view facing screen-right. Identical centered registration and feet baseline within each cell, entire weapon/machine inside each cell, generous clear transparent cell gutters. No text, no labels, no numbers, no borders, no scenery. GENUINE fully transparent alpha background (alpha zero outside character and compact ground shadow), absolutely no tinted fog or background sheet. Detailed steel, leather, timber and woven cloth, painterly realistic game miniatures, readable at tiny scale, not pixel art. Reference image is style reference only; do not copy its blue generic sword soldier.",
+      "method": "Built-in image generation"
+    },
+    {
+      "house": "House Tully",
+      "sigil": "fish",
+      "unit": "river_ranger",
+      "file": "houses/fish-troops.png",
+      "columns": 4,
+      "rows": 2,
+      "frames": 8,
+      "prompt": "Use case: stylized-concept. Asset: production-ready medieval RTS animated troop sprite sheet matching the detailed painted miniatures in the style-reference sheet. Create NEW character River Ranger. House Tully: ranger archer with blue/red surcoat, fish motif, leather scale armor, longbow and arrow quiver. EXACT layout: 4 equal columns by 2 equal rows, eight separate full-body poses on a landscape 2:1 PNG sheet. Top row: 4 sequential walking poses. Bottom row: 4 sequential weapon attack poses (ready, attack, impact/release, recovery). Same identical character and equipment and size across all eight frames, isometric elevated three-quarter view facing screen-right. Identical centered registration and feet baseline within each cell, entire weapon/machine inside each cell, generous clear transparent cell gutters. No text, no labels, no numbers, no borders, no scenery. GENUINE fully transparent alpha background (alpha zero outside character and compact ground shadow), absolutely no tinted fog or background sheet. Detailed steel, leather, timber and woven cloth, painterly realistic game miniatures, readable at tiny scale, not pixel art. Reference image is style reference only; do not copy its blue generic sword soldier.",
+      "method": "Built-in image generation"
+    },
+    {
+      "house": "House Reed",
+      "sigil": "frog",
+      "unit": "crannog_hunter",
+      "file": "houses/frog-troops.png",
+      "columns": 4,
+      "rows": 2,
+      "frames": 8,
+      "prompt": "Use case: stylized-concept. Asset: production-ready medieval RTS animated troop sprite sheet matching the detailed painted miniatures in the style-reference sheet. Create NEW character Crannog Hunter. House Reed: agile marsh archer in moss green and olive, hooded leaf cloak, light leather armor, small recurved bow and reed arrows, frog motif. EXACT layout: 4 equal columns by 2 equal rows, eight separate full-body poses on a landscape 2:1 PNG sheet. Top row: 4 sequential walking poses. Bottom row: 4 sequential weapon attack poses (ready, attack, impact/release, recovery). Same identical character and equipment and size across all eight frames, isometric elevated three-quarter view facing screen-right. Identical centered registration and feet baseline within each cell, entire weapon/machine inside each cell, generous clear transparent cell gutters. No text, no labels, no numbers, no borders, no scenery. GENUINE fully transparent alpha background (alpha zero outside character and compact ground shadow), absolutely no tinted fog or background sheet. Detailed steel, leather, timber and woven cloth, painterly realistic game miniatures, readable at tiny scale, not pixel art. Reference image is style reference only; do not copy its blue generic sword soldier.",
+      "method": "Built-in image generation"
+    },
+    {
+      "house": "House Hightower",
+      "sigil": "beacon",
+      "unit": "beacon_engineer",
+      "file": "houses/beacon-troops.png",
+      "columns": 4,
+      "rows": 2,
+      "frames": 8,
+      "prompt": "Use case: stylized-concept. Asset: production-ready medieval RTS animated troop sprite sheet matching the detailed painted miniatures in the style-reference sheet. Create NEW character Beacon Engineer. House Hightower: medieval engineer pushing a compact mobile wooden ballista on small wheels, ivory/slate robes and steel cap, beacon emblem. Include SAME engineer and siege machine fully within each cell. EXACT layout: 4 equal columns by 2 equal rows, eight separate full-body poses on a landscape 2:1 PNG sheet. Top row: 4 sequential walking poses. Bottom row: 4 sequential weapon attack poses (ready, attack, impact/release, recovery). Same identical character and equipment and size across all eight frames, isometric elevated three-quarter view facing screen-right. Identical centered registration and feet baseline within each cell, entire weapon/machine inside each cell, generous clear transparent cell gutters. No text, no labels, no numbers, no borders, no scenery. GENUINE fully transparent alpha background (alpha zero outside character and compact ground shadow), absolutely no tinted fog or background sheet. Detailed steel, leather, timber and woven cloth, painterly realistic game miniatures, readable at tiny scale, not pixel art. Reference image is style reference only; do not copy its blue generic sword soldier.",
+      "method": "Built-in image generation"
+    },
+    {
+      "house": "House Tarly",
+      "sigil": "huntsman",
+      "unit": "hill_huntsman",
+      "file": "houses/huntsman-troops.png",
+      "columns": 4,
+      "rows": 2,
+      "frames": 8,
+      "prompt": "Use case: stylized-concept. Asset: production-ready medieval RTS animated troop sprite sheet matching the detailed painted miniatures in the style-reference sheet. Create NEW character Hill Huntsman. House Tarly: disciplined veteran longbowman, brown leather and russet-green tunic, hunter crest, long straight longbow, quiver, small steel helmet. EXACT layout: 4 equal columns by 2 equal rows, eight separate full-body poses on a landscape 2:1 PNG sheet. Top row: 4 sequential walking poses. Bottom row: 4 sequential weapon attack poses (ready, attack, impact/release, recovery). Same identical character and equipment and size across all eight frames, isometric elevated three-quarter view facing screen-right. Identical centered registration and feet baseline within each cell, entire weapon/machine inside each cell, generous clear transparent cell gutters. No text, no labels, no numbers, no borders, no scenery. GENUINE fully transparent alpha background (alpha zero outside character and compact ground shadow), absolutely no tinted fog or background sheet. Detailed steel, leather, timber and woven cloth, painterly realistic game miniatures, readable at tiny scale, not pixel art. Reference image is style reference only; do not copy its blue generic sword soldier.",
+      "method": "Built-in image generation"
+    },
+    {
+      "house": "Free Folk",
+      "sigil": "bone",
+      "unit": "freefolk_berserker",
+      "file": "houses/bone-troops.png",
+      "columns": 4,
+      "rows": 2,
+      "frames": 8,
+      "prompt": "Use case: stylized-concept. Asset: production-ready medieval RTS animated troop sprite sheet matching the detailed painted miniatures in the style-reference sheet. Create NEW character Free Folk Berserker. Free Folk: wild adult warrior in ivory/brown shaggy furs, bone ornaments, heavy rough iron axe, leather straps and weathered wool, no uniform knight armor. EXACT layout: 4 equal columns by 2 equal rows, eight separate full-body poses on a landscape 2:1 PNG sheet. Top row: 4 sequential walking poses. Bottom row: 4 sequential weapon attack poses (ready, attack, impact/release, recovery). Same identical character and equipment and size across all eight frames, isometric elevated three-quarter view facing screen-right. Identical centered registration and feet baseline within each cell, entire weapon/machine inside each cell, generous clear transparent cell gutters. No text, no labels, no numbers, no borders, no scenery. GENUINE fully transparent alpha background (alpha zero outside character and compact ground shadow), absolutely no tinted fog or background sheet. Detailed steel, leather, timber and woven cloth, painterly realistic game miniatures, readable at tiny scale, not pixel art. Reference image is style reference only; do not copy its blue generic sword soldier.",
+      "method": "Built-in image generation"
+    }
+  ],
+  "castles": {
+    "mode": "built-in image_gen",
+    "verifiedDimensions": [
+      1254,
+      1254
+    ],
+    "alphaVerified": true,
+    "inspection": "All sixteen castles match the required four-by-four order and have distinct silhouettes. Corner alpha is zero. Sampled alpha bounds remain inside every cell with at least six pixels of empty padding; renderer must use intrinsic dimensions and floor-divided cell bounds because the image is 1254 pixels square.",
+    "layout": {
+      "columns": 4,
+      "rows": 4,
+      "sigils": [
+        "wolf",
+        "lion",
+        "dragon",
+        "stag",
+        "rose",
+        "sun",
+        "kraken",
+        "falcon",
+        "flayed",
+        "bridge",
+        "bear",
+        "fish",
+        "frog",
+        "beacon",
+        "huntsman",
+        "bone"
+      ]
+    },
+    "prompt": "Use case: stylized-concept. Asset type: production-ready RGBA medieval strategy game CASTLE SPRITE ATLAS. The attached image is ONLY a visual style reference for painted isometric stone, timber, crisp materials, soft top-left light, and miniature RTS perspective. Generate NEW castles, not the reference sheet. Create one square high-detail 2048 x 2048 PNG with exactly FOUR COLUMNS and FOUR ROWS of equal square cells, 16 castles total, one complete freestanding castle centered within each cell. Each castle has a clear unique architectural silhouette. Consistent 30-degree isometric camera showing front and right sides, painted semi-realistic game artwork, clean readable shapes. Fit every castle fully inside its assigned cell with generous transparent safety padding on ALL sides. Maximum castle footprint 80% of a cell; no towers or flags crossing cell boundaries. Absolutely no visible grid lines, no labels, no words, no letters, no numbers, no title. The entire empty background and gutters must be genuinely transparent alpha=0, not checkerboard or colored fog. Tiny footings only; no terrain tiles or scenery panels, no sheet-wide shadows. Preserve each native palette rather than making all banners blue.\nExact row-major castle order, LEFT TO RIGHT:\nROW 1: (1) Stark wolf northern grey stone and heavy timber keep, pale icy-blue wolf banners, modest snowy eaves; (2) Lannister lion grand red sandstone fortress with gold trim and a lion-shaped gate relief, scarlet banners; (3) Targaryen dragon black volcanic fortress with sharp angular purple and crimson towers and dragon-wing roof forms; (4) Baratheon stag stout rounded dark-stone storm keep with yellow banners and an antler-shaped gate crest.\nROW 2: (5) Tyrell rose elegant garden chateau with green and gold rounded towers, ivy and rose details; (6) Martell sun warm sandstone desert palace-fort with orange banners, sun crest and domed towers; (7) Greyjoy kraken dark maritime stone-and-timber sea-raider longhall fortress, teal banners and curved tentacle ornament; (8) Arryn falcon tall white-stone mountain-spire keep with slender lavender-roofed towers and falcon ornament.\nROW 3: (9) Bolton flayed grim dark-grey crenellated fortress with muted dark-pink banners and stark narrow windows; (10) Frey bridge symmetrical twin fortified gatehouses linked by a short central stone bridge, grey-blue banners; (11) Mormont bear rustic sturdy dark-green timber-and-stone bear-lodge fort with broad wooden roof and bear crest; (12) Tully fish red-and-blue riverfront castle with a small attached waterwheel, trout banner motifs, no river terrain.\nROW 4: (13) Reed frog low mossy olive-green stilted marsh fortress with reed-thatch roofing and wooden walkways; (14) Hightower beacon ivory slender lighthouse-castle with a tall beacon tower and a warm brazier at the top, pale lavender banners; (15) Tarly huntsman brown-brick fortified hunting manor, chestnut timber roof, hunting-horn/huntsman banner motifs; (16) Free Folk bone ivory fur and snow-dusted timber-palisade longhall stronghold with a huge curved bone arch, rough hides and cream banners.\nAll 16 are substantial castles, not small production huts. Maintain exactly the stated 4 x 4 cell order and spacing, with empty fully transparent gutters so each equal cell can be sliced independently by code."
+  },
+  "production": {
+    "mode": "built-in image_gen",
+    "destination": "house-production.png",
+    "prompt": "Use case: stylized-concept.\nAsset type: production-ready transparent PNG sprite atlas for the medieval isometric RTS Bannerlands.\nInput image: the supplied original structures-atlas.png is a STYLE REFERENCE ONLY, not an edit target. Match its finely painted semi-realistic game-sprite rendering, warm directional light from upper left, convincing carved stone and wood, steel equipment, high detail, clear silhouette, three-quarter isometric camera showing front and right side. Create new buildings, rather than recolored copies.\nLayout is an EXACT REGULAR 4 COLUMNS BY 4 ROWS square atlas. There must be EXACTLY SIXTEEN separate freestanding buildings, one centered in each equal cell, read left-to-right then top-to-bottom. Request 2048x2048 quality/detail. Every building and all its equipment must fit entirely inside its cell, with a generous fully empty transparent gutter on every side. No cell borders. No text, lettering, labels, numbers, watermark, UI, or backdrop.\nRow 1, column 1: Winter Hall, a northern gray-stone and dark-timber military hall with steep slate roofs, carved wolf-head entrance, icy blue banner, compact shield-and-axe racks.\nRow 1, column 2: Mercenary Guild, an affluent red-and-gold stone/timber crossbow training hall, ornate golden lion emblem, visible compact crossbow racks and small practice targets.\nRow 1, column 3: Dragonfire Foundry, sharp black volcanic-stone forge/alchemy hall, dark purple and crimson banners, dragon-head furnace mouth, copper firepots and controlled orange forge glow.\nRow 1, column 4: Storm Paddock, sturdy black-and-gold cavalry stable, antler-shaped ridge ornament, fenced compact paddock, one visible saddled horse, lance rack.\nRow 2, column 1: Garden Stables, elegant pale-stone green-and-gold stable complex with rose emblems, restrained ivy, horse stalls, rose-colored pennants and a tidy lance rack.\nRow 2, column 2: Sunspear Yard, warm orange/sandstone Dorne training courtyard with low domed shelter, sunny orange cloth canopy, sun-and-spear motifs, javelin racks and straw target.\nRow 2, column 3: Raider Longhall, dark maritime timber longhall, teal weathered banners, carved kraken/boat prow motifs, axes and small shields, compact low stone foundation.\nRow 2, column 4: Falcon Roost, narrow tall white-stone and lavender crossbow training hall, falcon roof carving, small lookout loft, visible crossbow equipment and shield targets.\nRow 3, column 1: Dreadfort Yard, grim dark-stone and muted rose/black training yard, sharp roofline, pike racks and heavy practice posts, simple severe banners; no gore.\nRow 3, column 2: Twin Guardhouse, two linked steel-blue stone gate huts, a small central arch, matching banners, halberds and tower shields arranged beside doors.\nRow 3, column 3: Bear Lodge, forest-green heavy timber lodge with a carved bear entrance, fur drapes, compact hammer forge and warhammer rack, stone chimney.\nRow 3, column 4: Riverside Lodge, blue-and-muted-red stone/timber longbow workshop, compact waterwheel at its side, fish carving, longbow rack and neatly stacked arrows; only a tiny self-contained water trough, no river scenery.\nRow 4, column 1: Marsh Hideout, moss-covered olive/green stilt hut, reed-thatched roof, frog carving, shortbows and quivers, small wooden platform; no swamp scenery.\nRow 4, column 2: Engineers College, ivory-and-slate domed engineering workshop, luminous beacon lantern, a small assembled ballista and precise wood/metal machinery outside.\nRow 4, column 3: Huntsman Lodge, rustic brown/russet stone-and-timber hall, hunter emblem, longbows and small archery targets, deep warm roof.\nRow 4, column 4: Warband Camp, ivory/brown fur tents joined with low timber palisades, a bone arch, axes and rough round shields; distinct from the permanent stone halls.\nKeep all sixteen buildings at comparable camera scale and consistent lighting, with their own recognizable silhouette, architecture and native palette. Buildings sit only on tiny compact foundation footprints without large ground tiles or scenery.\nCRITICAL TRANSPARENCY: every pixel of the empty background and gutters must have actual ALPHA ZERO. Genuinely transparent cutout PNG. Absolutely no gray/white/color backdrop, fog, glow haze, checkerboard pattern, vignette, giant ground shadow, or semitransparent wash between buildings. Only compact contact shadows directly under each building are allowed. This is an atlas used directly by a game engine.",
+    "grid": {
+      "columns": 4,
+      "rows": 4,
+      "order": [
+        "wolf",
+        "lion",
+        "dragon",
+        "stag",
+        "rose",
+        "sun",
+        "kraken",
+        "falcon",
+        "flayed",
+        "bridge",
+        "bear",
+        "fish",
+        "frog",
+        "beacon",
+        "huntsman",
+        "bone"
+      ]
+    },
+    "inspection": "Sixteen visually distinct complete buildings in correct4x4order. Each cell contains ownhousemotif andpalette. No text or labels. FullPNG copiedwithout pixelchanges."
+  },
+  "layoutOrder": [
+    "wolf",
+    "lion",
+    "dragon",
+    "stag",
+    "rose",
+    "sun",
+    "kraken",
+    "falcon",
+    "flayed",
+    "bridge",
+    "bear",
+    "fish",
+    "frog",
+    "beacon",
+    "huntsman",
+    "bone"
+  ]
+}

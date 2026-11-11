@@ -1,0 +1,8 @@
+Generated with the built-in image generation tool.
+
+Use case: photorealistic-natural.
+Asset type: production game material, seamless square creature-skin diffuse/albedo texture tile, 1024 by 1024 pixels.
+Primary request: an extraordinarily realistic close, flat surface scan of monstrous skin. Desaturated corpse-gray leathery dermis with fine pores, uneven aged wrinkles, pale healed scar ridges, subtle charcoal-purple veins beneath the surface, fine fungal-looking cracks and slightly moist dark crevices. Dense organic microdetail at several scales, restrained color variation with faint cool gray-green undertones. This is a raw skin material tile for a horror creature model, not a picture of a creature.
+Composition: orthographic straight-on flat swatch filling every pixel; same material continues beyond all four edges. Seamless and tileable left-to-right and top-to-bottom, no borders or centered feature.
+Lighting: uniform flat diffuse illumination, no baked directional shadows, no highlights, no vignette, no perspective, no depth-of-field blur.
+Constraints: photoreal material texture, realistic photographic detail, no people, no faces, no eyes, no body parts, no organs, no wounds, no text, no watermark, no background or scene. Do not show an entire animal or monster. Avoid stylized illustration, smooth plastic, repeated regular patterns, fur, scales, stone, or fabric.

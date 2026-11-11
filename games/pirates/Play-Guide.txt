@@ -1,0 +1,96 @@
+PIRATES: CROWN OF THE TIDES
+
+Open index.html in a modern desktop browser, or visit its hosted address. Keep the JavaScript, stylesheet, and assets folder beside it. The game works offline and needs no installation. For the clearest battlefield, use a wide window or fullscreen.
+
+FIRST VOYAGE
+Choose New voyage. Your brig begins safely anchored at Tortuga. Press H to visit its shops, or hold W to automatically raise anchor and set sail. Steer toward the gold marker. The five voyage chapters introduce sailing, a bounty, a new harbor, taking a prize, and the Dread Admiral's final fleet. You may explore freely after victory.
+
+CONTROLS
+Use the fullscreen icon beside Pause, or the Fullscreen option in the voyage menu. A regular browser supports true fullscreen; the embedded preview may refuse it.
+The sailing view keeps only a slim status strip, an objective line, and a compact helm. Open More (the three dots) for ammunition, anchor, deck controls, crew presets, chart, and zoom. The target's small interaction button opens boarding actions.
+W / Up: set sail, automatically raise anchor, and gain speed
+S / Down: slow down; keep holding to stop and anchor
+A / D: turn port or starboard
+R: raise or drop anchor
+X: all stop and anchor
+Q / E: port or starboard broadside; hold to fire whenever ready
+Space: both broadsides; sabre when walking on deck
+F: walk the deck / return to helm
+1 / 2 / 3: battle / pursuit / repair crew arrangement
+Tab: crew allocation and fleet orders
+G: grapple a selected ship when in reach; the winch pulls automatically; press again to cut lines
+B: send the displayed boarding party when the Send crew button lights up
+N: recall surviving boarders
+C: claim a grappled ship below 30% hull, or with no defending crew
+H: dock at a nearby harbor
+M: sea chart; click the chart to place a course marker
+Escape: pause or close the current panel
++ / - or mouse wheel: zoom
+Click an enemy ship to select it. The nearest hostile is selected automatically.
+Touchscreens have an on-screen directional pad and action buttons.
+
+CREW AND BATTLES
+Crew must be alive and actually reach a station to operate it. Gunners man individual cannon positions, rowers increase speed, repairers restore the hull, and boarding reserves stand ready to invade another deck. You can mix assignments. A first mate takes over if the captain falls.
+
+Broadside guides show your firing sectors. A little aiming assistance leads the selected target inside the sector. Chain shot slows a ship, fire shot burns its hull, and grapeshot attacks its sailors. Ammunition unlocks are permanent for the voyage. Fire from a side facing the enemy; shots cannot be aimed through your bow.
+
+BOARDING MADE CLEAR
+Nearby ships carry compact living-crew labels. A selected enemy separates its defenders from your boarders. Open its small boarding-information button to compare your actual sendable party with its defenders; the entire flagship crew does not cross at once. Normal ships send up to eight sailors, the galley sends up to ten, and four hands always stay aboard.
+Follow the contextual steps: get close, press G to attach a line, let the automatic winch pull, then press B when Send crew becomes available. Crew can cross when the hulls are close, including the bows of large ships, without ships overlapping. The side that initiated the grapple sends its own sailors across; the other crew stays aboard to defend that linked ship. A crossing finishes once. Sailors only return on an explicit N recall or after a prize or rescue; they do not shuttle automatically between the two ships. Enemy ships can still launch their own raids when no opposing grapple holds them.
+
+INTERACTIVE DECK BATTLES
+After grappling, choose Plan boarding to select a landing point. Sending a party opens Boarding Command automatically. Teal sailors are yours; red sailors are enemies, including skeletons. Your actual crew cross from your flagship and fight on the enemy deck, with individual health bars and casualties.
+Choose Helm, Guns, or Bow before launch to set the landing point; select another zone after landing to direct the squad. Assault deals more melee damage but exposes the party; Guard trades damage for protection. Capture two zones and break enemy resolve to demand surrender while defenders remain alive. You may also claim a ship at 30% hull or with no defenders. The Dread Admiral refuses surrender and must be sunk.
+Pistol volley hits up to three defenders in the occupied, selected zone. Rally heals living boarders and briefly strengthens their attack; it never revives casualties. Brace protects the party briefly. When Enemy rush incoming appears, brace before its countdown ends to counter the rush, stagger defenders, and weaken their resolve. Each ability has its own cooldown.
+While Boarding Command is open: 1 / 2 / 3 choose Helm / Guns / Bow, Z selects Assault, X selects Guard, Q fires a pistol volley, E rallies, and Space braces. B sends reinforcements, N recalls surviving boarders, and C claims a ready prize. The same actions are available as buttons, and clicking a deck section directs the party.
+The wider sea battle continues at a slower pace while the command view is open. Back to sea or Escape closes the view without recalling your party; open Command party in the boarding guide to return. N brings survivors home. Cutting the line leaves your party aboard the enemy ship, still fighting; reattach a grapple to recall them. Their combat and positions keep updating even if your flagship sails far away. Saving preserves the deployed party, deck control, resolve, and ability cooldowns; Continue closes the command view and restores the flagship safely stopped.
+
+The camera begins at a wider view and frames a nearby battle automatically. Whole-ship collision envelopes include bows, sails and oars. Impacts separate ships, transfer momentum, and can damage the hull. Collision damage has a cooldown rather than repeating every animation frame.
+
+PRIZES AND PORTS
+Keep a captured ship as an escort, salvage it for extra gold, or recruit new sailors. Captured enemies surrender and player/ally cannon fire is friendly. Use Follow, Defend, or Attack orders in Crew & Fleet.
+
+Harbors pause the world. Shops have four categories: Shipyard, Arsenal, Crew & Repairs, and Passage. Each harbor stocks its own ships, ammunition and refits. Small coastal ports offer basic upgrades; specialist and grand yards offer higher tiers. A local tier limit does not consume gold. Open Other shipyards to set a course for fantastic vessels. Passage is available between discovered ports. Prices depend on upgrade tier, not elapsed time.
+
+YOUR WHOLE FLEET
+Buying a ship adds a crewed escort. It never replaces the ship you are steering. You can buy multiple ships of the same type and keep captured prizes too. The small Fleet button opens every owned vessel; choose Take helm to control another ship. Your former flagship becomes an escort and keeps its hull, crew, damage and upgrades. Refits affect only the active flagship. Your gold, voyage and ammunition unlocks remain shared.
+Escorts follow the active flagship automatically, keep pace during fair-wind travel, and spread into formation when you stop. Follow mode recalls stragglers rather than abandoning the fleet to chase distant enemies. Defend and Attack orders remain available. Fleet ownership and your active flagship save together.
+Earlier versions replaced the starting brig on a ship purchase. Loading an affected older save preserves the purchased flagship and adds one clearly named Restored Starter Brig as compensation. This is a fresh starter vessel, since the original pre-purchase hull damage and crew snapshot were not saved. It is added once, without resetting your gold or voyage.
+
+FIVE SPECIALIST BOATS
+The shipyard shows one selected boat with a comparison against your current flagship. Each class has different hull strength, sailing speed, turning, guns, range, and reload.
+Swift Cutter (480 gold): fastest sails and tightest turns, rapid twin broadsides; light hull, short range, and few guns.
+Raider Galley (900 gold): powerful rowing and ten-sailor boarding parties with stronger melee; modest protection and cannon damage.
+Corsair Frigate (1,350 gold): agile long-range broadside fighter; less hull protection than heavier warships.
+Siege Bombard (1,550 gold): arcing mortar shells and area damage against clustered enemies; sluggish sailing and slow reloads.
+Armored Ironclad (2,150 gold): plating absorbs 32% of hull damage and supports heavy guns; slow sails and turns.
+All five also appear in enemy encounters and patrols. Buy them as escorts and select any owned vessel through Fleet > Take helm. Each ship has its own upgrades. Any crew already waiting ashore in an older save can still be recalled for free when there is room. Current voyages keep their gold, objectives, upgrades and captured fleet.
+
+FANTASTIC VESSELS & GRAND HARBORS
+Sovereign Leviathan (8,500 gold): Blackwater Bastion's exclusive giant dreadnought has five masts, 7,600 hull, fourteen guns per side, 20% hull-damage protection, and 110 crew berths. Its immense broadside is balanced by the slowest sailing and widest turns. Buy one as an escort, then use Fleet > Take helm if you want to command it. Giant ships can grapple and board at the edges of their hulls without overlapping.
+Tempest Stormark (4,400 gold): Azure Watch and Thunderhead Bastion build this four-mast expedition flagship with 4,200 hull, eight long-range guns per side, 10% hull protection, and 76 berths. It is faster and more agile than the Leviathan but still needs space to turn.
+Revenant Galleon (3,100 gold): Gravesend Refuge sells witchfire sails and a skeleton crew. Five quick guns, 1,600 hull, and 32 berths reward careful boarding decisions.
+Blackwater Bastion and Azure Watch are physically larger fortified cities with extensive piers, cranes, drydocks, warehouses and naval forts. Other ports specialize in pursuit ships, boarding crews, siege weapons, armored hulls or ammunition. Every port offers repairs and fresh hands.
+
+THE ARCHIPELAGO
+The ocean measures 52,000 by 44,000 world units, about 59.5 times the area of the original sea. It contains 112 islands, 12 ports, nine ocean regions, and 143 authored encounters. Regions include Calm Sea, Sapphire Shoals, Pearl Coast, Indigo Trench, Emerald Expanse, Crimson Strait, Stormbreak Sea, Frostwater, and The Bone Sea.
+
+DEEP-SEA ARMADAS
+Five additional battle fleets patrol the remotest waters: Blackwake Expedition in Indigo Trench (8 ships), Thunder Crown Armada in Stormbreak Sea (9), Sovereign Siege Fleet in Crimson Strait (10), Ossuary Grand Procession in the Bone Sea (9), and Rimeguard Deep Patrol in Frostwater (8). They sail in formation, share an alert when one ship spots your fleet, and regroup after you escape. A surviving officer takes command if their flagship falls. The Sovereign fleet carries an enemy Leviathan; the Ossuary fleet sends skeleton raiders onto your decks. Build a fleet before taking them on. Nearby fleets become small markers on your sea chart after discovery.
+Existing saves gain these fleets once, without reviving defeated ships or resetting your progress. If you were anchored in a new fleet's patrol area, its arrival waits until all your ships have sailed clear. Discovered fleets, captures, and deferred arrivals persist through Continue.
+
+Frostwater has icy islands and northern raiders. The Bone Sea lies to the east: haunted ruins, witchfire, three named skeleton captains, and roaming spectral fleets. Skeleton crews close in and launch boarding parties against the flagship and its escorts. Keep a boarding reserve and repairers ready.
+
+Full sails gain a fair-wind travel boost outside combat. Newly discovered islands award gold; ruins can reveal treasure. Merchants carry valuable cargo and will raise the alarm if attacked.
+
+SAVING
+Progress automatically saves on this browser and device every 25 seconds, at ports, and after captures. You can also save manually. Continue restores your ship safely anchored. Offline-file and hosted editions have separate browser storage; saves do not move automatically between them. New voyage begins a new save. Browser private mode or storage restrictions may prevent persistent saves.
+
+GRAPHICS AND SOUND
+Ships, islands, sea, crews and battle effects are drawn and animated by the game's original canvas renderer: layered planked hulls, curved sails, rigging, flags, foam wakes, cannon flashes, smoke, fire, boarding, sinking, storms, snow and haunted fog. There are no third-party game libraries or network assets. Sound effects are generated locally with Web Audio after you start playing.
+
+The title illustration was created with the built-in image generation tool and saved as dist/assets/cover.png. Prompt: Wide cinematic Caribbean pirate battle key art; an ornate wooden tall ship with ivory sails, gold stern carvings and black-and-gold flags firing broadsides on the right; turquoise sea, tropical islands, harbor, enemy galleons and cannon smoke; painterly realism with warm afternoon light; dark quiet left third for the title; no text, logos, or watermark.
+
+DEVELOPMENT
+Source modules: world.js, renderer.js, interface.js, game.js, style.css, index.html.
+Run node test-engine.cjs, node test-boarding.cjs, node test-boarding-ui.cjs, node test-port-ui.cjs, node test-integration.cjs and node test-renderer.cjs for the behavioral, tactical boarding, interface and rendering checks. The local development server is optional: node server.cjs.

@@ -1,0 +1,7 @@
+Use case: stylized-concept.
+Asset type: landscape menu background key art for a tactical fantasy academy strategy game, 16:9 landscape.
+Primary request: richly painted fantasy academy citadel overlooking a lush river valley, with distant rival castles and small heraldic banners. Foreground a small party of five young adult student warriors in blue capes: shield infantry, spearman, archer, and companions, seen mostly from behind looking toward the citadel.
+Style: polished storybook strategy-game concept art, painterly editorial illustration, detailed environment, elegant natural colors, atmospheric depth.
+Composition: majestic main castle on the right half, winding river through valley, pine forests and stone bridges. Darker quieter left and lower-left space suitable for overlaying an HTML title and menu. No visible text anywhere.
+Lighting: misty dawn, warm golden sunlight, soft green pines, warm stone towers, hopeful and adventurous.
+Constraints: no logos, no watermark, no interface, no lettering, no modern weapons, no gore. Cohesive professional game key art.

@@ -1,0 +1,74 @@
+Generated with the built-in image_gen tool. Each faction used a separate generation call.
+
+APOLLO
+Use case: stylized-concept. Asset type: production-ready animated RTS character sprite atlas.
+Create exactly one portrait PNG sprite sheet, exactly 1280 x 1600 pixels (4:5). It must be a mathematically regular grid of EXACTLY 8 columns and EXACTLY 10 rows: eighty square 160 x 160 pixel cells, edge to edge, with absolutely no gutters between cells. Background and every empty pixel are genuinely transparent RGBA alpha=0, not white and not a painted checkerboard.
+Art style: detailed painterly chibi pixel-art strategy game units, readable silhouettes, crisp hand-painted material shading and small pixel texture, consistent soft daylight from upper left, slightly elevated three-quarter camera. Full bodies with feet visible, heads about one third of human body height. Match unit scale consistently across all cells; body and equipment fit comfortably inside each cell with at least 20 percent empty side margin. No element can touch/cross a cell boundary. Feet/hooves share the identical baseline at 88 percent of each cell's height. Absolutely no text, labels, numbers, border lines, grid lines, backgrounds, scenery, or UI.
+STRICT row layout from top to bottom:
+Row 0: sword-and-shield infantry, FRONT three-quarter facing right.
+Row 1: the SAME sword-and-shield infantry, BACK three-quarter facing right.
+Row 2: spear-and-shield infantry, FRONT three-quarter facing right.
+Row 3: the SAME spear-and-shield infantry, BACK three-quarter facing right.
+Row 4: bow archer, FRONT three-quarter facing right.
+Row 5: the SAME bow archer, BACK three-quarter facing right.
+Row 6: medic carrying a recognizable satchel and healing staff, FRONT three-quarter facing right.
+Row 7: the SAME medic, BACK three-quarter facing right.
+Row 8: cavalry, full horse plus its sword-bearing rider, FRONT three-quarter facing right.
+Row 9: the SAME horse and rider, BACK three-quarter facing right.
+STRICT animation columns from left to right, the identical character and equipment maintained within each role row:
+Column 0 neutral standing idle; columns 1,2,3,4,5 are FIVE visibly different sequential WALK gait frames with alternating legs/arms (horse uses alternating hoof positions and rider bob); column 6 attack wind-up (archer draws bow, medic raises staff); column 7 attack release (sword/spear thrust or slash, archer releases, medic casts). Each animation frame remains independently centered in its own cell; no repetition of the exact same pose for columns 1 through 5.
+All figures face either front-right or back-right as specified, never face left. Weapons are visible and role differences obvious. Keep every sprite complete, distinct and separated.
+FACTION ART DIRECTION:
+HOUSE APOLLO: truly distinct orange-gold and ivory-white radiant sun-knights. Sculpted sunburst-crested helmets with short radial golden rays, light ivory lamellar armor and gold trim, orange waist sashes, circular embossed sun shields. Infantry use elegant gold swords and sun-tipped spears; archers have curved golden bows and white hoods with small sun ornaments. Medics wear ivory robes and an orange-gold stole with a sun staff. Cavalry ride WHITE horses with gold-and-orange tack and ivory chamfrons. The silhouettes should look light, radiant and athletic, clearly a solar knight order.
+
+JUNO
+Use case: stylized-concept. Asset type: production-ready animated RTS character sprite atlas.
+Create exactly one portrait PNG sprite sheet, exactly 1280 x 1600 pixels (4:5). It must be a mathematically regular grid of EXACTLY 8 columns and EXACTLY 10 rows: eighty square 160 x 160 pixel cells, edge to edge, with absolutely no gutters between cells. Background and every empty pixel are genuinely transparent RGBA alpha=0, not white and not a painted checkerboard.
+Art style: detailed painterly chibi pixel-art strategy game units, readable silhouettes, crisp hand-painted material shading and small pixel texture, consistent soft daylight from upper left, slightly elevated three-quarter camera. Full bodies with feet visible, heads about one third of human body height. Match unit scale consistently across all cells; body and equipment fit comfortably inside each cell with at least 20 percent empty side margin. No element can touch/cross a cell boundary. Feet/hooves share the identical baseline at 88 percent of each cell's height. Absolutely no text, labels, numbers, border lines, grid lines, backgrounds, scenery, or UI.
+STRICT row layout from top to bottom:
+Row 0: sword-and-shield infantry, FRONT three-quarter facing right.
+Row 1: the SAME sword-and-shield infantry, BACK three-quarter facing right.
+Row 2: spear-and-shield infantry, FRONT three-quarter facing right.
+Row 3: the SAME spear-and-shield infantry, BACK three-quarter facing right.
+Row 4: bow archer, FRONT three-quarter facing right.
+Row 5: the SAME bow archer, BACK three-quarter facing right.
+Row 6: medic carrying a recognizable satchel and healing staff, FRONT three-quarter facing right.
+Row 7: the SAME medic, BACK three-quarter facing right.
+Row 8: cavalry, full horse plus its sword-bearing rider, FRONT three-quarter facing right.
+Row 9: the SAME horse and rider, BACK three-quarter facing right.
+STRICT animation columns from left to right, the identical character and equipment maintained within each role row:
+Column 0 neutral standing idle; columns 1,2,3,4,5 are FIVE visibly different sequential WALK gait frames with alternating legs/arms (horse uses alternating hoof positions and rider bob); column 6 attack wind-up (archer draws bow, medic raises staff); column 7 attack release (sword/spear thrust or slash, archer releases, medic casts). Each animation frame remains independently centered in its own cell; no repetition of the exact same pose for columns 1 through 5.
+All figures face either front-right or back-right as specified, never face left. Weapons are visible and role differences obvious. Keep every sprite complete, distinct and separated.
+FACTION ART DIRECTION:
+HOUSE JUNO: truly distinct purple and ivory regal palace guards. Tall crown-like helmets with upright ornamental points, broad ornate ivory-and-gold breastplates, layered purple velvet mantles and pleated long tunics, tall rectangular tower shields with elegant crown motifs. Infantry carry finely decorated straight swords and formal long spears; archers wear tall noble hoods and use graceful slender recurved bows. Medics have royal ivory-purple ceremonial capes and crown-topped healing staffs. Cavalry ride DARK near-black horses with PURPLE quilted barding and ornate silver-gold tack. These are regal, dignified, substantial silhouettes, distinct from solar knights or naval warriors.
+
+NEPTUNE
+Use case: stylized-concept. Asset type: production-ready animated RTS character sprite atlas.
+Create exactly one portrait PNG sprite sheet, exactly 1280 x 1600 pixels (4:5). It must be a mathematically regular grid of EXACTLY 8 columns and EXACTLY 10 rows: eighty square 160 x 160 pixel cells, edge to edge, with absolutely no gutters between cells. Background and every empty pixel are genuinely transparent RGBA alpha=0, not white and not a painted checkerboard.
+Art style: detailed painterly chibi pixel-art strategy game units, readable silhouettes, crisp hand-painted material shading and small pixel texture, consistent soft daylight from upper left, slightly elevated three-quarter camera. Full bodies with feet visible, heads about one third of human body height. Match unit scale consistently across all cells; body and equipment fit comfortably inside each cell with at least 20 percent empty side margin. No element can touch/cross a cell boundary. Feet/hooves share the identical baseline at 88 percent of each cell's height. Absolutely no text, labels, numbers, border lines, grid lines, backgrounds, scenery, or UI.
+STRICT row layout from top to bottom:
+Row 0: sword-and-shield infantry, FRONT three-quarter facing right.
+Row 1: the SAME sword-and-shield infantry, BACK three-quarter facing right.
+Row 2: spear-and-shield infantry, FRONT three-quarter facing right.
+Row 3: the SAME spear-and-shield infantry, BACK three-quarter facing right.
+Row 4: bow archer, FRONT three-quarter facing right.
+Row 5: the SAME bow archer, BACK three-quarter facing right.
+Row 6: medic carrying a recognizable satchel and healing staff, FRONT three-quarter facing right.
+Row 7: the SAME medic, BACK three-quarter facing right.
+Row 8: cavalry, full horse plus its sword-bearing rider, FRONT three-quarter facing right.
+Row 9: the SAME horse and rider, BACK three-quarter facing right.
+STRICT animation columns from left to right, the identical character and equipment maintained within each role row:
+Column 0 neutral standing idle; columns 1,2,3,4,5 are FIVE visibly different sequential WALK gait frames with alternating legs/arms (horse uses alternating hoof positions and rider bob); column 6 attack wind-up (archer draws bow, medic raises staff); column 7 attack release (sword/spear thrust or slash, archer releases, medic casts). Each animation frame remains independently centered in its own cell; no repetition of the exact same pose for columns 1 through 5.
+All figures face either front-right or back-right as specified, never face left. Weapons are visible and role differences obvious. Keep every sprite complete, distinct and separated.
+FACTION ART DIRECTION:
+HOUSE NEPTUNE: truly distinct cyan and sea-green naval guards. Shell- and fin-crested rounded helmets, overlapping metallic scale mail, short sea-green weather cloaks, rope belts and sturdy naval boots. Infantry use cutlass-like swords, TRIDENT-tipped spears, and oval wave-embossed shields. Archers have curved nautical bows decorated with rope and shell details. Medics wear teal sea-cloaks and carry a shell-tipped healing staff plus rope-bound medical satchel. Cavalry ride GRAY horses with cyan/sea-green sea-cloth drapes and rope-and-silver tack. Silhouettes emphasize rounded shell crests, scales and nautical equipment, visibly different from the other houses.
+
+Layout correction prompts
+APOLLO
+Precise layout correction of this existing sprite atlas. Preserve all apollo faction character designs, colors, clothing, weapons, front/back row order, animation poses, and hand-painted chibi pixel-art style. Change ONLY spacing/layout/canvas. The current image is too tightly packed for game slicing. Rebuild as a perfectly aligned sprite atlas with EXACTLY 8 columns by EXACTLY 10 rows, no extra row or column, every cell the same size. The full uncropped output canvas should be1280 x1600 pixels, 160px square cells. Keep the full canvas dimensions including large TRANSPARENT outer edges; NEVER auto-crop to character bounding boxes. Every one of the80 sprites must be fully isolated inside its own cell, with at least25% empty transparent margin on left/right and at least15% on top/bottom. SHRINK the figures to fit comfortably if needed. No spear, sword, staff, cloak, horse, glow, shadow, or hair may touch a cell boundary or overlap any neighboring cell. All figures centered horizontally at cell centers, feet/hooves on the SAME baseline at80% of each row height. All10 row centers must be precisely equally spaced; all8 column centers precisely equally spaced. Preserve the same role sequence: rows0/1 sword front/back;2/3 spear front/back;4/5 bow front/back;6/7 medic front/back;8/9 horse+rider front/back. Columns0idle,1..5five walk frames,6windup,7attack release. Transparent RGBA background, actual alpha0 between figures. NO drawn grid, NO text, NO labels, NO background. This is a technical sprite-layout correction, not a new character design.
+
+JUNO
+Precise layout correction of this existing sprite atlas. Preserve all juno faction character designs, colors, clothing, weapons, front/back row order, animation poses, and hand-painted chibi pixel-art style. Change ONLY spacing/layout/canvas. The current image is too tightly packed for game slicing. Rebuild as a perfectly aligned sprite atlas with EXACTLY 8 columns by EXACTLY 10 rows, no extra row or column, every cell the same size. The full uncropped output canvas should be1280 x1600 pixels, 160px square cells. Keep the full canvas dimensions including large TRANSPARENT outer edges; NEVER auto-crop to character bounding boxes. Every one of the80 sprites must be fully isolated inside its own cell, with at least25% empty transparent margin on left/right and at least15% on top/bottom. SHRINK the figures to fit comfortably if needed. No spear, sword, staff, cloak, horse, glow, shadow, or hair may touch a cell boundary or overlap any neighboring cell. All figures centered horizontally at cell centers, feet/hooves on the SAME baseline at80% of each row height. All10 row centers must be precisely equally spaced; all8 column centers precisely equally spaced. Preserve the same role sequence: rows0/1 sword front/back;2/3 spear front/back;4/5 bow front/back;6/7 medic front/back;8/9 horse+rider front/back. Columns0idle,1..5five walk frames,6windup,7attack release. Transparent RGBA background, actual alpha0 between figures. NO drawn grid, NO text, NO labels, NO background. This is a technical sprite-layout correction, not a new character design.
+
+NEPTUNE
+Precise layout correction of this existing sprite atlas. Preserve all neptune faction character designs, colors, clothing, weapons, front/back row order, animation poses, and hand-painted chibi pixel-art style. Change ONLY spacing/layout/canvas. The current image is too tightly packed for game slicing. Rebuild as a perfectly aligned sprite atlas with EXACTLY 8 columns by EXACTLY 10 rows, no extra row or column, every cell the same size. The full uncropped output canvas should be1280 x1600 pixels, 160px square cells. Keep the full canvas dimensions including large TRANSPARENT outer edges; NEVER auto-crop to character bounding boxes. Every one of the80 sprites must be fully isolated inside its own cell, with at least25% empty transparent margin on left/right and at least15% on top/bottom. SHRINK the figures to fit comfortably if needed. No spear, sword, staff, cloak, horse, glow, shadow, or hair may touch a cell boundary or overlap any neighboring cell. All figures centered horizontally at cell centers, feet/hooves on the SAME baseline at80% of each row height. All10 row centers must be precisely equally spaced; all8 column centers precisely equally spaced. Preserve the same role sequence: rows0/1 sword front/back;2/3 spear front/back;4/5 bow front/back;6/7 medic front/back;8/9 horse+rider front/back. Columns0idle,1..5five walk frames,6windup,7attack release. Transparent RGBA background, actual alpha0 between figures. NO drawn grid, NO text, NO labels, NO background. This is a technical sprite-layout correction, not a new character design.

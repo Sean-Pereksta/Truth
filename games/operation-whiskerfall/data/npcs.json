@@ -1,0 +1,1463 @@
+[
+  {
+    "id": "npc_town_0",
+    "townId": "town_0",
+    "region": 0,
+    "name": "Captain Saffron",
+    "portrait": 0,
+    "questIds": [
+      "main_0_0",
+      "main_0_2",
+      "side_0_2",
+      "defend_0",
+      "bounty_0",
+      "camp_waves_0",
+      "invasion_orchard"
+    ],
+    "dialogue": [
+      "Welcome, resistance fighter. You are safe here. Let us plan our next move.",
+      "Colonel Ironwhisker holds Greenfields Reach. Our scouts have marked the installations on your map.",
+      "I have courier escorts, defensive patrols, named officer assignments, and commander bounties. Choose a mission to see its first step and a map marker.",
+      "Speak to me for missions, visit the merchant for supplies, and use the forge to strengthen your gun and armour.",
+      "Orchards, wheat farms, and the first sparks of resistance."
+    ],
+    "role": "scout",
+    "topics": {
+      "local": [
+        "Orchards, wheat farms, and the first sparks of resistance.",
+        "The bounty center lists every major boss and the sector where they hide."
+      ],
+      "advice": [
+        "Early orchard camps hold small patrols. Watch their tells and pick your approach.",
+        "Berlin opens after all eight commanders fall. Adolph Whisker is the final target."
+      ]
+    }
+  },
+  {
+    "id": "npc_town_way_0",
+    "townId": "town_way_0",
+    "region": 0,
+    "name": "Wayfinder Poppy",
+    "portrait": 0,
+    "questIds": [
+      "main_0_1",
+      "side_0_1",
+      "side_0_3",
+      "escort_0"
+    ],
+    "dialogue": [
+      "Rest your paws. This waystation is peaceful, and the forge is ready.",
+      "Colonel Ironwhisker holds Greenfields Reach. Our scouts have marked the installations on your map.",
+      "I have courier escorts, defensive patrols, named officer assignments, and commander bounties. Choose a mission to see its first step and a map marker.",
+      "Speak to me for missions, visit the merchant for supplies, and use the forge to strengthen your gun and armour.",
+      "Orchards, wheat farms, and the first sparks of resistance."
+    ],
+    "role": "scout",
+    "topics": {
+      "local": [
+        "Orchards, wheat farms, and the first sparks of resistance.",
+        "The bounty center lists every major boss and the sector where they hide."
+      ],
+      "advice": [
+        "Early orchard camps hold small patrols. Watch their tells and pick your approach.",
+        "Berlin opens after all eight commanders fall. Adolph Whisker is the final target."
+      ]
+    }
+  },
+  {
+    "id": "npc_town_extra_0",
+    "townId": "town_extra_0",
+    "region": 0,
+    "name": "Scout Hazel",
+    "portrait": 0,
+    "questIds": [
+      "side_0_0",
+      "side_0_4",
+      "assassination_0"
+    ],
+    "dialogue": [
+      "Welcome, resistance fighter. You are safe here. Let us plan our next move.",
+      "Colonel Ironwhisker holds Greenfields Reach. Our scouts have marked the installations on your map.",
+      "I have courier escorts, defensive patrols, named officer assignments, and commander bounties. Choose a mission to see its first step and a map marker.",
+      "Speak to me for missions, visit the merchant for supplies, and use the forge to strengthen your gun and armour.",
+      "Orchards, wheat farms, and the first sparks of resistance."
+    ],
+    "role": "scout",
+    "topics": {
+      "local": [
+        "Orchards, wheat farms, and the first sparks of resistance.",
+        "The bounty center lists every major boss and the sector where they hide."
+      ],
+      "advice": [
+        "Early orchard camps hold small patrols. Watch their tells and pick your approach.",
+        "Berlin opens after all eight commanders fall. Adolph Whisker is the final target."
+      ]
+    }
+  },
+  {
+    "id": "npc_town_1",
+    "townId": "town_1",
+    "region": 1,
+    "name": "Scout Juniper",
+    "portrait": 1,
+    "questIds": [
+      "main_1_0",
+      "main_1_2",
+      "side_1_2",
+      "defend_1",
+      "bounty_1",
+      "demolition_1"
+    ],
+    "dialogue": [
+      "Welcome, resistance fighter. You are safe here. Let us plan our next move.",
+      "Major Bramble holds Mosswood Wilds. Our scouts have marked the installations on your map.",
+      "I have courier escorts, defensive patrols, named officer assignments, and commander bounties. Choose a mission to see its first step and a map marker.",
+      "Speak to me for missions, visit the merchant for supplies, and use the forge to strengthen your gun and armour.",
+      "Ancient woodland conceals prison camps and radio towers."
+    ],
+    "role": "scout",
+    "topics": {
+      "local": [
+        "Ancient woodland conceals prison camps and radio towers.",
+        "The bounty center lists every major boss and the sector where they hide."
+      ],
+      "advice": [
+        "Early orchard camps hold small patrols. Watch their tells and pick your approach.",
+        "Berlin opens after all eight commanders fall. Adolph Whisker is the final target."
+      ]
+    }
+  },
+  {
+    "id": "npc_town_way_1",
+    "townId": "town_way_1",
+    "region": 1,
+    "name": "Wayfinder Bramble",
+    "portrait": 1,
+    "questIds": [
+      "main_1_1",
+      "side_1_1",
+      "side_1_3",
+      "escort_1"
+    ],
+    "dialogue": [
+      "Rest your paws. This waystation is peaceful, and the forge is ready.",
+      "Major Bramble holds Mosswood Wilds. Our scouts have marked the installations on your map.",
+      "I have courier escorts, defensive patrols, named officer assignments, and commander bounties. Choose a mission to see its first step and a map marker.",
+      "Speak to me for missions, visit the merchant for supplies, and use the forge to strengthen your gun and armour.",
+      "Ancient woodland conceals prison camps and radio towers."
+    ],
+    "role": "scout",
+    "topics": {
+      "local": [
+        "Ancient woodland conceals prison camps and radio towers.",
+        "The bounty center lists every major boss and the sector where they hide."
+      ],
+      "advice": [
+        "Early orchard camps hold small patrols. Watch their tells and pick your approach.",
+        "Berlin opens after all eight commanders fall. Adolph Whisker is the final target.",
+        "A hammer rings beside Owl’s Grotto. Wick has been missing from the forge for days."
+      ]
+    }
+  },
+  {
+    "id": "npc_town_extra_1",
+    "townId": "town_extra_1",
+    "region": 1,
+    "name": "Scout Fern",
+    "portrait": 1,
+    "questIds": [
+      "side_1_0",
+      "side_1_4",
+      "assassination_1"
+    ],
+    "dialogue": [
+      "Welcome, resistance fighter. You are safe here. Let us plan our next move.",
+      "Major Bramble holds Mosswood Wilds. Our scouts have marked the installations on your map.",
+      "I have courier escorts, defensive patrols, named officer assignments, and commander bounties. Choose a mission to see its first step and a map marker.",
+      "Speak to me for missions, visit the merchant for supplies, and use the forge to strengthen your gun and armour.",
+      "Ancient woodland conceals prison camps and radio towers."
+    ],
+    "role": "scout",
+    "topics": {
+      "local": [
+        "Ancient woodland conceals prison camps and radio towers.",
+        "The bounty center lists every major boss and the sector where they hide."
+      ],
+      "advice": [
+        "Early orchard camps hold small patrols. Watch their tells and pick your approach.",
+        "Berlin opens after all eight commanders fall. Adolph Whisker is the final target."
+      ]
+    }
+  },
+  {
+    "id": "npc_town_2",
+    "townId": "town_2",
+    "region": 2,
+    "name": "Ranger Crag",
+    "portrait": 2,
+    "questIds": [
+      "main_2_0",
+      "main_2_2",
+      "side_2_2",
+      "defend_2",
+      "bounty_2",
+      "camp_waves_2"
+    ],
+    "dialogue": [
+      "Welcome, resistance fighter. You are safe here. Let us plan our next move.",
+      "General Flintfang holds Stonecrest Highlands. Our scouts have marked the installations on your map.",
+      "I have courier escorts, defensive patrols, named officer assignments, and commander bounties. Choose a mission to see its first step and a map marker.",
+      "Speak to me for missions, visit the merchant for supplies, and use the forge to strengthen your gun and armour.",
+      "Rocky passes climb toward fortified mountain batteries."
+    ],
+    "role": "scout",
+    "topics": {
+      "local": [
+        "Rocky passes climb toward fortified mountain batteries.",
+        "The bounty center lists every major boss and the sector where they hide."
+      ],
+      "advice": [
+        "Early orchard camps hold small patrols. Watch their tells and pick your approach.",
+        "Berlin opens after all eight commanders fall. Adolph Whisker is the final target."
+      ]
+    }
+  },
+  {
+    "id": "npc_town_way_2",
+    "townId": "town_way_2",
+    "region": 2,
+    "name": "Wayfinder Granite",
+    "portrait": 2,
+    "questIds": [
+      "main_2_1",
+      "side_2_1",
+      "side_2_3",
+      "escort_2"
+    ],
+    "dialogue": [
+      "Rest your paws. This waystation is peaceful, and the forge is ready.",
+      "General Flintfang holds Stonecrest Highlands. Our scouts have marked the installations on your map.",
+      "I have courier escorts, defensive patrols, named officer assignments, and commander bounties. Choose a mission to see its first step and a map marker.",
+      "Speak to me for missions, visit the merchant for supplies, and use the forge to strengthen your gun and armour.",
+      "Rocky passes climb toward fortified mountain batteries."
+    ],
+    "role": "scout",
+    "topics": {
+      "local": [
+        "Rocky passes climb toward fortified mountain batteries.",
+        "The bounty center lists every major boss and the sector where they hide."
+      ],
+      "advice": [
+        "Early orchard camps hold small patrols. Watch their tells and pick your approach.",
+        "Berlin opens after all eight commanders fall. Adolph Whisker is the final target.",
+        "A lantern still burns near Crystal Pass. Follow the ruined watchtower’s signal."
+      ]
+    }
+  },
+  {
+    "id": "npc_town_extra_2",
+    "townId": "town_extra_2",
+    "region": 2,
+    "name": "Scout Slate",
+    "portrait": 2,
+    "questIds": [
+      "side_2_0",
+      "side_2_4",
+      "assassination_2"
+    ],
+    "dialogue": [
+      "Welcome, resistance fighter. You are safe here. Let us plan our next move.",
+      "General Flintfang holds Stonecrest Highlands. Our scouts have marked the installations on your map.",
+      "I have courier escorts, defensive patrols, named officer assignments, and commander bounties. Choose a mission to see its first step and a map marker.",
+      "Speak to me for missions, visit the merchant for supplies, and use the forge to strengthen your gun and armour.",
+      "Rocky passes climb toward fortified mountain batteries."
+    ],
+    "role": "scout",
+    "topics": {
+      "local": [
+        "Rocky passes climb toward fortified mountain batteries.",
+        "The bounty center lists every major boss and the sector where they hide."
+      ],
+      "advice": [
+        "Early orchard camps hold small patrols. Watch their tells and pick your approach.",
+        "Berlin opens after all eight commanders fall. Adolph Whisker is the final target."
+      ]
+    }
+  },
+  {
+    "id": "npc_town_3",
+    "townId": "town_3",
+    "region": 3,
+    "name": "Medic Lumi",
+    "portrait": 3,
+    "questIds": [
+      "main_3_0",
+      "main_3_2",
+      "side_3_2",
+      "defend_3",
+      "bounty_3",
+      "demolition_3",
+      "invasion_frost"
+    ],
+    "dialogue": [
+      "Welcome, resistance fighter. You are safe here. Let us plan our next move.",
+      "Marshal Whiteclaw holds Frostmarch. Our scouts have marked the installations on your map.",
+      "I have courier escorts, defensive patrols, named officer assignments, and commander bounties. Choose a mission to see its first step and a map marker.",
+      "Speak to me for missions, visit the merchant for supplies, and use the forge to strengthen your gun and armour.",
+      "Frozen lakes and pine forests surround an icy command post.",
+      "The eastern coast road is open. Keeper Nacre at Brinewatch Refuge has work for travelers; Captain Coral watches the Sunken Crown Isles farther south."
+    ],
+    "role": "medic",
+    "topics": {
+      "local": [
+        "Frozen lakes and pine forests surround an icy command post.",
+        "The bounty center lists every major boss and the sector where they hide."
+      ],
+      "advice": [
+        "Early orchard camps hold small patrols. Watch their tells and pick your approach.",
+        "Berlin opens after all eight commanders fall. Adolph Whisker is the final target."
+      ]
+    }
+  },
+  {
+    "id": "npc_town_way_3",
+    "townId": "town_way_3",
+    "region": 3,
+    "name": "Wayfinder Flurry",
+    "portrait": 3,
+    "questIds": [
+      "main_3_1",
+      "side_3_1",
+      "side_3_3",
+      "escort_3"
+    ],
+    "dialogue": [
+      "Rest your paws. This waystation is peaceful, and the forge is ready.",
+      "Marshal Whiteclaw holds Frostmarch. Our scouts have marked the installations on your map.",
+      "I have courier escorts, defensive patrols, named officer assignments, and commander bounties. Choose a mission to see its first step and a map marker.",
+      "Speak to me for missions, visit the merchant for supplies, and use the forge to strengthen your gun and armour.",
+      "Frozen lakes and pine forests surround an icy command post."
+    ],
+    "role": "scout",
+    "topics": {
+      "local": [
+        "Frozen lakes and pine forests surround an icy command post.",
+        "The bounty center lists every major boss and the sector where they hide."
+      ],
+      "advice": [
+        "Early orchard camps hold small patrols. Watch their tells and pick your approach.",
+        "Berlin opens after all eight commanders fall. Adolph Whisker is the final target.",
+        "Follow the frost-blue pipes northeast from Warmhearth to Keeper Thistle."
+      ]
+    }
+  },
+  {
+    "id": "npc_town_extra_3",
+    "townId": "town_extra_3",
+    "region": 3,
+    "name": "Scout Aurora",
+    "portrait": 3,
+    "questIds": [
+      "side_3_0",
+      "side_3_4",
+      "assassination_3"
+    ],
+    "dialogue": [
+      "Welcome, resistance fighter. You are safe here. Let us plan our next move.",
+      "Marshal Whiteclaw holds Frostmarch. Our scouts have marked the installations on your map.",
+      "I have courier escorts, defensive patrols, named officer assignments, and commander bounties. Choose a mission to see its first step and a map marker.",
+      "Speak to me for missions, visit the merchant for supplies, and use the forge to strengthen your gun and armour.",
+      "Frozen lakes and pine forests surround an icy command post."
+    ],
+    "role": "scout",
+    "topics": {
+      "local": [
+        "Frozen lakes and pine forests surround an icy command post.",
+        "The bounty center lists every major boss and the sector where they hide."
+      ],
+      "advice": [
+        "Early orchard camps hold small patrols. Watch their tells and pick your approach.",
+        "Berlin opens after all eight commanders fall. Adolph Whisker is the final target."
+      ]
+    }
+  },
+  {
+    "id": "npc_town_4",
+    "townId": "town_4",
+    "region": 4,
+    "name": "Trader Sol",
+    "portrait": 0,
+    "questIds": [
+      "main_4_0",
+      "main_4_2",
+      "side_4_2",
+      "defend_4",
+      "bounty_4",
+      "camp_waves_4"
+    ],
+    "dialogue": [
+      "Welcome, resistance fighter. You are safe here. Let us plan our next move.",
+      "Field Marshal Sirocco holds Sunscar Dunes. Our scouts have marked the installations on your map.",
+      "I have courier escorts, defensive patrols, named officer assignments, and commander bounties. Choose a mission to see its first step and a map marker.",
+      "Speak to me for missions, visit the merchant for supplies, and use the forge to strengthen your gun and armour.",
+      "Desert caravan roads carry supplies to a buried war factory.",
+      "The eastern coast road is open. Keeper Nacre at Brinewatch Refuge has work for travelers; Captain Coral watches the Sunken Crown Isles farther south."
+    ],
+    "role": "scout",
+    "topics": {
+      "local": [
+        "Desert caravan roads carry supplies to a buried war factory.",
+        "The bounty center lists every major boss and the sector where they hide."
+      ],
+      "advice": [
+        "Early orchard camps hold small patrols. Watch their tells and pick your approach.",
+        "Berlin opens after all eight commanders fall. Adolph Whisker is the final target."
+      ]
+    }
+  },
+  {
+    "id": "npc_town_way_4",
+    "townId": "town_way_4",
+    "region": 4,
+    "name": "Wayfinder Saffron",
+    "portrait": 0,
+    "questIds": [
+      "main_4_1",
+      "side_4_0",
+      "side_4_1",
+      "side_4_3",
+      "side_4_4",
+      "escort_4",
+      "assassination_4"
+    ],
+    "dialogue": [
+      "Rest your paws. This waystation is peaceful, and the forge is ready.",
+      "Field Marshal Sirocco holds Sunscar Dunes. Our scouts have marked the installations on your map.",
+      "I have courier escorts, defensive patrols, named officer assignments, and commander bounties. Choose a mission to see its first step and a map marker.",
+      "Speak to me for missions, visit the merchant for supplies, and use the forge to strengthen your gun and armour.",
+      "Desert caravan roads carry supplies to a buried war factory."
+    ],
+    "role": "scout",
+    "topics": {
+      "local": [
+        "Desert caravan roads carry supplies to a buried war factory.",
+        "The bounty center lists every major boss and the sector where they hide."
+      ],
+      "advice": [
+        "Early orchard camps hold small patrols. Watch their tells and pick your approach.",
+        "Berlin opens after all eight commanders fall. Adolph Whisker is the final target."
+      ]
+    }
+  },
+  {
+    "id": "npc_town_5",
+    "townId": "town_5",
+    "region": 5,
+    "name": "Harbormaster Reed",
+    "portrait": 1,
+    "questIds": [
+      "main_5_0",
+      "main_5_2",
+      "side_5_2",
+      "defend_5",
+      "bounty_5",
+      "demolition_5"
+    ],
+    "dialogue": [
+      "Welcome, resistance fighter. You are safe here. Let us plan our next move.",
+      "Admiral Miretooth holds Reedwater Delta. Our scouts have marked the installations on your map.",
+      "I have courier escorts, defensive patrols, named officer assignments, and commander bounties. Choose a mission to see its first step and a map marker.",
+      "Speak to me for missions, visit the merchant for supplies, and use the forge to strengthen your gun and armour.",
+      "Wetlands, fishing villages, and occupied river docks."
+    ],
+    "role": "scout",
+    "topics": {
+      "local": [
+        "Wetlands, fishing villages, and occupied river docks.",
+        "The bounty center lists every major boss and the sector where they hide."
+      ],
+      "advice": [
+        "Early orchard camps hold small patrols. Watch their tells and pick your approach.",
+        "Berlin opens after all eight commanders fall. Adolph Whisker is the final target."
+      ]
+    }
+  },
+  {
+    "id": "npc_town_way_5",
+    "townId": "town_way_5",
+    "region": 5,
+    "name": "Wayfinder Ripple",
+    "portrait": 1,
+    "questIds": [
+      "main_5_1",
+      "side_5_0",
+      "side_5_1",
+      "side_5_3",
+      "side_5_4",
+      "escort_5",
+      "assassination_5"
+    ],
+    "dialogue": [
+      "Rest your paws. This waystation is peaceful, and the forge is ready.",
+      "Admiral Miretooth holds Reedwater Delta. Our scouts have marked the installations on your map.",
+      "I have courier escorts, defensive patrols, named officer assignments, and commander bounties. Choose a mission to see its first step and a map marker.",
+      "Speak to me for missions, visit the merchant for supplies, and use the forge to strengthen your gun and armour.",
+      "Wetlands, fishing villages, and occupied river docks."
+    ],
+    "role": "scout",
+    "topics": {
+      "local": [
+        "Wetlands, fishing villages, and occupied river docks.",
+        "The bounty center lists every major boss and the sector where they hide."
+      ],
+      "advice": [
+        "Early orchard camps hold small patrols. Watch their tells and pick your approach.",
+        "Berlin opens after all eight commanders fall. Adolph Whisker is the final target.",
+        "Follow the wind bells northeast of Reedlight Refuge to Pilgrim Sora."
+      ]
+    }
+  },
+  {
+    "id": "npc_town_6",
+    "townId": "town_6",
+    "region": 6,
+    "name": "Engineer Cinder",
+    "portrait": 2,
+    "questIds": [
+      "main_6_0",
+      "main_6_2",
+      "side_6_2",
+      "defend_6",
+      "bounty_6",
+      "camp_waves_6"
+    ],
+    "dialogue": [
+      "Welcome, resistance fighter. You are safe here. Let us plan our next move.",
+      "Director Geargnash holds Emberworks. Our scouts have marked the installations on your map.",
+      "I have courier escorts, defensive patrols, named officer assignments, and commander bounties. Choose a mission to see its first step and a map marker.",
+      "Speak to me for missions, visit the merchant for supplies, and use the forge to strengthen your gun and armour.",
+      "Smokestacks and armored factories dominate the ruined countryside."
+    ],
+    "role": "engineer",
+    "topics": {
+      "local": [
+        "Smokestacks and armored factories dominate the ruined countryside.",
+        "The bounty center lists every major boss and the sector where they hide."
+      ],
+      "advice": [
+        "Early orchard camps hold small patrols. Watch their tells and pick your approach.",
+        "Berlin opens after all eight commanders fall. Adolph Whisker is the final target."
+      ]
+    }
+  },
+  {
+    "id": "npc_town_way_6",
+    "townId": "town_way_6",
+    "region": 6,
+    "name": "Wayfinder Coal",
+    "portrait": 2,
+    "questIds": [
+      "main_6_1",
+      "side_6_0",
+      "side_6_1",
+      "side_6_3",
+      "side_6_4",
+      "escort_6",
+      "assassination_6"
+    ],
+    "dialogue": [
+      "Rest your paws. This waystation is peaceful, and the forge is ready.",
+      "Director Geargnash holds Emberworks. Our scouts have marked the installations on your map.",
+      "I have courier escorts, defensive patrols, named officer assignments, and commander bounties. Choose a mission to see its first step and a map marker.",
+      "Speak to me for missions, visit the merchant for supplies, and use the forge to strengthen your gun and armour.",
+      "Smokestacks and armored factories dominate the ruined countryside."
+    ],
+    "role": "scout",
+    "topics": {
+      "local": [
+        "Smokestacks and armored factories dominate the ruined countryside.",
+        "The bounty center lists every major boss and the sector where they hide."
+      ],
+      "advice": [
+        "Early orchard camps hold small patrols. Watch their tells and pick your approach.",
+        "Berlin opens after all eight commanders fall. Adolph Whisker is the final target.",
+        "Violet survey ribbons lead southeast from Ember Rest. Vesper never leaves a marker by accident.",
+        "Follow the silent furnace chimneys east of Ember Rest to Foreman Brindle."
+      ]
+    }
+  },
+  {
+    "id": "npc_town_7",
+    "townId": "town_7",
+    "region": 7,
+    "name": "Captain Dawn",
+    "portrait": 3,
+    "questIds": [
+      "main_7_0",
+      "main_7_2",
+      "side_7_2",
+      "defend_7",
+      "bounty_7",
+      "main_berlin_final",
+      "demolition_7",
+      "invasion_berlin"
+    ],
+    "dialogue": [
+      "Welcome, resistance fighter. You are safe here. Let us plan our next move.",
+      "Supreme Commander Vex holds Blackbanner Citadel. Our scouts have marked the installations on your map.",
+      "I have courier escorts, defensive patrols, named officer assignments, and commander bounties. Choose a mission to see its first step and a map marker.",
+      "Speak to me for missions, visit the merchant for supplies, and use the forge to strengthen your gun and armour.",
+      "An occupied capital surrounding the sealed Berlin Sector."
+    ],
+    "role": "scout",
+    "topics": {
+      "local": [
+        "An occupied capital surrounding the sealed Berlin Sector.",
+        "The bounty center lists every major boss and the sector where they hide."
+      ],
+      "advice": [
+        "Early orchard camps hold small patrols. Watch their tells and pick your approach.",
+        "Berlin opens after all eight commanders fall. Adolph Whisker is the final target."
+      ]
+    }
+  },
+  {
+    "id": "npc_town_way_7",
+    "townId": "town_way_7",
+    "region": 7,
+    "name": "Wayfinder Starling",
+    "portrait": 3,
+    "questIds": [
+      "main_7_1",
+      "side_7_0",
+      "side_7_1",
+      "side_7_3",
+      "side_7_4",
+      "escort_7",
+      "assassination_7"
+    ],
+    "dialogue": [
+      "Rest your paws. This waystation is peaceful, and the forge is ready.",
+      "Supreme Commander Vex holds Blackbanner Citadel. Our scouts have marked the installations on your map.",
+      "I have courier escorts, defensive patrols, named officer assignments, and commander bounties. Choose a mission to see its first step and a map marker.",
+      "Speak to me for missions, visit the merchant for supplies, and use the forge to strengthen your gun and armour.",
+      "An occupied capital surrounding the sealed Berlin Sector."
+    ],
+    "role": "scout",
+    "topics": {
+      "local": [
+        "An occupied capital surrounding the sealed Berlin Sector.",
+        "The bounty center lists every major boss and the sector where they hide."
+      ],
+      "advice": [
+        "Early orchard camps hold small patrols. Watch their tells and pick your approach.",
+        "Berlin opens after all eight commanders fall. Adolph Whisker is the final target."
+      ]
+    }
+  },
+  {
+    "id": "npc_resident_0_0",
+    "townId": "town_0",
+    "region": 0,
+    "resident": true,
+    "offsetX": -320,
+    "offsetY": 220,
+    "name": "Moth",
+    "role": "scout",
+    "portrait": 0,
+    "questIds": [
+      "sabotage_0",
+      "vault_0_0",
+      "vault_0_1"
+    ],
+    "dialogue": [
+      "I used to mend radios. Now I pull their teeth. A relay goes silent when its fuse is in your pocket.",
+      "Listen for the orchard bells. Three rings means the patrol has changed.",
+      "I have one personal request: Paws Off the Airwaves. Ask about my work when you are ready."
+    ],
+    "topics": {
+      "local": [
+        "Listen for the orchard bells. Three rings means the patrol has changed.",
+        "Colonel Ironwhisker still commands the regional stronghold. The bounty center has the latest poster."
+      ],
+      "advice": [
+        "I used to mend radios. Now I pull their teeth. A relay goes silent when its fuse is in your pocket.",
+        "A knife can end a fight quickly, but getting close means accepting the danger."
+      ]
+    }
+  },
+  {
+    "id": "npc_resident_0_1",
+    "townId": "town_0",
+    "region": 0,
+    "resident": true,
+    "offsetX": 230,
+    "offsetY": 270,
+    "name": "Marmalade",
+    "role": "civilian",
+    "portrait": 1,
+    "questIds": [
+      "delivery_0"
+    ],
+    "dialogue": [
+      "My oven is cold, but my neighbors still need supper. A basket of bread can be as important as a crate of bullets.",
+      "Pip used to steal the burnt crusts. I always left one where he could reach it.",
+      "I have one personal request: The Baker’s Last Basket. Ask about my work when you are ready."
+    ],
+    "topics": {
+      "local": [
+        "Pip used to steal the burnt crusts. I always left one where he could reach it.",
+        "Colonel Ironwhisker still commands the regional stronghold. The bounty center has the latest poster."
+      ],
+      "advice": [
+        "My oven is cold, but my neighbors still need supper. A basket of bread can be as important as a crate of bullets.",
+        "Carry a second weapon that covers your first weapon’s weakness."
+      ]
+    }
+  },
+  {
+    "id": "npc_resident_1_0",
+    "townId": "town_1",
+    "region": 1,
+    "resident": true,
+    "offsetX": -320,
+    "offsetY": 220,
+    "name": "Nurse Fern",
+    "role": "medic",
+    "portrait": 1,
+    "questIds": [
+      "triage_1",
+      "vault_1_0",
+      "vault_1_1"
+    ],
+    "dialogue": [
+      "Alder and Sorrel came back for me when the trees caught fire. I will not leave them in that forest.",
+      "Keep a medkit for someone other than yourself. Sometimes that is how a village survives.",
+      "I have one personal request: Not One Paw Left Behind. Ask about my work when you are ready."
+    ],
+    "topics": {
+      "local": [
+        "Keep a medkit for someone other than yourself. Sometimes that is how a village survives.",
+        "Major Bramble still commands the regional stronghold. The bounty center has the latest poster."
+      ],
+      "advice": [
+        "Alder and Sorrel came back for me when the trees caught fire. I will not leave them in that forest.",
+        "A knife can end a fight quickly, but getting close means accepting the danger."
+      ]
+    }
+  },
+  {
+    "id": "npc_resident_1_1",
+    "townId": "town_1",
+    "region": 1,
+    "resident": true,
+    "offsetX": 230,
+    "offsetY": 270,
+    "name": "Professor Purr",
+    "role": "scholar",
+    "portrait": 2,
+    "questIds": [
+      "recon_1"
+    ],
+    "dialogue": [
+      "The owls remember every engine they hear. I only need a few quiet recordings to learn the enemy’s route.",
+      "Stand still long enough and this forest tells you who has passed through it.",
+      "I have one personal request: What the Owls Heard. Ask about my work when you are ready."
+    ],
+    "topics": {
+      "local": [
+        "Stand still long enough and this forest tells you who has passed through it.",
+        "Major Bramble still commands the regional stronghold. The bounty center has the latest poster."
+      ],
+      "advice": [
+        "The owls remember every engine they hear. I only need a few quiet recordings to learn the enemy’s route.",
+        "Carry a second weapon that covers your first weapon’s weakness."
+      ]
+    }
+  },
+  {
+    "id": "npc_resident_2_0",
+    "townId": "town_2",
+    "region": 2,
+    "resident": true,
+    "offsetX": -320,
+    "offsetY": 220,
+    "name": "Miner Flint",
+    "role": "engineer",
+    "portrait": 2,
+    "questIds": [
+      "demolition_2",
+      "vault_2_0",
+      "vault_2_1"
+    ],
+    "dialogue": [
+      "We know the mountain better than Flintfang. Put our charges in place and let gravity take our side.",
+      "Do not stand beside a charge when you press its detonator. That lesson cost me half a whisker.",
+      "I have one personal request: An Avalanche of Our Own. Ask about my work when you are ready."
+    ],
+    "topics": {
+      "local": [
+        "Do not stand beside a charge when you press its detonator. That lesson cost me half a whisker.",
+        "General Flintfang still commands the regional stronghold. The bounty center has the latest poster."
+      ],
+      "advice": [
+        "We know the mountain better than Flintfang. Put our charges in place and let gravity take our side.",
+        "A knife can end a fight quickly, but getting close means accepting the danger."
+      ]
+    }
+  },
+  {
+    "id": "npc_resident_2_1",
+    "townId": "town_2",
+    "region": 2,
+    "resident": true,
+    "offsetX": 230,
+    "offsetY": 270,
+    "name": "Cartographer Pebble",
+    "role": "scout",
+    "portrait": 3,
+    "questIds": [
+      "recovery_2"
+    ],
+    "dialogue": [
+      "A map is a promise that a frightened traveler can find home. Mine is scattered over three overlooks.",
+      "I draw every refuge as a little paw print. Follow those and you will always find a friend.",
+      "I have one personal request: A Map Written in Echoes. Ask about my work when you are ready."
+    ],
+    "topics": {
+      "local": [
+        "I draw every refuge as a little paw print. Follow those and you will always find a friend.",
+        "General Flintfang still commands the regional stronghold. The bounty center has the latest poster."
+      ],
+      "advice": [
+        "A map is a promise that a frightened traveler can find home. Mine is scattered over three overlooks.",
+        "Carry a second weapon that covers your first weapon’s weakness."
+      ]
+    }
+  },
+  {
+    "id": "npc_resident_3_0",
+    "townId": "town_3",
+    "region": 3,
+    "resident": true,
+    "offsetX": -320,
+    "offsetY": 220,
+    "name": "Radio Cat Solstice",
+    "role": "engineer",
+    "portrait": 3,
+    "questIds": [
+      "signal_3",
+      "vault_3_0",
+      "vault_3_1"
+    ],
+    "dialogue": [
+      "The aurora hides our signal. Tune the dishes in order and I can turn Whiteclaw’s own cipher against him.",
+      "A transmission needs time. Hold the receiver even when the snow starts moving.",
+      "I have one personal request: The Aurora Code. Ask about my work when you are ready."
+    ],
+    "topics": {
+      "local": [
+        "A transmission needs time. Hold the receiver even when the snow starts moving.",
+        "Marshal Whiteclaw still commands the regional stronghold. The bounty center has the latest poster."
+      ],
+      "advice": [
+        "The aurora hides our signal. Tune the dishes in order and I can turn Whiteclaw’s own cipher against him.",
+        "A knife can end a fight quickly, but getting close means accepting the danger."
+      ]
+    }
+  },
+  {
+    "id": "npc_resident_3_1",
+    "townId": "town_3",
+    "region": 3,
+    "resident": true,
+    "offsetX": 230,
+    "offsetY": 270,
+    "name": "Grandma Mittens",
+    "role": "civilian",
+    "portrait": 0,
+    "questIds": [
+      "delivery_3"
+    ],
+    "dialogue": [
+      "These paws knitted coats for three generations. Today I need two heater cells and a brave courier.",
+      "You look cold, dear. The snow takes enough from us without taking our manners too.",
+      "I have one personal request: A Hearth for Snowhaven. Ask about my work when you are ready."
+    ],
+    "topics": {
+      "local": [
+        "You look cold, dear. The snow takes enough from us without taking our manners too.",
+        "Marshal Whiteclaw still commands the regional stronghold. The bounty center has the latest poster."
+      ],
+      "advice": [
+        "These paws knitted coats for three generations. Today I need two heater cells and a brave courier.",
+        "Carry a second weapon that covers your first weapon’s weakness."
+      ]
+    }
+  },
+  {
+    "id": "npc_resident_4_0",
+    "townId": "town_4",
+    "region": 4,
+    "resident": true,
+    "offsetX": -320,
+    "offsetY": 220,
+    "name": "Pumpkeeper Fennel",
+    "role": "engineer",
+    "portrait": 0,
+    "questIds": [
+      "recovery_4",
+      "vault_4_0",
+      "vault_4_1"
+    ],
+    "dialogue": [
+      "The well is under the old sand road. Open the intake before you start the purifier or you will burn it dry.",
+      "Water belongs to everyone who is thirsty. No commander can change that.",
+      "I have one personal request: Water Beneath the Sand. Ask about my work when you are ready."
+    ],
+    "topics": {
+      "local": [
+        "Water belongs to everyone who is thirsty. No commander can change that.",
+        "Field Marshal Sirocco still commands the regional stronghold. The bounty center has the latest poster."
+      ],
+      "advice": [
+        "The well is under the old sand road. Open the intake before you start the purifier or you will burn it dry.",
+        "A knife can end a fight quickly, but getting close means accepting the danger."
+      ]
+    }
+  },
+  {
+    "id": "npc_resident_4_1",
+    "townId": "town_4",
+    "region": 4,
+    "resident": true,
+    "offsetX": 230,
+    "offsetY": 270,
+    "name": "Archivist Sable",
+    "role": "scholar",
+    "portrait": 1,
+    "questIds": [
+      "infiltration_4"
+    ],
+    "dialogue": [
+      "The convoy books do not agree. One honest ledger could feed this oasis for a year.",
+      "Facts are patient things. Bring me the real ones, and I will make them loud.",
+      "I have one personal request: The Mirage Ledger. Ask about my work when you are ready."
+    ],
+    "topics": {
+      "local": [
+        "Facts are patient things. Bring me the real ones, and I will make them loud.",
+        "Field Marshal Sirocco still commands the regional stronghold. The bounty center has the latest poster."
+      ],
+      "advice": [
+        "The convoy books do not agree. One honest ledger could feed this oasis for a year.",
+        "Carry a second weapon that covers your first weapon’s weakness."
+      ]
+    }
+  },
+  {
+    "id": "npc_resident_5_0",
+    "townId": "town_5",
+    "region": 5,
+    "resident": true,
+    "offsetX": -320,
+    "offsetY": 220,
+    "name": "Doctor Willow",
+    "role": "medic",
+    "portrait": 1,
+    "questIds": [
+      "triage_5",
+      "vault_5_0",
+      "vault_5_1"
+    ],
+    "dialogue": [
+      "Three fishing lanterns failed to return. Take medkits; the marsh gas hurts lungs long after the gunfire stops.",
+      "The delta is a family of little boats. If one is missing, we all feel the empty place.",
+      "I have one personal request: Lanterns in the Fog. Ask about my work when you are ready."
+    ],
+    "topics": {
+      "local": [
+        "The delta is a family of little boats. If one is missing, we all feel the empty place.",
+        "Admiral Miretooth still commands the regional stronghold. The bounty center has the latest poster."
+      ],
+      "advice": [
+        "Three fishing lanterns failed to return. Take medkits; the marsh gas hurts lungs long after the gunfire stops.",
+        "A knife can end a fight quickly, but getting close means accepting the danger."
+      ]
+    }
+  },
+  {
+    "id": "npc_resident_5_1",
+    "townId": "town_5",
+    "region": 5,
+    "resident": true,
+    "offsetX": 230,
+    "offsetY": 270,
+    "name": "Lockkeeper Ripple",
+    "role": "engineer",
+    "portrait": 2,
+    "questIds": [
+      "sabotage_5"
+    ],
+    "dialogue": [
+      "Two valves, then the big wheel. Open them in that order and the river will breathe again.",
+      "My grandfather taught me every bend in this water. I still talk to him when the fog comes in.",
+      "I have one personal request: The River Remembers. Ask about my work when you are ready."
+    ],
+    "topics": {
+      "local": [
+        "My grandfather taught me every bend in this water. I still talk to him when the fog comes in.",
+        "Admiral Miretooth still commands the regional stronghold. The bounty center has the latest poster."
+      ],
+      "advice": [
+        "Two valves, then the big wheel. Open them in that order and the river will breathe again.",
+        "Carry a second weapon that covers your first weapon’s weakness."
+      ]
+    }
+  },
+  {
+    "id": "npc_resident_6_0",
+    "townId": "town_6",
+    "region": 6,
+    "resident": true,
+    "offsetX": -320,
+    "offsetY": 220,
+    "name": "Welder Copper",
+    "role": "engineer",
+    "portrait": 2,
+    "questIds": [
+      "demolition_6",
+      "vault_6_0",
+      "vault_6_1"
+    ],
+    "dialogue": [
+      "That assembly line makes weapons all night. Three charges and one safe console can finally let Ashford sleep.",
+      "Give a machine a purpose worth serving. Otherwise all you built is a louder problem.",
+      "I have one personal request: The Quiet Assembly Line. Ask about my work when you are ready."
+    ],
+    "topics": {
+      "local": [
+        "Give a machine a purpose worth serving. Otherwise all you built is a louder problem.",
+        "Director Geargnash still commands the regional stronghold. The bounty center has the latest poster."
+      ],
+      "advice": [
+        "That assembly line makes weapons all night. Three charges and one safe console can finally let Ashford sleep.",
+        "A knife can end a fight quickly, but getting close means accepting the danger."
+      ]
+    }
+  },
+  {
+    "id": "npc_resident_6_1",
+    "townId": "town_6",
+    "region": 6,
+    "resident": true,
+    "offsetX": 230,
+    "offsetY": 270,
+    "name": "Tinker Button",
+    "role": "engineer",
+    "portrait": 3,
+    "questIds": [
+      "recovery_6"
+    ],
+    "dialogue": [
+      "The refugees need a warning beacon. Bring me a drone heart and eight pieces of useful scrap; we can make one.",
+      "I once made a toy mouse that chased itself. The children liked it better than my serious inventions.",
+      "I have one personal request: Cinder’s Spare Heart. Ask about my work when you are ready."
+    ],
+    "topics": {
+      "local": [
+        "I once made a toy mouse that chased itself. The children liked it better than my serious inventions.",
+        "Director Geargnash still commands the regional stronghold. The bounty center has the latest poster."
+      ],
+      "advice": [
+        "The refugees need a warning beacon. Bring me a drone heart and eight pieces of useful scrap; we can make one.",
+        "Carry a second weapon that covers your first weapon’s weakness."
+      ]
+    }
+  },
+  {
+    "id": "npc_resident_7_0",
+    "townId": "town_7",
+    "region": 7,
+    "resident": true,
+    "offsetX": -320,
+    "offsetY": 220,
+    "name": "Agent Velvet",
+    "role": "scout",
+    "portrait": 3,
+    "questIds": [
+      "infiltration_7",
+      "vault_7_0",
+      "vault_7_1"
+    ],
+    "dialogue": [
+      "Berlin is sealed by eight command seals. Take down every regional boss and its gate loses power. Vex is only one of them.",
+      "Adolph Whisker can blink across his arena. Save a dodge for the place he lands, not the place he left.",
+      "I have one personal request: Nine Lives of Intelligence. Ask about my work when you are ready."
+    ],
+    "topics": {
+      "local": [
+        "Adolph Whisker can blink across his arena. Save a dodge for the place he lands, not the place he left.",
+        "Supreme Commander Vex still commands the regional stronghold. The bounty center has the latest poster."
+      ],
+      "advice": [
+        "Berlin is sealed by eight command seals. Take down every regional boss and its gate loses power. Vex is only one of them.",
+        "A knife can end a fight quickly, but getting close means accepting the danger."
+      ]
+    }
+  },
+  {
+    "id": "npc_resident_7_1",
+    "townId": "town_7",
+    "region": 7,
+    "resident": true,
+    "offsetX": 230,
+    "offsetY": 270,
+    "name": "Poet Patches",
+    "role": "civilian",
+    "portrait": 0,
+    "questIds": [
+      "signal_7"
+    ],
+    "dialogue": [
+      "There are cats inside Berlin who think we forgot them. Keep my transmitter alive long enough to prove we did not.",
+      "When the anthem reaches the city, listen between the verses. That silence is people deciding to hope.",
+      "I have one personal request: One Voice Before Dawn. Ask about my work when you are ready."
+    ],
+    "topics": {
+      "local": [
+        "When the anthem reaches the city, listen between the verses. That silence is people deciding to hope.",
+        "Supreme Commander Vex still commands the regional stronghold. The bounty center has the latest poster."
+      ],
+      "advice": [
+        "There are cats inside Berlin who think we forgot them. Keep my transmitter alive long enough to prove we did not.",
+        "Carry a second weapon that covers your first weapon’s weakness."
+      ]
+    }
+  },
+  {
+    "id": "npc_stormglass_nacre",
+    "townId": "town_8",
+    "region": 8,
+    "name": "Keeper Nacre",
+    "role": "Lighthouse keeper",
+    "portrait": 0,
+    "offsetX": -320,
+    "offsetY": 220,
+    "resident": true,
+    "questIds": [
+      "stormglass_beacons",
+      "defense_stormglass_beacon"
+    ],
+    "dialogue": [
+      "My lamp survived the last storm. Its sister beacons did not. Follow the northern road east from Frostmarch and you will always find a warm kettle here.",
+      "The coast is open to any traveler. You do not need to defeat the commanders to help our villages."
+    ],
+    "topics": {
+      "local": [
+        "My lamp survived the last storm. Its sister beacons did not. Follow the northern road east from Frostmarch and you will always find a warm kettle here."
+      ],
+      "advice": [
+        "The coast is open to any traveler. You do not need to defeat the commanders to help our villages."
+      ]
+    }
+  },
+  {
+    "id": "npc_stormglass_brindle",
+    "townId": "town_8",
+    "region": 8,
+    "name": "Bosun Brindle",
+    "role": "Rescue captain",
+    "portrait": 1,
+    "offsetX": 230,
+    "offsetY": 270,
+    "resident": true,
+    "questIds": [
+      "stormglass_salvage",
+      "defense_stormglass_rescue"
+    ],
+    "dialogue": [
+      "Every glass float on that shelf came from a boat we brought home. I am still making room for the missing ones.",
+      "The Glass-Tide wreck lies east of the moorings. Rescue work goes better when someone has already stopped the harpoons."
+    ],
+    "topics": {
+      "local": [
+        "Every glass float on that shelf came from a boat we brought home. I am still making room for the missing ones."
+      ],
+      "advice": [
+        "The Glass-Tide wreck lies east of the moorings. Rescue work goes better when someone has already stopped the harpoons."
+      ]
+    }
+  },
+  {
+    "id": "npc_stormglass_pip",
+    "townId": "town_stormglass_lantern",
+    "region": 8,
+    "name": "Tinker Pip",
+    "role": "Salvage engineer",
+    "portrait": 2,
+    "offsetX": -320,
+    "offsetY": 220,
+    "resident": true,
+    "questIds": [
+      "stormglass_moorings",
+      "defense_sunkencrown_evacuation"
+    ],
+    "dialogue": [
+      "Salt ruins a machine faster than any enemy. I oil every hinge in this village, including the ones that refuse to thank me.",
+      "Harpoon Skirmishers pin a lane; Tideblades rush the opening. Keep moving across their aim, then hit the exposed flank."
+    ],
+    "topics": {
+      "local": [
+        "Salt ruins a machine faster than any enemy. I oil every hinge in this village, including the ones that refuse to thank me."
+      ],
+      "advice": [
+        "Harpoon Skirmishers pin a lane; Tideblades rush the opening. Keep moving across their aim, then hit the exposed flank."
+      ]
+    }
+  },
+  {
+    "id": "npc_stormglass_mira",
+    "townId": "town_stormglass_lantern",
+    "region": 8,
+    "name": "Scout Mira",
+    "role": "Causeway scout",
+    "portrait": 3,
+    "offsetX": 230,
+    "offsetY": 270,
+    "resident": true,
+    "questIds": [
+      "stormglass_prison",
+      "defense_stormglass_lantern"
+    ],
+    "dialogue": [
+      "At low tide you can hear the old city bells under the water. At high tide, you only hear the Bellringers. I prefer the old bells.",
+      "The road south becomes the Crown Causeway. Follow its bridges to Crownrest Haven, where Captain Coral shelters escaped prisoners."
+    ],
+    "topics": {
+      "local": [
+        "At low tide you can hear the old city bells under the water. At high tide, you only hear the Bellringers. I prefer the old bells."
+      ],
+      "advice": [
+        "The road south becomes the Crown Causeway. Follow its bridges to Crownrest Haven, where Captain Coral shelters escaped prisoners."
+      ]
+    }
+  },
+  {
+    "id": "npc_sunkencrown_coral",
+    "townId": "town_9",
+    "region": 9,
+    "name": "Captain Coral",
+    "role": "Island captain",
+    "portrait": 1,
+    "offsetX": -320,
+    "offsetY": 220,
+    "resident": true,
+    "questIds": [
+      "stormglass_convoy",
+      "defense_sunkencrown_reeds"
+    ],
+    "dialogue": [
+      "We named this island Crownrest because crowns ought to rest while ordinary folk get on with living. The fleet disagrees.",
+      "A Shellguard can hold a narrow bridge all day. Draw it onto the wider bank, circle its shield and attack from the side."
+    ],
+    "topics": {
+      "local": [
+        "We named this island Crownrest because crowns ought to rest while ordinary folk get on with living. The fleet disagrees."
+      ],
+      "advice": [
+        "A Shellguard can hold a narrow bridge all day. Draw it onto the wider bank, circle its shield and attack from the side."
+      ]
+    }
+  },
+  {
+    "id": "npc_sunkencrown_fenn",
+    "townId": "town_9",
+    "region": 9,
+    "name": "Herbalist Fenn",
+    "role": "Tide-garden keeper",
+    "portrait": 0,
+    "offsetX": 230,
+    "offsetY": 270,
+    "resident": true,
+    "questIds": [
+      "stormglass_homecoming",
+      "defense_sunkencrown_bell"
+    ],
+    "dialogue": [
+      "The tide garden grows medicine in places the maps call empty water. I keep a much more useful map in my apron.",
+      "Lit beacons guide the little ferryboats home. A repaired lamp can save as many lives as a cleared garrison."
+    ],
+    "topics": {
+      "local": [
+        "The tide garden grows medicine in places the maps call empty water. I keep a much more useful map in my apron."
+      ],
+      "advice": [
+        "Lit beacons guide the little ferryboats home. A repaired lamp can save as many lives as a cleared garrison."
+      ]
+    }
+  },
+  {
+    "id": "npc_hidden_gunsmith",
+    "townId": "town_1",
+    "region": 1,
+    "name": "Tinker Wick",
+    "role": "engineer",
+    "portrait": 1,
+    "resident": true,
+    "offsetX": -520,
+    "offsetY": 3146,
+    "questIds": [
+      "hidden_gunsmith"
+    ],
+    "dialogue": [
+      "I made that rifle to cut rescue ropes at a hundred paces. They stole it to cut escape routes. I would like it back.",
+      "The parts crates are tucked around Owl’s Grotto. The receiver guard favors a straight charge; step aside, then return fire.",
+      "Bring the receiver home and the finished Lanternline is yours. One for each of your fighting companions."
+    ],
+    "topics": {
+      "local": [
+        "I made that rifle to cut rescue ropes at a hundred paces. They stole it to cut escape routes. I would like it back."
+      ],
+      "advice": [
+        "The parts crates are tucked around Owl’s Grotto. The receiver guard favors a straight charge; step aside, then return fire."
+      ]
+    }
+  },
+  {
+    "id": "npc_hidden_lastwatch",
+    "townId": "town_2",
+    "region": 2,
+    "name": "Warden Tallow",
+    "role": "ranger",
+    "portrait": 2,
+    "resident": true,
+    "offsetX": 2405,
+    "offsetY": -221,
+    "questIds": [
+      "hidden_lastwatch"
+    ],
+    "dialogue": [
+      "The tower is officially abandoned. Nobody told the travelers who still follow its light.",
+      "Repair the lower signal and hold it for fifteen seconds. Then meet their assault leader beyond the tower. No kill deadline.",
+      "Keep this coat when we are done. A watch is a promise to the next traveler, not a place you must stand forever."
+    ],
+    "topics": {
+      "local": [
+        "The tower is officially abandoned. Nobody told the travelers who still follow its light."
+      ],
+      "advice": [
+        "Repair the lower signal and hold it for fifteen seconds. Then meet their assault leader beyond the tower. No kill deadline."
+      ]
+    }
+  },
+  {
+    "id": "npc_hidden_blackglass",
+    "townId": "town_6",
+    "region": 6,
+    "name": "Scout Vesper",
+    "role": "scout",
+    "portrait": 2,
+    "resident": true,
+    "offsetX": -585,
+    "offsetY": 2925,
+    "questIds": [
+      "hidden_blackglass"
+    ],
+    "dialogue": [
+      "The black glass remembers footprints when ash does not. Look for the violet ribbons beyond Ember Rest.",
+      "Read the two survey signs before following the elite patrol. Separate the mortar from its escorts; its long reload is your opening.",
+      "I mark routes so families can leave, and I never forget which squad opened the path. Take my spare pathfinder suit and make sure there is still a way home."
+    ],
+    "topics": {
+      "local": [
+        "The black glass remembers footprints when ash does not. Look for the violet ribbons beyond Ember Rest."
+      ],
+      "advice": [
+        "Read the two survey signs before following the elite patrol. Separate the mortar from its escorts; its long reload is your opening."
+      ]
+    }
+  },
+  {
+    "id": "npc_rimeglass_warden",
+    "name": "Keeper Thistle",
+    "role": "scholar",
+    "portrait": 3,
+    "region": 3,
+    "questIds": [
+      "rare_rimeglass"
+    ],
+    "dialogue": [
+      "Follow the frost-blue pipes northeast from Warmhearth to Keeper Thistle.",
+      "Wake both lake pumps, then turn the central regulator. The stone crossing between the two lakes is always safe. Entrance requires the Rimeglass Valve Key. Search the Frozen Courier Cache east of Badger’s Lantern in Stonecrest. Defeat its three sentries, then recover the valve key. Defeat the guardian, recover its expedition seal, then return to Keeper Thistle. REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold."
+    ],
+    "topics": {
+      "advice": [
+        "Follow the frost-blue pipes northeast from Warmhearth to Keeper Thistle.",
+        "Search the Frozen Courier Cache east of Badger’s Lantern in Stonecrest. Defeat its three sentries, then recover the valve key.",
+        "REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold."
+      ]
+    }
+  },
+  {
+    "id": "npc_cindercoil_keeper",
+    "name": "Foreman Brindle",
+    "role": "engineer",
+    "portrait": 0,
+    "region": 6,
+    "questIds": [
+      "rare_cindercoil"
+    ],
+    "dialogue": [
+      "Follow the silent furnace chimneys east of Ember Rest to Foreman Brindle.",
+      "Turn one valve in each side wing to cool the furnace bridge. Either wing can be visited first; the bridge stays open. Entrance requires the Cindercoil Foundry Key. Search the Smuggler’s Tool Chest east of Reedlight Refuge in Reedwater. Defeat its three guards, then recover the foundry key. Defeat the guardian, recover its expedition seal, then return to Foreman Brindle. REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark."
+    ],
+    "topics": {
+      "advice": [
+        "Follow the silent furnace chimneys east of Ember Rest to Foreman Brindle.",
+        "Search the Smuggler’s Tool Chest east of Reedlight Refuge in Reedwater. Defeat its three guards, then recover the foundry key.",
+        "REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark."
+      ]
+    }
+  },
+  {
+    "id": "npc_zephyr_pilgrim",
+    "name": "Pilgrim Sora",
+    "role": "medic",
+    "portrait": 5,
+    "region": 5,
+    "questIds": [
+      "rare_zephyr"
+    ],
+    "dialogue": [
+      "Follow the wind bells northeast of Reedlight Refuge to Pilgrim Sora.",
+      "Ring the three terrace bells in any order, then awaken the sanctuary in the middle of the loop. Defeat the guardian, recover its expedition seal, then return to Pilgrim Sora. REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary."
+    ],
+    "topics": {
+      "advice": [
+        "Follow the wind bells northeast of Reedlight Refuge to Pilgrim Sora.",
+        "REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary."
+      ]
+    }
+  },
+  {
+    "id": "npc_kraken_witness",
+    "name": "Diver Pearl",
+    "role": "scout",
+    "portrait": 3,
+    "region": 9,
+    "questIds": [
+      "rare_kraken"
+    ],
+    "dialogue": [
+      "Follow the shell markers east of Crownrest Haven to Diver Pearl at the Drowned Maw seaside cave.",
+      "Release the three tide anchors along the flooded piers. Beyond the gate waits Nacremaw, the Great Kraken: an optional level 26 challenge with no time limit. Defeat Nacremaw, the Great Kraken, recover its expedition seal, then return to Diver Pearl. REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge."
+    ],
+    "topics": {
+      "advice": [
+        "Follow the shell markers east of Crownrest Haven to Diver Pearl at the Drowned Maw seaside cave.",
+        "REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge."
+      ]
+    }
+  }
+]

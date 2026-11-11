@@ -1,0 +1,175 @@
+[
+  {
+    "id": "ironwhisker",
+    "name": "Colonel Ironwhisker",
+    "pattern": "charge",
+    "hp": 920,
+    "damage": 15,
+    "speed": 83,
+    "color": "#a28558",
+    "range": 570,
+    "fireRate": 0.8,
+    "xp": 240,
+    "level": 4,
+    "phases": 3,
+    "attackHints": [
+      "Sidestep the marked charge line, then punish the recovery.",
+      "Rifle fans and marked artillery alternate with a ground slam.",
+      "In the third phase the charge chains into a return charge."
+    ]
+  },
+  {
+    "id": "bramble",
+    "name": "Major Bramble",
+    "pattern": "summon",
+    "hp": 1400,
+    "damage": 17,
+    "speed": 72,
+    "color": "#68855b",
+    "range": 570,
+    "fireRate": 0.8,
+    "xp": 370,
+    "level": 7,
+    "phases": 3,
+    "attackHints": [
+      "Bramble leaps to a new firing position and marks delayed sniper shots.",
+      "Artillery lanes are backed by summoned scouts and wire hunters.",
+      "Watch for a teleport followed by a spreading rifle fan."
+    ]
+  },
+  {
+    "id": "flintfang",
+    "name": "General Flintfang",
+    "pattern": "barrage",
+    "hp": 1950,
+    "damage": 23,
+    "speed": 58,
+    "color": "#a09480",
+    "range": 570,
+    "fireRate": 0.8,
+    "xp": 500,
+    "level": 10,
+    "phases": 3,
+    "attackHints": [
+      "Move out of the marked ground slam before Flintfang lands.",
+      "Seismic rings expand around the battery; leave a clear path between marks.",
+      "Full-circle bullets alternate with a line of delayed shells."
+    ]
+  },
+  {
+    "id": "whiteclaw",
+    "name": "Marshal Whiteclaw",
+    "pattern": "frost",
+    "hp": 2500,
+    "damage": 24,
+    "speed": 86,
+    "color": "#b7d5df",
+    "range": 570,
+    "fireRate": 0.8,
+    "xp": 630,
+    "level": 13,
+    "phases": 3,
+    "attackHints": [
+      "Find gaps in the full-circle ice fan while Whiteclaw skates aside.",
+      "Marked frost patches become slowing ground.",
+      "An aimed slam is followed by a narrower ice fan."
+    ]
+  },
+  {
+    "id": "sirocco",
+    "name": "Field Marshal Sirocco",
+    "pattern": "dash",
+    "hp": 3050,
+    "damage": 29,
+    "speed": 113,
+    "color": "#d4ad69",
+    "range": 570,
+    "fireRate": 0.8,
+    "xp": 760,
+    "level": 16,
+    "phases": 3,
+    "attackHints": [
+      "Dodge across the charge direction and keep clear of the marked sand strikes.",
+      "A rocket fan covers Sirocco’s sideways skate.",
+      "The final phase adds a leap to the surrounding artillery pattern."
+    ]
+  },
+  {
+    "id": "miretooth",
+    "name": "Admiral Miretooth",
+    "pattern": "poison",
+    "hp": 3650,
+    "damage": 29,
+    "speed": 77,
+    "color": "#6c997d",
+    "range": 570,
+    "fireRate": 0.8,
+    "xp": 890,
+    "level": 19,
+    "phases": 3,
+    "attackHints": [
+      "Leave marked poison circles before Miretooth leaps toward you.",
+      "A line of venom patches is backed by spreading rifle fire.",
+      "A teleport to the floodgate is followed by reinforcements."
+    ]
+  },
+  {
+    "id": "geargnash",
+    "name": "Director Geargnash",
+    "pattern": "mines",
+    "hp": 4250,
+    "damage": 33,
+    "speed": 63,
+    "color": "#b38a62",
+    "range": 570,
+    "fireRate": 0.8,
+    "xp": 1020,
+    "level": 22,
+    "phases": 3,
+    "attackHints": [
+      "Geargnash shields up, deploys a turret and marks the ground around you.",
+      "The furnace slam leaves burning zones on both sides.",
+      "Rocket fans alternate with engineer or signal-jammer reinforcements."
+    ]
+  },
+  {
+    "id": "vex",
+    "name": "Supreme Commander Vex",
+    "pattern": "final",
+    "hp": 5200,
+    "damage": 37,
+    "speed": 96,
+    "color": "#aa6570",
+    "range": 570,
+    "fireRate": 0.8,
+    "xp": 1150,
+    "level": 25,
+    "phases": 3,
+    "attackHints": [
+      "Full-circle bullet rings cover Vex’s leap to a new position.",
+      "Delayed artillery crosses your route with an ice fan.",
+      "The final phase adds seismic rings and skirmisher reinforcements."
+    ]
+  },
+  {
+    "id": "adolph_whisker",
+    "name": "Adolph Whisker",
+    "pattern": "whisker",
+    "hp": 42000,
+    "damage": 48,
+    "speed": 135,
+    "color": "#c86174",
+    "range": 820,
+    "fireRate": 1.15,
+    "xp": 4000,
+    "level": 28,
+    "phases": 4,
+    "finalBoss": true,
+    "attackHints": [
+      "Phase I · Tyrant’s Arsenal: teleport rings, marked artillery and rocket fans.",
+      "Phase II · Blink Assault: a wider arsenal joins the teleport and delayed strike combinations.",
+      "Phase III · Berlin Lockdown: lingering hazards, summoned elites and orbital strikes.",
+      "Phase IV · Last Whisker: chained teleports weave every attack together. Save dodge and healing for this phase."
+    ]
+  }
+]

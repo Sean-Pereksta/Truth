@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Academy Standards · The Banner Trial</title>
+<meta name="description" content="Lead your party, outthink rival houses, and bring every banner home. A complete offline tactical strategy game.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<svg class="svg-library" aria-hidden="true"><defs>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 3 8 3v6c0 5-8 9-8 9S4 17 4 12V6z"/><path d="m9 12 2 2 4-5"/></symbol>
+<symbol id="i-bow" viewBox="0 0 24 24"><path d="M5 3c15 0 16 15 16 15L5 3v18L21 5M14 5h7v7"/></symbol>
+<symbol id="i-cross" viewBox="0 0 24 24"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/></symbol>
+<symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V3m0 1c5-5 9 5 15 0v10c-6 5-10-5-15 0"/></symbol>
+<symbol id="i-party" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3"/><path d="M6 21v-4a6 6 0 0 1 12 0v4M3 6a3 3 0 0 0 0 6m18-6a3 3 0 0 1 0 6M2 21v-5m20 5v-5"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M3 21V8h4V3h3v5h4V3h3v5h4v13zM9 21v-6h6v6"/></symbol>
+<symbol id="i-focus" viewBox="0 0 24 24"><path d="M3 9V3h6m6 0h6v6m0 6v6h-6m-6 0H3v-6"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14" stroke-width="3"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="m8 4 13 8-13 8z"/></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+<symbol id="i-map" viewBox="0 0 24 24"><path d="m3 5 6-2 6 2 6-2v16l-6 2-6-2-6 2zm6-2v16m6-14v16"/></symbol>
+<symbol id="i-sword" viewBox="0 0 24 24"><path d="m4 20 5-5m-3-3 6 6M9 15 20 4l-6 1-7 8"/></symbol>
+<symbol id="i-box" viewBox="0 0 24 24"><path d="m3 7 9-4 9 4v12l-9 3-9-3zm0 0 9 4 9-4M12 11v11M8 5l9 4"/></symbol>
+<symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+<symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 8a3 3 0 0 1 6 1c0 2-3 2-3 5m0 3v.1"/></symbol>
+<symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+<symbol id="i-expand" viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></symbol>
+<symbol id="i-contract" viewBox="0 0 24 24"><path d="M3 8h5V3m8 0v5h5M8 21v-5H3m18 0h-5v5"/></symbol>
+</defs></svg>
+
+<main id="battlefield" inert aria-label="Academy battlefield">
+ <canvas id="game" tabindex="0" aria-label="Battlefield. Left click or drag to select. Right click to move or attack. Press Space to pause."></canvas>
+ <div class="field-vignette"></div>
+ <header class="topbar glass">
+  <button class="brand" id="openMenu" title="Open menu (Escape)"><span class="crest">A</span><span>ACADEMY <b>STANDARDS</b><small>HOUSE AUGUSTUS</small></span></button>
+  <div id="battleStats" class="battle-stats" aria-live="off"></div>
+  <nav class="top-actions" aria-label="Battle controls">
+   <button id="focusParty" class="icon-button" title="Follow selected party (F)"><svg><use href="#i-focus"/></svg><span>Party</span></button>
+   <button id="focusHome" class="icon-button" title="Look at home castle"><svg><use href="#i-home"/></svg></button>
+   <button id="fullscreenToggle" class="icon-button" title="Enter fullscreen" aria-label="Enter fullscreen" aria-pressed="false"><svg><use href="#i-expand"/></svg></button>
+   <button id="pauseToggle" class="icon-button" title="Tactical pause (Space)"><svg><use href="#i-pause"/></svg></button>
+   <button id="helpToggle" class="icon-button" title="Controls and counters"><svg><use href="#i-help"/></svg></button>
+  </nav>
+ </header>
+ <button class="mission-chip glass flag-status" id="mission" aria-label="Find a rival flag" aria-live="off"><svg aria-hidden="true"><use href="#i-flag"/></svg><span class="flag-status-copy"><b id="flagStatusTitle">BRING RIVAL FLAGS HOME</b><span id="flagStatusDetail">Hold beside a flag for 3 seconds to take it.</span></span><span id="flagStatusAction" class="flag-status-action">Find flag ↗</span><span id="flagStatusProgress" class="flag-status-progress" aria-hidden="true"></span></button>
+ <span id="flagStatusAnnouncement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></span>
+ <div id="notice" class="notice" role="status" aria-live="polite"></div>
+ <div id="pausedIndicator" class="paused-indicator hidden">TACTICAL PAUSE <span>Plan your orders · Space to continue</span></div>
+
+ <aside class="minimap-shell glass" id="minimapShell">
+  <button id="mapToggle" class="map-heading" title="Show or hide minimap"><span><svg><use href="#i-map"/></svg>THE GROUNDS</span><span id="mapChevron">−</span></button>
+  <canvas id="minimap" width="288" height="288" aria-label="Minimap. Click to move the camera."></canvas>
+  <button class="map-footer" id="standingsToggle">House standings <span>↗</span></button>
+ </aside>
+
+ <section class="party-dock glass" aria-label="Party and orders">
+  <div class="dock-upper"><button id="rosterToggle" class="selection-summary"><span class="eyebrow">YOUR PARTY</span><b id="selectionCount">10 students selected</b><span id="selectionHint">Ready for orders</span></button>
+   <div class="formation-control" aria-label="Formation"><button data-formation="balanced" class="active" title="Balanced formation">▦ <span>Balanced</span></button><button data-formation="spread" title="Spread out against ranged attacks">⠿ <span>Spread</span></button><button data-formation="column" title="Travel through narrow paths">⋮ <span>Column</span></button></div>
+   <button id="equipmentToggle" class="loadout-button"><svg><use href="#i-box"/></svg><span>Equipment</span><b id="stockCount">0</b></button>
+  </div>
+  <div class="dock-main"><div class="squad-buttons" id="squadButtons"></div>
+   <div class="order-buttons" id="orderButtons">
+    <button data-order="attackmove" title="Attack enemies along the route (A)"><svg><use href="#i-sword"/></svg><span>Attack move</span><kbd>A</kbd></button>
+    <button data-order="defend" title="Hold a position (D)"><svg><use href="#i-shield"/></svg><span>Defend</span><kbd>D</kbd></button>
+    <button data-order="escort" title="Protect a selected flag carrier (E)"><svg><use href="#i-flag"/></svg><span>Escort</span><kbd>E</kbd></button>
+    <button id="recallParty" title="Return selected troops home (R)"><svg><use href="#i-home"/></svg><span>Recall</span><kbd>R</kbd></button>
+   </div>
+  </div>
+  <div class="dock-hint"><span><b>Left click / drag</b> select <i>·</i> <b>Right click</b> move, fight or collect</span><span id="modeHint">Right click a destination</span></div>
+ </section>
+
+ <section id="drawer" class="drawer glass hidden" aria-label="Party details"><div class="drawer-heading"><div><span class="eyebrow" id="drawerEyebrow">YOUR PARTY</span><h2 id="drawerTitle">Equipment</h2></div><button id="closeDrawer" class="icon-button" aria-label="Close panel"><svg><use href="#i-close"/></svg></button></div><div id="drawerBody"></div></section>
+ <div id="tooltip" class="unit-tooltip glass hidden"></div>
+</main>
+
+<section id="menu" class="menu-screen" aria-label="Main menu">
+ <div class="menu-art"></div><div class="menu-shade"></div>
+ <div class="menu-top"><span class="wordmark"><span class="crest">A</span> THE ACADEMY</span><div class="menu-tools"><span class="edition">THE BANNER TRIAL <span>✦</span></span><button id="menuFullscreen" class="icon-button" title="Enter fullscreen" aria-label="Enter fullscreen" aria-pressed="false"><svg><use href="#i-expand"/></svg></button></div></div>
+ <div class="menu-content"><div class="menu-kicker"><span></span>A TACTICAL HOUSE WAR</div><h1>ACADEMY<br><em>STANDARDS</em></h1><p class="menu-tagline">A small party.<br>A kingdom of rival banners.</p><p class="menu-description">Lead your students through the wilds. Build a balanced squad, outwit rival houses, and bring their standards home.</p>
+ <div class="menu-buttons"><button id="resumeGame" class="primary-button hidden">Resume trial <svg><use href="#i-arrow"/></svg></button><button id="startGame" class="primary-button">Begin the trial <svg><use href="#i-arrow"/></svg></button><button id="howToPlay" class="text-button">How to play <span>↗</span></button></div>
+ <div class="save-actions"><button id="loadSaved" class="text-button hidden">Continue saved trial</button><button id="saveGame" class="text-button hidden">Save trial</button><button id="exportGame" class="text-button hidden">Export save</button><button id="importGame" class="text-button">Load a save</button><input id="saveFile" type="file" accept=".json,application/json" hidden></div>
+ <div class="difficulty-picker"><span>CHOOSE YOUR CHALLENGE</span><div><button data-difficulty="relaxed">Explorer<small>Room to learn</small></button><button data-difficulty="normal" class="active">Tactician<small>A balanced trial</small></button><button data-difficulty="veteran">Veteran<small>Relentless rivals</small></button></div></div>
+ </div><div class="menu-bottom"><span>10 HOUSES <i>·</i> ONE STANDARD TO RULE THEM ALL</span><span>Mouse + keyboard <i>·</i> Plays offline</span></div>
+</section>
+
+<div id="modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><section class="modal glass"><button id="closeModal" class="icon-button modal-close" aria-label="Close"><svg><use href="#i-close"/></svg></button><span class="eyebrow">THE BANNER TRIAL</span><h2 id="modalTitle">Lead your party</h2><div id="modalBody"></div><button id="modalDone" class="primary-button">Got it <svg><use href="#i-arrow"/></svg></button></section></div>
+
+<div hidden aria-hidden="true" id="legacy">
+ <div id="topStats"></div><div id="selectedInfo"></div><div id="stockSummary"></div><div id="selectionPanel"></div><div id="houses"></div><div id="log"></div><div id="legend"></div><div id="equipSection"></div>
+ <button id="eqSword"></button><button id="eqSpear"></button><button id="eqBow"></button><button id="eqLongbow"></button><button id="eqLight"></button><button id="eqHeavy"></button><button id="eqShield"></button><button id="eqBoots"></button><button id="eqMedkit"></button><button id="eqHorse"></button><button id="eqEngineer"></button><button id="eqTrapKit"></button><button id="eqWarHorn"></button><button id="eqFireOil"></button>
+ <button id="modeMove"></button><button id="modeDefend"></button><button id="modeEscort"></button><button id="modeAttackMove"></button><button id="placeBarricade"></button><button id="placeTrap"></button><button id="cancelPlace"></button><button id="selectAll"></button><button id="recall"></button><button id="focusFlag"></button><button id="restart"></button>
+</div>
+<script src="assets.js"></script><script src="renderer.js"></script><script src="shell.js"></script><script src="engine.js"></script>
+</body></html>

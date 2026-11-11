@@ -1,0 +1,58 @@
+{
+  "mode": "built-in image_gen",
+  "project": "Operation Whiskerfall",
+  "note": "Production prompt set and final asset layout. Referenced artwork was generated earlier for this same project. The live player design was revised to modular bodies and arms; full-character five-gun sheets remain bonus assets.",
+  "assets": [
+    {
+      "file": "assets/characters/actors.png",
+      "prompt": "Transparent 8-column by 8-row animation atlas. Rows: orange tabby cat run, orange cat combat, cream white/blue-eared cat run, white cat combat, gray mouse infantry run, infantry combat, mouse officer run, officer combat. Run rows have eight distinct leg/arm/tail cycle poses. Combat rows: two aim, two recoil/fire, knife wind-up and follow-through, reload, hurt. Elevated three-quarter overhead view facing right; polished handpainted cartoon with navy outlines, teal/navy resistance cats and olive/charcoal mice; fictional insignia only; no text, grid or backdrop."
+    },
+    {
+      "file": "assets/buildings/scenery.png",
+      "prompt": "Genuinely transparent environment atlas, exactly6columns by4rows of isolated game scenery, one object per cell. Elevated three-quarter overhead camera, consistent upper-left lighting, soft navy outlines and polished handpainted modern adventure art. Rows: oak/pine/autumn oak/snow spruce/palms/mountain; cottage/shop/tent/bunker/guard tower/factory; cliff/bridge/sandbags/artillery/radio/tank; boulder/bush/chest/crate/windmill/ruin. No labels, text, real-world emblems or backdrop. Preserve every sprite during alpha cleanup."
+    },
+    {
+      "file": "assets/weapons/items.png",
+      "prompt": "Transparent 8x4 weapon, pickup and effects atlas. Row1 pistol/revolver/SMG/rifle/shotgun/sniper/LMG/launcher facing right. Row2 knife/machete/dual daggers/electric blade/grenade/helmet/vest/overhead propeller aircraft. Row3 eight actual sequential explosion frames from spark to fireball to smoke and embers. Row4 medkit/ammo/gold/crystal/muzzle flash/heal/loot beacon/impact. Original colorful handpainted military animal adventure style; no labels or grid, one isolated sprite per cell."
+    },
+    {
+      "file": "assets/terrain/terrain.png",
+      "prompt": "Opaque seamless overhead ground texture atlas, fourcolumns bytworows, eight edge-to-edge square tiles with no border, lettering, perspective or vignetting. Subtle handpainted textures appropriate for a colorful cartoon military adventure. Top row sunny moss-green grass with clover, deep forest leaf litter, gray mountain limestone gravel, golden desert sand. Bottom row pale blue-white snow, wet marsh moss and mud, worn military concrete paving, flowing turquoise river water. No large scenery or characters."
+    },
+    {
+      "file": "assets/buildings/landmarks.png",
+      "prompt": "Transparent4x2 isolated scenery atlas with clear padding and elevated three-quarter overhead view. Top row imposing slate enemy fortress with fictional red triangle banner, crystal-edged rocky cave entrance, barred wooden prison cage with rabbit civilian, olive canvas supply truck. Bottom row resistance cat merchant under blue cloth market stand, fenced carrot farm, heavy slate/maroon tracked war machine with twin cannons, blue-green willow. Polished handpainted cartoon, no lettering or background."
+    },
+    {
+      "file": "assets/ui/title.png",
+      "prompt": "Widescreen16:9 cinematic handpainted title-screen illustration, no text or logo. Left third quiet deep shadowed teal woodland for HTML title/menu. Center/right two courageous resistance cats, orange tabby in teal jacket and red scarf with rifle, cream-white cat with blue ears and golden scarf holding knife/binoculars, on a grassy hill above a huge terracotta-roof village, winding turquoise river, bridge, farms, deep forest, far snow mountains and ominous distant military fortress with fictional triangle banners. Warm late-afternoon sunlight, original charming adventure art, navy outlines; no real-world extremist insignia."
+    },
+    {
+      "files": [
+        "assets/characters/orange-scout.png",
+        "assets/characters/orange-ranger.png",
+        "assets/characters/orange-vanguard.png",
+        "assets/characters/white-scout.png",
+        "assets/characters/white-ranger.png",
+        "assets/characters/white-vanguard.png"
+      ],
+      "prompt": "One separate transparent8-column by5-row atlas for each cat/outfit. Preserve the original orange/red-scarf or white-blue-eared/golden-scarf cat identity. Scout olive jacket and tan harness; Ranger reinforced teal/navy jacket; Vanguard dark navy heavy armor with gold trim. Eachrow uses one naturally held weapon: pistol, SMG, rifle, shotgun, launcher. Columns idle, runA, runB, runC, runD, aim, recoil/fire, reload. No floating second gun, text or grid. Full original poses and clear transparent padding; elevated three-quarter overhead facing right. Completed as bonus artwork before the modular design revision."
+    },
+    {
+      "file": "assets/characters/bodies.png",
+      "prompt": "Use case: identity-preserve. Asset type: modular character BASE sprite atlas for actual cartoon overhead action RPG. Use reference ONLY for original cat identity, proportions and polished handpainted art style. Crucial: this sheet contains cat HEADS, FULL CLOTHED TORSOS, LEGS, BOOTS and TAILS, but absolutely NO ARMS, NO HANDS, NO FOREARMS, NO WEAPONS. The game attaches separately rendered arms and guns to these bodies. Keep normal full torso with neat shoulder joint sides; make each hero look like a modular game puppet awaiting arms, never hide the torso or head. One transparent PNG EXACTLY8 equal columns by6 equal rows, landscape4:3 ratio. No text, labels, grid lines, ground or shadows on backdrop. Each hero fully contained in its cell with transparent padding at least15% all sides. Elevated three-quarter overhead view, facing RIGHT, consistent feet baseline, same scale and cute face/ear/tail proportions as reference. ROW1 ORANGE TABBY RED SCARF wearing SCOUT light olive green jacket with tan leather harness and brown boots. ROW2 same ORANGE RED SCARF wearing RANGER reinforced teal jacket with pouches and dark boots. ROW3 same ORANGE RED SCARF wearing VANGUARD heavy navy breastplate and elegant gold trim/rounded shoulder caps/dark armored boots. ROW4 CREAM WHITE BLUE-EARED CAT GOLDEN SCARF wearing SCOUT olive green jacket, tan harness and brown boots. ROW5 same WHITE GOLDEN SCARF wearing RANGER reinforced navy-teal jacket and dark boots. ROW6 same WHITE GOLDEN SCARF wearing VANGUARD heavy navy breastplate with gold trim/shoulder caps/dark boots. For EVERY ROW exactly8 different frames columns0through7:0standing idle,1RUN left boot forward/right boot back,2RUN legs passing,3RUN right boot forward/left boot back,4RUN pushing off,5DODGE crouch with tucked legs,6HURT recoil/eyes squeezed,7DOWNED lying on side eyes closed. Real different boot/body/tail poses for run animation. ALL40 upright and8 downed cat frames must have NO arms and NO hands and NO guns/blades or weapons. Heads, torso, legs are clearly present in every cell. Transparent alpha background, no floor."
+    },
+    {
+      "file": "assets/weapons/arms.png",
+      "prompt": "Use case: stylized-concept. Asset type: modular GUNS WITH ATTACHED CAT ARMS atlas for an actual cartoon overhead action RPG. Match reference original military cats handpainted warm cartoon style, navy soft outlines, highly readable weapons. This atlas contains ONLY each held gun/blade plus its two attached forearms, sleeves and cat hands; absolutely NO cat heads, bodies, torsos, legs, feet or tails. Every cell contains one compact paired-arms-and-weapon assembly ready to overlay a separately rendered cat torso. All barrels/blades point perfectly horizontally RIGHT, naturally held gun with trigger hand at grip and support hand beneath barrel, forearms extend back toward LEFT shoulder area, both forearms end in clean sleeve edges near left. Consistent shoulder pivot around left-third of each cell. One transparent PNG EXACTLY6 equal columns by6 equal rows, square1:1. Every isolated assembly fully inside own cell with minimum15% clear transparent padding, NO adjacent overlap, NO grid lines or labels, NO text. Columns for ALL rows:0compact pistol with both hands,1black compact SMG with hands,2wooden-stock rifle with hands,3double-barrel shotgun with hands,4green tubular rocket launcher with hands,5silver combat KNIFE gripped in one hand plus second supportive ready fist. ROW1 ORANGE CAT gold-orange fur hands with light OLIVE SCOUT sleeves and brown gloves leaving fur fingers visible. ROW2 ORANGE fur hands with reinforced TEAL RANGER sleeves and dark fingerless gloves. ROW3 ORANGE fur hands with NAVY-and-GOLD VANGUARD armored sleeves/gauntlets. ROW4 CREAM WHITE fur hands with light OLIVE SCOUT sleeves and brown fingerless gloves. ROW5 WHITE hands with reinforced NAVY-TEAL RANGER sleeves and dark fingerless gloves. ROW6 WHITE hands with NAVY-and-GOLD VANGUARD armored sleeves/gauntlets. Arms must attach naturally to weapon grips, do not draw floating detached hands or additional guns. Exactly36 weapon-arm cutouts on genuine transparent alpha background. No background, ground, text, cast shadow, characters or heads."
+    },
+    {
+      "file": "assets/characters/bodies-v2.png",
+      "prompt": "Precise-object edit of bodies.png: keep the same8columns by6rows, same cat identities and clothing, no arms/hands/weapons. Shrink every complete cat to60percent of its current size centered in its cell, with huge truly transparent outer20percent gutters on allfour sides. Keep idle/four run/dodge/hurt/downed poses, original polished artwork, and full torso/head/legs/tail. No text/grid/background. Runtime uses measured per-frame alpha-component bounds for completely bleed-free cropping."
+    },
+    {
+      "file": "assets/characters/friendly-cats.png",
+      "prompt": "Transparent original friendly NPC cat atlas,4columns by6rows: trader,blacksmith,farmer,ranger,medic,civilian; four real poses per role: friendly idle wave,left walk,passing,right walk. Full bodies including arms and hands, no firearms. Same polished elevated three-quarter overhead handpainted cartoon art. Clear padding, navy outlines, warm expressive faces and different outfits. Trader burgundy vest; charcoal blacksmith apron/goggles/hammer; cream farmer straw hat/overalls/carrot basket; brown ranger green cape/binoculars; white medic teal jacket/medical satchel; gray civilian striped shirt/blue scarf/travel pack. No text/grid/backdrop."
+    }
+  ]
+}

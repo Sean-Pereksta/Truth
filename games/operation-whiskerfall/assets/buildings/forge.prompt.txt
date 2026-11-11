@@ -1,0 +1,7 @@
+Asset: forge.png
+Generator: built-in image_gen imagegen; original new raster asset.
+Output: transparent PNG, copied without removing or changing its alpha channel.
+Purpose: single illustrated interactable forge sprite for firearm and armor upgrades.
+
+Final prompt:
+Use case: stylized-concept. Asset type: a single original game building sprite for Operation Whiskerfall, a colorful overhead cartoon action RPG about animal resistance fighters. Primary request: create a charming little outdoor resistance forge workshop: squat stone furnace with glowing orange coals and a short brick chimney, a dark steel anvil on a wooden stump, hammer and tongs on a stout workbench, modest teal fabric canopy on wooden posts, a few neatly stacked armor plates and tools. It must read clearly as an interactable gun and armor upgrade workshop. Style: professionally illustrated hand-painted cartoon 2.5D game art, crisp dark contour outlines, rich warm material shading, soft top-left sunlight, playful proportions, coherent with detailed woodland cottages and rustic military tents. Composition: single unified building asset centered with a clean silhouette, three-quarter overhead/isometric view, view from southeast, ground footprint fully visible, generous transparent margins on every side. Actual transparent background; no scenery, no ground plane, no grid, no border, no labels, no text, no watermark, no characters. All components stay grouped as one readable 160-pixel-wide in-game prop.

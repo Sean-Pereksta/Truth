@@ -1,0 +1,13 @@
+# Deep-region reinforcements
+
+The **Blackglass Reaver** circles at medium range, then throws paired crescent blades around broad circular loops. Violet warnings trace the exact committed outward and return arcs before release. Both blades share a per-target limit of one hit on the outward pass and one on the return pass. Its catch leaves it exposed for 0.95 seconds, taking 20% extra damage. A dodge through one leg does not guarantee safety from the return. Mirror Ward reflects a blade into an ordinary player-owned shot along the reverse of its current direction.
+
+The **Cinder Mortar Rat** plants its feet for a 0.62-second loading warning and marks four fixed landing points. Its shell rises high above the battlefield, then rebounds three times before bursting at the fourth mark and leaving a burning crater. Successive visual arc heights are 280, 235, 215 and 195 world units; each landing hits the position shown by its numbered warning. Three smaller bounce impacts preserve the previous attack's total impact damage. Its 3.1-second reload gives melee fighters an opening. Firing, recoil and the extended reload use separate illustrated poses. Cover stops the moving shell and crater damage; refuge boundaries remain protected.
+
+Each enemy has a dedicated eight-pose illustrated sheet and rodent combat audio. All poses, attack warnings, projectiles, recovery states and defeat rendering use the shipped artwork and renderer. Slowing, freezing, stunning, defeating or unloading an attacker interacts with its attack state; travel, load and party defeat clear transient hazards.
+
+Blackglass Reavers and Cinder Mortars appear in Emberworks, Blackbanner Citadel, Stormglass Coast and Sunken Crown Isles. Each region has two roaming pairs and a pair guarding its first installation: Cinder Foundry, Outer Citadel, Harpoon Moorings and Drowned Bell Stockade. This adds 24 enemies in the default world. There are no additions in the first six regions or in boss arenas.
+
+The reinforcements use independent deterministic placement, stable append-only spawn IDs and the normal enemy streaming/save system. Existing geography, patrols, named targets, bosses and quest IDs stay intact. Previously liberated installations stay clear, defeated reinforcements stay dead, and damaged enemies keep their health when unloaded or saved. Patrols stand on accessible roadside ground outside refuges and the locked Berlin sector.
+
+Load `data/deep-enemies.js` after the coastal enemy definitions, and load `js/world/deep-enemies.js` immediately after `js/world/world.js`, before creating a world. The extension safely does nothing when the new data is absent.

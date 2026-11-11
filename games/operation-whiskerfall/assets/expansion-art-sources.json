@@ -1,0 +1,371 @@
+[
+  {
+    "key": "roller",
+    "path": "assets/enemies/roller.png",
+    "cols": 4,
+    "rows": 2,
+    "group": "enemyVanguard",
+    "row": 0,
+    "opaque": false
+  },
+  {
+    "key": "blinkstalker",
+    "path": "assets/enemies/blinkstalker.png",
+    "cols": 4,
+    "rows": 2,
+    "group": "enemyVanguard",
+    "row": 1,
+    "opaque": false
+  },
+  {
+    "key": "fencer",
+    "path": "assets/enemies/fencer.png",
+    "cols": 4,
+    "rows": 2,
+    "group": "enemyVanguard",
+    "row": 2,
+    "opaque": false
+  },
+  {
+    "key": "burrowrat",
+    "path": "assets/enemies/burrowrat.png",
+    "cols": 4,
+    "rows": 2,
+    "group": "enemyVanguard",
+    "row": 3,
+    "opaque": false
+  },
+  {
+    "key": "cinderbeast",
+    "path": "assets/enemies/cinderbeast.png",
+    "cols": 4,
+    "rows": 2,
+    "group": "enemyElemental",
+    "row": 0,
+    "opaque": false
+  },
+  {
+    "key": "venomrat",
+    "path": "assets/enemies/venomrat.png",
+    "cols": 4,
+    "rows": 2,
+    "group": "enemyElemental",
+    "row": 1,
+    "opaque": false
+  },
+  {
+    "key": "frostwarden",
+    "path": "assets/enemies/frostwarden.png",
+    "cols": 4,
+    "rows": 2,
+    "group": "enemyElemental",
+    "row": 2,
+    "opaque": false
+  },
+  {
+    "key": "voidknight",
+    "path": "assets/enemies/voidknight.png",
+    "cols": 4,
+    "rows": 2,
+    "group": "enemyElemental",
+    "row": 3,
+    "opaque": false
+  },
+  {
+    "key": "ironrat",
+    "path": "assets/enemies/ironrat.png",
+    "cols": 4,
+    "rows": 2,
+    "group": "cavernGuardians",
+    "row": 0,
+    "opaque": false
+  },
+  {
+    "key": "gloamwing",
+    "path": "assets/enemies/gloamwing.png",
+    "cols": 4,
+    "rows": 2,
+    "group": "cavernGuardians",
+    "row": 1,
+    "opaque": false
+  },
+  {
+    "key": "motherbriar",
+    "path": "assets/enemies/motherbriar.png",
+    "cols": 4,
+    "rows": 2,
+    "group": "cavernGuardians",
+    "row": 2,
+    "opaque": false
+  },
+  {
+    "key": "hollowking",
+    "path": "assets/enemies/hollowking.png",
+    "cols": 4,
+    "rows": 2,
+    "group": "cavernGuardians",
+    "row": 3,
+    "opaque": false
+  },
+  {
+    "key": "dungeonProps",
+    "path": "assets/dungeons/dungeonProps.png",
+    "cols": 4,
+    "rows": 4,
+    "opaque": false
+  },
+  {
+    "key": "puzzleDevices",
+    "path": "assets/dungeons/puzzleDevices.png",
+    "cols": 4,
+    "rows": 4,
+    "opaque": false
+  },
+  {
+    "key": "dungeonFloors",
+    "path": "assets/dungeons/dungeonFloors.png",
+    "cols": 4,
+    "rows": 2,
+    "opaque": true
+  },
+  {
+    "key": "dungeonFX",
+    "path": "assets/dungeons/dungeonFX.png",
+    "cols": 4,
+    "rows": 4,
+    "opaque": false
+  },
+  {
+    "key": "encounterProps",
+    "path": "assets/dungeons/encounterProps.png",
+    "cols": 4,
+    "rows": 2,
+    "opaque": false
+  },
+  {
+    "key": "harpooner",
+    "path": "assets/enemies/harpooner.png",
+    "cols": 4,
+    "rows": 2,
+    "group": "enemyCoastal",
+    "row": 0,
+    "opaque": false,
+    "cells": {
+      "4": [
+        0,
+        444,
+        510,
+        443
+      ]
+    }
+  },
+  {
+    "key": "bellringer",
+    "path": "assets/enemies/bellringer.png",
+    "cols": 4,
+    "rows": 2,
+    "group": "enemyCoastal",
+    "row": 1,
+    "opaque": false
+  },
+  {
+    "key": "shellguard",
+    "path": "assets/enemies/shellguard.png",
+    "cols": 4,
+    "rows": 2,
+    "group": "enemyCoastal",
+    "row": 2,
+    "opaque": false
+  },
+  {
+    "key": "tideblade",
+    "path": "assets/enemies/tideblade.png",
+    "cols": 4,
+    "rows": 2,
+    "group": "enemyCoastal",
+    "row": 3,
+    "opaque": false
+  },
+  {
+    "key": "coastalTerrain",
+    "path": "assets/coast/terrain.png",
+    "cols": 2,
+    "rows": 2,
+    "opaque": true
+  },
+  {
+    "key": "coastalProps",
+    "path": "assets/coast/scenery.png",
+    "cols": 4,
+    "rows": 2,
+    "opaque": false,
+    "cells": {
+      "0": [
+        30,
+        0,
+        395,
+        470
+      ],
+      "1": [
+        445,
+        30,
+        390,
+        417
+      ],
+      "2": [
+        850,
+        0,
+        560,
+        465
+      ],
+      "3": [
+        1435,
+        0,
+        320,
+        475
+      ],
+      "4": [
+        0,
+        470,
+        444,
+        417
+      ],
+      "5": [
+        470,
+        448,
+        350,
+        425
+      ],
+      "6": [
+        900,
+        510,
+        435,
+        365
+      ],
+      "7": [
+        1360,
+        480,
+        414,
+        395
+      ]
+    }
+  },
+  {
+    "key": "blackglassReaver",
+    "path": "assets/enemies/blackglass-reaver.png",
+    "cols": 4,
+    "rows": 2,
+    "group": "enemyDeep",
+    "row": 0,
+    "opaque": false,
+    "cells": [
+      [
+        0,
+        0,
+        444,
+        444
+      ],
+      [
+        444,
+        0,
+        443,
+        444
+      ],
+      [
+        887,
+        0,
+        444,
+        444
+      ],
+      [
+        1331,
+        0,
+        443,
+        444
+      ],
+      [
+        0,
+        444,
+        480,
+        443
+      ],
+      [
+        480,
+        444,
+        440,
+        443
+      ],
+      [
+        920,
+        444,
+        411,
+        443
+      ],
+      [
+        1331,
+        444,
+        443,
+        443
+      ]
+    ]
+  },
+  {
+    "key": "cinderMortar",
+    "path": "assets/enemies/cinder-mortar.png",
+    "cols": 4,
+    "rows": 2,
+    "group": "enemyDeep",
+    "row": 1,
+    "opaque": false,
+    "cells": [
+      [
+        0,
+        0,
+        444,
+        444
+      ],
+      [
+        444,
+        0,
+        443,
+        444
+      ],
+      [
+        887,
+        0,
+        444,
+        444
+      ],
+      [
+        1331,
+        0,
+        443,
+        444
+      ],
+      [
+        0,
+        444,
+        480,
+        443
+      ],
+      [
+        480,
+        444,
+        407,
+        443
+      ],
+      [
+        887,
+        444,
+        444,
+        443
+      ],
+      [
+        1331,
+        444,
+        443,
+        443
+      ]
+    ]
+  }
+]

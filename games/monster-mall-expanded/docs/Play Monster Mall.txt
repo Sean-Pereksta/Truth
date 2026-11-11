@@ -1,0 +1,118 @@
+MONSTER MALL — AFTER HOURS / EXPANDED EDITION
+
+Open "Monster Mall - After Hours.html" in Chrome or Edge. Wait for the
+characters to load, choose your difficulty, and select ENTER THE MALL.
+The game is self-contained and works offline. No installation is needed.
+
+EVERY NIGHT
+Find three emergency fuses: Hollow Records, the east service stockroom,
+and the upper west gallery. Northern stairs reach Level 02. Install the
+fuses at security at the far north end. Complete ALL tasks for your chosen
+difficulty, then use the main doors at the south end to escape.
+Power alone does not unlock the exit. The checklist shows what remains;
+amber map markers show fuses and tasks. Muted blue markers are on another floor.
+
+CHOOSE YOUR NIGHT
+Easy: two beasts, slower reactions, shorter memories, five starting flashes.
+  Added task: recover the SECURITY KEYCARD in Night Owl Books (east, Level 01).
+Normal: three beasts that listen and search last-known positions.
+  All Easy tasks, plus close the COOLANT VALVE in west maintenance
+  (northwest staff corridor).
+Hard: monsters run 15% faster than Normal, with better perception and anticipation.
+  All Normal tasks, plus reset the GALLERY RELAY on the upper east gallery,
+  near the south end. The relay needs restored power.
+Nightmare: monsters run 32% faster than Normal, share sightings and flank.
+  All Hard tasks, plus find the SHUTTER CRANK in west deliveries (southwest
+  staff corridor), then use it on the mechanism beside the main exit.
+  Restore power before winding the shutter.
+Insane: monsters run 50% faster than Normal, with coordinated hunters and
+  a fourth creature, THE STILL ONE.
+  All Nightmare tasks, plus cancel LOCKDOWN at the north security terminal
+  after power and every other task are complete. The override makes noise.
+
+THE STILL ONE — INSANE ONLY
+An abnormally tall, dark figure with a pale mask and long hanging hands.
+It stops when you keep it in view with an unobstructed sightline.
+Turn away and it can move again. Walls and stairs still constrain it.
+It can be stunned. Do not mistake stillness for safety.
+
+CONTROLLER (STANDARD XBOX / PLAYSTATION LAYOUT)
+Connect by USB or Bluetooth, focus the game window, and press a button.
+Left stick — Move (analog, with drift dead zone)
+Right stick — Look
+RB / R1 or left stick click — Hold to sprint
+A / Cross — Interact / select
+X / Square — Stun flash
+B / Circle — Toggle crouch / back in menus
+Y / Triangle — Flashlight
+View / Create / Share — Map
+Menu / Options — Pause / resume
+D-pad or left stick — Navigate menus
+Left / right — Change difficulty or the selected setting
+A / Cross — Activate focused menu item
+B / Circle — Close settings or go back
+Disconnecting a controller during play pauses the game. Release held controls
+after switching menus, reconnecting, or returning to the game window.
+Controllers must be exposed by the browser with a compatible standard layout;
+generic devices with unusual mappings may need their manufacturer's driver.
+If sound is silent, click or press a keyboard key once to enable audio, then
+continue with the controller. Browser fullscreen can require a mouse click.
+
+KEYBOARD / MOUSE
+WASD — Move
+Mouse — Look (drag if pointer capture is unavailable)
+Arrow keys — Alternative look
+Shift — Sprint
+C — Toggle crouch
+E — Interact / collect
+Q — Stun flash
+F — Flashlight
+M — Floor map
+O — Controls & settings
+Esc or P — Pause
+F11 — Fullscreen (also available using the fullscreen buttons)
+Touch: left thumb moves, drag the right side to look, use action buttons.
+
+SURVIVAL
+One capture is fatal. Save a stun flash for close encounters. A flash also
+frees a shopper being held. Refills are hidden around the mall.
+Beasts grow after feeding up to a fixed, stair-safe size. Every creature stays
+below the lowest shop doorway and ceiling; The Still One has its own smaller
+scale cap. Walking is quieter and conserves stamina.
+Crouch with the light off behind cover to break pursuit.
+Hunters remember observed positions; louder movement and machinery give
+them new clues. Higher difficulties react faster and search longer. Monsters spread their patrols
+across shops, staff passages and both galleries. After losing a target, they
+check different areas instead of always following each other.
+
+SHOPPERS
+Frightened shoppers look for counters, shelving and other solid cover. They
+run to a protected position, crouch low, and huddle quietly while danger passes.
+A monster that sees or reaches them can still find them. Hiding shoppers wait
+for a safe moment to move, then head for the exit once every lock is released.
+
+SETTINGS & SAVES
+Sensitivity, movement, field of view, brightness, quality, volume, invert look,
+toggle sprint, head motion, camera shake, sound captions, and gentle effects.
+The difficulty selection and preferences save on this device when browser
+storage is available. Best escape times are recorded separately per difficulty.
+Gentle effects reduces flashes, flicker, camera shake, and head motion.
+
+EDIT / REBUILD
+Editable files are in Source. Run "node build.mjs" there to rebuild the HTML
+one folder above. Node.js is only needed for rebuilding, never for playing.
+All art, characters, sound synthesis and engine code are bundled offline.
+Models contains the original reusable GLB assets. The new Still One is
+generated by the game's creature rig; the original GLB is preserved.
+
+CREDITS
+People: Nova, Sky and Kai by VTubeMe, CC BY 4.0.
+https://vtubeme.com
+https://vtubeme.com/free-vrm-avatars/nova
+https://vtubeme.com/free-vrm-avatars/sky
+https://vtubeme.com/free-vrm-avatars/kai
+https://creativecommons.org/licenses/by/4.0/
+Garment colors, lighting materials and movement adapted for this game.
+Original creature design and generated skin artwork created for Monster Mall.
+Engine: Three.js r160.1 and official GLTFLoader/SkeletonUtils/
+BufferGeometryUtils, MIT license. See Credits for full notices.

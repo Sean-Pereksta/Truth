@@ -1,0 +1,142 @@
+Distant vaults and guarded keys
+
+Four optional dungeons append to the sixteen existing caves. Existing cave IDs,
+quests and saved progress keep their original meaning. Their approaches and
+collision maps differ; the established guardian chamber bounds remain shared
+so the existing readable boss attacks keep their tested space.
+
+Rimeglass Reservoir — Frostmarch, recommended level 12
+Quest: A Breath Beneath the Ice. Contact: Keeper Thistle.
+Two lake loops form a figure eight around a permanently safe stone crossing.
+Activate the west and east pumps in either order, then the central regulator.
+The Rimeglass Valve Key is in the guarded Frozen Courier Cache in Stonecrest,
+east of Badger's Lantern. This source is outside the target dungeon.
+Reward after returning the seal to Thistle: Winter's Whisper and Frost Breath.
+
+Cindercoil Foundry — Emberworks, recommended level 19
+Quest: The Furnace That Wouldn't Die. Contact: Foreman Brindle.
+Separate valve wings flank a furnace. Turning both valves cools the cross-bridge
+and opens the guardian gate. Each wing can be visited first; no puzzle timer.
+The Cindercoil Foundry Key is in the guarded Smuggler's Tool Chest in Reedwater,
+east of Reedlight Refuge. This source is outside the target dungeon.
+Reward after returning the seal to Brindle: Ember Bastion Armor.
+
+Zephyr Reliquary — Reedwater, recommended level 16
+Quest: The Wind Remembers. Contact: Pilgrim Sora.
+Offset terraces form a loop around a central sanctuary. Ring three terrace
+bells in any order, then activate the sanctuary. No entrance key is required.
+Reward after returning the seal to Sora: Galeweave Mantle and Aurora Well.
+
+The Drowned Maw — Sunken Crown Isles, recommended level 26
+Quest: The Beast Beneath the Crown. Contact: Diver Pearl.
+Flooded piers and three tide anchors lead to Nacremaw, the Great Kraken.
+No entrance key or overall kill timer. The Kraken is a separate three-phase
+boss with tentacle lanes, delayed slams, warned ink fans and gapped undertow
+rings. Its behavior and illustrated rendering live in js/core/kraken.js.
+Reward after returning the seal to Pearl: Legendary Sea Beast Armor, with
+spectral tentacles from repeated firearm hits and slowing ink left by dodging.
+
+Shared keys and rewards
+
+Each key cache creates a bounded three-enemy patrol when investigated. Defeat
+all three, then interact again to collect the key. There is no kill timer and
+no random key drop. Both heroes use the same persistent, nonconsumable keyring.
+Normal entry and active-dungeon restoration both require the correct key.
+NPC clues and locked entrance labels name the source. Accepting a quest with a
+missing key tracks its source cache instead of the locked cave.
+
+The reliquary records an expedition seal. It gives no random equipment choice
+or extra generic treasure payout. The named quest contact must receive the
+seal through Finish quest; completedQuests then drives the separate equipment
+and ability reward modules. Repeated claims cannot duplicate a seal or key.
+
+Prism Sentry
+
+An appended slate-blue armored mouse with a cyan prism backpack. Two parallel
+frost lanes commit to their positions for a 1.15-second visible warning. Their
+middle gap is safe. Walls clip the lanes. One volley can hit a hero once and
+causes at most 0.65 seconds of slow after actual damage. An ordinary dodge
+blocks both damage and slow. Stun, freeze, death, travel and lost warnings
+cancel a pending attack. Both warnings must allocate before an attack starts.
+Its 1.4-second recovery is stationary and takes 15% extra incoming damage.
+
+Save and integration details
+
+Data: data/distant-vaults.js, loaded after dungeons, coastal content and deep
+enemy definitions. Surface site installation is idempotent and available as
+Content.installDistantVaultSites(World) for offline map tooling. Runtime:
+js/world/distant-vaults.js after dungeon/checkpoint/turn-in/guardian extensions,
+then js/core/prism-sentry.js and js/core/kraken.js. Illustrated expedition art
+loads afterward. The only legacy dungeon edit skips its old mural HUD for
+these custom layouts.
+
+dungeonStates remains keyed by cave ID. Dense boolean vaultNodes retain partial
+mechanisms; solved gates remain open. Guard IDs are stable. Saved guard health
+is restored exactly and pending attacks are cleared. Leaving and re-entering
+does not heal a living guardian. A full-party checkpoint rescue still resets
+the current fight under the game's established rules while retaining keys and
+solved mechanisms. Guard damage tuning can be reconstructed from stable IDs
+after checkpoint reset strips transient fields.
+
+Game.distantVaultKeys is a Set in memory and an array in snapshots.
+Game.distantVaultKeyRuns stores each key patrol's three enemy records. This
+preserves injured guards across streaming and reload without spawning copies.
+The Kraken remembers its first-encounter party size in state.krakenPartySize;
+switching co-op does not multiply its health repeatedly.
+
+Automated verification
+
+tests/distant-vaults.test.cjs exercises real generated terrain, flood-fill
+reachability of all mechanisms, locked/open collision gates, distinct layout
+signatures, source caches, actual guard kills, repeated save/load, injured
+enemy health, streaming recovery, shared keys, checkpoint rescue, partial
+any-order mechanisms and the real NPC turn-in flow.
+tests/prism-sentry.test.cjs exercises actual damage and effects: timing,
+committed targeting, safe gap, dodge, interrupts, streaming loss, co-op,
+effect-pool pressure, wall clipping and saved attack cleanup.
+tests/kraken.test.cjs exercises all five attacks and three phases, actual hits,
+gap/dodge avoidance, bounded ink, warning allocation, recovery damage,
+save/party invariance, persistent death/seal, and exact Sea Beast quest grants.
+tools/kraken-balance.cjs uses real inputs, bullets and AI with ordinary level26
+equipment. Its controller reads visible attack records perfectly; it is
+repeatable mechanics evidence, not a human playtest or a difficulty guarantee.
+
+The first balance pass defeated the Kraken in 17.0 seconds solo and 12.4
+seconds in co-op. Its final tuning uses 48,000 health solo or 72,000 co-op,
+190 base damage, an armored shell taking 20% damage outside recovery, and
+125% damage while exposed. Warning durations remain unchanged. With the same
+Reedrunner Carbine +4, ordinary Dawnkeeper Battle Vest, reinforcement +5 and
+level26 skills, the repeatable controller won in 60.0 seconds solo and 46.0
+seconds co-op. Both runs exercised all three phases and all five attacks.
+The solo hero took 76 damage; the co-op team took 87 total damage. Neither
+used its three starting medkits. Peak ink pressure was fourteen projectiles.
+The before/after JSON reports preserve equipment and remaining ammunition.
+These are successful automated avoidance runs, not claims that a human player
+will find the fight easy or difficult.
+
+Illustrated environments
+
+Each new dungeon uses its own original opaque floor texture and transparent
+eight-prop sheet. A separate painted wall atlas supplies an icy masonry wall,
+hot copper-pipe wall, mossy ruin wall and barnacled tidal wall, with matching
+corner stones. Source pixels are retained; measured crop metadata avoids
+adjacent sprites and keeps props grounded.
+
+js/world/distant-vault-scenery.js paints these textures over the exact union of
+the authored floor rectangles. It calculates exposed union edges for walls,
+including the guardian arena. Shared room seams and door openings receive no
+wall. Walls and background props are drawn outward before opaque walkable
+floors, so their decorative overhang cannot obscure an open route. Puzzle
+devices use thematic painted props; high-contrast labels, explicit active states,
+closed gates and combat warnings remain above the scenery. Sealed gates use
+the matching wall artwork within their exact bounds; opening removes the
+barrier completely. No collision or
+combat data changes. At most two cached floor surfaces remain in memory; an
+opened furnace bridge or replacement art invalidates the relevant cache.
+
+tests/distant-vault-scenery.test.cjs checks source files, genuine PNG alpha
+transparency and measured crops,
+all four themes, exposed boundary normals, clear door openings, exact floor
+clipping, drawing order, state invariance, cache bounds and missing-art fallback.
+tools/render-distant-scenery.cjs produces PNG previews through the actual game
+terrain renderer using native Canvas, without browser automation.

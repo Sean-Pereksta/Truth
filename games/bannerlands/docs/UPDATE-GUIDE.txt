@@ -1,0 +1,106 @@
+ADAPTIVE BOT PRODUCTION
+Bots plan their production network as part of their invasion strategy. They compare
+barracks, archery ranges, stables, siege works, house specialist buildings and defenses
+instead of following a fixed building rotation. Army shortages, enemy troop types,
+existing training speed, income and territory influence what they choose next.
+They can build multiple useful facilities of the same type, replace destroyed ones,
+and grow larger networks when the economy and army demand support them.
+Bots save for a chosen building, place it on safe owned ground, and use the same
+gold costs, land-based structure limit and army supply rules as the player.
+Near full army supply they stop adding unnecessary training capacity. During capital
+emergencies they prioritize defenders. Production is no longer held behind two town
+hall upgrades or the old fifteen-building ceiling.
+The house roster shows what each bot is building or saving for; hover for its reason.
+
+MOUSE CAMERA MOVEMENT
+Move the mouse to any battlefield edge to pan the camera. Corners pan diagonally.
+Move toward the center or onto the sidebar to stop. The closer you are to the edge,
+the faster the view moves. This also works while paused. Right/middle dragging and
+arrow keys remain available. Edge scrolling stops during drags, menus and dialogs.
+
+DRAWN ARTWORK AND UPGRADEABLE WATCHTOWERS
+This package includes nine new painted sprites: three distinct capital levels,
+three distinct watchtower levels, and neutral, battle and royal capture flags.
+Buildings use their own level artwork on the battlefield and in their portraits.
+Blue cloth and roofs take your faction/team colors. All artwork is embedded in
+the offline game and also included as a transparent PNG atlas in Source/dist/assets.
+The generation prompt is included beside the atlas in campaign-art-prompt.txt.
+
+Click one of YOUR watchtowers to select it, then use Upgrade tower in the sidebar.
+Level 1 Watchtower:    1,150 health, 25 base damage, 4.6 range.
+Level 2 Guard Tower:  2,000 health, 38 base damage, 5.2 range; costs 250 gold.
+Level 3 Royal Bastion:3,200 health, 55 base damage, 5.9 range; costs 450 gold.
+Upgrades preserve the tower's percentage of health remaining. Weapons upgrades
+and House Arryn's Falcon Guard combine with the tower's improved values.
+Bots also upgrade their watchtowers using the same prices and rules.
+
+BANNERLANDS - STRATEGIES, STANDARDS AND ALLIANCES
+
+Open Bannerlands.html to play offline. Start a new campaign to use the new rules.
+
+SIX GAME MODES
+Capital Conquest: destroy every rival capital.
+Bannerfall: first side to capture 5 standards wins; destroying all rival capitals also wins.
+Dominion: hold 65% of the realm after 90 seconds, or destroy all rival capitals.
+Each mode has a team version. Choose 2v2, 3 paired teams, up to 8 paired teams.
+You have one allied bot; opposing houses are paired into their own alliances.
+Allies share a main team color, with lighter shades identifying individual houses.
+Allies do not damage each other or steal one another's land. Their forces support
+each other's territorial captures, flag control and capital defense.
+
+TOWN HALLS - YOUR CAPITAL IS YOUR LIFELINE
+Level 1 Town Hall:       2,500 health, 24 base damage, 5.5 range.
+Level 2 Fortified Keep:  4,500 health, 36 base damage, 6.2 range; costs 500 gold.
+Level 3 Royal Citadel:   7,500 health, 52 base damage, 7.0 range; costs 950 gold.
+Open Council and use Upgrade Town Hall. The portrait and battlefield artwork grow
+through three levels, adding fortified walls, towers and animated banners.
+Upgrades preserve the percentage of health remaining. Ordinary weapons upgrades
+also improve capital firepower. Bots buy the same upgrades with their own gold.
+When a capital is destroyed, its entire faction's troops, buildings and territory
+are wiped immediately. If YOUR capital falls, you lose even if your ally survives.
+Protect it and answer allied calls for defense.
+
+CAPTURE STANDARDS - AVAILABLE IN EVERY MODE
+There are three physical flags on the battlefield. Click an objective in the
+Standards panel to locate it. Its highlighted area has a radius of 4 map cells.
+Have at least 90% of all living troops inside that area to advance your hold timer.
+In a team mode, both allied armies count together. Exactly 90% is sufficient.
+Hold for 30 accumulated seconds to secure the standard. Contested or empty time
+FREEZES your progress; it never erases it. A rival tracks its own saved time.
+Each successful capture awards eight Royal Guard specialist troops at your capital:
+50% extra health and 35% extra weapon damage, plus each house's specialist effects.
+Allied houses split the eight troops. The reward arrives even at full supply;
+ordinary recruitment waits until there is space again. Royal Guard display gold stars.
+The captured flag rearms for 20 seconds. The winner's hold timer resets; other
+sides retain their saved time. Bannerfall counts captures toward a five-flag win.
+In Conquest and Dominion, captures provide reinforcements without ending the game.
+
+STRATEGIC RIVALS
+Five distinct plans appear in the house roster:
+Grand host: gather a large force and invade as one army.
+Flanking raiders: fast, smaller waves take side routes toward exposed production.
+Siege column: gather artillery and escorts to break defended capitals.
+Bastion & counterattack: stronger home guard, fortifications and patient counterattacks.
+Banner guard: prioritize standards and hold their capture areas.
+Bots score targets by distance, guards, towers, damaged buildings, territory and
+nearby threats rather than always choosing the nearest house. They recruit for
+their plan and counter nearby hostile troop types. They muster recruits at home,
+keep reserves, retreat wounded soldiers and regroup between committed waves.
+Small scouting parties expand separately; new recruits do not trickle into an invasion.
+
+COORDINATED TEAM ORDERS
+In a team campaign, use Call assault or Call defense, then click the battlefield.
+Assault: bots gather for 8 seconds before launching toward the chosen position.
+Defense: allied bots respond immediately to protect the selected position.
+Calls appear on the battlefield, minimap and Alliance Orders panel.
+An assault call lasts up to 100 seconds; a defense call lasts 45 seconds.
+Bots also request help for threatened allied capitals and call joint offensives.
+They retain home guards and prioritize emergencies at their own capital.
+Your calls direct allied bots; your own soldiers continue to follow your orders.
+Esc or right-click cancels placing a call.
+
+Existing troop selection, building rally points, formations, house powers,
+specialist production, expansion and 500-level upgrades remain available.
+
+
+

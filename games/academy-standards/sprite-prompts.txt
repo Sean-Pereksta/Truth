@@ -1,0 +1,28 @@
+UNIT ATLAS PROMPT
+
+Use case: stylized-concept. Asset type: PRODUCTION GAME SPRITE SHEET, transparent RGBA raster image, square 1536 by 1536 pixels.
+Create precisely EIGHT COLUMNS and EIGHT ROWS of equal-size animation cells in a strict regular grid, 64 cells total. Each cell contains exactly ONE small complete full-body warrior character. No grid lines, no text, no labels, no background, no scenery. Absolutely transparent background.
+Art style: detailed hand-painted pixel-art/chibi top-down 3/4 RTS unit sprites with readable silhouettes and attractive shading. Student-age adult warriors with royal blue cloth tabards/capes, warm gray steel, brown leather, subtle gold trim, heads and facial features. Character should occupy about 65 percent cell width and 75 percent cell height, feet aligned on 85 percent cell baseline. Every frame remains centered in its own cell; no sprite crosses a cell edge.
+The 8 columns LEFT TO RIGHT are animation frames: (1) standing idle, (2) walk left foot forward, (3) walk passing pose, (4) walk right foot forward, (5) walk return pose, (6) walk passing return, (7) attack windup, (8) attack strike/release. Limbs change pose meaningfully; camera and character size remain fixed.
+The 8 rows TOP TO BOTTOM are:
+ROW 1: sword and round shield infantry facing front-right, three-quarter view.
+ROW 2: exactly same sword-and-shield infantry facing back-right, three-quarter view.
+ROW 3: spear infantry facing front-right, spear held upright and forward on attack.
+ROW 4: exactly same spear infantry facing back-right.
+ROW 5: bow archer facing front-right, drawing bow in attack frames.
+ROW 6: exactly same bow archer facing back-right.
+ROW 7: field medic with small staff and satchel facing front-right, casting/healing pose for attack.
+ROW 8: exactly same medic facing back-right.
+All eight columns within each row show exactly the SAME character design in successive animation poses. Do not change costume, sex, head, scale or style within a row. This is functional animation sprite atlas, not a collection of illustrations. Exact uniform 8x8 grid. Transparent empty pixels between sprites. No shadows outside character feet. No letters or symbols.
+
+CAVALRY ATLAS PROMPT
+
+Use case: stylized-concept. Asset type: transparent production CAVALRY ANIMATION SPRITE ATLAS for a top-down three-quarter-view fantasy RTS game.
+Create a LANDSCAPE image with precisely EIGHT equal-width columns and TWO equal-height rows, 16 equal cells total, ideally 2048 by 512 pixels. Fully transparent background. No text, labels, grid lines, backdrop or scenery.
+In EVERY cell is the SAME fully visible brown warhorse with a young adult academy cavalry rider wearing royal blue cloak and gray steel helmet/armor, brown leather saddle and boots, carrying spear. Professional hand-painted pixel-art/chibi RTS sprites, attractive shading and strong readable silhouette. Match miniature sword/spear/bow/medic infantry atlas style: royal blue cloth, warm gray metal, brown leather, subtle gold trim.
+ROW 1 (top row): horse and rider facing front-right in 3/4 view. ROW 2 (bottom row): exactly same horse/rider facing back-right in 3/4 view.
+EIGHT COLUMNS from left to right: 1 idle with horse standing; 2 walk/trot with near foreleg forward; 3 passing stride; 4 far foreleg forward; 5 opposite stride; 6 return passing stride; 7 spear attack windup raised arm; 8 spear attack release reaching forward. Noticeably different horse leg positions animate across columns 2-6.
+STRICT REGULAR 8x2 GRID is essential for drawImage frame cropping. Center identical scale horse/rider within each cell. Each entire sprite stays inside its own cell, with transparent margins. Feet align around 88 percent cell-height baseline. No overlapping neighboring cells. No sprite cutoffs. No cast shadows outside feet. Exactly 16 sprites with consistent identity and size.
+
+Generation: built-in image_gen. Infantry transparency corrected with background-extraction edit preserving all sprites.
+

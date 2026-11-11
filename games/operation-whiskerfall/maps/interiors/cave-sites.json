@@ -1,0 +1,1825 @@
+{
+  "description": "Twenty enterable caverns: sixteen legacy puzzle and survival chambers plus four distinct hidden expeditions, two permanent keys, and Nacremaw in the Drowned Maw. Geometry and interactions are implemented by js/world/dungeons.js and js/world/distant-vaults.js.",
+  "sites": [
+    {
+      "id": "cave_0_0",
+      "name": "Badger’s Hollow",
+      "type": "cave",
+      "region": 0,
+      "radius": 135,
+      "questId": "side_0_0",
+      "x": 845,
+      "y": 4680,
+      "cleared": false,
+      "enemyIds": [
+        "cave_0_0_sentry_0"
+      ],
+      "index": 10,
+      "dungeonId": "cave_0_0"
+    },
+    {
+      "id": "cave_0_1",
+      "name": "Forgotten Root Cellar",
+      "type": "cave",
+      "region": 0,
+      "radius": 135,
+      "questId": null,
+      "x": 3770,
+      "y": 1040,
+      "cleared": false,
+      "enemyIds": [
+        "cave_0_1_sentry_0"
+      ],
+      "index": 11,
+      "dungeonId": "cave_0_1"
+    },
+    {
+      "id": "cave_1_0",
+      "name": "Owl’s Grotto",
+      "type": "cave",
+      "region": 1,
+      "radius": 135,
+      "questId": "side_1_0",
+      "x": 5525,
+      "y": 4680,
+      "cleared": false,
+      "enemyIds": [
+        "cave_1_0_sentry_0",
+        "cave_1_0_sentry_1"
+      ],
+      "index": 22,
+      "dungeonId": "cave_1_0"
+    },
+    {
+      "id": "cave_1_1",
+      "name": "Moonmoss Cavern",
+      "type": "cave",
+      "region": 1,
+      "radius": 135,
+      "questId": null,
+      "x": 8450,
+      "y": 1040,
+      "cleared": false,
+      "enemyIds": [
+        "cave_1_1_sentry_0",
+        "cave_1_1_sentry_1"
+      ],
+      "index": 23,
+      "dungeonId": "cave_1_1"
+    },
+    {
+      "id": "cave_2_0",
+      "name": "Echoing Quarry",
+      "type": "cave",
+      "region": 2,
+      "radius": 135,
+      "questId": "side_2_0",
+      "x": 10205,
+      "y": 4680,
+      "cleared": false,
+      "enemyIds": [
+        "cave_2_0_sentry_0",
+        "cave_2_0_sentry_1",
+        "cave_2_0_sentry_2"
+      ],
+      "index": 34,
+      "dungeonId": "cave_2_0"
+    },
+    {
+      "id": "cave_2_1",
+      "name": "Crystal Pass",
+      "type": "cave",
+      "region": 2,
+      "radius": 135,
+      "questId": null,
+      "x": 13130,
+      "y": 1040,
+      "cleared": false,
+      "enemyIds": [
+        "cave_2_1_sentry_0",
+        "cave_2_1_sentry_1",
+        "cave_2_1_sentry_2"
+      ],
+      "index": 35,
+      "dungeonId": "cave_2_1"
+    },
+    {
+      "id": "cave_3_0",
+      "name": "Frozen Den",
+      "type": "cave",
+      "region": 3,
+      "radius": 135,
+      "questId": "side_3_0",
+      "x": 14885,
+      "y": 4680,
+      "cleared": false,
+      "enemyIds": [
+        "cave_3_0_sentry_0",
+        "cave_3_0_sentry_1",
+        "cave_3_0_sentry_2"
+      ],
+      "index": 46,
+      "dungeonId": "cave_3_0"
+    },
+    {
+      "id": "cave_3_1",
+      "name": "Aurora Cavern",
+      "type": "cave",
+      "region": 3,
+      "radius": 135,
+      "questId": null,
+      "x": 17810,
+      "y": 1040,
+      "cleared": false,
+      "enemyIds": [
+        "cave_3_1_sentry_0",
+        "cave_3_1_sentry_1",
+        "cave_3_1_sentry_2"
+      ],
+      "index": 47,
+      "dungeonId": "cave_3_1"
+    },
+    {
+      "id": "cave_4_0",
+      "name": "Amber Vault",
+      "type": "cave",
+      "region": 4,
+      "radius": 135,
+      "questId": "side_4_0",
+      "x": 15165,
+      "y": 11960,
+      "cleared": false,
+      "enemyIds": [
+        "cave_4_0_sentry_0",
+        "cave_4_0_sentry_1",
+        "cave_4_0_sentry_2"
+      ],
+      "index": 57,
+      "dungeonId": "cave_4_0"
+    },
+    {
+      "id": "cave_4_1",
+      "name": "Sandstone Refuge",
+      "type": "cave",
+      "region": 4,
+      "radius": 135,
+      "questId": null,
+      "x": 17810,
+      "y": 8320,
+      "cleared": false,
+      "enemyIds": [
+        "cave_4_1_sentry_0",
+        "cave_4_1_sentry_1",
+        "cave_4_1_sentry_2"
+      ],
+      "index": 58,
+      "dungeonId": "cave_4_1"
+    },
+    {
+      "id": "cave_5_0",
+      "name": "Reedroot Grotto",
+      "type": "cave",
+      "region": 5,
+      "radius": 135,
+      "questId": "side_5_0",
+      "x": 10205,
+      "y": 11960,
+      "cleared": false,
+      "enemyIds": [
+        "cave_5_0_sentry_0",
+        "cave_5_0_sentry_1",
+        "cave_5_0_sentry_2"
+      ],
+      "index": 68,
+      "dungeonId": "cave_5_0"
+    },
+    {
+      "id": "cave_5_1",
+      "name": "Sunken Hideaway",
+      "type": "cave",
+      "region": 5,
+      "radius": 135,
+      "questId": null,
+      "x": 13130,
+      "y": 8320,
+      "cleared": false,
+      "enemyIds": [
+        "cave_5_1_sentry_0",
+        "cave_5_1_sentry_1",
+        "cave_5_1_sentry_2"
+      ],
+      "index": 69,
+      "dungeonId": "cave_5_1"
+    },
+    {
+      "id": "cave_6_0",
+      "name": "Cinder Tunnel",
+      "type": "cave",
+      "region": 6,
+      "radius": 135,
+      "questId": "side_6_0",
+      "x": 5525,
+      "y": 11960,
+      "cleared": false,
+      "enemyIds": [
+        "cave_6_0_sentry_0",
+        "cave_6_0_sentry_1",
+        "cave_6_0_sentry_2"
+      ],
+      "index": 79,
+      "dungeonId": "cave_6_0"
+    },
+    {
+      "id": "cave_6_1",
+      "name": "Abandoned Workshop",
+      "type": "cave",
+      "region": 6,
+      "radius": 135,
+      "questId": null,
+      "x": 8450,
+      "y": 8320,
+      "cleared": false,
+      "enemyIds": [
+        "cave_6_1_sentry_0",
+        "cave_6_1_sentry_1",
+        "cave_6_1_sentry_2"
+      ],
+      "index": 80,
+      "dungeonId": "cave_6_1"
+    },
+    {
+      "id": "cave_7_0",
+      "name": "Old Resistance Vault",
+      "type": "cave",
+      "region": 7,
+      "radius": 135,
+      "questId": "side_7_0",
+      "x": 845,
+      "y": 11960,
+      "cleared": false,
+      "enemyIds": [
+        "cave_7_0_sentry_0",
+        "cave_7_0_sentry_1",
+        "cave_7_0_sentry_2"
+      ],
+      "index": 90,
+      "dungeonId": "cave_7_0"
+    },
+    {
+      "id": "cave_7_1",
+      "name": "Citadel Catacombs",
+      "type": "cave",
+      "region": 7,
+      "radius": 135,
+      "questId": null,
+      "x": 2730,
+      "y": 8320,
+      "cleared": false,
+      "enemyIds": [
+        "cave_7_1_sentry_0",
+        "cave_7_1_sentry_1",
+        "cave_7_1_sentry_2"
+      ],
+      "index": 91,
+      "dungeonId": "cave_7_1"
+    },
+    {
+      "id": "cave_rimeglass",
+      "name": "Rimeglass Reservoir",
+      "type": "cave",
+      "region": 3,
+      "x": 17251,
+      "y": 3835,
+      "radius": 135,
+      "dungeonId": "cave_rimeglass",
+      "questId": "rare_rimeglass",
+      "description": "Follow the frost-blue pipes northeast from Warmhearth to Keeper Thistle.",
+      "distantVault": true,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 301
+    },
+    {
+      "id": "cave_cindercoil",
+      "name": "Cindercoil Foundry",
+      "type": "cave",
+      "region": 6,
+      "x": 7969,
+      "y": 11180,
+      "radius": 135,
+      "dungeonId": "cave_cindercoil",
+      "questId": "rare_cindercoil",
+      "description": "Follow the silent furnace chimneys east of Ember Rest to Foreman Brindle.",
+      "distantVault": true,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 303
+    },
+    {
+      "id": "cave_zephyr",
+      "name": "Zephyr Reliquary",
+      "type": "cave",
+      "region": 5,
+      "x": 12623,
+      "y": 10374,
+      "radius": 135,
+      "dungeonId": "cave_zephyr",
+      "questId": "rare_zephyr",
+      "description": "Follow the wind bells northeast of Reedlight Refuge to Pilgrim Sora.",
+      "distantVault": true,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 305
+    },
+    {
+      "id": "cave_kraken",
+      "name": "The Drowned Maw",
+      "type": "cave",
+      "region": 9,
+      "x": 22490,
+      "y": 11700,
+      "radius": 135,
+      "dungeonId": "cave_kraken",
+      "questId": "rare_kraken",
+      "description": "Follow the shell markers east of Crownrest Haven to Diver Pearl at the Drowned Maw seaside cave.",
+      "distantVault": true,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 307
+    }
+  ],
+  "dungeons": [
+    {
+      "id": "cave_0_0",
+      "region": 0,
+      "variant": 0,
+      "puzzle": "echo",
+      "guardian": 0,
+      "level": 2,
+      "questId": "vault_0_0",
+      "sequence": [
+        0,
+        2,
+        1,
+        3
+      ],
+      "title": "Echoes Below"
+    },
+    {
+      "id": "cave_0_1",
+      "region": 0,
+      "variant": 1,
+      "puzzle": "mirrors",
+      "guardian": 1,
+      "level": 3,
+      "questId": "vault_0_1",
+      "sequence": [
+        1,
+        3,
+        2,
+        0
+      ],
+      "title": "A Light in the Deep"
+    },
+    {
+      "id": "cave_1_0",
+      "region": 1,
+      "variant": 0,
+      "puzzle": "mirrors",
+      "guardian": 2,
+      "level": 5,
+      "questId": "vault_1_0",
+      "sequence": [
+        1,
+        3,
+        2,
+        0
+      ],
+      "title": "A Light in the Deep"
+    },
+    {
+      "id": "cave_1_1",
+      "region": 1,
+      "variant": 1,
+      "puzzle": "conduit",
+      "guardian": 3,
+      "level": 6,
+      "questId": "vault_1_1",
+      "sequence": [
+        2,
+        0,
+        3,
+        1
+      ],
+      "title": "The Moonmoss Vigil",
+      "encounter": "survival",
+      "waveCount": 3
+    },
+    {
+      "id": "cave_2_0",
+      "region": 2,
+      "variant": 0,
+      "puzzle": "conduit",
+      "guardian": 0,
+      "level": 8,
+      "questId": "vault_2_0",
+      "sequence": [
+        2,
+        0,
+        3,
+        1
+      ],
+      "title": "The Broken Waterworks"
+    },
+    {
+      "id": "cave_2_1",
+      "region": 2,
+      "variant": 1,
+      "puzzle": "constellation",
+      "guardian": 1,
+      "level": 9,
+      "questId": "vault_2_1",
+      "sequence": [
+        3,
+        1,
+        0,
+        2
+      ],
+      "title": "The Starless Vault"
+    },
+    {
+      "id": "cave_3_0",
+      "region": 3,
+      "variant": 0,
+      "puzzle": "constellation",
+      "guardian": 2,
+      "level": 11,
+      "questId": "vault_3_0",
+      "sequence": [
+        3,
+        1,
+        0,
+        2
+      ],
+      "title": "The Starless Vault"
+    },
+    {
+      "id": "cave_3_1",
+      "region": 3,
+      "variant": 1,
+      "puzzle": "echo",
+      "guardian": 3,
+      "level": 12,
+      "questId": "vault_3_1",
+      "sequence": [
+        0,
+        2,
+        1,
+        3
+      ],
+      "title": "The Aurora Gauntlet",
+      "encounter": "survival",
+      "waveCount": 3
+    },
+    {
+      "id": "cave_4_0",
+      "region": 4,
+      "variant": 0,
+      "puzzle": "echo",
+      "guardian": 0,
+      "level": 14,
+      "questId": "vault_4_0",
+      "sequence": [
+        0,
+        2,
+        1,
+        3
+      ],
+      "title": "Echoes Below"
+    },
+    {
+      "id": "cave_4_1",
+      "region": 4,
+      "variant": 1,
+      "puzzle": "mirrors",
+      "guardian": 1,
+      "level": 15,
+      "questId": "vault_4_1",
+      "sequence": [
+        1,
+        3,
+        2,
+        0
+      ],
+      "title": "A Light in the Deep"
+    },
+    {
+      "id": "cave_5_0",
+      "region": 5,
+      "variant": 0,
+      "puzzle": "mirrors",
+      "guardian": 2,
+      "level": 17,
+      "questId": "vault_5_0",
+      "sequence": [
+        1,
+        3,
+        2,
+        0
+      ],
+      "title": "A Light in the Deep"
+    },
+    {
+      "id": "cave_5_1",
+      "region": 5,
+      "variant": 1,
+      "puzzle": "conduit",
+      "guardian": 3,
+      "level": 18,
+      "questId": "vault_5_1",
+      "sequence": [
+        2,
+        0,
+        3,
+        1
+      ],
+      "title": "The Drowned Watch",
+      "encounter": "survival",
+      "waveCount": 4
+    },
+    {
+      "id": "cave_6_0",
+      "region": 6,
+      "variant": 0,
+      "puzzle": "conduit",
+      "guardian": 0,
+      "level": 20,
+      "questId": "vault_6_0",
+      "sequence": [
+        2,
+        0,
+        3,
+        1
+      ],
+      "title": "The Broken Waterworks"
+    },
+    {
+      "id": "cave_6_1",
+      "region": 6,
+      "variant": 1,
+      "puzzle": "constellation",
+      "guardian": 1,
+      "level": 21,
+      "questId": "vault_6_1",
+      "sequence": [
+        3,
+        1,
+        0,
+        2
+      ],
+      "title": "The Starless Vault"
+    },
+    {
+      "id": "cave_7_0",
+      "region": 7,
+      "variant": 0,
+      "puzzle": "constellation",
+      "guardian": 2,
+      "level": 23,
+      "questId": "vault_7_0",
+      "sequence": [
+        3,
+        1,
+        0,
+        2
+      ],
+      "title": "The Starless Vault"
+    },
+    {
+      "id": "cave_7_1",
+      "region": 7,
+      "variant": 1,
+      "puzzle": "echo",
+      "guardian": 3,
+      "level": 24,
+      "questId": "vault_7_1",
+      "sequence": [
+        0,
+        2,
+        1,
+        3
+      ],
+      "title": "The Last Resistance",
+      "encounter": "survival",
+      "waveCount": 4
+    },
+    {
+      "id": "cave_rimeglass",
+      "name": "Rimeglass Reservoir",
+      "questId": "rare_rimeglass",
+      "region": 3,
+      "level": 12,
+      "variant": 0,
+      "guardian": 1,
+      "keyId": "rimeglass_valve_key",
+      "x": 2470,
+      "y": 2950,
+      "npcId": "npc_rimeglass_warden",
+      "npcName": "Keeper Thistle",
+      "role": "scholar",
+      "color": "#8ddde7",
+      "title": "A Breath Beneath the Ice",
+      "layout": "figure-eight",
+      "rewardStatement": "REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold.",
+      "clue": "Follow the frost-blue pipes northeast from Warmhearth to Keeper Thistle.",
+      "instruction": "Wake both lake pumps, then turn the central regulator. The stone crossing between the two lakes is always safe.",
+      "rooms": [
+        {
+          "x": 160,
+          "y": 1120,
+          "w": 840,
+          "h": 480
+        },
+        {
+          "x": 160,
+          "y": 220,
+          "w": 840,
+          "h": 200
+        },
+        {
+          "x": 160,
+          "y": 400,
+          "w": 180,
+          "h": 760
+        },
+        {
+          "x": 820,
+          "y": 400,
+          "w": 180,
+          "h": 760
+        },
+        {
+          "x": 160,
+          "y": 680,
+          "w": 840,
+          "h": 200
+        },
+        {
+          "x": 980,
+          "y": 540,
+          "w": 160,
+          "h": 160
+        },
+        {
+          "x": 1120,
+          "y": 220,
+          "w": 640,
+          "h": 820
+        },
+        {
+          "x": 1420,
+          "y": 1020,
+          "w": 140,
+          "h": 200
+        },
+        {
+          "x": 1250,
+          "y": 1200,
+          "w": 510,
+          "h": 400
+        }
+      ],
+      "holes": [
+        {
+          "x": 340,
+          "y": 420,
+          "w": 480,
+          "h": 260
+        },
+        {
+          "x": 340,
+          "y": 880,
+          "w": 480,
+          "h": 240
+        }
+      ],
+      "nodes": [
+        {
+          "id": "west_pump",
+          "name": "West lake pump",
+          "x": 250,
+          "y": 530
+        },
+        {
+          "id": "east_pump",
+          "name": "East lake pump",
+          "x": 910,
+          "y": 1000
+        },
+        {
+          "id": "regulator",
+          "name": "Central regulator",
+          "x": 580,
+          "y": 780,
+          "requires": [
+            0,
+            1
+          ]
+        }
+      ],
+      "spawns": [
+        [
+          260,
+          1000
+        ],
+        [
+          900,
+          520
+        ],
+        [
+          580,
+          320
+        ],
+        [
+          900,
+          1280
+        ]
+      ],
+      "puzzle": "distant",
+      "distantVault": true
+    },
+    {
+      "id": "cave_cindercoil",
+      "name": "Cindercoil Foundry",
+      "questId": "rare_cindercoil",
+      "region": 6,
+      "level": 19,
+      "variant": 0,
+      "guardian": 0,
+      "keyId": "cindercoil_foundry_key",
+      "x": 2530,
+      "y": 3000,
+      "npcId": "npc_cindercoil_keeper",
+      "npcName": "Foreman Brindle",
+      "role": "engineer",
+      "color": "#efac72",
+      "title": "The Furnace That Wouldn’t Die",
+      "layout": "forked-valves",
+      "rewardStatement": "REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark.",
+      "clue": "Follow the silent furnace chimneys east of Ember Rest to Foreman Brindle.",
+      "instruction": "Turn one valve in each side wing to cool the furnace bridge. Either wing can be visited first; the bridge stays open.",
+      "rooms": [
+        {
+          "x": 160,
+          "y": 1120,
+          "w": 840,
+          "h": 480
+        },
+        {
+          "x": 160,
+          "y": 980,
+          "w": 840,
+          "h": 300
+        },
+        {
+          "x": 160,
+          "y": 360,
+          "w": 280,
+          "h": 700
+        },
+        {
+          "x": 720,
+          "y": 360,
+          "w": 280,
+          "h": 700
+        },
+        {
+          "x": 160,
+          "y": 220,
+          "w": 840,
+          "h": 180
+        },
+        {
+          "x": 980,
+          "y": 540,
+          "w": 160,
+          "h": 160
+        },
+        {
+          "x": 1120,
+          "y": 220,
+          "w": 640,
+          "h": 820
+        },
+        {
+          "x": 1420,
+          "y": 1020,
+          "w": 140,
+          "h": 200
+        },
+        {
+          "x": 1250,
+          "y": 1200,
+          "w": 510,
+          "h": 400
+        }
+      ],
+      "holes": [
+        {
+          "x": 440,
+          "y": 400,
+          "w": 280,
+          "h": 580
+        }
+      ],
+      "bridge": {
+        "x": 440,
+        "y": 600,
+        "w": 280,
+        "h": 140
+      },
+      "nodes": [
+        {
+          "id": "west_valve",
+          "name": "West cooling valve",
+          "x": 300,
+          "y": 510
+        },
+        {
+          "id": "east_valve",
+          "name": "East cooling valve",
+          "x": 860,
+          "y": 510
+        }
+      ],
+      "spawns": [
+        [
+          300,
+          820
+        ],
+        [
+          860,
+          820
+        ],
+        [
+          300,
+          310
+        ],
+        [
+          860,
+          310
+        ]
+      ],
+      "puzzle": "distant",
+      "distantVault": true
+    },
+    {
+      "id": "cave_zephyr",
+      "name": "Zephyr Reliquary",
+      "questId": "rare_zephyr",
+      "region": 5,
+      "level": 16,
+      "variant": 0,
+      "guardian": 3,
+      "x": 2510,
+      "y": 2380,
+      "npcId": "npc_zephyr_pilgrim",
+      "npcName": "Pilgrim Sora",
+      "role": "medic",
+      "color": "#b3e3bd",
+      "title": "The Wind Remembers",
+      "layout": "terraced-sanctuary",
+      "rewardStatement": "REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary.",
+      "clue": "Follow the wind bells northeast of Reedlight Refuge to Pilgrim Sora.",
+      "instruction": "Ring the three terrace bells in any order, then awaken the sanctuary in the middle of the loop.",
+      "rooms": [
+        {
+          "x": 160,
+          "y": 1120,
+          "w": 840,
+          "h": 480
+        },
+        {
+          "x": 160,
+          "y": 900,
+          "w": 320,
+          "h": 400
+        },
+        {
+          "x": 160,
+          "y": 900,
+          "w": 680,
+          "h": 180
+        },
+        {
+          "x": 720,
+          "y": 540,
+          "w": 280,
+          "h": 540
+        },
+        {
+          "x": 160,
+          "y": 220,
+          "w": 840,
+          "h": 220
+        },
+        {
+          "x": 160,
+          "y": 220,
+          "w": 220,
+          "h": 820
+        },
+        {
+          "x": 820,
+          "y": 400,
+          "w": 180,
+          "h": 300
+        },
+        {
+          "x": 400,
+          "y": 480,
+          "w": 240,
+          "h": 240
+        },
+        {
+          "x": 620,
+          "y": 560,
+          "w": 140,
+          "h": 120
+        },
+        {
+          "x": 980,
+          "y": 540,
+          "w": 160,
+          "h": 160
+        },
+        {
+          "x": 1120,
+          "y": 220,
+          "w": 640,
+          "h": 820
+        },
+        {
+          "x": 1420,
+          "y": 1020,
+          "w": 140,
+          "h": 200
+        },
+        {
+          "x": 1250,
+          "y": 1200,
+          "w": 510,
+          "h": 400
+        }
+      ],
+      "holes": [],
+      "nodes": [
+        {
+          "id": "low_bell",
+          "name": "Lower terrace bell",
+          "x": 270,
+          "y": 1010
+        },
+        {
+          "id": "east_bell",
+          "name": "Eastern terrace bell",
+          "x": 860,
+          "y": 810
+        },
+        {
+          "id": "high_bell",
+          "name": "Upper terrace bell",
+          "x": 580,
+          "y": 320
+        },
+        {
+          "id": "sanctuary",
+          "name": "Wind sanctuary",
+          "x": 520,
+          "y": 600,
+          "requires": [
+            0,
+            1,
+            2
+          ]
+        }
+      ],
+      "spawns": [
+        [
+          270,
+          920
+        ],
+        [
+          860,
+          970
+        ],
+        [
+          260,
+          320
+        ],
+        [
+          860,
+          320
+        ]
+      ],
+      "puzzle": "distant",
+      "distantVault": true
+    },
+    {
+      "id": "cave_kraken",
+      "name": "The Drowned Maw",
+      "questId": "rare_kraken",
+      "region": 9,
+      "level": 26,
+      "variant": 0,
+      "guardian": 3,
+      "kraken": true,
+      "x": 2900,
+      "y": 3400,
+      "npcId": "npc_kraken_witness",
+      "npcName": "Diver Pearl",
+      "role": "scout",
+      "color": "#96dcd2",
+      "title": "The Beast Beneath the Crown",
+      "layout": "tidal-piers",
+      "rewardStatement": "REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge.",
+      "clue": "Follow the shell markers east of Crownrest Haven to Diver Pearl at the Drowned Maw seaside cave.",
+      "instruction": "Release the three tide anchors along the flooded piers. Beyond the gate waits Nacremaw, the Great Kraken: an optional level 26 challenge with no time limit.",
+      "rooms": [
+        {
+          "x": 160,
+          "y": 1120,
+          "w": 840,
+          "h": 480
+        },
+        {
+          "x": 480,
+          "y": 360,
+          "w": 180,
+          "h": 860
+        },
+        {
+          "x": 160,
+          "y": 560,
+          "w": 840,
+          "h": 180
+        },
+        {
+          "x": 160,
+          "y": 220,
+          "w": 840,
+          "h": 220
+        },
+        {
+          "x": 820,
+          "y": 400,
+          "w": 180,
+          "h": 800
+        },
+        {
+          "x": 980,
+          "y": 540,
+          "w": 160,
+          "h": 160
+        },
+        {
+          "x": 1120,
+          "y": 220,
+          "w": 640,
+          "h": 820
+        },
+        {
+          "x": 1420,
+          "y": 1020,
+          "w": 140,
+          "h": 200
+        },
+        {
+          "x": 1250,
+          "y": 1200,
+          "w": 510,
+          "h": 400
+        }
+      ],
+      "holes": [
+        {
+          "x": 160,
+          "y": 760,
+          "w": 320,
+          "h": 360
+        },
+        {
+          "x": 660,
+          "y": 760,
+          "w": 160,
+          "h": 360
+        },
+        {
+          "x": 160,
+          "y": 440,
+          "w": 320,
+          "h": 120
+        }
+      ],
+      "nodes": [
+        {
+          "id": "west_anchor",
+          "name": "Western tide anchor",
+          "x": 260,
+          "y": 640
+        },
+        {
+          "id": "north_anchor",
+          "name": "Northern tide anchor",
+          "x": 580,
+          "y": 320
+        },
+        {
+          "id": "east_anchor",
+          "name": "Eastern tide anchor",
+          "x": 910,
+          "y": 970
+        }
+      ],
+      "spawns": [
+        [
+          580,
+          1000
+        ],
+        [
+          910,
+          820
+        ],
+        [
+          260,
+          320
+        ],
+        [
+          860,
+          320
+        ]
+      ],
+      "puzzle": "distant",
+      "distantVault": true
+    }
+  ],
+  "guardians": [
+    {
+      "name": "Gravelback, the Iron Rat",
+      "kind": "rat",
+      "color": "#d4af7b",
+      "hint": "Watch the walls: long armored rolls ricochet around the chamber. Dodge across the roll, leave the slam circle, and cross the expanding rock ring after impact. Punish the brief recovery; later phases chain separately warned rolls."
+    },
+    {
+      "name": "The Gloamwing",
+      "kind": "bat",
+      "color": "#a5d5ef",
+      "hint": "Cross its committed swoop, slip between the icicle fan, and keep moving away from staggered falling-ice circles. Every attack leaves a recovery opening."
+    },
+    {
+      "name": "Mother Briar",
+      "kind": "spider",
+      "color": "#b2d38b",
+      "hint": "Leave venom blooms, avoid slowing web snares, and clear her bounded brood before it surrounds you. Her aimed venom fans and shorter late-phase recoveries punish standing still."
+    },
+    {
+      "name": "The Hollow King",
+      "kind": "burrower",
+      "color": "#d2a6f4",
+      "hint": "Move off the violet seal before the delayed emergence strike, cross the marked burrow rift sideways, and dodge the void fan. The king commits to every marked target before attacking."
+    }
+  ],
+  "rewards": [
+    [
+      "ember_seed",
+      "armor_rollshell"
+    ],
+    [
+      "sparrow_burst",
+      "ember_seed"
+    ],
+    [
+      "viper_bloom",
+      "armor_rollshell"
+    ],
+    [
+      "briar_smg",
+      "viper_bloom"
+    ],
+    [
+      "echo_fang",
+      "armor_wayfarer"
+    ],
+    [
+      "rime_fan",
+      "badger_slug"
+    ],
+    [
+      "winter_halo",
+      "armor_rimeheart"
+    ],
+    [
+      "shatterglass",
+      "thundercoil"
+    ],
+    [
+      "sunburst_mortar",
+      "owlet_guided"
+    ],
+    [
+      "firecracker",
+      "bankshot"
+    ],
+    [
+      "wasp_swarm",
+      "armor_venomskin"
+    ],
+    [
+      "stormcall",
+      "viper_bloom"
+    ],
+    [
+      "cinderwheel",
+      "armor_cinderproof"
+    ],
+    [
+      "storm_loom",
+      "sunbeam"
+    ],
+    [
+      "eventide",
+      "armor_phaseweave"
+    ],
+    [
+      "rat_kings_rattle",
+      "starlight"
+    ]
+  ],
+  "expeditions": [
+    {
+      "id": "cave_rimeglass",
+      "name": "Rimeglass Reservoir",
+      "questId": "rare_rimeglass",
+      "region": 3,
+      "level": 12,
+      "variant": 0,
+      "guardian": 1,
+      "keyId": "rimeglass_valve_key",
+      "x": 2470,
+      "y": 2950,
+      "npcId": "npc_rimeglass_warden",
+      "npcName": "Keeper Thistle",
+      "role": "scholar",
+      "color": "#8ddde7",
+      "title": "A Breath Beneath the Ice",
+      "layout": "figure-eight",
+      "rewardStatement": "REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold.",
+      "clue": "Follow the frost-blue pipes northeast from Warmhearth to Keeper Thistle.",
+      "instruction": "Wake both lake pumps, then turn the central regulator. The stone crossing between the two lakes is always safe.",
+      "rooms": [
+        {
+          "x": 160,
+          "y": 1120,
+          "w": 840,
+          "h": 480
+        },
+        {
+          "x": 160,
+          "y": 220,
+          "w": 840,
+          "h": 200
+        },
+        {
+          "x": 160,
+          "y": 400,
+          "w": 180,
+          "h": 760
+        },
+        {
+          "x": 820,
+          "y": 400,
+          "w": 180,
+          "h": 760
+        },
+        {
+          "x": 160,
+          "y": 680,
+          "w": 840,
+          "h": 200
+        },
+        {
+          "x": 980,
+          "y": 540,
+          "w": 160,
+          "h": 160
+        },
+        {
+          "x": 1120,
+          "y": 220,
+          "w": 640,
+          "h": 820
+        },
+        {
+          "x": 1420,
+          "y": 1020,
+          "w": 140,
+          "h": 200
+        },
+        {
+          "x": 1250,
+          "y": 1200,
+          "w": 510,
+          "h": 400
+        }
+      ],
+      "holes": [
+        {
+          "x": 340,
+          "y": 420,
+          "w": 480,
+          "h": 260
+        },
+        {
+          "x": 340,
+          "y": 880,
+          "w": 480,
+          "h": 240
+        }
+      ],
+      "nodes": [
+        {
+          "id": "west_pump",
+          "name": "West lake pump",
+          "x": 250,
+          "y": 530
+        },
+        {
+          "id": "east_pump",
+          "name": "East lake pump",
+          "x": 910,
+          "y": 1000
+        },
+        {
+          "id": "regulator",
+          "name": "Central regulator",
+          "x": 580,
+          "y": 780,
+          "requires": [
+            0,
+            1
+          ]
+        }
+      ],
+      "spawns": [
+        [
+          260,
+          1000
+        ],
+        [
+          900,
+          520
+        ],
+        [
+          580,
+          320
+        ],
+        [
+          900,
+          1280
+        ]
+      ]
+    },
+    {
+      "id": "cave_cindercoil",
+      "name": "Cindercoil Foundry",
+      "questId": "rare_cindercoil",
+      "region": 6,
+      "level": 19,
+      "variant": 0,
+      "guardian": 0,
+      "keyId": "cindercoil_foundry_key",
+      "x": 2530,
+      "y": 3000,
+      "npcId": "npc_cindercoil_keeper",
+      "npcName": "Foreman Brindle",
+      "role": "engineer",
+      "color": "#efac72",
+      "title": "The Furnace That Wouldn’t Die",
+      "layout": "forked-valves",
+      "rewardStatement": "REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark.",
+      "clue": "Follow the silent furnace chimneys east of Ember Rest to Foreman Brindle.",
+      "instruction": "Turn one valve in each side wing to cool the furnace bridge. Either wing can be visited first; the bridge stays open.",
+      "rooms": [
+        {
+          "x": 160,
+          "y": 1120,
+          "w": 840,
+          "h": 480
+        },
+        {
+          "x": 160,
+          "y": 980,
+          "w": 840,
+          "h": 300
+        },
+        {
+          "x": 160,
+          "y": 360,
+          "w": 280,
+          "h": 700
+        },
+        {
+          "x": 720,
+          "y": 360,
+          "w": 280,
+          "h": 700
+        },
+        {
+          "x": 160,
+          "y": 220,
+          "w": 840,
+          "h": 180
+        },
+        {
+          "x": 980,
+          "y": 540,
+          "w": 160,
+          "h": 160
+        },
+        {
+          "x": 1120,
+          "y": 220,
+          "w": 640,
+          "h": 820
+        },
+        {
+          "x": 1420,
+          "y": 1020,
+          "w": 140,
+          "h": 200
+        },
+        {
+          "x": 1250,
+          "y": 1200,
+          "w": 510,
+          "h": 400
+        }
+      ],
+      "holes": [
+        {
+          "x": 440,
+          "y": 400,
+          "w": 280,
+          "h": 580
+        }
+      ],
+      "bridge": {
+        "x": 440,
+        "y": 600,
+        "w": 280,
+        "h": 140
+      },
+      "nodes": [
+        {
+          "id": "west_valve",
+          "name": "West cooling valve",
+          "x": 300,
+          "y": 510
+        },
+        {
+          "id": "east_valve",
+          "name": "East cooling valve",
+          "x": 860,
+          "y": 510
+        }
+      ],
+      "spawns": [
+        [
+          300,
+          820
+        ],
+        [
+          860,
+          820
+        ],
+        [
+          300,
+          310
+        ],
+        [
+          860,
+          310
+        ]
+      ]
+    },
+    {
+      "id": "cave_zephyr",
+      "name": "Zephyr Reliquary",
+      "questId": "rare_zephyr",
+      "region": 5,
+      "level": 16,
+      "variant": 0,
+      "guardian": 3,
+      "x": 2510,
+      "y": 2380,
+      "npcId": "npc_zephyr_pilgrim",
+      "npcName": "Pilgrim Sora",
+      "role": "medic",
+      "color": "#b3e3bd",
+      "title": "The Wind Remembers",
+      "layout": "terraced-sanctuary",
+      "rewardStatement": "REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary.",
+      "clue": "Follow the wind bells northeast of Reedlight Refuge to Pilgrim Sora.",
+      "instruction": "Ring the three terrace bells in any order, then awaken the sanctuary in the middle of the loop.",
+      "rooms": [
+        {
+          "x": 160,
+          "y": 1120,
+          "w": 840,
+          "h": 480
+        },
+        {
+          "x": 160,
+          "y": 900,
+          "w": 320,
+          "h": 400
+        },
+        {
+          "x": 160,
+          "y": 900,
+          "w": 680,
+          "h": 180
+        },
+        {
+          "x": 720,
+          "y": 540,
+          "w": 280,
+          "h": 540
+        },
+        {
+          "x": 160,
+          "y": 220,
+          "w": 840,
+          "h": 220
+        },
+        {
+          "x": 160,
+          "y": 220,
+          "w": 220,
+          "h": 820
+        },
+        {
+          "x": 820,
+          "y": 400,
+          "w": 180,
+          "h": 300
+        },
+        {
+          "x": 400,
+          "y": 480,
+          "w": 240,
+          "h": 240
+        },
+        {
+          "x": 620,
+          "y": 560,
+          "w": 140,
+          "h": 120
+        },
+        {
+          "x": 980,
+          "y": 540,
+          "w": 160,
+          "h": 160
+        },
+        {
+          "x": 1120,
+          "y": 220,
+          "w": 640,
+          "h": 820
+        },
+        {
+          "x": 1420,
+          "y": 1020,
+          "w": 140,
+          "h": 200
+        },
+        {
+          "x": 1250,
+          "y": 1200,
+          "w": 510,
+          "h": 400
+        }
+      ],
+      "holes": [],
+      "nodes": [
+        {
+          "id": "low_bell",
+          "name": "Lower terrace bell",
+          "x": 270,
+          "y": 1010
+        },
+        {
+          "id": "east_bell",
+          "name": "Eastern terrace bell",
+          "x": 860,
+          "y": 810
+        },
+        {
+          "id": "high_bell",
+          "name": "Upper terrace bell",
+          "x": 580,
+          "y": 320
+        },
+        {
+          "id": "sanctuary",
+          "name": "Wind sanctuary",
+          "x": 520,
+          "y": 600,
+          "requires": [
+            0,
+            1,
+            2
+          ]
+        }
+      ],
+      "spawns": [
+        [
+          270,
+          920
+        ],
+        [
+          860,
+          970
+        ],
+        [
+          260,
+          320
+        ],
+        [
+          860,
+          320
+        ]
+      ]
+    },
+    {
+      "id": "cave_kraken",
+      "name": "The Drowned Maw",
+      "questId": "rare_kraken",
+      "region": 9,
+      "level": 26,
+      "variant": 0,
+      "guardian": 3,
+      "kraken": true,
+      "x": 2900,
+      "y": 3400,
+      "npcId": "npc_kraken_witness",
+      "npcName": "Diver Pearl",
+      "role": "scout",
+      "color": "#96dcd2",
+      "title": "The Beast Beneath the Crown",
+      "layout": "tidal-piers",
+      "rewardStatement": "REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge.",
+      "clue": "Follow the shell markers east of Crownrest Haven to Diver Pearl at the Drowned Maw seaside cave.",
+      "instruction": "Release the three tide anchors along the flooded piers. Beyond the gate waits Nacremaw, the Great Kraken: an optional level 26 challenge with no time limit.",
+      "rooms": [
+        {
+          "x": 160,
+          "y": 1120,
+          "w": 840,
+          "h": 480
+        },
+        {
+          "x": 480,
+          "y": 360,
+          "w": 180,
+          "h": 860
+        },
+        {
+          "x": 160,
+          "y": 560,
+          "w": 840,
+          "h": 180
+        },
+        {
+          "x": 160,
+          "y": 220,
+          "w": 840,
+          "h": 220
+        },
+        {
+          "x": 820,
+          "y": 400,
+          "w": 180,
+          "h": 800
+        },
+        {
+          "x": 980,
+          "y": 540,
+          "w": 160,
+          "h": 160
+        },
+        {
+          "x": 1120,
+          "y": 220,
+          "w": 640,
+          "h": 820
+        },
+        {
+          "x": 1420,
+          "y": 1020,
+          "w": 140,
+          "h": 200
+        },
+        {
+          "x": 1250,
+          "y": 1200,
+          "w": 510,
+          "h": 400
+        }
+      ],
+      "holes": [
+        {
+          "x": 160,
+          "y": 760,
+          "w": 320,
+          "h": 360
+        },
+        {
+          "x": 660,
+          "y": 760,
+          "w": 160,
+          "h": 360
+        },
+        {
+          "x": 160,
+          "y": 440,
+          "w": 320,
+          "h": 120
+        }
+      ],
+      "nodes": [
+        {
+          "id": "west_anchor",
+          "name": "Western tide anchor",
+          "x": 260,
+          "y": 640
+        },
+        {
+          "id": "north_anchor",
+          "name": "Northern tide anchor",
+          "x": 580,
+          "y": 320
+        },
+        {
+          "id": "east_anchor",
+          "name": "Eastern tide anchor",
+          "x": 910,
+          "y": 970
+        }
+      ],
+      "spawns": [
+        [
+          580,
+          1000
+        ],
+        [
+          910,
+          820
+        ],
+        [
+          260,
+          320
+        ],
+        [
+          860,
+          320
+        ]
+      ]
+    }
+  ],
+  "keys": [
+    {
+      "id": "rimeglass_valve_key",
+      "name": "Rimeglass Valve Key",
+      "region": 2,
+      "site": "cache_frozen_courier",
+      "siteName": "Frozen Courier Cache",
+      "x": 2900,
+      "y": 3400,
+      "level": 9,
+      "clue": "Search the Frozen Courier Cache east of Badger’s Lantern in Stonecrest. Defeat its three sentries, then recover the valve key."
+    },
+    {
+      "id": "cindercoil_foundry_key",
+      "name": "Cindercoil Foundry Key",
+      "region": 5,
+      "site": "cache_smuggler_tools",
+      "siteName": "Smuggler’s Tool Chest",
+      "x": 2320,
+      "y": 3100,
+      "level": 16,
+      "clue": "Search the Smuggler’s Tool Chest east of Reedlight Refuge in Reedwater. Defeat its three guards, then recover the foundry key."
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "path": "assets/expeditions/kraken-effects.png",
+  "width": 1774,
+  "height": 887,
+  "frames": [
+    {
+      "name": "lash",
+      "crop": [
+        30,
+        190,
+        403,
+        172
+      ]
+    },
+    {
+      "name": "raisedTentacle",
+      "crop": [
+        533,
+        90,
+        300,
+        339
+      ]
+    },
+    {
+      "name": "slam",
+      "crop": [
+        927,
+        82,
+        359,
+        342
+      ]
+    },
+    {
+      "name": "wave",
+      "crop": [
+        1352,
+        161,
+        395,
+        236
+      ]
+    },
+    {
+      "name": "inkBolt",
+      "crop": [
+        37,
+        567,
+        393,
+        205
+      ]
+    },
+    {
+      "name": "vortex",
+      "crop": [
+        508,
+        490,
+        354,
+        348
+      ]
+    },
+    {
+      "name": "spray",
+      "crop": [
+        944,
+        493,
+        335,
+        340
+      ]
+    },
+    {
+      "name": "shell",
+      "crop": [
+        1385,
+        511,
+        346,
+        320
+      ]
+    }
+  ]
+}

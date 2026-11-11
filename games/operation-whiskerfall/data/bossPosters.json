@@ -1,0 +1,138 @@
+[
+  {
+    "bossId": "ironwhisker",
+    "bossIndex": 0,
+    "name": "Colonel Ironwhisker",
+    "region": 0,
+    "sector": "Greenfields Reach",
+    "locationId": "boss_0",
+    "questId": "main_0_2",
+    "finalBoss": false,
+    "attackHints": [
+      "Sidestep the marked charge line, then punish the recovery.",
+      "Rifle fans and marked artillery alternate with a ground slam.",
+      "In the third phase the charge chains into a return charge."
+    ]
+  },
+  {
+    "bossId": "bramble",
+    "bossIndex": 1,
+    "name": "Major Bramble",
+    "region": 1,
+    "sector": "Mosswood Wilds",
+    "locationId": "boss_1",
+    "questId": "main_1_2",
+    "finalBoss": false,
+    "attackHints": [
+      "Bramble leaps to a new firing position and marks delayed sniper shots.",
+      "Artillery lanes are backed by summoned scouts and wire hunters.",
+      "Watch for a teleport followed by a spreading rifle fan."
+    ]
+  },
+  {
+    "bossId": "flintfang",
+    "bossIndex": 2,
+    "name": "General Flintfang",
+    "region": 2,
+    "sector": "Stonecrest Highlands",
+    "locationId": "boss_2",
+    "questId": "main_2_2",
+    "finalBoss": false,
+    "attackHints": [
+      "Move out of the marked ground slam before Flintfang lands.",
+      "Seismic rings expand around the battery; leave a clear path between marks.",
+      "Full-circle bullets alternate with a line of delayed shells."
+    ]
+  },
+  {
+    "bossId": "whiteclaw",
+    "bossIndex": 3,
+    "name": "Marshal Whiteclaw",
+    "region": 3,
+    "sector": "Frostmarch",
+    "locationId": "boss_3",
+    "questId": "main_3_2",
+    "finalBoss": false,
+    "attackHints": [
+      "Find gaps in the full-circle ice fan while Whiteclaw skates aside.",
+      "Marked frost patches become slowing ground.",
+      "An aimed slam is followed by a narrower ice fan."
+    ]
+  },
+  {
+    "bossId": "sirocco",
+    "bossIndex": 4,
+    "name": "Field Marshal Sirocco",
+    "region": 4,
+    "sector": "Sunscar Dunes",
+    "locationId": "boss_4",
+    "questId": "main_4_2",
+    "finalBoss": false,
+    "attackHints": [
+      "Dodge across the charge direction and keep clear of the marked sand strikes.",
+      "A rocket fan covers Sirocco’s sideways skate.",
+      "The final phase adds a leap to the surrounding artillery pattern."
+    ]
+  },
+  {
+    "bossId": "miretooth",
+    "bossIndex": 5,
+    "name": "Admiral Miretooth",
+    "region": 5,
+    "sector": "Reedwater Delta",
+    "locationId": "boss_5",
+    "questId": "main_5_2",
+    "finalBoss": false,
+    "attackHints": [
+      "Leave marked poison circles before Miretooth leaps toward you.",
+      "A line of venom patches is backed by spreading rifle fire.",
+      "A teleport to the floodgate is followed by reinforcements."
+    ]
+  },
+  {
+    "bossId": "geargnash",
+    "bossIndex": 6,
+    "name": "Director Geargnash",
+    "region": 6,
+    "sector": "Emberworks",
+    "locationId": "boss_6",
+    "questId": "main_6_2",
+    "finalBoss": false,
+    "attackHints": [
+      "Geargnash shields up, deploys a turret and marks the ground around you.",
+      "The furnace slam leaves burning zones on both sides.",
+      "Rocket fans alternate with engineer or signal-jammer reinforcements."
+    ]
+  },
+  {
+    "bossId": "vex",
+    "bossIndex": 7,
+    "name": "Supreme Commander Vex",
+    "region": 7,
+    "sector": "Blackbanner Citadel",
+    "locationId": "boss_7",
+    "questId": "main_7_2",
+    "finalBoss": false,
+    "attackHints": [
+      "Full-circle bullet rings cover Vex’s leap to a new position.",
+      "Delayed artillery crosses your route with an ice fan.",
+      "The final phase adds seismic rings and skirmisher reinforcements."
+    ]
+  },
+  {
+    "bossId": "adolph_whisker",
+    "bossIndex": 8,
+    "name": "Adolph Whisker",
+    "region": 7,
+    "sector": "Berlin Sector",
+    "locationId": "boss_berlin",
+    "questId": "main_berlin_final",
+    "finalBoss": true,
+    "attackHints": [
+      "Phase I · Tyrant’s Arsenal: teleport rings, marked artillery and rocket fans.",
+      "Phase II · Blink Assault: a wider arsenal joins the teleport and delayed strike combinations.",
+      "Phase III · Berlin Lockdown: lingering hazards, summoned elites and orbital strikes.",
+      "Phase IV · Last Whisker: chained teleports weave every attack together. Save dodge and healing for this phase."
+    ]
+  }
+]

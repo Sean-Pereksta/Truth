@@ -1,0 +1,7990 @@
+{
+  "version": 1,
+  "title": "Operation Whiskerfall original raster atlas",
+  "generator": "OpenAI built-in image_gen",
+  "copyright": "Original generated artwork produced for this project; no third-party game assets used.",
+  "coordinateConvention": "Source rectangles use integer pixels with nearest-edge rounding. pivots are normalized within each source frame. All row and column numbers are zero based.",
+  "textures": {
+    "bodies": {
+      "image": "assets/characters/bodies-v2.png",
+      "size": {
+        "w": 1448,
+        "h": 1086
+      },
+      "columns": 8,
+      "rows": 6,
+      "transparent": true,
+      "usage": "live",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.86
+      },
+      "frames": {
+        "bodies_0_0": {
+          "frame": {
+            "x": 35,
+            "y": 55,
+            "w": 111,
+            "h": 117
+          },
+          "row": 0,
+          "column": 0,
+          "label": "orange_scout_idle",
+          "cell": {
+            "x": 0,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 1
+          }
+        },
+        "bodies_0_1": {
+          "frame": {
+            "x": 217,
+            "y": 55,
+            "w": 109,
+            "h": 117
+          },
+          "row": 0,
+          "column": 1,
+          "label": "orange_scout_run_left",
+          "cell": {
+            "x": 181,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 1
+          }
+        },
+        "bodies_0_2": {
+          "frame": {
+            "x": 401,
+            "y": 55,
+            "w": 102,
+            "h": 116
+          },
+          "row": 0,
+          "column": 2,
+          "label": "orange_scout_run_passing",
+          "cell": {
+            "x": 362,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5049019607843137,
+            "y": 1.0086206896551724
+          }
+        },
+        "bodies_0_3": {
+          "frame": {
+            "x": 574,
+            "y": 55,
+            "w": 112,
+            "h": 118
+          },
+          "row": 0,
+          "column": 3,
+          "label": "orange_scout_run_right",
+          "cell": {
+            "x": 543,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.53125,
+            "y": 0.9915254237288136
+          }
+        },
+        "bodies_0_4": {
+          "frame": {
+            "x": 753,
+            "y": 54,
+            "w": 113,
+            "h": 118
+          },
+          "row": 0,
+          "column": 4,
+          "label": "orange_scout_run_push",
+          "cell": {
+            "x": 724,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5442477876106194,
+            "y": 1
+          }
+        },
+        "bodies_0_5": {
+          "frame": {
+            "x": 937,
+            "y": 86,
+            "w": 113,
+            "h": 85
+          },
+          "row": 0,
+          "column": 5,
+          "label": "orange_scout_dodge",
+          "cell": {
+            "x": 905,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5176991150442478,
+            "y": 1.011764705882353
+          }
+        },
+        "bodies_0_6": {
+          "frame": {
+            "x": 1121,
+            "y": 57,
+            "w": 105,
+            "h": 115
+          },
+          "row": 0,
+          "column": 6,
+          "label": "orange_scout_hurt",
+          "cell": {
+            "x": 1086,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5285714285714286,
+            "y": 1
+          }
+        },
+        "bodies_0_7": {
+          "frame": {
+            "x": 1297,
+            "y": 116,
+            "w": 124,
+            "h": 56
+          },
+          "row": 0,
+          "column": 7,
+          "label": "orange_scout_downed",
+          "cell": {
+            "x": 1267,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.4879032258064516,
+            "y": 1
+          }
+        },
+        "bodies_1_0": {
+          "frame": {
+            "x": 34,
+            "y": 237,
+            "w": 111,
+            "h": 119
+          },
+          "row": 1,
+          "column": 0,
+          "label": "orange_ranger_idle",
+          "cell": {
+            "x": 0,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.509009009009009,
+            "y": 1
+          }
+        },
+        "bodies_1_1": {
+          "frame": {
+            "x": 218,
+            "y": 236,
+            "w": 108,
+            "h": 122
+          },
+          "row": 1,
+          "column": 1,
+          "label": "orange_ranger_run_left",
+          "cell": {
+            "x": 181,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.49537037037037035,
+            "y": 0.9836065573770492
+          }
+        },
+        "bodies_1_2": {
+          "frame": {
+            "x": 401,
+            "y": 236,
+            "w": 105,
+            "h": 122
+          },
+          "row": 1,
+          "column": 2,
+          "label": "orange_ranger_run_passing",
+          "cell": {
+            "x": 362,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.49047619047619045,
+            "y": 0.9836065573770492
+          }
+        },
+        "bodies_1_3": {
+          "frame": {
+            "x": 575,
+            "y": 239,
+            "w": 110,
+            "h": 119
+          },
+          "row": 1,
+          "column": 3,
+          "label": "orange_ranger_run_right",
+          "cell": {
+            "x": 543,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5318181818181819,
+            "y": 0.9831932773109243
+          }
+        },
+        "bodies_1_4": {
+          "frame": {
+            "x": 753,
+            "y": 236,
+            "w": 115,
+            "h": 123
+          },
+          "row": 1,
+          "column": 4,
+          "label": "orange_ranger_run_push",
+          "cell": {
+            "x": 724,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5347826086956522,
+            "y": 0.975609756097561
+          }
+        },
+        "bodies_1_5": {
+          "frame": {
+            "x": 936,
+            "y": 271,
+            "w": 114,
+            "h": 85
+          },
+          "row": 1,
+          "column": 5,
+          "label": "orange_ranger_dodge",
+          "cell": {
+            "x": 905,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5219298245614035,
+            "y": 1
+          }
+        },
+        "bodies_1_6": {
+          "frame": {
+            "x": 1121,
+            "y": 239,
+            "w": 105,
+            "h": 120
+          },
+          "row": 1,
+          "column": 6,
+          "label": "orange_ranger_hurt",
+          "cell": {
+            "x": 1086,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5285714285714286,
+            "y": 0.975
+          }
+        },
+        "bodies_1_7": {
+          "frame": {
+            "x": 1294,
+            "y": 299,
+            "w": 126,
+            "h": 57
+          },
+          "row": 1,
+          "column": 7,
+          "label": "orange_ranger_downed",
+          "cell": {
+            "x": 1267,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.503968253968254,
+            "y": 1
+          }
+        },
+        "bodies_2_0": {
+          "frame": {
+            "x": 31,
+            "y": 418,
+            "w": 114,
+            "h": 120
+          },
+          "row": 2,
+          "column": 0,
+          "label": "orange_vanguard_idle",
+          "cell": {
+            "x": 0,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5219298245614035,
+            "y": 1
+          }
+        },
+        "bodies_2_1": {
+          "frame": {
+            "x": 216,
+            "y": 419,
+            "w": 110,
+            "h": 120
+          },
+          "row": 2,
+          "column": 1,
+          "label": "orange_vanguard_run_left",
+          "cell": {
+            "x": 181,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5045454545454545,
+            "y": 0.9916666666666667
+          }
+        },
+        "bodies_2_2": {
+          "frame": {
+            "x": 395,
+            "y": 419,
+            "w": 106,
+            "h": 120
+          },
+          "row": 2,
+          "column": 2,
+          "label": "orange_vanguard_run_passing",
+          "cell": {
+            "x": 362,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5424528301886793,
+            "y": 0.9916666666666667
+          }
+        },
+        "bodies_2_3": {
+          "frame": {
+            "x": 573,
+            "y": 422,
+            "w": 114,
+            "h": 117
+          },
+          "row": 2,
+          "column": 3,
+          "label": "orange_vanguard_run_right",
+          "cell": {
+            "x": 543,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5307017543859649,
+            "y": 0.9914529914529915
+          }
+        },
+        "bodies_2_4": {
+          "frame": {
+            "x": 752,
+            "y": 419,
+            "w": 115,
+            "h": 120
+          },
+          "row": 2,
+          "column": 4,
+          "label": "orange_vanguard_run_push",
+          "cell": {
+            "x": 724,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5434782608695652,
+            "y": 0.9916666666666667
+          }
+        },
+        "bodies_2_5": {
+          "frame": {
+            "x": 936,
+            "y": 451,
+            "w": 114,
+            "h": 88
+          },
+          "row": 2,
+          "column": 5,
+          "label": "orange_vanguard_dodge",
+          "cell": {
+            "x": 905,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5219298245614035,
+            "y": 0.9886363636363636
+          }
+        },
+        "bodies_2_6": {
+          "frame": {
+            "x": 1121,
+            "y": 420,
+            "w": 104,
+            "h": 120
+          },
+          "row": 2,
+          "column": 6,
+          "label": "orange_vanguard_hurt",
+          "cell": {
+            "x": 1086,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5336538461538461,
+            "y": 0.9833333333333333
+          }
+        },
+        "bodies_2_7": {
+          "frame": {
+            "x": 1295,
+            "y": 481,
+            "w": 125,
+            "h": 59
+          },
+          "row": 2,
+          "column": 7,
+          "label": "orange_vanguard_downed",
+          "cell": {
+            "x": 1267,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.9661016949152542
+          }
+        },
+        "bodies_3_0": {
+          "frame": {
+            "x": 34,
+            "y": 592,
+            "w": 112,
+            "h": 121
+          },
+          "row": 3,
+          "column": 0,
+          "label": "white_scout_idle",
+          "cell": {
+            "x": 0,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5044642857142857,
+            "y": 1
+          }
+        },
+        "bodies_3_1": {
+          "frame": {
+            "x": 216,
+            "y": 594,
+            "w": 110,
+            "h": 118
+          },
+          "row": 3,
+          "column": 1,
+          "label": "white_scout_run_left",
+          "cell": {
+            "x": 181,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5045454545454545,
+            "y": 1.0084745762711864
+          }
+        },
+        "bodies_3_2": {
+          "frame": {
+            "x": 400,
+            "y": 593,
+            "w": 105,
+            "h": 120
+          },
+          "row": 3,
+          "column": 2,
+          "label": "white_scout_run_passing",
+          "cell": {
+            "x": 362,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 1
+          }
+        },
+        "bodies_3_3": {
+          "frame": {
+            "x": 573,
+            "y": 594,
+            "w": 114,
+            "h": 120
+          },
+          "row": 3,
+          "column": 3,
+          "label": "white_scout_run_right",
+          "cell": {
+            "x": 543,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5307017543859649,
+            "y": 0.9916666666666667
+          }
+        },
+        "bodies_3_4": {
+          "frame": {
+            "x": 752,
+            "y": 595,
+            "w": 115,
+            "h": 120
+          },
+          "row": 3,
+          "column": 4,
+          "label": "white_scout_run_push",
+          "cell": {
+            "x": 724,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5434782608695652,
+            "y": 0.9833333333333333
+          }
+        },
+        "bodies_3_5": {
+          "frame": {
+            "x": 936,
+            "y": 626,
+            "w": 112,
+            "h": 88
+          },
+          "row": 3,
+          "column": 5,
+          "label": "white_scout_dodge",
+          "cell": {
+            "x": 905,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.53125,
+            "y": 0.9886363636363636
+          }
+        },
+        "bodies_3_6": {
+          "frame": {
+            "x": 1123,
+            "y": 593,
+            "w": 106,
+            "h": 121
+          },
+          "row": 3,
+          "column": 6,
+          "label": "white_scout_hurt",
+          "cell": {
+            "x": 1086,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5047169811320755,
+            "y": 0.9917355371900827
+          }
+        },
+        "bodies_3_7": {
+          "frame": {
+            "x": 1297,
+            "y": 656,
+            "w": 126,
+            "h": 58
+          },
+          "row": 3,
+          "column": 7,
+          "label": "white_scout_downed",
+          "cell": {
+            "x": 1267,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.4801587301587302,
+            "y": 0.9827586206896551
+          }
+        },
+        "bodies_4_0": {
+          "frame": {
+            "x": 32,
+            "y": 767,
+            "w": 112,
+            "h": 119
+          },
+          "row": 4,
+          "column": 0,
+          "label": "white_ranger_idle",
+          "cell": {
+            "x": 0,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5223214285714286,
+            "y": 1
+          }
+        },
+        "bodies_4_1": {
+          "frame": {
+            "x": 216,
+            "y": 768,
+            "w": 109,
+            "h": 117
+          },
+          "row": 4,
+          "column": 1,
+          "label": "white_ranger_run_left",
+          "cell": {
+            "x": 181,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5091743119266054,
+            "y": 1.0085470085470085
+          }
+        },
+        "bodies_4_2": {
+          "frame": {
+            "x": 399,
+            "y": 768,
+            "w": 104,
+            "h": 122
+          },
+          "row": 4,
+          "column": 2,
+          "label": "white_ranger_run_passing",
+          "cell": {
+            "x": 362,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5144230769230769,
+            "y": 0.9672131147540983
+          }
+        },
+        "bodies_4_3": {
+          "frame": {
+            "x": 576,
+            "y": 771,
+            "w": 110,
+            "h": 118
+          },
+          "row": 4,
+          "column": 3,
+          "label": "white_ranger_run_right",
+          "cell": {
+            "x": 543,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5227272727272727,
+            "y": 0.9745762711864406
+          }
+        },
+        "bodies_4_4": {
+          "frame": {
+            "x": 753,
+            "y": 767,
+            "w": 115,
+            "h": 123
+          },
+          "row": 4,
+          "column": 4,
+          "label": "white_ranger_run_push",
+          "cell": {
+            "x": 724,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5347826086956522,
+            "y": 0.967479674796748
+          }
+        },
+        "bodies_4_5": {
+          "frame": {
+            "x": 936,
+            "y": 797,
+            "w": 114,
+            "h": 91
+          },
+          "row": 4,
+          "column": 5,
+          "label": "white_ranger_dodge",
+          "cell": {
+            "x": 905,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5219298245614035,
+            "y": 0.978021978021978
+          }
+        },
+        "bodies_4_6": {
+          "frame": {
+            "x": 1121,
+            "y": 770,
+            "w": 107,
+            "h": 121
+          },
+          "row": 4,
+          "column": 6,
+          "label": "white_ranger_hurt",
+          "cell": {
+            "x": 1086,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5186915887850467,
+            "y": 0.9586776859504132
+          }
+        },
+        "bodies_4_7": {
+          "frame": {
+            "x": 1293,
+            "y": 828,
+            "w": 131,
+            "h": 59
+          },
+          "row": 4,
+          "column": 7,
+          "label": "white_ranger_downed",
+          "cell": {
+            "x": 1267,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.49236641221374045,
+            "y": 0.9830508474576272
+          }
+        },
+        "bodies_5_0": {
+          "frame": {
+            "x": 32,
+            "y": 924,
+            "w": 113,
+            "h": 119
+          },
+          "row": 5,
+          "column": 0,
+          "label": "white_vanguard_idle",
+          "cell": {
+            "x": 0,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5176991150442478,
+            "y": 1
+          }
+        },
+        "bodies_5_1": {
+          "frame": {
+            "x": 216,
+            "y": 925,
+            "w": 110,
+            "h": 120
+          },
+          "row": 5,
+          "column": 1,
+          "label": "white_vanguard_run_left",
+          "cell": {
+            "x": 181,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5045454545454545,
+            "y": 0.9833333333333333
+          }
+        },
+        "bodies_5_2": {
+          "frame": {
+            "x": 400,
+            "y": 925,
+            "w": 104,
+            "h": 120
+          },
+          "row": 5,
+          "column": 2,
+          "label": "white_vanguard_run_passing",
+          "cell": {
+            "x": 362,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5048076923076923,
+            "y": 0.9833333333333333
+          }
+        },
+        "bodies_5_3": {
+          "frame": {
+            "x": 572,
+            "y": 928,
+            "w": 113,
+            "h": 117
+          },
+          "row": 5,
+          "column": 3,
+          "label": "white_vanguard_run_right",
+          "cell": {
+            "x": 543,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5442477876106194,
+            "y": 0.9829059829059829
+          }
+        },
+        "bodies_5_4": {
+          "frame": {
+            "x": 755,
+            "y": 924,
+            "w": 113,
+            "h": 122
+          },
+          "row": 5,
+          "column": 4,
+          "label": "white_vanguard_run_push",
+          "cell": {
+            "x": 724,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5265486725663717,
+            "y": 0.9754098360655737
+          }
+        },
+        "bodies_5_5": {
+          "frame": {
+            "x": 935,
+            "y": 954,
+            "w": 115,
+            "h": 89
+          },
+          "row": 5,
+          "column": 5,
+          "label": "white_vanguard_dodge",
+          "cell": {
+            "x": 905,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5260869565217391,
+            "y": 1
+          }
+        },
+        "bodies_5_6": {
+          "frame": {
+            "x": 1123,
+            "y": 926,
+            "w": 107,
+            "h": 120
+          },
+          "row": 5,
+          "column": 6,
+          "label": "white_vanguard_hurt",
+          "cell": {
+            "x": 1086,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.5,
+            "y": 0.975
+          }
+        },
+        "bodies_5_7": {
+          "frame": {
+            "x": 1296,
+            "y": 985,
+            "w": 124,
+            "h": 58
+          },
+          "row": 5,
+          "column": 7,
+          "label": "white_vanguard_downed",
+          "cell": {
+            "x": 1267,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "pivot": {
+            "x": 0.4959677419354839,
+            "y": 1
+          }
+        }
+      },
+      "notes": "Live player body frames use measured bounds around each main alpha component. These exact crops exclude neighboring sprites and discarded faint generation residue. Bodies are fitted to68px idle height without changing proportions. Full heads, torsos and legs; arms are rendered separately.",
+      "idleHeights": [
+        117,
+        119,
+        120,
+        121,
+        119,
+        119
+      ],
+      "sourceBaselines": [
+        172,
+        356,
+        538,
+        713,
+        886,
+        1043
+      ]
+    },
+    "arms": {
+      "image": "assets/weapons/arms.png",
+      "size": {
+        "w": 1254,
+        "h": 1254
+      },
+      "columns": 6,
+      "rows": 6,
+      "transparent": true,
+      "usage": "live",
+      "pivot": {
+        "x": "60 / frame.width",
+        "y": 0.52
+      },
+      "frames": {
+        "arms_0_0": {
+          "frame": {
+            "x": 0,
+            "y": 220,
+            "w": 190,
+            "h": 140
+          },
+          "row": 0,
+          "column": 0,
+          "label": "orange_scout_pistol",
+          "pivot": {
+            "x": 0.3157894736842105,
+            "y": 0.52
+          }
+        },
+        "arms_0_1": {
+          "frame": {
+            "x": 190,
+            "y": 220,
+            "w": 202,
+            "h": 140
+          },
+          "row": 0,
+          "column": 1,
+          "label": "orange_scout_smg_lmg",
+          "pivot": {
+            "x": 0.297029702970297,
+            "y": 0.52
+          }
+        },
+        "arms_0_2": {
+          "frame": {
+            "x": 392,
+            "y": 220,
+            "w": 244,
+            "h": 140
+          },
+          "row": 0,
+          "column": 2,
+          "label": "orange_scout_rifle_sniper_plasma_flame",
+          "pivot": {
+            "x": 0.2459016393442623,
+            "y": 0.52
+          }
+        },
+        "arms_0_3": {
+          "frame": {
+            "x": 636,
+            "y": 220,
+            "w": 201,
+            "h": 140
+          },
+          "row": 0,
+          "column": 3,
+          "label": "orange_scout_shotgun",
+          "pivot": {
+            "x": 0.29850746268656714,
+            "y": 0.52
+          }
+        },
+        "arms_0_4": {
+          "frame": {
+            "x": 837,
+            "y": 220,
+            "w": 229,
+            "h": 140
+          },
+          "row": 0,
+          "column": 4,
+          "label": "orange_scout_rocket_launcher",
+          "pivot": {
+            "x": 0.26200873362445415,
+            "y": 0.52
+          }
+        },
+        "arms_0_5": {
+          "frame": {
+            "x": 1066,
+            "y": 220,
+            "w": 188,
+            "h": 140
+          },
+          "row": 0,
+          "column": 5,
+          "label": "orange_scout_knife",
+          "pivot": {
+            "x": 0.3191489361702128,
+            "y": 0.52
+          }
+        },
+        "arms_1_0": {
+          "frame": {
+            "x": 0,
+            "y": 378,
+            "w": 190,
+            "h": 140
+          },
+          "row": 1,
+          "column": 0,
+          "label": "orange_ranger_pistol",
+          "pivot": {
+            "x": 0.3157894736842105,
+            "y": 0.52
+          }
+        },
+        "arms_1_1": {
+          "frame": {
+            "x": 190,
+            "y": 378,
+            "w": 202,
+            "h": 140
+          },
+          "row": 1,
+          "column": 1,
+          "label": "orange_ranger_smg_lmg",
+          "pivot": {
+            "x": 0.297029702970297,
+            "y": 0.52
+          }
+        },
+        "arms_1_2": {
+          "frame": {
+            "x": 392,
+            "y": 378,
+            "w": 244,
+            "h": 140
+          },
+          "row": 1,
+          "column": 2,
+          "label": "orange_ranger_rifle_sniper_plasma_flame",
+          "pivot": {
+            "x": 0.2459016393442623,
+            "y": 0.52
+          }
+        },
+        "arms_1_3": {
+          "frame": {
+            "x": 636,
+            "y": 378,
+            "w": 201,
+            "h": 140
+          },
+          "row": 1,
+          "column": 3,
+          "label": "orange_ranger_shotgun",
+          "pivot": {
+            "x": 0.29850746268656714,
+            "y": 0.52
+          }
+        },
+        "arms_1_4": {
+          "frame": {
+            "x": 837,
+            "y": 378,
+            "w": 229,
+            "h": 140
+          },
+          "row": 1,
+          "column": 4,
+          "label": "orange_ranger_rocket_launcher",
+          "pivot": {
+            "x": 0.26200873362445415,
+            "y": 0.52
+          }
+        },
+        "arms_1_5": {
+          "frame": {
+            "x": 1066,
+            "y": 378,
+            "w": 188,
+            "h": 140
+          },
+          "row": 1,
+          "column": 5,
+          "label": "orange_ranger_knife",
+          "pivot": {
+            "x": 0.3191489361702128,
+            "y": 0.52
+          }
+        },
+        "arms_2_0": {
+          "frame": {
+            "x": 0,
+            "y": 550,
+            "w": 190,
+            "h": 140
+          },
+          "row": 2,
+          "column": 0,
+          "label": "orange_vanguard_pistol",
+          "pivot": {
+            "x": 0.3157894736842105,
+            "y": 0.52
+          }
+        },
+        "arms_2_1": {
+          "frame": {
+            "x": 190,
+            "y": 550,
+            "w": 202,
+            "h": 140
+          },
+          "row": 2,
+          "column": 1,
+          "label": "orange_vanguard_smg_lmg",
+          "pivot": {
+            "x": 0.297029702970297,
+            "y": 0.52
+          }
+        },
+        "arms_2_2": {
+          "frame": {
+            "x": 392,
+            "y": 550,
+            "w": 244,
+            "h": 140
+          },
+          "row": 2,
+          "column": 2,
+          "label": "orange_vanguard_rifle_sniper_plasma_flame",
+          "pivot": {
+            "x": 0.2459016393442623,
+            "y": 0.52
+          }
+        },
+        "arms_2_3": {
+          "frame": {
+            "x": 636,
+            "y": 550,
+            "w": 201,
+            "h": 140
+          },
+          "row": 2,
+          "column": 3,
+          "label": "orange_vanguard_shotgun",
+          "pivot": {
+            "x": 0.29850746268656714,
+            "y": 0.52
+          }
+        },
+        "arms_2_4": {
+          "frame": {
+            "x": 837,
+            "y": 550,
+            "w": 229,
+            "h": 140
+          },
+          "row": 2,
+          "column": 4,
+          "label": "orange_vanguard_rocket_launcher",
+          "pivot": {
+            "x": 0.26200873362445415,
+            "y": 0.52
+          }
+        },
+        "arms_2_5": {
+          "frame": {
+            "x": 1066,
+            "y": 550,
+            "w": 188,
+            "h": 140
+          },
+          "row": 2,
+          "column": 5,
+          "label": "orange_vanguard_knife",
+          "pivot": {
+            "x": 0.3191489361702128,
+            "y": 0.52
+          }
+        },
+        "arms_3_0": {
+          "frame": {
+            "x": 0,
+            "y": 712,
+            "w": 190,
+            "h": 140
+          },
+          "row": 3,
+          "column": 0,
+          "label": "white_scout_pistol",
+          "pivot": {
+            "x": 0.3157894736842105,
+            "y": 0.52
+          }
+        },
+        "arms_3_1": {
+          "frame": {
+            "x": 190,
+            "y": 712,
+            "w": 202,
+            "h": 140
+          },
+          "row": 3,
+          "column": 1,
+          "label": "white_scout_smg_lmg",
+          "pivot": {
+            "x": 0.297029702970297,
+            "y": 0.52
+          }
+        },
+        "arms_3_2": {
+          "frame": {
+            "x": 392,
+            "y": 712,
+            "w": 244,
+            "h": 140
+          },
+          "row": 3,
+          "column": 2,
+          "label": "white_scout_rifle_sniper_plasma_flame",
+          "pivot": {
+            "x": 0.2459016393442623,
+            "y": 0.52
+          }
+        },
+        "arms_3_3": {
+          "frame": {
+            "x": 636,
+            "y": 712,
+            "w": 201,
+            "h": 140
+          },
+          "row": 3,
+          "column": 3,
+          "label": "white_scout_shotgun",
+          "pivot": {
+            "x": 0.29850746268656714,
+            "y": 0.52
+          }
+        },
+        "arms_3_4": {
+          "frame": {
+            "x": 837,
+            "y": 712,
+            "w": 229,
+            "h": 140
+          },
+          "row": 3,
+          "column": 4,
+          "label": "white_scout_rocket_launcher",
+          "pivot": {
+            "x": 0.26200873362445415,
+            "y": 0.52
+          }
+        },
+        "arms_3_5": {
+          "frame": {
+            "x": 1066,
+            "y": 712,
+            "w": 188,
+            "h": 140
+          },
+          "row": 3,
+          "column": 5,
+          "label": "white_scout_knife",
+          "pivot": {
+            "x": 0.3191489361702128,
+            "y": 0.52
+          }
+        },
+        "arms_4_0": {
+          "frame": {
+            "x": 0,
+            "y": 872,
+            "w": 190,
+            "h": 140
+          },
+          "row": 4,
+          "column": 0,
+          "label": "white_ranger_pistol",
+          "pivot": {
+            "x": 0.3157894736842105,
+            "y": 0.52
+          }
+        },
+        "arms_4_1": {
+          "frame": {
+            "x": 190,
+            "y": 872,
+            "w": 202,
+            "h": 140
+          },
+          "row": 4,
+          "column": 1,
+          "label": "white_ranger_smg_lmg",
+          "pivot": {
+            "x": 0.297029702970297,
+            "y": 0.52
+          }
+        },
+        "arms_4_2": {
+          "frame": {
+            "x": 392,
+            "y": 872,
+            "w": 244,
+            "h": 140
+          },
+          "row": 4,
+          "column": 2,
+          "label": "white_ranger_rifle_sniper_plasma_flame",
+          "pivot": {
+            "x": 0.2459016393442623,
+            "y": 0.52
+          }
+        },
+        "arms_4_3": {
+          "frame": {
+            "x": 636,
+            "y": 872,
+            "w": 201,
+            "h": 140
+          },
+          "row": 4,
+          "column": 3,
+          "label": "white_ranger_shotgun",
+          "pivot": {
+            "x": 0.29850746268656714,
+            "y": 0.52
+          }
+        },
+        "arms_4_4": {
+          "frame": {
+            "x": 837,
+            "y": 872,
+            "w": 229,
+            "h": 140
+          },
+          "row": 4,
+          "column": 4,
+          "label": "white_ranger_rocket_launcher",
+          "pivot": {
+            "x": 0.26200873362445415,
+            "y": 0.52
+          }
+        },
+        "arms_4_5": {
+          "frame": {
+            "x": 1066,
+            "y": 872,
+            "w": 188,
+            "h": 140
+          },
+          "row": 4,
+          "column": 5,
+          "label": "white_ranger_knife",
+          "pivot": {
+            "x": 0.3191489361702128,
+            "y": 0.52
+          }
+        },
+        "arms_5_0": {
+          "frame": {
+            "x": 0,
+            "y": 1043,
+            "w": 190,
+            "h": 140
+          },
+          "row": 5,
+          "column": 0,
+          "label": "white_vanguard_pistol",
+          "pivot": {
+            "x": 0.3157894736842105,
+            "y": 0.52
+          }
+        },
+        "arms_5_1": {
+          "frame": {
+            "x": 190,
+            "y": 1043,
+            "w": 202,
+            "h": 140
+          },
+          "row": 5,
+          "column": 1,
+          "label": "white_vanguard_smg_lmg",
+          "pivot": {
+            "x": 0.297029702970297,
+            "y": 0.52
+          }
+        },
+        "arms_5_2": {
+          "frame": {
+            "x": 392,
+            "y": 1043,
+            "w": 244,
+            "h": 140
+          },
+          "row": 5,
+          "column": 2,
+          "label": "white_vanguard_rifle_sniper_plasma_flame",
+          "pivot": {
+            "x": 0.2459016393442623,
+            "y": 0.52
+          }
+        },
+        "arms_5_3": {
+          "frame": {
+            "x": 636,
+            "y": 1043,
+            "w": 201,
+            "h": 140
+          },
+          "row": 5,
+          "column": 3,
+          "label": "white_vanguard_shotgun",
+          "pivot": {
+            "x": 0.29850746268656714,
+            "y": 0.52
+          }
+        },
+        "arms_5_4": {
+          "frame": {
+            "x": 837,
+            "y": 1043,
+            "w": 229,
+            "h": 140
+          },
+          "row": 5,
+          "column": 4,
+          "label": "white_vanguard_rocket_launcher",
+          "pivot": {
+            "x": 0.26200873362445415,
+            "y": 0.52
+          }
+        },
+        "arms_5_5": {
+          "frame": {
+            "x": 1066,
+            "y": 1043,
+            "w": 188,
+            "h": 140
+          },
+          "row": 5,
+          "column": 5,
+          "label": "white_vanguard_knife",
+          "pivot": {
+            "x": 0.3191489361702128,
+            "y": 0.52
+          }
+        }
+      },
+      "rowBands": [
+        220,
+        378,
+        550,
+        712,
+        872,
+        1043
+      ],
+      "notes": "Each frame is one complete arms-and-weapon assembly. Rotate about the shoulder pivot. For left aim, mirror horizontally and subtract/add pi from rotation so gun top remains upright. Run-body time is independent of firing time. Recoil and blade swing animate the arms layer.",
+      "columnBounds": [
+        [
+          0,
+          190
+        ],
+        [
+          190,
+          392
+        ],
+        [
+          392,
+          636
+        ],
+        [
+          636,
+          837
+        ],
+        [
+          837,
+          1066
+        ],
+        [
+          1066,
+          1254
+        ]
+      ],
+      "attachment": {
+        "x": "3 * facingSign",
+        "y": -11,
+        "description": "Attach to player chest; preserve upright local rotation and mirror for left aim."
+      }
+    },
+    "actors": {
+      "image": "assets/characters/actors.png",
+      "size": {
+        "w": 1254,
+        "h": 1254
+      },
+      "columns": 8,
+      "rows": 8,
+      "transparent": true,
+      "usage": "live",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.86
+      },
+      "frames": {
+        "actors_0_0": {
+          "frame": {
+            "x": 0,
+            "y": 0,
+            "w": 157,
+            "h": 157
+          },
+          "row": 0,
+          "column": 0,
+          "label": "orange_run_0"
+        },
+        "actors_0_1": {
+          "frame": {
+            "x": 157,
+            "y": 0,
+            "w": 157,
+            "h": 157
+          },
+          "row": 0,
+          "column": 1,
+          "label": "orange_run_1"
+        },
+        "actors_0_2": {
+          "frame": {
+            "x": 314,
+            "y": 0,
+            "w": 156,
+            "h": 157
+          },
+          "row": 0,
+          "column": 2,
+          "label": "orange_run_2"
+        },
+        "actors_0_3": {
+          "frame": {
+            "x": 470,
+            "y": 0,
+            "w": 157,
+            "h": 157
+          },
+          "row": 0,
+          "column": 3,
+          "label": "orange_run_3"
+        },
+        "actors_0_4": {
+          "frame": {
+            "x": 627,
+            "y": 0,
+            "w": 157,
+            "h": 157
+          },
+          "row": 0,
+          "column": 4,
+          "label": "orange_run_4"
+        },
+        "actors_0_5": {
+          "frame": {
+            "x": 784,
+            "y": 0,
+            "w": 157,
+            "h": 157
+          },
+          "row": 0,
+          "column": 5,
+          "label": "orange_run_5"
+        },
+        "actors_0_6": {
+          "frame": {
+            "x": 941,
+            "y": 0,
+            "w": 156,
+            "h": 157
+          },
+          "row": 0,
+          "column": 6,
+          "label": "orange_run_6"
+        },
+        "actors_0_7": {
+          "frame": {
+            "x": 1097,
+            "y": 0,
+            "w": 157,
+            "h": 157
+          },
+          "row": 0,
+          "column": 7,
+          "label": "orange_run_7"
+        },
+        "actors_1_0": {
+          "frame": {
+            "x": 0,
+            "y": 157,
+            "w": 157,
+            "h": 157
+          },
+          "row": 1,
+          "column": 0,
+          "label": "orange_combat_aim_1"
+        },
+        "actors_1_1": {
+          "frame": {
+            "x": 157,
+            "y": 157,
+            "w": 157,
+            "h": 157
+          },
+          "row": 1,
+          "column": 1,
+          "label": "orange_combat_aim_2"
+        },
+        "actors_1_2": {
+          "frame": {
+            "x": 314,
+            "y": 157,
+            "w": 156,
+            "h": 157
+          },
+          "row": 1,
+          "column": 2,
+          "label": "orange_combat_shoot_1"
+        },
+        "actors_1_3": {
+          "frame": {
+            "x": 470,
+            "y": 157,
+            "w": 157,
+            "h": 157
+          },
+          "row": 1,
+          "column": 3,
+          "label": "orange_combat_shoot_2"
+        },
+        "actors_1_4": {
+          "frame": {
+            "x": 627,
+            "y": 157,
+            "w": 157,
+            "h": 157
+          },
+          "row": 1,
+          "column": 4,
+          "label": "orange_combat_knife_windup"
+        },
+        "actors_1_5": {
+          "frame": {
+            "x": 784,
+            "y": 157,
+            "w": 157,
+            "h": 157
+          },
+          "row": 1,
+          "column": 5,
+          "label": "orange_combat_knife_followthrough"
+        },
+        "actors_1_6": {
+          "frame": {
+            "x": 941,
+            "y": 157,
+            "w": 156,
+            "h": 157
+          },
+          "row": 1,
+          "column": 6,
+          "label": "orange_combat_reload"
+        },
+        "actors_1_7": {
+          "frame": {
+            "x": 1097,
+            "y": 157,
+            "w": 157,
+            "h": 157
+          },
+          "row": 1,
+          "column": 7,
+          "label": "orange_combat_hurt"
+        },
+        "actors_2_0": {
+          "frame": {
+            "x": 0,
+            "y": 314,
+            "w": 157,
+            "h": 156
+          },
+          "row": 2,
+          "column": 0,
+          "label": "white_run_0"
+        },
+        "actors_2_1": {
+          "frame": {
+            "x": 157,
+            "y": 314,
+            "w": 157,
+            "h": 156
+          },
+          "row": 2,
+          "column": 1,
+          "label": "white_run_1"
+        },
+        "actors_2_2": {
+          "frame": {
+            "x": 314,
+            "y": 314,
+            "w": 156,
+            "h": 156
+          },
+          "row": 2,
+          "column": 2,
+          "label": "white_run_2"
+        },
+        "actors_2_3": {
+          "frame": {
+            "x": 470,
+            "y": 314,
+            "w": 157,
+            "h": 156
+          },
+          "row": 2,
+          "column": 3,
+          "label": "white_run_3"
+        },
+        "actors_2_4": {
+          "frame": {
+            "x": 627,
+            "y": 314,
+            "w": 157,
+            "h": 156
+          },
+          "row": 2,
+          "column": 4,
+          "label": "white_run_4"
+        },
+        "actors_2_5": {
+          "frame": {
+            "x": 784,
+            "y": 314,
+            "w": 157,
+            "h": 156
+          },
+          "row": 2,
+          "column": 5,
+          "label": "white_run_5"
+        },
+        "actors_2_6": {
+          "frame": {
+            "x": 941,
+            "y": 314,
+            "w": 156,
+            "h": 156
+          },
+          "row": 2,
+          "column": 6,
+          "label": "white_run_6"
+        },
+        "actors_2_7": {
+          "frame": {
+            "x": 1097,
+            "y": 314,
+            "w": 157,
+            "h": 156
+          },
+          "row": 2,
+          "column": 7,
+          "label": "white_run_7"
+        },
+        "actors_3_0": {
+          "frame": {
+            "x": 0,
+            "y": 470,
+            "w": 157,
+            "h": 157
+          },
+          "row": 3,
+          "column": 0,
+          "label": "white_combat_aim_1"
+        },
+        "actors_3_1": {
+          "frame": {
+            "x": 157,
+            "y": 470,
+            "w": 157,
+            "h": 157
+          },
+          "row": 3,
+          "column": 1,
+          "label": "white_combat_aim_2"
+        },
+        "actors_3_2": {
+          "frame": {
+            "x": 314,
+            "y": 470,
+            "w": 156,
+            "h": 157
+          },
+          "row": 3,
+          "column": 2,
+          "label": "white_combat_shoot_1"
+        },
+        "actors_3_3": {
+          "frame": {
+            "x": 470,
+            "y": 470,
+            "w": 157,
+            "h": 157
+          },
+          "row": 3,
+          "column": 3,
+          "label": "white_combat_shoot_2"
+        },
+        "actors_3_4": {
+          "frame": {
+            "x": 627,
+            "y": 470,
+            "w": 157,
+            "h": 157
+          },
+          "row": 3,
+          "column": 4,
+          "label": "white_combat_knife_windup"
+        },
+        "actors_3_5": {
+          "frame": {
+            "x": 784,
+            "y": 470,
+            "w": 157,
+            "h": 157
+          },
+          "row": 3,
+          "column": 5,
+          "label": "white_combat_knife_followthrough"
+        },
+        "actors_3_6": {
+          "frame": {
+            "x": 941,
+            "y": 470,
+            "w": 156,
+            "h": 157
+          },
+          "row": 3,
+          "column": 6,
+          "label": "white_combat_reload"
+        },
+        "actors_3_7": {
+          "frame": {
+            "x": 1097,
+            "y": 470,
+            "w": 157,
+            "h": 157
+          },
+          "row": 3,
+          "column": 7,
+          "label": "white_combat_hurt"
+        },
+        "actors_4_0": {
+          "frame": {
+            "x": 0,
+            "y": 627,
+            "w": 157,
+            "h": 157
+          },
+          "row": 4,
+          "column": 0,
+          "label": "mouse_run_0"
+        },
+        "actors_4_1": {
+          "frame": {
+            "x": 157,
+            "y": 627,
+            "w": 157,
+            "h": 157
+          },
+          "row": 4,
+          "column": 1,
+          "label": "mouse_run_1"
+        },
+        "actors_4_2": {
+          "frame": {
+            "x": 314,
+            "y": 627,
+            "w": 156,
+            "h": 157
+          },
+          "row": 4,
+          "column": 2,
+          "label": "mouse_run_2"
+        },
+        "actors_4_3": {
+          "frame": {
+            "x": 470,
+            "y": 627,
+            "w": 157,
+            "h": 157
+          },
+          "row": 4,
+          "column": 3,
+          "label": "mouse_run_3"
+        },
+        "actors_4_4": {
+          "frame": {
+            "x": 627,
+            "y": 627,
+            "w": 157,
+            "h": 157
+          },
+          "row": 4,
+          "column": 4,
+          "label": "mouse_run_4"
+        },
+        "actors_4_5": {
+          "frame": {
+            "x": 784,
+            "y": 627,
+            "w": 157,
+            "h": 157
+          },
+          "row": 4,
+          "column": 5,
+          "label": "mouse_run_5"
+        },
+        "actors_4_6": {
+          "frame": {
+            "x": 941,
+            "y": 627,
+            "w": 156,
+            "h": 157
+          },
+          "row": 4,
+          "column": 6,
+          "label": "mouse_run_6"
+        },
+        "actors_4_7": {
+          "frame": {
+            "x": 1097,
+            "y": 627,
+            "w": 157,
+            "h": 157
+          },
+          "row": 4,
+          "column": 7,
+          "label": "mouse_run_7"
+        },
+        "actors_5_0": {
+          "frame": {
+            "x": 0,
+            "y": 784,
+            "w": 157,
+            "h": 157
+          },
+          "row": 5,
+          "column": 0,
+          "label": "mouse_combat_aim_1"
+        },
+        "actors_5_1": {
+          "frame": {
+            "x": 157,
+            "y": 784,
+            "w": 157,
+            "h": 157
+          },
+          "row": 5,
+          "column": 1,
+          "label": "mouse_combat_aim_2"
+        },
+        "actors_5_2": {
+          "frame": {
+            "x": 314,
+            "y": 784,
+            "w": 156,
+            "h": 157
+          },
+          "row": 5,
+          "column": 2,
+          "label": "mouse_combat_shoot_1"
+        },
+        "actors_5_3": {
+          "frame": {
+            "x": 470,
+            "y": 784,
+            "w": 157,
+            "h": 157
+          },
+          "row": 5,
+          "column": 3,
+          "label": "mouse_combat_shoot_2"
+        },
+        "actors_5_4": {
+          "frame": {
+            "x": 627,
+            "y": 784,
+            "w": 157,
+            "h": 157
+          },
+          "row": 5,
+          "column": 4,
+          "label": "mouse_combat_knife_windup"
+        },
+        "actors_5_5": {
+          "frame": {
+            "x": 784,
+            "y": 784,
+            "w": 157,
+            "h": 157
+          },
+          "row": 5,
+          "column": 5,
+          "label": "mouse_combat_knife_followthrough"
+        },
+        "actors_5_6": {
+          "frame": {
+            "x": 941,
+            "y": 784,
+            "w": 156,
+            "h": 157
+          },
+          "row": 5,
+          "column": 6,
+          "label": "mouse_combat_reload"
+        },
+        "actors_5_7": {
+          "frame": {
+            "x": 1097,
+            "y": 784,
+            "w": 157,
+            "h": 157
+          },
+          "row": 5,
+          "column": 7,
+          "label": "mouse_combat_hurt"
+        },
+        "actors_6_0": {
+          "frame": {
+            "x": 0,
+            "y": 941,
+            "w": 157,
+            "h": 156
+          },
+          "row": 6,
+          "column": 0,
+          "label": "officer_run_0"
+        },
+        "actors_6_1": {
+          "frame": {
+            "x": 157,
+            "y": 941,
+            "w": 157,
+            "h": 156
+          },
+          "row": 6,
+          "column": 1,
+          "label": "officer_run_1"
+        },
+        "actors_6_2": {
+          "frame": {
+            "x": 314,
+            "y": 941,
+            "w": 156,
+            "h": 156
+          },
+          "row": 6,
+          "column": 2,
+          "label": "officer_run_2"
+        },
+        "actors_6_3": {
+          "frame": {
+            "x": 470,
+            "y": 941,
+            "w": 157,
+            "h": 156
+          },
+          "row": 6,
+          "column": 3,
+          "label": "officer_run_3"
+        },
+        "actors_6_4": {
+          "frame": {
+            "x": 627,
+            "y": 941,
+            "w": 157,
+            "h": 156
+          },
+          "row": 6,
+          "column": 4,
+          "label": "officer_run_4"
+        },
+        "actors_6_5": {
+          "frame": {
+            "x": 784,
+            "y": 941,
+            "w": 157,
+            "h": 156
+          },
+          "row": 6,
+          "column": 5,
+          "label": "officer_run_5"
+        },
+        "actors_6_6": {
+          "frame": {
+            "x": 941,
+            "y": 941,
+            "w": 156,
+            "h": 156
+          },
+          "row": 6,
+          "column": 6,
+          "label": "officer_run_6"
+        },
+        "actors_6_7": {
+          "frame": {
+            "x": 1097,
+            "y": 941,
+            "w": 157,
+            "h": 156
+          },
+          "row": 6,
+          "column": 7,
+          "label": "officer_run_7"
+        },
+        "actors_7_0": {
+          "frame": {
+            "x": 0,
+            "y": 1097,
+            "w": 157,
+            "h": 157
+          },
+          "row": 7,
+          "column": 0,
+          "label": "officer_combat_aim_1"
+        },
+        "actors_7_1": {
+          "frame": {
+            "x": 157,
+            "y": 1097,
+            "w": 157,
+            "h": 157
+          },
+          "row": 7,
+          "column": 1,
+          "label": "officer_combat_aim_2"
+        },
+        "actors_7_2": {
+          "frame": {
+            "x": 314,
+            "y": 1097,
+            "w": 156,
+            "h": 157
+          },
+          "row": 7,
+          "column": 2,
+          "label": "officer_combat_shoot_1"
+        },
+        "actors_7_3": {
+          "frame": {
+            "x": 470,
+            "y": 1097,
+            "w": 157,
+            "h": 157
+          },
+          "row": 7,
+          "column": 3,
+          "label": "officer_combat_shoot_2"
+        },
+        "actors_7_4": {
+          "frame": {
+            "x": 627,
+            "y": 1097,
+            "w": 157,
+            "h": 157
+          },
+          "row": 7,
+          "column": 4,
+          "label": "officer_combat_knife_windup"
+        },
+        "actors_7_5": {
+          "frame": {
+            "x": 784,
+            "y": 1097,
+            "w": 157,
+            "h": 157
+          },
+          "row": 7,
+          "column": 5,
+          "label": "officer_combat_knife_followthrough"
+        },
+        "actors_7_6": {
+          "frame": {
+            "x": 941,
+            "y": 1097,
+            "w": 156,
+            "h": 157
+          },
+          "row": 7,
+          "column": 6,
+          "label": "officer_combat_reload"
+        },
+        "actors_7_7": {
+          "frame": {
+            "x": 1097,
+            "y": 1097,
+            "w": 157,
+            "h": 157
+          },
+          "row": 7,
+          "column": 7,
+          "label": "officer_combat_hurt"
+        }
+      }
+    },
+    "scenery": {
+      "image": "assets/buildings/scenery.png",
+      "size": {
+        "w": 1536,
+        "h": 1024
+      },
+      "columns": 6,
+      "rows": 4,
+      "transparent": true,
+      "usage": "live",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.83
+      },
+      "frames": {
+        "scenery_0_0": {
+          "frame": {
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 256
+          },
+          "row": 0,
+          "column": 0,
+          "label": "oak"
+        },
+        "scenery_0_1": {
+          "frame": {
+            "x": 256,
+            "y": 0,
+            "w": 256,
+            "h": 256
+          },
+          "row": 0,
+          "column": 1,
+          "label": "pine"
+        },
+        "scenery_0_2": {
+          "frame": {
+            "x": 512,
+            "y": 0,
+            "w": 256,
+            "h": 256
+          },
+          "row": 0,
+          "column": 2,
+          "label": "autumn_oak"
+        },
+        "scenery_0_3": {
+          "frame": {
+            "x": 768,
+            "y": 0,
+            "w": 256,
+            "h": 256
+          },
+          "row": 0,
+          "column": 3,
+          "label": "snow_spruce"
+        },
+        "scenery_0_4": {
+          "frame": {
+            "x": 1024,
+            "y": 0,
+            "w": 256,
+            "h": 256
+          },
+          "row": 0,
+          "column": 4,
+          "label": "palms"
+        },
+        "scenery_0_5": {
+          "frame": {
+            "x": 1280,
+            "y": 0,
+            "w": 256,
+            "h": 256
+          },
+          "row": 0,
+          "column": 5,
+          "label": "mountain_crag"
+        },
+        "scenery_1_0": {
+          "frame": {
+            "x": 0,
+            "y": 256,
+            "w": 256,
+            "h": 256
+          },
+          "row": 1,
+          "column": 0,
+          "label": "cottage"
+        },
+        "scenery_1_1": {
+          "frame": {
+            "x": 256,
+            "y": 256,
+            "w": 256,
+            "h": 256
+          },
+          "row": 1,
+          "column": 1,
+          "label": "shop"
+        },
+        "scenery_1_2": {
+          "frame": {
+            "x": 512,
+            "y": 256,
+            "w": 256,
+            "h": 256
+          },
+          "row": 1,
+          "column": 2,
+          "label": "military_tent"
+        },
+        "scenery_1_3": {
+          "frame": {
+            "x": 768,
+            "y": 256,
+            "w": 256,
+            "h": 256
+          },
+          "row": 1,
+          "column": 3,
+          "label": "bunker"
+        },
+        "scenery_1_4": {
+          "frame": {
+            "x": 1024,
+            "y": 256,
+            "w": 256,
+            "h": 256
+          },
+          "row": 1,
+          "column": 4,
+          "label": "guard_tower"
+        },
+        "scenery_1_5": {
+          "frame": {
+            "x": 1280,
+            "y": 256,
+            "w": 256,
+            "h": 256
+          },
+          "row": 1,
+          "column": 5,
+          "label": "factory"
+        },
+        "scenery_2_0": {
+          "frame": {
+            "x": 0,
+            "y": 512,
+            "w": 256,
+            "h": 256
+          },
+          "row": 2,
+          "column": 0,
+          "label": "cliff"
+        },
+        "scenery_2_1": {
+          "frame": {
+            "x": 256,
+            "y": 512,
+            "w": 256,
+            "h": 256
+          },
+          "row": 2,
+          "column": 1,
+          "label": "bridge"
+        },
+        "scenery_2_2": {
+          "frame": {
+            "x": 512,
+            "y": 512,
+            "w": 256,
+            "h": 256
+          },
+          "row": 2,
+          "column": 2,
+          "label": "sandbags"
+        },
+        "scenery_2_3": {
+          "frame": {
+            "x": 768,
+            "y": 512,
+            "w": 256,
+            "h": 256
+          },
+          "row": 2,
+          "column": 3,
+          "label": "artillery"
+        },
+        "scenery_2_4": {
+          "frame": {
+            "x": 1024,
+            "y": 512,
+            "w": 256,
+            "h": 256
+          },
+          "row": 2,
+          "column": 4,
+          "label": "radio_tower"
+        },
+        "scenery_2_5": {
+          "frame": {
+            "x": 1280,
+            "y": 512,
+            "w": 256,
+            "h": 256
+          },
+          "row": 2,
+          "column": 5,
+          "label": "tank"
+        },
+        "scenery_3_0": {
+          "frame": {
+            "x": 0,
+            "y": 768,
+            "w": 256,
+            "h": 256
+          },
+          "row": 3,
+          "column": 0,
+          "label": "boulder"
+        },
+        "scenery_3_1": {
+          "frame": {
+            "x": 256,
+            "y": 768,
+            "w": 256,
+            "h": 256
+          },
+          "row": 3,
+          "column": 1,
+          "label": "bush"
+        },
+        "scenery_3_2": {
+          "frame": {
+            "x": 512,
+            "y": 768,
+            "w": 256,
+            "h": 256
+          },
+          "row": 3,
+          "column": 2,
+          "label": "chest"
+        },
+        "scenery_3_3": {
+          "frame": {
+            "x": 768,
+            "y": 768,
+            "w": 256,
+            "h": 256
+          },
+          "row": 3,
+          "column": 3,
+          "label": "crate"
+        },
+        "scenery_3_4": {
+          "frame": {
+            "x": 1024,
+            "y": 768,
+            "w": 256,
+            "h": 256
+          },
+          "row": 3,
+          "column": 4,
+          "label": "windmill"
+        },
+        "scenery_3_5": {
+          "frame": {
+            "x": 1280,
+            "y": 768,
+            "w": 256,
+            "h": 256
+          },
+          "row": 3,
+          "column": 5,
+          "label": "ruin"
+        }
+      }
+    },
+    "landmarks": {
+      "image": "assets/buildings/landmarks.png",
+      "size": {
+        "w": 1774,
+        "h": 887
+      },
+      "columns": 4,
+      "rows": 2,
+      "transparent": true,
+      "usage": "live",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.82
+      },
+      "frames": {
+        "landmarks_0_0": {
+          "frame": {
+            "x": 0,
+            "y": 0,
+            "w": 444,
+            "h": 444
+          },
+          "row": 0,
+          "column": 0,
+          "label": "fortress"
+        },
+        "landmarks_0_1": {
+          "frame": {
+            "x": 444,
+            "y": 0,
+            "w": 443,
+            "h": 444
+          },
+          "row": 0,
+          "column": 1,
+          "label": "cave"
+        },
+        "landmarks_0_2": {
+          "frame": {
+            "x": 887,
+            "y": 0,
+            "w": 444,
+            "h": 444
+          },
+          "row": 0,
+          "column": 2,
+          "label": "prison"
+        },
+        "landmarks_0_3": {
+          "frame": {
+            "x": 1331,
+            "y": 0,
+            "w": 443,
+            "h": 444
+          },
+          "row": 0,
+          "column": 3,
+          "label": "truck"
+        },
+        "landmarks_1_0": {
+          "frame": {
+            "x": 0,
+            "y": 444,
+            "w": 444,
+            "h": 443
+          },
+          "row": 1,
+          "column": 0,
+          "label": "merchant"
+        },
+        "landmarks_1_1": {
+          "frame": {
+            "x": 444,
+            "y": 444,
+            "w": 443,
+            "h": 443
+          },
+          "row": 1,
+          "column": 1,
+          "label": "farm"
+        },
+        "landmarks_1_2": {
+          "frame": {
+            "x": 887,
+            "y": 444,
+            "w": 444,
+            "h": 443
+          },
+          "row": 1,
+          "column": 2,
+          "label": "war_machine"
+        },
+        "landmarks_1_3": {
+          "frame": {
+            "x": 1331,
+            "y": 444,
+            "w": 443,
+            "h": 443
+          },
+          "row": 1,
+          "column": 3,
+          "label": "willow"
+        }
+      }
+    },
+    "items": {
+      "image": "assets/weapons/items.png",
+      "size": {
+        "w": 1774,
+        "h": 887
+      },
+      "columns": 8,
+      "rows": 4,
+      "transparent": true,
+      "usage": "live",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "frames": {
+        "items_0_0": {
+          "frame": {
+            "x": 0,
+            "y": 0,
+            "w": 222,
+            "h": 222
+          },
+          "row": 0,
+          "column": 0,
+          "label": "pistol"
+        },
+        "items_0_1": {
+          "frame": {
+            "x": 222,
+            "y": 0,
+            "w": 222,
+            "h": 222
+          },
+          "row": 0,
+          "column": 1,
+          "label": "revolver"
+        },
+        "items_0_2": {
+          "frame": {
+            "x": 444,
+            "y": 0,
+            "w": 221,
+            "h": 222
+          },
+          "row": 0,
+          "column": 2,
+          "label": "smg"
+        },
+        "items_0_3": {
+          "frame": {
+            "x": 665,
+            "y": 0,
+            "w": 222,
+            "h": 222
+          },
+          "row": 0,
+          "column": 3,
+          "label": "rifle"
+        },
+        "items_0_4": {
+          "frame": {
+            "x": 887,
+            "y": 0,
+            "w": 222,
+            "h": 222
+          },
+          "row": 0,
+          "column": 4,
+          "label": "shotgun"
+        },
+        "items_0_5": {
+          "frame": {
+            "x": 1109,
+            "y": 0,
+            "w": 222,
+            "h": 222
+          },
+          "row": 0,
+          "column": 5,
+          "label": "sniper"
+        },
+        "items_0_6": {
+          "frame": {
+            "x": 1331,
+            "y": 0,
+            "w": 221,
+            "h": 222
+          },
+          "row": 0,
+          "column": 6,
+          "label": "lmg"
+        },
+        "items_0_7": {
+          "frame": {
+            "x": 1552,
+            "y": 0,
+            "w": 222,
+            "h": 222
+          },
+          "row": 0,
+          "column": 7,
+          "label": "rocket"
+        },
+        "items_1_0": {
+          "frame": {
+            "x": 0,
+            "y": 222,
+            "w": 222,
+            "h": 222
+          },
+          "row": 1,
+          "column": 0,
+          "label": "knife"
+        },
+        "items_1_1": {
+          "frame": {
+            "x": 222,
+            "y": 222,
+            "w": 222,
+            "h": 222
+          },
+          "row": 1,
+          "column": 1,
+          "label": "machete"
+        },
+        "items_1_2": {
+          "frame": {
+            "x": 444,
+            "y": 222,
+            "w": 221,
+            "h": 222
+          },
+          "row": 1,
+          "column": 2,
+          "label": "dual_daggers"
+        },
+        "items_1_3": {
+          "frame": {
+            "x": 665,
+            "y": 222,
+            "w": 222,
+            "h": 222
+          },
+          "row": 1,
+          "column": 3,
+          "label": "electric_blade"
+        },
+        "items_1_4": {
+          "frame": {
+            "x": 887,
+            "y": 222,
+            "w": 222,
+            "h": 222
+          },
+          "row": 1,
+          "column": 4,
+          "label": "grenade"
+        },
+        "items_1_5": {
+          "frame": {
+            "x": 1109,
+            "y": 222,
+            "w": 222,
+            "h": 222
+          },
+          "row": 1,
+          "column": 5,
+          "label": "helmet"
+        },
+        "items_1_6": {
+          "frame": {
+            "x": 1331,
+            "y": 222,
+            "w": 221,
+            "h": 222
+          },
+          "row": 1,
+          "column": 6,
+          "label": "vest"
+        },
+        "items_1_7": {
+          "frame": {
+            "x": 1552,
+            "y": 222,
+            "w": 222,
+            "h": 222
+          },
+          "row": 1,
+          "column": 7,
+          "label": "aircraft"
+        },
+        "items_2_0": {
+          "frame": {
+            "x": 0,
+            "y": 444,
+            "w": 222,
+            "h": 221
+          },
+          "row": 2,
+          "column": 0,
+          "label": "explosion_0"
+        },
+        "items_2_1": {
+          "frame": {
+            "x": 222,
+            "y": 444,
+            "w": 222,
+            "h": 221
+          },
+          "row": 2,
+          "column": 1,
+          "label": "explosion_1"
+        },
+        "items_2_2": {
+          "frame": {
+            "x": 444,
+            "y": 444,
+            "w": 221,
+            "h": 221
+          },
+          "row": 2,
+          "column": 2,
+          "label": "explosion_2"
+        },
+        "items_2_3": {
+          "frame": {
+            "x": 665,
+            "y": 444,
+            "w": 222,
+            "h": 221
+          },
+          "row": 2,
+          "column": 3,
+          "label": "explosion_3"
+        },
+        "items_2_4": {
+          "frame": {
+            "x": 887,
+            "y": 444,
+            "w": 222,
+            "h": 221
+          },
+          "row": 2,
+          "column": 4,
+          "label": "explosion_4"
+        },
+        "items_2_5": {
+          "frame": {
+            "x": 1109,
+            "y": 444,
+            "w": 222,
+            "h": 221
+          },
+          "row": 2,
+          "column": 5,
+          "label": "explosion_5"
+        },
+        "items_2_6": {
+          "frame": {
+            "x": 1331,
+            "y": 444,
+            "w": 221,
+            "h": 221
+          },
+          "row": 2,
+          "column": 6,
+          "label": "explosion_6"
+        },
+        "items_2_7": {
+          "frame": {
+            "x": 1552,
+            "y": 444,
+            "w": 222,
+            "h": 221
+          },
+          "row": 2,
+          "column": 7,
+          "label": "explosion_7"
+        },
+        "items_3_0": {
+          "frame": {
+            "x": 0,
+            "y": 665,
+            "w": 222,
+            "h": 222
+          },
+          "row": 3,
+          "column": 0,
+          "label": "medical"
+        },
+        "items_3_1": {
+          "frame": {
+            "x": 222,
+            "y": 665,
+            "w": 222,
+            "h": 222
+          },
+          "row": 3,
+          "column": 1,
+          "label": "ammo"
+        },
+        "items_3_2": {
+          "frame": {
+            "x": 444,
+            "y": 665,
+            "w": 221,
+            "h": 222
+          },
+          "row": 3,
+          "column": 2,
+          "label": "gold"
+        },
+        "items_3_3": {
+          "frame": {
+            "x": 665,
+            "y": 665,
+            "w": 222,
+            "h": 222
+          },
+          "row": 3,
+          "column": 3,
+          "label": "crystal"
+        },
+        "items_3_4": {
+          "frame": {
+            "x": 887,
+            "y": 665,
+            "w": 222,
+            "h": 222
+          },
+          "row": 3,
+          "column": 4,
+          "label": "muzzle"
+        },
+        "items_3_5": {
+          "frame": {
+            "x": 1109,
+            "y": 665,
+            "w": 222,
+            "h": 222
+          },
+          "row": 3,
+          "column": 5,
+          "label": "heal"
+        },
+        "items_3_6": {
+          "frame": {
+            "x": 1331,
+            "y": 665,
+            "w": 221,
+            "h": 222
+          },
+          "row": 3,
+          "column": 6,
+          "label": "loot_beacon"
+        },
+        "items_3_7": {
+          "frame": {
+            "x": 1552,
+            "y": 665,
+            "w": 222,
+            "h": 222
+          },
+          "row": 3,
+          "column": 7,
+          "label": "impact"
+        }
+      }
+    },
+    "terrain": {
+      "image": "assets/terrain/terrain.png",
+      "size": {
+        "w": 1774,
+        "h": 887
+      },
+      "columns": 4,
+      "rows": 2,
+      "transparent": false,
+      "usage": "live",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "frames": {
+        "terrain_0_0": {
+          "frame": {
+            "x": 0,
+            "y": 0,
+            "w": 444,
+            "h": 444
+          },
+          "row": 0,
+          "column": 0,
+          "label": "grass"
+        },
+        "terrain_0_1": {
+          "frame": {
+            "x": 444,
+            "y": 0,
+            "w": 443,
+            "h": 444
+          },
+          "row": 0,
+          "column": 1,
+          "label": "forest"
+        },
+        "terrain_0_2": {
+          "frame": {
+            "x": 887,
+            "y": 0,
+            "w": 444,
+            "h": 444
+          },
+          "row": 0,
+          "column": 2,
+          "label": "mountain"
+        },
+        "terrain_0_3": {
+          "frame": {
+            "x": 1331,
+            "y": 0,
+            "w": 443,
+            "h": 444
+          },
+          "row": 0,
+          "column": 3,
+          "label": "desert"
+        },
+        "terrain_1_0": {
+          "frame": {
+            "x": 0,
+            "y": 444,
+            "w": 444,
+            "h": 443
+          },
+          "row": 1,
+          "column": 0,
+          "label": "snow"
+        },
+        "terrain_1_1": {
+          "frame": {
+            "x": 444,
+            "y": 444,
+            "w": 443,
+            "h": 443
+          },
+          "row": 1,
+          "column": 1,
+          "label": "marsh"
+        },
+        "terrain_1_2": {
+          "frame": {
+            "x": 887,
+            "y": 444,
+            "w": 444,
+            "h": 443
+          },
+          "row": 1,
+          "column": 2,
+          "label": "industrial_fortress"
+        },
+        "terrain_1_3": {
+          "frame": {
+            "x": 1331,
+            "y": 444,
+            "w": 443,
+            "h": 443
+          },
+          "row": 1,
+          "column": 3,
+          "label": "water"
+        }
+      },
+      "notes": "Opaque edge-to-edge ground textures; rivers and roads use independent smooth path overlays."
+    },
+    "specialists": {
+      "image": "assets/enemies/specialists.png",
+      "size": {
+        "w": 1448,
+        "h": 1086
+      },
+      "columns": 8,
+      "rows": 6,
+      "transparent": true,
+      "usage": "live",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.86
+      },
+      "frames": {
+        "specialists_0_0": {
+          "frame": {
+            "x": 0,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "row": 0,
+          "column": 0,
+          "label": "leaper_idle"
+        },
+        "specialists_0_1": {
+          "frame": {
+            "x": 181,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "row": 0,
+          "column": 1,
+          "label": "leaper_run_a"
+        },
+        "specialists_0_2": {
+          "frame": {
+            "x": 362,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "row": 0,
+          "column": 2,
+          "label": "leaper_run_b"
+        },
+        "specialists_0_3": {
+          "frame": {
+            "x": 543,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "row": 0,
+          "column": 3,
+          "label": "leaper_windup"
+        },
+        "specialists_0_4": {
+          "frame": {
+            "x": 724,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "row": 0,
+          "column": 4,
+          "label": "leaper_jump_charge"
+        },
+        "specialists_0_5": {
+          "frame": {
+            "x": 905,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "row": 0,
+          "column": 5,
+          "label": "leaper_attack"
+        },
+        "specialists_0_6": {
+          "frame": {
+            "x": 1086,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "row": 0,
+          "column": 6,
+          "label": "leaper_land_recover"
+        },
+        "specialists_0_7": {
+          "frame": {
+            "x": 1267,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "row": 0,
+          "column": 7,
+          "label": "leaper_hurt"
+        },
+        "specialists_1_0": {
+          "frame": {
+            "x": 0,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "row": 1,
+          "column": 0,
+          "label": "bruiser_idle"
+        },
+        "specialists_1_1": {
+          "frame": {
+            "x": 181,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "row": 1,
+          "column": 1,
+          "label": "bruiser_run_a"
+        },
+        "specialists_1_2": {
+          "frame": {
+            "x": 362,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "row": 1,
+          "column": 2,
+          "label": "bruiser_run_b"
+        },
+        "specialists_1_3": {
+          "frame": {
+            "x": 543,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "row": 1,
+          "column": 3,
+          "label": "bruiser_windup"
+        },
+        "specialists_1_4": {
+          "frame": {
+            "x": 724,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "row": 1,
+          "column": 4,
+          "label": "bruiser_jump_charge"
+        },
+        "specialists_1_5": {
+          "frame": {
+            "x": 905,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "row": 1,
+          "column": 5,
+          "label": "bruiser_attack"
+        },
+        "specialists_1_6": {
+          "frame": {
+            "x": 1086,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "row": 1,
+          "column": 6,
+          "label": "bruiser_land_recover"
+        },
+        "specialists_1_7": {
+          "frame": {
+            "x": 1267,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "row": 1,
+          "column": 7,
+          "label": "bruiser_hurt"
+        },
+        "specialists_2_0": {
+          "frame": {
+            "x": 0,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "row": 2,
+          "column": 0,
+          "label": "mortar_idle"
+        },
+        "specialists_2_1": {
+          "frame": {
+            "x": 181,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "row": 2,
+          "column": 1,
+          "label": "mortar_run_a"
+        },
+        "specialists_2_2": {
+          "frame": {
+            "x": 362,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "row": 2,
+          "column": 2,
+          "label": "mortar_run_b"
+        },
+        "specialists_2_3": {
+          "frame": {
+            "x": 543,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "row": 2,
+          "column": 3,
+          "label": "mortar_windup"
+        },
+        "specialists_2_4": {
+          "frame": {
+            "x": 724,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "row": 2,
+          "column": 4,
+          "label": "mortar_jump_charge"
+        },
+        "specialists_2_5": {
+          "frame": {
+            "x": 905,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "row": 2,
+          "column": 5,
+          "label": "mortar_attack"
+        },
+        "specialists_2_6": {
+          "frame": {
+            "x": 1086,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "row": 2,
+          "column": 6,
+          "label": "mortar_land_recover"
+        },
+        "specialists_2_7": {
+          "frame": {
+            "x": 1267,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "row": 2,
+          "column": 7,
+          "label": "mortar_hurt"
+        },
+        "specialists_3_0": {
+          "frame": {
+            "x": 0,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "row": 3,
+          "column": 0,
+          "label": "sapper_idle"
+        },
+        "specialists_3_1": {
+          "frame": {
+            "x": 181,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "row": 3,
+          "column": 1,
+          "label": "sapper_run_a"
+        },
+        "specialists_3_2": {
+          "frame": {
+            "x": 362,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "row": 3,
+          "column": 2,
+          "label": "sapper_run_b"
+        },
+        "specialists_3_3": {
+          "frame": {
+            "x": 543,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "row": 3,
+          "column": 3,
+          "label": "sapper_windup"
+        },
+        "specialists_3_4": {
+          "frame": {
+            "x": 724,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "row": 3,
+          "column": 4,
+          "label": "sapper_jump_charge"
+        },
+        "specialists_3_5": {
+          "frame": {
+            "x": 905,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "row": 3,
+          "column": 5,
+          "label": "sapper_attack"
+        },
+        "specialists_3_6": {
+          "frame": {
+            "x": 1086,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "row": 3,
+          "column": 6,
+          "label": "sapper_land_recover"
+        },
+        "specialists_3_7": {
+          "frame": {
+            "x": 1267,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "row": 3,
+          "column": 7,
+          "label": "sapper_hurt"
+        },
+        "specialists_4_0": {
+          "frame": {
+            "x": 0,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "row": 4,
+          "column": 0,
+          "label": "skirmisher_idle"
+        },
+        "specialists_4_1": {
+          "frame": {
+            "x": 181,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "row": 4,
+          "column": 1,
+          "label": "skirmisher_run_a"
+        },
+        "specialists_4_2": {
+          "frame": {
+            "x": 362,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "row": 4,
+          "column": 2,
+          "label": "skirmisher_run_b"
+        },
+        "specialists_4_3": {
+          "frame": {
+            "x": 543,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "row": 4,
+          "column": 3,
+          "label": "skirmisher_windup"
+        },
+        "specialists_4_4": {
+          "frame": {
+            "x": 724,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "row": 4,
+          "column": 4,
+          "label": "skirmisher_jump_charge"
+        },
+        "specialists_4_5": {
+          "frame": {
+            "x": 905,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "row": 4,
+          "column": 5,
+          "label": "skirmisher_attack"
+        },
+        "specialists_4_6": {
+          "frame": {
+            "x": 1086,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "row": 4,
+          "column": 6,
+          "label": "skirmisher_land_recover"
+        },
+        "specialists_4_7": {
+          "frame": {
+            "x": 1267,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "row": 4,
+          "column": 7,
+          "label": "skirmisher_hurt"
+        },
+        "specialists_5_0": {
+          "frame": {
+            "x": 0,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "row": 5,
+          "column": 0,
+          "label": "frost_idle"
+        },
+        "specialists_5_1": {
+          "frame": {
+            "x": 181,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "row": 5,
+          "column": 1,
+          "label": "frost_run_a"
+        },
+        "specialists_5_2": {
+          "frame": {
+            "x": 362,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "row": 5,
+          "column": 2,
+          "label": "frost_run_b"
+        },
+        "specialists_5_3": {
+          "frame": {
+            "x": 543,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "row": 5,
+          "column": 3,
+          "label": "frost_windup"
+        },
+        "specialists_5_4": {
+          "frame": {
+            "x": 724,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "row": 5,
+          "column": 4,
+          "label": "frost_jump_charge"
+        },
+        "specialists_5_5": {
+          "frame": {
+            "x": 905,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "row": 5,
+          "column": 5,
+          "label": "frost_attack"
+        },
+        "specialists_5_6": {
+          "frame": {
+            "x": 1086,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "row": 5,
+          "column": 6,
+          "label": "frost_land_recover"
+        },
+        "specialists_5_7": {
+          "frame": {
+            "x": 1267,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "row": 5,
+          "column": 7,
+          "label": "frost_hurt"
+        }
+      }
+    },
+    "orange_scout": {
+      "image": "assets/characters/orange-scout.png",
+      "size": {
+        "w": 1586,
+        "h": 992
+      },
+      "columns": 8,
+      "rows": 5,
+      "transparent": true,
+      "usage": "bonus reference sheet; runtime uses modular bodies plus arms",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.86
+      },
+      "frames": {
+        "orange_scout_0_0": {
+          "frame": {
+            "x": 0,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 0,
+          "label": "pistol_idle"
+        },
+        "orange_scout_0_1": {
+          "frame": {
+            "x": 198,
+            "y": 0,
+            "w": 199,
+            "h": 198
+          },
+          "row": 0,
+          "column": 1,
+          "label": "pistol_run_left"
+        },
+        "orange_scout_0_2": {
+          "frame": {
+            "x": 397,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 2,
+          "label": "pistol_run_passing"
+        },
+        "orange_scout_0_3": {
+          "frame": {
+            "x": 595,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 3,
+          "label": "pistol_run_right"
+        },
+        "orange_scout_0_4": {
+          "frame": {
+            "x": 793,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 4,
+          "label": "pistol_run_push"
+        },
+        "orange_scout_0_5": {
+          "frame": {
+            "x": 991,
+            "y": 0,
+            "w": 199,
+            "h": 198
+          },
+          "row": 0,
+          "column": 5,
+          "label": "pistol_aim"
+        },
+        "orange_scout_0_6": {
+          "frame": {
+            "x": 1190,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 6,
+          "label": "pistol_shoot"
+        },
+        "orange_scout_0_7": {
+          "frame": {
+            "x": 1388,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 7,
+          "label": "pistol_reload"
+        },
+        "orange_scout_1_0": {
+          "frame": {
+            "x": 0,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 0,
+          "label": "smg_lmg_idle"
+        },
+        "orange_scout_1_1": {
+          "frame": {
+            "x": 198,
+            "y": 198,
+            "w": 199,
+            "h": 199
+          },
+          "row": 1,
+          "column": 1,
+          "label": "smg_lmg_run_left"
+        },
+        "orange_scout_1_2": {
+          "frame": {
+            "x": 397,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 2,
+          "label": "smg_lmg_run_passing"
+        },
+        "orange_scout_1_3": {
+          "frame": {
+            "x": 595,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 3,
+          "label": "smg_lmg_run_right"
+        },
+        "orange_scout_1_4": {
+          "frame": {
+            "x": 793,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 4,
+          "label": "smg_lmg_run_push"
+        },
+        "orange_scout_1_5": {
+          "frame": {
+            "x": 991,
+            "y": 198,
+            "w": 199,
+            "h": 199
+          },
+          "row": 1,
+          "column": 5,
+          "label": "smg_lmg_aim"
+        },
+        "orange_scout_1_6": {
+          "frame": {
+            "x": 1190,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 6,
+          "label": "smg_lmg_shoot"
+        },
+        "orange_scout_1_7": {
+          "frame": {
+            "x": 1388,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 7,
+          "label": "smg_lmg_reload"
+        },
+        "orange_scout_2_0": {
+          "frame": {
+            "x": 0,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 0,
+          "label": "rifle_sniper_plasma_flame_idle"
+        },
+        "orange_scout_2_1": {
+          "frame": {
+            "x": 198,
+            "y": 397,
+            "w": 199,
+            "h": 198
+          },
+          "row": 2,
+          "column": 1,
+          "label": "rifle_sniper_plasma_flame_run_left"
+        },
+        "orange_scout_2_2": {
+          "frame": {
+            "x": 397,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 2,
+          "label": "rifle_sniper_plasma_flame_run_passing"
+        },
+        "orange_scout_2_3": {
+          "frame": {
+            "x": 595,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 3,
+          "label": "rifle_sniper_plasma_flame_run_right"
+        },
+        "orange_scout_2_4": {
+          "frame": {
+            "x": 793,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 4,
+          "label": "rifle_sniper_plasma_flame_run_push"
+        },
+        "orange_scout_2_5": {
+          "frame": {
+            "x": 991,
+            "y": 397,
+            "w": 199,
+            "h": 198
+          },
+          "row": 2,
+          "column": 5,
+          "label": "rifle_sniper_plasma_flame_aim"
+        },
+        "orange_scout_2_6": {
+          "frame": {
+            "x": 1190,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 6,
+          "label": "rifle_sniper_plasma_flame_shoot"
+        },
+        "orange_scout_2_7": {
+          "frame": {
+            "x": 1388,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 7,
+          "label": "rifle_sniper_plasma_flame_reload"
+        },
+        "orange_scout_3_0": {
+          "frame": {
+            "x": 0,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 0,
+          "label": "shotgun_idle"
+        },
+        "orange_scout_3_1": {
+          "frame": {
+            "x": 198,
+            "y": 595,
+            "w": 199,
+            "h": 199
+          },
+          "row": 3,
+          "column": 1,
+          "label": "shotgun_run_left"
+        },
+        "orange_scout_3_2": {
+          "frame": {
+            "x": 397,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 2,
+          "label": "shotgun_run_passing"
+        },
+        "orange_scout_3_3": {
+          "frame": {
+            "x": 595,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 3,
+          "label": "shotgun_run_right"
+        },
+        "orange_scout_3_4": {
+          "frame": {
+            "x": 793,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 4,
+          "label": "shotgun_run_push"
+        },
+        "orange_scout_3_5": {
+          "frame": {
+            "x": 991,
+            "y": 595,
+            "w": 199,
+            "h": 199
+          },
+          "row": 3,
+          "column": 5,
+          "label": "shotgun_aim"
+        },
+        "orange_scout_3_6": {
+          "frame": {
+            "x": 1190,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 6,
+          "label": "shotgun_shoot"
+        },
+        "orange_scout_3_7": {
+          "frame": {
+            "x": 1388,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 7,
+          "label": "shotgun_reload"
+        },
+        "orange_scout_4_0": {
+          "frame": {
+            "x": 0,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 0,
+          "label": "rocket_launcher_idle"
+        },
+        "orange_scout_4_1": {
+          "frame": {
+            "x": 198,
+            "y": 794,
+            "w": 199,
+            "h": 198
+          },
+          "row": 4,
+          "column": 1,
+          "label": "rocket_launcher_run_left"
+        },
+        "orange_scout_4_2": {
+          "frame": {
+            "x": 397,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 2,
+          "label": "rocket_launcher_run_passing"
+        },
+        "orange_scout_4_3": {
+          "frame": {
+            "x": 595,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 3,
+          "label": "rocket_launcher_run_right"
+        },
+        "orange_scout_4_4": {
+          "frame": {
+            "x": 793,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 4,
+          "label": "rocket_launcher_run_push"
+        },
+        "orange_scout_4_5": {
+          "frame": {
+            "x": 991,
+            "y": 794,
+            "w": 199,
+            "h": 198
+          },
+          "row": 4,
+          "column": 5,
+          "label": "rocket_launcher_aim"
+        },
+        "orange_scout_4_6": {
+          "frame": {
+            "x": 1190,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 6,
+          "label": "rocket_launcher_shoot"
+        },
+        "orange_scout_4_7": {
+          "frame": {
+            "x": 1388,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 7,
+          "label": "rocket_launcher_reload"
+        }
+      }
+    },
+    "orange_ranger": {
+      "image": "assets/characters/orange-ranger.png",
+      "size": {
+        "w": 1586,
+        "h": 992
+      },
+      "columns": 8,
+      "rows": 5,
+      "transparent": true,
+      "usage": "bonus reference sheet; runtime uses modular bodies plus arms",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.86
+      },
+      "frames": {
+        "orange_ranger_0_0": {
+          "frame": {
+            "x": 0,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 0,
+          "label": "pistol_idle"
+        },
+        "orange_ranger_0_1": {
+          "frame": {
+            "x": 198,
+            "y": 0,
+            "w": 199,
+            "h": 198
+          },
+          "row": 0,
+          "column": 1,
+          "label": "pistol_run_left"
+        },
+        "orange_ranger_0_2": {
+          "frame": {
+            "x": 397,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 2,
+          "label": "pistol_run_passing"
+        },
+        "orange_ranger_0_3": {
+          "frame": {
+            "x": 595,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 3,
+          "label": "pistol_run_right"
+        },
+        "orange_ranger_0_4": {
+          "frame": {
+            "x": 793,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 4,
+          "label": "pistol_run_push"
+        },
+        "orange_ranger_0_5": {
+          "frame": {
+            "x": 991,
+            "y": 0,
+            "w": 199,
+            "h": 198
+          },
+          "row": 0,
+          "column": 5,
+          "label": "pistol_aim"
+        },
+        "orange_ranger_0_6": {
+          "frame": {
+            "x": 1190,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 6,
+          "label": "pistol_shoot"
+        },
+        "orange_ranger_0_7": {
+          "frame": {
+            "x": 1388,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 7,
+          "label": "pistol_reload"
+        },
+        "orange_ranger_1_0": {
+          "frame": {
+            "x": 0,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 0,
+          "label": "smg_lmg_idle"
+        },
+        "orange_ranger_1_1": {
+          "frame": {
+            "x": 198,
+            "y": 198,
+            "w": 199,
+            "h": 199
+          },
+          "row": 1,
+          "column": 1,
+          "label": "smg_lmg_run_left"
+        },
+        "orange_ranger_1_2": {
+          "frame": {
+            "x": 397,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 2,
+          "label": "smg_lmg_run_passing"
+        },
+        "orange_ranger_1_3": {
+          "frame": {
+            "x": 595,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 3,
+          "label": "smg_lmg_run_right"
+        },
+        "orange_ranger_1_4": {
+          "frame": {
+            "x": 793,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 4,
+          "label": "smg_lmg_run_push"
+        },
+        "orange_ranger_1_5": {
+          "frame": {
+            "x": 991,
+            "y": 198,
+            "w": 199,
+            "h": 199
+          },
+          "row": 1,
+          "column": 5,
+          "label": "smg_lmg_aim"
+        },
+        "orange_ranger_1_6": {
+          "frame": {
+            "x": 1190,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 6,
+          "label": "smg_lmg_shoot"
+        },
+        "orange_ranger_1_7": {
+          "frame": {
+            "x": 1388,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 7,
+          "label": "smg_lmg_reload"
+        },
+        "orange_ranger_2_0": {
+          "frame": {
+            "x": 0,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 0,
+          "label": "rifle_sniper_plasma_flame_idle"
+        },
+        "orange_ranger_2_1": {
+          "frame": {
+            "x": 198,
+            "y": 397,
+            "w": 199,
+            "h": 198
+          },
+          "row": 2,
+          "column": 1,
+          "label": "rifle_sniper_plasma_flame_run_left"
+        },
+        "orange_ranger_2_2": {
+          "frame": {
+            "x": 397,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 2,
+          "label": "rifle_sniper_plasma_flame_run_passing"
+        },
+        "orange_ranger_2_3": {
+          "frame": {
+            "x": 595,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 3,
+          "label": "rifle_sniper_plasma_flame_run_right"
+        },
+        "orange_ranger_2_4": {
+          "frame": {
+            "x": 793,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 4,
+          "label": "rifle_sniper_plasma_flame_run_push"
+        },
+        "orange_ranger_2_5": {
+          "frame": {
+            "x": 991,
+            "y": 397,
+            "w": 199,
+            "h": 198
+          },
+          "row": 2,
+          "column": 5,
+          "label": "rifle_sniper_plasma_flame_aim"
+        },
+        "orange_ranger_2_6": {
+          "frame": {
+            "x": 1190,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 6,
+          "label": "rifle_sniper_plasma_flame_shoot"
+        },
+        "orange_ranger_2_7": {
+          "frame": {
+            "x": 1388,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 7,
+          "label": "rifle_sniper_plasma_flame_reload"
+        },
+        "orange_ranger_3_0": {
+          "frame": {
+            "x": 0,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 0,
+          "label": "shotgun_idle"
+        },
+        "orange_ranger_3_1": {
+          "frame": {
+            "x": 198,
+            "y": 595,
+            "w": 199,
+            "h": 199
+          },
+          "row": 3,
+          "column": 1,
+          "label": "shotgun_run_left"
+        },
+        "orange_ranger_3_2": {
+          "frame": {
+            "x": 397,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 2,
+          "label": "shotgun_run_passing"
+        },
+        "orange_ranger_3_3": {
+          "frame": {
+            "x": 595,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 3,
+          "label": "shotgun_run_right"
+        },
+        "orange_ranger_3_4": {
+          "frame": {
+            "x": 793,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 4,
+          "label": "shotgun_run_push"
+        },
+        "orange_ranger_3_5": {
+          "frame": {
+            "x": 991,
+            "y": 595,
+            "w": 199,
+            "h": 199
+          },
+          "row": 3,
+          "column": 5,
+          "label": "shotgun_aim"
+        },
+        "orange_ranger_3_6": {
+          "frame": {
+            "x": 1190,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 6,
+          "label": "shotgun_shoot"
+        },
+        "orange_ranger_3_7": {
+          "frame": {
+            "x": 1388,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 7,
+          "label": "shotgun_reload"
+        },
+        "orange_ranger_4_0": {
+          "frame": {
+            "x": 0,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 0,
+          "label": "rocket_launcher_idle"
+        },
+        "orange_ranger_4_1": {
+          "frame": {
+            "x": 198,
+            "y": 794,
+            "w": 199,
+            "h": 198
+          },
+          "row": 4,
+          "column": 1,
+          "label": "rocket_launcher_run_left"
+        },
+        "orange_ranger_4_2": {
+          "frame": {
+            "x": 397,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 2,
+          "label": "rocket_launcher_run_passing"
+        },
+        "orange_ranger_4_3": {
+          "frame": {
+            "x": 595,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 3,
+          "label": "rocket_launcher_run_right"
+        },
+        "orange_ranger_4_4": {
+          "frame": {
+            "x": 793,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 4,
+          "label": "rocket_launcher_run_push"
+        },
+        "orange_ranger_4_5": {
+          "frame": {
+            "x": 991,
+            "y": 794,
+            "w": 199,
+            "h": 198
+          },
+          "row": 4,
+          "column": 5,
+          "label": "rocket_launcher_aim"
+        },
+        "orange_ranger_4_6": {
+          "frame": {
+            "x": 1190,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 6,
+          "label": "rocket_launcher_shoot"
+        },
+        "orange_ranger_4_7": {
+          "frame": {
+            "x": 1388,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 7,
+          "label": "rocket_launcher_reload"
+        }
+      }
+    },
+    "orange_vanguard": {
+      "image": "assets/characters/orange-vanguard.png",
+      "size": {
+        "w": 1586,
+        "h": 992
+      },
+      "columns": 8,
+      "rows": 5,
+      "transparent": true,
+      "usage": "bonus reference sheet; runtime uses modular bodies plus arms",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.86
+      },
+      "frames": {
+        "orange_vanguard_0_0": {
+          "frame": {
+            "x": 0,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 0,
+          "label": "pistol_idle"
+        },
+        "orange_vanguard_0_1": {
+          "frame": {
+            "x": 198,
+            "y": 0,
+            "w": 199,
+            "h": 198
+          },
+          "row": 0,
+          "column": 1,
+          "label": "pistol_run_left"
+        },
+        "orange_vanguard_0_2": {
+          "frame": {
+            "x": 397,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 2,
+          "label": "pistol_run_passing"
+        },
+        "orange_vanguard_0_3": {
+          "frame": {
+            "x": 595,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 3,
+          "label": "pistol_run_right"
+        },
+        "orange_vanguard_0_4": {
+          "frame": {
+            "x": 793,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 4,
+          "label": "pistol_run_push"
+        },
+        "orange_vanguard_0_5": {
+          "frame": {
+            "x": 991,
+            "y": 0,
+            "w": 199,
+            "h": 198
+          },
+          "row": 0,
+          "column": 5,
+          "label": "pistol_aim"
+        },
+        "orange_vanguard_0_6": {
+          "frame": {
+            "x": 1190,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 6,
+          "label": "pistol_shoot"
+        },
+        "orange_vanguard_0_7": {
+          "frame": {
+            "x": 1388,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 7,
+          "label": "pistol_reload"
+        },
+        "orange_vanguard_1_0": {
+          "frame": {
+            "x": 0,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 0,
+          "label": "smg_lmg_idle"
+        },
+        "orange_vanguard_1_1": {
+          "frame": {
+            "x": 198,
+            "y": 198,
+            "w": 199,
+            "h": 199
+          },
+          "row": 1,
+          "column": 1,
+          "label": "smg_lmg_run_left"
+        },
+        "orange_vanguard_1_2": {
+          "frame": {
+            "x": 397,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 2,
+          "label": "smg_lmg_run_passing"
+        },
+        "orange_vanguard_1_3": {
+          "frame": {
+            "x": 595,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 3,
+          "label": "smg_lmg_run_right"
+        },
+        "orange_vanguard_1_4": {
+          "frame": {
+            "x": 793,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 4,
+          "label": "smg_lmg_run_push"
+        },
+        "orange_vanguard_1_5": {
+          "frame": {
+            "x": 991,
+            "y": 198,
+            "w": 199,
+            "h": 199
+          },
+          "row": 1,
+          "column": 5,
+          "label": "smg_lmg_aim"
+        },
+        "orange_vanguard_1_6": {
+          "frame": {
+            "x": 1190,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 6,
+          "label": "smg_lmg_shoot"
+        },
+        "orange_vanguard_1_7": {
+          "frame": {
+            "x": 1388,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 7,
+          "label": "smg_lmg_reload"
+        },
+        "orange_vanguard_2_0": {
+          "frame": {
+            "x": 0,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 0,
+          "label": "rifle_sniper_plasma_flame_idle"
+        },
+        "orange_vanguard_2_1": {
+          "frame": {
+            "x": 198,
+            "y": 397,
+            "w": 199,
+            "h": 198
+          },
+          "row": 2,
+          "column": 1,
+          "label": "rifle_sniper_plasma_flame_run_left"
+        },
+        "orange_vanguard_2_2": {
+          "frame": {
+            "x": 397,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 2,
+          "label": "rifle_sniper_plasma_flame_run_passing"
+        },
+        "orange_vanguard_2_3": {
+          "frame": {
+            "x": 595,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 3,
+          "label": "rifle_sniper_plasma_flame_run_right"
+        },
+        "orange_vanguard_2_4": {
+          "frame": {
+            "x": 793,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 4,
+          "label": "rifle_sniper_plasma_flame_run_push"
+        },
+        "orange_vanguard_2_5": {
+          "frame": {
+            "x": 991,
+            "y": 397,
+            "w": 199,
+            "h": 198
+          },
+          "row": 2,
+          "column": 5,
+          "label": "rifle_sniper_plasma_flame_aim"
+        },
+        "orange_vanguard_2_6": {
+          "frame": {
+            "x": 1190,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 6,
+          "label": "rifle_sniper_plasma_flame_shoot"
+        },
+        "orange_vanguard_2_7": {
+          "frame": {
+            "x": 1388,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 7,
+          "label": "rifle_sniper_plasma_flame_reload"
+        },
+        "orange_vanguard_3_0": {
+          "frame": {
+            "x": 0,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 0,
+          "label": "shotgun_idle"
+        },
+        "orange_vanguard_3_1": {
+          "frame": {
+            "x": 198,
+            "y": 595,
+            "w": 199,
+            "h": 199
+          },
+          "row": 3,
+          "column": 1,
+          "label": "shotgun_run_left"
+        },
+        "orange_vanguard_3_2": {
+          "frame": {
+            "x": 397,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 2,
+          "label": "shotgun_run_passing"
+        },
+        "orange_vanguard_3_3": {
+          "frame": {
+            "x": 595,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 3,
+          "label": "shotgun_run_right"
+        },
+        "orange_vanguard_3_4": {
+          "frame": {
+            "x": 793,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 4,
+          "label": "shotgun_run_push"
+        },
+        "orange_vanguard_3_5": {
+          "frame": {
+            "x": 991,
+            "y": 595,
+            "w": 199,
+            "h": 199
+          },
+          "row": 3,
+          "column": 5,
+          "label": "shotgun_aim"
+        },
+        "orange_vanguard_3_6": {
+          "frame": {
+            "x": 1190,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 6,
+          "label": "shotgun_shoot"
+        },
+        "orange_vanguard_3_7": {
+          "frame": {
+            "x": 1388,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 7,
+          "label": "shotgun_reload"
+        },
+        "orange_vanguard_4_0": {
+          "frame": {
+            "x": 0,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 0,
+          "label": "rocket_launcher_idle"
+        },
+        "orange_vanguard_4_1": {
+          "frame": {
+            "x": 198,
+            "y": 794,
+            "w": 199,
+            "h": 198
+          },
+          "row": 4,
+          "column": 1,
+          "label": "rocket_launcher_run_left"
+        },
+        "orange_vanguard_4_2": {
+          "frame": {
+            "x": 397,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 2,
+          "label": "rocket_launcher_run_passing"
+        },
+        "orange_vanguard_4_3": {
+          "frame": {
+            "x": 595,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 3,
+          "label": "rocket_launcher_run_right"
+        },
+        "orange_vanguard_4_4": {
+          "frame": {
+            "x": 793,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 4,
+          "label": "rocket_launcher_run_push"
+        },
+        "orange_vanguard_4_5": {
+          "frame": {
+            "x": 991,
+            "y": 794,
+            "w": 199,
+            "h": 198
+          },
+          "row": 4,
+          "column": 5,
+          "label": "rocket_launcher_aim"
+        },
+        "orange_vanguard_4_6": {
+          "frame": {
+            "x": 1190,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 6,
+          "label": "rocket_launcher_shoot"
+        },
+        "orange_vanguard_4_7": {
+          "frame": {
+            "x": 1388,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 7,
+          "label": "rocket_launcher_reload"
+        }
+      }
+    },
+    "white_scout": {
+      "image": "assets/characters/white-scout.png",
+      "size": {
+        "w": 1586,
+        "h": 992
+      },
+      "columns": 8,
+      "rows": 5,
+      "transparent": true,
+      "usage": "bonus reference sheet; runtime uses modular bodies plus arms",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.86
+      },
+      "frames": {
+        "white_scout_0_0": {
+          "frame": {
+            "x": 0,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 0,
+          "label": "pistol_idle"
+        },
+        "white_scout_0_1": {
+          "frame": {
+            "x": 198,
+            "y": 0,
+            "w": 199,
+            "h": 198
+          },
+          "row": 0,
+          "column": 1,
+          "label": "pistol_run_left"
+        },
+        "white_scout_0_2": {
+          "frame": {
+            "x": 397,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 2,
+          "label": "pistol_run_passing"
+        },
+        "white_scout_0_3": {
+          "frame": {
+            "x": 595,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 3,
+          "label": "pistol_run_right"
+        },
+        "white_scout_0_4": {
+          "frame": {
+            "x": 793,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 4,
+          "label": "pistol_run_push"
+        },
+        "white_scout_0_5": {
+          "frame": {
+            "x": 991,
+            "y": 0,
+            "w": 199,
+            "h": 198
+          },
+          "row": 0,
+          "column": 5,
+          "label": "pistol_aim"
+        },
+        "white_scout_0_6": {
+          "frame": {
+            "x": 1190,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 6,
+          "label": "pistol_shoot"
+        },
+        "white_scout_0_7": {
+          "frame": {
+            "x": 1388,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 7,
+          "label": "pistol_reload"
+        },
+        "white_scout_1_0": {
+          "frame": {
+            "x": 0,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 0,
+          "label": "smg_lmg_idle"
+        },
+        "white_scout_1_1": {
+          "frame": {
+            "x": 198,
+            "y": 198,
+            "w": 199,
+            "h": 199
+          },
+          "row": 1,
+          "column": 1,
+          "label": "smg_lmg_run_left"
+        },
+        "white_scout_1_2": {
+          "frame": {
+            "x": 397,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 2,
+          "label": "smg_lmg_run_passing"
+        },
+        "white_scout_1_3": {
+          "frame": {
+            "x": 595,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 3,
+          "label": "smg_lmg_run_right"
+        },
+        "white_scout_1_4": {
+          "frame": {
+            "x": 793,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 4,
+          "label": "smg_lmg_run_push"
+        },
+        "white_scout_1_5": {
+          "frame": {
+            "x": 991,
+            "y": 198,
+            "w": 199,
+            "h": 199
+          },
+          "row": 1,
+          "column": 5,
+          "label": "smg_lmg_aim"
+        },
+        "white_scout_1_6": {
+          "frame": {
+            "x": 1190,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 6,
+          "label": "smg_lmg_shoot"
+        },
+        "white_scout_1_7": {
+          "frame": {
+            "x": 1388,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 7,
+          "label": "smg_lmg_reload"
+        },
+        "white_scout_2_0": {
+          "frame": {
+            "x": 0,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 0,
+          "label": "rifle_sniper_plasma_flame_idle"
+        },
+        "white_scout_2_1": {
+          "frame": {
+            "x": 198,
+            "y": 397,
+            "w": 199,
+            "h": 198
+          },
+          "row": 2,
+          "column": 1,
+          "label": "rifle_sniper_plasma_flame_run_left"
+        },
+        "white_scout_2_2": {
+          "frame": {
+            "x": 397,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 2,
+          "label": "rifle_sniper_plasma_flame_run_passing"
+        },
+        "white_scout_2_3": {
+          "frame": {
+            "x": 595,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 3,
+          "label": "rifle_sniper_plasma_flame_run_right"
+        },
+        "white_scout_2_4": {
+          "frame": {
+            "x": 793,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 4,
+          "label": "rifle_sniper_plasma_flame_run_push"
+        },
+        "white_scout_2_5": {
+          "frame": {
+            "x": 991,
+            "y": 397,
+            "w": 199,
+            "h": 198
+          },
+          "row": 2,
+          "column": 5,
+          "label": "rifle_sniper_plasma_flame_aim"
+        },
+        "white_scout_2_6": {
+          "frame": {
+            "x": 1190,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 6,
+          "label": "rifle_sniper_plasma_flame_shoot"
+        },
+        "white_scout_2_7": {
+          "frame": {
+            "x": 1388,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 7,
+          "label": "rifle_sniper_plasma_flame_reload"
+        },
+        "white_scout_3_0": {
+          "frame": {
+            "x": 0,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 0,
+          "label": "shotgun_idle"
+        },
+        "white_scout_3_1": {
+          "frame": {
+            "x": 198,
+            "y": 595,
+            "w": 199,
+            "h": 199
+          },
+          "row": 3,
+          "column": 1,
+          "label": "shotgun_run_left"
+        },
+        "white_scout_3_2": {
+          "frame": {
+            "x": 397,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 2,
+          "label": "shotgun_run_passing"
+        },
+        "white_scout_3_3": {
+          "frame": {
+            "x": 595,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 3,
+          "label": "shotgun_run_right"
+        },
+        "white_scout_3_4": {
+          "frame": {
+            "x": 793,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 4,
+          "label": "shotgun_run_push"
+        },
+        "white_scout_3_5": {
+          "frame": {
+            "x": 991,
+            "y": 595,
+            "w": 199,
+            "h": 199
+          },
+          "row": 3,
+          "column": 5,
+          "label": "shotgun_aim"
+        },
+        "white_scout_3_6": {
+          "frame": {
+            "x": 1190,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 6,
+          "label": "shotgun_shoot"
+        },
+        "white_scout_3_7": {
+          "frame": {
+            "x": 1388,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 7,
+          "label": "shotgun_reload"
+        },
+        "white_scout_4_0": {
+          "frame": {
+            "x": 0,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 0,
+          "label": "rocket_launcher_idle"
+        },
+        "white_scout_4_1": {
+          "frame": {
+            "x": 198,
+            "y": 794,
+            "w": 199,
+            "h": 198
+          },
+          "row": 4,
+          "column": 1,
+          "label": "rocket_launcher_run_left"
+        },
+        "white_scout_4_2": {
+          "frame": {
+            "x": 397,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 2,
+          "label": "rocket_launcher_run_passing"
+        },
+        "white_scout_4_3": {
+          "frame": {
+            "x": 595,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 3,
+          "label": "rocket_launcher_run_right"
+        },
+        "white_scout_4_4": {
+          "frame": {
+            "x": 793,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 4,
+          "label": "rocket_launcher_run_push"
+        },
+        "white_scout_4_5": {
+          "frame": {
+            "x": 991,
+            "y": 794,
+            "w": 199,
+            "h": 198
+          },
+          "row": 4,
+          "column": 5,
+          "label": "rocket_launcher_aim"
+        },
+        "white_scout_4_6": {
+          "frame": {
+            "x": 1190,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 6,
+          "label": "rocket_launcher_shoot"
+        },
+        "white_scout_4_7": {
+          "frame": {
+            "x": 1388,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 7,
+          "label": "rocket_launcher_reload"
+        }
+      }
+    },
+    "white_ranger": {
+      "image": "assets/characters/white-ranger.png",
+      "size": {
+        "w": 1586,
+        "h": 992
+      },
+      "columns": 8,
+      "rows": 5,
+      "transparent": true,
+      "usage": "bonus reference sheet; runtime uses modular bodies plus arms",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.86
+      },
+      "frames": {
+        "white_ranger_0_0": {
+          "frame": {
+            "x": 0,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 0,
+          "label": "pistol_idle"
+        },
+        "white_ranger_0_1": {
+          "frame": {
+            "x": 198,
+            "y": 0,
+            "w": 199,
+            "h": 198
+          },
+          "row": 0,
+          "column": 1,
+          "label": "pistol_run_left"
+        },
+        "white_ranger_0_2": {
+          "frame": {
+            "x": 397,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 2,
+          "label": "pistol_run_passing"
+        },
+        "white_ranger_0_3": {
+          "frame": {
+            "x": 595,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 3,
+          "label": "pistol_run_right"
+        },
+        "white_ranger_0_4": {
+          "frame": {
+            "x": 793,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 4,
+          "label": "pistol_run_push"
+        },
+        "white_ranger_0_5": {
+          "frame": {
+            "x": 991,
+            "y": 0,
+            "w": 199,
+            "h": 198
+          },
+          "row": 0,
+          "column": 5,
+          "label": "pistol_aim"
+        },
+        "white_ranger_0_6": {
+          "frame": {
+            "x": 1190,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 6,
+          "label": "pistol_shoot"
+        },
+        "white_ranger_0_7": {
+          "frame": {
+            "x": 1388,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 7,
+          "label": "pistol_reload"
+        },
+        "white_ranger_1_0": {
+          "frame": {
+            "x": 0,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 0,
+          "label": "smg_lmg_idle"
+        },
+        "white_ranger_1_1": {
+          "frame": {
+            "x": 198,
+            "y": 198,
+            "w": 199,
+            "h": 199
+          },
+          "row": 1,
+          "column": 1,
+          "label": "smg_lmg_run_left"
+        },
+        "white_ranger_1_2": {
+          "frame": {
+            "x": 397,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 2,
+          "label": "smg_lmg_run_passing"
+        },
+        "white_ranger_1_3": {
+          "frame": {
+            "x": 595,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 3,
+          "label": "smg_lmg_run_right"
+        },
+        "white_ranger_1_4": {
+          "frame": {
+            "x": 793,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 4,
+          "label": "smg_lmg_run_push"
+        },
+        "white_ranger_1_5": {
+          "frame": {
+            "x": 991,
+            "y": 198,
+            "w": 199,
+            "h": 199
+          },
+          "row": 1,
+          "column": 5,
+          "label": "smg_lmg_aim"
+        },
+        "white_ranger_1_6": {
+          "frame": {
+            "x": 1190,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 6,
+          "label": "smg_lmg_shoot"
+        },
+        "white_ranger_1_7": {
+          "frame": {
+            "x": 1388,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 7,
+          "label": "smg_lmg_reload"
+        },
+        "white_ranger_2_0": {
+          "frame": {
+            "x": 0,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 0,
+          "label": "rifle_sniper_plasma_flame_idle"
+        },
+        "white_ranger_2_1": {
+          "frame": {
+            "x": 198,
+            "y": 397,
+            "w": 199,
+            "h": 198
+          },
+          "row": 2,
+          "column": 1,
+          "label": "rifle_sniper_plasma_flame_run_left"
+        },
+        "white_ranger_2_2": {
+          "frame": {
+            "x": 397,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 2,
+          "label": "rifle_sniper_plasma_flame_run_passing"
+        },
+        "white_ranger_2_3": {
+          "frame": {
+            "x": 595,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 3,
+          "label": "rifle_sniper_plasma_flame_run_right"
+        },
+        "white_ranger_2_4": {
+          "frame": {
+            "x": 793,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 4,
+          "label": "rifle_sniper_plasma_flame_run_push"
+        },
+        "white_ranger_2_5": {
+          "frame": {
+            "x": 991,
+            "y": 397,
+            "w": 199,
+            "h": 198
+          },
+          "row": 2,
+          "column": 5,
+          "label": "rifle_sniper_plasma_flame_aim"
+        },
+        "white_ranger_2_6": {
+          "frame": {
+            "x": 1190,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 6,
+          "label": "rifle_sniper_plasma_flame_shoot"
+        },
+        "white_ranger_2_7": {
+          "frame": {
+            "x": 1388,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 7,
+          "label": "rifle_sniper_plasma_flame_reload"
+        },
+        "white_ranger_3_0": {
+          "frame": {
+            "x": 0,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 0,
+          "label": "shotgun_idle"
+        },
+        "white_ranger_3_1": {
+          "frame": {
+            "x": 198,
+            "y": 595,
+            "w": 199,
+            "h": 199
+          },
+          "row": 3,
+          "column": 1,
+          "label": "shotgun_run_left"
+        },
+        "white_ranger_3_2": {
+          "frame": {
+            "x": 397,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 2,
+          "label": "shotgun_run_passing"
+        },
+        "white_ranger_3_3": {
+          "frame": {
+            "x": 595,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 3,
+          "label": "shotgun_run_right"
+        },
+        "white_ranger_3_4": {
+          "frame": {
+            "x": 793,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 4,
+          "label": "shotgun_run_push"
+        },
+        "white_ranger_3_5": {
+          "frame": {
+            "x": 991,
+            "y": 595,
+            "w": 199,
+            "h": 199
+          },
+          "row": 3,
+          "column": 5,
+          "label": "shotgun_aim"
+        },
+        "white_ranger_3_6": {
+          "frame": {
+            "x": 1190,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 6,
+          "label": "shotgun_shoot"
+        },
+        "white_ranger_3_7": {
+          "frame": {
+            "x": 1388,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 7,
+          "label": "shotgun_reload"
+        },
+        "white_ranger_4_0": {
+          "frame": {
+            "x": 0,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 0,
+          "label": "rocket_launcher_idle"
+        },
+        "white_ranger_4_1": {
+          "frame": {
+            "x": 198,
+            "y": 794,
+            "w": 199,
+            "h": 198
+          },
+          "row": 4,
+          "column": 1,
+          "label": "rocket_launcher_run_left"
+        },
+        "white_ranger_4_2": {
+          "frame": {
+            "x": 397,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 2,
+          "label": "rocket_launcher_run_passing"
+        },
+        "white_ranger_4_3": {
+          "frame": {
+            "x": 595,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 3,
+          "label": "rocket_launcher_run_right"
+        },
+        "white_ranger_4_4": {
+          "frame": {
+            "x": 793,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 4,
+          "label": "rocket_launcher_run_push"
+        },
+        "white_ranger_4_5": {
+          "frame": {
+            "x": 991,
+            "y": 794,
+            "w": 199,
+            "h": 198
+          },
+          "row": 4,
+          "column": 5,
+          "label": "rocket_launcher_aim"
+        },
+        "white_ranger_4_6": {
+          "frame": {
+            "x": 1190,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 6,
+          "label": "rocket_launcher_shoot"
+        },
+        "white_ranger_4_7": {
+          "frame": {
+            "x": 1388,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 7,
+          "label": "rocket_launcher_reload"
+        }
+      }
+    },
+    "white_vanguard": {
+      "image": "assets/characters/white-vanguard.png",
+      "size": {
+        "w": 1586,
+        "h": 992
+      },
+      "columns": 8,
+      "rows": 5,
+      "transparent": true,
+      "usage": "bonus reference sheet; runtime uses modular bodies plus arms",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.86
+      },
+      "frames": {
+        "white_vanguard_0_0": {
+          "frame": {
+            "x": 0,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 0,
+          "label": "pistol_idle"
+        },
+        "white_vanguard_0_1": {
+          "frame": {
+            "x": 198,
+            "y": 0,
+            "w": 199,
+            "h": 198
+          },
+          "row": 0,
+          "column": 1,
+          "label": "pistol_run_left"
+        },
+        "white_vanguard_0_2": {
+          "frame": {
+            "x": 397,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 2,
+          "label": "pistol_run_passing"
+        },
+        "white_vanguard_0_3": {
+          "frame": {
+            "x": 595,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 3,
+          "label": "pistol_run_right"
+        },
+        "white_vanguard_0_4": {
+          "frame": {
+            "x": 793,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 4,
+          "label": "pistol_run_push"
+        },
+        "white_vanguard_0_5": {
+          "frame": {
+            "x": 991,
+            "y": 0,
+            "w": 199,
+            "h": 198
+          },
+          "row": 0,
+          "column": 5,
+          "label": "pistol_aim"
+        },
+        "white_vanguard_0_6": {
+          "frame": {
+            "x": 1190,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 6,
+          "label": "pistol_shoot"
+        },
+        "white_vanguard_0_7": {
+          "frame": {
+            "x": 1388,
+            "y": 0,
+            "w": 198,
+            "h": 198
+          },
+          "row": 0,
+          "column": 7,
+          "label": "pistol_reload"
+        },
+        "white_vanguard_1_0": {
+          "frame": {
+            "x": 0,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 0,
+          "label": "smg_lmg_idle"
+        },
+        "white_vanguard_1_1": {
+          "frame": {
+            "x": 198,
+            "y": 198,
+            "w": 199,
+            "h": 199
+          },
+          "row": 1,
+          "column": 1,
+          "label": "smg_lmg_run_left"
+        },
+        "white_vanguard_1_2": {
+          "frame": {
+            "x": 397,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 2,
+          "label": "smg_lmg_run_passing"
+        },
+        "white_vanguard_1_3": {
+          "frame": {
+            "x": 595,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 3,
+          "label": "smg_lmg_run_right"
+        },
+        "white_vanguard_1_4": {
+          "frame": {
+            "x": 793,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 4,
+          "label": "smg_lmg_run_push"
+        },
+        "white_vanguard_1_5": {
+          "frame": {
+            "x": 991,
+            "y": 198,
+            "w": 199,
+            "h": 199
+          },
+          "row": 1,
+          "column": 5,
+          "label": "smg_lmg_aim"
+        },
+        "white_vanguard_1_6": {
+          "frame": {
+            "x": 1190,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 6,
+          "label": "smg_lmg_shoot"
+        },
+        "white_vanguard_1_7": {
+          "frame": {
+            "x": 1388,
+            "y": 198,
+            "w": 198,
+            "h": 199
+          },
+          "row": 1,
+          "column": 7,
+          "label": "smg_lmg_reload"
+        },
+        "white_vanguard_2_0": {
+          "frame": {
+            "x": 0,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 0,
+          "label": "rifle_sniper_plasma_flame_idle"
+        },
+        "white_vanguard_2_1": {
+          "frame": {
+            "x": 198,
+            "y": 397,
+            "w": 199,
+            "h": 198
+          },
+          "row": 2,
+          "column": 1,
+          "label": "rifle_sniper_plasma_flame_run_left"
+        },
+        "white_vanguard_2_2": {
+          "frame": {
+            "x": 397,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 2,
+          "label": "rifle_sniper_plasma_flame_run_passing"
+        },
+        "white_vanguard_2_3": {
+          "frame": {
+            "x": 595,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 3,
+          "label": "rifle_sniper_plasma_flame_run_right"
+        },
+        "white_vanguard_2_4": {
+          "frame": {
+            "x": 793,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 4,
+          "label": "rifle_sniper_plasma_flame_run_push"
+        },
+        "white_vanguard_2_5": {
+          "frame": {
+            "x": 991,
+            "y": 397,
+            "w": 199,
+            "h": 198
+          },
+          "row": 2,
+          "column": 5,
+          "label": "rifle_sniper_plasma_flame_aim"
+        },
+        "white_vanguard_2_6": {
+          "frame": {
+            "x": 1190,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 6,
+          "label": "rifle_sniper_plasma_flame_shoot"
+        },
+        "white_vanguard_2_7": {
+          "frame": {
+            "x": 1388,
+            "y": 397,
+            "w": 198,
+            "h": 198
+          },
+          "row": 2,
+          "column": 7,
+          "label": "rifle_sniper_plasma_flame_reload"
+        },
+        "white_vanguard_3_0": {
+          "frame": {
+            "x": 0,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 0,
+          "label": "shotgun_idle"
+        },
+        "white_vanguard_3_1": {
+          "frame": {
+            "x": 198,
+            "y": 595,
+            "w": 199,
+            "h": 199
+          },
+          "row": 3,
+          "column": 1,
+          "label": "shotgun_run_left"
+        },
+        "white_vanguard_3_2": {
+          "frame": {
+            "x": 397,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 2,
+          "label": "shotgun_run_passing"
+        },
+        "white_vanguard_3_3": {
+          "frame": {
+            "x": 595,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 3,
+          "label": "shotgun_run_right"
+        },
+        "white_vanguard_3_4": {
+          "frame": {
+            "x": 793,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 4,
+          "label": "shotgun_run_push"
+        },
+        "white_vanguard_3_5": {
+          "frame": {
+            "x": 991,
+            "y": 595,
+            "w": 199,
+            "h": 199
+          },
+          "row": 3,
+          "column": 5,
+          "label": "shotgun_aim"
+        },
+        "white_vanguard_3_6": {
+          "frame": {
+            "x": 1190,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 6,
+          "label": "shotgun_shoot"
+        },
+        "white_vanguard_3_7": {
+          "frame": {
+            "x": 1388,
+            "y": 595,
+            "w": 198,
+            "h": 199
+          },
+          "row": 3,
+          "column": 7,
+          "label": "shotgun_reload"
+        },
+        "white_vanguard_4_0": {
+          "frame": {
+            "x": 0,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 0,
+          "label": "rocket_launcher_idle"
+        },
+        "white_vanguard_4_1": {
+          "frame": {
+            "x": 198,
+            "y": 794,
+            "w": 199,
+            "h": 198
+          },
+          "row": 4,
+          "column": 1,
+          "label": "rocket_launcher_run_left"
+        },
+        "white_vanguard_4_2": {
+          "frame": {
+            "x": 397,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 2,
+          "label": "rocket_launcher_run_passing"
+        },
+        "white_vanguard_4_3": {
+          "frame": {
+            "x": 595,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 3,
+          "label": "rocket_launcher_run_right"
+        },
+        "white_vanguard_4_4": {
+          "frame": {
+            "x": 793,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 4,
+          "label": "rocket_launcher_run_push"
+        },
+        "white_vanguard_4_5": {
+          "frame": {
+            "x": 991,
+            "y": 794,
+            "w": 199,
+            "h": 198
+          },
+          "row": 4,
+          "column": 5,
+          "label": "rocket_launcher_aim"
+        },
+        "white_vanguard_4_6": {
+          "frame": {
+            "x": 1190,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 6,
+          "label": "rocket_launcher_shoot"
+        },
+        "white_vanguard_4_7": {
+          "frame": {
+            "x": 1388,
+            "y": 794,
+            "w": 198,
+            "h": 198
+          },
+          "row": 4,
+          "column": 7,
+          "label": "rocket_launcher_reload"
+        }
+      }
+    },
+    "forge": {
+      "image": "assets/buildings/forge.png",
+      "size": {
+        "w": 1568,
+        "h": 1003
+      },
+      "columns": 1,
+      "rows": 1,
+      "transparent": true,
+      "usage": "live",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.75
+      },
+      "frames": {
+        "forge_0_0": {
+          "frame": {
+            "x": 0,
+            "y": 0,
+            "w": 1568,
+            "h": 1003
+          },
+          "row": 0,
+          "column": 0,
+          "label": "forge_workshop"
+        }
+      }
+    },
+    "title": {
+      "image": "assets/ui/title.png",
+      "size": {
+        "w": 1672,
+        "h": 941
+      },
+      "columns": 1,
+      "rows": 1,
+      "transparent": false,
+      "usage": "live",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "frames": {
+        "title_0_0": {
+          "frame": {
+            "x": 0,
+            "y": 0,
+            "w": 1672,
+            "h": 941
+          },
+          "row": 0,
+          "column": 0,
+          "label": "title_illustration"
+        }
+      }
+    },
+    "bodies_original": {
+      "image": "assets/characters/bodies.png",
+      "size": {
+        "w": 1448,
+        "h": 1086
+      },
+      "columns": 8,
+      "rows": 6,
+      "transparent": true,
+      "usage": "bonus reference; superseded by padded bodies-v2.png",
+      "pivot": {
+        "x": 0.5,
+        "y": 0.86
+      },
+      "frames": {
+        "bodies_0_0": {
+          "frame": {
+            "x": 0,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "row": 0,
+          "column": 0,
+          "label": "orange_scout_idle"
+        },
+        "bodies_0_1": {
+          "frame": {
+            "x": 181,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "row": 0,
+          "column": 1,
+          "label": "orange_scout_run_left"
+        },
+        "bodies_0_2": {
+          "frame": {
+            "x": 362,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "row": 0,
+          "column": 2,
+          "label": "orange_scout_run_passing"
+        },
+        "bodies_0_3": {
+          "frame": {
+            "x": 543,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "row": 0,
+          "column": 3,
+          "label": "orange_scout_run_right"
+        },
+        "bodies_0_4": {
+          "frame": {
+            "x": 724,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "row": 0,
+          "column": 4,
+          "label": "orange_scout_run_push"
+        },
+        "bodies_0_5": {
+          "frame": {
+            "x": 905,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "row": 0,
+          "column": 5,
+          "label": "orange_scout_dodge"
+        },
+        "bodies_0_6": {
+          "frame": {
+            "x": 1086,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "row": 0,
+          "column": 6,
+          "label": "orange_scout_hurt"
+        },
+        "bodies_0_7": {
+          "frame": {
+            "x": 1267,
+            "y": 0,
+            "w": 181,
+            "h": 181
+          },
+          "row": 0,
+          "column": 7,
+          "label": "orange_scout_downed"
+        },
+        "bodies_1_0": {
+          "frame": {
+            "x": 0,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "row": 1,
+          "column": 0,
+          "label": "orange_ranger_idle"
+        },
+        "bodies_1_1": {
+          "frame": {
+            "x": 181,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "row": 1,
+          "column": 1,
+          "label": "orange_ranger_run_left"
+        },
+        "bodies_1_2": {
+          "frame": {
+            "x": 362,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "row": 1,
+          "column": 2,
+          "label": "orange_ranger_run_passing"
+        },
+        "bodies_1_3": {
+          "frame": {
+            "x": 543,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "row": 1,
+          "column": 3,
+          "label": "orange_ranger_run_right"
+        },
+        "bodies_1_4": {
+          "frame": {
+            "x": 724,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "row": 1,
+          "column": 4,
+          "label": "orange_ranger_run_push"
+        },
+        "bodies_1_5": {
+          "frame": {
+            "x": 905,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "row": 1,
+          "column": 5,
+          "label": "orange_ranger_dodge"
+        },
+        "bodies_1_6": {
+          "frame": {
+            "x": 1086,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "row": 1,
+          "column": 6,
+          "label": "orange_ranger_hurt"
+        },
+        "bodies_1_7": {
+          "frame": {
+            "x": 1267,
+            "y": 181,
+            "w": 181,
+            "h": 181
+          },
+          "row": 1,
+          "column": 7,
+          "label": "orange_ranger_downed"
+        },
+        "bodies_2_0": {
+          "frame": {
+            "x": 0,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "row": 2,
+          "column": 0,
+          "label": "orange_vanguard_idle"
+        },
+        "bodies_2_1": {
+          "frame": {
+            "x": 181,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "row": 2,
+          "column": 1,
+          "label": "orange_vanguard_run_left"
+        },
+        "bodies_2_2": {
+          "frame": {
+            "x": 362,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "row": 2,
+          "column": 2,
+          "label": "orange_vanguard_run_passing"
+        },
+        "bodies_2_3": {
+          "frame": {
+            "x": 543,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "row": 2,
+          "column": 3,
+          "label": "orange_vanguard_run_right"
+        },
+        "bodies_2_4": {
+          "frame": {
+            "x": 724,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "row": 2,
+          "column": 4,
+          "label": "orange_vanguard_run_push"
+        },
+        "bodies_2_5": {
+          "frame": {
+            "x": 905,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "row": 2,
+          "column": 5,
+          "label": "orange_vanguard_dodge"
+        },
+        "bodies_2_6": {
+          "frame": {
+            "x": 1086,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "row": 2,
+          "column": 6,
+          "label": "orange_vanguard_hurt"
+        },
+        "bodies_2_7": {
+          "frame": {
+            "x": 1267,
+            "y": 362,
+            "w": 181,
+            "h": 181
+          },
+          "row": 2,
+          "column": 7,
+          "label": "orange_vanguard_downed"
+        },
+        "bodies_3_0": {
+          "frame": {
+            "x": 0,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "row": 3,
+          "column": 0,
+          "label": "white_scout_idle"
+        },
+        "bodies_3_1": {
+          "frame": {
+            "x": 181,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "row": 3,
+          "column": 1,
+          "label": "white_scout_run_left"
+        },
+        "bodies_3_2": {
+          "frame": {
+            "x": 362,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "row": 3,
+          "column": 2,
+          "label": "white_scout_run_passing"
+        },
+        "bodies_3_3": {
+          "frame": {
+            "x": 543,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "row": 3,
+          "column": 3,
+          "label": "white_scout_run_right"
+        },
+        "bodies_3_4": {
+          "frame": {
+            "x": 724,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "row": 3,
+          "column": 4,
+          "label": "white_scout_run_push"
+        },
+        "bodies_3_5": {
+          "frame": {
+            "x": 905,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "row": 3,
+          "column": 5,
+          "label": "white_scout_dodge"
+        },
+        "bodies_3_6": {
+          "frame": {
+            "x": 1086,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "row": 3,
+          "column": 6,
+          "label": "white_scout_hurt"
+        },
+        "bodies_3_7": {
+          "frame": {
+            "x": 1267,
+            "y": 543,
+            "w": 181,
+            "h": 181
+          },
+          "row": 3,
+          "column": 7,
+          "label": "white_scout_downed"
+        },
+        "bodies_4_0": {
+          "frame": {
+            "x": 0,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "row": 4,
+          "column": 0,
+          "label": "white_ranger_idle"
+        },
+        "bodies_4_1": {
+          "frame": {
+            "x": 181,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "row": 4,
+          "column": 1,
+          "label": "white_ranger_run_left"
+        },
+        "bodies_4_2": {
+          "frame": {
+            "x": 362,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "row": 4,
+          "column": 2,
+          "label": "white_ranger_run_passing"
+        },
+        "bodies_4_3": {
+          "frame": {
+            "x": 543,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "row": 4,
+          "column": 3,
+          "label": "white_ranger_run_right"
+        },
+        "bodies_4_4": {
+          "frame": {
+            "x": 724,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "row": 4,
+          "column": 4,
+          "label": "white_ranger_run_push"
+        },
+        "bodies_4_5": {
+          "frame": {
+            "x": 905,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "row": 4,
+          "column": 5,
+          "label": "white_ranger_dodge"
+        },
+        "bodies_4_6": {
+          "frame": {
+            "x": 1086,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "row": 4,
+          "column": 6,
+          "label": "white_ranger_hurt"
+        },
+        "bodies_4_7": {
+          "frame": {
+            "x": 1267,
+            "y": 724,
+            "w": 181,
+            "h": 181
+          },
+          "row": 4,
+          "column": 7,
+          "label": "white_ranger_downed"
+        },
+        "bodies_5_0": {
+          "frame": {
+            "x": 0,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "row": 5,
+          "column": 0,
+          "label": "white_vanguard_idle"
+        },
+        "bodies_5_1": {
+          "frame": {
+            "x": 181,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "row": 5,
+          "column": 1,
+          "label": "white_vanguard_run_left"
+        },
+        "bodies_5_2": {
+          "frame": {
+            "x": 362,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "row": 5,
+          "column": 2,
+          "label": "white_vanguard_run_passing"
+        },
+        "bodies_5_3": {
+          "frame": {
+            "x": 543,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "row": 5,
+          "column": 3,
+          "label": "white_vanguard_run_right"
+        },
+        "bodies_5_4": {
+          "frame": {
+            "x": 724,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "row": 5,
+          "column": 4,
+          "label": "white_vanguard_run_push"
+        },
+        "bodies_5_5": {
+          "frame": {
+            "x": 905,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "row": 5,
+          "column": 5,
+          "label": "white_vanguard_dodge"
+        },
+        "bodies_5_6": {
+          "frame": {
+            "x": 1086,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "row": 5,
+          "column": 6,
+          "label": "white_vanguard_hurt"
+        },
+        "bodies_5_7": {
+          "frame": {
+            "x": 1267,
+            "y": 905,
+            "w": 181,
+            "h": 181
+          },
+          "row": 5,
+          "column": 7,
+          "label": "white_vanguard_downed"
+        }
+      }
+    },
+    "friendly": {
+      "image": "assets/characters/friendly-cats.png",
+      "size": {
+        "w": 1024,
+        "h": 1536
+      },
+      "columns": 4,
+      "rows": 6,
+      "transparent": true,
+      "usage": "live",
+      "frames": {
+        "friendly_0_0": {
+          "frame": {
+            "x": 43,
+            "y": 31,
+            "w": 187,
+            "h": 225
+          },
+          "cell": {
+            "x": 0,
+            "y": 0,
+            "w": 256,
+            "h": 256
+          },
+          "row": 0,
+          "column": 0,
+          "label": "trader_idle_wave",
+          "pivot": {
+            "x": 0.45454545454545453,
+            "y": 1
+          }
+        },
+        "friendly_0_1": {
+          "frame": {
+            "x": 288,
+            "y": 41,
+            "w": 184,
+            "h": 215
+          },
+          "cell": {
+            "x": 256,
+            "y": 0,
+            "w": 256,
+            "h": 256
+          },
+          "row": 0,
+          "column": 1,
+          "label": "trader_walk_left",
+          "pivot": {
+            "x": 0.5217391304347826,
+            "y": 1
+          }
+        },
+        "friendly_0_2": {
+          "frame": {
+            "x": 542,
+            "y": 43,
+            "w": 180,
+            "h": 213
+          },
+          "cell": {
+            "x": 512,
+            "y": 0,
+            "w": 256,
+            "h": 256
+          },
+          "row": 0,
+          "column": 2,
+          "label": "trader_walk_passing",
+          "pivot": {
+            "x": 0.5444444444444444,
+            "y": 1
+          }
+        },
+        "friendly_0_3": {
+          "frame": {
+            "x": 797,
+            "y": 46,
+            "w": 178,
+            "h": 210
+          },
+          "cell": {
+            "x": 768,
+            "y": 0,
+            "w": 256,
+            "h": 256
+          },
+          "row": 0,
+          "column": 3,
+          "label": "trader_walk_right",
+          "pivot": {
+            "x": 0.5561797752808989,
+            "y": 1
+          }
+        },
+        "friendly_1_0": {
+          "frame": {
+            "x": 39,
+            "y": 277,
+            "w": 192,
+            "h": 235
+          },
+          "cell": {
+            "x": 0,
+            "y": 256,
+            "w": 256,
+            "h": 256
+          },
+          "row": 1,
+          "column": 0,
+          "label": "blacksmith_idle_wave",
+          "pivot": {
+            "x": 0.4635416666666667,
+            "y": 1
+          }
+        },
+        "friendly_1_1": {
+          "frame": {
+            "x": 285,
+            "y": 278,
+            "w": 213,
+            "h": 233
+          },
+          "cell": {
+            "x": 256,
+            "y": 256,
+            "w": 256,
+            "h": 256
+          },
+          "row": 1,
+          "column": 1,
+          "label": "blacksmith_walk_left",
+          "pivot": {
+            "x": 0.4647887323943662,
+            "y": 1.0042918454935623
+          }
+        },
+        "friendly_1_2": {
+          "frame": {
+            "x": 538,
+            "y": 279,
+            "w": 215,
+            "h": 233
+          },
+          "cell": {
+            "x": 512,
+            "y": 256,
+            "w": 256,
+            "h": 256
+          },
+          "row": 1,
+          "column": 2,
+          "label": "blacksmith_walk_passing",
+          "pivot": {
+            "x": 0.4744186046511628,
+            "y": 1
+          }
+        },
+        "friendly_1_3": {
+          "frame": {
+            "x": 800,
+            "y": 283,
+            "w": 205,
+            "h": 229
+          },
+          "cell": {
+            "x": 768,
+            "y": 256,
+            "w": 256,
+            "h": 256
+          },
+          "row": 1,
+          "column": 3,
+          "label": "blacksmith_walk_right",
+          "pivot": {
+            "x": 0.4682926829268293,
+            "y": 1
+          }
+        },
+        "friendly_2_0": {
+          "frame": {
+            "x": 42,
+            "y": 529,
+            "w": 189,
+            "h": 227
+          },
+          "cell": {
+            "x": 0,
+            "y": 512,
+            "w": 256,
+            "h": 256
+          },
+          "row": 2,
+          "column": 0,
+          "label": "farmer_idle_wave",
+          "pivot": {
+            "x": 0.455026455026455,
+            "y": 1
+          }
+        },
+        "friendly_2_1": {
+          "frame": {
+            "x": 289,
+            "y": 535,
+            "w": 195,
+            "h": 222
+          },
+          "cell": {
+            "x": 256,
+            "y": 512,
+            "w": 256,
+            "h": 256
+          },
+          "row": 2,
+          "column": 1,
+          "label": "farmer_walk_left",
+          "pivot": {
+            "x": 0.48717948717948717,
+            "y": 0.9954954954954955
+          }
+        },
+        "friendly_2_2": {
+          "frame": {
+            "x": 542,
+            "y": 536,
+            "w": 192,
+            "h": 222
+          },
+          "cell": {
+            "x": 512,
+            "y": 512,
+            "w": 256,
+            "h": 256
+          },
+          "row": 2,
+          "column": 2,
+          "label": "farmer_walk_passing",
+          "pivot": {
+            "x": 0.5104166666666666,
+            "y": 0.990990990990991
+          }
+        },
+        "friendly_2_3": {
+          "frame": {
+            "x": 798,
+            "y": 535,
+            "w": 182,
+            "h": 223
+          },
+          "cell": {
+            "x": 768,
+            "y": 512,
+            "w": 256,
+            "h": 256
+          },
+          "row": 2,
+          "column": 3,
+          "label": "farmer_walk_right",
+          "pivot": {
+            "x": 0.5384615384615384,
+            "y": 0.9910313901345291
+          }
+        },
+        "friendly_3_0": {
+          "frame": {
+            "x": 43,
+            "y": 769,
+            "w": 186,
+            "h": 241
+          },
+          "cell": {
+            "x": 0,
+            "y": 768,
+            "w": 256,
+            "h": 256
+          },
+          "row": 3,
+          "column": 0,
+          "label": "ranger_idle_wave",
+          "pivot": {
+            "x": 0.45698924731182794,
+            "y": 1
+          }
+        },
+        "friendly_3_1": {
+          "frame": {
+            "x": 278,
+            "y": 781,
+            "w": 196,
+            "h": 229
+          },
+          "cell": {
+            "x": 256,
+            "y": 768,
+            "w": 256,
+            "h": 256
+          },
+          "row": 3,
+          "column": 1,
+          "label": "ranger_walk_left",
+          "pivot": {
+            "x": 0.5408163265306123,
+            "y": 1
+          }
+        },
+        "friendly_3_2": {
+          "frame": {
+            "x": 536,
+            "y": 782,
+            "w": 197,
+            "h": 230
+          },
+          "cell": {
+            "x": 512,
+            "y": 768,
+            "w": 256,
+            "h": 256
+          },
+          "row": 3,
+          "column": 2,
+          "label": "ranger_walk_passing",
+          "pivot": {
+            "x": 0.5279187817258884,
+            "y": 0.991304347826087
+          }
+        },
+        "friendly_3_3": {
+          "frame": {
+            "x": 781,
+            "y": 780,
+            "w": 200,
+            "h": 232
+          },
+          "cell": {
+            "x": 768,
+            "y": 768,
+            "w": 256,
+            "h": 256
+          },
+          "row": 3,
+          "column": 3,
+          "label": "ranger_walk_right",
+          "pivot": {
+            "x": 0.575,
+            "y": 0.9913793103448276
+          }
+        },
+        "friendly_4_0": {
+          "frame": {
+            "x": 40,
+            "y": 1024,
+            "w": 184,
+            "h": 232
+          },
+          "cell": {
+            "x": 0,
+            "y": 1024,
+            "w": 256,
+            "h": 256
+          },
+          "row": 4,
+          "column": 0,
+          "label": "medic_idle_wave",
+          "pivot": {
+            "x": 0.4782608695652174,
+            "y": 1
+          }
+        },
+        "friendly_4_1": {
+          "frame": {
+            "x": 284,
+            "y": 1035,
+            "w": 188,
+            "h": 223
+          },
+          "cell": {
+            "x": 256,
+            "y": 1024,
+            "w": 256,
+            "h": 256
+          },
+          "row": 4,
+          "column": 1,
+          "label": "medic_walk_left",
+          "pivot": {
+            "x": 0.5319148936170213,
+            "y": 0.9910313901345291
+          }
+        },
+        "friendly_4_2": {
+          "frame": {
+            "x": 541,
+            "y": 1041,
+            "w": 185,
+            "h": 218
+          },
+          "cell": {
+            "x": 512,
+            "y": 1024,
+            "w": 256,
+            "h": 256
+          },
+          "row": 4,
+          "column": 2,
+          "label": "medic_walk_passing",
+          "pivot": {
+            "x": 0.5351351351351351,
+            "y": 0.9862385321100917
+          }
+        },
+        "friendly_4_3": {
+          "frame": {
+            "x": 800,
+            "y": 1042,
+            "w": 178,
+            "h": 216
+          },
+          "cell": {
+            "x": 768,
+            "y": 1024,
+            "w": 256,
+            "h": 256
+          },
+          "row": 4,
+          "column": 3,
+          "label": "medic_walk_right",
+          "pivot": {
+            "x": 0.5393258426966292,
+            "y": 0.9907407407407407
+          }
+        },
+        "friendly_5_0": {
+          "frame": {
+            "x": 34,
+            "y": 1280,
+            "w": 199,
+            "h": 228
+          },
+          "cell": {
+            "x": 0,
+            "y": 1280,
+            "w": 256,
+            "h": 256
+          },
+          "row": 5,
+          "column": 0,
+          "label": "civilian_idle_wave",
+          "pivot": {
+            "x": 0.4723618090452261,
+            "y": 1
+          }
+        },
+        "friendly_5_1": {
+          "frame": {
+            "x": 284,
+            "y": 1280,
+            "w": 190,
+            "h": 225
+          },
+          "cell": {
+            "x": 256,
+            "y": 1280,
+            "w": 256,
+            "h": 256
+          },
+          "row": 5,
+          "column": 1,
+          "label": "civilian_walk_left",
+          "pivot": {
+            "x": 0.5263157894736842,
+            "y": 1.0133333333333334
+          }
+        },
+        "friendly_5_2": {
+          "frame": {
+            "x": 539,
+            "y": 1281,
+            "w": 187,
+            "h": 226
+          },
+          "cell": {
+            "x": 512,
+            "y": 1280,
+            "w": 256,
+            "h": 256
+          },
+          "row": 5,
+          "column": 2,
+          "label": "civilian_walk_passing",
+          "pivot": {
+            "x": 0.5401069518716578,
+            "y": 1.0044247787610618
+          }
+        },
+        "friendly_5_3": {
+          "frame": {
+            "x": 796,
+            "y": 1287,
+            "w": 190,
+            "h": 220
+          },
+          "cell": {
+            "x": 768,
+            "y": 1280,
+            "w": 256,
+            "h": 256
+          },
+          "row": 5,
+          "column": 3,
+          "label": "civilian_walk_right",
+          "pivot": {
+            "x": 0.5263157894736842,
+            "y": 1.0045454545454546
+          }
+        }
+      },
+      "roleRows": [
+        "trader",
+        "blacksmith",
+        "farmer",
+        "ranger",
+        "medic",
+        "civilian"
+      ],
+      "actions": [
+        "idle_wave",
+        "walk_left",
+        "walk_passing",
+        "walk_right"
+      ]
+    }
+  },
+  "animations": {
+    "orange_scout_run": {
+      "texture": "bodies",
+      "frames": [
+        "bodies_0_1",
+        "bodies_0_2",
+        "bodies_0_3",
+        "bodies_0_4"
+      ],
+      "frameDurationMs": 90,
+      "loop": true
+    },
+    "orange_scout_idle": {
+      "texture": "bodies",
+      "frames": [
+        "bodies_0_0"
+      ],
+      "frameDurationMs": 600,
+      "loop": true
+    },
+    "orange_ranger_run": {
+      "texture": "bodies",
+      "frames": [
+        "bodies_1_1",
+        "bodies_1_2",
+        "bodies_1_3",
+        "bodies_1_4"
+      ],
+      "frameDurationMs": 90,
+      "loop": true
+    },
+    "orange_ranger_idle": {
+      "texture": "bodies",
+      "frames": [
+        "bodies_1_0"
+      ],
+      "frameDurationMs": 600,
+      "loop": true
+    },
+    "orange_vanguard_run": {
+      "texture": "bodies",
+      "frames": [
+        "bodies_2_1",
+        "bodies_2_2",
+        "bodies_2_3",
+        "bodies_2_4"
+      ],
+      "frameDurationMs": 90,
+      "loop": true
+    },
+    "orange_vanguard_idle": {
+      "texture": "bodies",
+      "frames": [
+        "bodies_2_0"
+      ],
+      "frameDurationMs": 600,
+      "loop": true
+    },
+    "white_scout_run": {
+      "texture": "bodies",
+      "frames": [
+        "bodies_3_1",
+        "bodies_3_2",
+        "bodies_3_3",
+        "bodies_3_4"
+      ],
+      "frameDurationMs": 90,
+      "loop": true
+    },
+    "white_scout_idle": {
+      "texture": "bodies",
+      "frames": [
+        "bodies_3_0"
+      ],
+      "frameDurationMs": 600,
+      "loop": true
+    },
+    "white_ranger_run": {
+      "texture": "bodies",
+      "frames": [
+        "bodies_4_1",
+        "bodies_4_2",
+        "bodies_4_3",
+        "bodies_4_4"
+      ],
+      "frameDurationMs": 90,
+      "loop": true
+    },
+    "white_ranger_idle": {
+      "texture": "bodies",
+      "frames": [
+        "bodies_4_0"
+      ],
+      "frameDurationMs": 600,
+      "loop": true
+    },
+    "white_vanguard_run": {
+      "texture": "bodies",
+      "frames": [
+        "bodies_5_1",
+        "bodies_5_2",
+        "bodies_5_3",
+        "bodies_5_4"
+      ],
+      "frameDurationMs": 90,
+      "loop": true
+    },
+    "white_vanguard_idle": {
+      "texture": "bodies",
+      "frames": [
+        "bodies_5_0"
+      ],
+      "frameDurationMs": 600,
+      "loop": true
+    },
+    "orange_run": {
+      "texture": "actors",
+      "frames": [
+        "actors_0_0",
+        "actors_0_1",
+        "actors_0_2",
+        "actors_0_3",
+        "actors_0_4",
+        "actors_0_5",
+        "actors_0_6",
+        "actors_0_7"
+      ],
+      "frameDurationMs": 90,
+      "loop": true
+    },
+    "orange_combat_knife": {
+      "texture": "actors",
+      "frames": [
+        "actors_1_4",
+        "actors_1_5"
+      ],
+      "frameDurationMs": 100,
+      "loop": false
+    },
+    "white_run": {
+      "texture": "actors",
+      "frames": [
+        "actors_2_0",
+        "actors_2_1",
+        "actors_2_2",
+        "actors_2_3",
+        "actors_2_4",
+        "actors_2_5",
+        "actors_2_6",
+        "actors_2_7"
+      ],
+      "frameDurationMs": 90,
+      "loop": true
+    },
+    "white_combat_knife": {
+      "texture": "actors",
+      "frames": [
+        "actors_3_4",
+        "actors_3_5"
+      ],
+      "frameDurationMs": 100,
+      "loop": false
+    },
+    "mouse_run": {
+      "texture": "actors",
+      "frames": [
+        "actors_4_0",
+        "actors_4_1",
+        "actors_4_2",
+        "actors_4_3",
+        "actors_4_4",
+        "actors_4_5",
+        "actors_4_6",
+        "actors_4_7"
+      ],
+      "frameDurationMs": 90,
+      "loop": true
+    },
+    "mouse_combat_knife": {
+      "texture": "actors",
+      "frames": [
+        "actors_5_4",
+        "actors_5_5"
+      ],
+      "frameDurationMs": 100,
+      "loop": false
+    },
+    "officer_run": {
+      "texture": "actors",
+      "frames": [
+        "actors_6_0",
+        "actors_6_1",
+        "actors_6_2",
+        "actors_6_3",
+        "actors_6_4",
+        "actors_6_5",
+        "actors_6_6",
+        "actors_6_7"
+      ],
+      "frameDurationMs": 90,
+      "loop": true
+    },
+    "officer_combat_knife": {
+      "texture": "actors",
+      "frames": [
+        "actors_7_4",
+        "actors_7_5"
+      ],
+      "frameDurationMs": 100,
+      "loop": false
+    },
+    "explosion": {
+      "texture": "items",
+      "frames": [
+        "items_2_0",
+        "items_2_1",
+        "items_2_2",
+        "items_2_3",
+        "items_2_4",
+        "items_2_5",
+        "items_2_6",
+        "items_2_7"
+      ],
+      "frameDurationMs": 82,
+      "loop": false
+    },
+    "leaper_run": {
+      "texture": "specialists",
+      "frames": [
+        "specialists_0_1",
+        "specialists_0_2"
+      ],
+      "frameDurationMs": 110,
+      "loop": true
+    },
+    "bruiser_run": {
+      "texture": "specialists",
+      "frames": [
+        "specialists_1_1",
+        "specialists_1_2"
+      ],
+      "frameDurationMs": 110,
+      "loop": true
+    },
+    "mortar_run": {
+      "texture": "specialists",
+      "frames": [
+        "specialists_2_1",
+        "specialists_2_2"
+      ],
+      "frameDurationMs": 110,
+      "loop": true
+    },
+    "sapper_run": {
+      "texture": "specialists",
+      "frames": [
+        "specialists_3_1",
+        "specialists_3_2"
+      ],
+      "frameDurationMs": 110,
+      "loop": true
+    },
+    "skirmisher_run": {
+      "texture": "specialists",
+      "frames": [
+        "specialists_4_1",
+        "specialists_4_2"
+      ],
+      "frameDurationMs": 110,
+      "loop": true
+    },
+    "frost_run": {
+      "texture": "specialists",
+      "frames": [
+        "specialists_5_1",
+        "specialists_5_2"
+      ],
+      "frameDurationMs": 110,
+      "loop": true
+    },
+    "trader_friendly_walk": {
+      "texture": "friendly",
+      "frames": [
+        "friendly_0_1",
+        "friendly_0_2",
+        "friendly_0_3"
+      ],
+      "frameDurationMs": 167,
+      "loop": true
+    },
+    "blacksmith_friendly_walk": {
+      "texture": "friendly",
+      "frames": [
+        "friendly_1_1",
+        "friendly_1_2",
+        "friendly_1_3"
+      ],
+      "frameDurationMs": 167,
+      "loop": true
+    },
+    "farmer_friendly_walk": {
+      "texture": "friendly",
+      "frames": [
+        "friendly_2_1",
+        "friendly_2_2",
+        "friendly_2_3"
+      ],
+      "frameDurationMs": 167,
+      "loop": true
+    },
+    "ranger_friendly_walk": {
+      "texture": "friendly",
+      "frames": [
+        "friendly_3_1",
+        "friendly_3_2",
+        "friendly_3_3"
+      ],
+      "frameDurationMs": 167,
+      "loop": true
+    },
+    "medic_friendly_walk": {
+      "texture": "friendly",
+      "frames": [
+        "friendly_4_1",
+        "friendly_4_2",
+        "friendly_4_3"
+      ],
+      "frameDurationMs": 167,
+      "loop": true
+    },
+    "civilian_friendly_walk": {
+      "texture": "friendly",
+      "frames": [
+        "friendly_5_1",
+        "friendly_5_2",
+        "friendly_5_3"
+      ],
+      "frameDurationMs": 167,
+      "loop": true
+    }
+  }
+}

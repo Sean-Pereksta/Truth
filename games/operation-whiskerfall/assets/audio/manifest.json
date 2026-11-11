@@ -1,0 +1,284 @@
+{
+  "version": 2,
+  "license": "Core effects: original project synthesis. Animal voices: CC0-1.0 recordings and performed effects; see animals/SOURCES.md.",
+  "format": "PCM WAV mono 16-bit 22050 Hz",
+  "effects": [
+    {
+      "id": "pistol",
+      "file": "pistol.wav"
+    },
+    {
+      "id": "rifle",
+      "file": "rifle.wav"
+    },
+    {
+      "id": "smg",
+      "file": "smg.wav"
+    },
+    {
+      "id": "lmg",
+      "file": "lmg.wav"
+    },
+    {
+      "id": "sniper",
+      "file": "sniper.wav"
+    },
+    {
+      "id": "shotgun",
+      "file": "shotgun.wav"
+    },
+    {
+      "id": "plasma",
+      "file": "plasma.wav"
+    },
+    {
+      "id": "flame",
+      "file": "flame.wav"
+    },
+    {
+      "id": "rocket",
+      "file": "rocket.wav"
+    },
+    {
+      "id": "melee",
+      "file": "melee.wav"
+    },
+    {
+      "id": "hit",
+      "file": "hit.wav"
+    },
+    {
+      "id": "explosion",
+      "file": "explosion.wav"
+    },
+    {
+      "id": "reload",
+      "file": "reload.wav"
+    },
+    {
+      "id": "dodge",
+      "file": "dodge.wav"
+    },
+    {
+      "id": "pickup",
+      "file": "pickup.wav"
+    },
+    {
+      "id": "level",
+      "file": "level.wav"
+    },
+    {
+      "id": "quest",
+      "file": "quest.wav"
+    },
+    {
+      "id": "ui",
+      "file": "ui.wav"
+    },
+    {
+      "id": "heal",
+      "file": "heal.wav"
+    },
+    {
+      "id": "revive",
+      "file": "revive.wav"
+    },
+    {
+      "id": "lightning",
+      "file": "lightning.wav"
+    },
+    {
+      "id": "alarm",
+      "file": "alarm.wav"
+    },
+    {
+      "id": "footstep",
+      "file": "footstep.wav"
+    },
+    {
+      "id": "snowstep",
+      "file": "snowstep.wav"
+    },
+    {
+      "id": "waterstep",
+      "file": "waterstep.wav"
+    },
+    {
+      "id": "airstrike",
+      "file": "airstrike.wav"
+    },
+    {
+      "id": "artillery",
+      "file": "artillery.wav"
+    },
+    {
+      "id": "bird",
+      "file": "bird.wav"
+    },
+    {
+      "id": "leap",
+      "file": "leap.wav"
+    },
+    {
+      "id": "stomp",
+      "file": "stomp.wav"
+    },
+    {
+      "id": "mortar",
+      "file": "mortar.wav"
+    },
+    {
+      "id": "mine",
+      "file": "mine.wav"
+    },
+    {
+      "id": "ice",
+      "file": "ice.wav"
+    },
+    {
+      "id": "dash",
+      "file": "dash.wav"
+    },
+    {
+      "id": "town_bell",
+      "file": "town_bell.wav"
+    },
+    {
+      "id": "wilderness-wind",
+      "file": "wilderness-wind.wav"
+    }
+  ],
+  "animals": {
+    "license": "CC0-1.0",
+    "credits": "animals/SOURCES.md",
+    "embeddedBank": "data/animal-sounds.js",
+    "clips": [
+      {
+        "id": "cat_hiss_01",
+        "file": "animals/cat_hiss_01.wav"
+      },
+      {
+        "id": "cat_hiss_02",
+        "file": "animals/cat_hiss_02.wav"
+      },
+      {
+        "id": "cat_meow_01",
+        "file": "animals/cat_meow_01.wav"
+      },
+      {
+        "id": "cat_meow_02",
+        "file": "animals/cat_meow_02.wav"
+      },
+      {
+        "id": "cat_meow_03",
+        "file": "animals/cat_meow_03.wav"
+      },
+      {
+        "id": "cat_meow_04",
+        "file": "animals/cat_meow_04.wav"
+      },
+      {
+        "id": "cat_purr_01",
+        "file": "animals/cat_purr_01.wav"
+      },
+      {
+        "id": "cat_purr_02",
+        "file": "animals/cat_purr_02.wav"
+      },
+      {
+        "id": "mouse_attack_01",
+        "file": "animals/mouse_attack_01.wav"
+      },
+      {
+        "id": "mouse_death_01",
+        "file": "animals/mouse_death_01.wav"
+      },
+      {
+        "id": "mouse_hurt_01",
+        "file": "animals/mouse_hurt_01.wav"
+      },
+      {
+        "id": "mouse_squeak_01",
+        "file": "animals/mouse_squeak_01.wav"
+      },
+      {
+        "id": "mouse_squeak_02",
+        "file": "animals/mouse_squeak_02.wav"
+      },
+      {
+        "id": "mouse_squeak_03",
+        "file": "animals/mouse_squeak_03.wav"
+      },
+      {
+        "id": "mouse_squeak_04",
+        "file": "animals/mouse_squeak_04.wav"
+      },
+      {
+        "id": "mouse_squeak_05",
+        "file": "animals/mouse_squeak_05.wav"
+      }
+    ],
+    "groups": {
+      "cat_greet": [
+        "cat_meow_01",
+        "cat_meow_02",
+        "cat_meow_03",
+        "cat_meow_04"
+      ],
+      "cat_idle": [
+        "cat_meow_01",
+        "cat_meow_02",
+        "cat_meow_03",
+        "cat_meow_04"
+      ],
+      "cat_happy": [
+        "cat_meow_01",
+        "cat_meow_02",
+        "cat_meow_04"
+      ],
+      "cat_hurt": [
+        "cat_hiss_01",
+        "cat_hiss_02",
+        "cat_meow_03"
+      ],
+      "cat_down": [
+        "cat_meow_03",
+        "cat_meow_04",
+        "cat_hiss_02"
+      ],
+      "cat_purr": [
+        "cat_purr_01",
+        "cat_purr_02"
+      ],
+      "mouse_alert": [
+        "mouse_squeak_01",
+        "mouse_squeak_02",
+        "mouse_squeak_03",
+        "mouse_squeak_04",
+        "mouse_squeak_05"
+      ],
+      "mouse_chatter": [
+        "mouse_squeak_01",
+        "mouse_squeak_02",
+        "mouse_squeak_03",
+        "mouse_squeak_04",
+        "mouse_squeak_05"
+      ],
+      "mouse_attack": [
+        "mouse_attack_01",
+        "mouse_squeak_04",
+        "mouse_squeak_05"
+      ],
+      "mouse_hurt": [
+        "mouse_hurt_01",
+        "mouse_squeak_02",
+        "mouse_squeak_05"
+      ],
+      "mouse_defeat": [
+        "mouse_death_01",
+        "mouse_squeak_01",
+        "mouse_squeak_03"
+      ]
+    }
+  }
+}

@@ -1,0 +1,209 @@
+{
+  "version": 3,
+  "description": "Ordinary enemies, advanced archetypes, elite troops and summoned enemies grant supplies, scrap and currency only. Bosses grant one shared equipment choice from their signature cache once. Named assassination and bounty targets offer one choice from the first two regional items. Cavern reliquaries offer one choice from their authored pair. Unchosen items are not granted.",
+  "rarityWeights": [
+    54,
+    25,
+    13,
+    6,
+    1.8,
+    0.2
+  ],
+  "sources": {
+    "trooper": {
+      "equipmentChance": 0
+    },
+    "officer": {
+      "equipmentChance": 0
+    },
+    "elite": {
+      "equipmentChance": 0
+    },
+    "advancedArchetype": {
+      "equipmentChance": 0
+    },
+    "summoned": {
+      "equipmentChance": 0
+    },
+    "boss": {
+      "equipmentChance": 1,
+      "itemsGranted": 1,
+      "rewardPools": [
+        [
+          "ember_seed",
+          "sparrow_burst",
+          "swift_paw"
+        ],
+        [
+          "viper_bloom",
+          "briar_smg",
+          "longtail",
+          "copper_revolver",
+          "armor_rollshell"
+        ],
+        [
+          "echo_fang",
+          "badger_slug",
+          "barkbreaker",
+          "armor_wayfarer"
+        ],
+        [
+          "winter_halo",
+          "rime_fan",
+          "stonewall",
+          "firefly",
+          "bankshot",
+          "hedgehog",
+          "armor_rimeheart"
+        ],
+        [
+          "sunburst_mortar",
+          "owlet_guided",
+          "wintertooth",
+          "glacier",
+          "firecracker",
+          "armor_venomskin"
+        ],
+        [
+          "wasp_swarm",
+          "stormcall",
+          "mirage",
+          "dunehammer",
+          "thundercoil",
+          "shatterglass"
+        ],
+        [
+          "storm_loom",
+          "cinderwheel",
+          "melee_16",
+          "forgeheart",
+          "triplethunder",
+          "armor_cinderproof"
+        ],
+        [
+          "eventide",
+          "dawnpiercer",
+          "melee_17",
+          "melee_18",
+          "anvil",
+          "whiskerfall",
+          "freedoms_echo",
+          "cinder_pistol",
+          "aurora_arc",
+          "phoenix_coil",
+          "sunbeam",
+          "silverline_rail",
+          "armor_phaseweave"
+        ],
+        [
+          "rat_kings_rattle",
+          "starlight",
+          "melee_19"
+        ]
+      ]
+    },
+    "namedQuestTarget": {
+      "questTypes": [
+        "assassination",
+        "bounty"
+      ],
+      "regionalPoolItems": 2,
+      "itemsGranted": 1,
+      "oneTime": true
+    },
+    "cavernReliquary": {
+      "oneTime": true,
+      "itemsGranted": 1,
+      "rewardPools": [
+        [
+          "ember_seed",
+          "armor_rollshell"
+        ],
+        [
+          "sparrow_burst",
+          "ember_seed"
+        ],
+        [
+          "viper_bloom",
+          "armor_rollshell"
+        ],
+        [
+          "briar_smg",
+          "viper_bloom"
+        ],
+        [
+          "echo_fang",
+          "armor_wayfarer"
+        ],
+        [
+          "rime_fan",
+          "badger_slug"
+        ],
+        [
+          "winter_halo",
+          "armor_rimeheart"
+        ],
+        [
+          "shatterglass",
+          "thundercoil"
+        ],
+        [
+          "sunburst_mortar",
+          "owlet_guided"
+        ],
+        [
+          "firecracker",
+          "bankshot"
+        ],
+        [
+          "wasp_swarm",
+          "armor_venomskin"
+        ],
+        [
+          "stormcall",
+          "viper_bloom"
+        ],
+        [
+          "cinderwheel",
+          "armor_cinderproof"
+        ],
+        [
+          "storm_loom",
+          "sunbeam"
+        ],
+        [
+          "eventide",
+          "armor_phaseweave"
+        ],
+        [
+          "rat_kings_rattle",
+          "starlight"
+        ]
+      ]
+    },
+    "cache": {
+      "equipmentChance": 1,
+      "rewardOnly": false
+    }
+  },
+  "modifiers": [
+    "explosive",
+    "areaDamage",
+    "healOnKill",
+    "chain",
+    "burn",
+    "pierce",
+    "shock",
+    "crit",
+    "fastDodge",
+    "fireResist"
+  ],
+  "upgradeLevels": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ]
+}

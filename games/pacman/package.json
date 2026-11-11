@@ -1,0 +1,10 @@
+{
+  "name": "pacman-blackout",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node source/server.cjs",
+    "test": "node source/test/simulation.mjs && node source/test/restart.cjs && node source/test/training-queue.mjs && node source/test/teams.mjs && node source/test/team-ai.mjs"
+  }
+}

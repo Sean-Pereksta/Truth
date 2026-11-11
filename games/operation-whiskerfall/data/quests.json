@@ -1,0 +1,4528 @@
+[
+  {
+    "id": "main_0_0",
+    "title": "A Spark in Greenfields",
+    "description": "Liberate Greenfields Reach’s first occupied outpost and open the supply road.",
+    "type": "liberate",
+    "region": 0,
+    "target": "base_0_0",
+    "required": 1,
+    "rewardGold": 100,
+    "rewardXp": 90,
+    "main": true,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_0",
+    "nextQuestId": "main_0_1",
+    "followUp": "After this assignment, speak with Wayfinder Poppy about “Cut the Supply Line”."
+  },
+  {
+    "id": "main_0_1",
+    "title": "Cut the Supply Line",
+    "description": "Secure the second enemy stronghold in Greenfields Reach.",
+    "type": "liberate",
+    "region": 0,
+    "target": "base_0_1",
+    "required": 1,
+    "rewardGold": 150,
+    "rewardXp": 140,
+    "main": true,
+    "prerequisite": "main_0_0",
+    "giverNpcId": "npc_town_way_0",
+    "nextQuestId": "main_0_2",
+    "followUp": "After this assignment, speak with Captain Saffron about “Defeat Colonel Ironwhisker”."
+  },
+  {
+    "id": "main_0_2",
+    "title": "Defeat Colonel Ironwhisker",
+    "description": "Confront Colonel Ironwhisker and free Greenfields Reach from occupation.",
+    "type": "boss",
+    "region": 0,
+    "target": "boss_0",
+    "required": 1,
+    "rewardGold": 320,
+    "rewardXp": 350,
+    "main": true,
+    "prerequisite": "main_0_1",
+    "giverNpcId": "npc_town_0",
+    "nextQuestId": "main_1_0",
+    "followUp": "After this assignment, speak with Scout Juniper about “Into the Mosswood”."
+  },
+  {
+    "id": "side_0_0",
+    "region": 0,
+    "required": 1,
+    "rewardGold": 100,
+    "rewardXp": 90,
+    "main": false,
+    "prerequisite": null,
+    "type": "explore",
+    "target": "cave_0_0",
+    "title": "Secrets of Greenfields Reach",
+    "description": "Find the hidden cavern marked by local scouts.",
+    "giverNpcId": "npc_town_extra_0",
+    "nextQuestId": "main_0_0",
+    "followUp": "After this assignment, speak with Captain Saffron about “A Spark in Greenfields”."
+  },
+  {
+    "id": "side_0_1",
+    "region": 0,
+    "required": 1,
+    "rewardGold": 115,
+    "rewardXp": 110,
+    "main": false,
+    "prerequisite": null,
+    "type": "cache",
+    "target": "cache_0_0",
+    "title": "Supplies for the Resistance",
+    "description": "Recover a lost resistance supply cache.",
+    "giverNpcId": "npc_town_way_0",
+    "nextQuestId": "main_0_0",
+    "followUp": "After this assignment, speak with Captain Saffron about “A Spark in Greenfields”."
+  },
+  {
+    "id": "side_0_2",
+    "region": 0,
+    "required": 1,
+    "rewardGold": 130,
+    "rewardXp": 130,
+    "main": false,
+    "prerequisite": null,
+    "type": "rescue",
+    "target": "base_0_2",
+    "title": "Bring Them Home",
+    "description": "Clear the prison outpost and free the captive villagers.",
+    "giverNpcId": "npc_town_0",
+    "nextQuestId": "escort_0",
+    "followUp": "After this assignment, speak with Wayfinder Poppy about “A Courier’s First Run”."
+  },
+  {
+    "id": "side_0_3",
+    "region": 0,
+    "required": 1,
+    "rewardGold": 145,
+    "rewardXp": 150,
+    "main": false,
+    "prerequisite": null,
+    "type": "convoy",
+    "target": "base_0_3",
+    "title": "Stop the War Convoy",
+    "description": "Break the convoy depot’s guard and recover its supplies.",
+    "giverNpcId": "npc_town_way_0",
+    "nextQuestId": "main_0_0",
+    "followUp": "After this assignment, speak with Captain Saffron about “A Spark in Greenfields”."
+  },
+  {
+    "id": "side_0_4",
+    "region": 0,
+    "required": 12,
+    "rewardGold": 160,
+    "rewardXp": 170,
+    "main": false,
+    "prerequisite": null,
+    "type": "kill",
+    "target": 0,
+    "title": "Reclaim the Countryside",
+    "description": "Defeat occupying troops anywhere in this region.",
+    "giverNpcId": "npc_town_extra_0",
+    "nextQuestId": "main_0_0",
+    "followUp": "After this assignment, speak with Captain Saffron about “A Spark in Greenfields”."
+  },
+  {
+    "id": "escort_0",
+    "title": "A Courier’s First Run",
+    "description": "Meet the courier south of Willow Camp, then stay close while they follow the marked road to the forward meeting point.",
+    "type": "escort",
+    "region": 0,
+    "level": 1,
+    "target": "escort_0",
+    "required": 1,
+    "startX": 1430,
+    "startY": 1664,
+    "x": 1801.8,
+    "y": 2471.04,
+    "waypoints": [
+      {
+        "x": 1430,
+        "y": 1664
+      },
+      {
+        "x": 1531.4,
+        "y": 1713.92
+      },
+      {
+        "x": 1632.8,
+        "y": 1997.84
+      },
+      {
+        "x": 1734.2,
+        "y": 2281.7599999999998
+      },
+      {
+        "x": 1801.8,
+        "y": 2471.04
+      }
+    ],
+    "escortKind": "courier",
+    "escortHp": 220,
+    "escortSpeed": 80,
+    "waveCount": 2,
+    "rewardGold": 240,
+    "rewardXp": 180,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_way_0",
+    "nextQuestId": "main_0_0",
+    "followUp": "After this assignment, speak with Captain Saffron about “A Spark in Greenfields”."
+  },
+  {
+    "id": "defend_0",
+    "title": "Hold the Orchard Road",
+    "description": "Hold the area for 45 seconds. The countdown advances while at least one standing hero is inside the circle. Leaving pauses progress; defeating every enemy is not required.",
+    "type": "defend",
+    "region": 0,
+    "level": 1,
+    "target": "defend_0",
+    "required": 1,
+    "duration": 45,
+    "waveCount": 3,
+    "rewardGold": 300,
+    "rewardXp": 230,
+    "main": false,
+    "prerequisite": "main_0_0",
+    "giverNpcId": "npc_town_0",
+    "nextQuestId": "escort_0",
+    "followUp": "After this assignment, speak with Wayfinder Poppy about “A Courier’s First Run”."
+  },
+  {
+    "id": "assassination_0",
+    "title": "Wanted: Captain Gristle",
+    "description": "Find Captain Gristle at Millroad Garrison. Defeat this named officer; the rest of the base is optional.",
+    "type": "assassination",
+    "region": 0,
+    "level": 2,
+    "target": "base_0_1_guard_7",
+    "targetLocation": "base_0_1",
+    "targetName": "Captain Gristle",
+    "required": 1,
+    "rewardGold": 350,
+    "rewardXp": 220,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_extra_0",
+    "nextQuestId": "main_0_0",
+    "followUp": "After this assignment, speak with Captain Saffron about “A Spark in Greenfields”."
+  },
+  {
+    "id": "bounty_0",
+    "title": "Commander Bounty: General Soot",
+    "description": "Track down General Soot at the marked supply depot. This armored commander carries a valuable resistance bounty.",
+    "type": "bounty",
+    "region": 0,
+    "level": 3,
+    "target": "base_0_3_guard_6",
+    "targetLocation": "base_0_3",
+    "targetName": "General Soot",
+    "required": 1,
+    "rewardGold": 500,
+    "rewardXp": 280,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_0",
+    "nextQuestId": "escort_0",
+    "followUp": "After this assignment, speak with Wayfinder Poppy about “A Courier’s First Run”."
+  },
+  {
+    "id": "main_1_0",
+    "title": "Into the Mosswood",
+    "description": "Liberate Mosswood Wilds’s first occupied outpost and open the supply road.",
+    "type": "liberate",
+    "region": 1,
+    "target": "base_1_0",
+    "required": 1,
+    "rewardGold": 190,
+    "rewardXp": 170,
+    "main": true,
+    "prerequisite": "main_0_2",
+    "giverNpcId": "npc_town_1",
+    "nextQuestId": "main_1_1",
+    "followUp": "After this assignment, speak with Wayfinder Bramble about “Silence the Forest Guns”."
+  },
+  {
+    "id": "main_1_1",
+    "title": "Silence the Forest Guns",
+    "description": "Secure the second enemy stronghold in Mosswood Wilds.",
+    "type": "liberate",
+    "region": 1,
+    "target": "base_1_1",
+    "required": 1,
+    "rewardGold": 250,
+    "rewardXp": 230,
+    "main": true,
+    "prerequisite": "main_1_0",
+    "giverNpcId": "npc_town_way_1",
+    "nextQuestId": "main_1_2",
+    "followUp": "After this assignment, speak with Scout Juniper about “Defeat Major Bramble”."
+  },
+  {
+    "id": "main_1_2",
+    "title": "Defeat Major Bramble",
+    "description": "Confront Major Bramble and free Mosswood Wilds from occupation.",
+    "type": "boss",
+    "region": 1,
+    "target": "boss_1",
+    "required": 1,
+    "rewardGold": 480,
+    "rewardXp": 510,
+    "main": true,
+    "prerequisite": "main_1_1",
+    "giverNpcId": "npc_town_1",
+    "nextQuestId": "main_2_0",
+    "followUp": "After this assignment, speak with Ranger Crag about “The Mountain Road”."
+  },
+  {
+    "id": "side_1_0",
+    "region": 1,
+    "required": 1,
+    "rewardGold": 165,
+    "rewardXp": 145,
+    "main": false,
+    "prerequisite": null,
+    "type": "explore",
+    "target": "cave_1_0",
+    "title": "Secrets of Mosswood Wilds",
+    "description": "Find the hidden cavern marked by local scouts.",
+    "giverNpcId": "npc_town_extra_1",
+    "nextQuestId": "main_1_0",
+    "followUp": "After this assignment, speak with Scout Juniper about “Into the Mosswood”."
+  },
+  {
+    "id": "side_1_1",
+    "region": 1,
+    "required": 1,
+    "rewardGold": 180,
+    "rewardXp": 165,
+    "main": false,
+    "prerequisite": null,
+    "type": "cache",
+    "target": "cache_1_0",
+    "title": "Supplies for the Resistance",
+    "description": "Recover a lost resistance supply cache.",
+    "giverNpcId": "npc_town_way_1",
+    "nextQuestId": "main_1_0",
+    "followUp": "After this assignment, speak with Scout Juniper about “Into the Mosswood”."
+  },
+  {
+    "id": "side_1_2",
+    "region": 1,
+    "required": 1,
+    "rewardGold": 195,
+    "rewardXp": 185,
+    "main": false,
+    "prerequisite": null,
+    "type": "rescue",
+    "target": "base_1_2",
+    "title": "Bring Them Home",
+    "description": "Clear the prison outpost and free the captive villagers.",
+    "giverNpcId": "npc_town_1",
+    "nextQuestId": "escort_1",
+    "followUp": "After this assignment, speak with Wayfinder Bramble about “Letters through Mosswood”."
+  },
+  {
+    "id": "side_1_3",
+    "region": 1,
+    "required": 1,
+    "rewardGold": 210,
+    "rewardXp": 205,
+    "main": false,
+    "prerequisite": null,
+    "type": "convoy",
+    "target": "base_1_3",
+    "title": "Stop the War Convoy",
+    "description": "Break the convoy depot’s guard and recover its supplies.",
+    "giverNpcId": "npc_town_way_1",
+    "nextQuestId": "main_1_0",
+    "followUp": "After this assignment, speak with Scout Juniper about “Into the Mosswood”."
+  },
+  {
+    "id": "side_1_4",
+    "region": 1,
+    "required": 14,
+    "rewardGold": 225,
+    "rewardXp": 225,
+    "main": false,
+    "prerequisite": null,
+    "type": "kill",
+    "target": 1,
+    "title": "Reclaim the Countryside",
+    "description": "Defeat occupying troops anywhere in this region.",
+    "giverNpcId": "npc_town_extra_1",
+    "nextQuestId": "main_1_0",
+    "followUp": "After this assignment, speak with Scout Juniper about “Into the Mosswood”."
+  },
+  {
+    "id": "escort_1",
+    "title": "Letters through Mosswood",
+    "description": "Meet the courier south of Mossbell, then stay close while they follow the marked road to the forward meeting point.",
+    "type": "escort",
+    "region": 1,
+    "level": 4,
+    "target": "escort_1",
+    "required": 1,
+    "startX": 6110,
+    "startY": 1664,
+    "x": 6481.8,
+    "y": 2471.04,
+    "waypoints": [
+      {
+        "x": 6110,
+        "y": 1664
+      },
+      {
+        "x": 6211.400000000001,
+        "y": 1713.92
+      },
+      {
+        "x": 6312.8,
+        "y": 1997.84
+      },
+      {
+        "x": 6414.2,
+        "y": 2281.7599999999998
+      },
+      {
+        "x": 6481.8,
+        "y": 2471.04
+      }
+    ],
+    "escortKind": "courier",
+    "escortHp": 255,
+    "escortSpeed": 80,
+    "waveCount": 2,
+    "rewardGold": 340,
+    "rewardXp": 260,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_way_1",
+    "nextQuestId": "main_1_0",
+    "followUp": "After this assignment, speak with Scout Juniper about “Into the Mosswood”."
+  },
+  {
+    "id": "defend_1",
+    "title": "Hold the Mosswood Road",
+    "description": "Hold the area for 45 seconds. The countdown advances while at least one standing hero is inside the circle. Leaving pauses progress; defeating every enemy is not required.",
+    "type": "defend",
+    "region": 1,
+    "level": 4,
+    "target": "defend_1",
+    "required": 1,
+    "duration": 45,
+    "waveCount": 3,
+    "rewardGold": 410,
+    "rewardXp": 315,
+    "main": false,
+    "prerequisite": "main_1_0",
+    "giverNpcId": "npc_town_1",
+    "nextQuestId": "escort_1",
+    "followUp": "After this assignment, speak with Wayfinder Bramble about “Letters through Mosswood”."
+  },
+  {
+    "id": "assassination_1",
+    "title": "Wanted: Captain Thorn",
+    "description": "Find Captain Thorn at Timberline Barracks. Defeat this named officer; the rest of the base is optional.",
+    "type": "assassination",
+    "region": 1,
+    "level": 5,
+    "target": "base_1_1_guard_7",
+    "targetLocation": "base_1_1",
+    "targetName": "Captain Thorn",
+    "required": 1,
+    "rewardGold": 450,
+    "rewardXp": 300,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_extra_1",
+    "nextQuestId": "main_1_0",
+    "followUp": "After this assignment, speak with Scout Juniper about “Into the Mosswood”."
+  },
+  {
+    "id": "bounty_1",
+    "title": "Commander Bounty: General Nettle",
+    "description": "Track down General Nettle at the marked supply depot. This armored commander carries a valuable resistance bounty.",
+    "type": "bounty",
+    "region": 1,
+    "level": 6,
+    "target": "base_1_3_guard_6",
+    "targetLocation": "base_1_3",
+    "targetName": "General Nettle",
+    "required": 1,
+    "rewardGold": 620,
+    "rewardXp": 370,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_1",
+    "nextQuestId": "escort_1",
+    "followUp": "After this assignment, speak with Wayfinder Bramble about “Letters through Mosswood”."
+  },
+  {
+    "id": "main_2_0",
+    "title": "The Mountain Road",
+    "description": "Liberate Stonecrest Highlands’s first occupied outpost and open the supply road.",
+    "type": "liberate",
+    "region": 2,
+    "target": "base_2_0",
+    "required": 1,
+    "rewardGold": 280,
+    "rewardXp": 250,
+    "main": true,
+    "prerequisite": "main_1_2",
+    "giverNpcId": "npc_town_2",
+    "nextQuestId": "main_2_1",
+    "followUp": "After this assignment, speak with Wayfinder Granite about “Take the High Ground”."
+  },
+  {
+    "id": "main_2_1",
+    "title": "Take the High Ground",
+    "description": "Secure the second enemy stronghold in Stonecrest Highlands.",
+    "type": "liberate",
+    "region": 2,
+    "target": "base_2_1",
+    "required": 1,
+    "rewardGold": 350,
+    "rewardXp": 320,
+    "main": true,
+    "prerequisite": "main_2_0",
+    "giverNpcId": "npc_town_way_2",
+    "nextQuestId": "main_2_2",
+    "followUp": "After this assignment, speak with Ranger Crag about “Defeat General Flintfang”."
+  },
+  {
+    "id": "main_2_2",
+    "title": "Defeat General Flintfang",
+    "description": "Confront General Flintfang and free Stonecrest Highlands from occupation.",
+    "type": "boss",
+    "region": 2,
+    "target": "boss_2",
+    "required": 1,
+    "rewardGold": 640,
+    "rewardXp": 670,
+    "main": true,
+    "prerequisite": "main_2_1",
+    "giverNpcId": "npc_town_2",
+    "nextQuestId": "main_3_0",
+    "followUp": "After this assignment, speak with Medic Lumi about “A Winter Offensive”."
+  },
+  {
+    "id": "side_2_0",
+    "region": 2,
+    "required": 1,
+    "rewardGold": 230,
+    "rewardXp": 200,
+    "main": false,
+    "prerequisite": null,
+    "type": "explore",
+    "target": "cave_2_0",
+    "title": "Secrets of Stonecrest Highlands",
+    "description": "Find the hidden cavern marked by local scouts.",
+    "giverNpcId": "npc_town_extra_2",
+    "nextQuestId": "main_2_0",
+    "followUp": "After this assignment, speak with Ranger Crag about “The Mountain Road”."
+  },
+  {
+    "id": "side_2_1",
+    "region": 2,
+    "required": 1,
+    "rewardGold": 245,
+    "rewardXp": 220,
+    "main": false,
+    "prerequisite": null,
+    "type": "cache",
+    "target": "cache_2_0",
+    "title": "Supplies for the Resistance",
+    "description": "Recover a lost resistance supply cache.",
+    "giverNpcId": "npc_town_way_2",
+    "nextQuestId": "main_2_0",
+    "followUp": "After this assignment, speak with Ranger Crag about “The Mountain Road”."
+  },
+  {
+    "id": "side_2_2",
+    "region": 2,
+    "required": 1,
+    "rewardGold": 260,
+    "rewardXp": 240,
+    "main": false,
+    "prerequisite": null,
+    "type": "rescue",
+    "target": "base_2_2",
+    "title": "Bring Them Home",
+    "description": "Clear the prison outpost and free the captive villagers.",
+    "giverNpcId": "npc_town_2",
+    "nextQuestId": "escort_2",
+    "followUp": "After this assignment, speak with Wayfinder Granite about “Medicine for the Pass”."
+  },
+  {
+    "id": "side_2_3",
+    "region": 2,
+    "required": 1,
+    "rewardGold": 275,
+    "rewardXp": 260,
+    "main": false,
+    "prerequisite": null,
+    "type": "convoy",
+    "target": "base_2_3",
+    "title": "Stop the War Convoy",
+    "description": "Break the convoy depot’s guard and recover its supplies.",
+    "giverNpcId": "npc_town_way_2",
+    "nextQuestId": "main_2_0",
+    "followUp": "After this assignment, speak with Ranger Crag about “The Mountain Road”."
+  },
+  {
+    "id": "side_2_4",
+    "region": 2,
+    "required": 16,
+    "rewardGold": 290,
+    "rewardXp": 280,
+    "main": false,
+    "prerequisite": null,
+    "type": "kill",
+    "target": 2,
+    "title": "Reclaim the Countryside",
+    "description": "Defeat occupying troops anywhere in this region.",
+    "giverNpcId": "npc_town_extra_2",
+    "nextQuestId": "main_2_0",
+    "followUp": "After this assignment, speak with Ranger Crag about “The Mountain Road”."
+  },
+  {
+    "id": "escort_2",
+    "title": "Medicine for the Pass",
+    "description": "Meet the courier south of Goat’s Rest, then stay close while they follow the marked road to the forward meeting point.",
+    "type": "escort",
+    "region": 2,
+    "level": 7,
+    "target": "escort_2",
+    "required": 1,
+    "startX": 10790,
+    "startY": 1664,
+    "x": 11161.800000000001,
+    "y": 2471.04,
+    "waypoints": [
+      {
+        "x": 10790,
+        "y": 1664
+      },
+      {
+        "x": 10891.4,
+        "y": 1713.92
+      },
+      {
+        "x": 10992.800000000001,
+        "y": 1997.84
+      },
+      {
+        "x": 11094.2,
+        "y": 2281.7599999999998
+      },
+      {
+        "x": 11161.800000000001,
+        "y": 2471.04
+      }
+    ],
+    "escortKind": "courier",
+    "escortHp": 290,
+    "escortSpeed": 80,
+    "waveCount": 2,
+    "rewardGold": 440,
+    "rewardXp": 340,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_way_2",
+    "nextQuestId": "main_2_0",
+    "followUp": "After this assignment, speak with Ranger Crag about “The Mountain Road”."
+  },
+  {
+    "id": "defend_2",
+    "title": "Hold the Stonecrest Road",
+    "description": "Hold the area for 45 seconds. The countdown advances while at least one standing hero is inside the circle. Leaving pauses progress; defeating every enemy is not required.",
+    "type": "defend",
+    "region": 2,
+    "level": 7,
+    "target": "defend_2",
+    "required": 1,
+    "duration": 45,
+    "waveCount": 3,
+    "rewardGold": 520,
+    "rewardXp": 400,
+    "main": false,
+    "prerequisite": "main_2_0",
+    "giverNpcId": "npc_town_2",
+    "nextQuestId": "escort_2",
+    "followUp": "After this assignment, speak with Wayfinder Granite about “Medicine for the Pass”."
+  },
+  {
+    "id": "assassination_2",
+    "title": "Wanted: Captain Scree",
+    "description": "Find Captain Scree at Summit Redoubt. Defeat this named officer; the rest of the base is optional.",
+    "type": "assassination",
+    "region": 2,
+    "level": 8,
+    "target": "base_2_1_guard_7",
+    "targetLocation": "base_2_1",
+    "targetName": "Captain Scree",
+    "required": 1,
+    "rewardGold": 550,
+    "rewardXp": 380,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_extra_2",
+    "nextQuestId": "main_2_0",
+    "followUp": "After this assignment, speak with Ranger Crag about “The Mountain Road”."
+  },
+  {
+    "id": "bounty_2",
+    "title": "Commander Bounty: General Basalt",
+    "description": "Track down General Basalt at the marked supply depot. This armored commander carries a valuable resistance bounty.",
+    "type": "bounty",
+    "region": 2,
+    "level": 9,
+    "target": "base_2_3_guard_6",
+    "targetLocation": "base_2_3",
+    "targetName": "General Basalt",
+    "required": 1,
+    "rewardGold": 740,
+    "rewardXp": 460,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_2",
+    "nextQuestId": "escort_2",
+    "followUp": "After this assignment, speak with Wayfinder Granite about “Medicine for the Pass”."
+  },
+  {
+    "id": "main_3_0",
+    "title": "A Winter Offensive",
+    "description": "Liberate Frostmarch’s first occupied outpost and open the supply road.",
+    "type": "liberate",
+    "region": 3,
+    "target": "base_3_0",
+    "required": 1,
+    "rewardGold": 370,
+    "rewardXp": 330,
+    "main": true,
+    "prerequisite": "main_2_2",
+    "giverNpcId": "npc_town_3",
+    "nextQuestId": "main_3_1",
+    "followUp": "After this assignment, speak with Wayfinder Flurry about “Thaw the Front Line”."
+  },
+  {
+    "id": "main_3_1",
+    "title": "Thaw the Front Line",
+    "description": "Secure the second enemy stronghold in Frostmarch.",
+    "type": "liberate",
+    "region": 3,
+    "target": "base_3_1",
+    "required": 1,
+    "rewardGold": 450,
+    "rewardXp": 410,
+    "main": true,
+    "prerequisite": "main_3_0",
+    "giverNpcId": "npc_town_way_3",
+    "nextQuestId": "main_3_2",
+    "followUp": "After this assignment, speak with Medic Lumi about “Defeat Marshal Whiteclaw”."
+  },
+  {
+    "id": "main_3_2",
+    "title": "Defeat Marshal Whiteclaw",
+    "description": "Confront Marshal Whiteclaw and free Frostmarch from occupation.",
+    "type": "boss",
+    "region": 3,
+    "target": "boss_3",
+    "required": 1,
+    "rewardGold": 800,
+    "rewardXp": 830,
+    "main": true,
+    "prerequisite": "main_3_1",
+    "giverNpcId": "npc_town_3",
+    "nextQuestId": "main_4_0",
+    "followUp": "After this assignment, speak with Trader Sol about “The Long Caravan”."
+  },
+  {
+    "id": "side_3_0",
+    "region": 3,
+    "required": 1,
+    "rewardGold": 295,
+    "rewardXp": 255,
+    "main": false,
+    "prerequisite": null,
+    "type": "explore",
+    "target": "cave_3_0",
+    "title": "Secrets of Frostmarch",
+    "description": "Find the hidden cavern marked by local scouts.",
+    "giverNpcId": "npc_town_extra_3",
+    "nextQuestId": "main_3_0",
+    "followUp": "After this assignment, speak with Medic Lumi about “A Winter Offensive”."
+  },
+  {
+    "id": "side_3_1",
+    "region": 3,
+    "required": 1,
+    "rewardGold": 310,
+    "rewardXp": 275,
+    "main": false,
+    "prerequisite": null,
+    "type": "cache",
+    "target": "cache_3_0",
+    "title": "Supplies for the Resistance",
+    "description": "Recover a lost resistance supply cache.",
+    "giverNpcId": "npc_town_way_3",
+    "nextQuestId": "main_3_0",
+    "followUp": "After this assignment, speak with Medic Lumi about “A Winter Offensive”."
+  },
+  {
+    "id": "side_3_2",
+    "region": 3,
+    "required": 1,
+    "rewardGold": 325,
+    "rewardXp": 295,
+    "main": false,
+    "prerequisite": null,
+    "type": "rescue",
+    "target": "base_3_2",
+    "title": "Bring Them Home",
+    "description": "Clear the prison outpost and free the captive villagers.",
+    "giverNpcId": "npc_town_3",
+    "nextQuestId": "escort_3",
+    "followUp": "After this assignment, speak with Wayfinder Flurry about “Warmth for Snowhaven”."
+  },
+  {
+    "id": "side_3_3",
+    "region": 3,
+    "required": 1,
+    "rewardGold": 340,
+    "rewardXp": 315,
+    "main": false,
+    "prerequisite": null,
+    "type": "convoy",
+    "target": "base_3_3",
+    "title": "Stop the War Convoy",
+    "description": "Break the convoy depot’s guard and recover its supplies.",
+    "giverNpcId": "npc_town_way_3",
+    "nextQuestId": "main_3_0",
+    "followUp": "After this assignment, speak with Medic Lumi about “A Winter Offensive”."
+  },
+  {
+    "id": "side_3_4",
+    "region": 3,
+    "required": 18,
+    "rewardGold": 355,
+    "rewardXp": 335,
+    "main": false,
+    "prerequisite": null,
+    "type": "kill",
+    "target": 3,
+    "title": "Reclaim the Countryside",
+    "description": "Defeat occupying troops anywhere in this region.",
+    "giverNpcId": "npc_town_extra_3",
+    "nextQuestId": "main_3_0",
+    "followUp": "After this assignment, speak with Medic Lumi about “A Winter Offensive”."
+  },
+  {
+    "id": "escort_3",
+    "title": "Warmth for Snowhaven",
+    "description": "Meet the courier south of Snowhaven, then stay close while they follow the marked road to the forward meeting point.",
+    "type": "escort",
+    "region": 3,
+    "level": 10,
+    "target": "escort_3",
+    "required": 1,
+    "startX": 15470,
+    "startY": 1664,
+    "x": 15841.800000000001,
+    "y": 2471.04,
+    "waypoints": [
+      {
+        "x": 15470,
+        "y": 1664
+      },
+      {
+        "x": 15571.4,
+        "y": 1713.92
+      },
+      {
+        "x": 15672.800000000001,
+        "y": 1997.84
+      },
+      {
+        "x": 15774.2,
+        "y": 2281.7599999999998
+      },
+      {
+        "x": 15841.800000000001,
+        "y": 2471.04
+      }
+    ],
+    "escortKind": "courier",
+    "escortHp": 325,
+    "escortSpeed": 80,
+    "waveCount": 2,
+    "rewardGold": 540,
+    "rewardXp": 420,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_way_3",
+    "nextQuestId": "main_3_0",
+    "followUp": "After this assignment, speak with Medic Lumi about “A Winter Offensive”."
+  },
+  {
+    "id": "defend_3",
+    "title": "Hold the Frostmarch Road",
+    "description": "Hold the area for 45 seconds. The countdown advances while at least one standing hero is inside the circle. Leaving pauses progress; defeating every enemy is not required.",
+    "type": "defend",
+    "region": 3,
+    "level": 10,
+    "target": "defend_3",
+    "required": 1,
+    "duration": 45,
+    "waveCount": 3,
+    "rewardGold": 630,
+    "rewardXp": 485,
+    "main": false,
+    "prerequisite": "main_3_0",
+    "giverNpcId": "npc_town_3",
+    "nextQuestId": "escort_3",
+    "followUp": "After this assignment, speak with Wayfinder Flurry about “Warmth for Snowhaven”."
+  },
+  {
+    "id": "assassination_3",
+    "title": "Wanted: Captain Rime",
+    "description": "Find Captain Rime at Frozen Battery. Defeat this named officer; the rest of the base is optional.",
+    "type": "assassination",
+    "region": 3,
+    "level": 11,
+    "target": "base_3_1_guard_7",
+    "targetLocation": "base_3_1",
+    "targetName": "Captain Rime",
+    "required": 1,
+    "rewardGold": 650,
+    "rewardXp": 460,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_extra_3",
+    "nextQuestId": "main_3_0",
+    "followUp": "After this assignment, speak with Medic Lumi about “A Winter Offensive”."
+  },
+  {
+    "id": "bounty_3",
+    "title": "Commander Bounty: General Hoarfang",
+    "description": "Track down General Hoarfang at the marked supply depot. This armored commander carries a valuable resistance bounty.",
+    "type": "bounty",
+    "region": 3,
+    "level": 12,
+    "target": "base_3_3_guard_6",
+    "targetLocation": "base_3_3",
+    "targetName": "General Hoarfang",
+    "required": 1,
+    "rewardGold": 860,
+    "rewardXp": 550,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_3",
+    "nextQuestId": "escort_3",
+    "followUp": "After this assignment, speak with Wayfinder Flurry about “Warmth for Snowhaven”."
+  },
+  {
+    "id": "main_4_0",
+    "title": "The Long Caravan",
+    "description": "Liberate Sunscar Dunes’s first occupied outpost and open the supply road.",
+    "type": "liberate",
+    "region": 4,
+    "target": "base_4_0",
+    "required": 1,
+    "rewardGold": 460,
+    "rewardXp": 410,
+    "main": true,
+    "prerequisite": "main_3_2",
+    "giverNpcId": "npc_town_4",
+    "nextQuestId": "main_4_1",
+    "followUp": "After this assignment, speak with Wayfinder Saffron about “The Desert Signal”."
+  },
+  {
+    "id": "main_4_1",
+    "title": "The Desert Signal",
+    "description": "Secure the second enemy stronghold in Sunscar Dunes.",
+    "type": "liberate",
+    "region": 4,
+    "target": "base_4_1",
+    "required": 1,
+    "rewardGold": 550,
+    "rewardXp": 500,
+    "main": true,
+    "prerequisite": "main_4_0",
+    "giverNpcId": "npc_town_way_4",
+    "nextQuestId": "main_4_2",
+    "followUp": "After this assignment, speak with Trader Sol about “Defeat Field Marshal Sirocco”."
+  },
+  {
+    "id": "main_4_2",
+    "title": "Defeat Field Marshal Sirocco",
+    "description": "Confront Field Marshal Sirocco and free Sunscar Dunes from occupation.",
+    "type": "boss",
+    "region": 4,
+    "target": "boss_4",
+    "required": 1,
+    "rewardGold": 960,
+    "rewardXp": 990,
+    "main": true,
+    "prerequisite": "main_4_1",
+    "giverNpcId": "npc_town_4",
+    "nextQuestId": "main_5_0",
+    "followUp": "After this assignment, speak with Harbormaster Reed about “Across the Delta”."
+  },
+  {
+    "id": "side_4_0",
+    "region": 4,
+    "required": 1,
+    "rewardGold": 360,
+    "rewardXp": 310,
+    "main": false,
+    "prerequisite": null,
+    "type": "explore",
+    "target": "cave_4_0",
+    "title": "Secrets of Sunscar Dunes",
+    "description": "Find the hidden cavern marked by local scouts.",
+    "giverNpcId": "npc_town_way_4",
+    "nextQuestId": "main_4_0",
+    "followUp": "After this assignment, speak with Trader Sol about “The Long Caravan”."
+  },
+  {
+    "id": "side_4_1",
+    "region": 4,
+    "required": 1,
+    "rewardGold": 375,
+    "rewardXp": 330,
+    "main": false,
+    "prerequisite": null,
+    "type": "cache",
+    "target": "cache_4_0",
+    "title": "Supplies for the Resistance",
+    "description": "Recover a lost resistance supply cache.",
+    "giverNpcId": "npc_town_way_4",
+    "nextQuestId": "main_4_0",
+    "followUp": "After this assignment, speak with Trader Sol about “The Long Caravan”."
+  },
+  {
+    "id": "side_4_2",
+    "region": 4,
+    "required": 1,
+    "rewardGold": 390,
+    "rewardXp": 350,
+    "main": false,
+    "prerequisite": null,
+    "type": "rescue",
+    "target": "base_4_2",
+    "title": "Bring Them Home",
+    "description": "Clear the prison outpost and free the captive villagers.",
+    "giverNpcId": "npc_town_4",
+    "nextQuestId": "escort_4",
+    "followUp": "After this assignment, speak with Wayfinder Saffron about “Water for the Caravan”."
+  },
+  {
+    "id": "side_4_3",
+    "region": 4,
+    "required": 1,
+    "rewardGold": 405,
+    "rewardXp": 370,
+    "main": false,
+    "prerequisite": null,
+    "type": "convoy",
+    "target": "base_4_3",
+    "title": "Stop the War Convoy",
+    "description": "Break the convoy depot’s guard and recover its supplies.",
+    "giverNpcId": "npc_town_way_4",
+    "nextQuestId": "main_4_0",
+    "followUp": "After this assignment, speak with Trader Sol about “The Long Caravan”."
+  },
+  {
+    "id": "side_4_4",
+    "region": 4,
+    "required": 20,
+    "rewardGold": 420,
+    "rewardXp": 390,
+    "main": false,
+    "prerequisite": null,
+    "type": "kill",
+    "target": 4,
+    "title": "Reclaim the Countryside",
+    "description": "Defeat occupying troops anywhere in this region.",
+    "giverNpcId": "npc_town_way_4",
+    "nextQuestId": "main_4_0",
+    "followUp": "After this assignment, speak with Trader Sol about “The Long Caravan”."
+  },
+  {
+    "id": "escort_4",
+    "title": "Water for the Caravan",
+    "description": "Meet the courier south of Sundial Oasis, then stay close while they follow the marked road to the forward meeting point.",
+    "type": "escort",
+    "region": 4,
+    "level": 13,
+    "target": "escort_4",
+    "required": 1,
+    "startX": 15470,
+    "startY": 8944,
+    "x": 15841.800000000001,
+    "y": 9751.04,
+    "waypoints": [
+      {
+        "x": 15470,
+        "y": 8944
+      },
+      {
+        "x": 15571.4,
+        "y": 8993.92
+      },
+      {
+        "x": 15672.800000000001,
+        "y": 9277.84
+      },
+      {
+        "x": 15774.2,
+        "y": 9561.76
+      },
+      {
+        "x": 15841.800000000001,
+        "y": 9751.04
+      }
+    ],
+    "escortKind": "courier",
+    "escortHp": 360,
+    "escortSpeed": 80,
+    "waveCount": 2,
+    "rewardGold": 640,
+    "rewardXp": 500,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_way_4",
+    "nextQuestId": "main_4_0",
+    "followUp": "After this assignment, speak with Trader Sol about “The Long Caravan”."
+  },
+  {
+    "id": "defend_4",
+    "title": "Hold the Sunscar Road",
+    "description": "Hold the area for 45 seconds. The countdown advances while at least one standing hero is inside the circle. Leaving pauses progress; defeating every enemy is not required.",
+    "type": "defend",
+    "region": 4,
+    "level": 13,
+    "target": "defend_4",
+    "required": 1,
+    "duration": 45,
+    "waveCount": 3,
+    "rewardGold": 740,
+    "rewardXp": 570,
+    "main": false,
+    "prerequisite": "main_4_0",
+    "giverNpcId": "npc_town_4",
+    "nextQuestId": "escort_4",
+    "followUp": "After this assignment, speak with Wayfinder Saffron about “Water for the Caravan”."
+  },
+  {
+    "id": "assassination_4",
+    "title": "Wanted: Captain Dustfang",
+    "description": "Find Captain Dustfang at Sunscar Barracks. Defeat this named officer; the rest of the base is optional.",
+    "type": "assassination",
+    "region": 4,
+    "level": 14,
+    "target": "base_4_1_guard_7",
+    "targetLocation": "base_4_1",
+    "targetName": "Captain Dustfang",
+    "required": 1,
+    "rewardGold": 750,
+    "rewardXp": 540,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_way_4",
+    "nextQuestId": "main_4_0",
+    "followUp": "After this assignment, speak with Trader Sol about “The Long Caravan”."
+  },
+  {
+    "id": "bounty_4",
+    "title": "Commander Bounty: General Copperdune",
+    "description": "Track down General Copperdune at the marked supply depot. This armored commander carries a valuable resistance bounty.",
+    "type": "bounty",
+    "region": 4,
+    "level": 15,
+    "target": "base_4_3_guard_6",
+    "targetLocation": "base_4_3",
+    "targetName": "General Copperdune",
+    "required": 1,
+    "rewardGold": 980,
+    "rewardXp": 640,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_4",
+    "nextQuestId": "escort_4",
+    "followUp": "After this assignment, speak with Wayfinder Saffron about “Water for the Caravan”."
+  },
+  {
+    "id": "main_5_0",
+    "title": "Across the Delta",
+    "description": "Liberate Reedwater Delta’s first occupied outpost and open the supply road.",
+    "type": "liberate",
+    "region": 5,
+    "target": "base_5_0",
+    "required": 1,
+    "rewardGold": 550,
+    "rewardXp": 490,
+    "main": true,
+    "prerequisite": "main_4_2",
+    "giverNpcId": "npc_town_5",
+    "nextQuestId": "main_5_1",
+    "followUp": "After this assignment, speak with Wayfinder Ripple about “Clear the River”."
+  },
+  {
+    "id": "main_5_1",
+    "title": "Clear the River",
+    "description": "Secure the second enemy stronghold in Reedwater Delta.",
+    "type": "liberate",
+    "region": 5,
+    "target": "base_5_1",
+    "required": 1,
+    "rewardGold": 650,
+    "rewardXp": 590,
+    "main": true,
+    "prerequisite": "main_5_0",
+    "giverNpcId": "npc_town_way_5",
+    "nextQuestId": "main_5_2",
+    "followUp": "After this assignment, speak with Harbormaster Reed about “Defeat Admiral Miretooth”."
+  },
+  {
+    "id": "main_5_2",
+    "title": "Defeat Admiral Miretooth",
+    "description": "Confront Admiral Miretooth and free Reedwater Delta from occupation.",
+    "type": "boss",
+    "region": 5,
+    "target": "boss_5",
+    "required": 1,
+    "rewardGold": 1120,
+    "rewardXp": 1150,
+    "main": true,
+    "prerequisite": "main_5_1",
+    "giverNpcId": "npc_town_5",
+    "nextQuestId": "main_6_0",
+    "followUp": "After this assignment, speak with Engineer Cinder about “Break the War Machine”."
+  },
+  {
+    "id": "side_5_0",
+    "region": 5,
+    "required": 1,
+    "rewardGold": 425,
+    "rewardXp": 365,
+    "main": false,
+    "prerequisite": null,
+    "type": "explore",
+    "target": "cave_5_0",
+    "title": "Secrets of Reedwater Delta",
+    "description": "Find the hidden cavern marked by local scouts.",
+    "giverNpcId": "npc_town_way_5",
+    "nextQuestId": "main_5_0",
+    "followUp": "After this assignment, speak with Harbormaster Reed about “Across the Delta”."
+  },
+  {
+    "id": "side_5_1",
+    "region": 5,
+    "required": 1,
+    "rewardGold": 440,
+    "rewardXp": 385,
+    "main": false,
+    "prerequisite": null,
+    "type": "cache",
+    "target": "cache_5_0",
+    "title": "Supplies for the Resistance",
+    "description": "Recover a lost resistance supply cache.",
+    "giverNpcId": "npc_town_way_5",
+    "nextQuestId": "main_5_0",
+    "followUp": "After this assignment, speak with Harbormaster Reed about “Across the Delta”."
+  },
+  {
+    "id": "side_5_2",
+    "region": 5,
+    "required": 1,
+    "rewardGold": 455,
+    "rewardXp": 405,
+    "main": false,
+    "prerequisite": null,
+    "type": "rescue",
+    "target": "base_5_2",
+    "title": "Bring Them Home",
+    "description": "Clear the prison outpost and free the captive villagers.",
+    "giverNpcId": "npc_town_5",
+    "nextQuestId": "escort_5",
+    "followUp": "After this assignment, speak with Wayfinder Ripple about “The Delta Messenger”."
+  },
+  {
+    "id": "side_5_3",
+    "region": 5,
+    "required": 1,
+    "rewardGold": 470,
+    "rewardXp": 425,
+    "main": false,
+    "prerequisite": null,
+    "type": "convoy",
+    "target": "base_5_3",
+    "title": "Stop the War Convoy",
+    "description": "Break the convoy depot’s guard and recover its supplies.",
+    "giverNpcId": "npc_town_way_5",
+    "nextQuestId": "main_5_0",
+    "followUp": "After this assignment, speak with Harbormaster Reed about “Across the Delta”."
+  },
+  {
+    "id": "side_5_4",
+    "region": 5,
+    "required": 22,
+    "rewardGold": 485,
+    "rewardXp": 445,
+    "main": false,
+    "prerequisite": null,
+    "type": "kill",
+    "target": 5,
+    "title": "Reclaim the Countryside",
+    "description": "Defeat occupying troops anywhere in this region.",
+    "giverNpcId": "npc_town_way_5",
+    "nextQuestId": "main_5_0",
+    "followUp": "After this assignment, speak with Harbormaster Reed about “Across the Delta”."
+  },
+  {
+    "id": "escort_5",
+    "title": "The Delta Messenger",
+    "description": "Meet the courier south of Otter’s Crossing, then stay close while they follow the marked road to the forward meeting point.",
+    "type": "escort",
+    "region": 5,
+    "level": 16,
+    "target": "escort_5",
+    "required": 1,
+    "startX": 10790,
+    "startY": 8944,
+    "x": 11161.800000000001,
+    "y": 9751.04,
+    "waypoints": [
+      {
+        "x": 10790,
+        "y": 8944
+      },
+      {
+        "x": 10891.4,
+        "y": 8993.92
+      },
+      {
+        "x": 10992.800000000001,
+        "y": 9277.84
+      },
+      {
+        "x": 11094.2,
+        "y": 9561.76
+      },
+      {
+        "x": 11161.800000000001,
+        "y": 9751.04
+      }
+    ],
+    "escortKind": "courier",
+    "escortHp": 395,
+    "escortSpeed": 80,
+    "waveCount": 2,
+    "rewardGold": 740,
+    "rewardXp": 580,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_way_5",
+    "nextQuestId": "main_5_0",
+    "followUp": "After this assignment, speak with Harbormaster Reed about “Across the Delta”."
+  },
+  {
+    "id": "defend_5",
+    "title": "Hold the Reedwater Road",
+    "description": "Hold the area for 45 seconds. The countdown advances while at least one standing hero is inside the circle. Leaving pauses progress; defeating every enemy is not required.",
+    "type": "defend",
+    "region": 5,
+    "level": 16,
+    "target": "defend_5",
+    "required": 1,
+    "duration": 45,
+    "waveCount": 3,
+    "rewardGold": 850,
+    "rewardXp": 655,
+    "main": false,
+    "prerequisite": "main_5_0",
+    "giverNpcId": "npc_town_5",
+    "nextQuestId": "escort_5",
+    "followUp": "After this assignment, speak with Wayfinder Ripple about “The Delta Messenger”."
+  },
+  {
+    "id": "assassination_5",
+    "title": "Wanted: Captain Murk",
+    "description": "Find Captain Murk at Floodgate Battery. Defeat this named officer; the rest of the base is optional.",
+    "type": "assassination",
+    "region": 5,
+    "level": 17,
+    "target": "base_5_1_guard_7",
+    "targetLocation": "base_5_1",
+    "targetName": "Captain Murk",
+    "required": 1,
+    "rewardGold": 850,
+    "rewardXp": 620,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_way_5",
+    "nextQuestId": "main_5_0",
+    "followUp": "After this assignment, speak with Harbormaster Reed about “Across the Delta”."
+  },
+  {
+    "id": "bounty_5",
+    "title": "Commander Bounty: General Bogclaw",
+    "description": "Track down General Bogclaw at the marked supply depot. This armored commander carries a valuable resistance bounty.",
+    "type": "bounty",
+    "region": 5,
+    "level": 18,
+    "target": "base_5_3_guard_6",
+    "targetLocation": "base_5_3",
+    "targetName": "General Bogclaw",
+    "required": 1,
+    "rewardGold": 1100,
+    "rewardXp": 730,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_5",
+    "nextQuestId": "escort_5",
+    "followUp": "After this assignment, speak with Wayfinder Ripple about “The Delta Messenger”."
+  },
+  {
+    "id": "main_6_0",
+    "title": "Break the War Machine",
+    "description": "Liberate Emberworks’s first occupied outpost and open the supply road.",
+    "type": "liberate",
+    "region": 6,
+    "target": "base_6_0",
+    "required": 1,
+    "rewardGold": 640,
+    "rewardXp": 570,
+    "main": true,
+    "prerequisite": "main_5_2",
+    "giverNpcId": "npc_town_6",
+    "nextQuestId": "main_6_1",
+    "followUp": "After this assignment, speak with Wayfinder Coal about “Sabotage the Foundry”."
+  },
+  {
+    "id": "main_6_1",
+    "title": "Sabotage the Foundry",
+    "description": "Secure the second enemy stronghold in Emberworks.",
+    "type": "liberate",
+    "region": 6,
+    "target": "base_6_1",
+    "required": 1,
+    "rewardGold": 750,
+    "rewardXp": 680,
+    "main": true,
+    "prerequisite": "main_6_0",
+    "giverNpcId": "npc_town_way_6",
+    "nextQuestId": "main_6_2",
+    "followUp": "After this assignment, speak with Engineer Cinder about “Defeat Director Geargnash”."
+  },
+  {
+    "id": "main_6_2",
+    "title": "Defeat Director Geargnash",
+    "description": "Confront Director Geargnash and free Emberworks from occupation.",
+    "type": "boss",
+    "region": 6,
+    "target": "boss_6",
+    "required": 1,
+    "rewardGold": 1280,
+    "rewardXp": 1310,
+    "main": true,
+    "prerequisite": "main_6_1",
+    "giverNpcId": "npc_town_6",
+    "nextQuestId": "main_7_0",
+    "followUp": "After this assignment, speak with Captain Dawn about “At the Gates”."
+  },
+  {
+    "id": "side_6_0",
+    "region": 6,
+    "required": 1,
+    "rewardGold": 490,
+    "rewardXp": 420,
+    "main": false,
+    "prerequisite": null,
+    "type": "explore",
+    "target": "cave_6_0",
+    "title": "Secrets of Emberworks",
+    "description": "Find the hidden cavern marked by local scouts.",
+    "giverNpcId": "npc_town_way_6",
+    "nextQuestId": "main_6_0",
+    "followUp": "After this assignment, speak with Engineer Cinder about “Break the War Machine”."
+  },
+  {
+    "id": "side_6_1",
+    "region": 6,
+    "required": 1,
+    "rewardGold": 505,
+    "rewardXp": 440,
+    "main": false,
+    "prerequisite": null,
+    "type": "cache",
+    "target": "cache_6_0",
+    "title": "Supplies for the Resistance",
+    "description": "Recover a lost resistance supply cache.",
+    "giverNpcId": "npc_town_way_6",
+    "nextQuestId": "main_6_0",
+    "followUp": "After this assignment, speak with Engineer Cinder about “Break the War Machine”."
+  },
+  {
+    "id": "side_6_2",
+    "region": 6,
+    "required": 1,
+    "rewardGold": 520,
+    "rewardXp": 460,
+    "main": false,
+    "prerequisite": null,
+    "type": "rescue",
+    "target": "base_6_2",
+    "title": "Bring Them Home",
+    "description": "Clear the prison outpost and free the captive villagers.",
+    "giverNpcId": "npc_town_6",
+    "nextQuestId": "escort_6",
+    "followUp": "After this assignment, speak with Wayfinder Coal about “A Package for the Forge”."
+  },
+  {
+    "id": "side_6_3",
+    "region": 6,
+    "required": 1,
+    "rewardGold": 535,
+    "rewardXp": 480,
+    "main": false,
+    "prerequisite": null,
+    "type": "convoy",
+    "target": "base_6_3",
+    "title": "Stop the War Convoy",
+    "description": "Break the convoy depot’s guard and recover its supplies.",
+    "giverNpcId": "npc_town_way_6",
+    "nextQuestId": "main_6_0",
+    "followUp": "After this assignment, speak with Engineer Cinder about “Break the War Machine”."
+  },
+  {
+    "id": "side_6_4",
+    "region": 6,
+    "required": 24,
+    "rewardGold": 550,
+    "rewardXp": 500,
+    "main": false,
+    "prerequisite": null,
+    "type": "kill",
+    "target": 6,
+    "title": "Reclaim the Countryside",
+    "description": "Defeat occupying troops anywhere in this region.",
+    "giverNpcId": "npc_town_way_6",
+    "nextQuestId": "main_6_0",
+    "followUp": "After this assignment, speak with Engineer Cinder about “Break the War Machine”."
+  },
+  {
+    "id": "escort_6",
+    "title": "A Package for the Forge",
+    "description": "Meet the courier south of Ashford Refuge, then stay close while they follow the marked road to the forward meeting point.",
+    "type": "escort",
+    "region": 6,
+    "level": 19,
+    "target": "escort_6",
+    "required": 1,
+    "startX": 6110,
+    "startY": 8944,
+    "x": 6481.8,
+    "y": 9751.04,
+    "waypoints": [
+      {
+        "x": 6110,
+        "y": 8944
+      },
+      {
+        "x": 6211.400000000001,
+        "y": 8993.92
+      },
+      {
+        "x": 6312.8,
+        "y": 9277.84
+      },
+      {
+        "x": 6414.2,
+        "y": 9561.76
+      },
+      {
+        "x": 6481.8,
+        "y": 9751.04
+      }
+    ],
+    "escortKind": "courier",
+    "escortHp": 430,
+    "escortSpeed": 80,
+    "waveCount": 2,
+    "rewardGold": 840,
+    "rewardXp": 660,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_way_6",
+    "nextQuestId": "main_6_0",
+    "followUp": "After this assignment, speak with Engineer Cinder about “Break the War Machine”."
+  },
+  {
+    "id": "defend_6",
+    "title": "Hold the Emberworks Road",
+    "description": "Hold the area for 45 seconds. The countdown advances while at least one standing hero is inside the circle. Leaving pauses progress; defeating every enemy is not required.",
+    "type": "defend",
+    "region": 6,
+    "level": 19,
+    "target": "defend_6",
+    "required": 1,
+    "duration": 45,
+    "waveCount": 3,
+    "rewardGold": 960,
+    "rewardXp": 740,
+    "main": false,
+    "prerequisite": "main_6_0",
+    "giverNpcId": "npc_town_6",
+    "nextQuestId": "escort_6",
+    "followUp": "After this assignment, speak with Wayfinder Coal about “A Package for the Forge”."
+  },
+  {
+    "id": "assassination_6",
+    "title": "Wanted: Captain Rivet",
+    "description": "Find Captain Rivet at Ironworks Garrison. Defeat this named officer; the rest of the base is optional.",
+    "type": "assassination",
+    "region": 6,
+    "level": 20,
+    "target": "base_6_1_guard_7",
+    "targetLocation": "base_6_1",
+    "targetName": "Captain Rivet",
+    "required": 1,
+    "rewardGold": 950,
+    "rewardXp": 700,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_way_6",
+    "nextQuestId": "main_6_0",
+    "followUp": "After this assignment, speak with Engineer Cinder about “Break the War Machine”."
+  },
+  {
+    "id": "bounty_6",
+    "title": "Commander Bounty: General Crucible",
+    "description": "Track down General Crucible at the marked supply depot. This armored commander carries a valuable resistance bounty.",
+    "type": "bounty",
+    "region": 6,
+    "level": 21,
+    "target": "base_6_3_guard_6",
+    "targetLocation": "base_6_3",
+    "targetName": "General Crucible",
+    "required": 1,
+    "rewardGold": 1220,
+    "rewardXp": 820,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_6",
+    "nextQuestId": "escort_6",
+    "followUp": "After this assignment, speak with Wayfinder Coal about “A Package for the Forge”."
+  },
+  {
+    "id": "main_7_0",
+    "title": "At the Gates",
+    "description": "Liberate Blackbanner Citadel’s first occupied outpost and open the supply road.",
+    "type": "liberate",
+    "region": 7,
+    "target": "base_7_0",
+    "required": 1,
+    "rewardGold": 730,
+    "rewardXp": 650,
+    "main": true,
+    "prerequisite": "main_6_2",
+    "giverNpcId": "npc_town_7",
+    "nextQuestId": "main_7_1",
+    "followUp": "After this assignment, speak with Wayfinder Starling about “The Last Approach”."
+  },
+  {
+    "id": "main_7_1",
+    "title": "The Last Approach",
+    "description": "Secure the second enemy stronghold in Blackbanner Citadel.",
+    "type": "liberate",
+    "region": 7,
+    "target": "base_7_1",
+    "required": 1,
+    "rewardGold": 850,
+    "rewardXp": 770,
+    "main": true,
+    "prerequisite": "main_7_0",
+    "giverNpcId": "npc_town_way_7",
+    "nextQuestId": "main_7_2",
+    "followUp": "After this assignment, speak with Captain Dawn about “Break Vex’s Command”."
+  },
+  {
+    "id": "main_7_2",
+    "title": "Break Vex’s Command",
+    "description": "Confront Supreme Commander Vex and free Blackbanner Citadel from occupation.",
+    "type": "boss",
+    "region": 7,
+    "target": "boss_7",
+    "required": 1,
+    "rewardGold": 1440,
+    "rewardXp": 1470,
+    "main": true,
+    "prerequisite": "main_7_1",
+    "giverNpcId": "npc_town_7",
+    "nextQuestId": "main_berlin_final",
+    "followUp": "After this assignment, speak with Captain Dawn about “Operation Whiskerfall: The Berlin Reckoning”."
+  },
+  {
+    "id": "side_7_0",
+    "region": 7,
+    "required": 1,
+    "rewardGold": 555,
+    "rewardXp": 475,
+    "main": false,
+    "prerequisite": null,
+    "type": "explore",
+    "target": "cave_7_0",
+    "title": "Secrets of Blackbanner Citadel",
+    "description": "Find the hidden cavern marked by local scouts.",
+    "giverNpcId": "npc_town_way_7",
+    "nextQuestId": "main_7_0",
+    "followUp": "After this assignment, speak with Captain Dawn about “At the Gates”."
+  },
+  {
+    "id": "side_7_1",
+    "region": 7,
+    "required": 1,
+    "rewardGold": 570,
+    "rewardXp": 495,
+    "main": false,
+    "prerequisite": null,
+    "type": "cache",
+    "target": "cache_7_0",
+    "title": "Supplies for the Resistance",
+    "description": "Recover a lost resistance supply cache.",
+    "giverNpcId": "npc_town_way_7",
+    "nextQuestId": "main_7_0",
+    "followUp": "After this assignment, speak with Captain Dawn about “At the Gates”."
+  },
+  {
+    "id": "side_7_2",
+    "region": 7,
+    "required": 1,
+    "rewardGold": 585,
+    "rewardXp": 515,
+    "main": false,
+    "prerequisite": null,
+    "type": "rescue",
+    "target": "base_7_2",
+    "title": "Bring Them Home",
+    "description": "Clear the prison outpost and free the captive villagers.",
+    "giverNpcId": "npc_town_7",
+    "nextQuestId": "escort_7",
+    "followUp": "After this assignment, speak with Wayfinder Starling about “The Last Dispatch”."
+  },
+  {
+    "id": "side_7_3",
+    "region": 7,
+    "required": 1,
+    "rewardGold": 600,
+    "rewardXp": 535,
+    "main": false,
+    "prerequisite": null,
+    "type": "convoy",
+    "target": "base_7_3",
+    "title": "Stop the War Convoy",
+    "description": "Break the convoy depot’s guard and recover its supplies.",
+    "giverNpcId": "npc_town_way_7",
+    "nextQuestId": "main_7_0",
+    "followUp": "After this assignment, speak with Captain Dawn about “At the Gates”."
+  },
+  {
+    "id": "side_7_4",
+    "region": 7,
+    "required": 26,
+    "rewardGold": 615,
+    "rewardXp": 555,
+    "main": false,
+    "prerequisite": null,
+    "type": "kill",
+    "target": 7,
+    "title": "Reclaim the Countryside",
+    "description": "Defeat occupying troops anywhere in this region.",
+    "giverNpcId": "npc_town_way_7",
+    "nextQuestId": "main_7_0",
+    "followUp": "After this assignment, speak with Captain Dawn about “At the Gates”."
+  },
+  {
+    "id": "escort_7",
+    "title": "The Last Dispatch",
+    "description": "Meet the courier south of Dawnbridge, then stay close while they follow the marked road to the forward meeting point.",
+    "type": "escort",
+    "region": 7,
+    "level": 22,
+    "target": "escort_7",
+    "required": 1,
+    "startX": 1430,
+    "startY": 8944,
+    "x": 1801.8,
+    "y": 9751.04,
+    "waypoints": [
+      {
+        "x": 1430,
+        "y": 8944
+      },
+      {
+        "x": 1531.4,
+        "y": 8993.92
+      },
+      {
+        "x": 1632.8,
+        "y": 9277.84
+      },
+      {
+        "x": 1734.2,
+        "y": 9561.76
+      },
+      {
+        "x": 1801.8,
+        "y": 9751.04
+      }
+    ],
+    "escortKind": "courier",
+    "escortHp": 465,
+    "escortSpeed": 80,
+    "waveCount": 2,
+    "rewardGold": 940,
+    "rewardXp": 740,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_way_7",
+    "nextQuestId": "main_7_0",
+    "followUp": "After this assignment, speak with Captain Dawn about “At the Gates”."
+  },
+  {
+    "id": "defend_7",
+    "title": "Hold the Citadel Road",
+    "description": "Hold the area for 45 seconds. The countdown advances while at least one standing hero is inside the circle. Leaving pauses progress; defeating every enemy is not required.",
+    "type": "defend",
+    "region": 7,
+    "level": 22,
+    "target": "defend_7",
+    "required": 1,
+    "duration": 45,
+    "waveCount": 3,
+    "rewardGold": 1070,
+    "rewardXp": 825,
+    "main": false,
+    "prerequisite": "main_7_0",
+    "giverNpcId": "npc_town_7",
+    "nextQuestId": "escort_7",
+    "followUp": "After this assignment, speak with Wayfinder Starling about “The Last Dispatch”."
+  },
+  {
+    "id": "assassination_7",
+    "title": "Wanted: Captain Onyx",
+    "description": "Find Captain Onyx at Capital Garrison. Defeat this named officer; the rest of the base is optional.",
+    "type": "assassination",
+    "region": 7,
+    "level": 23,
+    "target": "base_7_1_guard_7",
+    "targetLocation": "base_7_1",
+    "targetName": "Captain Onyx",
+    "required": 1,
+    "rewardGold": 1050,
+    "rewardXp": 780,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_way_7",
+    "nextQuestId": "main_7_0",
+    "followUp": "After this assignment, speak with Captain Dawn about “At the Gates”."
+  },
+  {
+    "id": "bounty_7",
+    "title": "Commander Bounty: General Nightiron",
+    "description": "Track down General Nightiron at the marked supply depot. This armored commander carries a valuable resistance bounty.",
+    "type": "bounty",
+    "region": 7,
+    "level": 24,
+    "target": "base_7_3_guard_6",
+    "targetLocation": "base_7_3",
+    "targetName": "General Nightiron",
+    "required": 1,
+    "rewardGold": 1340,
+    "rewardXp": 910,
+    "main": false,
+    "prerequisite": null,
+    "giverNpcId": "npc_town_7",
+    "nextQuestId": "escort_7",
+    "followUp": "After this assignment, speak with Wayfinder Starling about “The Last Dispatch”."
+  },
+  {
+    "id": "main_berlin_final",
+    "title": "Operation Whiskerfall: The Berlin Reckoning",
+    "description": "Defeat all eight regional commanders, enter the unlocked Berlin Sector, and end Adolph Whisker’s rule. Killing him wins the campaign.",
+    "type": "boss",
+    "region": 7,
+    "target": "boss_berlin",
+    "required": 1,
+    "rewardGold": 6000,
+    "rewardXp": 6000,
+    "main": true,
+    "prerequisite": "main_7_2",
+    "requiresAllBosses": true,
+    "giverNpcId": "npc_town_7"
+  },
+  {
+    "id": "sabotage_0",
+    "title": "Paws Off the Airwaves",
+    "type": "sabotage",
+    "region": 0,
+    "description": "Moth has mapped three orchard alarm relays. Disable each relay without needing to wipe out the whole garrison, then bring her the fuses.",
+    "main": false,
+    "target": "sabotage_0_point_0",
+    "objectives": [
+      {
+        "id": "sabotage_0_point_0",
+        "x": 2353,
+        "y": 2392,
+        "displayType": "relay",
+        "label": "Orchard alarm relay"
+      },
+      {
+        "id": "sabotage_0_point_1",
+        "x": 2808,
+        "y": 2340,
+        "displayType": "relay",
+        "label": "Millroad alarm relay"
+      },
+      {
+        "id": "sabotage_0_point_2",
+        "x": 3016,
+        "y": 2860,
+        "displayType": "relay",
+        "label": "Wheatfield alarm relay"
+      }
+    ],
+    "steps": [
+      {
+        "action": "sabotage",
+        "label": "Remove the three alarm fuses",
+        "targets": [
+          "sabotage_0_point_0",
+          "sabotage_0_point_1",
+          "sabotage_0_point_2"
+        ]
+      },
+      {
+        "action": "report",
+        "label": "Return the fuses to Moth",
+        "targets": [
+          "npc_resident_0_0"
+        ]
+      }
+    ],
+    "required": 2,
+    "rewardGold": 260,
+    "rewardXp": 210,
+    "prerequisite": null,
+    "giverNpcId": "npc_resident_0_0",
+    "nextQuestId": "delivery_0",
+    "followUp": "After this assignment, speak with Marmalade about “The Baker’s Last Basket”."
+  },
+  {
+    "id": "delivery_0",
+    "title": "The Baker’s Last Basket",
+    "type": "delivery",
+    "region": 0,
+    "description": "Marmalade hid a basket of bread beside the old road. Recover it and carry it home. You move more slowly while carrying the basket.",
+    "main": false,
+    "target": "delivery_0_point_0",
+    "objectives": [
+      {
+        "id": "delivery_0_point_0",
+        "x": 1963,
+        "y": 2769,
+        "displayType": "parcel",
+        "label": "Marmalade’s bread basket"
+      }
+    ],
+    "steps": [
+      {
+        "action": "recover",
+        "label": "Recover the basket beside the old road",
+        "targets": [
+          "delivery_0_point_0"
+        ],
+        "carry": true
+      },
+      {
+        "action": "deliver",
+        "label": "Bring the bread to Marmalade in Willow Camp",
+        "targets": [
+          "npc_resident_0_1"
+        ],
+        "consumeCarry": true
+      }
+    ],
+    "required": 2,
+    "rewardGold": 260,
+    "rewardXp": 210,
+    "prerequisite": null,
+    "giverNpcId": "npc_resident_0_1",
+    "nextQuestId": "escort_0",
+    "followUp": "After this assignment, speak with Wayfinder Poppy about “A Courier’s First Run”."
+  },
+  {
+    "id": "triage_1",
+    "title": "Not One Paw Left Behind",
+    "type": "triage",
+    "region": 1,
+    "description": "Nurse Fern’s missing scouts are alive. Use a field medkit on each wounded cat, then report back. Each patient needs one medkit.",
+    "main": false,
+    "target": "triage_1_point_0",
+    "objectives": [
+      {
+        "id": "triage_1_point_0",
+        "x": 6994,
+        "y": 2860,
+        "displayType": "wounded",
+        "label": "Wounded Scout Alder"
+      },
+      {
+        "id": "triage_1_point_1",
+        "x": 7501,
+        "y": 3250,
+        "displayType": "wounded",
+        "label": "Wounded Scout Sorrel"
+      }
+    ],
+    "steps": [
+      {
+        "action": "heal",
+        "label": "Treat Alder and Sorrel with field medkits",
+        "targets": [
+          "triage_1_point_0",
+          "triage_1_point_1"
+        ],
+        "medkit": true
+      },
+      {
+        "action": "report",
+        "label": "Tell Nurse Fern both scouts are stable",
+        "targets": [
+          "npc_resident_1_0"
+        ]
+      }
+    ],
+    "required": 2,
+    "rewardGold": 370,
+    "rewardXp": 295,
+    "prerequisite": null,
+    "giverNpcId": "npc_resident_1_0",
+    "nextQuestId": "recon_1",
+    "followUp": "After this assignment, speak with Professor Purr about “What the Owls Heard”."
+  },
+  {
+    "id": "recon_1",
+    "title": "What the Owls Heard",
+    "type": "recon",
+    "region": 1,
+    "description": "Professor Purr needs recordings from three listening stones. Interact at each point, then remain close and clear of enemies for four seconds.",
+    "main": false,
+    "target": "recon_1_point_0",
+    "objectives": [
+      {
+        "id": "recon_1_point_0",
+        "x": 6591,
+        "y": 2847,
+        "displayType": "signal",
+        "label": "North listening stone"
+      },
+      {
+        "id": "recon_1_point_1",
+        "x": 7280,
+        "y": 3679,
+        "displayType": "signal",
+        "label": "Old oak listening stone"
+      },
+      {
+        "id": "recon_1_point_2",
+        "x": 7813,
+        "y": 4121,
+        "displayType": "signal",
+        "label": "South listening stone"
+      }
+    ],
+    "steps": [
+      {
+        "action": "scan",
+        "label": "Record all three listening stones",
+        "targets": [
+          "recon_1_point_0",
+          "recon_1_point_1",
+          "recon_1_point_2"
+        ],
+        "duration": 4
+      },
+      {
+        "action": "report",
+        "label": "Deliver the recordings to Professor Purr",
+        "targets": [
+          "npc_resident_1_1"
+        ]
+      }
+    ],
+    "required": 2,
+    "rewardGold": 370,
+    "rewardXp": 295,
+    "prerequisite": null,
+    "giverNpcId": "npc_resident_1_1",
+    "nextQuestId": "escort_1",
+    "followUp": "After this assignment, speak with Wayfinder Bramble about “Letters through Mosswood”."
+  },
+  {
+    "id": "demolition_2",
+    "title": "An Avalanche of Our Own",
+    "type": "demolition",
+    "region": 2,
+    "description": "Miner Flint has placed charges beside the battery road. Arm both charges, withdraw to the detonator and bring the mountainside down on the supply line.",
+    "main": false,
+    "target": "demolition_2_point_0",
+    "objectives": [
+      {
+        "id": "demolition_2_point_0",
+        "x": 11466,
+        "y": 3406,
+        "displayType": "charge",
+        "label": "West rock charge"
+      },
+      {
+        "id": "demolition_2_point_1",
+        "x": 11934,
+        "y": 3601,
+        "displayType": "charge",
+        "label": "East rock charge"
+      },
+      {
+        "id": "demolition_2_point_2",
+        "x": 11323,
+        "y": 3978,
+        "displayType": "terminal",
+        "label": "Quarry remote detonator"
+      }
+    ],
+    "steps": [
+      {
+        "action": "plant",
+        "label": "Arm both rock charges",
+        "targets": [
+          "demolition_2_point_0",
+          "demolition_2_point_1"
+        ]
+      },
+      {
+        "action": "detonate",
+        "label": "Trigger the charges from the remote detonator",
+        "targets": [
+          "demolition_2_point_2"
+        ],
+        "blastTargets": [
+          0,
+          1
+        ]
+      },
+      {
+        "action": "report",
+        "label": "Tell Miner Flint the supply road is cut",
+        "targets": [
+          "npc_resident_2_0"
+        ]
+      }
+    ],
+    "required": 3,
+    "rewardGold": 480,
+    "rewardXp": 380,
+    "prerequisite": null,
+    "giverNpcId": "npc_resident_2_0",
+    "nextQuestId": "recovery_2",
+    "followUp": "After this assignment, speak with Cartographer Pebble about “A Map Written in Echoes”."
+  },
+  {
+    "id": "recovery_2",
+    "title": "A Map Written in Echoes",
+    "type": "recovery",
+    "region": 2,
+    "description": "Cartographer Pebble scattered three survey pages while escaping the quarry. Search the different overlooks and return the whole map.",
+    "main": false,
+    "target": "recovery_2_point_0",
+    "objectives": [
+      {
+        "id": "recovery_2_point_0",
+        "x": 10517,
+        "y": 2535,
+        "displayType": "parcel",
+        "label": "North survey page"
+      },
+      {
+        "id": "recovery_2_point_1",
+        "x": 11440,
+        "y": 4472,
+        "displayType": "parcel",
+        "label": "Quarry survey page"
+      },
+      {
+        "id": "recovery_2_point_2",
+        "x": 12532,
+        "y": 5174,
+        "displayType": "parcel",
+        "label": "Summit survey page"
+      }
+    ],
+    "steps": [
+      {
+        "action": "recover",
+        "label": "Gather the three scattered survey pages",
+        "targets": [
+          "recovery_2_point_0",
+          "recovery_2_point_1",
+          "recovery_2_point_2"
+        ]
+      },
+      {
+        "action": "report",
+        "label": "Return the complete survey to Pebble",
+        "targets": [
+          "npc_resident_2_1"
+        ]
+      }
+    ],
+    "required": 2,
+    "rewardGold": 480,
+    "rewardXp": 380,
+    "prerequisite": null,
+    "giverNpcId": "npc_resident_2_1",
+    "nextQuestId": "escort_2",
+    "followUp": "After this assignment, speak with Wayfinder Granite about “Medicine for the Pass”."
+  },
+  {
+    "id": "signal_3",
+    "title": "The Aurora Code",
+    "type": "signal",
+    "region": 3,
+    "description": "Radio Cat Solstice can break Whiteclaw’s cipher if you tune the northern dishes in order. Defend the last receiver while its signal uploads.",
+    "main": false,
+    "target": "signal_3_point_0",
+    "objectives": [
+      {
+        "id": "signal_3_point_0",
+        "x": 16042,
+        "y": 2652,
+        "displayType": "relay",
+        "label": "First aurora dish"
+      },
+      {
+        "id": "signal_3_point_1",
+        "x": 16458,
+        "y": 3185,
+        "displayType": "relay",
+        "label": "Second aurora dish"
+      },
+      {
+        "id": "signal_3_point_2",
+        "x": 16900,
+        "y": 3770,
+        "displayType": "signal",
+        "label": "Aurora uplink receiver"
+      }
+    ],
+    "steps": [
+      {
+        "action": "activate",
+        "label": "Tune the first dish to the moon frequency",
+        "targets": [
+          "signal_3_point_0"
+        ]
+      },
+      {
+        "action": "activate",
+        "label": "Tune the second dish to the aurora frequency",
+        "targets": [
+          "signal_3_point_1"
+        ]
+      },
+      {
+        "action": "hold",
+        "label": "Stay at the uplink while the cipher uploads",
+        "targets": [
+          "signal_3_point_2"
+        ],
+        "duration": 14,
+        "ambush": 2
+      },
+      {
+        "action": "report",
+        "label": "Give the decoded signal to Solstice",
+        "targets": [
+          "npc_resident_3_0"
+        ]
+      }
+    ],
+    "required": 4,
+    "rewardGold": 590,
+    "rewardXp": 465,
+    "prerequisite": null,
+    "giverNpcId": "npc_resident_3_0",
+    "nextQuestId": "delivery_3",
+    "followUp": "After this assignment, speak with Grandma Mittens about “A Hearth for Snowhaven”."
+  },
+  {
+    "id": "delivery_3",
+    "title": "A Hearth for Snowhaven",
+    "type": "delivery",
+    "region": 3,
+    "description": "Grandma Mittens needs heater cells before nightfall. Recover both cells, carry them through the snow and bring them to her hearth.",
+    "main": false,
+    "target": "delivery_3_point_0",
+    "objectives": [
+      {
+        "id": "delivery_3_point_0",
+        "x": 15262,
+        "y": 3120,
+        "displayType": "parcel",
+        "label": "Abandoned heater cell"
+      },
+      {
+        "id": "delivery_3_point_1",
+        "x": 16237,
+        "y": 3809,
+        "displayType": "parcel",
+        "label": "Frozen heater cell"
+      }
+    ],
+    "steps": [
+      {
+        "action": "recover",
+        "label": "Recover both heater cells",
+        "targets": [
+          "delivery_3_point_0",
+          "delivery_3_point_1"
+        ],
+        "carry": true
+      },
+      {
+        "action": "deliver",
+        "label": "Bring the heater cells to Grandma Mittens",
+        "targets": [
+          "npc_resident_3_1"
+        ],
+        "consumeCarry": true
+      }
+    ],
+    "required": 2,
+    "rewardGold": 590,
+    "rewardXp": 465,
+    "prerequisite": null,
+    "giverNpcId": "npc_resident_3_1",
+    "nextQuestId": "escort_3",
+    "followUp": "After this assignment, speak with Wayfinder Flurry about “Warmth for Snowhaven”."
+  },
+  {
+    "id": "recovery_4",
+    "title": "Water Beneath the Sand",
+    "type": "recovery",
+    "region": 4,
+    "description": "Pumpkeeper Fennel knows where the old well survives. Open its intake, keep the purifier running, and carry a clean water sample back to the oasis.",
+    "main": false,
+    "target": "recovery_4_point_0",
+    "objectives": [
+      {
+        "id": "recovery_4_point_0",
+        "x": 16016,
+        "y": 10400,
+        "displayType": "relay",
+        "label": "Buried well intake"
+      },
+      {
+        "id": "recovery_4_point_1",
+        "x": 16471,
+        "y": 10959,
+        "displayType": "terminal",
+        "label": "Sandglass water purifier"
+      }
+    ],
+    "steps": [
+      {
+        "action": "activate",
+        "label": "Open the buried well intake",
+        "targets": [
+          "recovery_4_point_0"
+        ]
+      },
+      {
+        "action": "hold",
+        "label": "Keep the purifier running for twelve seconds",
+        "targets": [
+          "recovery_4_point_1"
+        ],
+        "duration": 12,
+        "ambush": 2,
+        "carry": true
+      },
+      {
+        "action": "deliver",
+        "label": "Bring clean water to Pumpkeeper Fennel",
+        "targets": [
+          "npc_resident_4_0"
+        ],
+        "consumeCarry": true
+      }
+    ],
+    "required": 3,
+    "rewardGold": 700,
+    "rewardXp": 550,
+    "prerequisite": null,
+    "giverNpcId": "npc_resident_4_0",
+    "nextQuestId": "infiltration_4",
+    "followUp": "After this assignment, speak with Archivist Sable about “The Mirage Ledger”."
+  },
+  {
+    "id": "infiltration_4",
+    "title": "The Mirage Ledger",
+    "type": "infiltration",
+    "region": 4,
+    "description": "Archivist Sable has one chance to expose a supply fraud. Read the depot schedule, take the real ledger from its hiding place and return before it disappears.",
+    "main": false,
+    "target": "infiltration_4_point_0",
+    "objectives": [
+      {
+        "id": "infiltration_4_point_0",
+        "x": 16939,
+        "y": 11518,
+        "displayType": "terminal",
+        "label": "Depot schedule terminal"
+      },
+      {
+        "id": "infiltration_4_point_1",
+        "x": 17810,
+        "y": 11349,
+        "displayType": "parcel",
+        "label": "Hidden caravan ledger"
+      }
+    ],
+    "steps": [
+      {
+        "action": "scan",
+        "label": "Decode the depot schedule",
+        "targets": [
+          "infiltration_4_point_0"
+        ],
+        "duration": 5
+      },
+      {
+        "action": "recover",
+        "label": "Recover the real caravan ledger",
+        "targets": [
+          "infiltration_4_point_1"
+        ]
+      },
+      {
+        "action": "report",
+        "label": "Bring the ledger to Archivist Sable",
+        "targets": [
+          "npc_resident_4_1"
+        ]
+      }
+    ],
+    "required": 3,
+    "rewardGold": 700,
+    "rewardXp": 550,
+    "prerequisite": null,
+    "giverNpcId": "npc_resident_4_1",
+    "nextQuestId": "escort_4",
+    "followUp": "After this assignment, speak with Wayfinder Saffron about “Water for the Caravan”."
+  },
+  {
+    "id": "triage_5",
+    "title": "Lanterns in the Fog",
+    "type": "triage",
+    "region": 5,
+    "description": "Doctor Willow’s fishing crew was caught in a gas attack. Find all three lanterns and use one field medkit to treat each stranded fisher.",
+    "main": false,
+    "target": "triage_5_point_0",
+    "objectives": [
+      {
+        "id": "triage_5_point_0",
+        "x": 11583,
+        "y": 10244,
+        "displayType": "wounded",
+        "label": "Fisher Minnow"
+      },
+      {
+        "id": "triage_5_point_1",
+        "x": 12155,
+        "y": 11050,
+        "displayType": "wounded",
+        "label": "Fisher Kelp"
+      },
+      {
+        "id": "triage_5_point_2",
+        "x": 12545,
+        "y": 11817,
+        "displayType": "wounded",
+        "label": "Fisher Tansy"
+      }
+    ],
+    "steps": [
+      {
+        "action": "heal",
+        "label": "Treat the three fishers with field medkits",
+        "targets": [
+          "triage_5_point_0",
+          "triage_5_point_1",
+          "triage_5_point_2"
+        ],
+        "medkit": true
+      },
+      {
+        "action": "report",
+        "label": "Report the rescue to Doctor Willow",
+        "targets": [
+          "npc_resident_5_0"
+        ]
+      }
+    ],
+    "required": 2,
+    "rewardGold": 810,
+    "rewardXp": 635,
+    "prerequisite": null,
+    "giverNpcId": "npc_resident_5_0",
+    "nextQuestId": "sabotage_5",
+    "followUp": "After this assignment, speak with Lockkeeper Ripple about “The River Remembers”."
+  },
+  {
+    "id": "sabotage_5",
+    "title": "The River Remembers",
+    "type": "sabotage",
+    "region": 5,
+    "description": "Lockkeeper Ripple wants the delta flowing again. Release both pressure valves before opening the main floodgate. No amount of defeated guards can turn these wheels for you.",
+    "main": false,
+    "target": "sabotage_5_point_0",
+    "objectives": [
+      {
+        "id": "sabotage_5_point_0",
+        "x": 11401,
+        "y": 10374,
+        "displayType": "relay",
+        "label": "West pressure valve"
+      },
+      {
+        "id": "sabotage_5_point_1",
+        "x": 12272,
+        "y": 10868,
+        "displayType": "relay",
+        "label": "East pressure valve"
+      },
+      {
+        "id": "sabotage_5_point_2",
+        "x": 12441,
+        "y": 11531,
+        "displayType": "terminal",
+        "label": "River floodgate wheel"
+      }
+    ],
+    "steps": [
+      {
+        "action": "activate",
+        "label": "Release both pressure valves",
+        "targets": [
+          "sabotage_5_point_0",
+          "sabotage_5_point_1"
+        ]
+      },
+      {
+        "action": "activate",
+        "label": "Open the main river floodgate",
+        "targets": [
+          "sabotage_5_point_2"
+        ]
+      },
+      {
+        "action": "report",
+        "label": "Tell Lockkeeper Ripple the river is free",
+        "targets": [
+          "npc_resident_5_1"
+        ]
+      }
+    ],
+    "required": 3,
+    "rewardGold": 810,
+    "rewardXp": 635,
+    "prerequisite": null,
+    "giverNpcId": "npc_resident_5_1",
+    "nextQuestId": "escort_5",
+    "followUp": "After this assignment, speak with Wayfinder Ripple about “The Delta Messenger”."
+  },
+  {
+    "id": "demolition_6",
+    "title": "The Quiet Assembly Line",
+    "type": "demolition",
+    "region": 6,
+    "description": "Welder Copper has found the furnace’s weak points. Plant three shaped charges and set them off from a safe console to stop the war production.",
+    "main": false,
+    "target": "demolition_6_point_0",
+    "objectives": [
+      {
+        "id": "demolition_6_point_0",
+        "x": 6968,
+        "y": 9997,
+        "displayType": "charge",
+        "label": "Cooling pipe charge"
+      },
+      {
+        "id": "demolition_6_point_1",
+        "x": 7449,
+        "y": 10543,
+        "displayType": "charge",
+        "label": "Drive belt charge"
+      },
+      {
+        "id": "demolition_6_point_2",
+        "x": 7839,
+        "y": 11024,
+        "displayType": "charge",
+        "label": "Exhaust charge"
+      },
+      {
+        "id": "demolition_6_point_3",
+        "x": 6929,
+        "y": 11414,
+        "displayType": "terminal",
+        "label": "Foundry safety console"
+      }
+    ],
+    "steps": [
+      {
+        "action": "plant",
+        "label": "Arm the three shaped charges",
+        "targets": [
+          "demolition_6_point_0",
+          "demolition_6_point_1",
+          "demolition_6_point_2"
+        ]
+      },
+      {
+        "action": "detonate",
+        "label": "Use the safety console to destroy the line",
+        "targets": [
+          "demolition_6_point_3"
+        ],
+        "blastTargets": [
+          0,
+          1,
+          2
+        ]
+      },
+      {
+        "action": "report",
+        "label": "Tell Welder Copper the assembly line has stopped",
+        "targets": [
+          "npc_resident_6_0"
+        ]
+      }
+    ],
+    "required": 3,
+    "rewardGold": 920,
+    "rewardXp": 720,
+    "prerequisite": null,
+    "giverNpcId": "npc_resident_6_0",
+    "nextQuestId": "recovery_6",
+    "followUp": "After this assignment, speak with Tinker Button about “Cinder’s Spare Heart”."
+  },
+  {
+    "id": "recovery_6",
+    "title": "Cinder’s Spare Heart",
+    "type": "recovery",
+    "region": 6,
+    "description": "Tinker Button can build a refugee warning beacon from a crashed drone. Retrieve its core, then spend eight materials to repair the beacon outside Ashford.",
+    "main": false,
+    "target": "recovery_6_point_0",
+    "objectives": [
+      {
+        "id": "recovery_6_point_0",
+        "x": 8216,
+        "y": 10647,
+        "displayType": "parcel",
+        "label": "Crashed drone heart"
+      },
+      {
+        "id": "recovery_6_point_1",
+        "x": 6513,
+        "y": 9295,
+        "displayType": "signal",
+        "label": "Refugee warning beacon"
+      }
+    ],
+    "steps": [
+      {
+        "action": "recover",
+        "label": "Retrieve the crashed drone’s power core",
+        "targets": [
+          "recovery_6_point_0"
+        ]
+      },
+      {
+        "action": "repair",
+        "label": "Repair the warning beacon using eight materials",
+        "targets": [
+          "recovery_6_point_1"
+        ],
+        "materials": 8
+      },
+      {
+        "action": "report",
+        "label": "Show Tinker Button the beacon is working",
+        "targets": [
+          "npc_resident_6_1"
+        ]
+      }
+    ],
+    "required": 3,
+    "rewardGold": 920,
+    "rewardXp": 720,
+    "prerequisite": null,
+    "giverNpcId": "npc_resident_6_1",
+    "nextQuestId": "escort_6",
+    "followUp": "After this assignment, speak with Wayfinder Coal about “A Package for the Forge”."
+  },
+  {
+    "id": "infiltration_7",
+    "title": "Nine Lives of Intelligence",
+    "type": "infiltration",
+    "region": 7,
+    "description": "Agent Velvet needs proof of what waits in Berlin. Record the outer patrol frequencies, steal the gate manifest and return to Dawnbridge.",
+    "main": false,
+    "target": "infiltration_7_point_0",
+    "objectives": [
+      {
+        "id": "infiltration_7_point_0",
+        "x": 2054,
+        "y": 9971,
+        "displayType": "signal",
+        "label": "Blackbanner listening post"
+      },
+      {
+        "id": "infiltration_7_point_1",
+        "x": 2717,
+        "y": 10452,
+        "displayType": "parcel",
+        "label": "Berlin gate manifest"
+      }
+    ],
+    "steps": [
+      {
+        "action": "scan",
+        "label": "Record the outer patrol frequencies",
+        "targets": [
+          "infiltration_7_point_0"
+        ],
+        "duration": 6
+      },
+      {
+        "action": "recover",
+        "label": "Steal the Berlin gate manifest",
+        "targets": [
+          "infiltration_7_point_1"
+        ]
+      },
+      {
+        "action": "report",
+        "label": "Give Agent Velvet the Berlin intelligence",
+        "targets": [
+          "npc_resident_7_0"
+        ]
+      }
+    ],
+    "required": 3,
+    "rewardGold": 1030,
+    "rewardXp": 805,
+    "prerequisite": null,
+    "giverNpcId": "npc_resident_7_0",
+    "nextQuestId": "signal_7",
+    "followUp": "After this assignment, speak with Poet Patches about “One Voice Before Dawn”."
+  },
+  {
+    "id": "signal_7",
+    "title": "One Voice Before Dawn",
+    "type": "signal",
+    "region": 7,
+    "description": "Poet Patches wants the captive city to hear hope. Start the old transmitter, protect its broadcast and return when the resistance anthem reaches Berlin.",
+    "main": false,
+    "target": "signal_7_point_0",
+    "objectives": [
+      {
+        "id": "signal_7_point_0",
+        "x": 2288,
+        "y": 10998,
+        "displayType": "terminal",
+        "label": "Old city transmitter"
+      }
+    ],
+    "steps": [
+      {
+        "action": "activate",
+        "label": "Tune the old city transmitter",
+        "targets": [
+          "signal_7_point_0"
+        ]
+      },
+      {
+        "action": "hold",
+        "label": "Protect the resistance broadcast for twenty seconds",
+        "targets": [
+          "signal_7_point_0"
+        ],
+        "duration": 20,
+        "ambush": 3
+      },
+      {
+        "action": "report",
+        "label": "Tell Poet Patches the city heard the anthem",
+        "targets": [
+          "npc_resident_7_1"
+        ]
+      }
+    ],
+    "required": 3,
+    "rewardGold": 1030,
+    "rewardXp": 805,
+    "prerequisite": null,
+    "giverNpcId": "npc_resident_7_1",
+    "nextQuestId": "escort_7",
+    "followUp": "After this assignment, speak with Wayfinder Starling about “The Last Dispatch”."
+  },
+  {
+    "id": "vault_0_0",
+    "title": "Echoes Below · Greenfields Reach",
+    "description": "Investigate the sealed cavern, decipher its visible mechanism, defeat Gravelback, the Iron Rat, and recover the guardian’s relic.",
+    "type": "dungeon",
+    "target": "cave_0_0",
+    "targetLocation": "cave_0_0",
+    "region": 0,
+    "required": 1,
+    "rewardGold": 100,
+    "rewardXp": 160,
+    "giverNpcId": "npc_resident_0_0",
+    "main": false
+  },
+  {
+    "id": "vault_0_1",
+    "title": "A Light in the Deep · Greenfields Reach Depths",
+    "description": "Investigate the sealed cavern, decipher its visible mechanism, defeat The Gloamwing, and recover the guardian’s relic.",
+    "type": "dungeon",
+    "target": "cave_0_1",
+    "targetLocation": "cave_0_1",
+    "region": 0,
+    "required": 1,
+    "rewardGold": 100,
+    "rewardXp": 160,
+    "giverNpcId": "npc_resident_0_0",
+    "main": false
+  },
+  {
+    "id": "vault_1_0",
+    "title": "A Light in the Deep · Mosswood Wilds",
+    "description": "Investigate the sealed cavern, decipher its visible mechanism, defeat Mother Briar, and recover the guardian’s relic.",
+    "type": "dungeon",
+    "target": "cave_1_0",
+    "targetLocation": "cave_1_0",
+    "region": 1,
+    "required": 1,
+    "rewardGold": 155,
+    "rewardXp": 230,
+    "giverNpcId": "npc_resident_1_0",
+    "main": false
+  },
+  {
+    "id": "vault_1_1",
+    "title": "The Moonmoss Vigil · Mosswood Wilds",
+    "description": "Wake the watch altar. Survive 3 escalating waves, defeat the awakened guardian, and recover its unique relics.",
+    "type": "dungeon",
+    "target": "cave_1_1",
+    "targetLocation": "cave_1_1",
+    "region": 1,
+    "required": 1,
+    "rewardGold": 155,
+    "rewardXp": 230,
+    "giverNpcId": "npc_resident_1_0",
+    "main": false
+  },
+  {
+    "id": "vault_2_0",
+    "title": "The Broken Waterworks · Stonecrest Highlands",
+    "description": "Investigate the sealed cavern, decipher its visible mechanism, defeat Gravelback, the Iron Rat, and recover the guardian’s relic.",
+    "type": "dungeon",
+    "target": "cave_2_0",
+    "targetLocation": "cave_2_0",
+    "region": 2,
+    "required": 1,
+    "rewardGold": 210,
+    "rewardXp": 300,
+    "giverNpcId": "npc_resident_2_0",
+    "main": false
+  },
+  {
+    "id": "vault_2_1",
+    "title": "The Starless Vault · Stonecrest Highlands Depths",
+    "description": "Investigate the sealed cavern, decipher its visible mechanism, defeat The Gloamwing, and recover the guardian’s relic.",
+    "type": "dungeon",
+    "target": "cave_2_1",
+    "targetLocation": "cave_2_1",
+    "region": 2,
+    "required": 1,
+    "rewardGold": 210,
+    "rewardXp": 300,
+    "giverNpcId": "npc_resident_2_0",
+    "main": false
+  },
+  {
+    "id": "vault_3_0",
+    "title": "The Starless Vault · Frostmarch",
+    "description": "Investigate the sealed cavern, decipher its visible mechanism, defeat Mother Briar, and recover the guardian’s relic.",
+    "type": "dungeon",
+    "target": "cave_3_0",
+    "targetLocation": "cave_3_0",
+    "region": 3,
+    "required": 1,
+    "rewardGold": 265,
+    "rewardXp": 370,
+    "giverNpcId": "npc_resident_3_0",
+    "main": false
+  },
+  {
+    "id": "vault_3_1",
+    "title": "The Aurora Gauntlet · Frostmarch",
+    "description": "Wake the watch altar. Survive 3 escalating waves, defeat the awakened guardian, and recover its unique relics.",
+    "type": "dungeon",
+    "target": "cave_3_1",
+    "targetLocation": "cave_3_1",
+    "region": 3,
+    "required": 1,
+    "rewardGold": 265,
+    "rewardXp": 370,
+    "giverNpcId": "npc_resident_3_0",
+    "main": false
+  },
+  {
+    "id": "vault_4_0",
+    "title": "Echoes Below · Sunscar Dunes",
+    "description": "Investigate the sealed cavern, decipher its visible mechanism, defeat Gravelback, the Iron Rat, and recover the guardian’s relic.",
+    "type": "dungeon",
+    "target": "cave_4_0",
+    "targetLocation": "cave_4_0",
+    "region": 4,
+    "required": 1,
+    "rewardGold": 320,
+    "rewardXp": 440,
+    "giverNpcId": "npc_resident_4_0",
+    "main": false
+  },
+  {
+    "id": "vault_4_1",
+    "title": "A Light in the Deep · Sunscar Dunes Depths",
+    "description": "Investigate the sealed cavern, decipher its visible mechanism, defeat The Gloamwing, and recover the guardian’s relic.",
+    "type": "dungeon",
+    "target": "cave_4_1",
+    "targetLocation": "cave_4_1",
+    "region": 4,
+    "required": 1,
+    "rewardGold": 320,
+    "rewardXp": 440,
+    "giverNpcId": "npc_resident_4_0",
+    "main": false
+  },
+  {
+    "id": "vault_5_0",
+    "title": "A Light in the Deep · Reedwater Delta",
+    "description": "Investigate the sealed cavern, decipher its visible mechanism, defeat Mother Briar, and recover the guardian’s relic.",
+    "type": "dungeon",
+    "target": "cave_5_0",
+    "targetLocation": "cave_5_0",
+    "region": 5,
+    "required": 1,
+    "rewardGold": 375,
+    "rewardXp": 510,
+    "giverNpcId": "npc_resident_5_0",
+    "main": false
+  },
+  {
+    "id": "vault_5_1",
+    "title": "The Drowned Watch · Reedwater Delta",
+    "description": "Wake the watch altar. Survive 4 escalating waves, defeat the awakened guardian, and recover its unique relics.",
+    "type": "dungeon",
+    "target": "cave_5_1",
+    "targetLocation": "cave_5_1",
+    "region": 5,
+    "required": 1,
+    "rewardGold": 375,
+    "rewardXp": 510,
+    "giverNpcId": "npc_resident_5_0",
+    "main": false
+  },
+  {
+    "id": "vault_6_0",
+    "title": "The Broken Waterworks · Emberworks",
+    "description": "Investigate the sealed cavern, decipher its visible mechanism, defeat Gravelback, the Iron Rat, and recover the guardian’s relic.",
+    "type": "dungeon",
+    "target": "cave_6_0",
+    "targetLocation": "cave_6_0",
+    "region": 6,
+    "required": 1,
+    "rewardGold": 430,
+    "rewardXp": 580,
+    "giverNpcId": "npc_resident_6_0",
+    "main": false
+  },
+  {
+    "id": "vault_6_1",
+    "title": "The Starless Vault · Emberworks Depths",
+    "description": "Investigate the sealed cavern, decipher its visible mechanism, defeat The Gloamwing, and recover the guardian’s relic.",
+    "type": "dungeon",
+    "target": "cave_6_1",
+    "targetLocation": "cave_6_1",
+    "region": 6,
+    "required": 1,
+    "rewardGold": 430,
+    "rewardXp": 580,
+    "giverNpcId": "npc_resident_6_0",
+    "main": false
+  },
+  {
+    "id": "vault_7_0",
+    "title": "The Starless Vault · Blackbanner Citadel",
+    "description": "Investigate the sealed cavern, decipher its visible mechanism, defeat Mother Briar, and recover the guardian’s relic.",
+    "type": "dungeon",
+    "target": "cave_7_0",
+    "targetLocation": "cave_7_0",
+    "region": 7,
+    "required": 1,
+    "rewardGold": 485,
+    "rewardXp": 650,
+    "giverNpcId": "npc_resident_7_0",
+    "main": false
+  },
+  {
+    "id": "vault_7_1",
+    "title": "The Last Resistance · Blackbanner Citadel",
+    "description": "Wake the watch altar. Survive 4 escalating waves, defeat the awakened guardian, and recover its unique relics.",
+    "type": "dungeon",
+    "target": "cave_7_1",
+    "targetLocation": "cave_7_1",
+    "region": 7,
+    "required": 1,
+    "rewardGold": 485,
+    "rewardXp": 650,
+    "giverNpcId": "npc_resident_7_0",
+    "main": false
+  },
+  {
+    "id": "camp_waves_0",
+    "title": "Hold the Orchard Line",
+    "description": "Captain Saffron’s road camp is sheltering the harvest crews. Ring its defense bell and protect the supply chest from three arriving squads. Every wave must be defeated; there is no overall kill timer. Intermissions are preparation time.",
+    "type": "campDefense",
+    "target": "resistance_camp_0",
+    "targetLocation": "resistance_camp_0",
+    "region": 0,
+    "required": 1,
+    "waveCount": 3,
+    "campHealth": 750,
+    "rewardGold": 260,
+    "rewardXp": 250,
+    "giverNpcId": "npc_town_0",
+    "main": false,
+    "campSite": {
+      "id": "resistance_camp_0",
+      "name": "Harvest Crews’ Orchard Camp",
+      "x": 2769,
+      "y": 2912
+    },
+    "level": 1
+  },
+  {
+    "id": "camp_waves_2",
+    "title": "Turn the Lantern Line",
+    "description": "Ranger Crag has spotted the commander coordinating the offensive. Hold Lantern Ridge for 18 seconds while the mountaineers withdraw, then pursue the battery captain and disable the command post. No kill deadline. A checkpoint preserves the withdrawal.",
+    "type": "campDefense",
+    "target": "resistance_camp_2",
+    "targetLocation": "resistance_camp_2",
+    "region": 2,
+    "required": 1,
+    "waveCount": 3,
+    "campHealth": 1400,
+    "rewardGold": 500,
+    "rewardXp": 450,
+    "giverNpcId": "npc_town_2",
+    "main": false,
+    "campSite": {
+      "id": "resistance_camp_2",
+      "name": "Lantern Ridge Barricade",
+      "x": 11947,
+      "y": 2860
+    },
+    "level": 7,
+    "counterattack": true,
+    "holdDuration": 18,
+    "commandSite": {
+      "id": "lantern_command_post",
+      "name": "Lantern Ridge Battery Command",
+      "x": 12493,
+      "y": 3198
+    }
+  },
+  {
+    "id": "camp_waves_4",
+    "title": "Last Water at Sundial",
+    "description": "Sol’s caravan cannot leave without its water stores. Defend the desert road camp against four raiding waves. Every wave must be defeated; there is no overall kill timer. Intermissions are preparation time.",
+    "type": "campDefense",
+    "target": "resistance_camp_4",
+    "targetLocation": "resistance_camp_4",
+    "region": 4,
+    "required": 1,
+    "waveCount": 4,
+    "campHealth": 2200,
+    "rewardGold": 740,
+    "rewardXp": 650,
+    "giverNpcId": "npc_town_4",
+    "main": false,
+    "campSite": {
+      "id": "resistance_camp_4",
+      "name": "Sundial Water Convoy",
+      "x": 16952,
+      "y": 10010
+    },
+    "level": 13
+  },
+  {
+    "id": "camp_waves_6",
+    "title": "A Hearth in the Ash",
+    "description": "Engineer Cinder’s evacuation camp is the last refuge before the foundries. Hold its supply chest against four escalating siege waves. Every wave must be defeated; there is no overall kill timer. Intermissions are preparation time.",
+    "type": "campDefense",
+    "target": "resistance_camp_6",
+    "targetLocation": "resistance_camp_6",
+    "region": 6,
+    "required": 1,
+    "waveCount": 4,
+    "campHealth": 3200,
+    "rewardGold": 980,
+    "rewardXp": 850,
+    "giverNpcId": "npc_town_6",
+    "main": false,
+    "campSite": {
+      "id": "resistance_camp_6",
+      "name": "Ashford Evacuation Yard",
+      "x": 7306,
+      "y": 10179
+    },
+    "level": 19
+  },
+  {
+    "id": "demolition_1",
+    "title": "Bramble’s Silent Sawmill",
+    "description": "Juniper has found the three drives that feed the occupiers’ sawmill. Plant a charge on each drive, then retreat to the separate remote switch.",
+    "type": "demolition",
+    "encounter": "demolition",
+    "region": 1,
+    "main": false,
+    "target": "demolition_1_point_0",
+    "targetLocation": "demolition_1_point_0",
+    "objectives": [
+      {
+        "id": "demolition_1_point_0",
+        "x": 7124,
+        "y": 3172,
+        "displayType": "relay",
+        "label": "North drive"
+      },
+      {
+        "id": "demolition_1_point_1",
+        "x": 7592,
+        "y": 3172,
+        "displayType": "relay",
+        "label": "East drive"
+      },
+      {
+        "id": "demolition_1_point_2",
+        "x": 7592,
+        "y": 3640,
+        "displayType": "relay",
+        "label": "South drive"
+      },
+      {
+        "id": "demolition_1_point_3",
+        "x": 6942,
+        "y": 3718,
+        "displayType": "terminal",
+        "label": "Sheltered remote switch"
+      }
+    ],
+    "required": 2,
+    "steps": [
+      {
+        "action": "plant",
+        "label": "Plant all three demolition charges",
+        "targets": [
+          "demolition_1_point_0",
+          "demolition_1_point_1",
+          "demolition_1_point_2"
+        ]
+      },
+      {
+        "action": "detonate",
+        "label": "Use the separate remote switch",
+        "targets": [
+          "demolition_1_point_3"
+        ],
+        "blastTargets": [
+          0,
+          1,
+          2
+        ]
+      }
+    ],
+    "rewardGold": 450,
+    "rewardXp": 410,
+    "giverNpcId": "npc_town_1"
+  },
+  {
+    "id": "demolition_3",
+    "title": "Break the Winter Battery",
+    "description": "Lumi wants the frozen artillery relay silenced. Arm its three relay charges and use the sheltered remote switch to destroy them together.",
+    "type": "demolition",
+    "encounter": "demolition",
+    "region": 3,
+    "main": false,
+    "target": "demolition_3_point_0",
+    "targetLocation": "demolition_3_point_0",
+    "objectives": [
+      {
+        "id": "demolition_3_point_0",
+        "x": 16484,
+        "y": 3172,
+        "displayType": "relay",
+        "label": "North drive"
+      },
+      {
+        "id": "demolition_3_point_1",
+        "x": 16952,
+        "y": 3172,
+        "displayType": "relay",
+        "label": "East drive"
+      },
+      {
+        "id": "demolition_3_point_2",
+        "x": 16952,
+        "y": 3640,
+        "displayType": "relay",
+        "label": "South drive"
+      },
+      {
+        "id": "demolition_3_point_3",
+        "x": 16302,
+        "y": 3718,
+        "displayType": "terminal",
+        "label": "Sheltered remote switch"
+      }
+    ],
+    "required": 2,
+    "steps": [
+      {
+        "action": "plant",
+        "label": "Plant all three demolition charges",
+        "targets": [
+          "demolition_3_point_0",
+          "demolition_3_point_1",
+          "demolition_3_point_2"
+        ]
+      },
+      {
+        "action": "detonate",
+        "label": "Use the separate remote switch",
+        "targets": [
+          "demolition_3_point_3"
+        ],
+        "blastTargets": [
+          0,
+          1,
+          2
+        ]
+      }
+    ],
+    "rewardGold": 690,
+    "rewardXp": 630,
+    "giverNpcId": "npc_town_3"
+  },
+  {
+    "id": "demolition_5",
+    "title": "Cut the Floodgate Supply",
+    "description": "Reed has marked three pumping engines feeding the military docks. Place the charges before using the separate remote switch.",
+    "type": "demolition",
+    "encounter": "demolition",
+    "region": 5,
+    "main": false,
+    "target": "demolition_5_point_0",
+    "targetLocation": "demolition_5_point_0",
+    "objectives": [
+      {
+        "id": "demolition_5_point_0",
+        "x": 11804,
+        "y": 10452,
+        "displayType": "relay",
+        "label": "North drive"
+      },
+      {
+        "id": "demolition_5_point_1",
+        "x": 12272,
+        "y": 10452,
+        "displayType": "relay",
+        "label": "East drive"
+      },
+      {
+        "id": "demolition_5_point_2",
+        "x": 12272,
+        "y": 10920,
+        "displayType": "relay",
+        "label": "South drive"
+      },
+      {
+        "id": "demolition_5_point_3",
+        "x": 11622,
+        "y": 10998,
+        "displayType": "terminal",
+        "label": "Sheltered remote switch"
+      }
+    ],
+    "required": 2,
+    "steps": [
+      {
+        "action": "plant",
+        "label": "Plant all three demolition charges",
+        "targets": [
+          "demolition_5_point_0",
+          "demolition_5_point_1",
+          "demolition_5_point_2"
+        ]
+      },
+      {
+        "action": "detonate",
+        "label": "Use the separate remote switch",
+        "targets": [
+          "demolition_5_point_3"
+        ],
+        "blastTargets": [
+          0,
+          1,
+          2
+        ]
+      }
+    ],
+    "rewardGold": 930,
+    "rewardXp": 850,
+    "giverNpcId": "npc_town_5"
+  },
+  {
+    "id": "demolition_7",
+    "title": "The Citadel Goes Dark",
+    "description": "Dawn has a final opening: plant charges on the three outer-citadel generators, then use their isolated remote switch to cut the searchlights.",
+    "type": "demolition",
+    "encounter": "demolition",
+    "region": 7,
+    "main": false,
+    "target": "demolition_7_point_0",
+    "targetLocation": "demolition_7_point_0",
+    "objectives": [
+      {
+        "id": "demolition_7_point_0",
+        "x": 2444,
+        "y": 10452,
+        "displayType": "relay",
+        "label": "North drive"
+      },
+      {
+        "id": "demolition_7_point_1",
+        "x": 2912,
+        "y": 10452,
+        "displayType": "relay",
+        "label": "East drive"
+      },
+      {
+        "id": "demolition_7_point_2",
+        "x": 2912,
+        "y": 10920,
+        "displayType": "relay",
+        "label": "South drive"
+      },
+      {
+        "id": "demolition_7_point_3",
+        "x": 2262,
+        "y": 10998,
+        "displayType": "terminal",
+        "label": "Sheltered remote switch"
+      }
+    ],
+    "required": 2,
+    "steps": [
+      {
+        "action": "plant",
+        "label": "Plant all three demolition charges",
+        "targets": [
+          "demolition_7_point_0",
+          "demolition_7_point_1",
+          "demolition_7_point_2"
+        ]
+      },
+      {
+        "action": "detonate",
+        "label": "Use the separate remote switch",
+        "targets": [
+          "demolition_7_point_3"
+        ],
+        "blastTargets": [
+          0,
+          1,
+          2
+        ]
+      }
+    ],
+    "rewardGold": 1170,
+    "rewardXp": 1070,
+    "giverNpcId": "npc_town_7"
+  },
+  {
+    "id": "stormglass_beacons",
+    "title": "A Light Beyond the Snow",
+    "type": "repair",
+    "region": 8,
+    "giverNpcId": "npc_stormglass_nacre",
+    "description": "Restore the three salt-damaged roadside beacons so rescued crews can find Brinewatch. Then take Nacre’s news to Bosun Brindle.",
+    "objectives": [
+      {
+        "id": "stormglass_beacon_0",
+        "x": 18980,
+        "y": 2080,
+        "label": "Snowline beacon",
+        "displayType": "relay"
+      },
+      {
+        "id": "stormglass_beacon_1",
+        "x": 20670,
+        "y": 2340,
+        "label": "Saltwind beacon",
+        "displayType": "relay"
+      },
+      {
+        "id": "stormglass_beacon_2",
+        "x": 21255,
+        "y": 3510,
+        "label": "Moorland beacon",
+        "displayType": "relay"
+      }
+    ],
+    "steps": [
+      {
+        "action": "repair",
+        "label": "Relight the three roadside beacons",
+        "targets": [
+          "stormglass_beacon_0",
+          "stormglass_beacon_1",
+          "stormglass_beacon_2"
+        ]
+      }
+    ],
+    "required": 1,
+    "rewardGold": 520,
+    "rewardXp": 600,
+    "main": false,
+    "prerequisite": null,
+    "nextQuestId": "stormglass_salvage",
+    "target": "stormglass_beacon_0",
+    "targetLocation": "stormglass_beacon_0",
+    "followUp": "After this assignment, speak with Bosun Brindle about “Salvage the Glass Tide”."
+  },
+  {
+    "id": "stormglass_salvage",
+    "title": "Salvage the Glass Tide",
+    "type": "cache",
+    "region": 8,
+    "giverNpcId": "npc_stormglass_brindle",
+    "description": "Recover the sealed rescue stores from the Glass-Tide wreck. Tinker Pip at Lantern Quay can use the surviving signal lenses.",
+    "target": "cache_stormglass_salvage",
+    "required": 1,
+    "rewardGold": 580,
+    "rewardXp": 650,
+    "main": false,
+    "prerequisite": "stormglass_beacons",
+    "nextQuestId": "stormglass_moorings",
+    "targetLocation": "cache_stormglass_salvage",
+    "followUp": "After this assignment, speak with Tinker Pip about “Cut the Harpoon Lines”."
+  },
+  {
+    "id": "stormglass_moorings",
+    "title": "Cut the Harpoon Lines",
+    "type": "liberate",
+    "region": 8,
+    "giverNpcId": "npc_stormglass_pip",
+    "description": "Clear every guard from Harpoon Moorings so the fishing boats can move again. Scout Mira is waiting at Lantern Quay with news from the southern islands.",
+    "target": "base_stormglass_0",
+    "required": 1,
+    "rewardGold": 720,
+    "rewardXp": 800,
+    "main": false,
+    "prerequisite": "stormglass_salvage",
+    "nextQuestId": "stormglass_prison",
+    "targetLocation": "base_stormglass_0",
+    "followUp": "After this assignment, speak with Scout Mira about “The Drowned Bell Prisoners”."
+  },
+  {
+    "id": "stormglass_prison",
+    "title": "The Drowned Bell Prisoners",
+    "type": "rescue",
+    "region": 9,
+    "giverNpcId": "npc_stormglass_mira",
+    "description": "Cross the Crown Causeway and clear Drowned Bell Stockade to free its captive ferrymen. Find Captain Coral at Crownrest Haven afterward.",
+    "target": "base_sunkencrown_0",
+    "required": 1,
+    "rewardGold": 850,
+    "rewardXp": 1000,
+    "main": false,
+    "prerequisite": "stormglass_moorings",
+    "nextQuestId": "stormglass_convoy",
+    "targetLocation": "base_sunkencrown_0",
+    "followUp": "After this assignment, speak with Captain Coral about “Break the Crown Blockade”."
+  },
+  {
+    "id": "stormglass_convoy",
+    "title": "Break the Crown Blockade",
+    "type": "convoy",
+    "region": 9,
+    "giverNpcId": "npc_sunkencrown_coral",
+    "description": "Overrun Crown Fleet Anchorage and seize the blockade’s supply convoy. Herbalist Fenn at Crownrest will help the evacuated families return home.",
+    "target": "base_sunkencrown_1",
+    "required": 1,
+    "rewardGold": 950,
+    "rewardXp": 1100,
+    "main": false,
+    "prerequisite": "stormglass_prison",
+    "nextQuestId": "stormglass_homecoming",
+    "targetLocation": "base_sunkencrown_1",
+    "followUp": "After this assignment, speak with Herbalist Fenn about “The Homecoming Lights”."
+  },
+  {
+    "id": "stormglass_homecoming",
+    "title": "The Homecoming Lights",
+    "type": "delivery",
+    "region": 9,
+    "giverNpcId": "npc_sunkencrown_fenn",
+    "description": "Relight two forgotten island lanterns, then bring the ferry chart back to Crownrest. The defended watch camps will need your help keeping these routes open.",
+    "objectives": [
+      {
+        "id": "sunkencrown_lantern_0",
+        "x": 19370,
+        "y": 12220,
+        "label": "Tide-garden lantern",
+        "displayType": "relay"
+      },
+      {
+        "id": "sunkencrown_lantern_1",
+        "x": 21320,
+        "y": 14040,
+        "label": "Outer-crown lantern",
+        "displayType": "relay"
+      },
+      {
+        "id": "sunkencrown_ferry_chart",
+        "x": 20410,
+        "y": 11375,
+        "label": "Crownrest ferry chart table",
+        "displayType": "terminal"
+      }
+    ],
+    "steps": [
+      {
+        "action": "repair",
+        "label": "Relight both island lanterns",
+        "targets": [
+          "sunkencrown_lantern_0",
+          "sunkencrown_lantern_1"
+        ]
+      },
+      {
+        "action": "deliver",
+        "label": "Return the safe-passage chart to Crownrest",
+        "targets": [
+          "sunkencrown_ferry_chart"
+        ]
+      }
+    ],
+    "required": 2,
+    "rewardGold": 1100,
+    "rewardXp": 1300,
+    "main": false,
+    "prerequisite": "stormglass_convoy",
+    "target": "sunkencrown_lantern_0",
+    "targetLocation": "sunkencrown_lantern_0"
+  },
+  {
+    "id": "defense_stormglass_beacon",
+    "title": "Keep the Saltwind Burning",
+    "region": 8,
+    "target": "defend_stormglass_0",
+    "giverNpcId": "npc_stormglass_nacre",
+    "campHealth": 2100,
+    "rewardGold": 700,
+    "rewardXp": 750,
+    "rewardMaterials": 28,
+    "rewardCores": 1,
+    "description": "Keeper Nacre needs the Saltwind beacon protected while the northern ferries find the coast. Ring the watch bell and hold its supply chest through three assaults. After this defense, speak with Bosun Brindle about “A Shore for the Shipwrecked”.",
+    "wavePlan": [
+      {
+        "name": "The Fog Patrol",
+        "types": [
+          1,
+          44,
+          47,
+          0
+        ],
+        "brief": "Scouts probe the beacon. Watch the harpoon lane.",
+        "levelBonus": 0,
+        "healthMultiplier": 1,
+        "coopTypes": [
+          47
+        ]
+      },
+      {
+        "name": "Blades in the Mist",
+        "types": [
+          47,
+          47,
+          44,
+          5,
+          1
+        ],
+        "brief": "Tideblades close in while a medic keeps their squad moving.",
+        "levelBonus": 1,
+        "healthMultiplier": 1.055,
+        "coopTypes": [
+          47
+        ]
+      },
+      {
+        "name": "The Bell at Saltwind",
+        "types": [
+          45,
+          46,
+          44,
+          47,
+          47,
+          0
+        ],
+        "brief": "A Bellringer and Shellguard lead the final assault.",
+        "levelBonus": 2,
+        "healthMultiplier": 1.11,
+        "coopTypes": [
+          44,
+          47
+        ]
+      }
+    ],
+    "type": "campDefense",
+    "coastalDefense": true,
+    "main": false,
+    "required": 1,
+    "waveCount": 3,
+    "targetLocation": "defend_stormglass_0",
+    "intermission": 5,
+    "prerequisite": null,
+    "nextQuestId": "defense_stormglass_rescue",
+    "followUp": "After this defense, speak with Bosun Brindle about “A Shore for the Shipwrecked”."
+  },
+  {
+    "id": "defense_stormglass_rescue",
+    "title": "A Shore for the Shipwrecked",
+    "region": 8,
+    "target": "defend_stormglass_1",
+    "giverNpcId": "npc_stormglass_brindle",
+    "campHealth": 2500,
+    "rewardGold": 850,
+    "rewardXp": 950,
+    "rewardMaterials": 36,
+    "rewardCores": 1,
+    "description": "Bosun Brindle has brought the wreck survivors ashore. Defend their rescue stores until the last wounded sailor reaches safety. After this defense, speak with Scout Mira about “The Last Lantern Holds”.",
+    "wavePlan": [
+      {
+        "name": "Rope-Cutters",
+        "types": [
+          47,
+          47,
+          44,
+          1
+        ],
+        "brief": "Fast raiders are racing toward the rescue stores.",
+        "levelBonus": 0,
+        "healthMultiplier": 1,
+        "coopTypes": [
+          47
+        ]
+      },
+      {
+        "name": "Harpoons on the Rise",
+        "types": [
+          44,
+          44,
+          0,
+          46,
+          1
+        ],
+        "brief": "Circle the shell shield and sidestep the harpoon lanes.",
+        "levelBonus": 1,
+        "healthMultiplier": 1.055,
+        "coopTypes": [
+          47
+        ]
+      },
+      {
+        "name": "The Rescue Breakers",
+        "types": [
+          15,
+          47,
+          45,
+          44,
+          5,
+          0
+        ],
+        "brief": "A medic and Bellringer support a flanking squad.",
+        "levelBonus": 1,
+        "healthMultiplier": 1.055,
+        "coopTypes": [
+          47
+        ]
+      },
+      {
+        "name": "Brindle’s Last Boat",
+        "types": [
+          46,
+          46,
+          45,
+          44,
+          47,
+          47,
+          3
+        ],
+        "brief": "The heavy escort has arrived. Keep the stores intact.",
+        "levelBonus": 2,
+        "healthMultiplier": 1.11,
+        "coopTypes": [
+          44,
+          47
+        ]
+      }
+    ],
+    "type": "campDefense",
+    "coastalDefense": true,
+    "main": false,
+    "required": 1,
+    "waveCount": 4,
+    "targetLocation": "defend_stormglass_1",
+    "intermission": 5,
+    "prerequisite": "defense_stormglass_beacon",
+    "nextQuestId": "defense_stormglass_lantern",
+    "followUp": "After this defense, speak with Scout Mira about “The Last Lantern Holds”."
+  },
+  {
+    "id": "defense_stormglass_lantern",
+    "title": "The Last Lantern Holds",
+    "region": 8,
+    "target": "defend_stormglass_2",
+    "giverNpcId": "npc_stormglass_mira",
+    "campHealth": 3000,
+    "rewardGold": 1100,
+    "rewardXp": 1300,
+    "rewardMaterials": 48,
+    "rewardCores": 2,
+    "rewardChoices": [
+      "armor_stormglass_breakercoat",
+      "armor_rimeheart"
+    ],
+    "description": "Scout Mira is keeping the causeway open for the southbound refugees. Defend the last lantern against five waves to earn a choice of rare protective equipment. After this defense, speak with Captain Coral about “Stand at Reedcrown Landing”.",
+    "wavePlan": [
+      {
+        "name": "Causeway Runners",
+        "types": [
+          47,
+          47,
+          1,
+          44
+        ],
+        "brief": "Runners strike first. Keep them away from the lantern stores.",
+        "levelBonus": 0,
+        "healthMultiplier": 1,
+        "coopTypes": [
+          47
+        ]
+      },
+      {
+        "name": "Hook and Shield",
+        "types": [
+          44,
+          44,
+          46,
+          0,
+          47
+        ],
+        "brief": "Harpoons and shields advance together.",
+        "levelBonus": 1,
+        "healthMultiplier": 1.055,
+        "coopTypes": [
+          47
+        ]
+      },
+      {
+        "name": "Three Notes of Thunder",
+        "types": [
+          45,
+          44,
+          47,
+          15,
+          5,
+          0
+        ],
+        "brief": "The storm circles strike in sequence. Interrupt the Bellringer.",
+        "levelBonus": 1,
+        "healthMultiplier": 1.055,
+        "coopTypes": [
+          47
+        ]
+      },
+      {
+        "name": "The Split Advance",
+        "types": [
+          46,
+          47,
+          44,
+          45,
+          47,
+          3,
+          0
+        ],
+        "brief": "Two attack styles close on opposite sides of the causeway.",
+        "levelBonus": 2,
+        "healthMultiplier": 1.11,
+        "coopTypes": [
+          44,
+          47
+        ]
+      },
+      {
+        "name": "The Last Lantern Siege",
+        "types": [
+          46,
+          46,
+          45,
+          44,
+          44,
+          47,
+          47,
+          11
+        ],
+        "brief": "The final siege brings shell armor, harpoons and a rocket team.",
+        "levelBonus": 3,
+        "healthMultiplier": 1.165,
+        "coopTypes": [
+          44,
+          47
+        ]
+      }
+    ],
+    "type": "campDefense",
+    "coastalDefense": true,
+    "main": false,
+    "required": 1,
+    "waveCount": 5,
+    "targetLocation": "defend_stormglass_2",
+    "intermission": 5,
+    "prerequisite": "defense_stormglass_rescue",
+    "nextQuestId": "defense_sunkencrown_reeds",
+    "followUp": "After this defense, speak with Captain Coral about “Stand at Reedcrown Landing”."
+  },
+  {
+    "id": "defense_sunkencrown_reeds",
+    "title": "Stand at Reedcrown Landing",
+    "region": 9,
+    "target": "defend_sunkencrown_0",
+    "giverNpcId": "npc_sunkencrown_coral",
+    "campHealth": 3400,
+    "rewardGold": 1150,
+    "rewardXp": 1300,
+    "rewardMaterials": 48,
+    "rewardCores": 2,
+    "description": "Captain Coral needs a safe landing for the displaced island families. Hold the landing stores through four Crown Fleet assaults. After this defense, speak with Herbalist Fenn about “Let the Sunken Bell Ring”.",
+    "wavePlan": [
+      {
+        "name": "Landing Party",
+        "types": [
+          44,
+          47,
+          15,
+          46,
+          0
+        ],
+        "brief": "The fleet mixes ambushers with coastal assault troops.",
+        "levelBonus": 0,
+        "healthMultiplier": 1,
+        "coopTypes": [
+          47
+        ]
+      },
+      {
+        "name": "Reedbank Cutters",
+        "types": [
+          47,
+          47,
+          47,
+          44,
+          5,
+          1
+        ],
+        "brief": "Three Tideblades lead a fast raid.",
+        "levelBonus": 1,
+        "healthMultiplier": 1.055,
+        "coopTypes": [
+          47
+        ]
+      },
+      {
+        "name": "The Crown Chimes",
+        "types": [
+          45,
+          45,
+          46,
+          44,
+          0,
+          15
+        ],
+        "brief": "Two Bellringers make standing still dangerous.",
+        "levelBonus": 2,
+        "healthMultiplier": 1.11,
+        "coopTypes": [
+          44,
+          47
+        ]
+      },
+      {
+        "name": "The Landing Breakers",
+        "types": [
+          46,
+          46,
+          45,
+          47,
+          44,
+          47,
+          11
+        ],
+        "brief": "Break the shields before the heavy team reaches the stores.",
+        "levelBonus": 3,
+        "healthMultiplier": 1.165,
+        "coopTypes": [
+          44,
+          47
+        ]
+      }
+    ],
+    "type": "campDefense",
+    "coastalDefense": true,
+    "main": false,
+    "required": 1,
+    "waveCount": 4,
+    "targetLocation": "defend_sunkencrown_0",
+    "intermission": 5,
+    "prerequisite": "defense_stormglass_lantern",
+    "nextQuestId": "defense_sunkencrown_bell",
+    "followUp": "After this defense, speak with Herbalist Fenn about “Let the Sunken Bell Ring”."
+  },
+  {
+    "id": "defense_sunkencrown_bell",
+    "title": "Let the Sunken Bell Ring",
+    "region": 9,
+    "target": "defend_sunkencrown_1",
+    "giverNpcId": "npc_sunkencrown_fenn",
+    "campHealth": 3900,
+    "rewardGold": 1350,
+    "rewardXp": 1500,
+    "rewardMaterials": 60,
+    "rewardCores": 2,
+    "description": "Herbalist Fenn is turning the old bell platform into a medicine station. Guard its supplies through five waves so the island crews can hear a friendly signal again. After this defense, speak with Tinker Pip about “Until the Last Ferry Leaves”.",
+    "wavePlan": [
+      {
+        "name": "Medicine Raiders",
+        "types": [
+          47,
+          44,
+          15,
+          1,
+          0
+        ],
+        "brief": "Ambushers are testing the medicine station.",
+        "levelBonus": 0,
+        "healthMultiplier": 1,
+        "coopTypes": [
+          47
+        ]
+      },
+      {
+        "name": "The Hooked Crescent",
+        "types": [
+          44,
+          44,
+          46,
+          47,
+          47,
+          5
+        ],
+        "brief": "The flanking harpoons cover a blade rush.",
+        "levelBonus": 1,
+        "healthMultiplier": 1.055,
+        "coopTypes": [
+          47
+        ]
+      },
+      {
+        "name": "Drowned Patrol",
+        "types": [
+          45,
+          46,
+          15,
+          44,
+          3,
+          0
+        ],
+        "brief": "A storm bell supports the gun crews.",
+        "levelBonus": 1,
+        "healthMultiplier": 1.055,
+        "coopTypes": [
+          47
+        ]
+      },
+      {
+        "name": "The Broken Choir",
+        "types": [
+          45,
+          45,
+          47,
+          44,
+          46,
+          47,
+          5
+        ],
+        "brief": "Silence the Bellringers or the patrols keep their rally bonus.",
+        "levelBonus": 2,
+        "healthMultiplier": 1.11,
+        "coopTypes": [
+          44,
+          47
+        ]
+      },
+      {
+        "name": "The Bell Platform Siege",
+        "types": [
+          46,
+          46,
+          45,
+          44,
+          47,
+          47,
+          11,
+          15
+        ],
+        "brief": "Shellguards hold the lane while the siege team advances.",
+        "levelBonus": 3,
+        "healthMultiplier": 1.165,
+        "coopTypes": [
+          44,
+          47
+        ]
+      }
+    ],
+    "type": "campDefense",
+    "coastalDefense": true,
+    "main": false,
+    "required": 1,
+    "waveCount": 5,
+    "targetLocation": "defend_sunkencrown_1",
+    "intermission": 5,
+    "prerequisite": "defense_sunkencrown_reeds",
+    "nextQuestId": "defense_sunkencrown_evacuation",
+    "followUp": "After this defense, speak with Tinker Pip about “Until the Last Ferry Leaves”."
+  },
+  {
+    "id": "defense_sunkencrown_evacuation",
+    "title": "Until the Last Ferry Leaves",
+    "region": 9,
+    "target": "defend_sunkencrown_2",
+    "giverNpcId": "npc_stormglass_pip",
+    "campHealth": 4600,
+    "rewardGold": 1800,
+    "rewardXp": 2000,
+    "rewardMaterials": 80,
+    "rewardCores": 4,
+    "rewardChoices": [
+      "accessory_crownrest_tidecharm",
+      "armor_venomskin"
+    ],
+    "description": "Tinker Pip has repaired the evacuation ferries, but the Crown Fleet is closing on the pier. Protect the final supplies through six waves and claim one rare keepsake for the party. After this defense, speak with Keeper Nacre about “A Light Beyond the Snow”.",
+    "wavePlan": [
+      {
+        "name": "The Pier Patrol",
+        "types": [
+          44,
+          47,
+          15,
+          46,
+          0
+        ],
+        "brief": "Clear the first landing party.",
+        "levelBonus": 0,
+        "healthMultiplier": 1,
+        "coopTypes": [
+          47
+        ]
+      },
+      {
+        "name": "Hooks in the Spray",
+        "types": [
+          44,
+          44,
+          44,
+          47,
+          47,
+          1
+        ],
+        "brief": "Keep moving across the harpoon lanes.",
+        "levelBonus": 1,
+        "healthMultiplier": 1.055,
+        "coopTypes": [
+          47
+        ]
+      },
+      {
+        "name": "The Shell Wall",
+        "types": [
+          46,
+          46,
+          45,
+          47,
+          5,
+          0
+        ],
+        "brief": "Draw the shells into their exposed recovery.",
+        "levelBonus": 1,
+        "healthMultiplier": 1.055,
+        "coopTypes": [
+          47
+        ]
+      },
+      {
+        "name": "The Storm Choir",
+        "types": [
+          45,
+          45,
+          44,
+          47,
+          15,
+          46,
+          3
+        ],
+        "brief": "Interrupt the bells before their circles fill the pier.",
+        "levelBonus": 2,
+        "healthMultiplier": 1.11,
+        "coopTypes": [
+          44,
+          47
+        ]
+      },
+      {
+        "name": "Ferry-Cutters",
+        "types": [
+          47,
+          47,
+          47,
+          44,
+          44,
+          46,
+          11,
+          15
+        ],
+        "brief": "Fast blades race the final ferry loading.",
+        "levelBonus": 3,
+        "healthMultiplier": 1.165,
+        "coopTypes": [
+          44,
+          47
+        ]
+      },
+      {
+        "name": "The Crown Fleet’s Last Assault",
+        "types": [
+          46,
+          46,
+          45,
+          45,
+          44,
+          47,
+          47,
+          11,
+          3
+        ],
+        "brief": "Hold against the full fleet escort. This is the final wave.",
+        "levelBonus": 4,
+        "healthMultiplier": 1.22,
+        "coopTypes": [
+          44,
+          47
+        ]
+      }
+    ],
+    "type": "campDefense",
+    "coastalDefense": true,
+    "main": false,
+    "required": 1,
+    "waveCount": 6,
+    "targetLocation": "defend_sunkencrown_2",
+    "intermission": 5,
+    "prerequisite": "defense_sunkencrown_bell",
+    "nextQuestId": "stormglass_beacons",
+    "followUp": "After this defense, speak with Keeper Nacre about “A Light Beyond the Snow”."
+  },
+  {
+    "id": "invasion_orchard",
+    "title": "When the Orchard Answers",
+    "region": 0,
+    "level": 3,
+    "prerequisite": "main_0_0",
+    "giverNpcId": "npc_town_0",
+    "frontName": "Harvest Road Barricade",
+    "opening": "Saffron: Those orders were signed by every commander. This is a coordinated offensive. Get the harvest crews out; we will hold the road together.",
+    "fallback": "Juniper: The supply road is compromised. Walk the families to the fallback lantern. I am staying with the last cart.",
+    "victory": "Saffron: They planned to silence one village at a time. Now every village will hear us. The signal crews are yours.",
+    "support": "Orchard signal crew",
+    "rewardGold": 450,
+    "rewardXp": 440,
+    "type": "invasion",
+    "main": false,
+    "target": "invasion_orchard_front",
+    "targetLocation": "invasion_orchard_front",
+    "required": 3,
+    "description": "Saffron: Those orders were signed by every commander. This is a coordinated offensive. Get the harvest crews out; we will hold the road together. Three stages: hold the barricade, escort the evacuation, then disable the siege command. No overall kill timer. Stage checkpoints preserve completed work. Choose a rescued medic team or reinforced barricade before the first attack."
+  },
+  {
+    "id": "invasion_frost",
+    "title": "The Night Warmhearth Fell",
+    "region": 3,
+    "level": 10,
+    "prerequisite": "main_3_2",
+    "giverNpcId": "npc_town_3",
+    "frontName": "Warmhearth Evacuation Road",
+    "opening": "Lumi: Whiteclaw left the ferry route on the enemy frequency. Our safe road is gone. Save the families first; we can rebuild a road.",
+    "fallback": "Crag: My mountaineers found a shelter beyond the bend. Cover Lumi while she brings the wounded through.",
+    "victory": "Lumi: Every name on my list is accounted for. Take our siege-breaker and the medical team. Nobody faces Berlin alone.",
+    "support": "Warmhearth medics",
+    "rewardGold": 1150,
+    "rewardXp": 1200,
+    "type": "invasion",
+    "main": false,
+    "target": "invasion_frost_front",
+    "targetLocation": "invasion_frost_front",
+    "required": 3,
+    "description": "Lumi: Whiteclaw left the ferry route on the enemy frequency. Our safe road is gone. Save the families first; we can rebuild a road. Three stages: hold the barricade, escort the evacuation, then disable the siege command. No overall kill timer. Stage checkpoints preserve completed work. Choose a rescued medic team or reinforced barricade before the first attack."
+  },
+  {
+    "id": "invasion_berlin",
+    "title": "All Roads to the Resistance",
+    "region": 7,
+    "level": 22,
+    "prerequisite": "main_7_2",
+    "giverNpcId": "npc_town_7",
+    "frontName": "Blackbanner Supply Approach",
+    "opening": "Dawn: The commanders are falling, but Whisker is sending his reserve army. Keep this approach open and all our friends can join the final push.",
+    "fallback": "Cinder: The evacuation wagons carry the charges for Berlin. Walk them past the searchlights. I will keep the wheels turning.",
+    "victory": "Dawn: Signals, medicine, and a road through the dark. Every small victory brought us here. Our allies will meet you at Berlin.",
+    "support": "Blackbanner engineers",
+    "rewardGold": 2400,
+    "rewardXp": 2400,
+    "type": "invasion",
+    "main": false,
+    "target": "invasion_berlin_front",
+    "targetLocation": "invasion_berlin_front",
+    "required": 3,
+    "description": "Dawn: The commanders are falling, but Whisker is sending his reserve army. Keep this approach open and all our friends can join the final push. Three stages: hold the barricade, escort the evacuation, then disable the siege command. No overall kill timer. Stage checkpoints preserve completed work. Choose a rescued medic team or reinforced barricade before the first attack."
+  },
+  {
+    "id": "hidden_gunsmith",
+    "title": "The Gunsmith Below",
+    "type": "recovery",
+    "hiddenResistance": true,
+    "description": "Wick refuses to let the occupiers turn his precision prototype on the forest. Recover two stolen parts around Owl’s Grotto, then defeat the prototype’s guard and bring back the receiver. Unique reward: Lanternline Rifle.",
+    "region": 1,
+    "giverNpcId": "npc_hidden_gunsmith",
+    "turnInNpcId": "npc_hidden_gunsmith",
+    "main": false,
+    "recommendedLevel": 5,
+    "required": 2,
+    "steps": [
+      {
+        "action": "recover",
+        "label": "Recover both prototype parts",
+        "targets": [
+          "hidden_gunsmith_point_0",
+          "hidden_gunsmith_point_1"
+        ]
+      },
+      {
+        "action": "recover",
+        "label": "Defeat the receiver guards, then recover the prototype",
+        "targets": [
+          "hidden_gunsmith_point_2"
+        ],
+        "resistanceGuard": true
+      }
+    ],
+    "objectives": [
+      {
+        "id": "hidden_gunsmith_point_0",
+        "x": 5291,
+        "y": 4823,
+        "displayType": "parcel",
+        "label": "Cave-side lens crate"
+      },
+      {
+        "id": "hidden_gunsmith_point_1",
+        "x": 5772,
+        "y": 5083,
+        "displayType": "parcel",
+        "label": "Buried barrel crate"
+      },
+      {
+        "id": "hidden_gunsmith_point_2",
+        "x": 6175,
+        "y": 4797,
+        "displayType": "parcel",
+        "label": "Stolen prototype receiver"
+      }
+    ],
+    "target": "hidden_gunsmith_point_0",
+    "targetLocation": "hidden_gunsmith_point_0",
+    "rewardGold": 410,
+    "rewardXp": 325
+  },
+  {
+    "id": "hidden_lastwatch",
+    "title": "The Last Watch",
+    "type": "recovery",
+    "hiddenResistance": true,
+    "description": "A lone defender still keeps the ruined watchtower’s lantern. Repair its signal, hold the broadcast briefly, and defeat the assault leader. Unique reward: Last Watch Armor.",
+    "region": 2,
+    "giverNpcId": "npc_hidden_lastwatch",
+    "turnInNpcId": "npc_hidden_lastwatch",
+    "main": false,
+    "recommendedLevel": 7,
+    "required": 3,
+    "steps": [
+      {
+        "action": "repair",
+        "label": "Repair the watchtower signal",
+        "targets": [
+          "hidden_lastwatch_point_0"
+        ]
+      },
+      {
+        "action": "hold",
+        "label": "Broadcast for 15 seconds",
+        "targets": [
+          "hidden_lastwatch_point_0"
+        ],
+        "duration": 15,
+        "ambush": 2
+      },
+      {
+        "action": "recover",
+        "label": "Defeat the assault leader and retrieve the orders",
+        "targets": [
+          "hidden_lastwatch_point_1"
+        ],
+        "resistanceGuard": true
+      }
+    ],
+    "objectives": [
+      {
+        "id": "hidden_lastwatch_point_0",
+        "x": 12987,
+        "y": 1417,
+        "displayType": "signal",
+        "label": "Watchtower signal"
+      },
+      {
+        "id": "hidden_lastwatch_point_1",
+        "x": 13364,
+        "y": 1781,
+        "displayType": "parcel",
+        "label": "Assault leader’s orders"
+      }
+    ],
+    "target": "hidden_lastwatch_point_0",
+    "targetLocation": "hidden_lastwatch_point_0",
+    "rewardGold": 470,
+    "rewardXp": 375
+  },
+  {
+    "id": "hidden_blackglass",
+    "title": "The Blackglass Trail",
+    "type": "recovery",
+    "hiddenResistance": true,
+    "description": "Vesper’s violet ribbons reveal a supply route beyond Ember Rest. Read the trail signs, intercept an elite patrol, and return its route book. Unique reward: Blackglass Pathfinder Armor.",
+    "region": 6,
+    "giverNpcId": "npc_hidden_blackglass",
+    "turnInNpcId": "npc_hidden_blackglass",
+    "main": false,
+    "recommendedLevel": 19,
+    "required": 2,
+    "steps": [
+      {
+        "action": "scan",
+        "label": "Read both Blackglass trail signs",
+        "targets": [
+          "hidden_blackglass_point_0",
+          "hidden_blackglass_point_1"
+        ],
+        "duration": 3
+      },
+      {
+        "action": "recover",
+        "label": "Defeat the elite patrol and recover its route book",
+        "targets": [
+          "hidden_blackglass_point_2"
+        ],
+        "resistanceGuard": true
+      }
+    ],
+    "objectives": [
+      {
+        "id": "hidden_blackglass_point_0",
+        "x": 5902,
+        "y": 11869,
+        "displayType": "terminal",
+        "label": "First violet survey sign"
+      },
+      {
+        "id": "hidden_blackglass_point_1",
+        "x": 6292,
+        "y": 12194,
+        "displayType": "terminal",
+        "label": "Broken compass marker"
+      },
+      {
+        "id": "hidden_blackglass_point_2",
+        "x": 6643,
+        "y": 12480,
+        "displayType": "parcel",
+        "label": "Elite patrol route book"
+      }
+    ],
+    "target": "hidden_blackglass_point_0",
+    "targetLocation": "hidden_blackglass_point_0",
+    "rewardGold": 830,
+    "rewardXp": 675
+  },
+  {
+    "id": "rare_rimeglass",
+    "title": "A Breath Beneath the Ice",
+    "type": "dungeon",
+    "target": "cave_rimeglass",
+    "targetLocation": "cave_rimeglass",
+    "region": 3,
+    "required": 1,
+    "recommendedLevel": 12,
+    "main": false,
+    "hiddenResistance": true,
+    "distantVault": true,
+    "giverNpcId": "npc_rimeglass_warden",
+    "turnInNpcId": "npc_rimeglass_warden",
+    "rewardGold": 285,
+    "rewardXp": 420,
+    "rewardStatement": "REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold.",
+    "description": "Wake both lake pumps, then turn the central regulator. The stone crossing between the two lakes is always safe. Entrance requires the Rimeglass Valve Key. Search the Frozen Courier Cache east of Badger’s Lantern in Stonecrest. Defeat its three sentries, then recover the valve key. Defeat the guardian, recover its expedition seal, then return to Keeper Thistle. REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold.",
+    "offer": "Wake both lake pumps, then turn the central regulator. The stone crossing between the two lakes is always safe. Entrance requires the Rimeglass Valve Key. Search the Frozen Courier Cache east of Badger’s Lantern in Stonecrest. Defeat its three sentries, then recover the valve key. Defeat the guardian, recover its expedition seal, then return to Keeper Thistle. REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold.",
+    "completion": "The expedition seal is safe. REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold.",
+    "discoveryClue": "Follow the frost-blue pipes northeast from Warmhearth to Keeper Thistle."
+  },
+  {
+    "id": "rare_cindercoil",
+    "title": "The Furnace That Wouldn’t Die",
+    "type": "dungeon",
+    "target": "cave_cindercoil",
+    "targetLocation": "cave_cindercoil",
+    "region": 6,
+    "required": 1,
+    "recommendedLevel": 19,
+    "main": false,
+    "hiddenResistance": true,
+    "distantVault": true,
+    "giverNpcId": "npc_cindercoil_keeper",
+    "turnInNpcId": "npc_cindercoil_keeper",
+    "rewardGold": 420,
+    "rewardXp": 600,
+    "rewardStatement": "REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark.",
+    "description": "Turn one valve in each side wing to cool the furnace bridge. Either wing can be visited first; the bridge stays open. Entrance requires the Cindercoil Foundry Key. Search the Smuggler’s Tool Chest east of Reedlight Refuge in Reedwater. Defeat its three guards, then recover the foundry key. Defeat the guardian, recover its expedition seal, then return to Foreman Brindle. REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark.",
+    "offer": "Turn one valve in each side wing to cool the furnace bridge. Either wing can be visited first; the bridge stays open. Entrance requires the Cindercoil Foundry Key. Search the Smuggler’s Tool Chest east of Reedlight Refuge in Reedwater. Defeat its three guards, then recover the foundry key. Defeat the guardian, recover its expedition seal, then return to Foreman Brindle. REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark.",
+    "completion": "The expedition seal is safe. REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark.",
+    "discoveryClue": "Follow the silent furnace chimneys east of Ember Rest to Foreman Brindle."
+  },
+  {
+    "id": "rare_zephyr",
+    "title": "The Wind Remembers",
+    "type": "dungeon",
+    "target": "cave_zephyr",
+    "targetLocation": "cave_zephyr",
+    "region": 5,
+    "required": 1,
+    "recommendedLevel": 16,
+    "main": false,
+    "hiddenResistance": true,
+    "distantVault": true,
+    "giverNpcId": "npc_zephyr_pilgrim",
+    "turnInNpcId": "npc_zephyr_pilgrim",
+    "rewardGold": 375,
+    "rewardXp": 540,
+    "rewardStatement": "REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary.",
+    "description": "Ring the three terrace bells in any order, then awaken the sanctuary in the middle of the loop. Defeat the guardian, recover its expedition seal, then return to Pilgrim Sora. REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary.",
+    "offer": "Ring the three terrace bells in any order, then awaken the sanctuary in the middle of the loop. Defeat the guardian, recover its expedition seal, then return to Pilgrim Sora. REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary.",
+    "completion": "The expedition seal is safe. REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary.",
+    "discoveryClue": "Follow the wind bells northeast of Reedlight Refuge to Pilgrim Sora."
+  },
+  {
+    "id": "rare_kraken",
+    "title": "The Beast Beneath the Crown",
+    "type": "dungeon",
+    "target": "cave_kraken",
+    "targetLocation": "cave_kraken",
+    "region": 9,
+    "required": 1,
+    "recommendedLevel": 26,
+    "main": false,
+    "hiddenResistance": true,
+    "distantVault": true,
+    "giverNpcId": "npc_kraken_witness",
+    "turnInNpcId": "npc_kraken_witness",
+    "rewardGold": 555,
+    "rewardXp": 780,
+    "rewardStatement": "REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge.",
+    "description": "Release the three tide anchors along the flooded piers. Beyond the gate waits Nacremaw, the Great Kraken: an optional level 26 challenge with no time limit. Defeat Nacremaw, the Great Kraken, recover its expedition seal, then return to Diver Pearl. REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge.",
+    "offer": "Release the three tide anchors along the flooded piers. Beyond the gate waits Nacremaw, the Great Kraken: an optional level 26 challenge with no time limit. Defeat Nacremaw, the Great Kraken, recover its expedition seal, then return to Diver Pearl. REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge.",
+    "completion": "The expedition seal is safe. REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge.",
+    "discoveryClue": "Follow the shell markers east of Crownrest Haven to Diver Pearl at the Drowned Maw seaside cave."
+  }
+]

@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "license": "Original project compositions. No external samples or third-party music.",
+  "runtime": "js/core/audio.js schedules the original motifs with Web Audio; these WAV renders are included for reuse and editing.",
+  "tracks": [
+    {
+      "id": "exploration",
+      "file": "assets/music/exploration.wav",
+      "durationSeconds": 20.87,
+      "sampleRate": 22050,
+      "channels": 1,
+      "composer": "Original procedural score for Operation Whiskerfall",
+      "bpm": 92,
+      "root": 50,
+      "melody": [
+        0,
+        7,
+        12,
+        9,
+        7,
+        4,
+        2,
+        7,
+        0,
+        4,
+        7,
+        12,
+        14,
+        12,
+        9,
+        7
+      ],
+      "chords": [
+        0,
+        5,
+        9,
+        7
+      ]
+    },
+    {
+      "id": "combat",
+      "file": "assets/music/combat.wav",
+      "durationSeconds": 14.545,
+      "sampleRate": 22050,
+      "channels": 1,
+      "composer": "Original procedural score for Operation Whiskerfall",
+      "bpm": 132,
+      "root": 50,
+      "melody": [
+        0,
+        0,
+        7,
+        3,
+        0,
+        10,
+        7,
+        3,
+        5,
+        5,
+        12,
+        8,
+        7,
+        3,
+        10,
+        7
+      ],
+      "chords": [
+        0,
+        8,
+        5,
+        7
+      ]
+    },
+    {
+      "id": "boss",
+      "file": "assets/music/boss.wav",
+      "durationSeconds": 12.973,
+      "sampleRate": 22050,
+      "channels": 1,
+      "composer": "Original procedural score for Operation Whiskerfall",
+      "bpm": 148,
+      "root": 45,
+      "melody": [
+        0,
+        7,
+        3,
+        10,
+        0,
+        12,
+        7,
+        3,
+        1,
+        8,
+        4,
+        11,
+        7,
+        3,
+        10,
+        7
+      ],
+      "chords": [
+        0,
+        1,
+        8,
+        7
+      ]
+    }
+  ]
+}

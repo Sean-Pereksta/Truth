@@ -1,0 +1,17 @@
+[
+  {
+    "id": "berlin",
+    "name": "Berlin Sector",
+    "region": 7,
+    "x": 2925,
+    "y": 7384,
+    "w": 1677,
+    "h": 1781,
+    "gate": {
+      "x": 2925,
+      "y": 8515
+    },
+    "bossId": "adolph_whisker",
+    "description": "Adolph Whisker’s sealed headquarters. Defeat all eight regional commanders to open the gate."
+  }
+]

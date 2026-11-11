@@ -1,0 +1,10 @@
+{
+  "name": "bannerlands-war-of-crowns",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node source/server.mjs",
+    "check": "node --check core.js && node --check render.js && node --check app.js",
+    "test": "node source/tests/rally.mjs && node source/tests/cavalry.mjs && node source/tests/campaign.mjs && node source/tests/strategy.mjs && node source/tests/towers.mjs && node source/tests/production.mjs"
+  }
+}
