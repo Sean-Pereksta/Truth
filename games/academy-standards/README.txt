@@ -2,7 +2,7 @@ ACADEMY STANDARDS — THE BANNER TRIAL
 
 PLAY
 Open index.html in Chrome or Microsoft Edge, or visit its hosted address.
-Keep the scripts, stylesheet, PNG artwork, and factions folder together.
+Keep the scripts, stylesheet, PNG artwork, factions, champions and armor-troops folders together.
 The game works offline and needs no installation; the JavaScript is editable source.
 
 YOUR GOAL
@@ -64,15 +64,16 @@ blocked routes are planned in small batches, instead of waiting for every
 route to finish before accepting the command.
 
 ARMOR AND HOUSE CHAMPIONS
-Painted armor overlays make ordinary Light and Heavy armor visibly different.
-Every original house has a dedicated generated champion sprite sheet in
-champions/, with idle, walking and attack frames from front and back views.
+Light, Heavy and Champion use complete animated house troops from
+armor-troops/, with different helmets, body armor and clothing silhouettes.
+The champions/ artwork is retained for equipment portraits.
 Champion armor appears only in rare crates (7%) and great central caches
 (about 18%). Ordinary crates never contain it. Each of the ten relics belongs
 to a specific original house and only fits that house's students, including
 a recruited rival. The Champion relics equipment tab names the house and
 shows the artwork, stats and availability. Best gear automatically equips a
-matching relic and role presets preserve champion armor.
+matching relic on eligible troops; archers need no additional armor. Role presets
+preserve existing champion armor and its stat bonuses.
 A relic grants +80 maximum health, 36% armor protection and 18% more damage,
 with a small four-point movement penalty. Heavy armor grants +28 health and
 22% protection with an eight-point movement penalty; Light grants 14 speed.
@@ -121,6 +122,20 @@ Browser storage can differ between file locations and browsers. Use Export save
 to keep a portable save file, then Load a save to restore it.
 
 ART AND SOURCE
+Light, Heavy and Champion armor each have complete animated swordsmen,
+spearmen and medics for all ten houses. Every armor/role pair has front/back
+views and eight poses: idle, five walking poses, attack windup and strike.
+Armor is painted into the whole troop, including moving helmets, arms, legs,
+cloth and weapons; no static armor pieces are pasted over an ordinary troop.
+Archers use one design per house and need no extra armor in automatic or
+archer loadouts. Horsemen also use one design per house. Existing manually
+equipped armor and relic stat bonuses remain valid in saved trials.
+The armor-troops/ folder contains 1,440 complete painted animation frames.
+armor-troops.js and armor-troops/frames.json record the original image paths,
+per-tier row offsets, frame rectangles, stable foot anchors and source hashes.
+The exact built-in image generation prompts are in armor-troops/prompts/.
+Rebuild metadata with tools/build-armor-metadata.cjs (requires @napi-rs/canvas).
+
 Each of the ten houses has its OWN raster sprite sheet with unique armor,
 headgear, clothing, weapons, shields, and cavalry. Every sheet contains eighty
 frames: idle, walking and attacks, front/back views, across five troop types.

@@ -4,6 +4,7 @@
   const TAU = Math.PI * 2;
   const chunkCache = new Map();
   const atlases={units:null,cavalry:null,environment:null,grass:null};
+  const atlasImages=new Map();
   const tintedAtlases=new Map();
   const riverCache=new WeakMap();
   const carrierTrails=new Map();
@@ -30,11 +31,11 @@
   };
   function makeCanvas(w,h){const a=document.createElement('canvas');a.width=w;a.height=h;return a;}
   function loadAtlas(name){
-    const src=name.startsWith('faction:')?window.AcademyAssets?.factions?.[name.slice(8)]:name.startsWith('champion:')?window.AcademyAssets?.champions?.[name.slice(9)]:window.AcademyAssets?.[name];
+    const src=name.startsWith('armorTroop:')?window.AcademyArmorTroops?.sheets?.[name.slice(11)]:name.startsWith('faction:')?window.AcademyAssets?.factions?.[name.slice(8)]:window.AcademyAssets?.[name];
     if(!src)return null;
     if(!atlases[name]||atlases[name].source!==src){
-      const img=typeof src==='string'?new Image():src;
-      if(typeof src==='string')img.src=src;
+      let img=typeof src==='string'?atlasImages.get(src):src;
+      if(!img){img=new Image();img.src=src;atlasImages.set(src,img);}
       atlases[name]={source:src,img};
     }
     const image=atlases[name].img;
@@ -389,52 +390,40 @@
     c.restore();
   }
   const championArmor=s=>String(s.armor||'').startsWith('Champion_');
-  function paintedArmor(c,s,back,championImage,championMetadata){
-    if(s.armor==='None'||!s.armor)return;
-    const armor=loadAtlas('armor'),heavy=s.armor==='Heavy'||championArmor(s);
-    if(armor){
-      const sw=armor.naturalWidth/2,sh=armor.naturalHeight/2,col=back?1:0,row=heavy?1:0;
-      const width=heavy?31:25,height=heavy?29:25,y=s.mount?-48:-30;
-      c.drawImage(armor,col*sw,row*sh,sw,sh,-width/2,y,width,height);
-    }
-    // Horse, bow and staff poses remain the functional faction animation. The
-    // champion's own painted helmet and pauldrons replace the ordinary head.
-    if(championImage){
-      const cw=championImage.naturalWidth/8,ch=championImage.naturalHeight/2;
-      const frame=championMetadata?.frames?.[(back?1:0)*8];
-      const sx=frame?frame.x:0,sy=frame?frame.y:back?ch:0,sw=frame?frame.w:cw,sh=(frame?frame.h:ch)*.48;
-      const scale=32/(championMetadata?.referenceHeight||ch*.86),width=sw*scale*1.85,height=sh*scale*1.85;
-      c.drawImage(championImage,sx,sy,sw,sh,-width/2,s.mount?-70:-52,width,height);
-    }
-  }
   function championInsignia(c,s){
     if(!championArmor(s))return;
     const y=s.mount?-58:-55;
-    label(c,'★',-23,y,10,'#ffe3a0',true);
-    if(!s.mount&&s.weapon==='Spear')label(c,'SPEAR',23,y,6,'#fff0c4',true);
+    c.save();c.translate(-23,y-3);ellipse(c,0,0,7,7,'rgba(20,34,29,.84)');
+    poly(c,Array.from({length:10},(_,i)=>{const a=-Math.PI/2+i*Math.PI/5,r=i%2?2.2:5;return [Math.cos(a)*r,Math.sin(a)*r];}),'#ffe3a0');c.restore();
     if(!s.mount&&s.weapon==='None')label(c,'UNARMED',23,y,6,'#fff0c4',true);
   }
   function rasterSoldier(c,s,g,api){
-    const factionId=s.origHouse||s.controller,faction=loadAtlas('faction:'+factionId),champion=championArmor(s)?loadAtlas('champion:'+factionId):null;
-    const championMetadata=window.AcademyAssets?.championFrames?.[factionId];
-    const fullChampion=!!champion&&!s.mount&&!['Bow','Longbow'].includes(s.weapon)&&s.item!=='Medkit';
-    const image=fullChampion?champion:faction||loadAtlas(s.mount?'cavalry':'units');if(!image)return false;
+    const factionId=s.origHouse||s.controller,faction=loadAtlas('faction:'+factionId);
+    const archer=['Bow','Longbow'].includes(s.weapon);
+    // Armor is painted into every animation frame. Archers and horsemen each
+    // use a single house design, regardless of armor stored in an older save.
+    const armoredFoot=!s.mount&&!archer&&(s.armor==='Light'||s.armor==='Heavy'||championArmor(s));
+    const armorKey=factionId+'-'+(championArmor(s)?'champion':String(s.armor).toLowerCase());
+    const armorTroop=armoredFoot?loadAtlas('armorTroop:'+armorKey):null;
+    const armorMetadata=armorTroop?window.AcademyArmorTroops?.frames?.[armorKey]:null;
+    const fullChampion=!!armorTroop&&championArmor(s);
+    const image=armorTroop||faction||loadAtlas(s.mount?'cavalry':'units');if(!image)return false;
     const h=api.getHouse(s.origHouse||s.controller),controller=api.getHouse(s.controller),color=h?.color||'#b6b995',ally=controller?.color||color;
     const selected=g.selected.has(s.id),back=s.facingDir==='up';
-    let row=fullChampion?(back?1:0):s.mount?(faction?(back?9:8):(back?1:0)):s.item==='Medkit'?(back?7:6):(s.weapon==='Bow'||s.weapon==='Longbow')?(back?5:4):s.weapon==='Spear'?(back?3:2):(back?1:0);
-    const rows=fullChampion?2:faction?10:s.mount?2:8,cw=image.naturalWidth/8,ch=image.naturalHeight/rows;
+    let row=armorTroop?(window.AcademyArmorTroops.offsets[armorKey]||0)+(s.item==='Medkit'?4:s.weapon==='Spear'?2:0)+(back?1:0):s.mount?(faction?(back?9:8):(back?1:0)):archer?(back?5:4):s.item==='Medkit'?(back?7:6):s.weapon==='Spear'?(back?3:2):(back?1:0);
+    const rows=armorTroop?armorMetadata.rows:faction?10:s.mount?2:8,cw=image.naturalWidth/8,ch=image.naturalHeight/rows;
     let seed=0;for(let i=0;i<s.id.length;i++)seed=(seed+s.id.charCodeAt(i)*(i+1))%100;
     const moving=s.state==='move'||(s.path?.length>s.pathIndex&&s.state!=='idle'&&s.state!=='knocked');
     let frame=moving?1+(Math.floor(g.time*(s.mount?10:9)+seed)%5):0;
     if(s.attackAction)frame=s.attackAction.phase==='windup'?6:7;
     else{if(s.swing>0)frame=s.swing>.14?6:7;if(s.draw>0)frame=s.draw>.09?6:7;}
     if(s.state==='knocked')frame=0;
-    const metadata=fullChampion?championMetadata:faction?window.AcademyAssets?.factionFrames?.[factionId]:null;
+    const metadata=armorMetadata||(faction?window.AcademyAssets?.factionFrames?.[factionId]:null);
     const cell=metadata?.frames?.[row*8+frame];
     const rect=cell?{x:cell.x,y:cell.y,w:cell.w,h:cell.h}:{x:frame*cw,y:row*ch,w:cw,h:ch};
     const referenceHeight=metadata?.referenceHeight||ch;
     const anchorX=cell?.anchorX??cw/2,anchorY=cell?.anchorY??ch*.88;
-    const texture=fullChampion?champion:faction||teamAtlas(image,color);
+    const texture=armorTroop||faction||teamAtlas(image,color);
     c.save();c.translate(s.x,s.y);
     if(s.state==='knocked'){
       c.globalAlpha=.42;c.rotate(Math.PI/2);const z=45/referenceHeight;c.drawImage(texture,rect.x,rect.y,rect.w,rect.h,-anchorX*z,-anchorY*z,rect.w*z,rect.h*z);c.restore();return true;
@@ -447,7 +436,6 @@
     const damagedAge=Number.isFinite(s.lastDamagedAt)?g.time-s.lastDamagedAt:99;if(damagedAge>=0&&damagedAge<.16){const bump=Math.sin(damagedAge/.16*Math.PI)*2.5;c.translate(s.facingDir==='left'?bump:-bump,-bump*.3);}
     if(s.facingDir==='left')c.scale(-1,1);c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';
     c.drawImage(texture,rect.x,rect.y,rect.w,rect.h,-anchorX*z,(mounted?16:9)-anchorY*z,rect.w*z,rect.h*z);
-    if(!fullChampion)paintedArmor(c,s,back,champion,championMetadata);
     c.restore();championInsignia(c,s);
     if(s.burnUntil>g.time){for(let j=0;j<3;j++)poly(c,[[-11+j*9,6],[-10+j*9,-5-Math.sin(g.time*12+j)*5],[-5+j*9,4]],j%2?'#f7c26a':'#d88a3e');}
     if(s.hp<s.maxHp||selected||s.carryingStandard){

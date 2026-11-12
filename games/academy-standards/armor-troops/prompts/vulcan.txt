@@ -1,0 +1,30 @@
+Use case: stylized-concept. Asset type: PRODUCTION TRANSPARENT FULL-BODY TROOP ANIMATION SPRITE ATLAS for Academy Standards.
+Create one tall portrait canvas ideally1536x3456 pixels, EXACT aspect ratio4:9, EXACT regular grid8 equal columns by18 equal rows =144 separate sprites. Each cell square. Genuine transparent alpha background; generous transparent empty margins in each cell. NO labels, text, gridlines, backdrop, scenery, horses, or archers. Every cell contains one COMPLETE dressed soldier, head through feet and whole held weapon; never draw isolated armor pieces.
+Input image1 is REFERENCE ONLY for the house miniature art style and colors; image2 is REFERENCE ONLY for its elaborate CHAMPION armor design. New composition must follow the18rows below, not the reference layout.
+Art: premium hand-painted chibi fantasy RTS miniature, top-down three-quarter view. Crisp readable silhouette, attractive material shading. At game size light armor must be obviously slim leather, heavy armor broad steel, champion ornate magnificent. Same adult student body scale throughout; complete body centered in each cell; feet baseline88%cellheight. All sprites fit with12% transparent padding and no overlap.
+Exactly8 COLUMNS in EVERY row left to right:0 idle;1 walknearfootforward;2 passingstride;3 farfootforward;4 oppositestride;5 returnpassing;6 attackwindup;7 attackstrike or healrelease. Clearly vary legs, arms, cloak across walking poses. Same identity clothing equipment within row. Stable camera.
+Exactly18 ROWS TOP TO BOTTOM:
+0 LIGHT sword+shield FRONT-RIGHT.
+1 Same LIGHT sword+shield BACK-RIGHT.
+2 LIGHT spear+shield FRONT-RIGHT.
+3 Same LIGHT spear+shield BACK-RIGHT.
+4 LIGHT medic with shortstaff and satchel FRONT-RIGHT.
+5 Same LIGHT medic BACK-RIGHT.
+6 HEAVY sword+shield FRONT-RIGHT.
+7 Same HEAVY sword+shield BACK-RIGHT.
+8 HEAVY spear+shield FRONT-RIGHT.
+9 Same HEAVY spear+shield BACK-RIGHT.
+10 HEAVY medic shortstaff/satchel FRONT-RIGHT.
+11 Same HEAVY medic BACK-RIGHT.
+12 CHAMPION sword+shield FRONT-RIGHT.
+13 Same CHAMPION sword+shield BACK-RIGHT.
+14 CHAMPION spear+shield FRONT-RIGHT.
+15 Same CHAMPION spear+shield BACK-RIGHT.
+16 CHAMPION medic shortstaff/satchel FRONT-RIGHT.
+17 Same CHAMPION medic BACK-RIGHT.
+Rows0-5 LIGHT: fitted leatherjerkin/bracers, open face, modest clothcape, narrow shoulders, flexible visible legs.
+Rows6-11 HEAVY: closedmetalhelmet, broad breastplate/pauldrons, plate gauntlets and greaves, visibly bulkier legs.
+Rows12-17 CHAMPION: reference2 ceremonial heavyplate, grandcrest, ornate heraldic shield/cloth, enlarged splendid silhouette.
+Sword attack overheadwindup then outward slash; spear attack retract then forwardthrust; medic raise staff then healing release. EVERY sprite wholebody and posed; exactly144 sprites. No armor overlays, no isolated breastplates, no extraneous effects.
+House VULCAN forge academy: blackiron, copperbronze, burgundy and emberred palette. Squared forgehelm, angular rivetedshield with red forgehammeremblem, straight stout silver sword, metalpointed spear, ironhealingstaff and leatherworkbag. LIGHT armor must have NO METAL HELMET and NO METAL BREASTPLATE: open-faced leathercap, brownleather paddedcoat withburgundy shortcape, skinny leathergreaves, slim flexible silhouette. HEAVY rows have closed squareironhelmet and broadblackiron plate, angularshoulders and greaves. CHAMPION Emberforged Plate: huge obsidianblack engravedheavyplate, bronze/gold edging, elaborateforgecrest helmet, heavy burgundy embroideredcloak, copperemberseams, ornate shield. LIGHT versus HEAVY versus CHAMPION differences must be very obvious across the wholebody, not just colors.
+CRITICAL production margins: do not enlarge sprites to touch their cells. Each sprite occupies only60% cellwidth and70%cellheight; blank alpha at left/right and top/bottom of canvas. Draw no diffuse castshadows or glow around sprites. Keep row17 feet completely inside canvas.

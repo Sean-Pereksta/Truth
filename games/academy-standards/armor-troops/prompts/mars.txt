@@ -1,0 +1,44 @@
+Use case: stylized-concept.
+Asset type: production transparent full-body troop animation sprite sheet for Academy Standards.
+Input image 1 is a STYLE AND HOUSE IDENTITY REFERENCE for House Mars. Input image 2 is its CHAMPION COSTUME REFERENCE. These references are not edit targets. Ignore colored edge noise in references; output clean true transparency.
+
+Create ONE tall atlas, exactly EIGHT columns and EIGHTEEN rows (144 whole-body sprites), ideally 1536x3456, equal square cells in a strict 8x18 grid. Every cell must contain exactly one complete dressed young-adult troop from helmet through boots. This is a functional animation atlas, not isolated armor, not armor equipment, not a poster. No text, labels, dividers, scenery, drawn grid or visible background. Genuinely transparent alpha background with clean edges and empty margins between sprites.
+
+Match the references' polished hand-painted miniature chibi 3/4 overhead RTS style. Palette: deep red cloth and capes, dark bronze and blackened steel, brown leather, red crested helmets, crossed-swords emblems. Consistent body size, camera, foot baseline and identity within every row. Face front-right on front rows and back-right on back rows. Do not omit any of the 18 rows or any of the 8 columns.
+
+TOP SIX ROWS: LIGHT ARMOR. Slender flexible brown leather jerkin, leather shoulder guards and bracers, soft cloth under-tunic and boots, open face with a small cap or low helmet, short house cape. Very little exposed metal. Easily recognizable as light armor at tiny game scale.
+Row 1: LIGHT sword and small house shield, front-right.
+Row 2: same LIGHT sword troop, back-right.
+Row 3: LIGHT spear troop, front-right, no sword.
+Row 4: same LIGHT spear troop, back-right.
+Row 5: LIGHT field medic, front-right, staff and satchel, no sword/shield.
+Row 6: same LIGHT medic, back-right.
+
+MIDDLE SIX ROWS: HEAVY ARMOR. Broad steel/bronze full cuirass, closed metal helmet, prominent metal pauldrons, articulated gauntlets, thick greaves, heavier house cloak. Readably broader and more metal-clad than light armor, with simple plain practical steel distinct from ornate champion.
+Row 7: HEAVY sword and house shield, front-right.
+Row 8: same HEAVY sword troop, back-right.
+Row 9: HEAVY spear troop, front-right.
+Row 10: same HEAVY spear troop, back-right.
+Row 11: HEAVY field medic, front-right, armored body and staff/satchel.
+Row 12: same HEAVY medic, back-right.
+
+BOTTOM SIX ROWS: HOUSE CHAMPION ARMOR. Warborn Panoply: imposing dark steel and red plate, broad bronze shoulders, tall red horsehair crest, red gold-trimmed cape, angular closed helmet. Match reference image 2.
+Row 13: CHAMPION sword and house shield, front-right.
+Row 14: same CHAMPION sword troop, back-right.
+Row 15: CHAMPION spear troop in the same champion armor, front-right.
+Row 16: same CHAMPION spear troop, back-right.
+Row 17: CHAMPION field medic in the same champion armor, front-right, staff and satchel.
+Row 18: same CHAMPION medic, back-right.
+
+The EIGHT COLUMNS repeat identically for EVERY row, left to right:
+Column 1 idle standing;
+Column 2 walking left foot forward;
+Column 3 walking passing;
+Column 4 walking right foot forward;
+Column 5 walking opposite stride;
+Column 6 walking return passing;
+Column 7 attack windup (sword raised / spear pulled back / medic raises staff);
+Column 8 attack strike or staff casting release (sword extended / spear thrust / medic staff extended).
+Walking must animate the WHOLE troop: clearly different alternating legs, shifting arms, flexible cape. For back-facing rows keep torso back-facing throughout attack. Do not repeat one pose eight times. Keep armor design and weapon constant within each row.
+
+Strict registration: all full bodies, weapons, plumes, capes and feet remain entirely inside their own equal cell with generous transparent margin (at least 10% all sides), centered at consistent scale and feet near 85% cell height. Sword and spear attack can widen but must never cross a cell boundary. No archers, no horses, no loose armor pieces. Only 144 complete troops, exactly 8 columns x18 rows.

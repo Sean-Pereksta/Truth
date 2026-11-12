@@ -4,7 +4,7 @@ test('equipment menu previews role changes, applies on demand and supports gear 
  const {s,a,g,$,doc}=createApp();s.begin();a.selectUnits([g.students[0].id]);const stock=a.getPlayerHouse().stockpile;stock.Longbow=4;stock.Light=4;stock.Boots=4;
  $('equipmentToggle').click();assert.equal(s.ui.drawer,'equipment');assert($('drawer').classList.contains('armory-drawer'));
  const before=g.students[0].weapon;doc.querySelector('[data-loadout="ranged"]').click();assert.equal(g.students[0].weapon,before,'choosing a preset only previews it');assert.match(doc.querySelector('.armory-preview').textContent,/changes/);
- doc.querySelector('[data-apply-loadout]').click();assert.equal(g.students[0].weapon,'Longbow');assert.equal(g.students[0].armor,'Light');
+ doc.querySelector('[data-apply-loadout]').click();assert.equal(g.students[0].weapon,'Longbow');assert.equal(g.students[0].armor,'Heavy','archer preset preserves existing armor without spending additional supplies');assert.equal(stock.Light,4);
  doc.querySelector('[data-gear-category="weapons"]').click();assert.equal(doc.querySelectorAll('[data-armory-gear]').length,4);assert.match(doc.querySelector('.armory-result').textContent,/Party equipped/);
 });
 test('whole team quick equip works with an empty selection and keeps all troop checkboxes available',()=>{
