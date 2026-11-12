@@ -5,6 +5,6 @@
   "type": "module",
   "scripts": {
     "start": "node source/server.cjs",
-    "test": "node source/test/simulation.mjs && node source/test/restart.cjs && node source/test/training-queue.mjs && node source/test/teams.mjs && node source/test/team-ai.mjs"
+    "test": "node source/test/simulation.mjs && node source/test/restart.cjs && node source/test/training-queue.mjs && node source/test/teams.mjs && node source/test/team-ai.mjs && node source/test/sanctuary-cover.mjs"
   }
 }

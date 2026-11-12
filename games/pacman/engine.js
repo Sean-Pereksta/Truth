@@ -12,13 +12,14 @@ export const UNIT_DEFS = {
 };
 
 export const BUILDING_DEFS = {
-  nest:{name:'Command Nest',side:'pac',cost:130,w:3,h:3,hp:620,buildTime:14,description:'Summons Pac troops and slowly restores nearby allies. Losing it does not end the match.'},
-  refuge:{name:'Refuge',side:'pac',cost:90,w:3,h:3,hp:380,buildTime:10,description:'Forward troop production, healing and vision. Build on any cleared ground that fits.'},
-  tower:{name:'Pulse Tower',side:'pac',cost:75,w:2,h:2,hp:270,buildTime:10,damage:12,range:6,description:'Automatic defense. Provides time to retreat or finish mining.'},
-  well:{name:'Digestor',side:'pac',cost:110,w:3,h:3,hp:310,buildTime:14,description:'Generates Spark and forges renewable Power charges. Sustains the final breach.'},
-  lair:{name:'Haunt Lair',side:'ghost',cost:125,w:3,h:3,hp:640,buildTime:14,description:'Produces hunting parties. Build forward lairs to shorten reinforcement routes.'},
-  watch:{name:'Watch Relay',side:'ghost',cost:70,w:2,h:2,hp:230,buildTime:10,description:'Long-range local vision. Scout and hold the dark corridors after pellets are consumed.'},
-  spike:{name:'Spectral Spire',side:'ghost',cost:85,w:2,h:2,hp:285,buildTime:10,damage:9,range:5.5,description:'Defensive ranged support. Protect lairs and important junctions.'}
+  nest:{name:'Command Nest',side:'pac',role:'RECRUITMENT',cost:130,w:3,h:3,hp:620,buildTime:14,sight:6,description:'Durable home recruitment hub. Summons every Pac troop; 620 HP protects your production.'},
+  refuge:{name:'Refuge',side:'pac',role:'FORWARD OUTPOST',cost:90,w:3,h:3,hp:380,buildTime:10,sight:9,description:'Affordable forward reinforcements and 9-tile vision. Summons Pac troops closer to the front.'},
+  tower:{name:'Pulse Tower',side:'pac',role:'DEFENSE',cost:75,w:2,h:2,hp:270,buildTime:10,sight:7,damage:12,range:6,description:'Automatic ranged defense. Fires within 6 tiles; protects mining routes and retreat paths.'},
+  well:{name:'Digestor',side:'pac',role:'ECONOMY & POWER',cost:110,w:3,h:3,hp:310,buildTime:14,sight:6,description:'Generates 0.6 Spark/sec. Forges a Power charge every 50s for 40 Spark, up to 2 charges.'},
+  sanctuary:{name:'Sanctuary',side:'pac',role:'HEALING',cost:95,w:3,h:3,hp:360,buildTime:12,sight:6,healRange:6,healRate:10,healDelay:4,description:'Heals Pac-Man and all allied Pac troops for 10 HP/sec within 6 tiles after 4s without damage. Walls block healing; overlapping auras do not stack.'},
+  lair:{name:'Haunt Lair',side:'ghost',role:'RECRUITMENT & RECOVERY',cost:125,w:3,h:3,hp:640,buildTime:14,sight:6,healRange:4,healRate:4,healDelay:4,description:'Produces hunting parties and restores nearby ghosts for 4 HP/sec after 4s without damage.'},
+  watch:{name:'Watch Relay',side:'ghost',role:'RECONNAISSANCE',cost:70,w:2,h:2,hp:230,buildTime:10,sight:9,description:'9-tile local vision. Scout and hold dark corridors after their pellets are consumed.'},
+  spike:{name:'Spectral Spire',side:'ghost',role:'DEFENSE',cost:85,w:2,h:2,hp:285,buildTime:10,sight:6,damage:9,range:5.5,description:'Automatic ranged defense within 5.5 tiles. Protect lairs and important junctions.'}
 };
 
 export const DIFFICULTIES = {
@@ -91,6 +92,23 @@ function createMap(kind,seed){
   for(const col of [Math.floor(cols*.27),Math.floor(cols*.73)]){gate('north',col,0);gate('south',col,rows-1);}
   const pacStarts=[{x:13.5,y:Math.floor(fullHeight*.72)+.5},{x:pad+Math.floor(width*.68)+.5,y:13.5},{x:fullWidth-13.5,y:Math.floor(fullHeight*.64)+.5}],pacStart=pacStarts[0],ghostStart={x:pad+Math.floor(width/2)+.5,y:pad+Math.floor(height/2)+.5};
   for(const start of pacStarts)outerCarve(start.x,start.y,19);
+  // Two-exit ruin courts provide real cover in the otherwise open hinterland.
+  // Solid walls block vision and fire; three-tile exits keep retreat routes open.
+  // Starting yards and broad maze gates always keep their original clear space.
+  const hidingPlaces=[];
+  const hideCourt=(x,y,side)=>{
+    if(pacStarts.some(p=>Math.abs(p.x-x)<14&&Math.abs(p.y-y)<14)||entrances.some(p=>Math.hypot(p.x-x,p.y-y)<9))return;
+    const vertical=side==='west'||side==='east',cx=Math.floor(x),cy=Math.floor(y),exits=[];
+    for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){
+      if(Math.abs(dx)!==3&&Math.abs(dy)!==3)continue;
+      const doorway=vertical?Math.abs(dy)===3&&Math.abs(dx)<=1:Math.abs(dx)===3&&Math.abs(dy)<=1;
+      if(!doorway)fullTiles[(cy+dy)*fullWidth+cx+dx]=0;
+    }
+    for(const direction of [-1,1])exits.push({x:x+(vertical?0:direction*4),y:y+(vertical?direction*4:0)});
+    hidingPlaces.push({x,y,w:7,h:7,side,exterior:true,exits});
+  };
+  for(let y=12.5;y<fullHeight-12;y+=16){hideCourt(10.5,y,'west');hideCourt(fullWidth-10.5,y,'east');}
+  for(let x=28.5;x<fullWidth-26;x+=16){hideCourt(x,10.5,'north');hideCourt(x,fullHeight-10.5,'south');}
   const citadel={x:ghostStart.x,y:ghostStart.y,w:9,h:9};outerCarve(citadel.x,citadel.y,citadel.w,citadel.h);
   for(let y=Math.floor(citadel.y-citadel.h/2);y<Math.ceil(citadel.y+citadel.h/2);y++)for(let x=Math.floor(citadel.x-citadel.w/2);x<Math.ceil(citadel.x+citadel.w/2);x++)biome[y*fullWidth+x]=2;
   // Four interior approaches connect the central citadel to the old maze graph.
@@ -101,10 +119,10 @@ function createMap(kind,seed){
   const outerCenters=[];
   for(let y=13;y<fullHeight-12;y+=14){outerCenters.push({x:13.5,y:y+.5,exterior:true},{x:fullWidth-13.5,y:y+.5,exterior:true});}
   for(let x=27;x<fullWidth-26;x+=14){outerCenters.push({x:x+.5,y:13.5,exterior:true},{x:x+.5,y:fullHeight-13.5,exterior:true});}
-  const allCenters=[...shiftedCenters,...entrances.map(e=>({...e,exterior:true})),...outerCenters].map((c,id)=>({...c,id}));
+  const allCenters=[...shiftedCenters,...entrances.map(e=>({...e,exterior:true})),...outerCenters,...hidingPlaces].filter(c=>fullTiles[Math.floor(c.y)*fullWidth+Math.floor(c.x)]).map((c,id)=>({...c,id}));
   const regions=[];for(let ry=0;ry<3;ry++)for(let rx=0;rx<4;rx++){const x=pad+Math.floor(rx*width/4),y=pad+Math.floor(ry*height/3),x2=pad+Math.floor((rx+1)*width/4),y2=pad+Math.floor((ry+1)*height/3);regions.push({id:ry*4+rx,x,y,w:x2-x,h:y2-y});}
   const names={catacombs:'The Hollow Archive',ruins:'Mosslight Ruins',crossroads:'The Endless Crossroads'};
-  return{width:fullWidth,height:fullHeight,tiles:fullTiles,regions,centers:allCenters,pockets:shiftedPockets,pacStart,pacStarts,ghostStart,mazeBounds,citadel,entrances,biome,beltWidth:pad,name:names[kind]||names.catacombs,seed,kind};
+  return{width:fullWidth,height:fullHeight,tiles:fullTiles,regions,centers:allCenters,pockets:shiftedPockets,hidingPlaces,pacStart,pacStarts,ghostStart,mazeBounds,citadel,entrances,biome,beltWidth:pad,name:names[kind]||names.catacombs,seed,kind};
 }
 
 export class Game {
@@ -249,7 +267,7 @@ export class Game {
   }
 
   spawnUnit(type,x,y,teamId){const d=UNIT_DEFS[type];if(!d)return null;teamId=this._teamFor(d.side,teamId);if(!teamId||this.teams[teamId].eliminated)return null;const requested=this.nearestFloor(x,y),p=this._localCells(requested.x,requested.y,20).find(p=>this.units.every(v=>v.side!==d.side||v.hp<=0||dist(v,p)>=FRIEND_SPACING))||requested,bonus=d.side==='pac'?1+this.powerRanks*.08:1;const u={id:'u'+(++this._id),type,side:d.side,teamId,x:p.x,y:p.y,hp:Math.round(d.hp*bonus),maxHp:Math.round(d.hp*bonus),speed:d.speed,damage:d.damage,range:d.range,order:null,path:[],facing:0,cooldown:this.random()*.4,powered:0,slow:0,rooted:0,snareImmunity:0,snareCooldown:0,cast:null,carrying:0,animation:this.random()*8,_retarget:0,_attacker:null,_lastHit:-100};this.units.push(u);return u;}
-  _spawnBuilding(type,x,y,complete=false,teamId){const d=BUILDING_DEFS[type];if(!d)return null;teamId=this._teamFor(d.side,teamId);if(!teamId||this.teams[teamId].eliminated)return null;const p=this._snapBuilding(d,x,y);const b={id:'b'+(++this._id),type,side:d.side,teamId,x:p.x,y:p.y,w:d.w,h:d.h,hp:d.hp,maxHp:d.hp,progress:complete?1:0,queue:[],forge:0,cooldown:0,buildTime:d.buildTime};this.buildings.push(b);return b;}
+  _spawnBuilding(type,x,y,complete=false,teamId){const d=BUILDING_DEFS[type];if(!d)return null;teamId=this._teamFor(d.side,teamId);if(!teamId||this.teams[teamId].eliminated)return null;const p=this._snapBuilding(d,x,y);const b={id:'b'+(++this._id),type,side:d.side,teamId,x:p.x,y:p.y,w:d.w,h:d.h,hp:d.hp,maxHp:d.hp,progress:complete?1:0,queue:[],forge:0,cooldown:0,healingCount:0,buildTime:d.buildTime};this.buildings.push(b);return b;}
   _snapBuilding(d,x,y){return{x:Math.floor(x-d.w/2)+d.w/2,y:Math.floor(y-d.h/2)+d.h/2};}
 
   canBuild(type,x,y,teamId=this.playerTeam){
@@ -472,7 +490,7 @@ export class Game {
     if(this.status!=='playing'||target.hp<=0)return;target.hp-=amount;target._lastHit=this.time;target._attacker=attacker?.id;
     if(target.order?.type==='harvest'&&target.type!=='hero')target.order.progress=Math.max(0,(target.order.progress||0)-.22);
     if(target.hp<=0){target.hp=0;if(target.cast)this._cancelSnare(target);this.effects.push({x:target.x,y:target.y,type:'death',life:.65,maxLife:.65,side:target.side});if(attacker)this.kills[attacker.side]++;
-      if(target.side==='pac'&&attacker?.side==='ghost'&&!target._bountyPaid){const reward=target.w?({nest:200,refuge:140,tower:110,well:160}[target.type]||100):(GHOST_BOUNTIES[target.type]||0);if(reward){target._bountyPaid=true;this.resources.ghost+=reward;this.log('+'+reward+' Dread — '+(target.w?BUILDING_DEFS[target.type].name:UNIT_DEFS[target.type].name)+' eliminated.','ghost');this.effects.push({x:target.x,y:target.y,type:'bounty',text:'+'+reward+' Dread',amount:reward,side:'ghost',life:1.2,maxLife:1.2});}}
+      if(target.side==='pac'&&attacker?.side==='ghost'&&!target._bountyPaid){const reward=target.w?({nest:200,refuge:140,tower:110,well:160,sanctuary:150}[target.type]||100):(GHOST_BOUNTIES[target.type]||0);if(reward){target._bountyPaid=true;this.resources.ghost+=reward;this.log('+'+reward+' Dread — '+(target.w?BUILDING_DEFS[target.type].name:UNIT_DEFS[target.type].name)+' eliminated.','ghost');this.effects.push({x:target.x,y:target.y,type:'bounty',text:'+'+reward+' Dread',amount:reward,side:'ghost',life:1.2,maxLife:1.2});}}
       if(target.type==='hero')this._eliminateTeam(target.teamId);
       else if(target.isHQ){this.status='pac-won';this.winnerReason='The Ghost Citadel has been destroyed.';this.log('GHOST CITADEL FALLEN — Pac-Man wins!','victory');}
       else if(target.w)this.log(BUILDING_DEFS[target.type].name+' destroyed.',other(target.side));
@@ -545,13 +563,33 @@ export class Game {
     }
   }
 
+  _updateHealing(elapsed){
+    const healers=this.buildings.filter(b=>{
+      b.healingCount=0;
+      return b.hp>0&&b.progress>=1&&BUILDING_DEFS[b.type].healRate>0;
+    });
+    for(const u of this.units){
+      if(u.hp<=0||u.hp>=u.maxHp)continue;
+      // Each unit receives only the strongest eligible aura, regardless of how
+      // many allied Sanctuaries overlap. Healing never revives an eliminated unit.
+      const healer=healers.filter(b=>{
+        const d=BUILDING_DEFS[b.type];
+        return u.side===b.side&&dist(u,b)<=d.healRange&&this.time-(u._lastHit??-100)>=d.healDelay&&this.hasLineOfSight(b.x,b.y,u.x,u.y);
+      }).sort((a,b)=>BUILDING_DEFS[b.type].healRate-BUILDING_DEFS[a.type].healRate)[0];
+      if(!healer)continue;
+      u.hp=Math.min(u.maxHp,u.hp+elapsed*BUILDING_DEFS[healer.type].healRate);
+      u.healedUntil=this.time+.6;healer.healingCount++;
+      this.effects.push({x:u.x,y:u.y,type:'heal',life:.6,maxLife:.6,side:u.side});
+    }
+  }
+
   _reveal(side,cx,cy,r){const {width:w,height:h}=this.map,v=this.visible[side];for(let y=Math.max(0,Math.floor(cy-r));y<Math.min(h,Math.ceil(cy+r));y++)for(let x=Math.max(0,Math.floor(cx-r));x<Math.min(w,Math.ceil(cx+r));x++){if(Math.hypot(x+.5-cx,y+.5-cy)>r)continue;if(this.hasLineOfSight(cx,cy,x+.5,y+.5))v[y*w+x]=1;else if(!this.tileAt(x,y)){// Show the first wall encountered rather than an outline of unseen rooms.
       const dx=x+.5-cx,dy=y+.5-cy,l=Math.hypot(dx,dy);if(l>0&&this.hasLineOfSight(cx,cy,x+.5-dx/l*.8,y+.5-dy/l*.8))v[y*w+x]=1;
     }}}
   _updateVision(){
     this.visible.pac.fill(0);this.visible.ghost.fill(0);
     for(const u of this.units)if(u.hp>0)this._reveal(u.side,u.x,u.y,UNIT_DEFS[u.type].sight);
-    for(const b of this.buildings)if(b.hp>0&&b.progress>=1)this._reveal(b.side,b.x,b.y,b.type==='watch'?9:b.type==='tower'?7:6);
+    for(const b of this.buildings)if(b.hp>0&&b.progress>=1)this._reveal(b.side,b.x,b.y,BUILDING_DEFS[b.type].sight??6);
     // Every remaining orb is a tiny camera, without channels or tuning. Four
     // cardinal neighbors are within its ~1.25-tile sight radius; walls stop it.
     for(const p of this.pellets.values()){const x=Math.floor(p.x),y=Math.floor(p.y),w=this.map.width;this.visible.ghost[y*w+x]=1;for(const[dx,dy]of DIRS){const xx=x+dx,yy=y+dy;if(this.tileAt(xx,yy))this.visible.ghost[yy*w+xx]=1;}}
@@ -568,7 +606,7 @@ export class Game {
     if(this.status==='playing')this._separateUnits(dt);
     for(const u of this.units){const p=positions.get(u.id);if(p){u._motionX=(u.x-p.x)/dt;u._motionY=(u.y-p.y)/dt;}}
     this.units=this.units.filter(u=>u.hp>0);this.buildings=this.buildings.filter(b=>b.hp>0);this.effects=this.effects.filter(e=>(e.life-=dt)>0);this.alerts=this.alerts.filter(a=>a.expires>this.time);
-    this._healingTime+=dt;if(this._healingTime>=.5){const elapsed=this._healingTime;this._healingTime=0;for(const b of this.buildings)if(b.progress>=1&&['nest','refuge','lair'].includes(b.type))for(const u of this.units)if(u.side===b.side&&u.hp<u.maxHp&&dist(u,b)<4&&this.time-u._lastHit>4)u.hp=Math.min(u.maxHp,u.hp+elapsed*4);}
+    this._healingTime+=dt;if(this._healingTime>=.5){const elapsed=this._healingTime;this._healingTime=0;this._updateHealing(elapsed);}
     this._visionTime-=dt;if(this._visionTime<=0){this._visionTime=.28;this._updateVision();}
     if(this.collected>=this.totalPellets&&this.status==='playing'){this.status='pac-won';this.winnerReason='Every yellow pellet has been consumed.';}
   }

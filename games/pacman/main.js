@@ -4,7 +4,9 @@ import { Renderer } from './render.js';
 
 const $=id=>document.getElementById(id);
 const rows={hero:0,miner:1,guardian:2,engineer:3,extractor:3,hunter:4,scout:5,binder:6,brute:7};
-const buildingFrames={nest:0,refuge:1,tower:2,well:3,lair:4,watch:5,spike:6};
+const buildingFrames={nest:0,refuge:1,tower:2,well:3,lair:4,watch:5,spike:6,sanctuary:7};
+const productionKeys=['z','c','v','n','g'];
+const unitRoles={miner:'HARVEST',guardian:'ESCORT',engineer:'REPAIR',extractor:'RANGED MINING',scout:'SCOUT',hunter:'ASSAULT',binder:'SNARE',brute:'SIEGE'};
 const other=side=>side==='pac'?'ghost':'pac';
 const clock=t=>{const n=Math.floor(t||0);return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');};
 const settings={side:'pac',teamId:'pac',difficulty:'normal',map:'catacombs',seed:1975,sound:false};
@@ -17,6 +19,9 @@ settings.seed=Math.max(1,Number(settings.seed)||1975);
 let game,ai,renderer,started=false,ended=false,selected=new Set(),productionTab='troops',buildType=null,orderMode=null;
 let pointer=null,drag=null,mouseWorld=null,mouseCanvas=null,panPointer=null,toastTimer=null,lastSoundPellets=0,audio=null,uiTime=0,previousHp=null;
 let menuWasPaused=false,helpWasPaused=false,speed=1,accumulator=0;
+const controlGroups=Array.from({length:9},()=>new Set());
+const controlGroupNodes=[];
+let lastGroupRecall={index:-1,time:-Infinity};
 const keys=new Set(),coarse=matchMedia('(pointer:coarse)').matches;
 const canvas=$('game-canvas'),minimap=$('minimap');
 const trainingQueueNodes=new Map();
@@ -30,6 +35,56 @@ function ownUnits(){return game.units.filter(u=>u.teamId===game.playerTeam&&u.hp
 function selectedUnits(){return ownUnits().filter(u=>selected.has(u.id));}
 function selectedBuilding(){return game.buildings.find(b=>selected.has(b.id)&&b.teamId===game.playerTeam&&b.hp>0);}
 function playerEliminated(){return !!game.teams[game.playerTeam]?.eliminated;}
+function ownedEntities(){return [...game.units,...game.buildings].filter(entity=>entity.teamId===game.playerTeam&&entity.hp>0);}
+function groupMembers(index){
+  const living=new Set(ownedEntities().map(entity=>entity.id));
+  controlGroups[index]=new Set([...controlGroups[index]].filter(id=>living.has(id)));
+  return controlGroups[index];
+}
+function setControlGroup(index,append=false){
+  if(playerEliminated())return;
+  const available=new Set(ownedEntities().map(entity=>entity.id)),members=[...selected].filter(id=>available.has(id));
+  if(append){for(const id of members)groupMembers(index).add(id);}
+  else controlGroups[index]=new Set(members);
+  lastGroupRecall={index:-1,time:-Infinity};
+  const count=controlGroups[index].size;
+  toast('GROUP '+(index+1)+' · '+(count?count+' assigned'+(append?' · Selection added':''):'Cleared'));
+  updateControlGroups();
+}
+function recallControlGroup(index){
+  const members=groupMembers(index);
+  if(!members.size){toast('Group '+(index+1)+' is empty. Select units or structures, then Ctrl+'+(index+1)+' to assign.');return;}
+  cancelMode();selected=new Set(members);
+  const now=performance.now();
+  if(lastGroupRecall.index===index&&now-lastGroupRecall.time<450){
+    const entities=ownedEntities().filter(entity=>members.has(entity.id));
+    renderer.centerOn(entities.reduce((sum,entity)=>sum+entity.x,0)/entities.length,entities.reduce((sum,entity)=>sum+entity.y,0)/entities.length);
+  }
+  lastGroupRecall={index,time:now};updateSelection();
+}
+function renderControlGroups(){
+  const bar=$('control-group-buttons');bar.replaceChildren();controlGroupNodes.length=0;
+  for(let index=0;index<controlGroups.length;index++){
+    const button=document.createElement('button');button.type='button';button.className='control-group';
+    const key=document.createElement('kbd');key.textContent=String(index+1);
+    const count=document.createElement('span');button.append(key,count);
+    button.addEventListener('click',event=>{
+      if(!started||ended)return;
+      if(event.ctrlKey||event.metaKey)setControlGroup(index);else if(event.shiftKey)setControlGroup(index,true);else recallControlGroup(index);
+    });
+    bar.append(button);controlGroupNodes.push({button,count});
+  }
+}
+function updateControlGroups(){
+  $('control-groups').hidden=!started||ended||!$('setup-screen').hidden||!$('help-screen').hidden;
+  for(let index=0;index<controlGroups.length;index++){
+    const {button,count}=controlGroupNodes[index],members=groupMembers(index),active=members.size>0&&members.size===selected.size&&[...members].every(id=>selected.has(id));
+    count.textContent=members.size||'–';button.classList.toggle('assigned',members.size>0);button.classList.toggle('active',active);
+    button.setAttribute('aria-pressed',String(active));
+    button.title='Group '+(index+1)+' · '+members.size+' members · Click / '+(index+1)+' recalls · Double recall focuses · Ctrl assigns · Shift adds';
+    button.setAttribute('aria-label',button.title);
+  }
+}
 function difficultyLabel(key){return key==='normal'?'Medium':DIFFICULTIES[key]?.label||key;}
 function toast(text,error=false){
   $('toast').textContent=text;$('toast').classList.toggle('error',error);$('toast').hidden=false;
@@ -118,7 +173,7 @@ function configureFaction(){
   $('app').style.setProperty('--team',game.teams[game.playerTeam].color);
   $('faction-label').textContent=game.teams[game.playerTeam].name;
   $('objective-text').textContent=pac?'Work with your partners. Eat every pellet or destroy the Citadel.':'Eliminate all three Pac-Men. Protect your Citadel.';
-  $('resource-label').textContent=pac?'SPARK':'DREAD';$('production-note').textContent=pac?'SPARK':'DREAD';
+  $('resource-label').textContent=pac?'SPARK':'DREAD';
   $('harvest-order').hidden=!pac;$('snare-order').hidden=pac;$('power-panel').hidden=!pac;
   $('quick-power').hidden=!pac;$('quick-hero-name').textContent=pac?'PAC TEAM '+(PAC_TEAMS.indexOf(game.playerTeam)+1):'PAC-MEN LEFT';
   $('hero-title').textContent=pac?'YOUR COMMANDER':'PRIORITY TARGET';
@@ -133,6 +188,7 @@ function makeGame(){
   if(renderer)renderer.setGame(game);else renderer=new Renderer(canvas,game,{zoom:.9});
   game.paused=true;configureFaction();
   selected=new Set(game.side==='pac'?[game.getHero()?.id].filter(Boolean):ownUnits().filter(u=>u.type==='hunter').map(u=>u.id));
+  controlGroups.forEach(group=>group.clear());lastGroupRecall={index:-1,time:-Infinity};renderControlGroups();
   lastSoundPellets=0;previousHp=game.getHero()?.hp??0;updateHUD.lastDanger=0;buildType=null;orderMode=null;drag=null;mouseWorld=null;ended=false;accumulator=0;playerWasEliminated=false;
   renderTeamRoster();renderProduction();updateHUD();updateSelection();focusArmy();
 }
@@ -216,7 +272,8 @@ function summonTroop(type){
   const def=UNIT_DEFS[type];if(!def||!started||ended)return;
   if(playerEliminated()){toast('Your commander has fallen. Your partners are still fighting.',true);return;}
   if(game.paused){toast('Resume the match to summon units.',true);return;}
-  if(game.train(type,selectedBuilding()?.id)){tone(480,.05);toast(def.name+' queued. New troops wait at their production building.');}
+  const chosen=selectedBuilding(),producer=chosen&&['nest','refuge','lair'].includes(chosen.type)?chosen:null;
+  if(game.train(type,producer?.id)){tone(480,.05);toast(def.name+' queued. New troops wait at their production building.');}
   else toast('Need resources, a completed production building, and room in your army.',true);
   updateHUD();updateSelection();
 }
@@ -240,18 +297,21 @@ function activatePower(){
 function renderProduction(){
   const grid=$('production-grid');grid.replaceChildren();
   const definitions=productionTab==='troops'?UNIT_DEFS:BUILDING_DEFS;
+  const types=Object.keys(definitions).filter(type=>definitions[type].side===game.side&&type!=='hero');
+  grid.style.setProperty('--production-count',String(types.length));
+  $('production-note').textContent=(productionTab==='troops'?'T':'B')+' · '+productionKeys.slice(0,types.length).join(' ').toUpperCase();
   $('troops-tab').classList.toggle('active',productionTab==='troops');$('buildings-tab').classList.toggle('active',productionTab==='buildings');
   $('troops-tab').setAttribute('aria-selected',String(productionTab==='troops'));$('buildings-tab').setAttribute('aria-selected',String(productionTab==='buildings'));
   grid.setAttribute('aria-labelledby',productionTab==='troops'?'troops-tab':'buildings-tab');
   for(const [type,def]of Object.entries(definitions)){
     if(def.side!==game.side||type==='hero')continue;
-    // Four choices remain readable; the second Pac structure row fits into the same grid.
-    const constructionKey=Object.keys(definitions).filter(k=>definitions[k].side===game.side&&k!=='hero').indexOf(type)+1;
-    const b=document.createElement('button');b.className='production-card';b.dataset.type=type;b.title=def.name+' — '+def.description+' Cost: '+def.cost+(productionTab==='troops'?' · '+def.trainTime+'s training. T then '+constructionKey:' · '+def.w+'×'+def.h+' ground. B then '+constructionKey+' / Shift+'+constructionKey);b.dataset.constructionKey=String(constructionKey);
-    b.setAttribute('aria-label',(productionTab==='troops'?'Summon ':'Build ')+def.name+', '+def.cost+' '+(game.side==='pac'?'Spark':'Dread')+'. '+def.description);
+    const constructionKey=productionKeys[types.indexOf(type)].toUpperCase(),tabKey=productionTab==='troops'?'T':'B';
+    const b=document.createElement('button');b.className='production-card';b.dataset.type=type;b.title=def.name+' — '+def.description+' Cost: '+def.cost+(productionTab==='troops'?' · '+def.trainTime+'s training.':' · '+def.w+'×'+def.h+' ground.')+' '+tabKey+' then '+constructionKey;b.dataset.constructionKey=constructionKey;
+    b.setAttribute('aria-label',(productionTab==='troops'?'Summon ':'Build ')+def.name+', '+def.cost+' '+(game.side==='pac'?'Spark':'Dread')+'. '+def.description+' Shortcut: '+tabKey+' then '+constructionKey+'.');
     const art=document.createElement('span');art.className=productionTab==='troops'?'unit-art':'building-art';art.style.backgroundPosition=productionTab==='troops'?spritePosition(type):buildingPosition(type);art.setAttribute('aria-hidden','true');b.append(art);
     const hotkey=document.createElement('kbd');hotkey.className='construction-key';hotkey.textContent=String(constructionKey);b.append(hotkey);
     const name=document.createElement('strong');name.textContent=def.name;b.append(name);
+    const role=document.createElement('span');role.className='production-role';role.textContent=def.role||unitRoles[type]||'SUPPORT';b.append(role);
     const cost=document.createElement('small');cost.textContent='◇ '+def.cost;b.append(cost);
     b.addEventListener('click',()=>{
       if(!started||ended)return;
@@ -271,9 +331,9 @@ function updateSelection(){
   const baseDef=first?(UNIT_DEFS[first.type]||BUILDING_DEFS[first.type]):null;
   const def=first?.isHQ?{...baseDef,name:'Ghost Citadel',description:'Your headquarters. 20,000 health. Regenerates after damage stops. Its destruction gives Pac the victory.'}:baseDef;
   portrait.title=def?.description||'';
-  $('selection-category').textContent=selectedEntities.length>1?'SELECTED FORCE':isBuilding?'STRUCTURE':first?.type==='hero'?'COMMANDER':'UNIT';
-  $('selection-title').textContent=selectedEntities.length>1?selectedEntities.length+' units selected':def?.name||(playerEliminated()?'Spectating allies':'No selection');
-  $('selection-description').textContent=selectedEntities.length>1?'Right click to move, attack, or harvest as a group.':def?.description||'Left click a friendly unit or drag a selection box.';
+  $('selection-category').textContent=selectedEntities.length>1?'SELECTED FORCE':isBuilding?def.role||'STRUCTURE':first?.type==='hero'?'COMMANDER':unitRoles[first?.type]||'UNIT';
+  $('selection-title').textContent=selectedEntities.length>1?selectedEntities.length+' selected':def?.name||(playerEliminated()?'Spectating allies':'No selection');
+  $('selection-description').textContent=selectedEntities.length>1?'Right click orders your troops. Ctrl + 1–9 assigns this selection to a control group.':def?.description||'Left click a friendly unit or drag a selection box.';
   const details=$('selection-details');details.replaceChildren();
   if(first){
     const hp=document.createElement('span');hp.textContent='HP '+Math.ceil(first.hp)+' / '+first.maxHp;details.append(hp);
@@ -281,6 +341,7 @@ function updateSelection(){
       const status=document.createElement('span');status.textContent=first.progress<1?'BUILDING '+Math.floor(first.progress*100)+'%':'OPERATIONAL';details.append(status);
       if(first.queue?.length){const q=document.createElement('span');q.textContent='QUEUE '+first.queue.length+' · '+UNIT_DEFS[first.queue[0].type].name+' '+Math.ceil(first.queue[0].remaining)+'s';details.append(q);}
       if(first.type==='well'){const t=document.createElement('span');t.textContent='FORGE '+Math.floor((first.forge||0)/50*100)+'%';details.append(t);}
+      if(first.type==='sanctuary'){const t=document.createElement('span');t.textContent=def.healRate+' HP/s · '+def.healRange+' TILE RANGE';details.append(t);}
       if(first.isHQ){const t=document.createElement('span');t.textContent=game.time-(first._lastHit??-100)>=8&&first.hp<first.maxHp?'REGENERATING':'HEADQUARTERS';details.append(t);}
     }else{
       const action=document.createElement('span');let text=first.order?.type?.toUpperCase()||'IDLE';
@@ -297,6 +358,7 @@ function updateSelection(){
   $('order-hint').textContent=selectedUnits().length?selectedUnits().length+' SELECTED':'SELECT A UNIT';
   document.querySelectorAll('[data-order]').forEach(b=>b.disabled=!selectedUnits().length);
   $('snare-order').disabled=!selectedUnits().some(u=>u.type==='binder');
+  updateControlGroups();
 }
 function renderTeamRoster(){
   const roster=$('team-roster');roster.replaceChildren();rosterNodes.clear();
@@ -535,22 +597,31 @@ $('buildings-tab').addEventListener('click',()=>{productionTab='buildings';cance
 document.querySelectorAll('[data-order]').forEach(b=>b.addEventListener('click',()=>b.dataset.order==='attack'?attackNearest():setOrderMode(b.dataset.order)));
 $('rematch-btn').addEventListener('click',startGame);$('result-menu').addEventListener('click',()=>{$('result-screen').hidden=true;openMenu();});
 document.addEventListener('keydown',e=>{
-  if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;
+  if(['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)||e.target.isContentEditable)return;
   const key=e.key.toLowerCase();
   if(key==='escape'){
     if(!$('help-screen').hidden)closeHelp();else if(!$('setup-screen').hidden)closeMenu();else if(buildType||orderMode)cancelMode();else setPaused(!game.paused);e.preventDefault();return;
   }
   if(!started||ended||!$('setup-screen').hidden||!$('help-screen').hidden)return;
-  const digit=e.code?.match(/^Digit([1-4])$/)?.[1];
-  if(digit&&!e.ctrlKey&&!e.metaKey){
-    if(productionTab==='buildings'||e.shiftKey){const types=Object.keys(BUILDING_DEFS).filter(type=>BUILDING_DEFS[type].side===game.side);const type=types[Number(digit)-1];if(type)beginConstruction(type);}
-    else{const types=Object.keys(UNIT_DEFS).filter(type=>UNIT_DEFS[type].side===game.side&&type!=='hero');const type=types[Number(digit)-1];if(type)summonTroop(type);}
-    e.preventDefault();return;
+  const digit=e.code?.match(/^(?:Digit|Numpad)([1-9])$/)?.[1];
+  if(digit&&!e.altKey){
+    e.preventDefault();if(e.repeat)return;
+    const index=Number(digit)-1;
+    if(e.ctrlKey||e.metaKey)setControlGroup(index);else if(e.shiftKey)setControlGroup(index,true);else recallControlGroup(index);
+    return;
+  }
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  const productionIndex=productionKeys.indexOf(key);
+  if(productionIndex>=0){
+    e.preventDefault();if(e.repeat)return;
+    const definitions=productionTab==='buildings'?BUILDING_DEFS:UNIT_DEFS,types=Object.keys(definitions).filter(type=>definitions[type].side===game.side&&type!=='hero'),type=types[productionIndex];
+    if(type){if(productionTab==='buildings')beginConstruction(type);else summonTroop(type);}
+    return;
   }
   if(key===' '){if(!e.repeat)setPaused(!game.paused);e.preventDefault();return;}
   if(key==='f'){focusArmy();e.preventDefault();return;}
   if(key==='e'){if(!e.repeat)activatePower();e.preventDefault();return;}
-  if(key==='b'){productionTab='buildings';renderProduction();updateHUD();e.preventDefault();return;}
+  if(key==='b'){productionTab='buildings';cancelMode();renderProduction();updateHUD();e.preventDefault();return;}
   if(key==='t'){productionTab='troops';cancelMode();renderProduction();updateHUD();e.preventDefault();return;}
   if(key==='m'){setOrderMode('move');e.preventDefault();return;}
   if(key==='h'&&game.side==='pac'){setOrderMode('harvest');e.preventDefault();return;}
