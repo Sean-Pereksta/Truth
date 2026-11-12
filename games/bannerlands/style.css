@@ -91,6 +91,7 @@
 #menuOverlay .campaign-menu-body{display:grid;grid-template-columns:minmax(0,1.85fr) minmax(300px,1fr);gap:16px;min-height:0}
 #menuOverlay .menu-house-panel{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);gap:16px;min-width:0;min-height:0}
 #menuOverlay .menu-panel{display:flex;flex-direction:column;min-width:0;min-height:0;padding:18px;border:1px solid #61715a77;border-top-color:#a18b566e;border-radius:5px;background:linear-gradient(135deg,#243b3b5c,#14252cdd 65%);box-shadow:0 12px 35px #0002}
+#menuOverlay .house-selection-panel{overflow:auto;scrollbar-width:thin;scrollbar-color:#667458 transparent}
 #menuOverlay .menu-panel-heading{display:flex;align-items:center;gap:11px;flex-shrink:0}
 #menuOverlay .menu-step{display:flex;align-items:center;justify-content:center;width:29px;height:29px;flex:0 0 29px;border:1px solid #a18b5666;border-radius:50%;font:10px 'Segoe UI',sans-serif;color:#c3ad7b}
 #menuOverlay .menu-panel .eyebrow{display:block;font-size:8px;letter-spacing:1.8px;color:#99ac91}
@@ -270,3 +271,4 @@
  #menuOverlay .landscape-preview{height:66px;margin-top:11px}
  #menuOverlay .landscape-description{font-size:10px;margin-bottom:9px}
 }
+@media(max-width:360px){#menuOverlay .menu-edition{display:none}}
