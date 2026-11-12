@@ -3,7 +3,7 @@ import {pathToFileURL,fileURLToPath} from 'node:url';
 const modulePath=process.argv[2]||fileURLToPath(new URL('../../core.js',import.meta.url));
 const {Game,HOUSES,UNIT_DEFS}=await import(pathToFileURL(modulePath));
 function fixture({rider='thorn_lancer',enemy='infantry',held=false,rear=false,rows=5,terrain='grass',playerSpears=false}={}){
- const g=new Game({house:4,enemies:1,scale:'standard',seed:1234});
+ const g=new Game({landscape:'open',house:4,enemies:1,scale:'standard',seed:1234});
  g.units=[];g.buildings=[];g.byId.clear();g.projectiles=[];g.effects=[];g.fireZones=[];
  for(const t of g.tiles){if(t.terrain!=='water')t.terrain=terrain;t.owner=0;}
  Object.assign(g.teams[1],HOUSES[1]);for(const s of g.teams){s.count=0;s.cap=1000;s.aiClock=1e9;s.heroTimer=0;}

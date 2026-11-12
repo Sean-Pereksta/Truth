@@ -1,0 +1,29 @@
+Bannerlands - The Lands Update environment atlas
+
+File: lands-atlas.png
+Layout: four equal columns by two equal rows, transparent PNG.
+Top row: mountain massif; pine cluster; stone bridge; timber bridge.
+Bottom row: mountain pass; shallow ford; roadside waymarker; ruined watchtower.
+
+Original artwork generated for this update with the built-in image generation
+tool. Prompt: richly hand-painted naturalistic medieval RTS miniature scenery,
+isometric 2:1 viewpoint, upper-left daylight, natural stone/moss/wood/water colors,
+eight isolated sprites in an exact four-column two-row transparent atlas, no text.
+A follow-up edit removed divider lines and colored matte fringes while preserving
+the sprites and grid. Runtime extraction suppresses remaining saturated fringe.
+
+The atlas adds scenic landmarks and mountain/woodland depth. Walkable bridge
+decks, outside parapets, roads, passes, banks and water ripples are drawn by the
+terrain renderer to match the simulation grid precisely. Decorative bridge
+sprites never narrow the actual five-lane crossing.
+
+Ground file: lands-ground.png
+Opaque material atlas, four equal columns by two equal rows.
+Top row: river water; rutted dirt road; stone bridge paving; shallow ford.
+Bottom row: rocky pass; mountain slate; grassy riverbank; timber bridge decking.
+
+Ground prompt: full-bleed seamless top-down hand-painted medieval RTS material
+swatches, exact 4-by-2 opaque grid, natural subdued water/earth/slate palette,
+fine tactile details readable at tile scale, no perspective, labels or borders.
+Generated with the built-in image generation tool for this update. The renderer
+projects these dedicated material textures onto the isometric ground grid.

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {Game,UNIT_DEFS} from '../../core.js';
 let passed=0;
 const test=(name,fn)=>{fn();console.log('PASS '+name);passed++;};
-const make=(mode='conquest',enemies=3)=>new Game({mode,enemies,scale:'standard',seed:44277});
+const make=(mode='conquest',enemies=3)=>new Game({landscape:'open',mode,enemies,scale:'standard',seed:44277});
 const empty=g=>{g.units=[];g.byId=new Map(g.buildings.map(b=>[b.id,b]));for(const s of g.teams)s.count=0;g.hash.rebuild(g.units);};
 const atFlag=(g,team,n)=>{const f=g.objectives[0];for(let i=0;i<n;i++)g.addUnit(team,'infantry',f.x+(i%3)*.1,f.y+Math.floor(i/3)*.1);g.hash.rebuild(g.units);};
 test('Thirty seconds of actual dominance awards exactly eight stronger troops, even at supply limit',()=>{
@@ -55,6 +55,6 @@ test('Coordination calls validate map targets and protect player requests from b
   const g=make('team-conquest');assert.equal(g.callTeamOrder('assault',NaN,20).ok,false);assert.equal(g.callTeamOrder('defend',0,0).ok,false);assert.equal(g.callTeamOrder('assault',50,50).ok,true);assert.equal(g.teamOrders[0].launchAt,8);assert.equal(g.callTeamOrder('assault',60,60,1).ok,false);assert.equal(g.teamOrders[0].x,50);assert.equal(g.callTeamOrder('defend',30,30).ok,true);assert.equal(g.teamOrders.find(o=>o.kind==='defend').launchAt,0);
 });
 test('All sixteen factions have valid alliances and objective progress arrays on every map size',()=>{
-  for(const scale of ['standard','epic','continent']){const g=new Game({mode:'team-bannerfall',enemies:15,scale});assert.equal(g.teams.length,16);assert.equal(g.objectiveScores.length,8);assert.ok(g.objectives.every(o=>o.progress.length===8));for(const s of g.teams)assert.equal(g.allied(s.id,s.id^1),true);}
+  for(const scale of ['standard','epic','continent']){const g=new Game({landscape:'open',mode:'team-bannerfall',enemies:15,scale});assert.equal(g.teams.length,16);assert.equal(g.objectiveScores.length,8);assert.ok(g.objectives.every(o=>o.progress.length===8));for(const s of g.teams)assert.equal(g.allied(s.id,s.id^1),true);}
 });
 console.log(`${passed} campaign checks passed.`);

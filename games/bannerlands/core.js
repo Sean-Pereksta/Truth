@@ -1,4 +1,6 @@
 // Bannerlands simulation. World coordinates are measured in grid cells.
+import {generateLands,isPassableTile,tileTravelCost} from './lands.js';
+import {LandsNavigation} from './navigation.js';
 export const HOUSES = [
   {name:'House Stark',motto:'Winter is coming',sigil:'wolf',color:'#8ac9e8',dark:'#234c61',trait:'Steadfast in the North'},
   {name:'House Lannister',motto:'Hear me roar',sigil:'lion',color:'#ef7165',dark:'#672e31',trait:'The pride of the West'},
@@ -167,7 +169,7 @@ class SpatialHash {
 
 export class Game {
   constructor(config={}){
-    this.config={house:0,enemies:3,difficulty:'standard',scale:'epic',seed:44277,mode:'conquest',...config};
+    this.config={house:0,enemies:3,difficulty:'standard',scale:'epic',seed:44277,mode:'conquest',landscape:'crownlands',...config};
     if(!GAME_MODES[this.config.mode])this.config.mode='conquest';
     this.mode={...GAME_MODES[this.config.mode]};this.teamOrders=[];this.nextTeamOrder=1;this.objectives=[];this.objectiveScores=[];this.victoryReason='';
     if(!AI_DIFFICULTIES[this.config.difficulty])this.config.difficulty='standard';
@@ -198,6 +200,8 @@ export class Game {
     let minCapitalDistance=Infinity;for(let i=0;i<homes.length;i++)for(let j=i+1;j<homes.length;j++)minCapitalDistance=Math.min(minCapitalDistance,Math.sqrt(ds(homes[i],homes[j])));
     // Pair nearby starting reservations so allies share a defensible front.
     if(this.mode.teams)for(let i=0;i+1<homes.length;i+=2){let nearest=i+1;for(let j=i+2;j<homes.length;j++)if(ds(homes[i],homes[j])<ds(homes[i],homes[nearest]))nearest=j;[homes[i+1],homes[nearest]]=[homes[nearest],homes[i+1]];}
+    generateLands(this,homes);
+    this.navigation=new LandsNavigation(this);
     this.spawnSafety={minCapitalDistance,armyRadius:6,minimumArmyGap:minCapitalDistance-12};
     for(let t=0;t<n;t++){
       const home=homes[t];
@@ -206,9 +210,9 @@ export class Game {
       this.teams.push(team);this.objectiveScores[alliance]=0;
       // Every opening army has a clear, equally valued mustering field.
       for(let yy=Math.floor(home.y)-7;yy<=Math.floor(home.y)+7;yy++)for(let xx=Math.floor(home.x)-7;xx<=Math.floor(home.x)+7;xx++){
-        const tile=this.tileAt(xx+.5,yy+.5);if(tile&&tile.terrain!=='water'&&ds({x:xx+.5,y:yy+.5},home)<6.75**2){tile.terrain='grass';tile.height=0;tile.value=1;}
+        const tile=this.tileAt(xx+.5,yy+.5);if(isPassableTile(tile)&&ds({x:xx+.5,y:yy+.5},home)<6.75**2){tile.terrain='grass';tile.feature=null;tile.height=0;tile.value=1;}
       }
-      for(let yy=Math.floor(home.y)-3;yy<=Math.floor(home.y)+3;yy++)for(let xx=Math.floor(home.x)-3;xx<=Math.floor(home.x)+3;xx++){const tile=this.tileAt(xx+.5,yy+.5);if(tile&&tile.terrain!=='water'){tile.owner=t;tile.value=1;}}
+      for(let yy=Math.floor(home.y)-3;yy<=Math.floor(home.y)+3;yy++)for(let xx=Math.floor(home.x)-3;xx<=Math.floor(home.x)+3;xx++){const tile=this.tileAt(xx+.5,yy+.5);if(isPassableTile(tile)){tile.owner=t;tile.value=1;}}
       this.addBuilding(t,'keep',home.x,home.y);
       this.addBuilding(t,'barracks',home.x+1.65,home.y+.2);
       this.addBuilding(t,'range',home.x-.2,home.y+1.65);
@@ -224,7 +228,7 @@ export class Game {
       // Every point stays inside a six-cell reservation; adjacent enemy
       // reservations have at least twelve completely empty cells between them.
       const accept=slot=>{
-        if(slot.x<1.4||slot.y<1.4||slot.x>this.W-1.4||slot.y>this.H-1.4||ds(slot,home)>36)return;
+        if(slot.x<1.4||slot.y<1.4||slot.x>this.W-1.4||slot.y>this.H-1.4||ds(slot,home)>36||!this.isWalkable(slot.x,slot.y))return;
         if(this.buildings.some(b=>ds(b,slot)<(this.buildingRadius(b)+.46)**2))return;
         if(this.units.some(u=>ds(u,slot)<(u.team===t?.5:12)**2))return;
         if(slots.some(p=>ds(p,slot)<.48**2))return;slots.push(slot);
@@ -242,7 +246,7 @@ export class Game {
     }
     this.fireZones=[];this.stats.housePowerUses=0;this.stats.siegeImpacts=0;
     for(const team of this.teams){team.powerReadyAt=0;team.buffs={};}
-    this.createObjectives();this.recount();this.hash.rebuild(this.units);this.event(`${this.mode.label}: protect your town hall. The banners are raised.`,0);
+    this.navigation.invalidate();this.createObjectives();this.recount();this.hash.rebuild(this.units);this.event(`${this.landscape.label}: ${this.mode.label}. Protect your town hall.`,0);
   }
 
   tintColor(hex,amount){const n=parseInt(hex.slice(1),16),mix=v=>Math.round(amount>=0?v+(255-v)*amount:v*(1+amount));return '#'+[n>>16,(n>>8)&255,n&255].map(v=>mix(v).toString(16).padStart(2,'0')).join('');}
@@ -268,7 +272,7 @@ export class Game {
     this.event(`${s.name} upgraded a tower to a level ${tower.level} ${next.label}.`,team);return result(true,`${next.label} complete: level ${tower.level}, ${next.hp.toLocaleString()} maximum health.`);
   }
   callTeamOrder(kind,x,y,team=0){
-    const s=this.teams[team],tile=this.tileAt(x,y);if(!s?.alive||!this.mode.teams)return result(false,'Coordinated orders require a living house in a team campaign.');if(!['assault','defend'].includes(kind)||!Number.isFinite(x)||!Number.isFinite(y)||!tile||tile.terrain==='water')return result(false,'Choose a land position for your allies.');
+    const s=this.teams[team],tile=this.tileAt(x,y);if(!s?.alive||!this.mode.teams)return result(false,'Coordinated orders require a living house in a team campaign.');if(!['assault','defend'].includes(kind)||!Number.isFinite(x)||!Number.isFinite(y)||!isPassableTile(tile))return result(false,'Choose open ground, a bridge or a mountain pass for your allies.');
     if(!this.teams.some(t=>t.id!==team&&t.alive&&this.allied(team,t.id)))return result(false,'No allied houses remain to answer your call.');
     const existing=this.teamOrders.find(o=>o.alliance===s.alliance&&o.expiresAt>this.time&&o.kind===kind);
     // Bot calls cannot move the player's live coordination marker.
@@ -280,9 +284,16 @@ export class Game {
   }
   createObjectives(){
     const count=this.objectiveScores.length,spots=[[.5,.5],[.34,.34],[.66,.66]],names=['Crown Standard','Western Standard','Eastern Standard'];
-    for(let i=0;i<spots.length;i++){let p={x:Math.floor(this.W*spots[i][0])+.5,y:Math.floor(this.H*spots[i][1])+.5};
-      // Move a standard out of a capital's opening reservation if necessary.
-      for(let step=0;step<80&&this.teams.some(s=>ds(s.home,p)<11**2);step++){const angle=step*2.399963,r=4+Math.sqrt(step)*2;p=this.bound({x:this.W*spots[i][0]+Math.cos(angle)*r,y:this.H*spots[i][1]+Math.sin(angle)*r});}
+    for(let i=0;i<spots.length;i++){
+      const anchor={x:Math.floor(this.W*spots[i][0])+.5,y:Math.floor(this.H*spots[i][1])+.5};let p=null,best=Infinity;
+      // Validate the final location: snapping away from water must never move a flag into a starting army.
+      for(const tile of this.tiles){
+        if(!isPassableTile(tile))continue;const candidate={x:tile.x+.5,y:tile.y+.5},score=ds(candidate,anchor);
+        if(score>=best||this.teams.some(s=>ds(s.home,candidate)<121)||this.objectives.some(o=>ds(o,candidate)<100))continue;
+        let room=0;for(let y=-3;y<=3;y++)for(let x=-3;x<=3;x++)if(x*x+y*y<=9&&this.isWalkable(candidate.x+x,candidate.y+y))room++;
+        if(room<21)continue;p=candidate;best=score;
+      }
+      p=p||this.navigation.nearestPassable(anchor);
       this.objectives.push({id:i,name:names[i],...p,radius:4,required:30,progress:Array(count).fill(0),controller:null,contested:false,cooldownUntil:0,captures:0});
     }
   }
@@ -355,10 +366,12 @@ export class Game {
 
   random(){this.seed=(Math.imul(1664525,this.seed)+1013904223)>>>0;return this.seed/4294967296;}
   tileAt(x,y){const xx=Math.floor(x),yy=Math.floor(y);return xx<0||yy<0||xx>=this.W||yy>=this.H?null:this.tiles[yy*this.W+xx];}
+  isWalkable(x,y){return Number.isFinite(x)&&Number.isFinite(y)&&isPassableTile(this.tileAt(x,y));}
+  buildingGround(type,x,y){const radius=(BUILD_DEFS[type]?.radius||.5)+.12;for(const [dx,dy]of [[0,0],[-radius,0],[radius,0],[0,-radius],[0,radius],[-radius,-radius],[radius,radius],[-radius,radius],[radius,-radius]]){const tile=this.tileAt(x+dx,y+dy);if(!isPassableTile(tile)||['bridge','ford','pass','road'].includes(tile.feature))return false;}return true;}
   bound(p){p.x=clamp(p.x,1.22,this.W-1.22);p.y=clamp(p.y,1.22,this.H-1.22);return p;}
   event(text,team=-1){this.events.push({id:++this.eventId,text,team,time:this.time});if(this.events.length>35)this.events.shift();}
   addUnit(team,type,x,y){
-    const d=UNIT_DEFS[type],s=this.teams[team],armor=this.upgradeMultiplier('armor',s.upgrades.armor);const u={id:this.nextId++,team,type,x,y,hp:d.hp*armor,maxHp:d.hp*armor,vx:0,vy:0,attackAnim:0,phase:this.random()*6.28,cooldown:this.random()*d.rate,seek:this.random()*.2,target:null,order:null,charge:0,momentum:0,charging:false,chargeSpeed:0,chargeDir:{x:1,y:0},chargeRunup:0,chargeTravel:0,chargeCooldown:0,chargeElapsed:0,chargeHits:this.unitClass(type)==='cavalry'?new Map():null,knockT:0,knockVX:0,knockVY:0,alive:true,spawn:this.time,hit:0};this.bound(u);this.units.push(u);this.byId.set(u.id,u);s.count++;return u;
+    const d=UNIT_DEFS[type],s=this.teams[team],armor=this.upgradeMultiplier('armor',s.upgrades.armor);const u={id:this.nextId++,team,type,x,y,radius:d.radius,hp:d.hp*armor,maxHp:d.hp*armor,vx:0,vy:0,attackAnim:0,phase:this.random()*6.28,cooldown:this.random()*d.rate,seek:this.random()*.2,target:null,order:null,charge:0,momentum:0,charging:false,chargeSpeed:0,chargeDir:{x:1,y:0},chargeRunup:0,chargeTravel:0,chargeCooldown:0,chargeElapsed:0,chargeHits:this.unitClass(type)==='cavalry'?new Map():null,knockT:0,knockVX:0,knockVY:0,alive:true,spawn:this.time,hit:0};this.bound(u);if(!this.isWalkable(u.x,u.y))Object.assign(u,this.navigation.nearestPassable(u));this.units.push(u);this.byId.set(u.id,u);s.count++;return u;
   }
   addBuilding(team,type,x,y){const d=BUILD_DEFS[type],rally=this.teams[team]?.rally,b={id:this.nextId++,team,type,x,y,hp:d.hp,maxHp:d.hp,level:type==='keep'||type==='tower'?1:undefined,radius:d.radius,spawnTimer:0,cooldown:this.random(),hit:0,progress:1,rally:rally?{...rally}:null};this.bound(b);this.buildings.push(b);this.byId.set(b.id,b);return b;}
   group(team){return this.units.filter(u=>u.team===team&&u.hp>0);}
@@ -366,6 +379,7 @@ export class Game {
   command(ids,x,y,mode='attack',formation='line'){
     const arr=(ids instanceof Set?[...ids]:ids).map(id=>this.byId.get(id)).filter(u=>u&&u.hp>0&&UNIT_DEFS[u.type]);if(!arr.length)return;
     x=clamp(x,1.4,this.W-1.4);y=clamp(y,1.4,this.H-1.4);
+    const destination=this.navigation.nearestPassable({x,y});if(!destination)return;x=destination.x;y=destination.y;
     const center=arr.reduce((o,u)=>({x:o.x+u.x/arr.length,y:o.y+u.y/arr.length}),{x:0,y:0});
     const angle=Math.atan2(y-center.y,x-center.x),fx=Math.cos(angle),fy=Math.sin(angle),sideX=-fy,sideY=fx;
     // Keep ranged fighters at the rear instead of collapsing the whole army onto one point.
@@ -373,7 +387,7 @@ export class Game {
     const spacing=formation==='spread'?.7:.43,cols=Math.max(3,Math.ceil(Math.sqrt(arr.length)*1.45)),rows=Math.ceil(arr.length/cols);
     arr.forEach((u,i)=>{let side=(i%cols-(Math.min(cols,arr.length)-1)/2)*spacing,back=(Math.floor(i/cols)-(rows-1)/2)*spacing;
       if(formation==='wedge'){side=(i%cols-(cols-1)/2)*spacing;back=Math.abs(side)*.7+Math.floor(i/cols)*spacing-rows*spacing*.45;}
-      const goal=this.bound({x:x+sideX*side-fx*back,y:y+sideY*side-fy*back});if(this.unitClass(u)==='cavalry'&&(mode!=='attack'||u.charging&&((goal.x-u.x)*u.chargeDir.x+(goal.y-u.y)*u.chargeDir.y)<0))this.stopCharge(u);u.order={...goal,mode,formation,groupX:x,groupY:y};u.target=null;u.seek=0;u.sweepWait=0;
+      let goal=this.bound({x:x+sideX*side-fx*back,y:y+sideY*side-fy*back});if(!this.isWalkable(goal.x,goal.y))goal=this.navigation.nearestPassable(goal)||destination;if(!this.navigation.isClearPoint(goal.x,goal.y,u.radius))goal={x:Math.floor(goal.x)+.5,y:Math.floor(goal.y)+.5};if(this.unitClass(u)==='cavalry'&&(mode!=='attack'||u.charging&&((goal.x-u.x)*u.chargeDir.x+(goal.y-u.y)*u.chargeDir.y)<0))this.stopCharge(u);u.order={...goal,mode,formation,groupX:x,groupY:y};u.target=null;u.seek=0;u.sweepWait=0;
     });
   }
   hold(ids){for(const id of ids){const u=this.byId.get(id);if(u&&UNIT_DEFS[u.type]){if(this.unitClass(u)==='cavalry')this.stopCharge(u);if(UNIT_DEFS[u.type].spearBrace){const dx=u.target?u.target.x-u.x:u.vx||u.facingX||0,dy=u.target?u.target.y-u.y:u.vy||u.facingY||0,length=Math.hypot(dx,dy);u.braceDir=length>.01?{x:dx/length,y:dy/length}:null;u.braceTime=0;}u.order={x:u.x,y:u.y,mode:'hold',formation:u.order?.formation||'line'};u.target=null;}}}
@@ -390,8 +404,8 @@ export class Game {
     const teams=new Map();for(const u of this.units)if(u.hp>0&&u.order?.mode==='expand'){if(!teams.has(u.team))teams.set(u.team,[]);teams.get(u.team).push(u);}
     for(const [team,troops]of teams){
       // One frontier scan per team and planning tick, rather than one map scan per soldier.
-      const frontier=[],reserved=new Map();for(let i=0;i<this.tiles.length;i++){const tile=this.tiles[i];if(tile.terrain!=='water'&&tile.owner!==team&&this.canCapture(tile,team))frontier.push({index:i,x:tile.x+.5,y:tile.y+.5});}
-      const valid=u=>{const tile=this.tiles[u.order.expandTile];return u.order.expandTile!==null&&tile&&tile.terrain!=='water'&&tile.owner!==team&&this.canCapture(tile,team);};
+      const frontier=[],reserved=new Map();for(let i=0;i<this.tiles.length;i++){const tile=this.tiles[i];if(isPassableTile(tile)&&tile.owner!==team&&this.canCapture(tile,team))frontier.push({index:i,x:tile.x+.5,y:tile.y+.5});}
+      const valid=u=>{const tile=this.tiles[u.order.expandTile];return u.order.expandTile!==null&&isPassableTile(tile)&&tile.owner!==team&&this.canCapture(tile,team);};
       // Finish a contested tile before choosing another; reservations keep companies spread out.
       for(const u of troops)if(valid(u)){const index=u.order.expandTile;reserved.set(index,(reserved.get(index)||0)+1);}
       for(const u of troops){
@@ -411,7 +425,7 @@ export class Game {
   setRally(x,y,team=0,buildingIds=null){
     const s=this.teams[team],tile=Number.isFinite(x)&&Number.isFinite(y)?this.tileAt(x,y):null;
     if(!s?.alive)return result(false,'Your house has fallen.');
-    if(!tile||tile.terrain==='water')return result(false,'Choose land inside the realm for your rally point.');
+    if(!isPassableTile(tile))return result(false,'Choose open ground, a bridge or a pass for your rally point.');
     const ids=buildingIds===null?null:new Set(buildingIds),posts=this.buildings.filter(b=>b.team===team&&b.hp>0&&(!ids||ids.has(b.id)));
     if(!posts.length)return result(false,'Select one of your buildings first.');
     const point=this.bound({x,y});
@@ -466,7 +480,8 @@ export class Game {
   build(type,x,y,team=0){
     const s=this.teams[team],d=BUILD_DEFS[type],tile=this.tileAt(x,y);if(!s?.alive||!d||type==='keep')return result(false,'Choose a building.');
     if(d.house&&d.house!==s.sigil)return result(false,'Only this house can build its specialist production structure.');
-    if(!tile||tile.terrain==='water'||tile.owner!==team)return result(false,'Build on territory owned by your house.');
+    if(!tile||tile.owner!==team)return result(false,'Build on territory owned by your house.');
+    if(!this.buildingGround(type,x,y))return result(false,'Leave roads, crossings and passes open. Buildings need clear, solid ground.');
     if(s.gold<d.cost)return result(false,`You need ${d.cost} gold.`);
     if(this.buildings.some(b=>b.hp>0&&ds(b,{x,y})<(this.buildingRadius(b)+d.radius+.45)**2))return result(false,'Leave more room between buildings.');
     const slots=this.buildingStatus(team);
@@ -805,12 +820,13 @@ export class Game {
       if(team.sigil==='sun'&&this.unitClass(u)==='archer'&&mode==='attack'){let danger=null,nearest=1.7**2;this.hash.visit(u.x,u.y,1.7,e=>{if(this.hostile(e.team,u.team)&&e.hp>0&&this.unitClass(e)!=='archer'&&this.unitClass(e)!=='siege'){const dd=ds(u,e);if(dd<nearest){nearest=dd;danger=e;}}});if(danger){const away=Math.sqrt(nearest)||1;tx=u.x+(u.x-danger.x)/away;ty=u.y+(u.y-danger.y)/away;moving=true;}}
       if(u.disciplineUntil>this.time&&mode==='attack'&&order&&Math.hypot(order.x-u.x,order.y-u.y)>.16){tx=order.x;ty=order.y;moving=true;}
       if(u.charging){tx=u.x+u.chargeDir.x;ty=u.y+u.chargeDir.y;moving=true;}
+      if(moving&&!u.charging){const waypoint=this.navigation.steer(u,{x:tx,y:ty},this.unitClass(u));tx=waypoint.x;ty=waypoint.y;if(waypoint.blocked)moving=false;}
       let mx=0,my=0;
       if(moving){const dx=tx-u.x,dy=ty-u.y,len=Math.hypot(dx,dy)||1;let speed=d.speed*this.movementMultiplier(u)*this.specialistSpeed(u);
-        const tile=this.tileAt(u.x,u.y);if(tile?.terrain==='forest'&&this.unitClass(u)==='cavalry'&&!(u.pathsUntil>this.time))speed*=.8;if(tile?.terrain==='forest'&&u.pathsUntil>this.time)speed*=1.3;if(u.rushUntil>this.time)speed*=1.15;if(u.poisonUntil>this.time)speed*=.84;
+        const tile=this.tileAt(u.x,u.y);speed/=tileTravelCost(tile,this.unitClass(u));if(tile?.terrain==='forest'&&u.pathsUntil>this.time){speed*=1.3*tileTravelCost(tile,this.unitClass(u));}if(u.rushUntil>this.time)speed*=1.15;if(u.poisonUntil>this.time)speed*=.84;
         // Attack marching pauses briefly to secure land; a pure move order never stops.
         // Riders need a genuine run-up across neutral ground and capture passively.
-        if(this.unitClass(u)!=='cavalry'&&!(u.rushUntil>this.time)&&!(u.disciplineUntil>this.time)&&!(u.pathsUntil>this.time&&tile?.terrain==='forest')&&!target&&mode==='attack'&&tile&&tile.owner!==u.team&&this.canCapture(tile,u.team)&&tile.capture<.95){speed*=.16;u.sweepWait=(u.sweepWait||0)+dt;if(u.sweepWait>3)speed=d.speed*.65;}
+        if(this.unitClass(u)!=='cavalry'&&!['bridge','ford','pass'].includes(tile?.feature)&&!(u.rushUntil>this.time)&&!(u.disciplineUntil>this.time)&&!(u.pathsUntil>this.time&&tile?.terrain==='forest')&&!target&&mode==='attack'&&tile&&tile.owner!==u.team&&this.canCapture(tile,u.team)&&tile.capture<.95){speed*=.16;u.sweepWait=(u.sweepWait||0)+dt;if(u.sweepWait>3)speed=d.speed*.65;}
         else u.sweepWait=0;
         if(u.charging)speed*=1+.85*u.momentum;if(stagger)speed*=.1;
         mx=dx/len*speed;my=dy/len*speed;
@@ -823,7 +839,8 @@ export class Game {
       mx+=pushX;my+=pushY;const speed=Math.hypot(mx,my),limit=(u.charging?d.speed*(1+.9*u.momentum):d.speed*1.3)*this.specialistSpeed(u);if(speed>limit){mx*=limit/speed;my*=limit/speed;}
       if(stagger){const fade=u.knockT/(u.knockDuration||.34);mx+=(u.knockVX||0)*fade;my+=(u.knockVY||0)*fade;u.knockT=Math.max(0,u.knockT-dt);if(!u.knockT){u.knockVX=0;u.knockVY=0;}}
       const oldX=u.x,oldY=u.y;u.x+=mx*dt;u.y+=my*dt;this.bound(u);
-      if(u.charging)this.chargeContact(u,oldX,oldY,dt);
+      if(this.navigation.constrain(u,oldX,oldY)&&u.charging)this.stopCharge(u);
+      if(u.charging){this.chargeContact(u,oldX,oldY,dt);this.navigation.constrain(u,oldX,oldY);}
       u.vx=(u.x-oldX)/dt;u.vy=(u.y-oldY)/dt;
       const actual=Math.hypot(u.vx,u.vy);u.phase+=actual*dt*9;
       if(this.unitClass(u)==='cavalry'){
@@ -845,8 +862,9 @@ export class Game {
       // A struck fighter is deflected out of the rider's lane, rather than
       // becoming an unlimited forward-moving bulldozer for the whole charge.
       const horse=this.hostile(u.team,o.team)?(u.charging?u:o.charging?o:null):null,foe=horse===u?o:u;
-      if(horse&&foe.knockT>0&&(horse.chargeHits.get(foe.id)??-Infinity)>this.time-.5){const dir=horse.chargeDir,lateral=(foe.x-horse.x)*-dir.y+(foe.y-horse.y)*dir.x,side=Math.abs(lateral)>.03?Math.sign(lateral):foe.id%2?1:-1;foe.x-=dir.y*side*shift*2;foe.y+=dir.x*side*shift*2;this.bound(foe);return;}
-      dx=dx/len*shift;dy=dy/len*shift;const weight=this.hostile(u.team,o.team)?(u.charging?.2:o.charging?.8:.5):.5;u.x+=dx*weight*2;u.y+=dy*weight*2;o.x-=dx*(1-weight)*2;o.y-=dy*(1-weight)*2;this.bound(u);this.bound(o);});}
+      const ux=u.x,uy=u.y,ox=o.x,oy=o.y;
+      if(horse&&foe.knockT>0&&(horse.chargeHits.get(foe.id)??-Infinity)>this.time-.5){const dir=horse.chargeDir,lateral=(foe.x-horse.x)*-dir.y+(foe.y-horse.y)*dir.x,side=Math.abs(lateral)>.03?Math.sign(lateral):foe.id%2?1:-1;foe.x-=dir.y*side*shift*2;foe.y+=dir.x*side*shift*2;this.bound(foe);this.navigation.constrain(foe,foe===u?ux:ox,foe===u?uy:oy);return;}
+      dx=dx/len*shift;dy=dy/len*shift;const weight=this.hostile(u.team,o.team)?(u.charging?.2:o.charging?.8:.5):.5;u.x+=dx*weight*2;u.y+=dy*weight*2;o.x-=dx*(1-weight)*2;o.y-=dy*(1-weight)*2;this.bound(u);this.bound(o);this.navigation.constrain(u,ux,uy);this.navigation.constrain(o,ox,oy);});}
   }
 
   updateProjectiles(dt){
@@ -861,7 +879,7 @@ export class Game {
     const len=this.tiles.length,power=this.capturePower;power.fill(0);
     for(const u of this.units){if(u.hp<=0)continue;const x=Math.floor(u.x),y=Math.floor(u.y);for(let yy=y-1;yy<=y+1;yy++)for(let xx=x-1;xx<=x+1;xx++){if(xx<1||yy<1||xx>=this.W-1||yy>=this.H-1)continue;const dd=(u.x-(xx+.5))**2+(u.y-(yy+.5))**2;if(dd<1.3){const i=yy*this.W+xx;power[u.team*len+i]+=(this.unitClass(u)==='hero'?1.7:1)*Math.max(.15,1-dd*.65);}}}
     const alliancePower=Array(this.objectiveScores.length).fill(0);
-    for(let i=0;i<len;i++){const tile=this.tiles[i];if(tile.terrain==='water')continue;alliancePower.fill(0);let best=-1,max=0,second=0,strongest=0;
+    for(let i=0;i<len;i++){const tile=this.tiles[i];if(!isPassableTile(tile))continue;alliancePower.fill(0);let best=-1,max=0,second=0,strongest=0;
       for(let t=0;t<this.teams.length;t++)if(this.teams[t].alive)alliancePower[this.teams[t].alliance]+=power[t*len+i];
       let leading=-1;for(let a=0;a<alliancePower.length;a++){const v=alliancePower[a];if(v>max){second=max;max=v;leading=a;}else if(v>second)second=v;}
       for(let t=0;t<this.teams.length;t++)if(this.teams[t].alive&&this.teams[t].alliance===leading&&power[t*len+i]>strongest){best=t;strongest=power[t*len+i];}
@@ -916,11 +934,11 @@ export class Game {
     // Waves muster at home; a remote foothold can support an invasion, but cannot erase its march.
     const frontier=[s.home],borders=new Map(),pressure=new Map();
     for(const tile of this.tiles){
-      if(tile.owner!==s.id||tile.terrain==='water')continue;
+      if(tile.owner!==s.id||!isPassableTile(tile))continue;
       let edge=false;
       for(const [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1]]){
         const x=tile.x+dx,y=tile.y+dy;if(x<0||y<0||x>=this.W||y>=this.H)continue;
-        const next=this.tiles[y*this.W+x];if(next.terrain==='water'||this.allied(s.id,next.owner))continue;
+        const next=this.tiles[y*this.W+x];if(!isPassableTile(next)||this.allied(s.id,next.owner))continue;
         edge=true;
         if(this.teams[next.owner]?.alive&&this.hostile(s.id,next.owner)){const alliance=this.teams[next.owner].alliance;borders.set(alliance,(borders.get(alliance)||0)+1);}
       }
@@ -936,28 +954,27 @@ export class Game {
     const forts=this.buildings.filter(b=>b.hp>0&&this.teams[b.team]?.alive&&this.hostile(s.id,b.team)&&['keep','tower'].includes(b.type));
     let target=null,best=Infinity,bestTie=Infinity;
     for(const b of candidates){
+      const route=this.navigation.route(s.home,b,plan.style==='raider'?'cavalry':plan.style==='siege'?'siege':'infantry');if(!route.reachable)continue;
       let guards=0,retaliation=0;this.hash.visit(b.x,b.y,10,u=>{if(u.hp>0&&this.allied(u.team,b.team)&&ds(u,b)<100)guards+=this.unitClass(u)==='siege'?2:this.unitClass(u)==='hero'?3:1;});
       this.hash.visit(s.home.x,s.home.y,13,u=>{if(u.hp>0&&u.team===b.team&&ds(u,s.home)<169)retaliation++;});
       const towers=this.buildings.filter(p=>p.hp>0&&this.allied(p.team,b.team)&&p.type==='tower'&&ds(p,b)<81).length;
       const distance=Math.sqrt(ds(b,s.home)),vulnerability=b.hp/b.maxHp;
       let frontierDistance=distance;for(const point of frontier)frontierDistance=Math.min(frontierDistance,Math.sqrt(ds(b,point)));
-      const alliance=this.teams[b.team].alliance,dx=b.x-s.home.x,dy=b.y-s.home.y,length2=distance*distance;
-      // Sample the actual approach for third-party land, then account for forts along that corridor.
-      const samples=Math.max(1,Math.ceil(distance/3));let crossings=0;
-      for(let i=1;i<=samples;i++){const t=i/(samples+1),tile=this.tileAt(s.home.x+dx*t,s.home.y+dy*t);if(tile&&this.teams[tile.owner]?.alive&&this.hostile(s.id,tile.owner)&&!this.allied(tile.owner,b.team))crossings++;}
-      let routeForts=0;
+      const alliance=this.teams[b.team].alliance,samples=Math.max(1,route.points.length);let crossings=0;
+      for(const point of route.points){const tile=this.tileAt(point.x,point.y);if(tile&&this.teams[tile.owner]?.alive&&this.hostile(s.id,tile.owner)&&!this.allied(tile.owner,b.team))crossings++;}
+      let routeForts=0;const exposed=new Set();
+      for(const crossing of route.crossings)this.hash.visit(crossing.x,crossing.y,6,u=>{if(u.hp>0&&this.hostile(s.id,u.team)&&ds(u,crossing)<36)exposed.add(u.id);});
       for(const fort of forts){
         if(ds(fort,b)<100)continue;
-        const t=length2?((fort.x-s.home.x)*dx+(fort.y-s.home.y)*dy)/length2:0;if(t<=0||t>=1)continue;
-        const point={x:s.home.x+dx*t,y:s.home.y+dy*t},range=fort.type==='keep'?this.townHallDetails(fort.team).range:this.towerDetails(fort.id,fort.team).range;
-        if(ds(fort,point)<(range+1)**2)routeForts+=fort.type==='keep'?8:5;
+        const range=fort.type==='keep'?this.townHallDetails(fort.team).range:this.towerDetails(fort.id,fort.team).range;
+        if(route.points.some(point=>ds(fort,point)<(range+1)**2))routeForts+=fort.type==='keep'?8:5;
       }
-      const geography=distance+frontierDistance*.3-Math.min(10,Math.sqrt(borders.get(alliance)||0)*2)+crossings/samples*20+Math.min(24,routeForts);
+      const geography=route.cost+frontierDistance*.3-Math.min(10,Math.sqrt(borders.get(alliance)||0)*2)+crossings/samples*20+Math.min(24,routeForts)+Math.min(24,exposed.size*(plan.style==='siege'?.4:1));
       let score=geography+guards*(plan.style==='siege'?.65:1.5)+towers*(plan.style==='siege'?3:9)+vulnerability*22-Math.min(12,retaliation*1.5)-(this.teams[b.team].tiles||0)/leader*12+Math.min(16,(pressure.get(alliance)||0)*8);
       if(plan.style==='raider'){score+=b.type==='keep'?22:-18;score+=guards*.5;}
       // Stable seeded ties neither favor the first-created (player) building nor change on every decision.
       let tie=(Number(this.config.seed)||44277)^Math.imul(s.id+1,0x9e3779b1)^Math.imul(b.id,0x85ebca6b);tie=Math.imul(tie^(tie>>>16),0x7feb352d);tie=Math.imul(tie^(tie>>>15),0x846ca68b);tie=(tie^(tie>>>16))>>>0;
-      if(score<best-1e-7||Math.abs(score-best)<=1e-7&&tie<bestTie){best=score;bestTie=tie;target=b;}
+      if(score<best-1e-7||Math.abs(score-best)<=1e-7&&tie<bestTie){best=score;bestTie=tie;target=b;plan.targetRoute={distance:route.distance,cost:route.cost,crossings:route.crossings};}
     }
     return target;
   }
@@ -1012,7 +1029,7 @@ export class Game {
   aiProductionSite(s,type){
     const d=BUILD_DEFS[type],buildings=this.buildings.filter(b=>b.hp>0),forts=buildings.filter(b=>this.hostile(s.id,b.team)&&['keep','tower'].includes(b.type));let best=null,bestScore=Infinity;
     for(const tile of this.tiles){
-      if(tile.owner!==s.id||tile.terrain==='water')continue;const p={x:tile.x+.5,y:tile.y+.5};
+      if(tile.owner!==s.id||!isPassableTile(tile)||!this.buildingGround(type,tile.x+.5,tile.y+.5))continue;const p={x:tile.x+.5,y:tile.y+.5};
       if(buildings.some(b=>ds(b,p)<(this.buildingRadius(b)+d.radius+.45)**2))continue;
       if(forts.some(b=>ds(b,p)<((b.type==='keep'?this.townHallDetails(b.team).range:this.towerDetails?.(b.id,b.team)?.range||BUILD_DEFS.tower.range)+d.radius+1)**2))continue;
       let unsafe=false;this.hash.visit(p.x,p.y,8,u=>{if(!unsafe&&u.hp>0&&this.hostile(s.id,u.team)&&ds(u,p)<(this.unitClass(u)==='siege'?8:6.5)**2)unsafe=true;});if(unsafe)continue;
@@ -1143,7 +1160,7 @@ export class Game {
     const expansion=army.filter(u=>this.aiTaskOf(u)==='frontier'&&u.order?.mode==='expand');for(const u of expansion)committed.add(u.id);
     if(!coordinated&&!threatenedKeep&&this.time>=plan.frontierAt&&expansion.length<Math.floor(army.length*plan.expansion)){
       plan.frontierAt=this.time+15;
-      const candidates=this.tiles.filter(tile=>tile.owner===-1&&tile.terrain!=='water'&&this.canCapture(tile,s.id));
+      const candidates=this.tiles.filter(tile=>tile.owner===-1&&isPassableTile(tile)&&this.canCapture(tile,s.id));
       if(candidates.length){
         const scouts=army.filter(u=>!committed.has(u.id)&&u.hp>=u.maxHp*.6&&!['assault','raid','objective','team'].includes(this.aiTaskOf(u))).slice(0,Math.min(8,Math.floor(army.length*plan.expansion)-expansion.length));
         if(scouts.length){this.expand(scouts.map(u=>u.id));for(const u of scouts){u.order.aiTask='frontier';committed.add(u.id);}}
@@ -1154,18 +1171,18 @@ export class Game {
       const objectives=(this.objectives||[]).filter(o=>!(o.cooldownUntil>this.time));
       const seekObjective=objectives.length&&(plan.style==='objective'||this.mode?.objectiveGoal||this.random()<.3);
       if(seekObjective){
-        const objective=[...objectives].sort((a,b)=>Math.sqrt(ds(a,home))-Math.sqrt(ds(b,home))-(a.progress?.[s.alliance]||0)*.8+(b.progress?.[s.alliance]||0)*.8)[0];
+        const objective=[...objectives].sort((a,b)=>this.navigation.route(home,a).cost-this.navigation.route(home,b).cost-(a.progress?.[s.alliance]||0)*.8+(b.progress?.[s.alliance]||0)*.8)[0];
         const force=pool.slice(0,Math.max(plan.min,Math.floor(pool.length*.82)));
         this.aiIssue(force,objective,'attack','objective');Object.assign(plan,{phase:'objective',objectiveId:objective.id,cohort:force.map(u=>u.id),initialSize:force.length,startedAt:this.time});
       }else{
         const target=this.aiTarget(s,plan);
         if(target){
           const force=[...pool].sort((a,b)=>plan.style==='raider'?(this.unitClass(a)==='cavalry'?0:1)-(this.unitClass(b)==='cavalry'?0:1)||ds(a,home)-ds(b,home):ds(a,home)-ds(b,home)).slice(0,Math.max(plan.min,Math.floor(pool.length*plan.fraction)));
-          const distance=Math.sqrt(ds(home,target));Object.assign(plan,{phase:'advance',targetId:target.id,targetTeam:target.team,cohort:force.map(u=>u.id),initialSize:force.length,startedAt:this.time,timeout:70+distance*2,stage:'strike'});
+          const distance=Math.sqrt(ds(home,target));Object.assign(plan,{phase:'advance',targetId:target.id,targetTeam:target.team,cohort:force.map(u=>u.id),initialSize:force.length,startedAt:this.time,timeout:70+(plan.targetRoute?.cost||distance)*2.5,stage:'strike'});
           if(plan.style==='raider'){
             const dx=(target.x-home.x)/(distance||1),dy=(target.y-home.y)/(distance||1),side=(s.id%2?1:-1),bend=Math.min(14,distance*.2);
-            const waypoint=this.bound({x:home.x+(target.x-home.x)*.58-dy*bend*side,y:home.y+(target.y-home.y)*.58+dx*bend*side});
-            Object.assign(plan,{waypoint,stage:'flank',stageAt:this.time,flankTimeout:15+Math.sqrt(ds(home,waypoint))*2.2});this.aiIssue(force,waypoint,'attack','raid',{aiTarget:target.id});
+            const waypoint=this.navigation.nearestPassable(this.bound({x:home.x+(target.x-home.x)*.58-dy*bend*side,y:home.y+(target.y-home.y)*.58+dx*bend*side})),approach=this.navigation.route(home,waypoint,'cavalry');
+            Object.assign(plan,{waypoint,stage:'flank',stageAt:this.time,flankTimeout:15+approach.cost*2.2});this.aiIssue(force,waypoint,'attack','raid',{aiTarget:target.id});
           }else this.aiIssue(force,target,'attack','assault',{aiTarget:target.id});
           s.assault=this.time;this.event(`${s.name}: ${plan.label.toLowerCase()} advances on ${this.teams[target.team].name}.`,s.id);
           if(this.mode?.teams&&this.time>=(s.assaultCallAt||0)&&this.teams.some(t=>t.alive&&t.id!==s.id&&this.allied(t.id,s.id))){this.callTeamOrder('assault',target.x,target.y,s.id);s.assaultCallAt=this.time+90;}

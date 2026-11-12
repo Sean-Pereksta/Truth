@@ -1,3 +1,13 @@
+THE LANDS UPDATE
+Choose Crownlands, Riverlands, Highland Marches, Shattered Coast or Kingsroad
+in the campaign menu. Open Realm preserves the original open battlefield.
+Painted river, road, bridge, ford, pass and mountain textures match terrain that
+changes actual travel. Five-lane stone bridges have broad bank approaches;
+water and solid mountains block troops outside crossings and passes.
+Player and rival armies share weighted routes and terrain movement costs.
+Lords consider route length, road access and defended crossings when invading.
+See Lands-Update.txt for landscape details and movement rules.
+
 ADAPTIVE BOT PRODUCTION
 Bots plan their production network as part of their invasion strategy. They compare
 barracks, archery ranges, stables, siege works, house specialist buildings and defenses

@@ -3,7 +3,7 @@ import { Game, HOUSES, HOUSE_CONTENT } from '../../core.js';
 
 let cases=0;
 const test=(name,fn)=>{fn();cases++;console.log(`PASS ${name}`);};
-const game=()=>new Game({house:0,enemies:1,scale:'standard',seed:44277});
+const game=()=>new Game({landscape:'open',house:0,enemies:1,scale:'standard',seed:44277});
 const newTroops=(g,origin)=>{const count=g.units.length;g.spawnBatch(origin,'infantry',3);return g.units.slice(count);};
 const assertRally=(troops,point)=>{assert.equal(troops.length,3);for(const u of troops){assert.equal(u.order.mode,'attack');assert.equal(u.order.groupX,point.x);assert.equal(u.order.groupY,point.y);}};
 
@@ -56,7 +56,7 @@ test('AI reinforcement routes still follow the current AI rally',()=>{
 });
 test('Every house can recruit and evaluate its power without a default player rally',()=>{
   for(let house=0;house<HOUSES.length;house++){
-    const g=new Game({house,enemies:1,scale:'standard',seed:44277}),s=g.teams[0],content=HOUSE_CONTENT[s.sigil];
+    const g=new Game({landscape:'open',house,enemies:1,scale:'standard',seed:44277}),s=g.teams[0],content=HOUSE_CONTENT[s.sigil];
     s.gold=100000;s.cap=10000;
     g.addBuilding(0,content.building,s.home.x+4,s.home.y+4);g.addBuilding(0,'workshop',s.home.x-4,s.home.y-4);g.addBuilding(0,'tower',s.home.x+4,s.home.y-4);
     assert.equal(g.recruit('infantry').ok,true,`${s.name} infantry`);

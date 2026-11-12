@@ -1,5 +1,6 @@
 import {Game,HOUSES,UNIT_DEFS,BUILD_DEFS,HOUSE_CONTENT} from './core.js';
 import {Renderer,worldToScreen,screenToWorld} from './render.js';
+import {LAND_MAPS,isPassableTile,tileTravelCost} from './lands.js';
 
 const $=id=>document.getElementById(id),canvas=$('battleCanvas'),field=$('battlefield');
 const renderer=new Renderer(canvas),view={x:0,y:0,zoom:1,w:800,h:600,dpr:Math.min(window.devicePixelRatio||1,2)};
@@ -68,6 +69,25 @@ function updateModeDescription(){
  $('factionCountLabel').textContent=team?'Alliance setup':'Rival houses';$('modeDescription').textContent=modeDescriptions[base]+(team?' You lead one house with an allied bot. Share flag control, score and team colors.':' Every house fights for itself.')+' Your town hall must survive.';
 }
 $('modeSelect').addEventListener('change',updateModeDescription);updateModeDescription();
+function updateLandscapeDescription(){
+ const map=LAND_MAPS.find(m=>m.id===$('landscapeSelect').value)||LAND_MAPS[0];$('landscapeDescription').textContent=map.description;
+ const preview=$('landscapePreview'),c=preview.getContext('2d'),sample=new Game({landscape:map.id,scale:'standard',enemies:3,seed:628410}),sx=preview.width/sample.W,sy=preview.height/sample.H;
+ c.fillStyle='#182b2e';c.fillRect(0,0,preview.width,preview.height);
+ for(const t of sample.tiles){c.fillStyle=t.feature==='bridge'?'#e4c995':t.feature==='ford'?'#a4b5a3':t.feature==='road'?'#bfa676':t.feature==='pass'?'#b9b39a':t.terrain==='water'?'#397a88':t.terrain==='mountain'?'#8b8c80':t.terrain==='forest'?'#34543d':t.terrain==='hill'?'#797b54':'#67805a';c.fillRect(t.x*sx,t.y*sy,Math.ceil(sx),Math.ceil(sy));}
+ for(const s of sample.teams){c.beginPath();c.arc(s.home.x*sx,s.home.y*sy,3.5,0,Math.PI*2);c.fillStyle='#ead7a5';c.fill();c.strokeStyle='#21322c';c.lineWidth=1.5;c.stroke();}
+ $('landscapePreviewName').textContent=map.label;
+}
+$('landscapeSelect').innerHTML=LAND_MAPS.map(m=>'<option value="'+escapeHTML(m.id)+'">'+escapeHTML(m.label)+'</option>').join('');$('landscapeSelect').value='crownlands';$('landscapeSelect').addEventListener('change',updateLandscapeDescription);updateLandscapeDescription();
+function terrainDescription(t){
+ if(!t)return 'Sea · choose a bridge or ford to cross';
+ const label=t.feature==='bridge'?'Bridge':t.feature==='ford'?'Shallow ford':t.feature==='pass'?'Mountain pass':t.feature==='road'?'Road':({water:'Deep water',mountain:'Mountain',forest:'Forest',hill:'Highlands',grass:'Open ground'})[t.terrain]||'Ground';
+ if(!isPassableTile(t))return label+' · impassable';
+ if(t.feature==='bridge')return label+' · narrow crossing · keep approaches clear';
+ if(t.feature==='ford')return label+' · slow crossing · exposed troops';
+ if(t.feature==='pass')return label+' · the route through impassable peaks';
+ if(t.feature==='road')return label+' · faster march · all houses';
+ const foot=tileTravelCost(t,'infantry'),horse=tileTravelCost(t,'cavalry');return label+(horse>foot+.1?' · cavalry moves slower':t.terrain==='hill'?' · slower climb · valuable land':' · passable');
+}
 function buildActionLists(){
  const house=game.houseContent(0);
  $('recruitList').innerHTML=['infantry','archer','cavalry','siege',house.unit].map(type=>{const d=UNIT_DEFS[type],special=type===house.unit;return `<button class="action-card${special?' house-special-card':''}" data-recruit="${type}"${special?' data-special-recruit':''} title="${escapeHTML(specialistTooltip(type))}">${special?`<span class="building-art" aria-hidden="true"><canvas data-unit-icon="${type}" width="96" height="96"></canvas></span>`:icon(icons[type])}<span class="action-copy"><span class="action-title"><b>${d.label}<span id="recruitBatch-${type}" style="font:8px 'Segoe UI';color:#718e87"> ×${d.batch}</span></b></span><small>${special?`Requires ${BUILD_DEFS[house.building].label}`:d.role.split(' · ').pop()}</small></span><span class="cost" id="recruitCost-${type}">${d.cost}<small>GOLD</small></span></button>`;}).join('');
@@ -153,7 +173,7 @@ function beginRally(){if(!selectedBuildings().length)return;cancelBuild();ui.ral
 function setSelectedRally(x,y){const buildings=selectedBuildings();if(!buildings.length){cancelBuild();return;}const r=game.setRally(x,y,0,allBuildingsSelected?null:buildings.map(b=>b.id));toast(r.message,!r.ok);if(r.ok){ui.orderMarker={x,y,time:game.time,mode:'rally'};cancelBuild();tone(380);}updateHud();}
 function clearSelectedRally(){const r=game.clearRally(0,allBuildingsSelected?null:ui.selectedBuildings);toast(r.message,!r.ok);cancelBuild();updateHud();}
 function findHero(){const u=game.units.find(u=>u.team===0&&u.type==='hero'&&u.hp>0);if(!u){toast('Your commander will return while a keep remains.');return;}cancelBuild();clearBuildingSelection();ui.selected=new Set([u.id]);allSelected=false;focusPoint(u.x,u.y,1.7);updateHud();}
-function issue(x,y,mode=orderMode){if(!ui.selected.size){toast('Select soldiers first. Drag a box or press Q.');return;}const t=game.tileAt(x,y);if(!t||t.terrain==='water'){toast('Choose land inside the realm.',true);return;}game.command(ui.selected,x,y,mode,ui.formation);ui.orderMarker={x,y,time:game.time,mode};tone(mode==='attack'?240:340);}
+function issue(x,y,mode=orderMode){if(!ui.selected.size){toast('Select soldiers first. Drag a box or press Q.');return;}const t=game.tileAt(x,y);if(!isPassableTile(t)){toast('Choose reachable ground, a bridge, a ford or a pass.',true);return;}game.command(ui.selected,x,y,mode,ui.formation);ui.orderMarker={x,y,time:game.time,mode};tone(mode==='attack'?240:340);}
 function expandNearby(){
  if(!started||menuOpen||game.winner!==null||!game.teams[0].alive)return;
  const troops=selected();if(!troops.length)return toast('Select soldiers first. Drag a box or press Q.');
@@ -201,9 +221,9 @@ function closeHouses(){$('housesDialog').close();game.paused=housesWasPaused;upd
 $('compareHousesButton').onclick=showHouses;$('compareHousesCouncilButton').onclick=showHouses;$('houseCardButton').onclick=()=>showTab('council');$('closeHouses').onclick=closeHouses;$('houseGuideDone').onclick=closeHouses;$('housesDialog').addEventListener('cancel',e=>{e.preventDefault();closeHouses();});
 function start(){
  edgeMouse=null;
- game=new Game({house:chosenHouse,mode:$('modeSelect').value,enemies:+$('enemySelect').value,difficulty:$('difficultySelect').value,scale:$('scaleSelect').value,seed:Math.floor(Math.random()*1e9)});
+ game=new Game({house:chosenHouse,landscape:$('landscapeSelect').value,mode:$('modeSelect').value,enemies:+$('enemySelect').value,difficulty:$('difficultySelect').value,scale:$('scaleSelect').value,seed:Math.floor(Math.random()*1e9)});
  ui.quality=$('qualitySelect').value;ui.selected.clear();clearBuildingSelection();ui.drag=null;ui.orderMarker=null;ui.hover=null;allSelected=false;groups.clear();keys.clear();started=true;menuOpen=false;speed=1;lastResult=null;lastEvent=game.eventId;lastBattle=0;accumulator=0;cancelBuild();
- $('menuOverlay').hidden=true;$('resultOverlay').hidden=true;$('speedButton').textContent='1×';$('mapTitle').textContent='The realm will remember your name.';$('campaignLabel').textContent=game.mode.label.toUpperCase();$('objective').textContent=(game.mode.objectiveGoal?'Reach '+game.mode.objectiveGoal+' flag captures or eliminate enemy capitals.':game.mode.id.endsWith('dominion')?'Hold 65% of the realm after 90 seconds or eliminate enemy capitals.':'Destroy every enemy capital.')+(game.mode.teams?' Your alliance shares progress.':'')+' Protect your town hall.';
+ $('menuOverlay').hidden=true;$('resultOverlay').hidden=true;$('speedButton').textContent='1×';$('mapTitle').textContent=game.landscape?.label||'The Shattered Realm';$('campaignLabel').textContent=game.mode.label.toUpperCase();$('landsStatus').textContent=(game.landmarks||[]).filter(l=>['bridge','ford','pass'].includes(l.kind)).length+' crossings & passes';$('objective').textContent=(game.mode.objectiveGoal?'Reach '+game.mode.objectiveGoal+' flag captures or eliminate enemy capitals.':game.mode.id.endsWith('dominion')?'Hold 65% of the realm after 90 seconds or eliminate enemy capitals.':'Destroy every enemy capital.')+(game.mode.teams?' Your alliance shares progress.':'')+' Protect your town hall.';
  document.documentElement.style.setProperty('--house',game.teams[0].teamColor||game.teams[0].color);$('houseName').textContent=game.teams[0].name;$('houseTrait').textContent=houseData(0).playstyle||game.teams[0].trait;$('houseCardButton').title='Bonuses: '+houseAdvantages(houseData(0)).join(' ')+'\nWeaknesses: '+houseWeaknesses(houseData(0)).join(' ')+'\nOpen Council for your house power.';
  document.querySelector('.house-card .crest use').setAttribute('href','#i-'+game.teams[0].sigil);
  buildActionLists();paintBuildingIcons();showTab('army');home();updatePause();updateHud();initAudio();tone(390);canvas.focus();toast(game.mode.teams?'You share a color with your bot ally. Use Call assault or Call defense to coordinate.':'Protect your capital. Capture flags for Royal Guard reinforcements.');
@@ -254,7 +274,7 @@ function finishPointer(e,cancel=false){
  let closest=null,best=22;for(const u of game.units){if(u.team!==0||u.hp<=0)continue;const s=worldToScreen(u.x,u.y,view),d=Math.hypot(s.x-p.x,s.y-9*view.zoom-p.y);if(d<best){closest=u;best=d;}}
  if(closest){clearBuildingSelection();if(!z.shift)ui.selected.clear();if(z.shift&&ui.selected.has(closest.id))ui.selected.delete(closest.id);else ui.selected.add(closest.id);allSelected=false;tone(430);updateHud();}
  else if(ui.selected.size)issue(w.x,w.y);
- else{clearBuildingSelection();updateHud();const t=game.tileAt(w.x,w.y);if(t)toast(t.owner<0?'Unclaimed ground. Send your soldiers to raise a banner.':`${game.teams[t.owner].name} territory · ${t.value===2?'Rich highlands':'Open ground'}`);}
+ else{clearBuildingSelection();updateHud();const t=game.tileAt(w.x,w.y);if(t)toast(terrainDescription(t)+(t.owner>=0?' · '+game.teams[t.owner].name:''));}
 }
 canvas.addEventListener('pointerup',e=>finishPointer(e));canvas.addEventListener('pointercancel',e=>{edgeMouse=null;finishPointer(e,true);});canvas.addEventListener('pointerleave',()=>{edgeMouse=null;ui.hover=null;});
 canvas.addEventListener('dblclick',e=>{if(!started||menuOpen||ui.buildMode||ui.rallyMode||ui.teamOrderMode)return;const p=pointerPos(e);if(buildingAt(p))return;let target=null,best=28;for(const u of game.units){if(u.team!==0||u.hp<=0)continue;const s=worldToScreen(u.x,u.y,view),d=Math.hypot(s.x-p.x,s.y-10*view.zoom-p.y);if(d<best){target=u;best=d;}}if(target){clearBuildingSelection();allSelected=false;ui.selected=new Set(game.units.filter(u=>u.team===0&&u.hp>0&&u.type===target.type).map(u=>u.id));updateHud();}});
@@ -366,8 +386,8 @@ function updateHud(){
   return `<div class="roster-row${t.id===0?' you':''}${ally?' ally':''}" title="${escapeHTML(title)}" style="--color:${t.teamColor||t.color};opacity:${t.alive?1:.3}"><span class="roster-dot"></span><b>${short(t.name)}${t.id===0?' · You':ally?' · Ally':''}${plan&&t.id!==0?'<small>'+escapeHTML(plan)+'</small>':''}${t.id!==0&&t.alive&&productionText?'<small class="production-plan" title="'+escapeHTML(production.reason||'')+'">'+escapeHTML(productionText)+'</small>':''}</b><span class="army-total">${t.count}</span><span class="roster-percent">${t.alive?percent(t)+'%':'Fallen'}</span></div>`;
  }).join('');
  $('battleCount').textContent=`${num(game.units.filter(u=>u.hp>0).length)} SOLDIERS IN THE REALM`;
- if(ui.hover){const t=game.tileAt(ui.hover.x,ui.hover.y);$('tileInfo').textContent=t?`${t.owner<0?'UNCLAIMED':short(game.teams[t.owner].name).toUpperCase()} · ${t.x}, ${t.y}`:'THE SHIVERING SEA';}
- else $('tileInfo').textContent='SCROLL TO ZOOM';
+ if(ui.hover){const t=game.tileAt(ui.hover.x,ui.hover.y);$('tileInfo').textContent=t?`${t.owner<0?'UNCLAIMED':short(game.teams[t.owner].name).toUpperCase()} · ${t.x}, ${t.y}`:'THE SHIVERING SEA';$('terrainReadout').textContent=terrainDescription(t);}
+ else{$('tileInfo').textContent='SCROLL TO ZOOM';$('terrainReadout').textContent='Hover ground to inspect its terrain';}
 }
 function checkResult(){
  const outcome=game.winner!==null?game.winner:!game.teams[0].alive?'defeat':null;
@@ -394,7 +414,7 @@ function frame(now){
 }
 async function boot(){
  $('startButton').disabled=true;$('startButton').innerHTML='PREPARING THE REALM…';
- try{await Promise.all([renderer.loadTroops('assets/troops-atlas.png'),renderer.loadStructures('assets/structures-atlas.png'),renderer.loadCampaignArt('assets/campaign-structures.png'),renderer.loadTerrain('assets/ground-textures.png','assets/terrain-props.png'),renderer.loadHouseArt(HOUSE_ART_SOURCES)]);
+ try{await Promise.all([renderer.loadTroops('assets/troops-atlas.png'),renderer.loadStructures('assets/structures-atlas.png'),renderer.loadCampaignArt('assets/campaign-structures.png'),renderer.loadTerrain('assets/ground-textures.png','assets/terrain-props.png'),renderer.loadHouseArt(HOUSE_ART_SOURCES),renderer.loadLandsArt('assets/lands-atlas.png').catch(error=>console.warn('Using drawn landscape details.',error)),renderer.loadLandsGround('assets/lands-ground.png').catch(error=>console.warn('Using base landscape textures.',error))]);
   $('startButton').disabled=false;$('startButton').innerHTML='RAISE THE BANNERS <span>→</span>';
   paintBuildingIcons();paintHousePreview();paintTownHall();fitMap();updateHud();requestAnimationFrame(frame);
  }catch(error){$('startButton').innerHTML='ARTWORK COULD NOT LOAD';$('chosenTrait').textContent='Open the complete game file or keep the assets folder beside index.html.';console.error('Sprite artwork failed to load',error);}

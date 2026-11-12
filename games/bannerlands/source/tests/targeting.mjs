@@ -4,9 +4,10 @@ import {Game} from '../../core.js';
 let cases=0;
 const test=(name,fn)=>{fn();cases++;console.log(`PASS ${name}`);};
 const fixture=(config={})=>{
-  const g=new Game({house:0,enemies:3,scale:'standard',seed:44277,...config});
+  const g=new Game({landscape:'open',house:0,enemies:3,scale:'standard',seed:44277,...config});
   g.units=[];g.buildings=[];g.byId=new Map();g.time=100;
-  for(const t of g.tiles){t.owner=-1;t.claim=-1;t.capture=0;}
+  for(const t of g.tiles){t.owner=-1;t.claim=-1;t.capture=0;t.terrain=t.x>0&&t.y>0&&t.x<g.W-1&&t.y<g.H-1?'grass':'water';t.feature=null;}
+  g.navigation.invalidate();
   for(const s of g.teams){s.tiles=0;s.count=0;s.aiPlan=null;s.alive=true;}
   const s=g.teams[1];s.home={x:30.5,y:45.5};s.strategy='mass';
   g.addBuilding(s.id,'keep',s.home.x,s.home.y);

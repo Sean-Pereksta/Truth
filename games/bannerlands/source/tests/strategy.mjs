@@ -3,7 +3,7 @@ import {Game,BUILD_DEFS} from '../../core.js';
 
 let cases=0;
 const test=(name,fn)=>{fn();cases++;console.log(`PASS ${name}`);};
-const game=(config={})=>new Game({house:0,enemies:3,scale:'standard',seed:44277,...config});
+const game=(config={})=>new Game({landscape:'open',house:0,enemies:3,scale:'standard',seed:44277,...config});
 const prepare=(g,team=1,style='mass')=>{
   const s=g.teams[team];s.strategy=style;s.gold=0;s.powerReadyAt=1e9;
   const p=g.aiPlanFor(s);p.economyAt=1e9;p.frontierAt=1e9;

@@ -4,8 +4,9 @@
   "type": "module",
   "scripts": {
     "start": "node source/server.mjs",
-    "check": "node --check core.js && node --check render.js && node --check app.js",
-    "test": "node source/tests/rally.mjs && node source/tests/cavalry.mjs && node source/tests/campaign.mjs && node source/tests/strategy.mjs && node source/tests/targeting.mjs && node source/tests/towers.mjs && node source/tests/production.mjs"
+    "check": "node --check core.js && node --check lands.js && node --check navigation.js && node --check render.js && node --check app.js",
+    "test": "node source/tests/rally.mjs && node source/tests/cavalry.mjs && node source/tests/campaign.mjs && node source/tests/strategy.mjs && node source/tests/targeting.mjs && node source/tests/towers.mjs && node source/tests/production.mjs && node source/tests/lands-generation.mjs && node source/tests/navigation.mjs && node source/tests/lands-campaign.mjs",
+    "test:render": "node source/tests/lands-render.mjs"
   }
 }
 

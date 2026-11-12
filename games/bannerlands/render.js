@@ -160,6 +160,23 @@ export class Renderer{
     this.terrainReady=false;const load=src=>new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('The terrain artwork could not be loaded.'));im.src=src;});
     const [ground,props]=await Promise.all([load(groundSrc),load(propsSrc)]);return this.setTerrainAtlases(ground,props);
   }
+  async loadLandsArt(src='./assets/lands-atlas.png'){
+    const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('The Lands Update artwork could not be loaded.'));im.src=src;});
+    this.landsFrames={};
+    ['mountain','woodland','stoneBridge','woodBridge','pass','ford','waymarker','ruin'].forEach((kind,i)=>{const f=atlasCell(image,i%4,Math.floor(i/4),4,2,'Lands '+kind),c=f.image.getContext('2d',{willReadFrequently:true}),pixels=c.getImageData(0,0,f.image.width,f.image.height),data=pixels.data;for(let p=0;p<data.length;p+=4){if(data[p]>180&&data[p]>data[p+1]*1.8&&data[p]>data[p+2]*1.8)data[p+3]=0;}c.putImageData(pixels,0,0);this.landsFrames[kind]=f;});
+    this.landsArtReady=true;this.treeSprites.clear();this.terrainChunkCache.clear();this.cachedGame=null;
+    return {source:src,columns:4,rows:2,classes:Object.keys(this.landsFrames)};
+  }
+  async loadLandsGround(src='./assets/lands-ground.png'){
+    const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('The Lands ground textures could not be loaded.'));im.src=src;});
+    this.landsGroundFrames={};const w=image.naturalWidth||image.width,h=image.naturalHeight||image.height;
+    ['water','road','bridge','ford','pass','mountain','bank','timber'].forEach((kind,i)=>{const sx=Math.floor(i%4*w/4),sy=Math.floor(Math.floor(i/4)*h/2),sw=Math.floor((i%4+1)*w/4)-sx,sh=Math.floor((Math.floor(i/4)+1)*h/2)-sy,a=makeCanvas(sw,sh);a.getContext('2d').drawImage(image,sx,sy,sw,sh,0,0,sw,sh);this.landsGroundFrames[kind]=a;});
+    this.terrainTileSprites.clear();this.terrainChunkCache.clear();this.cachedGame=null;return {source:src,columns:4,rows:2,classes:Object.keys(this.landsGroundFrames)};
+  }
+  landsPropSprite(kind,variant=0){
+    const f=this.landsFrames?.[kind];if(!f)return null;const key='lands|'+kind+'|'+variant;if(this.treeSprites.has(key))return this.treeSprites.get(key);
+    const size=kind==='mountain'?[72+variant%3*8,70+variant%4*9]:kind==='woodland'?[68,72]:kind==='waymarker'?[22,34]:kind==='pass'?[60,48]:[66,42],scale=Math.min(size[0]/f.width,size[1]/f.height),w=f.width*scale,h=f.height*scale,a=makeCanvas(192,224),c=a.getContext('2d');c.scale(2,2);c.translate(48,100);if(variant%2)c.scale(-1,1);if(kind==='mountain')c.filter='saturate(.62) brightness('+(variant%3===0?.72:variant%3===1?.87:1)+')';c.drawImage(f.image,f.left,f.top,f.width,f.height,-w/2,-h+3,w,h);this.treeSprites.set(key,a);return a;
+  }
   setTerrainAtlases(ground,props){
     const gw=ground.naturalWidth||ground.width,gh=ground.naturalHeight||ground.height,pw=props.naturalWidth||props.width,ph=props.naturalHeight||props.height;
     if(gw<90||gh<30||pw<90||ph<30)throw new Error('Terrain artwork needs three ground textures and three prop sprites.');
@@ -183,9 +200,50 @@ export class Renderer{
     const key=kind+'|'+variant;if(this.terrainTileSprites.has(key))return this.terrainTileSprites.get(key);const a=makeCanvas(116,66),c=a.getContext('2d');c.scale(2,2);c.translate(1,1);
     if(kind==='water'){diamond(c,HW,HH,HW,HH,'#193c42');for(let k=0;k<9;k++){const x=8+hash(k,variant)*38,y=8+hash(k+8,variant)*12;line(c,x,y,x+4,y-.3,'rgba(122,169,170,.14)',.6);}}
     else{polygon(c,[[0,HH],[HW,HH*2],[HW*2,HH],[HW*2,HH+1.5],[HW,HH*2+1.5],[0,HH+1.5]],'#293c2a');
-      const texture=this.groundFrames?.[kind]||this.groundFrames?.grass;if(texture){c.save();c.transform(HW,HH,-HW,HH,HW,0);c.translate(.5,.5);c.rotate((variant%4)*Math.PI/2);if(variant>3)c.scale(-1,1);c.drawImage(texture,-.5,-.5,1,1);c.restore();
+      const texture=this.groundFrames?.[kind==='mountain'?'hill':kind]||this.groundFrames?.grass;if(texture){c.save();c.transform(HW,HH,-HW,HH,HW,0);c.translate(.5,.5);c.rotate((variant%4)*Math.PI/2);if(variant>3)c.scale(-1,1);c.drawImage(texture,-.5,-.5,1,1);c.restore();
         c.globalAlpha=.07;diamond(c,HW,HH,HW,HH,variant%2?'#20341f':'#c5bd7d');c.globalAlpha=1;
       }else diamond(c,HW,HH,HW,HH,'#4d6843');
+    }
+    this.terrainTileSprites.set(key,a);return a;
+  }
+  landsTileSprite(g,t){
+    const neighbors=[[0,-1],[1,0],[0,1],[-1,0]].map(([dx,dy])=>t.x+dx>=0&&t.y+dy>=0&&t.x+dx<g.W&&t.y+dy<g.H?g.tiles[(t.y+dy)*g.W+t.x+dx]:null);
+    const wet=t.terrain==='water',banks=neighbors.reduce((m,n,i)=>m|((!!n&&n.terrain!=='water')?1<<i:0),0),links=neighbors.reduce((m,n,i)=>m|((!!n&&['road','bridge','ford','pass'].includes(n.feature))?1<<i:0),0),bridgeLinks=neighbors.reduce((m,n,i)=>m|(n?.feature==='bridge'?1<<i:0),0),variant=Math.floor(hash(t.x,t.y)*8),key='land|'+[t.terrain,t.feature||'',t.featureAxis||'',wet?banks:0,links,bridgeLinks,variant].join('|');
+    if(this.terrainTileSprites.has(key))return this.terrainTileSprites.get(key);
+    const a=makeCanvas(116,66),c=a.getContext('2d');c.drawImage(this.groundTileSprite(t.terrain,variant),0,0);c.scale(2,2);c.translate(1,1);
+    const ground=this.landsGroundFrames?.[t.terrain];if(ground){c.save();c.transform(HW,HH,-HW,HH,HW,0);c.drawImage(ground,0,0,1,1);c.restore();}
+    if(wet){
+      c.save();polygon(c,[[0,HH],[HW,0],[HW*2,HH],[HW,HH*2]],null);c.clip();
+      const glow=c.createLinearGradient(0,0,56,28);glow.addColorStop(0,'rgba(37,115,126,.46)');glow.addColorStop(.55,'rgba(36,95,106,.2)');glow.addColorStop(1,'rgba(9,40,54,.32)');c.fillStyle=glow;c.fillRect(0,0,56,28);
+      const corners=[[HW,0],[HW*2,HH],[HW,HH*2],[0,HH]];
+      for(let i=0;i<4;i++)if(banks&(1<<i)){const p=corners[i],q=corners[(i+1)%4];line(c,p[0],p[1],q[0],q[1],'#665f41',4);if(this.landsGroundFrames?.bank){c.save();polygon(c,[p,q,[q[0]*.83+HW*.17,q[1]*.83+HH*.17],[p[0]*.83+HW*.17,p[1]*.83+HH*.17]],null);c.clip();c.transform(HW,HH,-HW,HH,HW,0);c.drawImage(this.landsGroundFrames.bank,0,0,1,1);c.restore();}line(c,p[0],p[1]+.5,q[0],q[1]+.5,'#a49a66',1.3);}
+      for(let i=0;i<6;i++){const x=5+hash(i,variant)*43,y=4+hash(i+10,variant)*19;line(c,x,y,x+6,y-1,'rgba(155,207,204,.24)',.6);}c.restore();
+    }
+    if(t.terrain==='mountain'&&t.feature!=='pass'&&!this.landsGroundFrames?.mountain){
+      polygon(c,[[3,14],[19,5],[35,13],[48,10],[55,17],[28,28]],'#514f43','#4a493c');polygon(c,[[8,16],[23,2],[35,15],[24,21]],'#858372');polygon(c,[[23,2],[35,15],[24,21]],'#5e645c');polygon(c,[[15,10],[23,2],[28,9],[24,8],[21,10]],'#d6d2bd');
+    }
+    if(t.feature){
+      const bridge=t.feature==='bridge',ford=t.feature==='ford',pass=t.feature==='pass',axis=t.featureAxis||'x';
+      c.save();c.transform(HW,HH,-HW,HH,HW,0);c.lineCap='round';c.lineJoin='round';
+      c.lineCap='butt';
+      if(bridge){
+        // The deck fills every walkable bridge tile. Only the outside corridor edges have parapets.
+        c.fillStyle=variant%2?'#a49e84':'#98947c';c.fillRect(-.015,-.015,1.03,1.03);
+        if(this.landsGroundFrames?.bridge)c.drawImage(this.landsGroundFrames.bridge,0,0,1,1);
+        for(let row=0;row<3;row++)for(let col=0;col<3;col++){const x=col/3,y=row/3;c.fillStyle=hash(row*3+col,variant)>.5?'rgba(222,211,170,.14)':'rgba(78,76,61,.1)';c.fillRect(x+.016,y+.014,.3,.3);}
+        for(let i=0;i<3;i++){const z=(i+1)/3;c.beginPath();if(axis==='y'){c.moveTo(0,z);c.lineTo(1,z);}else{c.moveTo(z,0);c.lineTo(z,1);}c.strokeStyle='rgba(70,68,53,.3)';c.lineWidth=.014;c.stroke();}
+        for(const [offset,mask] of axis==='y'?[[0,8],[1,2]]:[[0,1],[1,4]])if(!(bridgeLinks&mask)){c.beginPath();if(axis==='y'){c.moveTo(offset,0);c.lineTo(offset,1);}else{c.moveTo(0,offset);c.lineTo(1,offset);}c.strokeStyle='#625e4c';c.lineWidth=.14;c.stroke();c.strokeStyle='#d4c9a2';c.lineWidth=.075;c.stroke();}
+      }else if(ford){c.fillStyle='rgba(111,154,145,.65)';c.fillRect(-.01,-.01,1.02,1.02);if(this.landsGroundFrames?.ford)c.drawImage(this.landsGroundFrames.ford,0,0,1,1);for(let i=0;i<7;i++){const z=.1+(i%4)*.24,side=.22+Math.floor(i/4)*.5;c.fillStyle=i%2?'#c1bd9e':'#8b9685';c.beginPath();c.ellipse(axis==='y'?side:z,axis==='y'?z:side,.075,.055,0,0,TAU);c.fill();}}
+      else{
+        // Road and pass features are corridors of several complete tiles, not thin spokes per tile.
+        c.fillStyle=pass?'rgba(162,150,118,.9)':'rgba(172,149,98,.72)';c.fillRect(-.01,-.01,1.02,1.02);
+        const texture=this.landsGroundFrames?.[pass?'pass':'road'];if(texture)c.drawImage(texture,0,0,1,1);else if(this.groundFrames?.hill){c.globalAlpha=pass?.5:.36;c.drawImage(this.groundFrames.hill,0,0,1,1);c.globalAlpha=1;c.fillStyle=pass?'rgba(154,146,120,.15)':'rgba(153,126,75,.22)';c.fillRect(0,0,1,1);}
+        const edges=[[[0,0],[1,0]],[[1,0],[1,1]],[[1,1],[0,1]],[[0,1],[0,0]]];
+        edges.forEach(([a,b],i)=>{if(links&(1<<i))return;c.beginPath();c.moveTo(...a);c.lineTo(...b);c.strokeStyle=pass?'#7c7963':'#7f8257';c.lineWidth=.045;c.stroke();});
+        for(const offset of [.3,.7]){c.beginPath();if(axis==='y'){c.moveTo(offset,0);c.lineTo(offset,1);}else{c.moveTo(0,offset);c.lineTo(1,offset);}c.strokeStyle='rgba(90,78,49,.2)';c.lineWidth=.025;c.stroke();}
+        for(let i=0;i<24;i++){c.fillStyle=i%2?'rgba(224,206,151,.2)':'rgba(91,85,58,.18)';c.fillRect(.04+hash(i,variant)*.9,.04+hash(i+7,variant)*.9,.02+hash(i+8,variant)*.035,.015+hash(i+11,variant)*.02);}
+      }
+      c.restore();
     }
     this.terrainTileSprites.set(key,a);return a;
   }
@@ -193,14 +251,19 @@ export class Renderer{
   prepare(g){
     this.cachedGame=g;this.left=-g.H*HW-80;this.top=-90;this.mapW=(g.W+g.H)*HW+160;this.mapH=(g.W+g.H)*HH+210;
     this.terrainChunkCache.clear();this.decor=[];this.decorChunks=new Map();this.miniBase=null;this.miniTerrainPixels=makeCanvas(g.W,g.H);const miniCtx=this.miniTerrainPixels.getContext('2d'),miniData=miniCtx.createImageData(g.W,g.H);
-    for(const t of g.tiles){const r=hash(t.x,t.y),i=(t.y*g.W+t.x)*4,color=t.terrain==='water'?[25,60,66]:t.terrain==='forest'?[48,71,37]:t.terrain==='hill'?[114,105,75]:[91,115,52];miniData.data.set([...color,255],i);if(t.terrain==='water')continue;
+    for(const t of g.tiles){const r=hash(t.x,t.y),i=(t.y*g.W+t.x)*4,color=t.feature==='bridge'?[218,197,142]:t.feature==='ford'?[131,174,169]:t.feature==='road'?[180,159,108]:t.feature==='pass'?[177,168,136]:t.terrain==='mountain'?[102,105,101]:t.terrain==='water'?[35,100,116]:t.terrain==='forest'?[48,71,37]:t.terrain==='hill'?[114,105,75]:[91,115,52];miniData.data.set([...color,255],i);if(t.feature||t.terrain==='water')continue;
+      if(t.terrain==='mountain'){
+        if(t.x%2===0&&t.y%2===0||r>.96)this.decor.push({x:t.x+.5,y:t.y+.5,kind:'mountain',variant:Math.floor(r*8),scale:.8+r*.32});
+        continue;
+      }
       if(t.terrain==='forest'){
-        if(r>.17)this.decor.push({x:t.x+.23+hash(t.x*2,t.y)*.5,y:t.y+.15+hash(t.x,t.y*3)*.65,kind:'tree',variant:Math.floor(hash(t.x,t.y)*6),scale:.72+hash(t.x*3,t.y)*.35});
+        if(r>.17)this.decor.push({x:t.x+.23+hash(t.x*2,t.y)*.5,y:t.y+.15+hash(t.x,t.y*3)*.65,kind:this.landsArtReady&&r>.82?'woodland':'tree',variant:Math.floor(hash(t.x,t.y)*6),scale:.72+hash(t.x*3,t.y)*.35});
       }else if(t.terrain==='hill'){
         if(r>.58)this.decor.push({x:t.x+.2,y:t.y+.15,kind:'rock',variant:Math.floor(r*3),scale:.48+r*.45});
       }else if(r>.94){this.decor.push({x:t.x+.05,y:t.y+.08,kind:'bush',variant:0,scale:.6+r*.2});}
     }
-    miniCtx.putImageData(miniData,0,0);this.ownerPixels=makeCanvas(g.W,g.H);this.ownerImageData=this.ownerPixels.getContext('2d').createImageData(g.W,g.H);this.clearBuildingSites(g);this.territoryTime=-1;this.buildOverview(g);this.updateTerritory(g);
+    for(const mark of g.landmarks||[]){if(mark.kind==='pass'||mark.kind==='road')this.decor.push({x:mark.x+.48,y:mark.y-.48,kind:mark.kind==='pass'?'pass':'waymarker',variant:0,scale:.7});}
+    miniCtx.putImageData(miniData,0,0);this.miniFeaturePixels=makeCanvas(g.W,g.H);const fc=this.miniFeaturePixels.getContext('2d'),fd=fc.createImageData(g.W,g.H);for(const t of g.tiles)if(t.feature){const i=(t.y*g.W+t.x)*4;fd.data.set(miniData.data.subarray(i,i+4),i);}fc.putImageData(fd,0,0);this.ownerPixels=makeCanvas(g.W,g.H);this.ownerImageData=this.ownerPixels.getContext('2d').createImageData(g.W,g.H);this.clearBuildingSites(g);this.territoryTime=-1;this.buildOverview(g);this.updateTerritory(g);
     // Prime the opening artwork while the map is preparing, so the first jump
     // to a distant capital does not pay for faction-tint pixel readbacks.
     for(const team of g.teams){for(const type of ['infantry','archer','cavalry','siege','hero'])this.soldierSprite(type,team.color,team.dark,1,0,false);for(const type of ['keep','barracks','range'])this.structureSprite(type,team.color,team.sigil);const house=g.houseContent?.(team.id);if(house){this.soldierSprite(house.unit,team.color,team.dark,1,0,false,team.sigil);this.structureSprite(house.building,team.color,team.sigil);}}
@@ -213,7 +276,7 @@ export class Renderer{
   }
   buildOverview(g){
     this.overviewScale=Math.min(.32,2048/this.mapW);const s=this.overviewScale,w=Math.ceil(this.mapW*s),h=Math.ceil(this.mapH*s);this.terrainOverview=makeCanvas(w,h);this.decorOverview=makeCanvas(w,h);const c=this.terrainOverview.getContext('2d');c.scale(s,s);c.translate(-this.left,-this.top);
-    for(const t of g.tiles){const p=iso(t.x+.5,t.y+.5),tile=this.groundTileSprite(t.terrain,Math.floor(hash(t.x,t.y)*8));c.drawImage(tile,p.x-HW-1,p.y-HH-1,58,33);}
+    for(const t of g.tiles){const p=iso(t.x+.5,t.y+.5),tile=this.landsTileSprite(g,t);c.drawImage(tile,p.x-HW-1,p.y-HH-1,58,33);}
     this.rebuildDecorOverview();
     // Resolve the offscreen snapshots during preparation, rather than making
     // the first overview-camera jump perform a large deferred raster upload.
@@ -223,7 +286,7 @@ export class Renderer{
   terrainChunk(g,cx,cy){
     const key=cx+','+cy;let ch=this.terrainChunkCache.get(key);if(ch){this.terrainChunkCache.delete(key);this.terrainChunkCache.set(key,ch);return ch;}
     const x0=cx*16,y0=cy*16,x1=Math.min(g.W,x0+16),y1=Math.min(g.H,y0+16),left=(x0-y1)*HW-2,top=(x0+y0)*HH-2,w=(x1-x0+y1-y0)*HW+4,h=(x1-x0+y1-y0)*HH+7,a=makeCanvas(w,h),c=a.getContext('2d');c.translate(-left,-top);
-    for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const t=g.tiles[y*g.W+x],p=iso(x+.5,y+.5),tile=this.groundTileSprite(t.terrain,Math.floor(hash(x,y)*8));c.drawImage(tile,p.x-HW-1,p.y-HH-1,58,33);}
+    for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const t=g.tiles[y*g.W+x],p=iso(x+.5,y+.5),tile=this.landsTileSprite(g,t);c.drawImage(tile,p.x-HW-1,p.y-HH-1,58,33);}
     ch={image:a,left,top,width:w,height:h};this.terrainChunkCache.set(key,ch);while(this.terrainChunkCache.size>this.maxTerrainChunks)this.terrainChunkCache.delete(this.terrainChunkCache.keys().next().value);return ch;
   }
   visibleWorldRange(g,bounds){const points=[[bounds.left,bounds.top],[bounds.right,bounds.top],[bounds.right,bounds.bottom],[bounds.left,bounds.bottom]].map(([x,y])=>({x:(x/HW+y/HH)/2,y:(y/HH-x/HW)/2}));return{x0:clamp(Math.floor(Math.min(...points.map(p=>p.x)))-1,0,g.W-1),x1:clamp(Math.ceil(Math.max(...points.map(p=>p.x)))+1,0,g.W-1),y0:clamp(Math.floor(Math.min(...points.map(p=>p.y)))-1,0,g.H-1),y1:clamp(Math.ceil(Math.max(...points.map(p=>p.y)))+1,0,g.H-1)};}
@@ -232,13 +295,40 @@ export class Renderer{
     else for(let cy=Math.floor(range.y0/16);cy<=Math.floor(range.y1/16);cy++)for(let cx=Math.floor(range.x0/16);cx<=Math.floor(range.x1/16);cx++){
       const x0=cx*16,y0=cy*16,x1=Math.min(g.W,x0+16),y1=Math.min(g.H,y0+16),left=(x0-y1)*HW,right=(x1-y0)*HW,top=(x0+y0)*HH,bottom=(x1+y1)*HH+6;if(right<bounds.left||left>bounds.right||bottom<bounds.top||top>bounds.bottom)continue;const ch=this.terrainChunk(g,cx,cy);c.drawImage(ch.image,ch.left,ch.top);
     }
+    if(v.zoom>.48&&!this.lowDetail)for(let y=range.y0;y<=range.y1;y++)for(let x=range.x0;x<=range.x1;x++){const t=g.tiles[y*g.W+x];if(t.terrain!=='water'||t.feature||hash(x,y)<.55)continue;const p=iso(x+.5,y+.5),drift=Math.sin(g.time*.7+x+y)*3;c.globalAlpha=.12+Math.sin(g.time*.8+x*.4+y*.7)*.06;line(c,p.x-5+drift,p.y,p.x+6+drift,p.y-.7,'#c5e6d9',.8);c.globalAlpha=1;}
     c.save();c.globalAlpha=.16;c.imageSmoothingEnabled=false;c.transform(HW,HH,-HW,HH,0,0);c.drawImage(this.ownerPixels,0,0);c.restore();
     const width=v.zoom<.45?1.2/v.zoom:1.35;for(const e of this.territoryEdges){if(Math.max(e.x1,e.x2)<bounds.left||Math.min(e.x1,e.x2)>bounds.right||Math.max(e.y1,e.y2)<bounds.top||Math.min(e.y1,e.y2)>bounds.bottom)continue;line(c,e.x1,e.y1,e.x2,e.y2,e.color,width);}
     if(v.zoom<.42){if(this.decorOverviewDirty)this.rebuildDecorOverview();c.drawImage(this.decorOverview,this.left,this.top,this.mapW,this.mapH);}
+    this.drawBridgeArchitecture(c,g,range);
+  }
+  drawBridgeArchitecture(c,g,range){
+    // Sidewalls extend down outside the deck. The walking surface stays on the same plane as troop feet.
+    const bridgeAt=(x,y)=>x>=0&&y>=0&&x<g.W&&y<g.H&&g.tiles[y*g.W+x].feature==='bridge';
+    for(let y=range.y0;y<=range.y1;y++)for(let x=range.x0;x<=range.x1;x++){
+      const t=g.tiles[y*g.W+x];if(t.feature!=='bridge')continue;
+      const axis=t.featureAxis||'x',edges=axis==='x'?[[!bridgeAt(x,y-1),[x,y],[x+1,y],false],[!bridgeAt(x,y+1),[x,y+1],[x+1,y+1],true]]:[[!bridgeAt(x-1,y),[x,y],[x,y+1],true],[!bridgeAt(x+1,y),[x+1,y],[x+1,y+1],false]];
+      for(const [visible,wa,wb,front]of edges){
+        if(!visible)continue;const a=iso(...wa),b=iso(...wb),dx=b.x-a.x,dy=b.y-a.y,depth=front?10:6;
+        polygon(c,[[a.x,a.y+3],[b.x,b.y+3],[b.x+3,b.y+depth+5],[a.x+3,a.y+depth+5]],'rgba(9,24,27,.26)');
+        polygon(c,[[a.x,a.y],[b.x,b.y],[b.x,b.y+depth],[a.x,a.y+depth]],front?'#656859':'#858474','#555c50');
+        // Three stone courses and staggered joints give a continuous masonry face.
+        for(let row=1;row<3;row++){const z=row*depth/3;line(c,a.x,a.y+z,b.x,b.y+z,'rgba(35,43,36,.35)',.65);}
+        for(let j=1;j<4;j++){const k=j/4;line(c,a.x+dx*k,a.y+dy*k,b.x-dx*(1-k),b.y-dy*(1-k)+depth,'rgba(39,44,36,.45)',.8);}
+        const mid={x:a.x+dx*.5,y:a.y+dy*.5};
+        if((axis==='x'?x:y)%2===0){
+          // Dark arched openings sit below the deck edge, leaving every lane unobstructed.
+          c.save();c.translate(mid.x,mid.y+depth*.7);c.rotate(Math.atan2(dy,dx));c.beginPath();c.ellipse(0,0,7,depth*.42,0,Math.PI,TAU);c.lineTo(7,depth*.35);c.lineTo(-7,depth*.35);c.closePath();c.fillStyle='#284c50';c.fill();c.strokeStyle='#aaa58b';c.lineWidth=1.4;c.stroke();c.restore();
+        }
+        line(c,a.x,a.y-3.8,b.x,b.y-3.8,front?'#777965':'#999984',4.3);line(c,a.x,a.y-5.2,b.x,b.y-5.2,'#c3bca1',1.1);
+        for(const k of [0,.5,1]){const px=a.x+dx*k,py=a.y+dy*k;line(c,px,py-5.5,px,py-1.4,'#646c5b',.8);}
+        const end=axis==='x'?!bridgeAt(x-1,y)||!bridgeAt(x+1,y):!bridgeAt(x,y-1)||!bridgeAt(x,y+1);
+        if(end){polygon(c,[[mid.x-4,mid.y-3],[mid.x+4,mid.y-1],[mid.x+4,mid.y+depth+3],[mid.x-4,mid.y+depth+1]],'#7a7d69','#545f50');line(c,mid.x-4,mid.y-3,mid.x+4,mid.y-1,'#c1b797',1.2);}
+      }
+    }
   }
   updateTerritory(g){
     const c=this.ownerPixels.getContext('2d'),data=this.ownerImageData.data,colors=g.teams.map(t=>[parseInt(t.color.slice(1,3),16),parseInt(t.color.slice(3,5),16),parseInt(t.color.slice(5,7),16)]);data.fill(0);this.territoryEdges=[];
-    for(const t of g.tiles){if(t.owner<0||t.terrain==='water')continue;const team=g.teams[t.owner];if(!team)continue;const i=(t.y*g.W+t.x)*4;data.set([...colors[t.owner],255],i);const p=iso(t.x+.5,t.y+.5);
+    for(const t of g.tiles){if(t.owner<0||!g.isWalkable(t.x+.5,t.y+.5))continue;const team=g.teams[t.owner];if(!team)continue;const i=(t.y*g.W+t.x)*4;data.set([...colors[t.owner],255],i);const p=iso(t.x+.5,t.y+.5);
       const corners=[[p.x,p.y-HH],[p.x+HW,p.y],[p.x,p.y+HH],[p.x-HW,p.y]];
       const checks=[[t.x,t.y-1,0],[t.x+1,t.y,1],[t.x,t.y+1,2],[t.x-1,t.y,3]];
       for(const [x,y,e]of checks){const nt=x>=0&&y>=0&&x<g.W&&y<g.H?g.tiles[y*g.W+x]:null;if(!nt||nt.owner!==t.owner){const a=corners[e],b=corners[(e+1)%4];this.territoryEdges.push({x1:a[0],y1:a[1],x2:b[0],y2:b[1],color:team.color});}}
@@ -246,6 +336,7 @@ export class Renderer{
     c.putImageData(this.ownerImageData,0,0);this.territoryTime=g.time;this.minimapRevision=(this.minimapRevision||0)+1;
   }
   treeSprite(kind,variant=0){
+    if(['mountain','woodland','stoneBridge','woodBridge','pass','ford','waymarker','ruin'].includes(kind))return this.landsPropSprite(kind,variant);
     return this.terrainPropSprite(kind==='rock'?'rock':kind==='bush'?'oak':variant%3===0?'oak':'pine',variant);
   }
   soldierSprite(type,color,dark,dir,frame,attack=false,specialHouse=null){
@@ -512,7 +603,7 @@ export class Renderer{
     this.projectiles(c,g);this.effects(c,g,lowDetail);
     this.teamOrderMarkers(c,g,v.zoom);
     if(ui.teamOrderMode&&ui.hover){const p=iso(ui.hover.x,ui.hover.y),color=ui.teamOrderMode==='defend'?'#8fdfca':'#f3b77c';c.save();c.strokeStyle=color;c.lineWidth=2/v.zoom;c.setLineDash([5/v.zoom,4/v.zoom]);diamond(c,p.x,p.y,32,16,null,color);c.setLineDash([]);this.flag(c,p.x,p.y,color,g.time,.8);c.restore();}
-    if(ui.hover&&ui.hover.x>=0&&ui.hover.y>=0&&ui.hover.x<g.W&&ui.hover.y<g.H){const tx=Math.floor(ui.hover.x),ty=Math.floor(ui.hover.y),p=iso(tx+.5,ty+.5),tile=g.tiles[ty*g.W+tx];c.lineWidth=1.2;diamond(c,p.x,p.y,HW,HH,null,ui.buildMode?(tile.owner===0?'#e8d38a':'#e28a71'):'rgba(229,223,174,.6)');if(ui.buildMode){c.globalAlpha=.55;this.building(c,{type:ui.buildMode,x:tx+.5,y:ty+.5,team:0,hp:1,maxHp:1},g);c.globalAlpha=1;}}
+    if(ui.hover&&ui.hover.x>=0&&ui.hover.y>=0&&ui.hover.x<g.W&&ui.hover.y<g.H){const tx=Math.floor(ui.hover.x),ty=Math.floor(ui.hover.y),p=iso(tx+.5,ty+.5),tile=g.tiles[ty*g.W+tx];c.lineWidth=1.2;diamond(c,p.x,p.y,HW,HH,null,ui.buildMode?(tile.owner===0&&g.isWalkable(tx+.5,ty+.5)&&!['bridge','ford','pass'].includes(tile.feature)?'#e8d38a':'#e28a71'):'rgba(229,223,174,.6)');if(ui.buildMode){c.globalAlpha=.55;this.building(c,{type:ui.buildMode,x:tx+.5,y:ty+.5,team:0,hp:1,maxHp:1},g);c.globalAlpha=1;}}
     c.restore();
     const vignette=c.createRadialGradient(v.w/2,v.h/2,v.h*.3,v.w/2,v.h/2,v.w*.8);vignette.addColorStop(0,'rgba(2,14,19,0)');vignette.addColorStop(1,'rgba(2,14,19,.35)');c.fillStyle=vignette;c.fillRect(0,0,v.w,v.h);
     if(ui.drag){const r=ui.drag,x=Math.min(r.x0,r.x1),y=Math.min(r.y0,r.y1),w=Math.abs(r.x1-r.x0),h=Math.abs(r.y1-r.y0);c.fillStyle='rgba(221,208,140,.08)';c.fillRect(x,y,w,h);c.strokeStyle='#e0cc83';c.lineWidth=1;c.setLineDash([4,3]);c.strokeRect(x+.5,y+.5,w,h);c.setLineDash([]);}
@@ -522,7 +613,7 @@ export class Renderer{
     const rect=canvas.getBoundingClientRect(),w=Math.max(50,Math.round(rect.width||200)),h=Math.max(50,Math.round(rect.height||140)),d=Math.min(2,window.devicePixelRatio||1);if(canvas.width!==Math.round(w*d)||canvas.height!==Math.round(h*d)){canvas.width=Math.round(w*d);canvas.height=Math.round(h*d);}
     const c=canvas.getContext('2d');c.setTransform(d,0,0,d,0,0);const scale=Math.min((w-14)/((g.W+g.H)*HW),(h-14)/((g.W+g.H)*HH)),ox=(w-(g.W-g.H)*HW*scale)/2,oy=(h-(g.W+g.H)*HH*scale)/2;
     this.minimapTransform={scale,ox,oy,width:w,height:h};
-    if(!this.miniBase||this.miniBase.width!==Math.round(w*d)||this.miniBase.height!==Math.round(h*d)||this.miniRevision!==this.minimapRevision){this.miniBase=makeCanvas(Math.round(w*d),Math.round(h*d));const m=this.miniBase.getContext('2d');m.scale(d,d);m.fillStyle='#10272c';m.fillRect(0,0,w,h);m.imageSmoothingEnabled=false;m.transform(HW*scale,HH*scale,-HW*scale,HH*scale,ox,oy);m.drawImage(this.miniTerrainPixels,0,0);m.globalAlpha=.9;m.drawImage(this.ownerPixels,0,0);this.miniRevision=this.minimapRevision;}
+    if(!this.miniBase||this.miniBase.width!==Math.round(w*d)||this.miniBase.height!==Math.round(h*d)||this.miniRevision!==this.minimapRevision){this.miniBase=makeCanvas(Math.round(w*d),Math.round(h*d));const m=this.miniBase.getContext('2d');m.scale(d,d);m.fillStyle='#10272c';m.fillRect(0,0,w,h);m.imageSmoothingEnabled=false;m.transform(HW*scale,HH*scale,-HW*scale,HH*scale,ox,oy);m.drawImage(this.miniTerrainPixels,0,0);m.globalAlpha=.78;m.drawImage(this.ownerPixels,0,0);m.globalAlpha=1;m.drawImage(this.miniFeaturePixels,0,0);this.miniRevision=this.minimapRevision;}
     c.drawImage(this.miniBase,0,0,w,h);
     for(const b of g.buildings){if(b.hp<=0||b.type!=='keep')continue;const p=iso(b.x,b.y),x=p.x*scale+ox,y=p.y*scale+oy,size=2+(b.level||1)*.5;c.fillStyle=g.teams[b.team]?.teamColor||g.teams[b.team]?.color||'#f3e4b0';c.fillRect(x-size,y-size,size*2,size*2);c.strokeStyle='#eee3bc';c.lineWidth=.65;c.strokeRect(x-size,y-size,size*2,size*2);}
     for(const u of g.units){if(u.hp<=0)continue;const p=iso(u.x,u.y);c.fillStyle=g.teams[u.team]?.color||'#ddd';c.globalAlpha=.9;c.fillRect(p.x*scale+ox-1,p.y*scale+oy-1,2,2);}c.globalAlpha=1;
