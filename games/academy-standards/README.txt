@@ -63,6 +63,19 @@ the latest command takes effect on resume. Large parties begin moving while
 blocked routes are planned in small batches, instead of waiting for every
 route to finish before accepting the command.
 
+CENTRAL SUPPLIES, CAPTAINS AND RECRUITS
+Almost all supplies lie in the center; home deliveries are rare. Scout and
+contest central crates to outfit your party instead of waiting at the castle.
+Each original house has one captain, identified by a small gold crown above
+the troop and in the roster. If the captain is knocked out, original housemates
+serving the same ruler become morale shaken: 15% less damage and 10% slower
+movement for up to 20 seconds. The captain's recovery rallies them early.
+Captured recruits have a separate, lasting penalty while serving another house:
+23% less damage and movement. The roster and visible troop information label
+them Recruited. Recruits can also become morale shaken; both reductions apply.
+Roster and visible troop information show the remaining shaken time. Unseen
+enemy captain state is not shown in house standings or through fog.
+
 ARMOR AND HOUSE CHAMPIONS
 Light, Heavy and Champion use complete animated house troops from
 armor-troops/, with different helmets, body armor and clothing silhouettes.

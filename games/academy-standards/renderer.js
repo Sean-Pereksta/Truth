@@ -397,6 +397,12 @@
     poly(c,Array.from({length:10},(_,i)=>{const a=-Math.PI/2+i*Math.PI/5,r=i%2?2.2:5;return [Math.cos(a)*r,Math.sin(a)*r];}),'#ffe3a0');c.restore();
     if(!s.mount&&s.weapon==='None')label(c,'UNARMED',23,y,6,'#fff0c4',true);
   }
+  function captainBadge(c,s,api,y){
+    if(s.state==='knocked'||!api.isHouseCaptain?.(s))return;
+    c.save();c.translate(0,y);ellipse(c,0,0,7,6,'rgba(20,34,29,.92)');
+    poly(c,[[-4,2],[-5,-3],[-2,-1],[0,-4],[2,-1],[5,-3],[4,2]],'#edcf83','#8f784b',.7);
+    line(c,-3,3,3,3,'#edcf83',1);c.restore();
+  }
   function rasterSoldier(c,s,g,api){
     const factionId=s.origHouse||s.controller,faction=loadAtlas('faction:'+factionId);
     const archer=['Bow','Longbow'].includes(s.weapon);
@@ -436,7 +442,7 @@
     const damagedAge=Number.isFinite(s.lastDamagedAt)?g.time-s.lastDamagedAt:99;if(damagedAge>=0&&damagedAge<.16){const bump=Math.sin(damagedAge/.16*Math.PI)*2.5;c.translate(s.facingDir==='left'?bump:-bump,-bump*.3);}
     if(s.facingDir==='left')c.scale(-1,1);c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';
     c.drawImage(texture,rect.x,rect.y,rect.w,rect.h,-anchorX*z,(mounted?16:9)-anchorY*z,rect.w*z,rect.h*z);
-    c.restore();championInsignia(c,s);
+    c.restore();championInsignia(c,s);captainBadge(c,s,api,mounted?-86:fullChampion?-76:-54);
     if(s.burnUntil>g.time){for(let j=0;j<3;j++)poly(c,[[-11+j*9,6],[-10+j*9,-5-Math.sin(g.time*12+j)*5],[-5+j*9,4]],j%2?'#f7c26a':'#d88a3e');}
     if(s.hp<s.maxHp||selected||s.carryingStandard){
       const y=mounted?-75:fullChampion?-65:s.carryingStandard?-58:-42;c.fillStyle='rgba(21,39,32,.9)';c.beginPath();c.roundRect(-16,y,32,5,2);c.fill();c.fillStyle=s.hp/s.maxHp>.5?'#b0d8a2':s.hp/s.maxHp>.25?'#efc87b':'#e89a86';c.beginPath();c.roundRect(-15,y+1,30*clamp(s.hp/s.maxHp,0,1),3,1);c.fill();
@@ -490,6 +496,7 @@
     if(s.burnUntil>g.time){for(let j=0;j<3;j++)poly(c,[[-8+j*7,5],[-9+j*7,-4-Math.sin(g.time*12+j)*4],[-3+j*7,3]],j%2?'#f7c26a':'#d88a3e');}
     if(s.hp<s.maxHp||sel||s.carryingStandard){const y=s.carryingStandard?-49:-29;c.fillStyle='rgba(24,43,35,.88)';c.beginPath();c.roundRect(-13,y,26,4,2);c.fill();c.fillStyle=s.hp/s.maxHp>.5?'#acd39d':s.hp/s.maxHp>.25?'#efc87b':'#e89a86';c.beginPath();c.roundRect(-12,y+1,24*clamp(s.hp/s.maxHp,0,1),2,1);c.fill();}
     if(s.smithTimer>0){c.strokeStyle='#eed38e';c.lineWidth=1.5;c.beginPath();c.arc(0,3,15,-Math.PI/2,-Math.PI/2+TAU*s.smithTimer/(api.objectiveBuffsFor?.(s.controller)?.forge?12:18));c.stroke();}
+    captainBadge(c,s,api,s.mount?-58:-50);
     c.restore();
   }
   function commands(c,g,api,inView){
