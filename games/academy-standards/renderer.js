@@ -30,7 +30,7 @@
   };
   function makeCanvas(w,h){const a=document.createElement('canvas');a.width=w;a.height=h;return a;}
   function loadAtlas(name){
-    const src=name.startsWith('faction:')?window.AcademyAssets?.factions?.[name.slice(8)]:window.AcademyAssets?.[name];
+    const src=name.startsWith('faction:')?window.AcademyAssets?.factions?.[name.slice(8)]:name.startsWith('champion:')?window.AcademyAssets?.champions?.[name.slice(9)]:window.AcademyAssets?.[name];
     if(!src)return null;
     if(!atlases[name]||atlases[name].source!==src){
       const img=typeof src==='string'?new Image():src;
@@ -388,40 +388,70 @@
     if(targeted){const bob=Math.sin(g.time*4)*3;poly(c,[[-7,top-40+bob],[7,top-40+bob],[0,top-30+bob]],gold);if(s.controller==='player')label(c,'RETURN TO YOUR CASTLE',0,top-49,8,'#dbeec5');}
     c.restore();
   }
+  const championArmor=s=>String(s.armor||'').startsWith('Champion_');
+  function paintedArmor(c,s,back,championImage,championMetadata){
+    if(s.armor==='None'||!s.armor)return;
+    const armor=loadAtlas('armor'),heavy=s.armor==='Heavy'||championArmor(s);
+    if(armor){
+      const sw=armor.naturalWidth/2,sh=armor.naturalHeight/2,col=back?1:0,row=heavy?1:0;
+      const width=heavy?31:25,height=heavy?29:25,y=s.mount?-48:-30;
+      c.drawImage(armor,col*sw,row*sh,sw,sh,-width/2,y,width,height);
+    }
+    // Horse, bow and staff poses remain the functional faction animation. The
+    // champion's own painted helmet and pauldrons replace the ordinary head.
+    if(championImage){
+      const cw=championImage.naturalWidth/8,ch=championImage.naturalHeight/2;
+      const frame=championMetadata?.frames?.[(back?1:0)*8];
+      const sx=frame?frame.x:0,sy=frame?frame.y:back?ch:0,sw=frame?frame.w:cw,sh=(frame?frame.h:ch)*.48;
+      const scale=32/(championMetadata?.referenceHeight||ch*.86),width=sw*scale*1.85,height=sh*scale*1.85;
+      c.drawImage(championImage,sx,sy,sw,sh,-width/2,s.mount?-70:-52,width,height);
+    }
+  }
+  function championInsignia(c,s){
+    if(!championArmor(s))return;
+    const y=s.mount?-58:-55;
+    label(c,'★',-23,y,10,'#ffe3a0',true);
+    if(!s.mount&&s.weapon==='Spear')label(c,'SPEAR',23,y,6,'#fff0c4',true);
+    if(!s.mount&&s.weapon==='None')label(c,'UNARMED',23,y,6,'#fff0c4',true);
+  }
   function rasterSoldier(c,s,g,api){
-    const factionId=s.origHouse||s.controller,faction=loadAtlas('faction:'+factionId);
-    const image=faction||loadAtlas(s.mount?'cavalry':'units');if(!image)return false;
+    const factionId=s.origHouse||s.controller,faction=loadAtlas('faction:'+factionId),champion=championArmor(s)?loadAtlas('champion:'+factionId):null;
+    const championMetadata=window.AcademyAssets?.championFrames?.[factionId];
+    const fullChampion=!!champion&&!s.mount&&!['Bow','Longbow'].includes(s.weapon)&&s.item!=='Medkit';
+    const image=fullChampion?champion:faction||loadAtlas(s.mount?'cavalry':'units');if(!image)return false;
     const h=api.getHouse(s.origHouse||s.controller),controller=api.getHouse(s.controller),color=h?.color||'#b6b995',ally=controller?.color||color;
     const selected=g.selected.has(s.id),back=s.facingDir==='up';
-    let row=s.mount?(faction?(back?9:8):(back?1:0)):s.item==='Medkit'?(back?7:6):(s.weapon==='Bow'||s.weapon==='Longbow')?(back?5:4):s.weapon==='Spear'?(back?3:2):(back?1:0);
-    const rows=faction?10:s.mount?2:8,cw=image.naturalWidth/8,ch=image.naturalHeight/rows;
+    let row=fullChampion?(back?1:0):s.mount?(faction?(back?9:8):(back?1:0)):s.item==='Medkit'?(back?7:6):(s.weapon==='Bow'||s.weapon==='Longbow')?(back?5:4):s.weapon==='Spear'?(back?3:2):(back?1:0);
+    const rows=fullChampion?2:faction?10:s.mount?2:8,cw=image.naturalWidth/8,ch=image.naturalHeight/rows;
     let seed=0;for(let i=0;i<s.id.length;i++)seed=(seed+s.id.charCodeAt(i)*(i+1))%100;
     const moving=s.state==='move'||(s.path?.length>s.pathIndex&&s.state!=='idle'&&s.state!=='knocked');
     let frame=moving?1+(Math.floor(g.time*(s.mount?10:9)+seed)%5):0;
     if(s.attackAction)frame=s.attackAction.phase==='windup'?6:7;
     else{if(s.swing>0)frame=s.swing>.14?6:7;if(s.draw>0)frame=s.draw>.09?6:7;}
     if(s.state==='knocked')frame=0;
-    const metadata=faction?window.AcademyAssets?.factionFrames?.[factionId]:null;
+    const metadata=fullChampion?championMetadata:faction?window.AcademyAssets?.factionFrames?.[factionId]:null;
     const cell=metadata?.frames?.[row*8+frame];
     const rect=cell?{x:cell.x,y:cell.y,w:cell.w,h:cell.h}:{x:frame*cw,y:row*ch,w:cw,h:ch};
     const referenceHeight=metadata?.referenceHeight||ch;
     const anchorX=cell?.anchorX??cw/2,anchorY=cell?.anchorY??ch*.88;
-    const texture=faction||teamAtlas(image,color);
+    const texture=fullChampion?champion:faction||teamAtlas(image,color);
     c.save();c.translate(s.x,s.y);
     if(s.state==='knocked'){
       c.globalAlpha=.42;c.rotate(Math.PI/2);const z=45/referenceHeight;c.drawImage(texture,rect.x,rect.y,rect.w,rect.h,-anchorX*z,-anchorY*z,rect.w*z,rect.h*z);c.restore();return true;
     }
-    const mounted=s.mount,height=mounted?77:50,z=height/referenceHeight;
+    const mounted=s.mount,height=mounted?77:fullChampion?62:50,z=height/referenceHeight;
     ellipse(c,2,mounted?17:9,mounted?21:15,mounted?7:5,'rgba(20,34,27,.29)');
     c.strokeStyle=selected?'#d3efff':s.controller==='player'?'rgba(144,203,244,.65)':ally+'99';c.lineWidth=selected?2:1.1;c.beginPath();c.ellipse(0,mounted?16:9,mounted?24:18,mounted?12:9,0,0,TAU);c.stroke();
     if(selected){c.fillStyle='rgba(141,204,243,.12)';c.fill();}
     c.save();const attack=attackView(s,g);if(attack){c.translate(attack.offsetX,attack.offsetY);c.rotate(attack.lean);}
     const damagedAge=Number.isFinite(s.lastDamagedAt)?g.time-s.lastDamagedAt:99;if(damagedAge>=0&&damagedAge<.16){const bump=Math.sin(damagedAge/.16*Math.PI)*2.5;c.translate(s.facingDir==='left'?bump:-bump,-bump*.3);}
     if(s.facingDir==='left')c.scale(-1,1);c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';
-    c.drawImage(texture,rect.x,rect.y,rect.w,rect.h,-anchorX*z,(mounted?16:9)-anchorY*z,rect.w*z,rect.h*z);c.restore();
+    c.drawImage(texture,rect.x,rect.y,rect.w,rect.h,-anchorX*z,(mounted?16:9)-anchorY*z,rect.w*z,rect.h*z);
+    if(!fullChampion)paintedArmor(c,s,back,champion,championMetadata);
+    c.restore();championInsignia(c,s);
     if(s.burnUntil>g.time){for(let j=0;j<3;j++)poly(c,[[-11+j*9,6],[-10+j*9,-5-Math.sin(g.time*12+j)*5],[-5+j*9,4]],j%2?'#f7c26a':'#d88a3e');}
     if(s.hp<s.maxHp||selected||s.carryingStandard){
-      const y=mounted?-56:s.carryingStandard?-58:-42;c.fillStyle='rgba(21,39,32,.9)';c.beginPath();c.roundRect(-16,y,32,5,2);c.fill();c.fillStyle=s.hp/s.maxHp>.5?'#b0d8a2':s.hp/s.maxHp>.25?'#efc87b':'#e89a86';c.beginPath();c.roundRect(-15,y+1,30*clamp(s.hp/s.maxHp,0,1),3,1);c.fill();
+      const y=mounted?-75:fullChampion?-65:s.carryingStandard?-58:-42;c.fillStyle='rgba(21,39,32,.9)';c.beginPath();c.roundRect(-16,y,32,5,2);c.fill();c.fillStyle=s.hp/s.maxHp>.5?'#b0d8a2':s.hp/s.maxHp>.25?'#efc87b':'#e89a86';c.beginPath();c.roundRect(-15,y+1,30*clamp(s.hp/s.maxHp,0,1),3,1);c.fill();
     }
     if(selected){ellipse(c,19,mounted?-26:-15,7,7,'rgba(26,43,36,.9)');houseCrest(c,s.origHouse||s.controller,19,mounted?-26:-15,.49);}
     if(s.item==='Shield'&&s.weapon!=='Sword'){poly(c,[[-16,-13],[-8,-13],[-8,-4],[-12,0],[-16,-4]],color,'#ded0a0',1);}
@@ -445,12 +475,12 @@
     poly(c,[[-6,-10],[5,-10],[8,8],[-8,7]],'#263e38');
     poly(c,[[-5,-11],[5,-11],[6,3],[2,7],[-6,4]],color,'rgba(28,46,39,.7)',.8);
     poly(c,[[-6,-10],[-1,-12],[-2,3],[-7,4]],'rgba(255,255,220,.14)');
-    if(s.armor==='Heavy'){poly(c,[[-5,-10],[4,-10],[6,0],[0,5],[-6,0]],'#a1aaa0','#4c6059',1);line(c,-3,-8,-2,1,'#d3d4b6',1);line(c,-8,-7,-4,-9,'#bbc2ab',4);line(c,4,-9,8,-7,'#7a8d82',4);}
+    if(s.armor==='Heavy'||championArmor(s)){poly(c,[[-5,-10],[4,-10],[6,0],[0,5],[-6,0]],'#a1aaa0','#4c6059',1);line(c,-3,-8,-2,1,'#d3d4b6',1);line(c,-8,-7,-4,-9,'#bbc2ab',4);line(c,4,-9,8,-7,'#7a8d82',4);}
     if(s.armor==='Light'){line(c,-5,-8,4,1,'#dac798',2);}
     c.fillStyle='#54462e';c.fillRect(-6,1,12,3);c.fillStyle='#d0b77a';c.fillRect(-1,1,3,3);
     line(c,-6,-7,-9,0,color,4);line(c,6,-7,9,-1,color,4);ellipse(c,-9,1,2,2,'#d0ad82');ellipse(c,9,0,2,2,'#d0ad82');
     ellipse(c,0,-16,4.8,5.5,'#e0bb8d');
-    const heavy=s.armor==='Heavy';if(s.weapon!=='None'||heavy){ellipse(c,0,-19,5.5,4.5,heavy?'#a7b5aa':'#7f9286');poly(c,[[-6,-18],[6,-18],[5,-15],[-6,-15]],heavy?'#ccd2b6':'#a9b5a0');line(c,-3,-21,-1,-22,'#d8dec1',2);if(heavy)line(c,1,-17,1,-12,'#82958a',1.2);}else{ellipse(c,0,-20,5,3,'#66523b');}
+    const heavy=s.armor==='Heavy'||championArmor(s);if(s.weapon!=='None'||heavy){ellipse(c,0,-19,5.5,4.5,heavy?'#a7b5aa':'#7f9286');poly(c,[[-6,-18],[6,-18],[5,-15],[-6,-15]],heavy?'#ccd2b6':'#a9b5a0');line(c,-3,-21,-1,-22,'#d8dec1',2);if(heavy)line(c,1,-17,1,-12,'#82958a',1.2);}else{ellipse(c,0,-20,5,3,'#66523b');}
     ellipse(c,s.facingDir==='left'?-2:2,-15.5,.7,.7,'#344039');
     // Every loadout has a visibly different silhouette.
     const sign=s.facingDir==='left'?-1:1,sw=s.swing>0?Math.sin((.28-s.swing)/.28*Math.PI):0;

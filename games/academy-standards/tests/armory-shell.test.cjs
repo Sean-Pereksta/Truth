@@ -24,3 +24,15 @@ test('hidden flag carriers and capture progress do not leak positions into missi
 test('field guide explains fog and uses the production terrain artwork',()=>{
  const {s,$,doc}=createApp();s.begin();$('helpToggle').click();assert.equal(s.ui.drawer,'strategy');assert.match($('drawerBody').textContent,/Unexplored ground is hidden/);assert.equal(doc.querySelectorAll('.terrain-thumb').length,7);
 });
+test('item assignment has a clear action at the item list and shows each equipment slot',()=>{
+ const {s,a,$,doc}=createApp();s.begin();a.getPlayerHouse().stockpile.Heavy=10;$('equipmentToggle').click();
+ assert.match($('drawerBody').textContent,/Weapon:/);assert.match($('drawerBody').textContent,/Armor:/);assert.match($('drawerBody').textContent,/Utility:/);assert.match($('drawerBody').textContent,/Mount:/);
+ doc.querySelector('[data-armory-gear="Heavy"]').click();const button=doc.querySelector('.armory-item-action [data-apply-loadout]');assert(button);assert.match(button.textContent,/Equip item/);assert.match(doc.querySelector('.armory-item-action').textContent,/Heavy armor/);
+});
+test('champion relic menu names all ten houses and only previews eligible assignments',()=>{
+ const {s,a,g,$,doc}=createApp();s.begin();a.selectUnits([g.students[0].id]);a.getPlayerHouse().stockpile.Champion_mars=1;$('equipmentToggle').click();doc.querySelector('[data-gear-category="relics"]').click();assert.equal(doc.querySelectorAll('[data-armory-gear]').length,10);assert.match($('drawerBody').textContent,/House Augustus only/);assert.match($('drawerBody').textContent,/ULTRA RARE/);
+ doc.querySelector('[data-armory-gear="Champion_mars"]').click();assert.match(doc.querySelector('.armory-preview').textContent,/matching original house/);assert(doc.querySelector('.armory-item-action [data-apply-loadout]').disabled);
+});
+test('house standings keep unseen owners unknown until scouted',()=>{
+ const {s,a,$,doc}=createApp();s.begin();const mars=a.getHouse('mars');mars.controller='diana';s.update(a);$('standingsToggle').click();const row=doc.querySelector('[data-house-id="mars"]');assert.equal(row.dataset.houseStatus,'unknown');assert.match(row.textContent,/UNSCOUTED/);assert(!row.textContent.includes('Ruled by House Diana'));
+});

@@ -60,9 +60,12 @@
 
   const NAMES = ['Cassius','Lorn','Tactus','Sevro','Adrius','Roque','Victra','Mustang','Holiday','Thorne','Pax','Nero','Ragnar','Karnus','Daxo','Rhonna','Pebble','Clown','Ajax','Aja','Lysander','Atlas','Orion','Tiber','Quinn','Evey','Julian','Nyla','Toren','Sera','Aurex','Bran','Cato','Varro','Silas','Nyx','Drusus','Mira','Joren','Vela','Maro','Sulla','Aurel','Tima','Dorian','Petra','Ione','Vale'];
 
-  const LOOT_KEYS = ['Sword','Spear','Bow','Longbow','Light','Heavy','Shield','Boots','Medkit','Horse','EngineerKit','TrapKit','WarHorn','FireOil'];
+  const CHAMPION_KEYS=HOUSE_DEFS.map(h=>'Champion_'+h.id);
+  const isChampionArmor=key=>CHAMPION_KEYS.includes(key);
+  const displayLootName=key=>window.AcademyChampions?.relics?.find(relic=>relic.key===key)?.name||key;
+  const LOOT_KEYS = ['Sword','Spear','Bow','Longbow','Light','Heavy','Shield','Boots','Medkit','Horse','EngineerKit','TrapKit','WarHorn','FireOil',...CHAMPION_KEYS];
   const WEAPON_SET = new Set(['Sword','Spear','Bow','Longbow']);
-  const ARMOR_SET = new Set(['Light','Heavy']);
+  const ARMOR_SET = new Set(['Light','Heavy',...CHAMPION_KEYS]);
   const ITEM_SET = new Set(['Shield','Boots','Medkit','EngineerKit','TrapKit','WarHorn','FireOil']);
 
   let controlMode = 'move';
@@ -71,6 +74,7 @@
   let lastUIAt=-1;
   let lastCameraUIAt=0;
   const keysDown = new Set();
+  const pendingPaths=new Map();
 
   const game = {
     time:0,
@@ -415,6 +419,7 @@
 
     if(s.armor==='Light') speed+=14;
     if(s.armor==='Heavy'){ speed-=8; def+=0.22; hp+=28; }
+    if(isChampionArmor(s.armor)){speed-=4;def+=.36;hp+=80;dmg*=1.18;}
     if(s.item==='Shield'){ def+=0.16; speed-=3; }
     if(s.item==='Boots') speed+=20;
     if(s.item==='Medkit') speed-=1;
@@ -454,7 +459,7 @@
     if(s.weapon==='Sword' || s.weapon==='Spear') segs.push('#ff5757');
     if(s.weapon==='Bow' || s.weapon==='Longbow') segs.push('#58d97b');
     if(s.item==='Medkit') segs.push('#64b5ff');
-    if(s.armor==='Heavy' || s.item==='Shield' || s.item==='EngineerKit' || s.item==='TrapKit') segs.push('#f2d25a');
+    if((s.armor==='Heavy'||isChampionArmor(s.armor)) || s.item==='Shield' || s.item==='EngineerKit' || s.item==='TrapKit') segs.push('#f2d25a');
     if(s.item==='WarHorn') segs.push('#d8bd66');
     if(s.item==='FireOil') segs.push('#ff8c3a');
     if(segs.length===0) segs.push('#ffffff');
@@ -745,14 +750,16 @@
   }
 
   function setOrder(student, order){
-    if(student.carryingStandard && order.type!=='returnBanner'){
+    if(student.carryingStandard && order.type!=='returnBanner'&&order.manual===false){
       const home=getHouse(student.controller).castle;
       order={type:'returnBanner',x:home.x,y:home.y,manual:true};
     }
     const destination=resolveDestination(order.x??student.x,order.y??student.y,student.radius||13);
     const changed=student.order && (student.order.type!==(order.type??'move')||student.order.targetId!==(order.targetId??null)||dist(student.order.x,student.order.y,destination.x,destination.y)>24||(order.type==='idle'&&(student.attackAction||student.flagCaptureId)));
-    if(changed){
+    if(changed||order.manual!==false){
+      const canceledWindup=student.attackAction?.phase==='windup';
       cancelAttackAction(student);
+      if(canceledWindup)student.attackCd=0;
       if(student.flagCaptureId && !(order.type==='capture'&&order.targetId===student.flagCaptureId))interruptFlagCapture(student,'order');
     }
     if(order.type==='capture'&&order.targetType==='standard'){
@@ -772,10 +779,35 @@
     student.buildProgress = 0;
     student.tx = student.order.x;
     student.ty = student.order.y;
-    student.path = pathfind(student.x, student.y, student.tx, student.ty,null,student);
+    student.path = [];
     student.pathIndex = 0;
     student.lastPathAt = game.time;
+    queuePath(student);
     student.state = 'move';
+  }
+
+  function queuePath(s,avoid=null){
+    pendingPaths.delete(s);
+    const clear=segmentClear(s.x,s.y,s.tx,s.ty,s.radius||13);
+    let slow=false;
+    if(clear){
+      const steps=Math.ceil(dist(s.x,s.y,s.tx,s.ty)/TILE);
+      for(let i=1;i<=steps;i++)if(terrainMoveFactor(s,lerp(s.x,s.tx,i/steps),lerp(s.y,s.ty,i/steps))<.85){slow=true;break;}
+    }
+    if(!clear||slow||avoid)pendingPaths.set(s,{avoid});
+  }
+
+  // Accept every command first. Bound expensive route work so a large party
+  // never waits for one hundred complete searches before its orders change.
+  function processPendingPaths(){
+    const now=()=>globalThis.performance?.now?.()??Date.now(),started=now();
+    for(let count=0;count<4&&pendingPaths.size;count++){
+      let s=[...pendingPaths.keys()].find(unit=>unit.controller==='player'&&unit.order.manual)||pendingPaths.keys().next().value;
+      const request=pendingPaths.get(s);pendingPaths.delete(s);
+      if(s.state==='knocked'||!game.students.includes(s))continue;
+      s.path=pathfind(s.x,s.y,s.tx,s.ty,request.avoid,s);s.pathIndex=0;
+      if(now()-started>=4)break;
+    }
   }
 
   function randomLootSpawnPoint(centerBias=false){
@@ -822,6 +854,10 @@
   function spawnLootBoxAt(x,y,rare=false,big=false){
     const pool = ['Sword','Spear','Bow','Longbow','Light','Heavy','Shield','Boots','Medkit','EngineerKit','WarHorn','FireOil'];
     const loot = [];
+    if((rare&&Math.random()<.07)||(big&&Math.random()<.12)){
+      const home=[...game.houses].sort((a,b)=>dist(x,y,a.castle.x,a.castle.y)-dist(x,y,b.castle.x,b.castle.y))[0];
+      loot.push(Math.random()<.7?'Champion_'+home.id:CHAMPION_KEYS[randi(0,CHAMPION_KEYS.length-1)]);
+    }
     if(rare) loot.push(['Horse','TrapKit','EngineerKit','WarHorn','FireOil'][randi(0,4)]);
     loot.push(pool[randi(0,pool.length-1)]);
     if(Math.random()<0.45 || big) loot.push(pool[randi(0,pool.length-1)]);
@@ -864,6 +900,7 @@
 
   function init(){
     game.time=0; game.last=0; game.gameOver=false;
+    pendingPaths.clear();
     game.visibility={};game.visibilityAt=-1;game.visionSources={};
     game.paused=true;
     game.squads={2:null,3:null,4:null};
@@ -1116,8 +1153,11 @@
   }
 
   function spendLootOnSelected(key){
-  const selectedUnits = getSelectedUnits().filter(s=>s.controller==='player' && s.state!=='knocked');
-  if(!selectedUnits.length) return;
+  const selectedUnits = getSelectedUnits().filter(s=>s.controller==='player' && s.state!=='knocked'&&(!isChampionArmor(key)||key==='Champion_'+s.origHouse));
+  if(!selectedUnits.length){
+    if(isChampionArmor(key))log('Select a ready student from the relic’s original house to equip this champion armor.');
+    return;
+  }
 
   const p = getPlayerHouse();
   if((p.stockpile[key]||0)<=0){
@@ -1256,7 +1296,7 @@
     }
     if(key==='r') document.getElementById('recall').click();
     if(key==='f'){e.preventDefault();focusParty();}
-    if(key==='a') setMode('attackmove');
+    if(key==='a'){e.preventDefault();if(!e.repeat)attackNearestSelected();}
     if(key==='d') setMode('defend');
     if(key==='e') setMode('escort');
     if(key==='b') setMode('barricade');
@@ -1267,6 +1307,20 @@
 
   function getSelectedUnits(){
     return [...game.selected].map(id=>game.students.find(s=>s.id===id)).filter(Boolean);
+  }
+
+  function attackNearestSelected(){
+    controlMode='move';placementMode=null;
+    const units=getSelectedUnits().filter(s=>s.controller==='player'&&s.state!=='knocked');
+    let ordered=0;
+    for(const s of units){
+      const target=nearestEnemyWithin(s,Infinity);
+      if(!target)continue;
+      setOrder(s,{type:'attack',x:target.x,y:target.y,targetId:target.id,targetType:'student',manual:true});
+      beginAttack(s,target,'student');ordered++;
+    }
+    if(!ordered)log(units.length?'No enemy is in sight. Scout farther to find one.':'Select students before ordering an attack.');
+    syncModeButtons();return ordered;
   }
 
   function getRole(s){
@@ -1320,7 +1374,7 @@
 
   function equipItemOn(s,key,replace=false){
     const stock=getPlayerHouse().stockpile;
-    if(!s || s.controller!=='player' || s.state==='knocked' || !(stock[key]>0))return false;
+    if(!s || s.controller!=='player' || s.state==='knocked' || !(stock[key]>0)||(isChampionArmor(key)&&key!=='Champion_'+s.origHouse))return false;
     let slot=WEAPON_SET.has(key)?'weapon':ARMOR_SET.has(key)?'armor':ITEM_SET.has(key)?'item':key==='Horse'?'mount':null;
     if(!slot || s[slot]===key || (slot==='mount'&&s.mount))return false;
     if(slot!=='mount' && s[slot]!=='None' && !replace)return false;
@@ -1475,7 +1529,7 @@
       candidate.houses=houseRows.map(row=>{
         object(row,'house');const id=houseId(row.id),definition=HOUSE_DEFS.find(h=>h.id===id);
         object(row.stockpile,'supplies');const stockpile={};
-        for(const key of LOOT_KEYS){stockpile[key]=num(row.stockpile[key],0,1e6,'supply count');if(!Number.isInteger(stockpile[key]))fail('Invalid supply count.');}
+        for(const key of LOOT_KEYS){stockpile[key]=num(row.stockpile[key]===undefined&&isChampionArmor(key)?0:row.stockpile[key],0,1e6,'supply count');if(!Number.isInteger(stockpile[key]))fail('Invalid supply count.');}
         object(row.ai,'house strategy');
         return {...definition,castle:{...definition.castle},controller:houseId(row.controller),previousController:row.previousController===undefined?null:houseId(row.previousController,true),lastCapturedAt:row.lastCapturedAt===undefined?-1:num(row.lastCapturedAt,-1,1e9,'castle capture time'),stockpile,ai:{thinkAt:num(row.ai.thinkAt,0,1e9,'strategy timer'),aggression:num(row.ai.aggression,0,1,'house aggression'),regroupUntil:num(row.ai.regroupUntil,0,1e9,'regroup timer'),raid:readRaid(row.ai.raid)}};
       });
@@ -1491,6 +1545,7 @@
         if(controller!==candidate.houses.find(h=>h.id===origHouse).controller)fail('Student allegiance does not match its house.');
         const definition=HOUSE_DEFS.find(h=>h.id===origHouse),p=point(row,'student');
         const weapon=choice(row.weapon,['None',...WEAPON_SET],'weapon'),armor=choice(row.armor,['None',...ARMOR_SET],'armor'),item=choice(row.item,['None',...ITEM_SET],'specialist equipment');
+        if(isChampionArmor(armor)&&armor!=='Champion_'+origHouse)fail('Champion armor belongs to a different house.');
         const weaponLevel=num(row.weaponLevel,0,3,'weapon level');if(!Number.isInteger(weaponLevel))fail('Invalid weapon level.');
         const rawOrder=object(row.order,'student command');
         const targetType=choice(rawOrder.targetType,[null,'student','standard','box','ground','barricade'],'command target');
@@ -1579,6 +1634,7 @@
     }catch(error){return {ok:false,error:error.message||'This saved trial is damaged.'};}
 
     // Commit only after the entire document and its cross-references are valid.
+    pendingPaths.clear();
     for(const [key,value]of Object.entries(candidate))if(!['selected','selectedOneId','controlMode'].includes(key))game[key]=value;
     game.selected=new Set(candidate.selected.filter(id=>game.students.some(s=>s.id===id&&s.controller==='player'&&s.state!=='knocked')));
     game.selectedOne=game.students.find(s=>s.id===candidate.selectedOneId&&game.selected.has(s.id))||game.students.find(s=>game.selected.has(s.id))||null;
@@ -1766,9 +1822,8 @@
         const carrier = sel.find(s=>s.carryingStandard);
         if(carrier) issueFormationOrder(sel.filter(s=>s!==carrier), carrier.x, carrier.y, 'escort', carrier.id, 'student', true);
         else issueFormationOrder(sel, p.x, p.y, 'move', null, null, true);
-      }else if(controlMode==='attackmove'){
-        issueFormationOrder(sel, p.x, p.y, 'attackMove', null, null, true);
       }else{
+        controlMode='move';placementMode=null;
         issueFormationOrder(sel, p.x, p.y, 'move', null, null, true);
       }
     }
@@ -1971,7 +2026,7 @@
     const fv=facingVector(target.facingDir);
     const dx=att.x-target.x,dy=att.y-target.y,len=Math.hypot(dx,dy)||1;
     const facingDot=(dx*fv.x+dy*fv.y)/len;
-    if(target.armor==='Heavy' && facingDot<-.25){
+    if((target.armor==='Heavy'||isChampionArmor(target.armor)) && facingDot<-.25){
       defense=Math.max(0,defense-.18);
       multiplier*=1.20;
       label=label||'FLANK';
@@ -2006,7 +2061,7 @@
     else if(facingDot > 0.20) chance = 0.34;
     else if(facingDot > -0.15) chance = 0.22;
 
-    if(target.armor === 'Heavy') chance += 0.06;
+    if(target.armor === 'Heavy'||isChampionArmor(target.armor)) chance += 0.06;
     if(target.carryingStandard) chance += 0.04;
     chance = clamp(chance, 0.12, 0.62);
 
@@ -2184,7 +2239,7 @@
     box.alive=false;
     const house=getHouse(controllerId);
     for(const item of box.loot) house.stockpile[item] = (house.stockpile[item]||0) + 1;
-    logWorld(`<span style="color:${house.color}">${house.name}</span> breaks a loot box and finds <b>${box.loot.join(', ')}</b>.`,{...box,controller:controllerId});
+    logWorld(`<span style="color:${house.color}">${house.name}</span> breaks a loot box and finds <b>${box.loot.map(displayLootName).join(', ')}</b>.`,{...box,controller:controllerId});
     if(controllerId==='player') renderStockSummary();
     refreshEquipButtons();
     partAround(box.x, box.y, controllerId);
@@ -2206,7 +2261,7 @@
       else if(ITEM_SET.has(item))target.item='None';
       else if(item==='Horse')target.mount=false;
       applyLoadout(target);
-      logWorld(`<span style="color:#d8bd66">Dropped gear:</span> ${item} falls to the ground.`,target);
+      logWorld(`<span style="color:#d8bd66">Dropped gear:</span> ${displayLootName(item)} falls to the ground.`,target);
     }
   }
 
@@ -2375,6 +2430,11 @@
   }
 
   function autoEquipAI(house){
+    for(const s of game.students.filter(s=>s.controller===house.id&&s.state!=='knocked')){
+      const key='Champion_'+s.origHouse;if((house.stockpile[key]||0)>0&&!isChampionArmor(s.armor)){
+        house.stockpile[key]--;if(s.armor!=='None')house.stockpile[s.armor]=(house.stockpile[s.armor]||0)+1;s.armor=key;applyLoadout(s);
+      }
+    }
     const active = game.students.filter(s=>s.controller===house.id && s.state!=='knocked');
     const stock = house.stockpile;
     for(const s of active){
@@ -2805,7 +2865,7 @@
         house.stockpile[g.item] = (house.stockpile[g.item]||0) + 1;
         if(s.controller==='player') renderStockSummary();
         refreshEquipButtons();
-        logWorld(`<span style="color:${house.color}">${house.name}</span> recovers <b>${g.item}</b>.`,s);
+        logWorld(`<span style="color:${house.color}">${house.name}</span> recovers <b>${displayLootName(g.item)}</b>.`,s);
         return true;
       }
     }
@@ -2932,9 +2992,10 @@
     const destination=resolveDestination(targetPoint.x,targetPoint.y,s.radius||13);
     s.tx = destination.x;
     s.ty = destination.y;
-    s.path = pathfind(s.x,s.y,s.tx,s.ty,null,s);
+    s.path = [];
     s.pathIndex = 0;
     s.lastPathAt = game.time;
+    queuePath(s);
   }
 
   function getEngagementMeleePoint(s, target){
@@ -3019,7 +3080,7 @@
     let vx=dirX*speed+sep.x,vy=dirY*speed+sep.y;
     if(length>12){
       for(const other of game.students){
-        if(other===s||other.state==='knocked'||other.controller!==s.controller)continue;
+        if(other===s||other.state==='knocked'||(other.controller!==s.controller&&!(s.order.manual&&s.order.type==='move')))continue;
         const rx=other.x-s.x,ry=other.y-s.y,distance=Math.hypot(rx,ry);
         if(distance<1||distance>75)continue;
         const forward=(rx*dirX+ry*dirY)/distance;
@@ -3059,7 +3120,7 @@
     if(s.stuckFor>1.2 && game.time-(s.lastStuckRepath||0)>1.2){
       const avoid=new Set();
       for(const other of game.students)if(other!==s&&other.state!=='knocked'&&dist(s.x,s.y,other.x,other.y)<180)avoid.add(keyXY(Math.floor(other.x/TILE),Math.floor(other.y/TILE)));
-      s.path=pathfind(s.x,s.y,s.tx,s.ty,avoid,s);s.pathIndex=0;s.lastPathAt=game.time;s.lastStuckRepath=game.time;s.stuckFor=0;
+      s.path=[];s.pathIndex=0;queuePath(s,avoid);s.lastPathAt=game.time;s.lastStuckRepath=game.time;s.stuckFor=0;
     }
   }
 
@@ -3151,6 +3212,7 @@
     updateAttackActions(dt);
     updateProjectiles(dt);
     updateFlagCaptures(dt);
+    processPendingPaths();
 
     for(const s of game.students){ s.lastPosX = s.x; s.lastPosY = s.y; }
 
@@ -3164,7 +3226,7 @@
 
       if(!s.carryingStandard){
         handleGroundLootPickup(s);
-        handleBannerPickup(s);
+        if(!(s.order.manual&&s.order.type==='move'))handleBannerPickup(s);
       }
 
       if(s.carryingStandard){
@@ -3228,7 +3290,7 @@
         if(s.order.type==='attack'){
           s.order={...s.order,type:'attackMove',targetId:null,targetType:null};
           s.tx=s.order.x;s.ty=s.order.y;
-          s.path=pathfind(s.x,s.y,s.tx,s.ty,null,s);s.pathIndex=0;
+          s.path=[];s.pathIndex=0;queuePath(s);
         }
       }
 
@@ -3310,7 +3372,7 @@
         }
       }
 
-      if(s.carryingStandard){
+      if(s.carryingStandard&&(s.order.type==='returnBanner'||!s.order.manual)){
         const home=getHouse(s.controller).castle;
         targetPoint = {x:home.x,y:home.y};
       }
@@ -4049,8 +4111,9 @@
   }
 
   const api={
+    attackNearestSelected,
     VISION_TILE,VISION_COLS,VISION_ROWS,terrainAt,terrainMoveFactor,lineOfSight,canSee,isTerrainVisible,isVisibleTo,isExplored,refreshVisibility,canSeePoint,canSeeStudent,
-    game,canvas,ctx,DPR,TILE,COLS,ROWS,WORLD_W,WORLD_H,HOUSE_DEFS,LOOT_KEYS,FLAG_CAPTURE_DURATION,
+    game,canvas,ctx,DPR,TILE,COLS,ROWS,WORLD_W,WORLD_H,HOUSE_DEFS,LOOT_KEYS,CHAMPION_KEYS,isChampionArmor,FLAG_CAPTURE_DURATION,
     getHouse,getStandard,getPlayerHouse,objectiveBuffsFor,getSelectedUnits,
     selectUnits,selectSquad,saveSquad,resetSquad,getSquadUnits,getSquadName,getRole,
     issueFormationOrder,setOrder,issueBuildOrder,applyLoadout,refreshUI,resize,
@@ -4078,6 +4141,9 @@
   };
   window.Academy=api;
   window.AcademyTest={updateObjectives,combatMatchup,handleBannerPickup,captureBanner,secureReturnedBanner,transferHouse,checkVictory,attackTarget,performBowShot,attackBox,attackBarricade,tryShieldBlock,knockOut,respawnStudent,autoEquipAI,terrainClear,segmentClear,resolveDestination,pathfind,rebuildWalkableGrid,startFlagCapture,updateFlagCaptures,interruptFlagCapture,applyStudentDamage,beginAttack,resolveAttack,updateAttackActions,updateProjectiles,cancelAttackAction,update,init};
+
+  window.AcademyTest.spawnLootBoxAt=spawnLootBoxAt;
+  window.AcademyTest.getPendingPathCount=()=>pendingPaths.size;
 
   init();
   requestAnimationFrame(frame);

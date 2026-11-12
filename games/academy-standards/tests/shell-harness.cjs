@@ -125,7 +125,7 @@ function createApp() {
     addEventListener:addWindowListener,localStorage:{getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,String(v)),removeItem:k=>memory.delete(k)},
     Blob,URL:{createObjectURL:()=>'',revokeObjectURL(){}},AcademyDraw(){}};
   host.window=host;host.globalThis=host;vm.createContext(host);
-  for(const name of ['equipment.js','armory.js','strategy.js','shell.js','engine.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'..',name),'utf8'),host,{filename:name});
+  for(const name of ['champions.js','equipment.js','armory.js','strategy.js','shell.js','engine.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'..',name),'utf8'),host,{filename:name});
   dispatch('load',doc.body);
   return {host,doc,$:doc.getElementById,a:host.Academy,s:host.AcademyShell,g:host.Academy.game,
     key:(key,extra={})=>dispatch('keydown',doc.activeElement,{key,code:key===' '?'Space':key,...extra}),dispatch};

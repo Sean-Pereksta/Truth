@@ -6,7 +6,7 @@
   const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
   const ranged=s=>s.weapon==='Bow'||s.weapon==='Longbow';
   const health=s=>s.hp/Math.max(1,s.maxHp);
-  const power=s=>(s.weapon==='None'?.3:1)*(s.weaponLevel>=2?1.25:1)*(s.armor==='Heavy'?1.2:1)*(s.mount?1.2:1)*(.35+.65*health(s));
+  const power=s=>(s.weapon==='None'?.3:1)*(s.weaponLevel>=2?1.25:1)*(String(s.armor).startsWith('Champion_')?1.7:s.armor==='Heavy'?1.2:1)*(s.mount?1.2:1)*(.35+.65*health(s));
   function memoryFor(house){
     if(!memories.has(house))memories.set(house,{seen:new Map(),objectives:new Map(),plan:null,retreat:new Map(),regroupCooldown:new Map(),mode:'prepare'});
     return memories.get(house);
@@ -41,7 +41,7 @@
       if(t.item==='Medkit')score-=hard?35:12;
       if(s.weapon==='Spear'&&t.mount)score-=48;
       if(s.mount&&ranged(t))score-=45;
-      if(ranged(s)&&t.armor!=='Heavy')score-=15;
+      if(ranged(s)&&t.armor!=='Heavy'&&!String(t.armor).startsWith('Champion_'))score-=15;
       return score;
     };
     const fight=(units,targets)=>{

@@ -9,14 +9,15 @@
   support:{weapon:['Spear','Sword','Bow','Longbow'],armor:['Light','Heavy'],item:['Medkit','EngineerKit','TrapKit','WarHorn','Boots','Shield']},
   cavalry:{weapon:['Spear','Sword'],armor:['Light','Heavy'],item:['WarHorn','Boots','Shield','FireOil']}
  };
- const slotFor=key=>weapons.includes(key)?'weapon':armors.includes(key)?'armor':items.includes(key)?'item':key==='Horse'?'mount':null;
+ const champion=key=>typeof key==='string'&&/^Champion_(player|mars|minerva|diana|apollo|juno|neptune|vulcan|venus|saturn)$/.test(key);
+ const slotFor=key=>weapons.includes(key)?'weapon':armors.includes(key)||champion(key)?'armor':items.includes(key)?'item':key==='Horse'?'mount':null;
  const roleOf=s=>['Medkit','EngineerKit','TrapKit','WarHorn'].includes(s.item)?'support':['Bow','Longbow'].includes(s.weapon)?'ranged':s.mount?'cavalry':'vanguard';
  function plan(units,inventory,{mode='auto',gear=null}={}){
   const stock={...inventory},changes=[],missing=[];
   const ready=units.filter(s=>s.controller==='player'&&s.state!=='knocked');
   const copies=ready.map(s=>({...s}));
   const assign=(s,key)=>{
-   const slot=slotFor(key);if(!slot||!(stock[key]>0)||s[slot]===key||(slot==='mount'&&s.mount))return false;
+   const slot=slotFor(key);if(!slot||!(stock[key]>0)||s[slot]===key||(slot==='mount'&&s.mount)||(champion(key)&&key!=='Champion_'+s.origHouse))return false;
    const before=slot==='mount'?(s.mount?'Horse':'None'):s[slot];
    stock[key]--;if(before&&before!=='None')stock[before]=(stock[before]||0)+1;
    s[slot]=slot==='mount'?true:key;if(slot==='weapon')s.weaponLevel=1;
@@ -26,6 +27,7 @@
    const slot=slotFor(gear);
    if(slot)for(const s of [...copies].sort((a,b)=>(a[slot]==='None'?-1:0)-(b[slot]==='None'?-1:0))){
     if(s[slot]===gear||(slot==='mount'&&s.mount))continue;
+    if(champion(gear)&&gear!=='Champion_'+s.origHouse){missing.push({studentId:s.id,slot,choices:[gear],incompatible:true});continue;}
     if(!assign(s,gear))missing.push({studentId:s.id,slot,choices:[gear]});
    }
   }else{
@@ -36,6 +38,7 @@
     const s=copies[i],role=roles[i],preset=presets[role];if(!preset)continue;
     for(const slot of ['weapon','armor','item']){
      let choices=[...preset[slot]],current=s[slot]||'None';
+     if(slot==='armor'){if(champion(current))continue;choices.unshift('Champion_'+s.origHouse);}
      if(mode==='auto')choices.push(...(slot==='weapon'?weapons:slot==='item'?items:armors).filter(k=>!choices.includes(k)));
      if(mode==='auto'&&slot==='weapon'&&current!=='None'){
       if(s.weaponLevel>1)continue;

@@ -18,14 +18,15 @@ home. Castles display their current ruler and clearly mark captured ownership.
 CONTROLS
 Left click or drag      Select students
 Shift + select         Add students to your selection
-Right click            Move / attack / collect / capture, depending on the target
+Right click ground     Disengage immediately and move; cancel fighting or capture
+Right click target     Attack / collect / capture, depending on the target
 1                      All students
 2 / 3 / 4              Vanguard / Ranged / Support
 Ctrl + 2 / 3 / 4       Save the current selection as a custom squad
 F                      Follow your selected party
 Arrow keys             Pan the map, including during tactical pause
 Space                  Pause and plan / resume
-A                      Attack move; then right click a destination
+A                      Immediately attack the nearest visible enemy
 D                      Defend; then right click a position
 E                      Escort a selected carrier with selected guards
 R                      Recall the selection to your castle
@@ -47,6 +48,37 @@ are reported. Automatic equipping upgrades available gear, uses spare mounts,
 and keeps specialist jobs and forged weapons. Explicit weapon changes reset
 the new weapon to forge level one. Recovering students are excluded.
 The party heading opens individual students and custom squad assignment.
+Individual gear cards show Weapon, Armor, Utility or Mount, the item's effects,
+and supply count. Select an item and use the Equip item action beside the
+supply list; it never requires scrolling back to a different part of the menu.
+
+RESPONSIVE COMMANDS
+A and the Attack button immediately order every selected student to attack the
+nearest enemy they can see. Holding A does not continually restart attacks.
+Right-clicking empty ground cancels attack windups, pursuit and flag holds and
+moves the party there, even while enemies attack. Troops avoid getting pinned
+against enemy bodies. Direct movement takes priority over automatic fighting
+until the destination is reached. Orders can be given during tactical pause;
+the latest command takes effect on resume. Large parties begin moving while
+blocked routes are planned in small batches, instead of waiting for every
+route to finish before accepting the command.
+
+ARMOR AND HOUSE CHAMPIONS
+Painted armor overlays make ordinary Light and Heavy armor visibly different.
+Every original house has a dedicated generated champion sprite sheet in
+champions/, with idle, walking and attack frames from front and back views.
+Champion armor appears only in rare crates (7%) and great central caches
+(about 18%). Ordinary crates never contain it. Each of the ten relics belongs
+to a specific original house and only fits that house's students, including
+a recruited rival. The Champion relics equipment tab names the house and
+shows the artwork, stats and availability. Best gear automatically equips a
+matching relic and role presets preserve champion armor.
+A relic grants +80 maximum health, 36% armor protection and 18% more damage,
+with a small four-point movement penalty. Heavy armor grants +28 health and
+22% protection with an eight-point movement penalty; Light grants 14 speed.
+Champion students retain their chosen weapon, utility and mount. Ranged,
+medic and mounted animation remains functional under the champion armor.
+Armor and champion badges are shown in the party list and unit information.
 
 FOG AND PAINTED TERRAIN
 Students and controlled castles share sight. Unknown ground is hidden; explored
