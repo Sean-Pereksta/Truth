@@ -250,6 +250,8 @@ export class Renderer{
   resize(w,h,dpr=1){this.w=w;this.h=h;this.dpr=Math.min(2,dpr);this.canvas.width=Math.round(w*this.dpr);this.canvas.height=Math.round(h*this.dpr);this.canvas.style.width=w+'px';this.canvas.style.height=h+'px';}
   prepare(g){
     this.cachedGame=g;this.left=-g.H*HW-80;this.top=-90;this.mapW=(g.W+g.H)*HW+160;this.mapH=(g.W+g.H)*HH+210;
+    this.bridgeArchitectureCache=new Map();this.bridgeArchitectureGame=g;this.bridgeArchitectureBytes=0;
+    this.sceneryChunkCache=new Map();this.sceneryChunkBytes=0;
     this.terrainChunkCache.clear();this.decor=[];this.decorChunks=new Map();this.miniBase=null;this.miniTerrainPixels=makeCanvas(g.W,g.H);const miniCtx=this.miniTerrainPixels.getContext('2d'),miniData=miniCtx.createImageData(g.W,g.H);
     for(const t of g.tiles){const r=hash(t.x,t.y),i=(t.y*g.W+t.x)*4,color=t.feature==='bridge'?[218,197,142]:t.feature==='ford'?[131,174,169]:t.feature==='road'?[180,159,108]:t.feature==='pass'?[177,168,136]:t.terrain==='mountain'?[102,105,101]:t.terrain==='water'?[35,100,116]:t.terrain==='forest'?[48,71,37]:t.terrain==='hill'?[114,105,75]:[91,115,52];miniData.data.set([...color,255],i);if(t.feature||t.terrain==='water')continue;
       if(t.terrain==='mountain'){
@@ -272,6 +274,7 @@ export class Renderer{
     this.decor=this.decor.filter(z=>!g.buildings.some(b=>b.hp>0&&(z.x-b.x)**2+(z.y-b.y)**2<(b.type==='keep'?5:1.25))&&!(g.objectives||[]).some(o=>(z.x-o.x)**2+(z.y-o.y)**2<1.7));
     this.lastBuildingCount=g.buildings.length;this.lastBuildingId=g.buildings.at(-1)?.id||0;
     this.decorChunks=new Map();for(const z of this.decor){const key=Math.floor(z.x/16)+','+Math.floor(z.y/16);if(!this.decorChunks.has(key))this.decorChunks.set(key,[]);this.decorChunks.get(key).push(z);}
+    this.sceneryChunkCache?.clear();this.sceneryChunkBytes=0;
     this.decorOverviewDirty=true;
   }
   buildOverview(g){
@@ -290,6 +293,25 @@ export class Renderer{
     ch={image:a,left,top,width:w,height:h};this.terrainChunkCache.set(key,ch);while(this.terrainChunkCache.size>this.maxTerrainChunks)this.terrainChunkCache.delete(this.terrainChunkCache.keys().next().value);return ch;
   }
   visibleWorldRange(g,bounds){const points=[[bounds.left,bounds.top],[bounds.right,bounds.top],[bounds.right,bounds.bottom],[bounds.left,bounds.bottom]].map(([x,y])=>({x:(x/HW+y/HH)/2,y:(y/HH-x/HW)/2}));return{x0:clamp(Math.floor(Math.min(...points.map(p=>p.x)))-1,0,g.W-1),x1:clamp(Math.ceil(Math.max(...points.map(p=>p.x)))+1,0,g.W-1),y0:clamp(Math.floor(Math.min(...points.map(p=>p.y)))-1,0,g.H-1),y1:clamp(Math.ceil(Math.max(...points.map(p=>p.y)))+1,0,g.H-1)};}
+  drawStrategicScenery(c,range,bounds){
+    // Strategic views keep the same illustrated trees and rocks, but composite
+    // their static chunks once. Armies remain a live layer above the scenery.
+    for(let cy=Math.floor(range.y0/16);cy<=Math.floor(range.y1/16);cy++)for(let cx=Math.floor(range.x0/16);cx<=Math.floor(range.x1/16);cx++){
+      const x0=cx*16,y0=cy*16,x1=x0+16,y1=y0+16;if((x1-y0)*HW+60<bounds.left||(x0-y1)*HW-60>bounds.right||(x1+y1)*HH+20<bounds.top||(x0+y0)*HH-110>bounds.bottom)continue;
+      const key=cx+','+cy;let chunk=this.sceneryChunkCache.get(key);
+      if(chunk===undefined){
+        const decor=this.decorChunks.get(key);if(!decor?.length){this.sceneryChunkCache.set(key,null);continue;}
+        let left=Infinity,top=Infinity,right=-Infinity,bottom=-Infinity;const items=[];
+        for(const z of decor){const p=iso(z.x,z.y),sprite=this.treeSprite(z.kind,z.variant),s=z.scale*(z.kind==='bush'?.38:1);if(!sprite)continue;const x=p.x-48*s,y=p.y-100*s,w=96*s,h=112*s;items.push({sprite,x,y,w,h,depth:p.y});left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x+w);bottom=Math.max(bottom,y+h);}
+        if(!items.length){this.sceneryChunkCache.set(key,null);continue;}
+        left=Math.floor(left);top=Math.floor(top);const width=Math.ceil(right)-left,height=Math.ceil(bottom)-top,image=makeCanvas(width,height),ctx=image.getContext('2d');ctx.translate(-left,-top);
+        items.sort((a,b)=>a.depth-b.depth);for(const item of items)ctx.drawImage(item.sprite,item.x,item.y,item.w,item.h);
+        chunk={image,left,top,width,height,bytes:width*height*4};this.sceneryChunkCache.set(key,chunk);this.sceneryChunkBytes+=chunk.bytes;
+        while(this.sceneryChunkBytes>64*1024*1024&&this.sceneryChunkCache.size>1){const oldest=this.sceneryChunkCache.keys().next().value,entry=this.sceneryChunkCache.get(oldest);this.sceneryChunkBytes-=entry?.bytes||0;this.sceneryChunkCache.delete(oldest);}
+      }else if(chunk){this.sceneryChunkCache.delete(key);this.sceneryChunkCache.set(key,chunk);}
+      if(chunk)c.drawImage(chunk.image,chunk.left,chunk.top,chunk.width,chunk.height);
+    }
+  }
   drawGround(c,g,v,bounds,range){
     if(v.zoom<.75)c.drawImage(this.terrainOverview,this.left,this.top,this.mapW,this.mapH);
     else for(let cy=Math.floor(range.y0/16);cy<=Math.floor(range.y1/16);cy++)for(let cx=Math.floor(range.x0/16);cx<=Math.floor(range.x1/16);cx++){
@@ -299,9 +321,30 @@ export class Renderer{
     c.save();c.globalAlpha=.16;c.imageSmoothingEnabled=false;c.transform(HW,HH,-HW,HH,0,0);c.drawImage(this.ownerPixels,0,0);c.restore();
     const width=v.zoom<.45?1.2/v.zoom:1.35;for(const e of this.territoryEdges){if(Math.max(e.x1,e.x2)<bounds.left||Math.min(e.x1,e.x2)>bounds.right||Math.max(e.y1,e.y2)<bounds.top||Math.min(e.y1,e.y2)>bounds.bottom)continue;line(c,e.x1,e.y1,e.x2,e.y2,e.color,width);}
     if(v.zoom<.42){if(this.decorOverviewDirty)this.rebuildDecorOverview();c.drawImage(this.decorOverview,this.left,this.top,this.mapW,this.mapH);}
+    else if(v.zoom<.75){if(v.w/v.zoom>4500||v.h/v.zoom>2800){if(this.decorOverviewDirty)this.rebuildDecorOverview();c.drawImage(this.decorOverview,this.left,this.top,this.mapW,this.mapH);}else this.drawStrategicScenery(c,range,bounds);}
     this.drawBridgeArchitecture(c,g,range);
   }
   drawBridgeArchitecture(c,g,range){
+    // Bridge masonry is static. Rasterize each occupied chunk once instead of
+    // scanning every visible tile and rebuilding hundreds of paths every frame.
+    if(!this.bridgeArchitectureCache||this.bridgeArchitectureGame!==g){this.bridgeArchitectureCache=new Map();this.bridgeArchitectureGame=g;this.bridgeArchitectureBytes=0;}
+    for(let cy=Math.floor(range.y0/16);cy<=Math.floor(range.y1/16);cy++)for(let cx=Math.floor(range.x0/16);cx<=Math.floor(range.x1/16);cx++){
+      const key=cx+','+cy;let chunk=this.bridgeArchitectureCache.get(key);
+      if(chunk===undefined){
+        const x0=cx*16,y0=cy*16,x1=Math.min(g.W,x0+16),y1=Math.min(g.H,y0+16);let occupied=false,left=Infinity,top=Infinity,right=-Infinity,bottom=-Infinity;
+        for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++)if(g.tiles[y*g.W+x].feature==='bridge'){const p=iso(x+.5,y+.5);occupied=true;left=Math.min(left,p.x-HW);right=Math.max(right,p.x+HW);top=Math.min(top,p.y-HH);bottom=Math.max(bottom,p.y+HH);}
+        if(!occupied){this.bridgeArchitectureCache.set(key,null);continue;}
+        left-=12;top-=12;const width=right-left+24,height=bottom-top+32;
+        const image=makeCanvas(width*2,height*2),ctx=image.getContext('2d');ctx.scale(2,2);ctx.translate(-left,-top);
+        this.paintBridgeArchitecture(ctx,g,{x0,y0,x1:x1-1,y1:y1-1});
+        chunk={image,left,top,width,height,bytes:image.width*image.height*4};this.bridgeArchitectureCache.set(key,chunk);this.bridgeArchitectureBytes+=chunk.bytes;
+        while(this.bridgeArchitectureBytes>32*1024*1024&&this.bridgeArchitectureCache.size>1){const oldest=this.bridgeArchitectureCache.keys().next().value,entry=this.bridgeArchitectureCache.get(oldest);this.bridgeArchitectureBytes-=entry?.bytes||0;this.bridgeArchitectureCache.delete(oldest);}
+      }
+      else if(chunk){this.bridgeArchitectureCache.delete(key);this.bridgeArchitectureCache.set(key,chunk);}
+      if(chunk)c.drawImage(chunk.image,chunk.left,chunk.top,chunk.width,chunk.height);
+    }
+  }
+  paintBridgeArchitecture(c,g,range){
     // Sidewalls extend down outside the deck. The walking surface stays on the same plane as troop feet.
     const bridgeAt=(x,y)=>x>=0&&y>=0&&x<g.W&&y<g.H&&g.tiles[y*g.W+x].feature==='bridge';
     for(let y=range.y0;y<=range.y1;y++)for(let x=range.x0;x<=range.x1;x++){
@@ -590,7 +633,7 @@ export class Renderer{
     if(ui.orderMarker){const m=ui.orderMarker,age=g.time-m.time;if(age<1.7&&age>=0){const p=iso(m.x,m.y),a=1-age/1.7;c.globalAlpha=a;c.beginPath();c.ellipse(p.x,p.y,13+age*9,6+age*4,0,0,TAU);c.strokeStyle=m.mode==='move'?'#c2e0ce':'#edca78';c.lineWidth=2;c.stroke();line(c,p.x-4,p.y,p.x+4,p.y,'#ead89c',1.5);line(c,p.x,p.y-4,p.x,p.y+4,'#ead89c',1.5);c.globalAlpha=1;}}
     const items=[];
     let decorIndex=0;
-    if(v.zoom>=.42)for(let cy=Math.floor(range.y0/16);cy<=Math.floor(range.y1/16);cy++)for(let cx=Math.floor(range.x0/16);cx<=Math.floor(range.x1/16);cx++)for(const z of this.decorChunks.get(cx+','+cy)||[]){const index=decorIndex++;if(lowDetail&&v.zoom<.8&&index%2)continue;const p=iso(z.x,z.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:0,obj:z,p});}
+    if(v.zoom>=.75)for(let cy=Math.floor(range.y0/16);cy<=Math.floor(range.y1/16);cy++)for(let cx=Math.floor(range.x0/16);cx<=Math.floor(range.x1/16);cx++)for(const z of this.decorChunks.get(cx+','+cy)||[]){const index=decorIndex++;if(lowDetail&&v.zoom<.8&&index%2)continue;const p=iso(z.x,z.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:0,obj:z,p});}
     for(const b of g.buildings){if(b.hp<=0)continue;const p=iso(b.x,b.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:1,obj:b});}
     for(const u of g.units){if(u.hp<=0)continue;const p=iso(u.x,u.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:2,obj:u});}
     for(const objective of g.objectives||[]){const p=iso(objective.x,objective.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:3,obj:objective});}

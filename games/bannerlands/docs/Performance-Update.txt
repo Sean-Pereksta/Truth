@@ -1,0 +1,41 @@
+PERFORMANCE UPDATE
+
+Large-army movement and map views do less repeated work, while roads, terrain
+costs, five-lane bridges and combat rules remain in effect.
+
+ROUTE PLANNING AND MOVEMENT
+Armies share movement fields. Fields expand only as far as needed and resume
+over later simulation updates instead of calculating dozens of complete maps
+in one frame. A newly ordered group may briefly wait for its route to be ready.
+It never substitutes a straight march through blocked water or mountains.
+
+Open-ground collision checks use cached obstacle data. Shorelines, mountain
+corners, charges, knockback and bridge edges retain swept collision checks.
+
+CAPTURE AND DRAWING
+Territory capture compares factions only on occupied or decaying tiles. Tile
+processing order, rewards, decay, alliance rules and seeded effects are preserved.
+
+Bridge masonry and painted scenery at strategic zoom are cached in bounded
+buffers. Troops stay live and use the same visible bridge deck. Close battle
+views retain depth-sorted scenery. Cached scenery and bridge buffers have
+64 MB and 32 MB limits respectively.
+
+The covered battlefield stops repainting continuously behind the menu. Unchanged
+house details and roster markup are reused. The frame loop limits catch-up work
+so a slow update can yield to drawing and input; under sustained overload the
+campaign can advance more slowly than the requested speed, with fixed combat
+steps preserved.
+
+PAINTED HOUSE ICONS
+All sixteen house-selection buttons use hand-painted heraldic shield emblems.
+The icons share one image atlas and require no per-frame drawing or animation.
+
+CHECKING PERFORMANCE
+Run npm run check and npm test for syntax and gameplay/performance regressions.
+Run npm run benchmark for repeatable epic/continent army scenarios.
+Optional native raster checks use @napi-rs/canvas: npm run test:render and
+npm run benchmark:render. Native raster timings are not browser FPS.
+
+Build the updated offline edition with:
+node source/build-standalone.mjs <output-directory>

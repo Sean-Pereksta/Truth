@@ -1,0 +1,16 @@
+Painted house emblem atlas - performance update
+
+File: house-emblems.png. Regular four-column, four-row grid, opaque dark teal.
+Reading order: Stark wolf; Lannister lion; Targaryen dragon; Baratheon stag;
+Tyrell rose; Martell sun and spear; Greyjoy kraken; Arryn falcon and moon;
+Bolton symbolic figure; Frey twin towers and bridge; Mormont bear; Tully trout;
+Reed frog; Hightower beacon; Tarly bow; Free Folk bones.
+
+Generated for this game with the built-in image generation tool. Prompt:
+sixteen hand-painted medieval heraldic shield emblems, raised enamel and metal,
+consistent brass rims, soft upper-left light, readable at small menu sizes,
+exact 4-by-4 grid, no labels. A follow-up edit cleaned the edges against an
+opaque dark teal background while preserving the emblems and cell layout.
+
+The menu uses CSS background positions and one shared atlas; no per-frame
+painting, recoloring, individual icon requests, or animation is required.

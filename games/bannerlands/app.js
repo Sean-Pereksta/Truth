@@ -3,6 +3,8 @@ import {Renderer,worldToScreen,screenToWorld} from './render.js';
 import {LAND_MAPS,isPassableTile,tileTravelCost} from './lands.js';
 
 const $=id=>document.getElementById(id),canvas=$('battleCanvas'),field=$('battlefield');
+const hudMarkup=new WeakMap();
+function setHudHTML(element,markup){if(hudMarkup.get(element)!==markup){element.innerHTML=markup;hudMarkup.set(element,markup);}}
 const renderer=new Renderer(canvas),view={x:0,y:0,zoom:1,w:800,h:600,dpr:Math.min(window.devicePixelRatio||1,2)};
 const ui={selected:new Set(),selectedBuildings:new Set(),rallyMode:false,teamOrderMode:null,hover:null,drag:null,buildMode:null,orderMarker:null,showGrid:true,quality:'auto',formation:'line'};
 let game=new Game({enemies:3,scale:'epic',seed:628410}),started=false,menuOpen=true,chosenHouse=0,orderMode='attack',speed=1;
@@ -18,6 +20,7 @@ const MENU_ACTIONS={
  council:['#housePowerButton','[data-upgrade="weapons"]','[data-upgrade="armor"]','[data-upgrade="economy"]','#compareHousesCouncilButton','#townHallUpgradeButton']
 };
 const icon=name=>`<svg aria-hidden="true"><use href="#i-${name}"/></svg>`;
+const houseEmblem=index=>`<span class="sigil house-sigil-art" aria-hidden="true" style="background-position:${index%4*100/3}% ${Math.floor(index/4)*100/3}%"></span>`;
 const short=name=>name.replace('House ','');
 const num=n=>Math.floor(n||0).toLocaleString('en-US');
 function compactGold(value){return value<1000?num(value):new Intl.NumberFormat('en-US',{notation:'compact',maximumFractionDigits:1}).format(value);}
@@ -56,7 +59,7 @@ function chooseHouse(index){
  $('chosenPower').innerHTML=`<b>${escapeHTML(power.name)}</b><span>${escapeHTML(power.description)}</span><small>${power.cost?`${power.cost} gold · `:''}${power.cooldown}s cooldown · Activate with E</small>`;
  $('compareHousesButton').textContent=`Compare all ${HOUSES.length} houses →`;$('compareHousesCouncilButton').textContent=`Compare all ${HOUSES.length} houses →`;$('houseCountPromise').textContent=`${HOUSES.length} houses. ${HOUSES.length} ways to conquer.`;labelMenuHotkeys();paintHousePreview();
 }
-$('houseChoices').innerHTML=HOUSES.map((h,i)=>`<button class="house-choice${i===0?' active':''}" data-house="${i}" title="${h.motto}" style="--color:${h.color}"><span class="sigil" style="color:${h.color}">${icon(h.sigil)}</span>${short(h.name)}</button>`).join('');
+$('houseChoices').innerHTML=HOUSES.map((h,i)=>`<button class="house-choice${i===0?' active':''}" data-house="${i}" title="${h.motto}" style="--color:${h.color}">${houseEmblem(i)}${short(h.name)}</button>`).join('');
 $('houseChoices').addEventListener('click',e=>{const b=e.target.closest('[data-house]');if(b)chooseHouse(+b.dataset.house);});chooseHouse(0);
 const difficultyDescriptions={relaxed:'Easy · Deliberate expansion gives you time to gather and plan.',standard:'Normal · Balanced expansion, defenses, and coordinated attacks.',veteran:'Hard · Rivals coordinate attacks and react quickly to exposed frontiers.',warlord:'Warlord · Quick strategic decisions, adaptive reserves and coordinated attacks across multiple fronts.'};
 function updateDifficultyDescription(){$('difficultyDescription').textContent=difficultyDescriptions[$('difficultySelect').value]||difficultyDescriptions.standard;}
@@ -334,7 +337,7 @@ function updateCampaignHud(){
 
 }
 function updateHud(){
- const s=game.teams[0];$('gold').textContent=num(s.gold);$('income').textContent=`+${s.income.toFixed(1)} / sec`;$('army').innerHTML=`${num(s.count)} <i>/ ${s.cap}</i>`;$('land').innerHTML=`${num(s.tiles)} <i>tiles</i>`;$('landPercent').textContent=`${percent(s)}% OF THE REALM`;
+ const s=game.teams[0];$('gold').textContent=num(s.gold);$('income').textContent=`+${s.income.toFixed(1)} / sec`;setHudHTML($('army'),`${num(s.count)} <i>/ ${s.cap}</i>`);setHudHTML($('land'),`${num(s.tiles)} <i>tiles</i>`);$('landPercent').textContent=`${percent(s)}% OF THE REALM`;
  $('clock').textContent=`${Math.floor(game.time/60).toString().padStart(2,'0')}:${Math.floor(game.time%60).toString().padStart(2,'0')}`;
  for(const id of ui.selected){const u=game.byId.get(id);if(!u||u.hp<=0)ui.selected.delete(id);}if(allSelected)for(const u of game.units)if(u.team===0&&u.hp>0)ui.selected.add(u.id);
  for(const id of ui.selectedBuildings){const b=game.byId.get(id);if(!b||b.hp<=0||b.team!==0||!BUILD_DEFS[b.type])ui.selectedBuildings.delete(id);}if(allBuildingsSelected)for(const b of game.buildings)if(b.team===0&&b.hp>0)ui.selectedBuildings.add(b.id);
@@ -370,21 +373,21 @@ function updateHud(){
  const powerClasses={stag:['cavalry'],sun:['archer'],flayed:['infantry'],bear:['infantry','hero'],huntsman:['infantry']},troopPowerHouses=['wolf','dragon','stag','sun','kraken','flayed','bear','frog','huntsman'];
  const hasSelectedPower=troops.length>0&&troopPowerHouses.includes(s.sigil)&&(!powerClasses[s.sigil]||troops.some(u=>powerClasses[s.sigil].includes(game.unitClass(u))));
  const selectedPower=$('selectedPowerButton');selectedPower.hidden=!hasSelectedPower;selectedPower.disabled=$('housePowerButton').disabled;
- selectedPower.innerHTML=`${escapeHTML(status.name||fallback.name)} <kbd>E</kbd>${status.remaining>0?` · ${Math.ceil(status.remaining)}s`:s.gold<(status.cost||0)?' · Need gold':status.ready?' · Ready':''}`;selectedPower.title=status.description||fallback.description;
+ setHudHTML(selectedPower,`${escapeHTML(status.name||fallback.name)} <kbd>E</kbd>${status.remaining>0?` · ${Math.ceil(status.remaining)}s`:s.gold<(status.cost||0)?' · Need gold':status.ready?' · Ready':''}`);selectedPower.title=status.description||fallback.description;
  const passive=[];for(const type of Object.keys(counts)){const d=UNIT_DEFS[type];if(d.impactName)passive.push({label:`${d.impactName} · Automatic`,description:d.impact});}
  if(troops.some(u=>game.unitClass(u)==='cavalry'))passive.push({label:'Charge · Automatic',description:'Conquer or attack with a straight 3-tile run-up. Flank braced spearmen.'});
  if(troops.some(u=>['dread_pike','bridge_warden'].includes(u.type)))passive.push({label:'Spear brace · Hold H',description:'Hold facing an incoming charge to break it. Moving or flanked spearmen cannot brace.'});
  $('selectedPassiveAbilities').textContent=passive.map(p=>p.label).join(' · ');$('selectedPassiveAbilities').title=passive.map(p=>`${p.label}: ${p.description}`).join('\n');$('selectionAbility').hidden=!hasSelectedPower&&!passive.length;
- const specialist=game.houseContent(0);$('housePassives').innerHTML=`<b>${escapeHTML(h.playstyle||h.trait)}</b><div class="specialist-impact"><b>${escapeHTML(UNIT_DEFS[specialist.unit].label)} · ${escapeHTML(specialist.impactName||'House specialist')}</b><p>${escapeHTML(specialist.impact||'')}</p></div><div class="house-trait-label">BONUSES</div><ul>${houseAdvantages(h).map(a=>`<li>${escapeHTML(a)}</li>`).join('')}</ul><div class="house-trait-label weakness-label">WEAKNESSES</div><ul class="house-weaknesses">${houseWeaknesses(h).map(a=>`<li>${escapeHTML(a)}</li>`).join('')}</ul>`;
+ const specialist=game.houseContent(0);setHudHTML($('housePassives'),`<b>${escapeHTML(h.playstyle||h.trait)}</b><div class="specialist-impact"><b>${escapeHTML(UNIT_DEFS[specialist.unit].label)} · ${escapeHTML(specialist.impactName||'House specialist')}</b><p>${escapeHTML(specialist.impact||'')}</p></div><div class="house-trait-label">BONUSES</div><ul>${houseAdvantages(h).map(a=>`<li>${escapeHTML(a)}</li>`).join('')}</ul><div class="house-trait-label weakness-label">WEAKNESSES</div><ul class="house-weaknesses">${houseWeaknesses(h).map(a=>`<li>${escapeHTML(a)}</li>`).join('')}</ul>`);
  updateCampaignHud();
  const alive=game.teams.filter(t=>t.alive);$('housesAlive').textContent=`${alive.length} HOUSES`;
- const total=game.teams.reduce((a,t)=>a+t.tiles,0)||1;$('powerBar').innerHTML=game.teams.filter(t=>t.alive).map(t=>`<span style="background:${t.teamColor||t.color};width:${t.tiles/total*100}%"></span>`).join('');
- $('houseRoster').innerHTML=game.teams.map(t=>{
+ const total=game.teams.reduce((a,t)=>a+t.tiles,0)||1;setHudHTML($('powerBar'),game.teams.filter(t=>t.alive).map(t=>`<span style="background:${t.teamColor||t.color};width:${t.tiles/total*100}%"></span>`).join(''));
+ setHudHTML($('houseRoster'),game.teams.map(t=>{
   const h=HOUSES[t.house]||t,ally=game.mode?.teams&&game.allied(0,t.id),strategy=t.aiPlan?.label||(typeof t.strategy==='string'?t.strategy:t.strategy?.label||t.strategy?.name||''),phase=({muster:'Gathering',advance:'Invading',objective:'Securing flag',regroup:'Regrouping',defend:'Defending',coordinate:'Coordinating',counter:'Counterattack'})[t.aiPlan?.phase]||t.aiState?.phase||t.strategy?.phase||t.phase||(t.id===0?'':'Preparing'),plan=[strategy,phase].filter(Boolean).join(' · '),production=t.aiPlan?.production;
   const productionText=!production?'':production.status==='built'?'Built '+production.label:production.status==='saving'?'Saving for '+production.label:production.status==='blocked'?'Needs building space':production.status==='supply'?'Army supply full':production.status==='threat'?'Recruiting defenders':'Production ready';
   const title=(h.playstyle||h.trait)+'. Bonuses: '+houseAdvantages(h).join(' ')+' Weaknesses: '+houseWeaknesses(h).join(' ')+' Power: '+powerData(h).name+(plan?' · Plan: '+plan:'')+(productionText?' · '+productionText+'. '+(production.reason||''):'');
   return `<div class="roster-row${t.id===0?' you':''}${ally?' ally':''}" title="${escapeHTML(title)}" style="--color:${t.teamColor||t.color};opacity:${t.alive?1:.3}"><span class="roster-dot"></span><b>${short(t.name)}${t.id===0?' · You':ally?' · Ally':''}${plan&&t.id!==0?'<small>'+escapeHTML(plan)+'</small>':''}${t.id!==0&&t.alive&&productionText?'<small class="production-plan" title="'+escapeHTML(production.reason||'')+'">'+escapeHTML(productionText)+'</small>':''}</b><span class="army-total">${t.count}</span><span class="roster-percent">${t.alive?percent(t)+'%':'Fallen'}</span></div>`;
- }).join('');
+ }).join(''));
  $('battleCount').textContent=`${num(game.units.filter(u=>u.hp>0).length)} SOLDIERS IN THE REALM`;
  if(ui.hover){const t=game.tileAt(ui.hover.x,ui.hover.y);$('tileInfo').textContent=t?`${t.owner<0?'UNCLAIMED':short(game.teams[t.owner].name).toUpperCase()} · ${t.x}, ${t.y}`:'THE SHIVERING SEA';$('terrainReadout').textContent=terrainDescription(t);}
  else{$('tileInfo').textContent='SCROLL TO ZOOM';$('terrainReadout').textContent='Hover ground to inspect its terrain';}
@@ -401,14 +404,15 @@ function frame(now){
  ui.lowDetail=ui.quality==='auto'&&fps<46;
  if(!menuOpen&&started){const pan=600*dt/view.zoom,mouse=mousePan(),keyX=(keys.has('arrowright')?1:0)-(keys.has('arrowleft')?1:0),keyY=(keys.has('arrowdown')?1:0)-(keys.has('arrowup')?1:0);view.x+=(keyX||mouse.x)*pan;view.y+=(keyY||mouse.y)*pan;boundCamera();
   if(edgeMouse&&(mouse.x||mouse.y||keyX||keyY)){const r=canvas.getBoundingClientRect();ui.hover=screenToWorld(edgeMouse.clientX-r.left,edgeMouse.clientY-r.top,view);}
-  if(!game.paused&&game.winner===null){accumulator+=dt*speed;let ticks=0;while(accumulator>=1/30&&ticks<6){game.update(1/30);accumulator-=1/30;ticks++;}if(ticks>=6)accumulator=0;}else accumulator=0;
+  if(!game.paused&&game.winner===null){accumulator+=dt*speed;let ticks=0;const deadline=performance.now()+8;while(accumulator>=1/30&&ticks<6){game.update(1/30);accumulator-=1/30;ticks++;if(performance.now()>=deadline)break;}if(ticks>=6||accumulator>1/15)accumulator=Math.min(accumulator,1/30);}else accumulator=0;
   if(game.stats.battles>lastBattle&&now-lastSfx>240){const center=screenToWorld(view.w/2,view.h/2,view),near=game.units.some(u=>u.attackAnim>.7&&Math.hypot(u.x-center.x,u.y-center.y)<10);if(near)tone(95+(game.stats.battles%7)*27,'battle',.008);lastBattle=game.stats.battles;lastSfx=now;}
   const events=game.events.filter(e=>e.id>lastEvent);if(events.length){lastEvent=events[events.length-1].id;const important=events.find(e=>e.team===0&&/lost|fallen|eliminated/.test(e.text))||events.find(e=>/eliminated/.test(e.text));const reward=events.find(e=>game.allied(0,e.team)&&/Royal Guard/.test(e.text));if(important)toast(important.text,true);else if(reward)toast(reward.text);}
   checkResult();
  }
- renderer.draw(game,view,ui);
+ const menuView=renderer.menuView;
+ if(!menuOpen||!menuView||menuView.game!==game||menuView.x!==view.x||menuView.y!==view.y||menuView.zoom!==view.zoom||menuView.w!==view.w||menuView.h!==view.h||menuView.dpr!==view.dpr){renderer.draw(game,view,ui);renderer.menuView=menuOpen?{...view,game}:null;}
  if(now-lastHud>220){updateHud();$('zoomLabel').textContent=Math.round(view.zoom*100)+'%';$('performance').textContent=Math.round(Math.min(240,fps))+' FPS';lastHud=now;}
- if(now-lastMini>150){renderer.drawMinimap(game,$('minimap'),view);lastMini=now;}
+ if(!menuOpen&&now-lastMini>150){renderer.drawMinimap(game,$('minimap'),view);lastMini=now;}
  if(toastUntil&&now>toastUntil){$('toast').classList.remove('visible');toastUntil=0;}
  requestAnimationFrame(frame);
 }
