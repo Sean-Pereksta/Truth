@@ -7,10 +7,10 @@ const game=()=>new Game({landscape:'open',house:0,enemies:1,scale:'standard',see
 const newTroops=(g,origin)=>{const count=g.units.length;g.spawnBatch(origin,'infantry',3);return g.units.slice(count);};
 const assertRally=(troops,point)=>{assert.equal(troops.length,3);for(const u of troops){assert.equal(u.order.mode,'attack');assert.equal(u.order.groupX,point.x);assert.equal(u.order.groupY,point.y);}};
 
-test('Player troops hold at their production building until a rally is explicitly set',()=>{
+test('Player troops idle at their production building until a rally is explicitly set',()=>{
   const g=game(),posts=g.buildings.filter(b=>b.team===0);
   assert.equal(g.teams[0].rally,null);
-  for(const post of posts){assert.equal(post.rally,null);for(const u of newTroops(g,post)){assert.equal(u.order.mode,'hold');assert.equal(u.order.x,u.x);assert.equal(u.order.y,u.y);}}
+  for(const post of posts){assert.equal(post.rally,null);for(const u of newTroops(g,post)){assert.equal(u.order.mode,'idle');assert.equal(u.order.x,u.x);assert.equal(u.order.y,u.y);}}
   assert.ok(g.teams[1].rally);
 });
 test('Individual building rallies remain independent and do not set a global default',()=>{
@@ -19,7 +19,7 @@ test('Individual building rallies remain independent and do not set a global def
   assert.equal(g.setRally(q.x,q.y,0,new Set([posts[1].id])).ok,true);
   assert.equal(g.teams[0].rally,null);
   assertRally(newTroops(g,posts[0]),p);assertRally(newTroops(g,posts[1]),q);
-  for(const u of newTroops(g,posts[2]))assert.equal(u.order.mode,'hold');
+  for(const u of newTroops(g,posts[2]))assert.equal(u.order.mode,'idle');
   assert.equal(g.addBuilding(0,'barracks',40,40).rally,null);
 });
 test('An all-buildings rally applies to existing and future buildings, with local overrides',()=>{
@@ -30,10 +30,10 @@ test('An all-buildings rally applies to existing and future buildings, with loca
   g.setRally(q.x,q.y,0,[b.id]);assert.deepEqual(g.teams[0].rally,p);assertRally(newTroops(g,b),q);
   const later=g.addBuilding(0,'barracks',50,50);assert.deepEqual(later.rally,p);
 });
-test('Clearing an individual rally holds its recruits without clearing other building defaults',()=>{
+test('Clearing an individual rally idles its recruits without clearing other building defaults',()=>{
   const g=game(),p={x:20.5,y:20.5};g.setRally(p.x,p.y);const posts=g.buildings.filter(b=>b.team===0);
   assert.equal(g.clearRally(0,[posts[0].id]).ok,true);assert.equal(posts[0].rally,null);assert.deepEqual(posts[1].rally,p);
-  for(const u of newTroops(g,posts[0]))assert.equal(u.order.mode,'hold');
+  for(const u of newTroops(g,posts[0]))assert.equal(u.order.mode,'idle');
   assert.deepEqual(g.addBuilding(0,'barracks',40,40).rally,p);
   assert.equal(g.clearRally().ok,true);assert.equal(g.teams[0].rally,null);
   for(const b of g.buildings.filter(b=>b.team===0))assert.equal(b.rally,null);
@@ -63,7 +63,7 @@ test('Every house can recruit and evaluate its power without a default player ra
     assert.equal(g.recruit(content.unit).ok,true,`${s.name} specialist`);
     const power=g.useHousePower(g.group(0).map(u=>u.id));assert.equal(typeof power.ok,'boolean');
     assert.equal(s.rally,null,`${s.name} default remains unset`);
-    for(const u of g.units.filter(u=>u.team===0&&u.id>g.buildings[5].id&&u.order))assert.notEqual(u.order.mode,'attack',`${s.name} summoned troops hold`);
+    for(const u of g.units.filter(u=>u.team===0&&u.id>g.buildings[5].id&&u.order))assert.notEqual(u.order.mode,'attack',`${s.name} summoned troops wait near their origin`);
   }
 });
 console.log(`${cases} rally behavior checks passed.`);

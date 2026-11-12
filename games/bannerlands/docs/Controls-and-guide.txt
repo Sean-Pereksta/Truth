@@ -353,7 +353,7 @@ Menu shortcuts work while paused. Unavailable items cannot be activated, and hol
 CAMERA
 Scroll or use +/− to zoom toward the cursor.
 Right-drag orders selected troops to move and face; middle-drag or arrow keys
-pan. Right-drag pans when no troops are selected. A attacks each troop's nearest enemy.
+pan. Right-drag never pans, even with no troops selected. A attacks each troop's nearest enemy.
 Tab fits the whole map; Home returns to your keep.
 Click or drag the minimap to navigate. G toggles the grid.
 Touch: pinch to zoom, tap a soldier then a destination; drag to select.

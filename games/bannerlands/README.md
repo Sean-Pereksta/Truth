@@ -57,6 +57,20 @@ faster turns and less crowd drag. Crowds still slow champions, but they escape m
 training facility’s rally, then their army rally or keep if needed. Rival
 champions withdraw and regroup between successful charges.
 
+Fog of war is an optional campaign setting. It shades visible terrain, hides
+unseen enemy armies and preserves last-seen buildings. Allied sight is shared;
+enemy commanders use the same information limits. Watchtowers reveal 12, 15
+and 18 tiles by level. Cavalry Patrol (N) continuously scouts owned borders.
+Left-drag selects troops; right-drag always sets destination and facing.
+See docs/Fog-and-Scouting.txt for the complete rules.
+
+Idle soldiers and cavalry patrols now engage nearby visible enemies, with
+bounded pursuit and a return to their post or patrol. Capture companies fight
+for contested ruins and flags. Explicit orders keep priority; ordinary Move
+orders release automatic engagement after arrival, while facing orders and
+Hold preserve the line. Fog of War is highlighted in the campaign menu with
+clear On/Off choices and visible guidance.
+
 The playable web entry is `index.html`. The current editable JavaScript, CSS, and artwork are beside it. Serve this folder over HTTP; opening the split-module entry directly with `file://` is unsupported.
 
 - Local preview: `npm start` (http://127.0.0.1:4173).

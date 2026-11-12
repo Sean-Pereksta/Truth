@@ -37,15 +37,16 @@ MOVE AND FACE
 Select troops, hold right mouse at the destination, then drag toward the way
 the line should face. A line, front arrow and formation slots preview the order.
 Release to march there while keeping that facing. The Move & face button (D)
-also lets you give the order with a left drag or a touch drag.
+shows a guide for this right-drag gesture. Left-drag always selects troops.
 
 Right-click without dragging remains a direct Move order. Middle drag and
-screen edges pan the camera. Right drag pans when no troops are selected.
+screen edges pan the camera. Right-drag never pans, even with no troops selected.
 Escape or a canceled gesture clears the preview without issuing an order.
 
 Facing marches do not chase enemies. Backward movement uses 55% of forward
 speed, sideways movement uses 80%, and troops turn gradually to their facing.
-When a Move reaches its position it becomes Hold and preserves the facing.
+A facing Move settles into Hold and preserves its facing. An ordinary Move
+becomes idle on arrival, allowing local automatic engagement.
 H holds the line at its current positions. A new ordinary movement or attack
 order releases the explicit facing. Cavalry cannot charge while backpedaling.
 
@@ -108,3 +109,14 @@ Muster uses Shift+1 through 5 and Shift+6 for an eligible new house regiment;
 Council uses Shift+1 through 6.
 
 The compact campaign menu is included in this playable copy as well.
+
+LOCAL AUTOMATIC ENGAGEMENT
+Idle troops, new recruits without a rally, and cavalry on patrol notice nearby
+enemy troops up to 8 tiles away (long-range troops retain their wider search).
+When fog is enabled, enemies must also be inside allied sight. Idle troops can
+close the gap, continue fighting local enemies and return to their post.
+Pursuit stays within 10 tiles of the post or patrol contact point for ordinary
+troops, with a wider leash for long-range units. Patrols then resume scouting.
+Capture companies use this stance so rival armies fight for contested ruins
+and flags. Explicit Move, Hold, Expand, Retreat and facing orders take priority.
+Hold still defends in weapon range without chasing; Attack remains a combat order.

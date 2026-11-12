@@ -126,6 +126,11 @@
 #menuOverlay .config-grid label{min-width:0;font:11px/1.25 'Segoe UI',sans-serif;color:#adbcac}
 #menuOverlay .config-grid select{display:block;height:33px;min-width:0;margin-top:5px;padding:6px 8px;border-color:#63745c99;border-radius:3px;background:#0d2026;color:#dedfcb;font:11px 'Segoe UI',sans-serif}
 #menuOverlay .config-grid .mode-config,#menuOverlay .config-grid .landscape-config{grid-column:1/-1}
+#menuOverlay .config-grid .fog-config{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) 134px;align-items:center;gap:7px 10px;padding:9px 10px;border:1px solid #a18b5688;border-radius:3px;background:#c6aa650c}
+#menuOverlay .fog-config strong{font-weight:600;color:#e6d3a7;font-size:12px}
+#menuOverlay .fog-config select{margin:0}
+#menuOverlay .fog-config small{grid-column:1/-1;font:10px/1.45 'Segoe UI',sans-serif;color:#b2c1ae}
+
 #menuOverlay .landscape-preview{flex-shrink:0;height:82px;margin:14px 0 8px;border-color:#89926a66;border-radius:3px}
 #menuOverlay .landscape-preview>span{font-size:18px;bottom:9px;left:11px}
 #menuOverlay .landscape-description{margin:0 0 12px;padding:0;font:11px/1.45 'Segoe UI',sans-serif;color:#abbca7}
