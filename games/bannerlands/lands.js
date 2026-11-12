@@ -5,6 +5,9 @@ export const LAND_MAPS=Object.freeze([
   {id:'highlands',label:'Highland Marches',description:'Mountain walls divide wooded valleys. Stone passes offer short, defensible invasion routes.'},
   {id:'coast',label:'Shattered Coast',description:'Long tidal inlets shelter peninsulas. Causeways and coastal roads offer routes around the water.'},
   {id:'kingsroad',label:'Kingsroad',description:'A dense royal road network crosses deep forest and a central river. Fast roads reward mobile armies.'},
+  {id:'twin-lakes',label:'Twin Lakes',description:'Two broad lakes split the flanks. Long causeways and a clear central corridor offer very different routes to the battle.'},
+  {id:'mountain-crown',label:'Mountain Crown',description:'A jagged ring of peaks shelters a central valley. Four broad gates and an outer river reward control of the approaches.'},
+  {id:'four-rivers',label:'Four Rivers',description:'Four river arms reach toward an open central arena. Cross the outer bridges or race along the banks to contest the middle.'},
   {id:'open',label:'Open Realm',description:'The original open battlefield: rolling grass, forests and hills, with no interior impassable barriers.'}
 ]);
 
@@ -63,7 +66,7 @@ export function generateLands(game,homes=[]){
     if(!inside(tile.x,tile.y)){tile.terrain='water';tile.height=0;tile.value=0;continue;}
     const forest=noise(tile.x/10,tile.y/10,seed^0x6d2b79f5)*.8+noise(tile.x/4,tile.y/4,seed^0x24635342)*.2;
     const hill=noise(tile.x/14,tile.y/14,seed^0x3c6ef372);
-    tile.terrain=forest>(landscape.id==='kingsroad'?.45:landscape.id==='highlands'?.53:.59)?'forest':hill>(landscape.id==='highlands'?.52:.65)?'hill':'grass';
+    tile.terrain=forest>(landscape.id==='kingsroad'?.45:landscape.id==='highlands'?.53:landscape.id==='twin-lakes'?.52:.59)?'forest':hill>(['highlands','mountain-crown'].includes(landscape.id)?.52:.65)?'hill':'grass';
     tile.height=tile.terrain==='hill'?.12:0;tile.value=tile.terrain==='hill'?2:1;
     if(safe[tile.y*W+tile.x]){tile.terrain='grass';tile.height=0;tile.value=1;}
   }
@@ -148,10 +151,59 @@ export function generateLands(game,homes=[]){
     for(let y=Math.round(H*.37);y<H-1;y++){const center=Math.round(south.center+Math.sin(y/H*Math.PI*3+phase+2)*3);south.samples[y]=center;for(let off=-3;off<=3;off++)paint(center+off,y,'water');}
     crossing(south,H*.55,'bridge','Seabreak Causeway');crossing(south,H*.81,'bridge','Southshore Bridge');
     const headland=ridge('x',gapY(0),1,phase);pass(headland,W*.19,'Cliffgate Pass');pass(headland,W*.57,'Headland Pass');pass(headland,W*.86,'Coastwatch Pass');
+  }else if(landscape.id==='twin-lakes'){
+    const lakeY=H*.5,rx=W*(.105+mix(13,21,seed)*.015),ry=H*.23;
+    for(const [i,cx]of [W*.25,W*.75].entries()){
+      for(let y=Math.floor(lakeY-ry-2);y<=lakeY+ry+2;y++)for(let x=Math.floor(cx-rx-2);x<=cx+rx+2;x++){
+        const edge=((x-cx)/rx)**2+((y-lakeY)/ry)**2,bend=.08*Math.sin(y*.29+phase+i);
+        if(edge<1+bend)paint(x,y,'water');else if(edge<1.2&&at(x,y)?.terrain!=='water')paint(x,y,'hill');
+      }
+      const band={axis:'y',center:cx,width:Math.ceil(rx)+1,samples:[]};
+      crossing(band,lakeY,'bridge',i?'Eastmere Causeway':'Westmere Causeway');
+    }
+  }else if(landscape.id==='mountain-crown'){
+    const cx=W*.5,cy=H*.5,rx=W*.235,ry=H*.275;
+    for(let y=Math.floor(cy-ry-5);y<=cy+ry+5;y++)for(let x=Math.floor(cx-rx-5);x<=cx+rx+5;x++){
+      const angle=Math.atan2((y-cy)/ry,(x-cx)/rx),radius=Math.hypot((x-cx)/rx,(y-cy)/ry),edge=1+.045*Math.sin(angle*7+phase),thickness=3/Math.min(rx,ry);
+      if(Math.abs(radius-edge)<thickness)paint(x,y,'mountain');else if(Math.abs(radius-edge)<thickness*1.8&&at(x,y)?.terrain!=='water')paint(x,y,'hill');
+    }
+    for(const [axis,cross,along,name]of [['x',cx,cy-ry,'North Crown Gate'],['x',cx,cy+ry,'South Crown Gate'],['y',cy,cx-rx,'West Crown Gate'],['y',cy,cx+rx,'East Crown Gate']]){
+      pendingCrossings.push(()=>{
+        let marked=0;for(let lane=-2;lane<=2;lane++)for(let side=-6;side<=6;side++){
+          const x=Math.round(axis==='x'?cross+lane:along+side),y=Math.round(axis==='x'?along+side:cross+lane),tile=at(x,y);
+          if(!inside(x,y)||!tile||safe[y*W+x]||tile.terrain==='water')continue;
+          if(tile.terrain==='mountain'){tile.feature='pass';tile.featureAxis=axis==='x'?'y':'x';tile.height=.08;tile.value=1;marked++;}else if(!tile.feature){tile.feature='road';tile.featureAxis=axis==='x'?'y':'x';}
+        }
+        if(marked)landmark('pass',name,axis==='x'?Math.round(cross):Math.round(along),axis==='x'?Math.round(along):Math.round(cross),{axis:axis==='x'?'y':'x',width:5,length:11});
+      });
+    }
+    const river=waterBand('x',gapY(0),1,phase+1);
+    for(const [i,x]of [.13,.5,.87].entries())crossing(river,W*x,'bridge',['Raven Bridge','Crownwater Bridge','Falcon Bridge'][i]);
+  }else if(landscape.id==='four-rivers'){
+    const cx=W*.5,cy=H*.5,arena=Math.min(W,H)*.115;
+    const arm=(axis,start,end,center,offset)=>{
+      const band={axis,center,width:2,samples:[]},length=axis==='y'?H:W;
+      for(let along=Math.max(1,Math.floor(start));along<=Math.min(length-2,Math.ceil(end));along++){
+        const cross=Math.round(center+Math.sin(along/length*Math.PI*3+phase+offset)*2);band.samples[along]=cross;
+        for(let side=-2;side<=2;side++)paint(axis==='y'?cross+side:along,axis==='y'?along:cross+side,'water');
+      }
+      return band;
+    };
+    // Offset the northern and southern channels from the center capital column;
+    // otherwise the equal opening reservations would break each river into pools.
+    const north=arm('y',1,cy-arena,cx-arena*.9,0),south=arm('y',cy+arena,H-2,cx+arena*.9,1),west=arm('x',1,cx-arena,cy,2),east=arm('x',cx+arena,W-2,cy,3);
+    crossing(north,H*.21,'bridge','North River Bridge');crossing(south,H*.79,'bridge','South River Bridge');
+    crossing(west,W*.21,'bridge','West River Bridge');crossing(east,W*.79,'bridge','East River Bridge');
   }else{
     const river=waterBand('x',gapY(1),1,phase);
     for(const [i,x]of [.15,.5,.85].entries())crossing(river,W*x,'bridge',['Western Tollbridge','King\'s Crossing','Eastern Tollbridge'][i]);
     const wall=ridge('y',gapX(3),1,phase);pass(wall,H*.2,'North Road Gate');pass(wall,H*.4,'Royal Pass');pass(wall,H*.8,'South Road Gate');
+  }
+  if(['twin-lakes','mountain-crown','four-rivers'].includes(landscape.id)){
+    // New central-objective modes always have a broad arena, independent of the
+    // seed. Rivers and mountains shape its approaches rather than its floor.
+    const cx=W*.5,cy=H*.5,radius=Math.min(W,H)*.1;
+    for(let y=Math.floor(cy-radius);y<=cy+radius;y++)for(let x=Math.floor(cx-radius);x<=cx+radius;x++)if((x+.5-cx)**2+(y+.5-cy)**2<=radius*radius)paint(x,y,'grass');
   }
   for(const carve of pendingCrossings)carve();
 

@@ -2,6 +2,13 @@
 
 Command armies, conquer the grid, and unite the realm in an isometric real-time strategy game.
 
+The Kings and Battlefields update adds cosmetic faction-colored casualties
+that fade over two minutes, plus three landscapes: Twin Lakes, Mountain Crown
+and Four Rivers. Defend the King pits four armies against each other with one
+irreplaceable king each and recurring central flags that award reinforcements.
+Crown Control rewards 120 seconds of central control; Blitz Flags is a faster
+three-capture campaign. See `docs/Kings-and-Battlefields.txt` for the rules.
+
 Ruined castles are major campaign objectives: Standard maps have 3 neutral ruins,
 Epic maps 5 and Continent maps 6. Hold a ruin with 90% local troop dominance for
 60 seconds to restore it. Contested or empty rings pause saved capture progress.

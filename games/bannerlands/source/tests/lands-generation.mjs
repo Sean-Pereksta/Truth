@@ -16,8 +16,8 @@ const connected=g=>{
 };
 const snapshot=g=>g.tiles.map(t=>[t.terrain,t.feature,t.featureAxis].join(':')).join('|');
 
-test('Five new lands plus the classic open map expose meaningful campaign descriptions',()=>{
-  assert.equal(LAND_MAPS.length,6);assert.equal(new Set(LAND_MAPS.map(m=>m.id)).size,6);
+test('Nine landscapes expose meaningful campaign descriptions',()=>{
+  assert.equal(LAND_MAPS.length,9);assert.equal(new Set(LAND_MAPS.map(m=>m.id)).size,9);
   for(const map of LAND_MAPS)assert.ok(map.label.length>3&&map.description.length>30);
 });
 
@@ -45,7 +45,7 @@ test('All twenty starting reservations have an equal clear seven-tile mustering 
   }
 });
 
-test('The five lands differ structurally and expose crossings, roads and mountain passes',()=>{
+test('The eight designed lands differ structurally and expose crossings, roads and mountain passes',()=>{
   const signatures=new Set();
   for(const map of LAND_MAPS.filter(m=>m.id!=='open')){
     const g=make(map.id);signatures.add(snapshot(g));
@@ -55,7 +55,7 @@ test('The five lands differ structurally and expose crossings, roads and mountai
     assert.ok(g.landmarks.some(l=>l.kind==='bridge'),map.id+' names its bridge crossings');
     for(const l of g.landmarks)assert.ok(l.x>0&&l.x<g.W-1&&l.y>0&&l.y<g.H-1);
   }
-  assert.equal(signatures.size,5);
+  assert.equal(signatures.size,8);
   const highlands=make('highlands');assert.ok(highlands.landsStats.mountains>500);assert.ok(highlands.landsStats.passes>0);assert.ok(highlands.landmarks.some(l=>l.kind==='pass'));
   assert.ok(make('riverlands').landsStats.fords>0);
   assert.ok(make('kingsroad').landsStats.roads>make('crownlands').landsStats.roads);

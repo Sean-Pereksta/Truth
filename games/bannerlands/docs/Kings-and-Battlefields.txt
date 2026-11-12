@@ -1,0 +1,55 @@
+BANNERLANDS - KINGS, STANDARDS AND BATTLEFIELDS
+
+THE BATTLEFIELD AFTER A FIGHT
+Fallen soldiers leave faction-colored bodies with several poses and clothing
+shades. Riders leave fallen mounts, and siege troops leave wreckage. Bodies
+fade continuously over two minutes of unpaused game time, then disappear.
+Fading continues on the victory screen. Bodies never block movement, attack,
+capture land or flags, provide sight, or appear in troop selections or totals.
+Fog hides bodies outside current allied sight. Very large battles use bounded
+cosmetic storage so old casualties cannot accumulate indefinitely.
+
+DEFEND THE KING
+Choose Defend the King in the campaign menu. The battle always has four armies,
+each from a different house, and one crowned king per army. The king has one
+life: killing him immediately eliminates his army, surviving buildings and
+projectiles. The last king standing wins. Your king's death ends your campaign.
+Losing a castle does not eliminate an army while its king survives.
+
+The first three reinforcement flags appear in the central battlefield after
+15 seconds. A fresh wave appears every 45 seconds, replacing unclaimed flags.
+Hold at least 90% of the troops in a flag's ring for 12 seconds to claim it.
+Contested or empty rings pause progress until the next wave replaces the flag.
+Each captured flag disappears and awards 12 mixed infantry, archers and cavalry
+beside your living king. These reinforcements need no castle or free supply.
+Ordinary paid and automatic recruitment remain available through facilities.
+
+Kings wear crowns, have gold health bars and a KING label, and have distinct
+minimap markers. Find king focuses your king. The king panel shows your health;
+enemy health is only available while the enemy king is currently visible.
+Enemy commanders retain a royal guard, send companies to capture standards,
+withdraw injured kings, and hunt observed rival kings. Fog still limits their
+knowledge, targeting and scouting.
+
+CROWN CONTROL
+One central Crown Standard determines victory. Accumulate 120 seconds of
+uncontested control with at least 90% troop dominance in its ring. Empty or
+contested time pauses each army's saved total; another army taking control
+does not erase it. Destroying every rival castle also wins.
+
+BLITZ FLAGS
+A faster flag campaign: capture a standard in 10 seconds and reach three
+captures to win. Captures award eight elite Royal Guard; each flag reopens
+after 12 seconds. Destroying every rival castle also wins.
+
+THREE NEW LANDSCAPES
+Twin Lakes: two large lakes with causeways and flanking approaches around an
+open central battlefield.
+Mountain Crown: a mountain ring and four radial gates surround the central
+arena; passes and roads give each side several routes.
+Four Rivers: four river arms and stone bridges divide the outer approaches
+while leaving an open central battlefield for flags and army clashes.
+
+All nine landscapes work with existing modes, map sizes, faction choices and
+optional fog. Starting armies have clear deployment ground and land routes
+remain connected. Castle modes retain sparse, capturable ruins.
