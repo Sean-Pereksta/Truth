@@ -153,7 +153,7 @@ test('Alt-type hotkeys and Ctrl command groups avoid menu and battle key conflic
 });
 
 test('All sixteen houses retain their original menus while eligible houses gain the sixth regiment and seventh building shortcuts',()=>{
-  const expectedRegiments={wolf:'shield_bearer',lion:'shield_bearer',dragon:'shield_bearer',rose:'shield_bearer',bear:'lance_champion',sun:'lance_champion',falcon:'lance_champion'};
+  const expectedRegiments={wolf:'shield_bearer',lion:'shield_bearer',dragon:'shield_bearer',rose:'shield_bearer',bear:'lance_champion',sun:'lance_champion',falcon:'lance_champion',flayed:'trebuchet',beacon:'trebuchet',bone:'giant',fish:'sharpshooter'};
   for(let house=0;house<HOUSES.length;house++){
     const f=fixture({house,realMenu:true}),sigil=HOUSES[house].sigil,regiment=expectedRegiments[sigil]||null,building=regimentBuildingForHouse(sigil),original=f.game.houseContent(0);
     assert.equal(regimentForHouse(sigil),regiment);f.context.buildActionLists();const rows=f.refreshMenu();
@@ -177,14 +177,14 @@ test('All sixteen houses retain their original menus while eligible houses gain 
   }
 });
 
-await testAsync('Boot waits for all seven regiment sheets and production art, and failed new art keeps Start disabled',async()=>{
-  for(const failed of [null,'loadRegimentArt','loadRegimentBuildings']){
+await testAsync('Boot waits for regiment and conquest art, and failed new art keeps Start disabled',async()=>{
+  for(const failed of [null,'loadRegimentArt','loadRegimentBuildings','loadConquestArt']){
     const f=fixture({realMenu:true}),loads=[],errors=[],effects=[];
     f.context.console={warn(){},error:(...args)=>errors.push(args)};f.context.renderer={};
-    for(const method of ['loadTroops','loadStructures','loadCampaignArt','loadTerrain','loadHouseArt','loadRegimentArt','loadRegimentBuildings','loadLandsArt','loadLandsGround'])f.context.renderer[method]=(...args)=>{loads.push({method,args});return method===failed?Promise.reject(new Error('Missing test artwork')):Promise.resolve();};
+    for(const method of ['loadTroops','loadStructures','loadCampaignArt','loadTerrain','loadHouseArt','loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadLandsArt','loadLandsGround'])f.context.renderer[method]=(...args)=>{loads.push({method,args});return method===failed?Promise.reject(new Error('Missing test artwork')):Promise.resolve();};
     for(const name of ['paintBuildingIcons','paintHousePreview','paintTownHall','fitMap','updateHud'])f.context[name]=()=>effects.push(name);
     f.context.frame=()=>{};f.context.requestAnimationFrame=()=>effects.push('frame');
-    for(const prefix of ['const HOUSE_ART_SOURCES=','const REGIMENT_ART_SOURCES=']){const line=source.split('\n').find(line=>line.startsWith(prefix));assert.ok(line);vm.runInContext(line,f.context);}
+    for(const prefix of ['const HOUSE_ART_SOURCES=','const REGIMENT_ART_SOURCES=','const CONQUEST_ART_SOURCES=']){const line=source.split('\n').find(line=>line.startsWith(prefix));assert.ok(line);vm.runInContext(line,f.context);}
     vm.runInContext(extract('boot'),f.context);const boot=f.context.boot();assert.equal(f.element('startButton').disabled,true);assert.ok(f.element('startButton').innerHTML.includes('PREPARING'));
     await boot;
     const sheets=loads.find(load=>load.method==='loadRegimentArt')?.args[0];assert.ok(sheets);assert.deepEqual(Object.keys(sheets).sort(),['bear','dragon','falcon','lion','rose','sun','wolf']);assert.equal(new Set(Object.values(sheets)).size,7);

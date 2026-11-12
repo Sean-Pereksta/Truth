@@ -2,6 +2,25 @@
 
 Command armies, conquer the grid, and unite the realm in an isometric real-time strategy game.
 
+Ruined castles are major campaign objectives: Standard maps have 3 neutral ruins,
+Epic maps 5 and Continent maps 6. Hold a ruin with 90% local troop dominance for
+60 seconds to restore it. Contested or empty rings pause saved capture progress.
+Every living castle adds 60 troop capacity beyond the ordinary territory limit;
+restoring one immediately claims passable land within 8 tiles. Destroyed castles
+become neutral ruins again. A faction survives while it has at least one castle,
+and its home moves to a surviving castle if the original capital falls.
+
+Bolton and Hightower can build dedicated siege yards for long-range trebuchets
+that need 15 stationary seconds to deploy. Free Folk Giant Camps muster one
+high-health, splash-damage giant per 130 seconds; paid and automatic mustering
+share each camp's cadence. Tully Sharpshooter Lodges train marksmen with longer
+range and slower attacks than archers. Build these facilities with Shift+J and
+recruit the extra regiment with U, Shift+6. Rival armies use the same facilities,
+seek ruins, hold capture companies in place, and defend their castle network.
+
+The new painted PNG sprite sheets, castle states and four production buildings
+live in `assets/conquest/`; that folder also records their generation prompts.
+
 The Lands Update adds Crownlands, Riverlands, Highland Marches, Shattered Coast,
 and Kingsroad, alongside the original Open Realm. Rivers, five-lane bridges,
 mountain passes, shallow fords, and roads change both army routes and lord strategy.
