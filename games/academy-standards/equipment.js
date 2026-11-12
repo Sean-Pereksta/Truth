@@ -5,7 +5,7 @@
  const items=['Shield','Boots','Medkit','EngineerKit','TrapKit','WarHorn','FireOil'];
  const presets={
   vanguard:{weapon:['Spear','Sword'],armor:['Heavy','Light'],item:['Shield','FireOil','Boots','WarHorn']},
-  ranged:{weapon:['Longbow','Bow'],armor:['Light','Heavy'],item:['Boots','FireOil','Shield','WarHorn']},
+  ranged:{weapon:['Longbow','Bow'],armor:[],item:['Boots','FireOil','Shield','WarHorn']},
   support:{weapon:['Spear','Sword','Bow','Longbow'],armor:['Light','Heavy'],item:['Medkit','EngineerKit','TrapKit','WarHorn','Boots','Shield']},
   cavalry:{weapon:['Spear','Sword'],armor:['Light','Heavy'],item:['WarHorn','Boots','Shield','FireOil']}
  };
@@ -37,6 +37,7 @@
    for(let i=0;i<copies.length;i++){
     const s=copies[i],role=roles[i],preset=presets[role];if(!preset)continue;
     for(const slot of ['weapon','armor','item']){
+     if(slot==='armor'&&(['Bow','Longbow'].includes(s.weapon)||(role==='ranged'&&s.weapon==='None')))continue;
      let choices=[...preset[slot]],current=s[slot]||'None';
      if(slot==='armor'){if(champion(current))continue;choices.unshift('Champion_'+s.origHouse);}
      if(mode==='auto')choices.push(...(slot==='weapon'?weapons:slot==='item'?items:armors).filter(k=>!choices.includes(k)));
@@ -57,6 +58,7 @@
    if(mode==='auto')for(let i=0;i<copies.length;i++){
     const s=copies[i],preset=presets[roles[i]];
     for(const slot of ['weapon','armor','item'])if(s[slot]==='None'){
+     if(slot==='armor'&&(['Bow','Longbow'].includes(s.weapon)||(roles[i]==='ranged'&&s.weapon==='None')))continue;
      const pool=slot==='weapon'?weapons:slot==='armor'?armors:items;
      const key=[...preset[slot],...pool].find(k=>stock[k]>0);if(key)assign(s,key);
     }

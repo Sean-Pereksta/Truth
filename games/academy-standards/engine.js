@@ -938,7 +938,7 @@
       troops.forEach((s,i)=>{
         s.weapon=i>=6 && i<=8 ? 'Bow' : (i===3 || i===4 || i===9 ? 'Spear' : 'Sword');
         s.weaponLevel=1;
-        s.armor=i<4 ? 'Heavy' : 'Light';
+        s.armor=['Bow','Longbow'].includes(s.weapon) ? 'None' : i<4 ? 'Heavy' : 'Light';
         s.item=i<4 ? 'Shield' : (i===9 ? 'Medkit' : 'Boots');
         s.mount=i===5;
         s.roleHint=i>=6&&i<=8?'ranged':i===9?'support':'vanguard';
@@ -2430,11 +2430,6 @@
   }
 
   function autoEquipAI(house){
-    for(const s of game.students.filter(s=>s.controller===house.id&&s.state!=='knocked')){
-      const key='Champion_'+s.origHouse;if((house.stockpile[key]||0)>0&&!isChampionArmor(s.armor)){
-        house.stockpile[key]--;if(s.armor!=='None')house.stockpile[s.armor]=(house.stockpile[s.armor]||0)+1;s.armor=key;applyLoadout(s);
-      }
-    }
     const active = game.students.filter(s=>s.controller===house.id && s.state!=='knocked');
     const stock = house.stockpile;
     for(const s of active){
@@ -2445,7 +2440,11 @@
       }else if(s.weapon==='Bow' && s.weaponLevel<=1 && stock.Longbow>0){
         stock.Longbow--;stock.Bow++;s.weapon='Longbow';s.weaponLevel=1;
       }
-      if(s.armor==='None'){
+      const key='Champion_'+s.origHouse;
+      if(!['Bow','Longbow'].includes(s.weapon)&&(stock[key]||0)>0&&!isChampionArmor(s.armor)){
+        stock[key]--;if(s.armor!=='None')stock[s.armor]=(stock[s.armor]||0)+1;s.armor=key;
+      }
+      if(s.armor==='None'&&!['Bow','Longbow'].includes(s.weapon)){
         if(stock.Heavy>0 && (game.difficulty==='veteran'?!['Bow','Longbow'].includes(s.weapon)&&s.item!=='Medkit':Math.random()<0.42)){ stock.Heavy--; s.armor='Heavy'; }
         else if(stock.Light>0){ stock.Light--; s.armor='Light'; }
       }

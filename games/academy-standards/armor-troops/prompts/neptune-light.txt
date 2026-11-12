@@ -1,0 +1,17 @@
+Use case: stylized-concept.
+Asset type: complete full-body production troop animation sprite atlas for Academy Standards, House Neptune.
+Reference image1 defines house style: sea green/teal, pearl white, silver metal, brown leather, seashell/trident emblems. Reference image2 defines ornate champion armor. Reference image3 is a style reference only, NOT an edit target. Do not copy its row count.
+Create EXACTLY EIGHT COLUMNS and SIX ROWS:48complete whole-body troop sprites in a strict equal-cell grid. Landscape4:3 canvas, ideally1536x1152. TRUE TRANSPARENT alpha background, clean cutout outlines and empty gutters. No text, no grid, no labels, no scenery. Every sprite is a complete dressed character, including head, torso, both arms, legs and boots, with weapon/staff.
+Costume for this entire sheet: LIGHT ARMOR: flexible brown leather jerkin, leather bracers, teal cloth tunic and short teal cape, small soft teal cap with OPEN face, low narrow shoulders, plain leather boots. Very little exposed metal. This light costume applies to ALL rows including the medics.
+Style: polished hand-painted/chibi3/4 overhead RTS miniature sprites, matching references; consistent adult student identity, proportions, lighting, fixed camera/scale within rows.
+Exactly SIX rows TOP TO BOTTOM:
+ROW1: sword and teal house shield, full body, front-right3/4.
+ROW2: same sword/shield troop back-right3/4, cape back dominant.
+ROW3: spear/trident infantry, front-right3/4.
+ROW4: same spear/trident troop back-right3/4.
+ROW5: field medic with pearl-topped staff and satchel, front-right3/4, wearing THIS SHEET'S same armor tier.
+ROW6: same field medic back-right3/4, wearing THIS SHEET'S same armor tier, cape back dominant. Do not omit this bottom row.
+Exactly EIGHT columns LEFT TO RIGHT for every row:
+1standing idle;2walking left foot forward;3walking passing;4walking right foot forward;5walking opposite stride;6walking return passing;7attack windup(sword raised,spear drawnback,staff raised);8attack strike(sword extended,spear thrust,staff casting release).
+All eight frames in a row show the SAME character and costume, with visibly distinct alternating leg and arm movement and fluttering cape. Back-facing rows remain back-facing during attacks. Do not repeat one pose.
+Strict sprite registration: equal cells, consistent foot baseline near85%cell height, centered character, generous10%transparent margin all sides. Every full body, boot, plume, spear tip and cape remains within its own cell. No cropped feet, no overlapping rows or columns. All48cells painted, all6rows present. No loose armor parts, no archers or horses. Transparent background; no detached red/yellow/green speckle noise.

@@ -12,14 +12,39 @@ test('auto fills every available slot, upgrades armor and bows, and preserves fo
  const result=plan(units,stock);
  assert.equal(result.units[0].weaponLevel,3);assert.equal(result.units[0].weapon,'Spear');assert.equal(result.units[0].armor,'Heavy');
  assert.equal(result.units[1].weapon,'Longbow');assert.equal(result.units[2].item,'Medkit');assert.equal(result.units[2].weaponLevel,2);
- assert(result.units.every(s=>s.weapon!=='None'&&s.armor!=='None'&&s.item!=='None'&&s.mount));
+ assert(result.units.every(s=>s.weapon!=='None'&&(['Bow','Longbow'].includes(s.weapon)||s.armor!=='None')&&s.item!=='None'&&s.mount));
+ assert.equal(result.units[1].armor,'None','archer needs no extra armor');
  assert.deepEqual(ledger(units,stock),ledger(result.units,result.stock));
  assert.deepEqual(stock,{Heavy:4,Light:4,Longbow:3,Shield:4,Horse:4,Sword:2,Spear:2,Boots:4},'preview must not mutate supplies');
 });
 test('a role preset upgrades compatible equipment and returns replaced gear to supplies',()=>{
  const units=[unit('bow',{weapon:'Bow',weaponLevel:1,armor:'Heavy',item:'Shield'})],stock={Longbow:1,Light:1,Boots:1};
- const result=plan(units,stock,{mode:'ranged'});assert.equal(result.changed,3);assert.equal(result.units[0].weapon,'Longbow');assert.equal(result.stock.Bow,1);assert.equal(result.stock.Heavy,1);assert.equal(result.stock.Shield,1);
+ const result=plan(units,stock,{mode:'ranged'});assert.equal(result.changed,2);assert.equal(result.units[0].weapon,'Longbow');assert.equal(result.stock.Bow,1);assert.equal(result.units[0].armor,'Heavy');assert.equal(result.stock.Light,1);assert.equal(result.stock.Shield,1);
  assert.deepEqual(ledger(units,stock),ledger(result.units,result.stock));
+});
+
+test('archer presets and best gear never spend or report a need for additional armor',()=>{
+ for(const mode of ['ranged','auto']){
+  const units=[unit('archer',{origHouse:'player',weapon:'Bow'})],stock={Longbow:1,Light:2,Heavy:2,Champion_player:1,Boots:1,Horse:1};
+  const result=plan(units,stock,{mode});assert.equal(result.units[0].armor,'None');assert.equal(result.stock.Light,2);assert.equal(result.stock.Heavy,2);assert.equal(result.stock.Champion_player,1);assert(!result.missing.some(m=>m.slot==='armor'));assert.deepEqual(ledger(units,stock),ledger(result.units,result.stock));
+ }
+});
+
+test('auto still arms fallback swordsmen when no bows are available',()=>{
+ const result=plan([unit('one'),unit('two'),unit('three')],{Sword:3,Heavy:3,Shield:3});
+ assert(result.units.every(s=>s.weapon==='Sword'&&s.armor==='Heavy'));assert.equal(result.stock.Heavy,0);
+});
+
+test('new trials and enemy archer equipment need no additional armor',()=>{
+ const {A,T}=loadGame(),g=A.game;
+ const archers=g.students.filter(s=>['Bow','Longbow'].includes(s.weapon));assert.equal(archers.length,30);assert(archers.every(s=>s.armor==='None'));
+ const house=g.houses.find(h=>h.id==='mars'),archer=archers.find(s=>s.origHouse==='mars');
+ for(const s of g.students)if(s.controller==='mars'&&s!==archer)s.state='knocked';
+ for(const k of A.LOOT_KEYS)house.stockpile[k]=0;
+ Object.assign(house.stockpile,{Light:2,Heavy:2,Champion_mars:1});T.autoEquipAI(house);
+ assert.equal(archer.armor,'None');assert.equal(house.stockpile.Light,2);assert.equal(house.stockpile.Heavy,2);assert.equal(house.stockpile.Champion_mars,1);
+ archer.weapon='None';archer.roleHint='ranged';house.stockpile.Bow=1;T.autoEquipAI(house);
+ assert.equal(archer.weapon,'Bow');assert.equal(archer.armor,'None');assert.equal(house.stockpile.Champion_mars,1,'newly armed archers must not consume a relic before their bow is assigned');
 });
 test('specific gear fills empty slots first and never invents stock when supplies are short',()=>{
  const units=[unit('forged',{weapon:'Spear',weaponLevel:3}),unit('unarmed'),unit('down',{state:'knocked'}),unit('enemy',{controller:'mars'})];

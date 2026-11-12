@@ -9,7 +9,7 @@
  const label=x=>relic(x)?.name||names[x]||x;
  const slotLabel=x=>x==='Horse'?'Mount':['Sword','Spear','Bow','Longbow'].includes(x)?'Weapon':['Light','Heavy'].includes(x)||relic(x)?'Armor':'Utility';
  const descriptions={Sword:'Fast close combat',Spear:'Reach · counters cavalry',Bow:'Ranged attacks',Longbow:'Longest weapon range',Light:'+14 movement speed',Heavy:'+28 health · 22% protection · slower',Shield:'Blocks frontal arrows',Boots:'Faster movement',Medkit:'Heals nearby allies',Horse:'Speed & extra health',EngineerKit:'Build barricades',TrapKit:'Build slowing traps',WarHorn:'Speed & damage',FireOil:'Damage & burning'};
- const modes=[['auto','spark','Best available','Fill slots & upgrade, keep jobs'],['balanced','party','Balanced team','Front line, archers & medics'],['vanguard','shield','Vanguard','Spears, heavy armor & shields'],['ranged','bow','Archers','Longbows, mobility & range'],['support','cross','Support','Healing & engineer equipment'],['cavalry','sword','Cavalry','Horses, spears & mobility']];
+ const modes=[['auto','spark','Best available','Fill slots & upgrade, keep jobs'],['balanced','party','Balanced team','Front line, archers & medics'],['vanguard','shield','Vanguard','Spears, heavy armor & shields'],['ranged','bow','Archers','Longbows & mobility · no armor needed'],['support','cross','Support','Healing & engineer equipment'],['cavalry','sword','Cavalry','Horses, spears & mobility']];
  function render(api){
   const g=api.game,stock=api.getPlayerHouse().stockpile,targets=api.equipmentTargets(state.scope);
   const plan=api.planEquipment({scope:state.scope,mode:state.mode,gear:state.gear});

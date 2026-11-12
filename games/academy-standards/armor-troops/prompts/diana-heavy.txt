@@ -1,0 +1,11 @@
+Use case: stylized-concept. Asset type: production fullbody troop ANIMATION SPRITE ATLAS, true transparent PNG for Academy Standards. Create EXACT8columns by6rows=48sprites on landscape4:3 canvas, ideally1536x1152, square192px cells. Every cell ONE COMPLETE fully dressed footsoldier with head torso botharms bothlegs boots and whole weapon all visible. Match art style and faction identity from referenceimages; input1 factionreference, input2 championreference. NOT armorparts, NOT portraits. TRUE transparentalpha, no background/checkerboard/scenery/shadows/grid/text/labels.
+STRICT sixrows TOPTOBOTTOM:
+ROW0 swordandshield,FRONT-RIGHT3/4.
+ROW1 SAME swordandshield,BACK-RIGHT3/4,backofheadcape,facehidden.
+ROW2 spearinfantry,FRONT-RIGHT3/4,holds longspear.
+ROW3 SAME spearinfantry,BACK-RIGHT3/4,backofheadcape,facehidden.
+ROW4 medic with smallhealingstaffandsatchel,FRONT-RIGHT3/4.
+ROW5 SAME medic,BACK-RIGHT3/4,backofheadcape,facehidden.
+EightcolumnsLEFTTORIGHT:0standingidle;1walknearfootforward;2passingstride;3farfootforward;4returnoppositestride;5passingreturn;6attackwindup;7attackrelease. Every row exactsame costume/body/weapon across8successive meaningful movingposes. Limbsandcloakmustanimate. Medic raises then extends staff withtinyglow. SpearattackretractsthenjabsLONGSPEAR. Swordwindupthenoutwardstrike.
+DetailedhandpaintedchibifantasyRTSminiatures, premiumshading, crispsilhouettes readableat50pxtall, slightlytopdown3/4camera. Center everyentirecharacter insideitsowncell with12%emptymargins,feetbaseline85%cellheight,consistentscale.48fullbodyframes,nocelloverlap,no cutoffs,no horse,noarcher.
+HOUSE DIANA HEAVY ARMOR ONLY. Female youngadult woodland plateinfantry, polishedsilvergreathelm beneathgreenhood, broad layered silverandbronze leaf-shaped METAL breastplate and bigsilverleafpauldrons, articulatedarmoredgreaves and metalgauntlets, emeraldgreenheavycloak. Large roundsilverrimmeddarkwoodcrescent shield swordrows, curvesilverhuntingsword, longleafpointspear, woodenleafmedicstaff. Noticeablybroader armoredsilhouette thanleatherranger, NOantlercrown.
