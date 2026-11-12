@@ -103,3 +103,37 @@ test('unchanged plans do not cancel capture channels or attack windups',()=>{
   s.orders.length=0;s.game.time=2;s.tick();
   assert(!s.orders.some(o=>o.id===runner.id&&o.type==='capture'));
 });
+
+test('a visible captain gets a modest preference over an otherwise comparable enemy',()=>{
+  const s=scenario();s.ctx.isHouseCaptain=unit=>unit.id==='mars_0'||unit.id==='player_0';
+  s.troops[3].x=760;
+  const ordinary=s.unit('player_1',{controller:'player',x:810,y:500});
+  const captain=s.unit('player_0',{controller:'player',x:820,y:500});
+  s.game.students.push(ordinary,captain);s.tick();
+  assert.equal(s.troops[3].order.targetId,captain.id,'a slightly more distant captain is a useful morale target');
+
+  const carrier=scenario();carrier.ctx.isHouseCaptain=s.ctx.isHouseCaptain;carrier.troops[3].x=760;
+  carrier.game.students.push(carrier.unit('player_0',{controller:'player',x:820,y:500}),carrier.unit('player_1',{controller:'player',x:810,y:500,carryingStandard:'minerva'}));
+  carrier.tick();assert.equal(carrier.troops[3].order.targetId,'player_1','banner carriers retain greater priority than captains');
+});
+
+test('a hidden captain cannot affect orders or reveal its rank to the commander',()=>{
+  const empty=scenario(),fog=scenario();
+  empty.ctx.isHouseCaptain=unit=>unit.id==='mars_0';
+  fog.ctx.isHouseCaptain=unit=>{assert.notEqual(unit.id,'player_0','hidden enemies must never reach captain scoring');return unit.id==='mars_0';};
+  fog.game.students.push(fog.unit('player_0',{controller:'player',x:820,y:500}));fog.hidden.add('player_0');
+  empty.tick();fog.tick();assert.deepEqual(fog.orders,empty.orders);assert.equal(strategy.getState(fog.house).seen.size,0);
+});
+
+test('an unthreatened captain normally guards home instead of collecting supplies',()=>{
+  const s=scenario();s.ctx.isHouseCaptain=unit=>unit.id==='mars_0';
+  s.troops[0].x=800;s.troops[1].x=510;
+  s.game.lootBoxes.push({id:'box_central',x:810,y:780,alive:true});s.tick();
+  assert.equal(s.troops[0].order.type,'defend','captain preference takes precedence over nearest-home reserve selection');
+  assert(s.troops.some(unit=>unit.order.type==='box'),'other students still collect the supplies');
+
+  const runner=scenario();runner.ctx.isHouseCaptain=s.ctx.isHouseCaptain;runner.troops[0].carryingStandard='player';runner.tick();
+  assert.equal(runner.troops[0].order.type,'returnBanner','carrying a standard still overrides captain reserve duty');
+  const wounded=scenario();wounded.ctx.isHouseCaptain=s.ctx.isHouseCaptain;wounded.troops[0].hp=20;wounded.tick();
+  assert.equal(wounded.troops[0].order.type,'move','a wounded captain still withdraws before reserve selection');
+});

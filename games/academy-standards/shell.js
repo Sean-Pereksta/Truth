@@ -3,7 +3,7 @@
  const $=id=>document.getElementById(id);
  const icon=name=>`<svg aria-hidden="true"><use href="#i-${name}"/></svg>`;
  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const ui={api:null,started:false,menu:true,drawer:null,difficulty:'normal',noticeUntil:0,noticeTimer:null,lastLog:null,drawerKey:'',lastMap:0,outcome:false,modalWasPaused:true,modalDone:null,savedSnapshot:null,lastSaveTime:0,storageAvailable:true,flagFocus:null,flagState:null,flagAnnounceKey:'',houseOwners:null,captureToastUntil:0,mapMarkers:null};
+ const ui={api:null,started:false,menu:true,drawer:null,inspectStudentId:null,rosterSquadsOpen:false,difficulty:'normal',noticeUntil:0,noticeTimer:null,lastLog:null,drawerKey:'',lastMap:0,outcome:false,modalWasPaused:true,modalDone:null,savedSnapshot:null,lastSaveTime:0,storageAvailable:true,flagFocus:null,flagState:null,flagAnnounceKey:'',houseOwners:null,captureToastUntil:0,mapMarkers:null};
  const roleNames={vanguard:'Vanguard',ranged:'Archer',support:'Support'};
  const houseMarks={player:'❧',mars:'⚔',minerva:'◇',diana:'☾',apollo:'☀',juno:'♛',neptune:'♆',vulcan:'⚒',venus:'✿',saturn:'♄'};
  const gearNames={Sword:'Sword',Spear:'Spear',Bow:'Bow',Longbow:'Longbow',Light:'Light armor',Heavy:'Heavy armor',Shield:'Shield',Boots:'Boots',Medkit:'Medic kit',Horse:'Horse',EngineerKit:'Engineer kit',TrapKit:'Trap kit',WarHorn:'War horn',FireOil:'Fire oil'};
@@ -14,6 +14,35 @@
  const visible=(api,x,y)=>!api.canSee||api.canSee('player',x,y);
  const explored=(api,x,y)=>!api.isExplored||api.isExplored('player',x,y);
  const mapMemory={};
+
+ function studentStatus(api,s){
+  if(s.controller!=='player'&&!seen(api,s))return '';
+  const status=api.captainStatus?.(s),lines=[];
+  if(status?.isCaptain)lines.push('<span class="captain-tag">♛ House captain</span>');
+  if(s.slaveDebuff)lines.push('<span class="recruited-status">Recruited · -23% damage &amp; movement</span>');
+  if(status?.shaken)lines.push(`<span class="shaken-status">Morale shaken · ${Math.max(1,Math.ceil(status.remaining||0))}s · -15% damage &amp; -10% movement</span>`);
+  return lines.length?`<small class="student-status">${lines.join('')}</small>`:'';
+ }
+
+ const captainMark='<span class="captain-marker" role="img" aria-label="House captain" title="House captain"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 5l3 2 3-4 3 4 3-2-1 7H3zM4 14h8"/></svg></span>';
+ function studentDetail(api,s){
+  const weapon=s.weapon==='None'?'Unarmed':esc(s.weapon)+(s.weaponLevel>1?' · Lv. '+s.weaponLevel:'');
+  return `<div class="student-detail" id="student-detail-${s.id}"><div class="student-detail-heading"><b>${esc(api.getHouse(s.origHouse).name)}</b><span>${Math.ceil(s.hp)} / ${s.maxHp} HP</span></div><dl class="student-equipment"><div><dt>Weapon</dt><dd>${weapon}</dd></div><div><dt>Armor</dt><dd>${s.armor==='None'?'No armor':esc(gearNames[s.armor]||s.armor)}</dd></div><div><dt>Utility</dt><dd>${s.item==='None'?'—':esc(gearNames[s.item]||s.item)}</dd></div>${s.mount?'<div><dt>Mount</dt><dd>Horse</dd></div>':''}</dl>${studentStatus(api,s)}</div>`;
+ }
+ function roster(api){
+  const g=api.game,units=g.students.filter(s=>s.controller==='player');
+  if(!units.some(s=>s.id===ui.inspectStudentId))ui.inspectStudentId=null;
+  const prior=document.querySelector('.roster-squads');if(prior)ui.rosterSquadsOpen=!!prior.open;
+  const groups=api.HOUSE_DEFS.filter(h=>units.some(s=>s.origHouse===h.id));
+  const list=groups.map(h=>{
+   const members=units.filter(s=>s.origHouse===h.id),shaken=api.isHouseShaken?.(members[0]);
+   return `<section class="roster-group" aria-label="${esc(h.name)}"><div class="roster-group-heading"><span><i style="background:${h.color}" aria-hidden="true"></i>${esc(h.name.replace(/^House /,''))}</span><small>${members.length}${h.id!=='player'?' · Recruits':''}${shaken?' <span class="roster-morale" title="Captain down. Inspect a student for details.">Shaken</span>':''}</small></div>${members.map(s=>{
+    const selected=g.selected.has(s.id),expanded=ui.inspectStudentId===s.id;
+    return `<div class="roster-entry ${selected?'active':''} ${s.state==='knocked'?'recovering':''}"><div class="roster-row"><button class="roster-card" data-student="${s.id}" aria-pressed="${selected}"><div class="roster-name-row"><b>${api.isHouseCaptain?.(s)?captainMark:''}${esc(s.name)}</b><small class="roster-hp">${s.state==='knocked'?'Recovering':Math.ceil(s.hp)+' HP'}</small></div><small class="roster-role">${s.mount?'Horseman':roleNames[api.getRole(s)]}</small><div class="health-track" aria-hidden="true"><span style="width:${Math.max(0,Math.min(100,s.hp/s.maxHp*100))}%"></span></div></button><button class="roster-info ${expanded?'expanded':''}" data-inspect-student="${s.id}" aria-label="Details for ${esc(s.name)}" aria-expanded="${expanded}" aria-controls="student-detail-${s.id}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button></div>${expanded?studentDetail(api,s):''}</div>`;
+   }).join('')}</section>`;
+  }).join('');
+  return `${list}<details class="roster-squads" ${ui.rosterSquadsOpen?'open':''}><summary>Squads</summary><div class="build-row"><button data-save="2">Save to 2</button><button data-save="3">Save to 3</button><button data-save="4">Save to 4</button></div><button class="roster-reset" data-reset-squads>Reset squads</button></details>`;
+ }
 
  function refreshFullscreen(){
   const active=!!(document.fullscreenElement||document.webkitFullscreenElement);
@@ -172,12 +201,12 @@
 
  function toggleDrawer(type){
   if(ui.drawer===type){closeDrawer();return;}
-  ui.drawer=type;ui.drawerKey='';$('drawer').classList.remove('hidden');$('drawer').classList.toggle('armory-drawer',type==='equipment');renderDrawer(ui.api);
+  ui.drawer=type;ui.drawerKey='';ui.inspectStudentId=null;ui.rosterSquadsOpen=false;$('drawer').classList.remove('hidden');$('drawer').classList.toggle('armory-drawer',type==='equipment');$('drawer').classList.toggle('roster-drawer',type==='roster');renderDrawer(ui.api);
  }
  function closeDrawer(){ui.drawer=null;$('drawer').classList.add('hidden');if(!ui.menu&&$('modal').classList.contains('hidden'))ui.api?.canvas.focus({preventScroll:true});}
  function renderDrawer(api){
   if(!api)return;const g=api.game,sel=api.getSelectedUnits(),stock=api.getPlayerHouse().stockpile;
-  const key=ui.drawer+'|'+sel.map(s=>`${s.id}:${ui.drawer==='equipment'?'':Math.round(s.hp)}:${s.weapon}:${s.item}:${s.state}`).join(',')+'|'+Object.values(stock).join(',')+'|'+g.houses.map(h=>h.controller).join(',')+'|'+g.activeSquad+'|'+JSON.stringify(window.AcademyArmory?.state)+'|'+g.students.filter(s=>s.controller==='player').map(s=>[s.id,s.weapon,s.weaponLevel,s.armor,s.item,s.mount,s.state].join(':')).join(',');
+  const key=ui.drawer+'|'+sel.map(s=>`${s.id}:${ui.drawer==='equipment'?'':Math.round(s.hp)}:${s.weapon}:${s.item}:${s.state}`).join(',')+'|'+Object.values(stock).join(',')+'|'+g.houses.map(h=>h.controller).join(',')+'|'+g.activeSquad+'|'+JSON.stringify(window.AcademyArmory?.state)+'|'+g.students.filter(s=>s.controller==='player').map(s=>[s.id,s.weapon,s.weaponLevel,s.armor,s.item,s.mount,s.state].join(':')).join(',')+'|'+(ui.drawer==='roster'?Math.floor(g.time)+'|'+ui.inspectStudentId:'');
   if(key===ui.drawerKey)return;ui.drawerKey=key;
   let title='',eyebrow='',body='';
   if(ui.drawer==='equipment'){
@@ -185,17 +214,22 @@
    const priorList=document.querySelector('.armory-students');if(priorList)window.AcademyArmory.state.open=priorList.open;
    body=window.AcademyArmory.render(api);
   }else if(ui.drawer==='roster'){
-   title='Students & squads';eyebrow='YOUR PARTY';
-   const units=g.students.filter(s=>s.controller==='player');
-   body=`<p>Click a student to select them. Shift-click adds or removes students. Save a selection to a squad below.</p><div class="build-row"><button data-save="2">Save to 2</button><button data-save="3">Save to 3</button><button data-save="4">Save to 4</button></div><p><kbd>Ctrl + 2 / 3 / 4</kbd> also saves a squad.</p>${units.map(s=>`<button class="roster-card ${g.selected.has(s.id)?'active':''}" data-student="${s.id}"><div class="row"><b>${esc(s.name)}</b><small>${s.state==='knocked'?'Recovering':`${Math.ceil(s.hp)} / ${s.maxHp}`}</small></div><div class="health-track"><span style="width:${Math.max(0,s.hp/s.maxHp)*100}%"></span></div><small>${roleNames[api.getRole(s)]}${s.mount?' · Mounted':''} · ${s.weapon==='None'?'Unarmed':esc(s.weapon)} · <span class="armor-badge ${api.isChampionArmor(s.armor)?'champion':''}">${esc(gearNames[s.armor]||s.armor)}</span>${s.item!=='None'?' · '+esc(gearNames[s.item]||s.item):''}</small></button>`).join('')}<button class="wide-button" data-reset-squads>Restore automatic role squads</button>`;
+   title='Party';eyebrow=g.students.filter(s=>s.controller==='player').length+' STUDENTS';body=roster(api);
   }else if(ui.drawer==='standings'){
    title='The ten houses';eyebrow='RIVAL STANDARDS';
    const houses=[...g.houses].sort((a,b)=>(mapMemory[a.id]==='player'?-1:0)-(mapMemory[b.id]==='player'?-1:0)||a.name.localeCompare(b.name));
    body=`<p>Every castle keeps its house name. Its banner and the owner below show who rules it now. Checked castles on the minimap have been conquered.</p>${houses.map(h=>{const known=mapMemory[h.id],owner=known?api.getHouse(known):null,captured=!!owner&&owner.id!==h.id,active=g.students.filter(s=>s.origHouse===h.id&&s.state!=='knocked'&&seen(api,s)).length;return `<div class="house-row ${captured?'captured-house':''}" data-house-id="${h.id}" data-house-status="${!owner?'unknown':captured?'captured':'independent'}"><div class="row"><span class="house-mark" style="color:${h.color}">${houseMarks[h.id]}</span><b>${esc(h.name)}</b><span class="ownership-badge ${owner?.id==='player'?'yours':''}">${!owner?'UNSCOUTED':owner.id==='player'?'YOURS':captured?'CAPTURED':'FREE'}</span></div><small class="house-owner" style="color:${owner?.color||'#9ba89f'}">${!owner?'Scout this castle to identify its ruler':captured?'✓ Ruled by '+esc(owner.name):'Independent house'}${owner&&!visible(api,h.castle.x,h.castle.y)&&known!=='player'?' · Last seen':''}<span>${active} students ${h.controller==='player'?'ready':'in sight'}</span></small></div>`;}).join('')}`;
   }else if(ui.drawer==='strategy'){
-   title='Fight with a plan';eyebrow='TERRAIN & TACTICS';body=`<p>Your students and castles share sight. Unexplored ground is hidden; explored ground stays dim until scouted again. Enemies disappear when sight is lost.</p><div class="terrain-guide">${[['forest',0,'Woodland','Walkable cover. Slower travel, shorter sight and concealed troops.'],['marsh',1,'Marsh','Slow ground. Horses lose more speed than infantry.'],['ridge',4,'Rocky ridge','Blocks movement and vision. Find a route around it.'],['ruins',5,'Ruins','Broken walls conceal troops and slow movement.'],['hill',6,'High ground','Wider sight and a longer view across the field.'],['road',8,'Road','Faster movement; useful for reinforcement and retreat.'],['river',15,'River & ford','Crossable shallows slow your march. Deep ponds block movement.']].map(([type,frame,name,description])=>`<div class="terrain-card"><span class="terrain-thumb" style="background-position:${(frame%4)*100/3}% ${Math.floor(frame/4)*100/3}%"></span><div><b>${name}</b><p>${description}</p></div></div>`).join('')}</div><p>Positioning and party composition change the outcome of a fight. Attacks land after a visible windup: watch the weapon, then reposition.</p>${api.getCounters().map(x=>`<div class="counter-card"><b>${esc(x.name)}</b><p>${esc(x.detail)}</p></div>`).join('')}<p>Taking a flag requires a 3-second hold nearby. Damage or nearby enemies interrupt it. Escort the carrier home to capture its castle.</p><p>Central sites grant speed, damage, healing or faster smithing. Enemy presence pauses their capture.</p>`;
+   title='Fight with a plan';eyebrow='TERRAIN & TACTICS';body=`<p>Your students and castles share sight. Unexplored ground is hidden; explored ground stays dim until scouted again. Enemies disappear when sight is lost.</p><p>Almost all supplies lie in the center; home deliveries are rare. Scout and contest the central crates to equip your party.</p><div class="terrain-guide">${[['forest',0,'Woodland','Walkable cover. Slower travel, shorter sight and concealed troops.'],['marsh',1,'Marsh','Slow ground. Horses lose more speed than infantry.'],['ridge',4,'Rocky ridge','Blocks movement and vision. Find a route around it.'],['ruins',5,'Ruins','Broken walls conceal troops and slow movement.'],['hill',6,'High ground','Wider sight and a longer view across the field.'],['road',8,'Road','Faster movement; useful for reinforcement and retreat.'],['river',15,'River & ford','Crossable shallows slow your march. Deep ponds block movement.']].map(([type,frame,name,description])=>`<div class="terrain-card"><span class="terrain-thumb" style="background-position:${(frame%4)*100/3}% ${Math.floor(frame/4)*100/3}%"></span><div><b>${name}</b><p>${description}</p></div></div>`).join('')}</div><p>Positioning and party composition change the outcome of a fight. Attacks land after a visible windup: watch the weapon, then reposition.</p>${api.getCounters().map(x=>`<div class="counter-card"><b>${esc(x.name)}</b><p>${esc(x.detail)}</p></div>`).join('')}<p>Each house has one captain, marked with a gold crown. If the captain falls, their original housemates serving the same ruler become morale shaken: -15% damage and -10% movement for up to 20 seconds. The captain's recovery rallies them early.</p><p>Captured recruits have a separate, lasting weakness: -23% damage and movement while serving another house. Recruits can also become morale shaken; both reductions apply.</p><p>Taking a flag requires a 3-second hold nearby. Damage or nearby enemies interrupt it. Escort the carrier home to capture its castle.</p><p>Central sites grant speed, damage, healing or faster smithing. Enemy presence pauses their capture.</p>`;
+  }
+  const scrollArea=ui.drawer==='roster'?$('drawerBody'):$('drawer'),scroll=scrollArea.scrollTop,active=document.activeElement;
+  let focusSelector=null;
+  if(ui.drawer==='roster'&&$('drawerBody').contains(active)){
+   for(const attr of ['data-inspect-student','data-student','data-save','data-reset-squads'])if(active.hasAttribute(attr)){focusSelector=`[${attr}="${active.getAttribute(attr)}"]`;break;}
+   if(active.tagName==='SUMMARY')focusSelector='.roster-squads summary';
   }
   text($('drawerTitle'),title);text($('drawerEyebrow'),eyebrow);html($('drawerBody'),body);
+  if(ui.drawer==='roster'){scrollArea.scrollTop=scroll;if(focusSelector)$('drawerBody').querySelector(focusSelector)?.focus({preventScroll:true});}
  }
 
  function openMenu(){
@@ -230,7 +264,7 @@
   if(!ui.api.exportSave)return;const blob=new Blob([JSON.stringify(ui.api.exportSave())],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Academy Standards - saved trial.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Your trial was exported as a save file.');
  }
  function showHelp(){
-  showModal('Lead your party',`<div class="help-step"><span>01</span><div><b>Choose a squad. Give one clear order.</b><p>Left click or drag to select students. Press A to attack the nearest visible enemy immediately. Right click the ground to cancel fighting and move, an enemy to attack, or a supply crate to collect its gear. Your camera follows the selected party.</p></div></div><div class="help-step"><span>02</span><div><b>Build a balanced party.</b><p>Vanguard protects your archers. Spears counter cavalry; cavalry threatens archers. Face shield troops toward incoming arrows, and flank heavy infantry. Attacks land after a visible windup, so timing and movement matter. Open Equipment, choose recipients, preview a role loadout and apply. Best gear · whole team fills slots and upgrades from shared supplies.</p></div></div><div class="help-step"><span>03</span><div><b>Bring their standards home.</b><p>Hold beside a rival flag for 3 seconds to take it. Damage or nearby enemies interrupt the hold. Your flag target is marked in gold; click the status above the field to find it. The carrier heads home automatically and moves more slowly. Select the carrier and guards, choose Escort, then right click the ground to assign bodyguards. Protect your own standard.</p></div></div><div class="help-step"><span>04</span><div><b>Control the center.</b><p>Scout before you commit. Forests and ruins hide troops, ridges block sight, marsh slows horses, hills extend sight, and roads speed travel. Veteran rivals rally, guard their castle, retreat and escort carriers. Stand inside a site to capture it. Capture pauses while enemies contest it. Rally grants speed, Arsenal improves attacks, Sanctum heals, and Forge speeds up weapon upgrades.</p></div></div><div class="help-keys"><span><kbd>1–4</kbd> Select squads</span><span><kbd>Ctrl + 2–4</kbd> Save a squad</span><span><kbd>Space</kbd> Pause and plan</span><span><kbd>F</kbd> Follow party</span><span><kbd>A</kbd> Attack nearest enemy</span><span><kbd>D</kbd> Defend position</span><span><kbd>E</kbd> Escort carrier</span><span><kbd>R</kbd> Recall home</span><span><kbd>Arrows</kbd> Pan the map</span><span><kbd>Esc</kbd> Cancel / menu</span></div>`,'Ready');
+  showModal('Lead your party',`<div class="help-step"><span>01</span><div><b>Choose a squad. Give one clear order.</b><p>Left click or drag to select students. Press A to attack the nearest visible enemy immediately. Right click the ground to cancel fighting and move, an enemy to attack, or a supply crate to collect its gear. Your camera follows the selected party.</p></div></div><div class="help-step"><span>02</span><div><b>Build a balanced party.</b><p>Vanguard protects your archers. Spears counter cavalry; cavalry threatens archers. Face shield troops toward incoming arrows, and flank heavy infantry. Attacks land after a visible windup, so timing and movement matter. Open Equipment, choose recipients, preview a role loadout and apply. Best gear · whole team fills slots and upgrades from shared supplies.</p></div></div><div class="help-step"><span>03</span><div><b>Bring their standards home.</b><p>Hold beside a rival flag for 3 seconds to take it. Damage or nearby enemies interrupt the hold. Your flag target is marked in gold; click the status above the field to find it. The carrier heads home automatically and moves more slowly. Select the carrier and guards, choose Escort, then right click the ground to assign bodyguards. Protect your own standard.</p></div></div><div class="help-step"><span>04</span><div><b>Control the center.</b><p>Almost all supplies lie in the center; home deliveries are rare. Scout before you commit. Forests and ruins hide troops, ridges block sight, marsh slows horses, hills extend sight, and roads speed travel. Veteran rivals rally, guard their castle, retreat and escort carriers. Stand inside a site to capture it. Capture pauses while enemies contest it. Rally grants speed, Arsenal improves attacks, Sanctum heals, and Forge speeds up weapon upgrades.</p></div></div><div class="help-step"><span>05</span><div><b>Protect your house captain.</b><p>Each house has one captain, marked with a gold crown. If the captain falls, their original housemates serving the same ruler suffer -15% damage and -10% movement for up to 20 seconds. The captain’s recovery rallies them early. Captured recruits have a separate -23% damage and movement while serving another house. Both weaknesses can apply together.</p></div></div><div class="help-keys"><span><kbd>1–4</kbd> Select squads</span><span><kbd>Ctrl + 2–4</kbd> Save a squad</span><span><kbd>Space</kbd> Pause and plan</span><span><kbd>F</kbd> Follow party</span><span><kbd>A</kbd> Attack nearest enemy</span><span><kbd>D</kbd> Defend position</span><span><kbd>E</kbd> Escort carrier</span><span><kbd>R</kbd> Recall home</span><span><kbd>Arrows</kbd> Pan the map</span><span><kbd>Esc</kbd> Cancel / menu</span></div>`,'Ready');
  }
  function showOutcome(api){
   const win=api.getPlayerHouse().controller==='player';
@@ -260,6 +294,12 @@
   $('equipmentToggle').addEventListener('click',()=>toggleDrawer('equipment'));$('rosterToggle').addEventListener('click',()=>toggleDrawer('roster'));$('standingsToggle').addEventListener('click',()=>toggleDrawer('standings'));$('closeDrawer').addEventListener('click',closeDrawer);
   $('drawerBody').addEventListener('click',e=>{
    if(ui.drawer==='equipment'&&window.AcademyArmory.handleClick(e,ui.api,toast)){ui.drawerKey='';update(ui.api);return;}
+   const inspect=e.target.closest('[data-inspect-student]');
+   if(inspect){
+    const id=inspect.dataset.inspectStudent,student=ui.api.game.students.find(s=>s.id===id&&s.controller==='player');if(!student)return;
+    ui.inspectStudentId=ui.inspectStudentId===id?null:id;ui.drawerKey='';renderDrawer(ui.api);
+    if(ui.inspectStudentId)$('student-detail-'+id)?.scrollIntoView?.({block:'nearest'});return;
+   }
    const equip=e.target.closest('[data-equip]'),gear=e.target.closest('[data-gear]'),student=e.target.closest('[data-student]'),save=e.target.closest('[data-save]'),build=e.target.closest('[data-build]');
    if(equip){if(!ui.api.getSelectedUnits().length){toast('Select a student or squad first.');return;}equip.dataset.equip==='auto'?ui.api.autoEquipSelected():ui.api.equipPreset(equip.dataset.equip);}
    if(gear)ui.api.spendLootOnSelected(gear.dataset.gear);
@@ -276,7 +316,7 @@
    const s=ui.api.hitStudent(p.x,p.y,s=>s.state!=='knocked'&&seen(ui.api,s));const tip=$('tooltip');
    if(!s){tip.classList.add('hidden');return;}
    const selected=ui.api.getSelectedUnits()[0],match=selected&&s.controller!=='player'?ui.api.combatMatchup(selected,s):null;
-   html(tip,`<b>${esc(s.name)}</b><span>${esc(ui.api.getHouse(s.origHouse).name)} · ${roleNames[ui.api.getRole(s)]}${s.mount?' · Mounted':''}<br>${Math.ceil(s.hp)} / ${s.maxHp} HP · ${esc(s.weapon)}<br><span class="armor-badge ${ui.api.isChampionArmor(s.armor)?'champion':''}">${esc(gearNames[s.armor]||s.armor)}${s.armor!=='None'?' · '+Math.round(s.defense*100)+'% protection':''}</span>${s.carryingStandard?'<br>Carrying a standard':''}</span>${match?.label?`<div class="matchup">${esc(match.label)}</div>`:''}`);
+   html(tip,`<b>${esc(s.name)}</b><span>${esc(ui.api.getHouse(s.origHouse).name)} · ${roleNames[ui.api.getRole(s)]}${s.mount?' · Mounted':''}<br>${Math.ceil(s.hp)} / ${s.maxHp} HP · ${esc(s.weapon)}<br><span class="armor-badge ${ui.api.isChampionArmor(s.armor)?'champion':''}">${esc(gearNames[s.armor]||s.armor)}${s.armor!=='None'?' · '+Math.round(s.defense*100)+'% protection':''}</span>${s.carryingStandard?'<br>Carrying a standard':''}</span>${studentStatus(ui.api,s)}${match?.label?`<div class="matchup">${esc(match.label)}</div>`:''}`);
    tip.style.left=`${Math.min(e.clientX+18,window.innerWidth-240)}px`;tip.style.top=`${Math.max(75,Math.min(e.clientY+18,window.innerHeight-230))}px`;tip.classList.remove('hidden');
   });ui.api.canvas.addEventListener('mouseleave',()=>$('tooltip').classList.add('hidden'));
   window.onAcademyEscape=()=>{if(!$('modal').classList.contains('hidden')){closeModal();return;}if(ui.api.getPlacementMode()||ui.api.getMode()!=='move'){ui.api.setMode('move');update(ui.api);return;}if(ui.drawer){closeDrawer();return;}if(ui.menu){if(ui.started&&!ui.api.game.gameOver)resume();}else openMenu();};

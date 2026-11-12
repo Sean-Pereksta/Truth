@@ -32,6 +32,7 @@
   const FLAG_CAPTURE_DURATION=3;
   const FLAG_CAPTURE_RADIUS=29;
   const FLAG_CONTEST_RADIUS=96;
+  const CAPTAIN_MORALE_DURATION=20;
   const VISION_TILE=80, VISION_COLS=Math.ceil(WORLD_W/VISION_TILE), VISION_ROWS=Math.ceil(WORLD_H/VISION_TILE);
   const TERRAIN_PROFILES={
     grass:{type:'grass',speed:1,sight:1,concealment:1},
@@ -112,7 +113,7 @@
     flagTargetId:null,
     nextLootSpawnAt:5,
     nextBigMidLootAt:26,
-    earlyBaseLootRemaining:20,
+    earlyBaseLootRemaining:0,
     followMode:true,
     followTargetIds:[]
   };
@@ -310,6 +311,8 @@
       controller:def.id,
       previousController:null,
       lastCapturedAt:-1,
+      captainShakenUntil:0,
+      captainShakenController:null,
       stockpile:stock,
       ai:{ thinkAt:0, aggression:0.25, raid:null, regroupUntil:0 }
     };
@@ -379,6 +382,36 @@
 
   function getHouse(id){ return game.houses.find(h=>h.id===id); }
   function getStandard(houseId){ return game.standards.find(s=>s.houseId===houseId); }
+  // Captains are a permanent role within each original house, independent of gear
+  // and allegiance. Never trust a saved isCaptain flag to assign this role.
+  function isHouseCaptain(s){return !!s&&s.id===`${s.origHouse}_0`;}
+  function isHouseShaken(s){
+    const house=s&&getHouse(s.origHouse);
+    return !!house&&house.captainShakenController===s.controller&&house.captainShakenUntil>game.time;
+  }
+  function captainStatus(s){
+    const captainId=`${s.origHouse}_0`,captain=game.students.find(unit=>unit.id===captainId),house=getHouse(s.origHouse),shaken=isHouseShaken(s);
+    return {isCaptain:isHouseCaptain(s),shaken,remaining:shaken?Math.max(0,house.captainShakenUntil-game.time):0,captainId,captainName:captain?.name||'House captain'};
+  }
+  function refreshOriginalHouseStats(houseId){
+    for(const student of game.students)if(student.origHouse===houseId)applyLoadout(student);
+  }
+  function clearCaptainMorale(house){
+    if(!house||!house.captainShakenUntil)return;
+    house.captainShakenUntil=0;house.captainShakenController=null;
+    refreshOriginalHouseStats(house.id);
+  }
+  function updateCaptainMorale(){
+    for(const house of game.houses)if(house.captainShakenUntil&&house.captainShakenUntil<=game.time)clearCaptainMorale(house);
+  }
+  function shakeCaptainHouse(captain){
+    if(!isHouseCaptain(captain))return;
+    const house=getHouse(captain.origHouse);if(!house)return;
+    house.captainShakenUntil=game.time+CAPTAIN_MORALE_DURATION;
+    house.captainShakenController=captain.controller;
+    refreshOriginalHouseStats(house.id);
+    logWorld(`<b>${house.name}'s captain is down.</b> Their students lose 15% damage and 10% movement until the captain returns, for at most 20 seconds.`,captain);
+  }
   function enemies(a,b){ return a.controller!==b.controller; }
   function isEquipped(s){ return s.weapon!=='None' || s.armor!=='None' || s.item!=='None' || s.mount; }
   function isEngineer(s){ return s.item==='EngineerKit' || s.item==='TrapKit'; }
@@ -431,13 +464,18 @@
     if(s.origHouse==='mars') dmg*=1.08;
     if(s.origHouse==='diana') speed*=1.06;
     if((s.origHouse==='minerva' || s.origHouse==='apollo') && (s.weapon==='Bow' || s.weapon==='Longbow')) range += 14;
-    if(s.slaveDebuff){ speed*=0.77; dmg*=0.77; }
     if(s.carryingStandard) speed *= 0.66;
 
     const buffs = objectiveBuffsFor(s.controller);
     speed += buffs.speed;
     dmg += buffs.dmg;
     range += buffs.range;
+
+    // Recompute both weaknesses from base equipment every time. Changing rulers
+    // never stacks a second recruitment penalty or weakens the ruler's natives.
+    s.slaveDebuff=s.controller!==s.origHouse;
+    if(s.slaveDebuff){speed*=0.77;dmg*=0.77;}
+    if(isHouseShaken(s)){speed*=0.90;dmg*=0.85;}
 
     s.maxHp = hp;
     s.hp = Math.min(Number.isFinite(s.hp) ? s.hp : hp, hp);
@@ -810,26 +848,37 @@
     }
   }
 
-  function randomLootSpawnPoint(centerBias=false){
+  const SUPPLY_RULES=Object.freeze({
+    centerX:WORLD_W/2,centerY:WORLD_H/2,
+    radiusX:WORLD_W*.20,radiusY:WORLD_H*.20,
+    castleClearance:900,boxSpacing:130,initialCrates:24,homeDeliveryChance:.03
+  });
+
+  function isCentralSupplyPoint(x,y){
+    return ((x-SUPPLY_RULES.centerX)/SUPPLY_RULES.radiusX)**2+((y-SUPPLY_RULES.centerY)/SUPPLY_RULES.radiusY)**2<=1 &&
+      HOUSE_DEFS.every(h=>dist(h.castle.x,h.castle.y,x,y)>=SUPPLY_RULES.castleClearance);
+  }
+
+  function supplyPointAvailable(x,y,spacing=SUPPLY_RULES.boxSpacing){
+    const closeToBox=game.lootBoxes.some(b=>b.alive&&dist(b.x,b.y,x,y)<spacing);
+    const closeToWater=game.terrain.waters.some(w=>((x-w.x)/(w.rx+32))**2+((y-w.y)/(w.ry+32))**2<1);
+    const inForge=game.blacksmiths.some(f=>x>f.x-f.w/2-28&&x<f.x+f.w/2+28&&y>f.y-f.h/2-28&&y<f.y+f.h/2+28);
+    return !closeToBox&&!closeToWater&&!inForge&&terrainClear(x,y,28)&&isAreaReachable(x,y,50);
+  }
+
+  function randomLootSpawnPoint(){
     for(let tries=0; tries<200; tries++){
-      const x = centerBias ? rand(WORLD_W*0.34, WORLD_W*0.68) : rand(180, WORLD_W-180);
-      const y = centerBias ? rand(WORLD_H*0.26, WORLD_H*0.72) : rand(160, WORLD_H-160);
+      const x=rand(SUPPLY_RULES.centerX-SUPPLY_RULES.radiusX,SUPPLY_RULES.centerX+SUPPLY_RULES.radiusX);
+      const y=rand(SUPPLY_RULES.centerY-SUPPLY_RULES.radiusY,SUPPLY_RULES.centerY+SUPPLY_RULES.radiusY);
       const nw = nearestWalkable(x,y);
       const px = nw.gx*TILE + TILE/2;
       const py = nw.gy*TILE + TILE/2;
-      const closeToBox = game.lootBoxes.some(b=>b.alive && dist(b.x,b.y,px,py) < 130);
-      const closeToCastle = HOUSE_DEFS.some(h=>dist(h.castle.x,h.castle.y,px,py) < 155);
-      const closeToWater = game.terrain.waters.some(w=>{
-        const nx=(px-w.x)/(w.rx+32), ny=(py-w.y)/(w.ry+32);
-        return nx*nx + ny*ny < 1;
-      });
-      const inForge = game.blacksmiths.some(f=>px>f.x-f.w/2-28 && px<f.x+f.w/2+28 && py>f.y-f.h/2-28 && py<f.y+f.h/2+28);
-      if(!closeToBox && !closeToCastle && !closeToWater && !inForge && isAreaReachable(px,py,50)) return {x:px,y:py};
+      if(isCentralSupplyPoint(px,py)&&supplyPointAvailable(px,py))return {x:px,y:py};
     }
     return null;
   }
 
-  function randomLootSpawnNearHouse(house, minR=95, maxR=220){
+  function randomLootSpawnNearHouse(house,minR=155,maxR=280){
     for(let tries=0; tries<100; tries++){
       const ang = rand(0, Math.PI*2);
       const rr = rand(minR, maxR);
@@ -841,12 +890,8 @@
       const px = nw.gx*TILE + TILE/2;
       const py = nw.gy*TILE + TILE/2;
 
-      const closeToBox = game.lootBoxes.some(b=>b.alive && dist(b.x,b.y,px,py) < 100);
-      const closeToWater = game.terrain.waters.some(w=>{
-        const nx=(px-w.x)/(w.rx+26), ny=(py-w.y)/(w.ry+26);
-        return nx*nx + ny*ny < 1;
-      });
-      if(!closeToBox && !closeToWater && isAreaReachable(px,py,44)) return {x:px,y:py};
+      const castleDistance=dist(house.castle.x,house.castle.y,px,py);
+      if(castleDistance>=minR&&castleDistance<=maxR&&supplyPointAvailable(px,py))return {x:px,y:py};
     }
     return null;
   }
@@ -879,15 +924,38 @@
 
   function spawnInitialLootBoxes(){
     game.lootBoxes = [];
-    for(const h of game.houses){
-      const a = randomLootSpawnNearHouse(h, 95, 180);
-      const b = randomLootSpawnNearHouse(h, 130, 235);
-      if(a) spawnLootBoxAt(a.x, a.y, false, false);
-      if(b) spawnLootBoxAt(b.x, b.y, Math.random()<0.20, false);
-    }
-    for(let i=0;i<8;i++){
-      const p = randomLootSpawnPoint(false);
+    for(let i=0;i<SUPPLY_RULES.initialCrates;i++){
+      const p = randomLootSpawnPoint();
       if(p) spawnLootBoxAt(p.x,p.y, i%4===0, false);
+    }
+  }
+
+  function updateSupplySpawns(){
+    // Retain the legacy save field without replaying its old home-delivery queue.
+    game.earlyBaseLootRemaining=0;
+    if(game.time>=game.nextLootSpawnAt){
+      let spot=null,homeDelivery=false;
+      if(Math.random()<SUPPLY_RULES.homeDeliveryChance&&game.houses.length){
+        const start=randi(0,game.houses.length-1);
+        for(let i=0;i<game.houses.length;i++){
+          spot=randomLootSpawnNearHouse(game.houses[(start+i)%game.houses.length]);
+          if(spot){homeDelivery=true;break;}
+        }
+      }
+      if(!spot)spot=randomLootSpawnPoint();
+      if(spot){
+        spawnLootBoxAt(spot.x,spot.y,homeDelivery?false:Math.random()<.25,false);
+        logWorld(homeDelivery?'A rare home delivery brings an ordinary supply box.':'A new supply box appears in the central field.',spot);
+      }
+      game.nextLootSpawnAt=game.time+rand(7,11);
+    }
+    if(game.time>=game.nextBigMidLootAt){
+      const spot=randomLootSpawnPoint();
+      if(spot){
+        spawnLootBoxAt(spot.x,spot.y,true,true);
+        logWorld('<b style="color:#d8bd66">A great loot crate appears near the center!</b>',spot);
+      }
+      game.nextBigMidLootAt=game.time+rand(20,30);
     }
   }
 
@@ -917,7 +985,7 @@
     controlMode = 'move';
     game.nextLootSpawnAt = 5;
     game.nextBigMidLootAt = 26;
-    game.earlyBaseLootRemaining = 20;
+    game.earlyBaseLootRemaining = 0;
     game.followMode = true;
     game.followTargetIds = [];
     game.groundLoot = [];
@@ -1531,7 +1599,12 @@
         object(row.stockpile,'supplies');const stockpile={};
         for(const key of LOOT_KEYS){stockpile[key]=num(row.stockpile[key]===undefined&&isChampionArmor(key)?0:row.stockpile[key],0,1e6,'supply count');if(!Number.isInteger(stockpile[key]))fail('Invalid supply count.');}
         object(row.ai,'house strategy');
-        return {...definition,castle:{...definition.castle},controller:houseId(row.controller),previousController:row.previousController===undefined?null:houseId(row.previousController,true),lastCapturedAt:row.lastCapturedAt===undefined?-1:num(row.lastCapturedAt,-1,1e9,'castle capture time'),stockpile,ai:{thinkAt:num(row.ai.thinkAt,0,1e9,'strategy timer'),aggression:num(row.ai.aggression,0,1,'house aggression'),regroupUntil:num(row.ai.regroupUntil,0,1e9,'regroup timer'),raid:readRaid(row.ai.raid)}};
+        const controller=houseId(row.controller);
+        let captainShakenUntil=row.captainShakenUntil===undefined?0:num(row.captainShakenUntil,0,candidate.time+CAPTAIN_MORALE_DURATION,'captain morale timer');
+        let captainShakenController=row.captainShakenController===undefined?null:houseId(row.captainShakenController,true);
+        if(captainShakenUntil>candidate.time){if(captainShakenController!==controller)fail('Captain morale does not match its house allegiance.');}
+        else{captainShakenUntil=0;captainShakenController=null;}
+        return {...definition,castle:{...definition.castle},controller,previousController:row.previousController===undefined?null:houseId(row.previousController,true),lastCapturedAt:row.lastCapturedAt===undefined?-1:num(row.lastCapturedAt,-1,1e9,'castle capture time'),captainShakenUntil,captainShakenController,stockpile,ai:{thinkAt:num(row.ai.thinkAt,0,1e9,'strategy timer'),aggression:num(row.ai.aggression,0,1,'house aggression'),regroupUntil:num(row.ai.regroupUntil,0,1e9,'regroup timer'),raid:readRaid(row.ai.raid)}};
       });
       for(const house of candidate.houses){const ruler=candidate.houses.find(h=>h.id===house.controller);if(ruler.controller!==ruler.id)fail('The saved house allegiances are inconsistent.');}
 
@@ -1565,6 +1638,11 @@
         s.flagCaptureRetryAt=row.flagCaptureRetryAt===undefined?0:num(row.flagCaptureRetryAt,0,1e9,'capture recovery timer');
         return s;
       });
+
+      for(const house of candidate.houses)if(house.captainShakenUntil>candidate.time){
+        const captain=candidate.students.find(s=>s.id===`${house.id}_0`);
+        if(captain.state!=='knocked')fail('Active captain morale requires a knocked-out captain.');
+      }
 
       const readEntities=(value,max,prefix,read)=>{
         const rows=array(value,max,prefix),seen=new Set();
@@ -2266,12 +2344,14 @@
   }
 
   function knockOut(target, by){
+    if(target.state==='knocked')return;
     if(target.flagCaptureId)interruptFlagCapture(target,'knockout');
     cancelAttackAction(target);
     game.projectiles=game.projectiles.filter(p=>p.attackerId!==target.id);
     target.hp=0;
     target.state='knocked';
     target.koUntil=game.time + rand(12,18);
+    shakeCaptainHouse(target);
     target.engageId=null;
     target.order = {type:'idle', x:target.x, y:target.y, targetId:null, targetType:null, manual:false};
     target.path=[]; target.pathIndex=0;
@@ -2347,6 +2427,7 @@
     for(const h of transferred){
       if(h.controller!==newControllerId){h.previousController=h.controller;h.lastCapturedAt=game.time;}
       h.controller=newControllerId;
+      h.captainShakenUntil=0;h.captainShakenController=null;
       if(h.id!==newControllerId){
         const supplies=getHouse(newControllerId).stockpile;
         for(const item of LOOT_KEYS){supplies[item]+=(h.stockpile[item]||0);h.stockpile[item]=0;}
@@ -2427,6 +2508,11 @@
     s.smithingAt = null;
     s.burnUntil = 0;
     s.attackAction=null;s.flagCaptureId=null;s.flagCaptureProgress=0;s.flagCaptureBlockedId=null;
+    if(isHouseCaptain(s)){
+      const house=getHouse(s.origHouse),rallied=isHouseShaken(s);
+      clearCaptainMorale(house);
+      if(rallied)logWorld(`<b>${house.name}'s captain returns.</b> Their students rally and recover their strength.`,s);
+    }
   }
 
   function autoEquipAI(house){
@@ -2741,7 +2827,7 @@
 
     autoEquipAI(house);
 
-    if(game.difficulty!=='relaxed'&&window.AcademyStrategy?.think({game,setOrder,canSee,isVisibleTo,terrainAt},house))return;
+    if(game.difficulty!=='relaxed'&&window.AcademyStrategy?.think({game,setOrder,canSee,isVisibleTo,terrainAt,isHouseCaptain},house))return;
 
     if(house.ai.raid && sustainRaid(house)) return;
     if(house.ai.regroupUntil > game.time) return;
@@ -3128,37 +3214,11 @@
     game.time += dt;
     refreshVisibility();
 
+    updateCaptainMorale();
+
     updateObjectives(dt);
 
-    if(game.time >= game.nextLootSpawnAt){
-      let spot = null;
-      if(game.earlyBaseLootRemaining > 0){
-        const shuffled = [...game.houses].sort(()=>Math.random()-0.5);
-        for(const h of shuffled){ spot = randomLootSpawnNearHouse(h, 100, 225); if(spot) break; }
-        if(spot){
-          spawnLootBoxAt(spot.x, spot.y, Math.random()<0.12, false);
-          game.earlyBaseLootRemaining--;
-          logWorld(`A nearby supply box appears beside a house base.`,spot);
-        }
-        game.nextLootSpawnAt = game.time + rand(4.6, 6.8);
-      }else{
-        spot = randomLootSpawnPoint(false);
-        if(spot){
-          spawnLootBoxAt(spot.x, spot.y, Math.random()<0.25, false);
-          logWorld(`A new loot box appears on the field.`,spot);
-        }
-        game.nextLootSpawnAt = game.time + rand(7, 11);
-      }
-    }
-
-    if(game.time >= game.nextBigMidLootAt){
-      const spot = randomLootSpawnPoint(true);
-      if(spot){
-        spawnLootBoxAt(spot.x, spot.y, true, true);
-        logWorld(`<b style="color:#d8bd66">A great loot crate appears near the center!</b>`,spot);
-      }
-      game.nextBigMidLootAt = game.time + rand(20, 30);
-    }
+    updateSupplySpawns();
 
     for(const h of game.houses){
       if(h.id==='player') continue;
@@ -4114,6 +4174,7 @@
     VISION_TILE,VISION_COLS,VISION_ROWS,terrainAt,terrainMoveFactor,lineOfSight,canSee,isTerrainVisible,isVisibleTo,isExplored,refreshVisibility,canSeePoint,canSeeStudent,
     game,canvas,ctx,DPR,TILE,COLS,ROWS,WORLD_W,WORLD_H,HOUSE_DEFS,LOOT_KEYS,CHAMPION_KEYS,isChampionArmor,FLAG_CAPTURE_DURATION,
     getHouse,getStandard,getPlayerHouse,objectiveBuffsFor,getSelectedUnits,
+    isHouseCaptain,isHouseShaken,captainStatus,CAPTAIN_MORALE_DURATION,
     selectUnits,selectSquad,saveSquad,resetSquad,getSquadUnits,getSquadName,getRole,
     issueFormationOrder,setOrder,issueBuildOrder,applyLoadout,refreshUI,resize,
     init,restart:init,setPaused,getPaused:()=>game.paused,setDifficulty,exportSave,importSave,
@@ -4141,8 +4202,10 @@
   window.Academy=api;
   window.AcademyTest={updateObjectives,combatMatchup,handleBannerPickup,captureBanner,secureReturnedBanner,transferHouse,checkVictory,attackTarget,performBowShot,attackBox,attackBarricade,tryShieldBlock,knockOut,respawnStudent,autoEquipAI,terrainClear,segmentClear,resolveDestination,pathfind,rebuildWalkableGrid,startFlagCapture,updateFlagCaptures,interruptFlagCapture,applyStudentDamage,beginAttack,resolveAttack,updateAttackActions,updateProjectiles,cancelAttackAction,update,init};
 
-  window.AcademyTest.spawnLootBoxAt=spawnLootBoxAt;
+  Object.assign(api,{SUPPLY_RULES,isCentralSupplyPoint});
+  Object.assign(window.AcademyTest,{spawnLootBoxAt,randomLootSpawnPoint,randomLootSpawnNearHouse,spawnInitialLootBoxes,updateSupplySpawns});
   window.AcademyTest.getPendingPathCount=()=>pendingPaths.size;
+  window.AcademyTest.updateCaptainMorale=updateCaptainMorale;
 
   init();
   requestAnimationFrame(frame);

@@ -38,6 +38,7 @@
       let score=distance(s,t)*.12+health(t)*22;
       if(t.carryingStandard)score-=120;
       if(t.flagCaptureId)score-=100;
+      if(ctx.isHouseCaptain?.(t))score-=25;
       if(t.item==='Medkit')score-=hard?35:12;
       if(s.weapon==='Spear'&&t.mount)score-=48;
       if(s.mount&&ranged(t))score-=45;
@@ -117,7 +118,7 @@
     // A small security detail stays at home. Expanded houses retain reserves
     // rather than sending every student to the same remote target.
     const reserveCount=hard?Math.max(1,Math.floor(active.length*.17)):1;
-    const reserve=fighters().sort((a,b)=>distance(a,safeHome(a))-distance(b,safeHome(b))).slice(0,reserveCount);
+    const reserve=fighters().sort((a,b)=>Number(!!ctx.isHouseCaptain?.(b))-Number(!!ctx.isHouseCaptain?.(a))||distance(a,safeHome(a))-distance(b,safeHome(b))).slice(0,reserveCount);
     reserve.forEach((s,i)=>order(s,'defend',{x:safeHome(s).x+Math.cos(i*2.4)*105,y:safeHome(s).y+Math.sin(i*2.4)*105}));
 
     const supply=[...game.lootBoxes.filter(b=>b.alive).map(obj=>({obj,type:'box',targetType:'box'})),...game.groundLoot.filter(g=>g.alive).map(obj=>({obj,type:'groundLoot',targetType:'ground'}))]

@@ -21,6 +21,7 @@ function forbidden(object,key){Object.defineProperty(object,key,{get(){throw new
 
 test('fog hides enemy soldiers, carriers, labels, particles, flags and supplies',()=>{
   const s=scene(),point={x:300,y:300,controller:'mars'};
+  s.api.isHouseCaptain=()=>{throw new Error('Hidden captain identity was queried');};
   s.game.students=[forbidden({...point,id:'secret',carryingStandard:'player'},'attackAction')];
   s.game.standards=[forbidden({...point},'houseId')];
   s.game.hitEffects=[forbidden({...point},'text')];
