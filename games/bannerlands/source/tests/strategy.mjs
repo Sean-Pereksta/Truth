@@ -22,7 +22,7 @@ test('A fresh bot musters recruits at its capital instead of streaming toward an
   g.spawnBatch(origin,'infantry',4);
   for(const u of g.units.slice(before)){
     assert.notEqual(u.order.aiTask,'assault');
-    if(u.order.mode!=='hold'){assert.equal(u.order.groupX,s.home.x);assert.equal(u.order.groupY,s.home.y);}
+    if(u.order.mode!=='idle'){assert.equal(u.order.groupX,s.home.x);assert.equal(u.order.groupY,s.home.y);}
   }
 });
 
@@ -68,13 +68,13 @@ test('Target selection weighs enemy defenses and capital vulnerability',()=>{
   g.hash.rebuild(g.units);assert.equal(g.aiTarget(s,p).id,weak.id);
 });
 
-test('A banner guard commits a company to a flag and holds troops inside its capture area',()=>{
+test('A banner guard commits a company to a flag and idles troops inside its capture area',()=>{
   const g=game(),{s,p}=prepare(g,1,'objective');g.time=90;p.nextAttackAt=0;
   g.ai(s);assert.equal(p.phase,'objective');assert.ok(p.cohort.length>=p.min);
   const flag=g.objectives.find(o=>o.id===p.objectiveId);
   for(const id of p.cohort){const u=g.byId.get(id);u.x=flag.x;u.y=flag.y;}
   g.hash.rebuild(g.units);g.time+=3;g.ai(s);
-  for(const id of p.cohort){const u=g.byId.get(id);assert.equal(u.order.mode,'hold');assert.equal(u.order.aiTask,'objective');}
+  for(const id of p.cohort){const u=g.byId.get(id);assert.equal(u.order.mode,'idle');assert.equal(u.order.aiTask,'objective');}
 });
 
 test('Allied houses never appear in bot invasion targets',()=>{

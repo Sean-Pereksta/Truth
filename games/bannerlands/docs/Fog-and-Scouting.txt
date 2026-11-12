@@ -1,0 +1,43 @@
+BANNERLANDS - FOG, WATCHES AND BORDER PATROLS
+
+The campaign menu highlights Fog of War with On / Off choices and a visible
+explanation. Choose On before starting a new campaign. It is off by default.
+Terrain, roads, rivers and crossings remain visible beneath translucent fog.
+Unseen enemy armies are hidden. Discovered buildings remain as faded LAST SEEN
+images with their observed state; hidden construction, damage and destruction
+do not update these memories. Revisit an area to confirm what remains there.
+
+Allied houses share sight. Rivals obey the same knowledge rules: they must scout
+enemy armies and structures, and can march to remembered positions without
+knowing hidden changes. Enemy army totals, territory shares and private plans
+are concealed. Flag locations and alliance scores remain public; local flag
+control is only shown inside sight. Castle locations must be discovered.
+
+WATCHTOWERS AND SIGHT
+Ordinary infantry and archers see 6 tiles; cavalry and commanders see 8.
+Siege troops see 5. Keeps see 9, 10 and 11 tiles by level; ordinary production
+buildings see 4. Watchtowers see 12, 15 and 18 tiles by level. Distribute them
+through your territory to warn of approaching armies instead of relying only
+on the capital garrison. Selecting a tower displays its sight ring.
+
+Rival commanders use different scouting patterns: defensive border screens,
+raiding deep probes, objective-focused crossing surveys, cautious surveys for
+siege forces, and wide fan sweeps for mass armies. They use cavalry when
+available and can send infantry scouts. Watchtower placement favors uncovered
+areas, and known threats determine defensive reactions and production.
+
+CAVALRY PATROL
+Select cavalry and press N, or click Patrol border. Riders spread along the
+reachable edges of their own territory and continue around the perimeter.
+Routes refresh as borders move. Riders engage nearby visible enemies, pursue
+only within a local leash, then return to their patrol. New Move, Attack, Hold,
+Expand or Retreat orders immediately cancel pursuit and patrol. Other troop types in a mixed selection retain their orders.
+
+MOUSE CONTROLS
+Hold and drag LEFT: select troops. Shift adds to the selection.
+Hold and drag RIGHT: choose destination and facing, regardless of other modes.
+Press at the destination, drag toward the desired front, then release.
+Right-drag never pans the camera. With no troops selected it gives guidance.
+A simple right-click still issues a normal Move, or sets selected buildings'
+rally point. Middle-drag, map edges and arrow keys pan the camera.
+The D / Move & face guide does not take over left-drag selection.

@@ -56,10 +56,10 @@ test('Restoration is awarded once and preserves living entity lookup through dea
 test('Ruin footprints cannot be covered by ordinary player construction',()=>{
   const g=make(),site=g.castles.find(c=>c.ruined);g.tileAt(site.x,site.y).owner=0;g.teams[0].gold=1e6;const outcome=g.build('barracks',site.x,site.y);assert.equal(outcome.ok,false);assert.match(outcome.message,/castle ruins/i);
 });
-test('Bots prioritize a reachable ruin, keep a fixed capture company and hold inside its radius',()=>{
+test('Bots prioritize a reachable ruin, keep a fixed capture company and idle inside its radius',()=>{
   const g=make(),s=g.teams[1];s.gold=0;s.powerReadyAt=1e9;const p=g.aiPlanFor(s);p.economyAt=1e9;p.frontierAt=1e9;p.nextAttackAt=0;g.time=90;g.hash.rebuild(g.units);g.ai(s);
   assert.equal(p.phase,'objective');assert.equal(p.objectiveKind,'castle');const site=g.castles.find(c=>c.id===p.objectiveId),cohort=[...p.cohort];assert.equal(site.ruined,true);
-  for(const id of cohort){const u=g.byId.get(id);u.x=site.x;u.y=site.y;}g.hash.rebuild(g.units);g.time+=3;g.ai(s);assert.deepEqual(p.cohort,cohort);for(const id of cohort)assert.equal(g.byId.get(id).order.mode,'hold');
+  for(const id of cohort){const u=g.byId.get(id);u.x=site.x;u.y=site.y;}g.hash.rebuild(g.units);g.time+=3;g.ai(s);assert.deepEqual(p.cohort,cohort);for(const id of cohort)assert.equal(g.byId.get(id).order.mode,'idle');
   g.updateCastles(60);g.time+=3;g.ai(s);assert.equal(site.team,s.id);assert.equal(p.phase,'regroup');
 });
 test('A successful siege converts its surviving army straight into a castle capture company',()=>{

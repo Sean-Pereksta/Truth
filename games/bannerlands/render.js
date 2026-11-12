@@ -346,8 +346,26 @@ export class Renderer{
     // to a distant capital does not pay for faction-tint pixel readbacks.
     for(const team of g.teams){for(const type of ['infantry','archer','cavalry','siege','hero'])this.soldierSprite(type,team.color,team.dark,1,0,false);for(const type of ['keep','barracks','range'])this.structureSprite(type,team.color,team.sigil);const house=g.houseContent?.(team.id);if(house){this.soldierSprite(house.unit,team.color,team.dark,1,0,false,team.sigil);this.structureSprite(house.building,team.color,team.sigil);}}
   }
+  fogScene(g){
+    if(!g.config?.fogOfWar)return {buildings:g.buildings,units:g.units,castles:g.castles||[],objectives:g.objectives||[]};
+    return {buildings:g.knownBuildings(0),units:g.knownUnits(0),castles:g.knownCastleSites(0),objectives:(g.objectives||[]).map(o=>g.isVisibleTo(0,o)?o:{...o,progress:[],controller:null,contested:false,cooldownUntil:0})};
+  }
+  fogPixels(g){
+    if(!g.config?.fogOfWar||!g.vision)return null;
+    if(this.fogGame===g&&this.fogRevision===g.vision.revision)return this.fogImage;
+    if(this.fogGame!==g){this.fogImage=makeCanvas(g.W,g.H);this.fogGame=g;}
+    const c=this.fogImage.getContext('2d'),pixels=c.createImageData(g.W,g.H),visible=g.vision.gridFor(0),explored=g.vision.exploredFor(0);
+    for(let i=0;i<g.W*g.H;i++){const p=i*4;pixels.data[p]=23;pixels.data[p+1]=35;pixels.data[p+2]=43;pixels.data[p+3]=visible[i]?0:explored[i]?72:119;}
+    c.putImageData(pixels,0,0);this.fogRevision=g.vision.revision;return this.fogImage;
+  }
+  drawFog(c,g){const fog=this.fogPixels(g);if(!fog)return;c.save();c.imageSmoothingEnabled=false;c.transform(HW,HH,-HW,HH,0,0);c.drawImage(fog,0,0);c.restore();}
+  rememberedBuilding(c,b,g){
+    c.save();c.globalAlpha=.53;c.filter='saturate(.2)';this.building(c,{...b,hit:0},g);c.restore();
+    const p=iso(b.x,b.y);c.save();c.textAlign='center';c.font='bold 8px Segoe UI';c.strokeStyle='#132c30';c.lineWidth=3;c.strokeText('LAST SEEN',p.x,p.y+50);c.fillStyle='#bac8c2';c.fillText('LAST SEEN',p.x,p.y+50);c.restore();
+  }
   clearBuildingSites(g){
-    this.decor=this.decor.filter(z=>!g.buildings.some(b=>b.hp>0&&(z.x-b.x)**2+(z.y-b.y)**2<(b.type==='keep'?5:1.25))&&!(g.objectives||[]).some(o=>(z.x-o.x)**2+(z.y-o.y)**2<1.7)&&!(g.castles||[]).some(o=>(z.x-o.x)**2+(z.y-o.y)**2<5));
+    const scene=this.fogScene(g);
+    this.decor=this.decor.filter(z=>!scene.buildings.some(b=>b.hp>0&&(z.x-b.x)**2+(z.y-b.y)**2<(b.type==='keep'?5:1.25))&&!(g.objectives||[]).some(o=>(z.x-o.x)**2+(z.y-o.y)**2<1.7)&&!scene.castles.some(o=>(z.x-o.x)**2+(z.y-o.y)**2<5));
     this.lastBuildingCount=g.buildings.length;this.lastBuildingId=g.buildings.at(-1)?.id||0;
     this.decorChunks=new Map();for(const z of this.decor){const key=Math.floor(z.x/16)+','+Math.floor(z.y/16);if(!this.decorChunks.has(key))this.decorChunks.set(key,[]);this.decorChunks.get(key).push(z);}
     this.sceneryChunkCache?.clear();this.sceneryChunkBytes=0;
@@ -446,11 +464,11 @@ export class Renderer{
     }
   }
   updateTerritory(g){
-    const c=this.ownerPixels.getContext('2d'),data=this.ownerImageData.data,colors=g.teams.map(t=>[parseInt(t.color.slice(1,3),16),parseInt(t.color.slice(3,5),16),parseInt(t.color.slice(5,7),16)]);data.fill(0);this.territoryEdges=[];
-    for(const t of g.tiles){if(t.owner<0||!g.isWalkable(t.x+.5,t.y+.5))continue;const team=g.teams[t.owner];if(!team)continue;const i=(t.y*g.W+t.x)*4;data.set([...colors[t.owner],255],i);const p=iso(t.x+.5,t.y+.5);
+    const c=this.ownerPixels.getContext('2d'),data=this.ownerImageData.data,colors=g.teams.map(t=>[parseInt(t.color.slice(1,3),16),parseInt(t.color.slice(3,5),16),parseInt(t.color.slice(5,7),16)]),owners=g.config?.fogOfWar?g.vision.ownersFor(0):null,ownerAt=t=>t?(owners?owners[t.y*g.W+t.x]:t.owner):-1;data.fill(0);this.territoryEdges=[];
+    for(const t of g.tiles){const owner=ownerAt(t);if(owner<0||!g.isWalkable(t.x+.5,t.y+.5))continue;const team=g.teams[owner];if(!team)continue;const i=(t.y*g.W+t.x)*4;data.set([...colors[owner],255],i);const p=iso(t.x+.5,t.y+.5);
       const corners=[[p.x,p.y-HH],[p.x+HW,p.y],[p.x,p.y+HH],[p.x-HW,p.y]];
       const checks=[[t.x,t.y-1,0],[t.x+1,t.y,1],[t.x,t.y+1,2],[t.x-1,t.y,3]];
-      for(const [x,y,e]of checks){const nt=x>=0&&y>=0&&x<g.W&&y<g.H?g.tiles[y*g.W+x]:null;if(!nt||nt.owner!==t.owner){const a=corners[e],b=corners[(e+1)%4];this.territoryEdges.push({x1:a[0],y1:a[1],x2:b[0],y2:b[1],color:team.color});}}
+      for(const [x,y,e]of checks){const nt=x>=0&&y>=0&&x<g.W&&y<g.H?g.tiles[y*g.W+x]:null;if(ownerAt(nt)!==owner){const a=corners[e],b=corners[(e+1)%4];this.territoryEdges.push({x1:a[0],y1:a[1],x2:b[0],y2:b[1],color:team.color});}}
     }
     c.putImageData(this.ownerImageData,0,0);this.territoryTime=g.time;this.minimapRevision=(this.minimapRevision||0)+1;
   }
@@ -663,7 +681,7 @@ export class Renderer{
     c.font=`600 ${10/zoom}px Segoe UI`;c.textAlign='center';c.textBaseline='middle';c.strokeStyle='#10282d';c.lineWidth=4/zoom;const tx=q.x+dx*19/zoom,ty=q.y+dy*19/zoom;c.strokeText('FRONT',tx,ty);c.fillStyle='#f4dfb2';c.fillText('FRONT',tx,ty);c.restore();
   }
   projectiles(c,g){
-    for(const b of g.projectiles||[]){const progress=clamp((b.t||0)/(b.duration||1),0,1),p=iso(b.x,b.y),piercing=b.sourceType==='beacon_engineer',firepot=b.sourceType==='dragonfire_acolyte',javelin=b.sourceType==='dune_skirmisher',lift=Math.sin(progress*Math.PI)*(piercing?7:firepot?42:b.type==='rock'?70:32);ellipse(c,p.x,p.y,3,1.2,'rgba(8,22,22,.2)');
+    for(const b of g.projectiles||[]){if(g.config?.fogOfWar&&!g.isVisibleTo(0,{x:b.x,y:b.y}))continue;const progress=clamp((b.t||0)/(b.duration||1),0,1),p=iso(b.x,b.y),piercing=b.sourceType==='beacon_engineer',firepot=b.sourceType==='dragonfire_acolyte',javelin=b.sourceType==='dune_skirmisher',lift=Math.sin(progress*Math.PI)*(piercing?7:firepot?42:b.type==='rock'?70:32);ellipse(c,p.x,p.y,3,1.2,'rgba(8,22,22,.2)');
       const v=iso((b.tx??b.x)-(b.sx??b.x),(b.ty??b.y)-(b.sy??b.y));let a=Math.atan2(v.y,v.x);c.save();c.translate(p.x,p.y-lift-10);c.rotate(a);
       if(piercing){line(c,-15,0,7,0,'#d4c7a6',2);polygon(c,[[8,0],[2,-3],[2,3]],'#eef1d5');line(c,-15,0,-19,-3,'#99b8bc',1.5);}
       else if(firepot){ellipse(c,0,0,4,3.5,'#bd653a');ellipse(c,1,-2,2.5,3,'#ffce67');line(c,-8,0,-2,0,'#ed9c50',2);}
@@ -675,7 +693,7 @@ export class Renderer{
   }
   fireZones(c,g,bounds,zoom){
     const zones=g.fireZones||[];let visible=0;
-    for(let index=zones.length-1;index>=0&&visible<24;index--){const z=zones[index];if(!(z.life>0))continue;const p=iso(z.x,z.y),radius=clamp(z.radius||1,.3,3),rw=radius*40,rh=radius*20;if(p.x+rw<bounds.left||p.x-rw>bounds.right||p.y+rh<bounds.top||p.y-rh-45>bounds.bottom)continue;visible++;
+    for(let index=zones.length-1;index>=0&&visible<24;index--){const z=zones[index];if(!(z.life>0)||g.config?.fogOfWar&&!g.isVisibleTo(0,{x:z.x,y:z.y}))continue;const p=iso(z.x,z.y),radius=clamp(z.radius||1,.3,3),rw=radius*40,rh=radius*20;if(p.x+rw<bounds.left||p.x-rw>bounds.right||p.y+rh<bounds.top||p.y-rh-45>bounds.bottom)continue;visible++;
       const fade=Math.min(1,z.life/.5),count=zoom<.3?5:this.lowDetail?8:14;c.save();c.globalAlpha=fade;ellipse(c,p.x,p.y+2,rw,rh,'rgba(38,22,12,.24)');
       for(let k=0;k<count;k++){const angle=k*2.399963+index*.71,distance=Math.sqrt(hash(k+index*3,z.team||0))*radius*.86,foot=iso(z.x+Math.cos(angle)*distance,z.y+Math.sin(angle)*distance),flicker=.84+Math.sin(g.time*12.2+k*2.1)*.12,scale=(.56+hash(k,17)*.24)*flicker,height=38*scale;
         const sprite=this.fireSprite(Math.floor(g.time*12+k*1.7)%8,k%3);c.drawImage(sprite,foot.x-24*scale,foot.y-60*scale,48*scale,64*scale);
@@ -692,7 +710,7 @@ export class Renderer{
   }
   effects(c,g,lowDetail=false){
     let detailIndex=0;
-    for(const f of g.effects||[]){if(lowDetail&&(f.type==='dust'||(f.type==='hit'&&detailIndex++%2)))continue;const p=iso(f.x,f.y),r=clamp(1-f.life/(f.maxLife||1),0,1);c.save();c.translate(p.x,p.y-7);c.globalAlpha=1-r;
+    for(const f of g.effects||[]){if(g.config?.fogOfWar&&!g.isVisibleTo(0,{x:f.x,y:f.y}))continue;if(lowDetail&&(f.type==='dust'||(f.type==='hit'&&detailIndex++%2)))continue;const p=iso(f.x,f.y),r=clamp(1-f.life/(f.maxLife||1),0,1);c.save();c.translate(p.x,p.y-7);c.globalAlpha=1-r;
       if(f.type==='specialHit'){
         const color={guard:'#b4deec',pierce:'#c8e5f0',cleave:'#e4bd82',heal:'#a8dfa0',loot:'#f1ce73',shock:'#f3d26e',snare:'#d1a27e',poison:'#adcb6d',cripple:'#efb174',finish:'#df9292',fury:'#e8a275'}[f.kind]||'#e9d9a7';
         if(f.kind==='heal'){line(c,-4,-12-r*7,4,-12-r*7,color,2);line(c,0,-16-r*7,0,-8-r*7,color,2);}
@@ -722,9 +740,10 @@ export class Renderer{
   }
   draw(g,v,ui={}){
     if(!this.terrainReady)return;
+    const scene=this.fogScene(g);
     const lowDetail=ui.quality!=='high'&&(!!ui.lowDetail||v.zoom<.75);
     this.lowDetail=lowDetail;
-    if(!this.w||!this.h)this.resize(v.w,v.h,v.dpr||1);if(this.cachedGame!==g)this.prepare(g);if(this.lastBuildingCount!==g.buildings.length||this.lastBuildingId!==(g.buildings.at(-1)?.id||0))this.clearBuildingSites(g);if(g.time-this.territoryTime>(lowDetail?.55:.35)||this.territoryTime<0)this.updateTerritory(g);
+    if(!this.w||!this.h)this.resize(v.w,v.h,v.dpr||1);if(this.cachedGame!==g)this.prepare(g);if(this.lastBuildingCount!==g.buildings.length||this.lastBuildingId!==(g.buildings.at(-1)?.id||0))this.clearBuildingSites(g);if(g.config?.fogOfWar&&this.territoryVisionRevision!==g.vision.revision){this.updateTerritory(g);this.territoryVisionRevision=g.vision.revision;const signature=scene.buildings.map(b=>b.id).join(',')+'|'+scene.castles.map(b=>b.id).join(',');if(signature!==this.fogSiteSignature){this.clearBuildingSites(g);this.fogSiteSignature=signature;}}if(g.time-this.territoryTime>(lowDetail?.55:.35)||this.territoryTime<0)this.updateTerritory(g);
     this.frame++;const c=this.ctx,d=this.dpr;c.setTransform(d,0,0,d,0,0);c.fillStyle='#10272e';c.fillRect(0,0,v.w,v.h);
     const glow=c.createRadialGradient(v.w*.52,v.h*.42,10,v.w*.5,v.h*.5,v.w*.7);glow.addColorStop(0,'#25404a');glow.addColorStop(1,'#0d222a');c.fillStyle=glow;c.fillRect(0,0,v.w,v.h);
     c.save();c.translate(v.w/2-v.x*v.zoom,v.h/2-v.y*v.zoom);c.scale(v.zoom,v.zoom);
@@ -732,17 +751,17 @@ export class Renderer{
     const range=this.visibleWorldRange(g,bounds);this.lastVisibleRange=range;
     for(let i=0;i<(lowDetail?22:44);i++){const x=this.left+hash(i,4)*(this.mapW),y=-60+hash(i,8)*this.mapH;if(x<bounds.left||x>bounds.right||y<bounds.top||y>bounds.bottom)continue;const wave=Math.sin(g.time*.8+i)*3;line(c,x+wave,y,x+8+wave,y,'rgba(106,152,159,.16)',.8);if(!lowDetail)line(c,x+4+wave,y+3,x+15+wave,y+3,'rgba(106,152,159,.10)',.7);}
     this.drawGround(c,g,v,bounds,range);
-    for(const objective of [...(g.objectives||[]),...(g.castles||[]).filter(site=>site.ruined)]){const p=iso(objective.x,objective.y),radius=(objective.radius||4)*HW*1.5;if(p.x+radius>bounds.left&&p.x-radius<bounds.right&&p.y+radius>bounds.top&&p.y-radius<bounds.bottom)this.objectiveGround(c,objective,g,v.zoom);}
+    for(const objective of [...scene.objectives,...scene.castles.filter(site=>site.ruined)]){const p=iso(objective.x,objective.y),radius=(objective.radius||4)*HW*1.5;if(p.x+radius>bounds.left&&p.x-radius<bounds.right&&p.y+radius>bounds.top&&p.y-radius<bounds.bottom)this.objectiveGround(c,objective,g,v.zoom);}
     if(ui.showGrid){
       if(v.zoom>.48){c.lineWidth=.65;for(let y=range.y0;y<=range.y1;y++)for(let x=range.x0;x<=range.x1;x++){const p=iso(x+.5,y+.5);if(p.x<bounds.left||p.x>bounds.right||p.y<bounds.top||p.y>bounds.bottom)continue;diamond(c,p.x,p.y,HW,HH,null,'rgba(197,211,174,.11)');}}
       else{for(let x=Math.ceil(range.x0/4)*4;x<=range.x1;x+=4){const a=iso(x,range.y0),b=iso(x,range.y1+1);line(c,a.x,a.y,b.x,b.y,'rgba(197,211,174,.10)',.65/v.zoom);}for(let y=Math.ceil(range.y0/4)*4;y<=range.y1;y+=4){const a=iso(range.x0,y),b=iso(range.x1+1,y);line(c,a.x,a.y,b.x,b.y,'rgba(197,211,174,.10)',.65/v.zoom);}}
     }
-    if(v.zoom>.32)for(let y=range.y0;y<=range.y1;y++)for(let x=range.x0;x<=range.x1;x++){const t=g.tiles[y*g.W+x];if(t.claim<0||!t.capture||t.capture>.999)continue;const p=iso(t.x+.5,t.y+.5);if(p.x<bounds.left||p.x>bounds.right||p.y<bounds.top||p.y>bounds.bottom)continue;const color=g.teams[t.claim]?.color||'#dac589';c.globalAlpha=.08+Math.sin(g.time*4)*.03;diamond(c,p.x,p.y,HW,HH,color);c.globalAlpha=1;c.fillStyle='rgba(10,35,32,.7)';c.fillRect(p.x-11,p.y+5,22,2);c.fillStyle=color;c.fillRect(p.x-11,p.y+5,22*t.capture,2);}
+    if(v.zoom>.32)for(let y=range.y0;y<=range.y1;y++)for(let x=range.x0;x<=range.x1;x++){const t=g.tiles[y*g.W+x];if(t.claim<0||!t.capture||t.capture>.999||g.config?.fogOfWar&&!g.isVisibleTo(0,{x:x+.5,y:y+.5}))continue;const p=iso(t.x+.5,t.y+.5);if(p.x<bounds.left||p.x>bounds.right||p.y<bounds.top||p.y>bounds.bottom)continue;const color=g.teams[t.claim]?.color||'#dac589';c.globalAlpha=.08+Math.sin(g.time*4)*.03;diamond(c,p.x,p.y,HW,HH,color);c.globalAlpha=1;c.fillStyle='rgba(10,35,32,.7)';c.fillRect(p.x-11,p.y+5,22,2);c.fillStyle=color;c.fillRect(p.x-11,p.y+5,22*t.capture,2);}
     this.fireZones(c,g,bounds,v.zoom);
     // Rally markers belong to the selected production posts, never army orders.
     const rallies=new Map();
     for(const b of g.buildings){if(b.team!==0||b.hp<=0||!ui.selectedBuildings?.has(b.id))continue;const p=iso(b.x,b.y),scale=b.type==='keep'?(1+((b.level||1)-1)*.25):1;c.save();c.strokeStyle='#f1d187';c.lineWidth=2/v.zoom;diamond(c,p.x,p.y+3,(b.type==='keep'?38:25)*scale,(b.type==='keep'?19:12)*scale,null,'#f1d187');
-      if(b.rally){const q=iso(b.rally.x,b.rally.y);c.globalAlpha=.5;c.setLineDash([5/v.zoom,5/v.zoom]);line(c,p.x,p.y,q.x,q.y,'#d9ce91',1/v.zoom);rallies.set(`${b.rally.x},${b.rally.y}`,q);}c.restore();
+      if(g.config?.fogOfWar&&b.type==='tower'){const radius=g.vision.sightRadius(b);c.strokeStyle='#9fcac7';c.globalAlpha=.6;c.setLineDash([8/v.zoom,6/v.zoom]);c.beginPath();c.ellipse(p.x,p.y,radius*HW*Math.SQRT2,radius*HH*Math.SQRT2,0,0,TAU);c.stroke();}if(b.rally){const q=iso(b.rally.x,b.rally.y);c.globalAlpha=.5;c.setLineDash([5/v.zoom,5/v.zoom]);line(c,p.x,p.y,q.x,q.y,'#d9ce91',1/v.zoom);rallies.set(`${b.rally.x},${b.rally.y}`,q);}c.restore();
     }
     for(const p of rallies.values()){c.save();c.strokeStyle='#f4d38b';c.lineWidth=1.8/v.zoom;c.beginPath();c.ellipse(p.x,p.y,13,6,0,0,TAU);c.stroke();this.flag(c,p.x,p.y-2,'#e8c377',g.time,.7);c.restore();}
     if(ui.orderMarker){const m=ui.orderMarker,age=g.time-m.time;if(age<1.7&&age>=0){const p=iso(m.x,m.y),a=1-age/1.7;c.globalAlpha=a;c.beginPath();c.ellipse(p.x,p.y,13+age*9,6+age*4,0,0,TAU);c.strokeStyle=m.mode==='move'?'#c2e0ce':'#edca78';c.lineWidth=2;c.stroke();line(c,p.x-4,p.y,p.x+4,p.y,'#ead89c',1.5);line(c,p.x,p.y-4,p.x,p.y+4,'#ead89c',1.5);c.globalAlpha=1;}}
@@ -750,17 +769,17 @@ export class Renderer{
     const items=[];
     let decorIndex=0;
     if(v.zoom>=.75)for(let cy=Math.floor(range.y0/16);cy<=Math.floor(range.y1/16);cy++)for(let cx=Math.floor(range.x0/16);cx<=Math.floor(range.x1/16);cx++)for(const z of this.decorChunks.get(cx+','+cy)||[]){const index=decorIndex++;if(lowDetail&&v.zoom<.8&&index%2)continue;const p=iso(z.x,z.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:0,obj:z,p});}
-    for(const b of g.buildings){if(b.hp<=0)continue;const p=iso(b.x,b.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:1,obj:b});}
-    for(const u of g.units){if(u.hp<=0)continue;const p=iso(u.x,u.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:2,obj:u});}
-    for(const objective of g.objectives||[]){const p=iso(objective.x,objective.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:3,obj:objective});}
-    for(const site of g.castles||[]){if(!site.ruined)continue;const p=iso(site.x,site.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:4,obj:site});}
+    for(const b of scene.buildings){if(b.hp<=0)continue;const p=iso(b.x,b.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:1,obj:b});}
+    for(const u of scene.units){if(u.hp<=0)continue;const p=iso(u.x,u.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:2,obj:u});}
+    for(const objective of scene.objectives){const p=iso(objective.x,objective.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:3,obj:objective});}
+    for(const site of scene.castles){if(!site.ruined)continue;const p=iso(site.x,site.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:4,obj:site});}
     items.sort((a,b)=>a.depth-b.depth||a.kind-b.kind);
     for(const it of items){if(it.kind===0){const z=it.obj,a=this.treeSprite(z.kind,z.variant),s=z.scale*(z.kind==='bush'?.38:1);if(!a)continue;const wind=!lowDetail&&z.kind==='tree'?Math.sin(g.time*1.3+z.x*.2)*.65:0;
       // Nearby armies remain readable through foreground vegetation and rocks.
-      if(z.occlusionTime===undefined||g.time-z.occlusionTime>.1){let occupied=false;const radius=z.kind==='tree'?1:.75;g.hash?.visit(z.x,z.y,radius,u=>{if(u.hp>0&&(u.x-z.x)**2+(u.y-z.y)**2<radius*radius)occupied=true;});z.opacity=occupied?(z.kind==='tree'?.23:.35):1;z.occlusionTime=g.time;}
+      if(z.occlusionTime===undefined||g.time-z.occlusionTime>.1){let occupied=false;const radius=z.kind==='tree'?1:.75;g.hash?.visit(z.x,z.y,radius,u=>{if(u.hp>0&&(!g.config?.fogOfWar||g.isVisibleTo(0,u))&&(u.x-z.x)**2+(u.y-z.y)**2<radius*radius)occupied=true;});z.opacity=occupied?(z.kind==='tree'?.23:.35):1;z.occlusionTime=g.time;}
       c.globalAlpha=z.opacity??1;c.drawImage(a,it.p.x-48*s+wind,it.p.y-100*s,96*s,112*s);c.globalAlpha=1;
-    }else if(it.kind===1)this.building(c,it.obj,g);else if(it.kind===2)this.unit(c,it.obj,g,ui,v.zoom);else if(it.kind===4)this.castleRuin(c,it.obj,g,v.zoom);else this.objectiveFlag(c,it.obj,g,v.zoom);}
-    this.projectiles(c,g);this.effects(c,g,lowDetail);
+    }else if(it.kind===1){if(it.obj.remembered)this.rememberedBuilding(c,it.obj,g);else this.building(c,it.obj,g);}else if(it.kind===2)this.unit(c,it.obj,g,ui,v.zoom);else if(it.kind===4)this.castleRuin(c,it.obj,g,v.zoom);else this.objectiveFlag(c,it.obj,g,v.zoom);}
+    this.projectiles(c,g);this.effects(c,g,lowDetail);this.drawFog(c,g);
     this.teamOrderMarkers(c,g,v.zoom);
     if(ui.teamOrderMode&&ui.hover){const p=iso(ui.hover.x,ui.hover.y),color=ui.teamOrderMode==='defend'?'#8fdfca':'#f3b77c';c.save();c.strokeStyle=color;c.lineWidth=2/v.zoom;c.setLineDash([5/v.zoom,4/v.zoom]);diamond(c,p.x,p.y,32,16,null,color);c.setLineDash([]);this.flag(c,p.x,p.y,color,g.time,.8);c.restore();}
     if(ui.hover&&ui.hover.x>=0&&ui.hover.y>=0&&ui.hover.x<g.W&&ui.hover.y<g.H){const tx=Math.floor(ui.hover.x),ty=Math.floor(ui.hover.y),p=iso(tx+.5,ty+.5),tile=g.tiles[ty*g.W+tx];c.lineWidth=1.2;diamond(c,p.x,p.y,HW,HH,null,ui.buildMode?(tile.owner===0&&g.isWalkable(tx+.5,ty+.5)&&!['bridge','ford','pass'].includes(tile.feature)?'#e8d38a':'#e28a71'):'rgba(229,223,174,.6)');if(ui.buildMode){c.globalAlpha=.55;this.building(c,{type:ui.buildMode,x:tx+.5,y:ty+.5,team:0,hp:1,maxHp:1},g);c.globalAlpha=1;}}
@@ -769,16 +788,16 @@ export class Renderer{
     if(ui.drag){const r=ui.drag,x=Math.min(r.x0,r.x1),y=Math.min(r.y0,r.y1),w=Math.abs(r.x1-r.x0),h=Math.abs(r.y1-r.y0);c.fillStyle='rgba(221,208,140,.08)';c.fillRect(x,y,w,h);c.strokeStyle='#e0cc83';c.lineWidth=1;c.setLineDash([4,3]);c.strokeRect(x+.5,y+.5,w,h);c.setLineDash([]);}
   }
   drawMinimap(g,canvas,v){
-    if(!this.terrainReady)return;if(this.cachedGame!==g)this.prepare(g);
+    if(!this.terrainReady)return;if(this.cachedGame!==g)this.prepare(g);const scene=this.fogScene(g);if(g.config?.fogOfWar&&this.territoryVisionRevision!==g.vision.revision){this.updateTerritory(g);this.territoryVisionRevision=g.vision.revision;}
     const rect=canvas.getBoundingClientRect(),w=Math.max(50,Math.round(rect.width||200)),h=Math.max(50,Math.round(rect.height||140)),d=Math.min(2,window.devicePixelRatio||1);if(canvas.width!==Math.round(w*d)||canvas.height!==Math.round(h*d)){canvas.width=Math.round(w*d);canvas.height=Math.round(h*d);}
     const c=canvas.getContext('2d');c.setTransform(d,0,0,d,0,0);const scale=Math.min((w-14)/((g.W+g.H)*HW),(h-14)/((g.W+g.H)*HH)),ox=(w-(g.W-g.H)*HW*scale)/2,oy=(h-(g.W+g.H)*HH*scale)/2;
     this.minimapTransform={scale,ox,oy,width:w,height:h};
     if(!this.miniBase||this.miniBase.width!==Math.round(w*d)||this.miniBase.height!==Math.round(h*d)||this.miniRevision!==this.minimapRevision){this.miniBase=makeCanvas(Math.round(w*d),Math.round(h*d));const m=this.miniBase.getContext('2d');m.scale(d,d);m.fillStyle='#10272c';m.fillRect(0,0,w,h);m.imageSmoothingEnabled=false;m.transform(HW*scale,HH*scale,-HW*scale,HH*scale,ox,oy);m.drawImage(this.miniTerrainPixels,0,0);m.globalAlpha=.78;m.drawImage(this.ownerPixels,0,0);m.globalAlpha=1;m.drawImage(this.miniFeaturePixels,0,0);this.miniRevision=this.minimapRevision;}
-    c.drawImage(this.miniBase,0,0,w,h);
-    for(const b of g.buildings){if(b.hp<=0||b.type!=='keep')continue;const p=iso(b.x,b.y),x=p.x*scale+ox,y=p.y*scale+oy,size=2+(b.level||1)*.5;c.fillStyle=g.teams[b.team]?.teamColor||g.teams[b.team]?.color||'#f3e4b0';c.fillRect(x-size,y-size,size*2,size*2);c.strokeStyle='#eee3bc';c.lineWidth=.65;c.strokeRect(x-size,y-size,size*2,size*2);}
-    for(const site of g.castles||[]){if(!site.ruined)continue;const p=iso(site.x,site.y),x=p.x*scale+ox,y=p.y*scale+oy;c.fillStyle=site.contested?'#efab7c':'#d6c59b';c.strokeStyle='#172f31';c.lineWidth=1;polygon(c,[[x,y-4],[x+4,y],[x,y+4],[x-4,y]],c.fillStyle,c.strokeStyle);}
-    for(const u of g.units){if(u.hp<=0)continue;const p=iso(u.x,u.y);c.fillStyle=g.teams[u.team]?.color||'#ddd';c.globalAlpha=.9;c.fillRect(p.x*scale+ox-1,p.y*scale+oy-1,2,2);}c.globalAlpha=1;
-    for(const o of g.objectives||[]){const p=iso(o.x,o.y),x=p.x*scale+ox,y=p.y*scale+oy,team=g.teams.find(s=>s.alliance===o.controller),color=o.contested?'#f0ab77':team?.teamColor||'#edd490';line(c,x-2,y+3,x-2,y-5,'#f1ead2',1);polygon(c,[[x-1,y-5],[x+5,y-4],[x+3,y],[x-1,y-1]],color,'#153331');}
+    c.drawImage(this.miniBase,0,0,w,h);const fog=this.fogPixels(g);if(fog){c.save();c.imageSmoothingEnabled=false;c.transform(HW*scale,HH*scale,-HW*scale,HH*scale,ox,oy);c.drawImage(fog,0,0);c.restore();}
+    for(const b of scene.buildings){if(b.hp<=0||b.type!=='keep'&&!(g.config?.fogOfWar&&b.type==='tower'))continue;const p=iso(b.x,b.y),x=p.x*scale+ox,y=p.y*scale+oy,size=2+(b.level||1)*.5;c.globalAlpha=b.remembered?.45:1;c.fillStyle=g.teams[b.team]?.teamColor||g.teams[b.team]?.color||'#f3e4b0';c.fillRect(x-size,y-size,size*2,size*2);c.strokeStyle='#eee3bc';c.lineWidth=.65;c.strokeRect(x-size,y-size,size*2,size*2);}c.globalAlpha=1;
+    for(const site of scene.castles){if(!site.ruined)continue;const p=iso(site.x,site.y),x=p.x*scale+ox,y=p.y*scale+oy;c.globalAlpha=site.remembered?.45:1;c.fillStyle=site.contested?'#efab7c':'#d6c59b';c.strokeStyle='#172f31';c.lineWidth=1;polygon(c,[[x,y-4],[x+4,y],[x,y+4],[x-4,y]],c.fillStyle,c.strokeStyle);}c.globalAlpha=1;
+    for(const u of scene.units){if(u.hp<=0)continue;const p=iso(u.x,u.y);c.fillStyle=g.teams[u.team]?.color||'#ddd';c.globalAlpha=.9;c.fillRect(p.x*scale+ox-1,p.y*scale+oy-1,2,2);}c.globalAlpha=1;
+    for(const o of scene.objectives){const p=iso(o.x,o.y),x=p.x*scale+ox,y=p.y*scale+oy,team=g.teams.find(s=>s.alliance===o.controller),color=o.contested?'#f0ab77':team?.teamColor||'#edd490';line(c,x-2,y+3,x-2,y-5,'#f1ead2',1);polygon(c,[[x-1,y-5],[x+5,y-4],[x+3,y],[x-1,y-1]],color,'#153331');}
     for(const order of g.teamOrders||[]){if(order.expiresAt<=g.time||order.alliance!==g.teams[0]?.alliance)continue;const p=iso(order.x,order.y),x=p.x*scale+ox,y=p.y*scale+oy,color=order.kind==='defend'?'#8fdfca':'#f3b77c';c.beginPath();c.arc(x,y,5,0,TAU);c.strokeStyle=color;c.lineWidth=1.2;c.stroke();line(c,x-3,y,x+3,y,color,1);line(c,x,y-3,x,y+3,color,1);}
     c.strokeStyle='#f1e0a7';c.lineWidth=1;c.strokeRect((v.x-v.w/v.zoom/2)*scale+ox,(v.y-v.h/v.zoom/2)*scale+oy,v.w/v.zoom*scale,v.h/v.zoom*scale);
   }

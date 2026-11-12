@@ -192,7 +192,7 @@ test('Replacement orders cancel champion cycles and stale targets or expired cal
     const resume={x:50,y:40,mode:'attack',aiTask:reason==='expired-call'?'team':'assault',...(reason==='expired-call'?{aiOrder:999}:{aiTarget:target.id})};
     horse.championRegroup={resumeOrder:resume,rally:{x:horse.x,y:horse.y}};horse.order={x:horse.x,y:horse.y,mode:'move'};
     if(reason==='dead')target.hp=0;if(reason==='allied')target.team=1;
-    g.hash.rebuild(g.units);g.updateUnits(1/60);assert.equal(horse.championRegroup,null);assert.equal(horse.order.mode,'hold');assert.equal(horse.order.aiTask,'muster');
+    g.hash.rebuild(g.units);g.updateUnits(1/60);assert.equal(horse.championRegroup,null);assert.equal(horse.order.mode,'idle');assert.equal(horse.order.aiTask,'muster');
   }
 });
 

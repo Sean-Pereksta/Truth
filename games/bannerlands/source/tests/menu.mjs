@@ -58,8 +58,19 @@ test('The redesigned menu preserves unique IDs and all referenced static control
   const ids=[...html.matchAll(/\bid=["']([^"']+)["']/g)].map(m=>m[1]);assert.equal(ids.length,new Set(ids).size,'HTML IDs must be unique.');
   const present=new Set(ids);
   for(const match of source.matchAll(/\$\(['"]([^'"]+)['"]\)/g))assert.ok(present.has(match[1]),`Missing app control: ${match[1]}`);
-  for(const id of ['modeSelect','enemySelect','difficultySelect','scaleSelect','landscapeSelect','qualitySelect'])assert.match(html,new RegExp('<select\\b[^>]*\\bid="'+id+'"'));
+  for(const id of ['modeSelect','enemySelect','difficultySelect','scaleSelect','landscapeSelect','qualitySelect','fogSelect'])assert.match(html,new RegExp('<select\\b[^>]*\\bid="'+id+'"'));
   for(const id of ['menuHouseTab','menuCampaignTab','menuHousePanel','menuCampaignPanel','chosenHouseName','chosenHouseEmblem','startButton','resumeButton'])assert.ok(present.has(id),id);
+});
+
+test('Fog of War is an explicit campaign setting with visible instructions and distinct On and Off choices',()=>{
+  const campaign=html.match(/<section id="menuCampaignPanel"[\s\S]*?<\/section>/)?.[0];assert.ok(campaign);
+  const label=campaign.match(/<label for="fogSelect"[^>]*>([\s\S]*?)<\/label>/)?.[1];assert.ok(label,'Fog must be labeled in the campaign setup, outside optional details.');
+  assert.match(label,/<strong>Fog of War<\/strong>/);
+  assert.match(label,/<option value="off" selected>Off · full map<\/option>/);
+  assert.match(label,/<option value="on">On · scouting<\/option>/);
+  assert.match(label,/aria-describedby="fogHelp"/);
+  assert.match(label,/<small id="fogHelp">[^<]*enemy armies[^<]*last-seen buildings[^<]*rivals use the same rules\./);
+  assert.doesNotMatch(label,/\bhidden\b/);
 });
 
 test('All sixteen painted house choices update the selected profile and accessible state',()=>{
@@ -81,13 +92,13 @@ test('Compact house profiles retain complete bonuses, weaknesses and powers in t
 });
 
 test('Small-screen menu tabs preserve choices and expose one keyboard tab stop',()=>{
-  const f=fixture();f.element('modeSelect').value='team-bannerfall';f.element('landscapeSelect').value='highlands';f.context.chosenHouse=12;
+  const f=fixture();f.element('modeSelect').value='team-bannerfall';f.element('landscapeSelect').value='highlands';f.element('fogSelect').value='on';f.context.chosenHouse=12;
   for(const tab of ['campaign','house','campaign']){
     f.context.chooseMenuTab(tab);assert.equal(f.element('menuOverlay').dataset.menuTab,tab);
     for(const [name,id]of [['house','menuHouseTab'],['campaign','menuCampaignTab']]){assert.equal(f.element(id).getAttribute('aria-selected'),String(name===tab));assert.equal(f.element(id).tabIndex,name===tab?0:-1);}
   }
   f.context.chooseMenuTab('house',true);assert.equal(f.element('menuHouseTab').focusCount,1);
-  assert.equal(f.context.chosenHouse,12);assert.equal(f.element('modeSelect').value,'team-bannerfall');assert.equal(f.element('landscapeSelect').value,'highlands');
+  assert.equal(f.context.chosenHouse,12);assert.equal(f.element('modeSelect').value,'team-bannerfall');assert.equal(f.element('landscapeSelect').value,'highlands');assert.equal(f.element('fogSelect').value,'on');
 });
 
 test('Menu tab clicks and arrow, Home and End keys select and focus the expected panel',()=>{
@@ -123,10 +134,11 @@ test('Starting a campaign passes every selected setting to the actual simulation
   const f=fixture();let captured;
   f.context.Game=class extends Game{constructor(config){captured={...config};super(config);}};
   f.context.chosenHouse=14;
-  const values={modeSelect:'team-dominion',enemySelect:'7',difficultySelect:'veteran',scaleSelect:'standard',landscapeSelect:'highlands',qualitySelect:'high'};
+  const values={modeSelect:'team-dominion',enemySelect:'7',difficultySelect:'veteran',scaleSelect:'standard',landscapeSelect:'highlands',qualitySelect:'high',fogSelect:'on'};
   for(const [id,value]of Object.entries(values))f.element(id).value=value;
   f.context.start();
   assert.equal(captured.house,14);assert.equal(captured.mode,values.modeSelect);assert.equal(captured.enemies,7);assert.equal(captured.difficulty,values.difficultySelect);assert.equal(captured.scale,values.scaleSelect);assert.equal(captured.landscape,values.landscapeSelect);
+  assert.equal(captured.fogOfWar,true);assert.equal(f.context.game.config.fogOfWar,true);
   assert.equal(f.context.ui.quality,'high');assert.equal(f.context.started,true);assert.equal(f.context.menuOpen,false);assert.equal(f.element('menuOverlay').hidden,true);assert.equal(f.context.game.teams[0].house,14);
   for(const [id,value]of Object.entries(values))assert.equal(f.element(id).value,value,`Starting must not reset ${id}.`);
 });
@@ -139,6 +151,14 @@ test('Opening and resuming the menu preserves the running campaign and pause sta
     f.context.resume();assert.equal(f.context.game,campaign);assert.equal(campaign.paused,paused);assert.equal(campaign.time,123);assert.equal(f.context.menuOpen,false);assert.equal(f.element('menuOverlay').hidden,true);
     assert.equal(f.element('landscapeSelect').value,'coast');assert.equal(f.context.chosenHouse,9);
   }
+});
+
+test('Choosing Fog of War Off starts a new campaign with full battlefield knowledge',()=>{
+  const f=fixture();
+  for(const [id,value]of Object.entries({modeSelect:'conquest',enemySelect:'1',difficultySelect:'standard',scaleSelect:'standard',landscapeSelect:'open',qualitySelect:'auto',fogSelect:'off'}))f.element(id).value=value;
+  f.context.Game=Game;f.context.start();
+  assert.equal(f.context.game.config.fogOfWar,false);
+  const enemy=f.context.game.units.find(u=>u.team===1);assert.ok(enemy);assert.equal(f.context.game.isVisibleTo(0,enemy),true);
 });
 
 console.log(`${cases} campaign menu checks passed.`);

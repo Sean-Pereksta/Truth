@@ -58,10 +58,11 @@ function fixture({house=0,realMenu=false}={}){
     const line=source.split('\n').find(line=>line.startsWith(prefix));assert.ok(line,prefix);vm.runInContext(line,context);
   }
   const actionsStart=source.indexOf('const MENU_ACTIONS='),actionsEnd=source.indexOf('\n};',actionsStart);vm.runInContext(source.slice(actionsStart,actionsEnd+3),context);
-  for(const name of ['clearBuildingSelection','selectTroopType','commandGroup','cancelBuild','showTab','activateMenuAction','handleMenuHotkey','beginFacing','issue','setSelectedRally','pointerPos','rememberMouse','finishPointer','bonusText','upgradeSummary','specialistTooltip','labelMenuHotkeys','buildActionLists'])vm.runInContext(extract(name),context);
+  for(const name of ['clearBuildingSelection','selectTroopType','commandGroup','cancelBuild','showTab','activateMenuAction','handleMenuHotkey','beginFacing','patrolBorder','issue','setSelectedRally','pointerPos','rememberMouse','finishPointer','bonusText','upgradeSummary','specialistTooltip','labelMenuHotkeys','buildActionLists'])vm.runInContext(extract(name),context);
   vm.runInContext(listener('canvas','pointerdown'),context);vm.runInContext(listener('canvas','pointermove'),context);vm.runInContext(listener('window','keydown'),context);
   const cancelLine=source.split('\n').find(line=>line.startsWith("canvas.addEventListener('pointerup'"));vm.runInContext(cancelLine,context);
   const blurLine=source.split('\n').find(line=>line.startsWith("window.addEventListener('keyup'"));vm.runInContext(blurLine,context);
+  const patrolLine=source.split('\n').find(line=>line.startsWith("$('patrolButton').onclick="));assert.ok(patrolLine);vm.runInContext(patrolLine,context);
   for(const id of ['recruitList','buildList']){const line=source.split('\n').find(line=>line.startsWith("$('"+id+"').addEventListener('click'"));assert.ok(line);vm.runInContext(line,context);}
   const refreshMenu=()=>{
     actions.clear();const rows={};
@@ -93,11 +94,13 @@ test('Right-drag issues one order at the pressed destination with normalized wor
   assert.equal(u.order.groupX,30);assert.equal(u.order.groupY,30);assert.ok(Math.abs(u.order.facingX-1)<1e-9);assert.equal(f.ui.facingPreview,null);
 });
 
-test('Simple right-click keeps ordinary movement and the directional button also supports a left drag',()=>{
+test('Simple right-click moves, while the directional button and D never turn left-drag selection into an order',()=>{
   const f=fixture(),u=f.game.addUnit(0,'infantry',28.5,30.5);f.ui.selected.add(u.id);
   f.canvas.dispatch('pointerdown',f.event());f.canvas.dispatch('pointerup',f.event());assert.equal(f.commands.length,1);assert.equal(f.commands[0][3],'move');assert.equal(f.commands[0][5],null);assert.equal(u.order.facingX,undefined);
-  f.context.beginFacing();assert.equal(f.ui.facingMode,true);f.canvas.dispatch('pointerdown',f.event({button:0}));f.canvas.dispatch('pointermove',f.event({button:0,clientX:344,clientY:328}));f.canvas.dispatch('pointerup',f.event({button:0,clientX:344,clientY:328}));
-  assert.equal(f.commands.length,2);assert.ok(Math.abs(f.commands[1][5].x)<1e-9);assert.ok(Math.abs(f.commands[1][5].y-1)<1e-9);assert.equal(f.ui.facingMode,false);
+  for(const explain of [()=>f.context.beginFacing(),()=>f.win.dispatch('keydown',f.event({key:'d',code:'KeyD'}))]){
+    explain();f.canvas.dispatch('pointerdown',f.event({button:0}));f.canvas.dispatch('pointermove',f.event({button:0,clientX:300,clientY:260}));assert.ok(f.ui.drag);assert.equal(f.ui.facingPreview,null);f.canvas.dispatch('pointerup',f.event({button:0,clientX:300,clientY:260}));
+    assert.equal(f.commands.length,1);assert.deepEqual(ids(f.ui.selected),[u.id]);
+  }
 });
 
 test('Cancel, Escape and lost focus discard a facing preview without issuing an order',()=>{
@@ -109,11 +112,31 @@ test('Cancel, Escape and lost focus discard a facing preview without issuing an 
   }
 });
 
-test('Building-only right-click still sets its independent rally and a right-drag only pans',()=>{
+test('Building-only right-click sets its rally, while right-drag never pans or changes a rally',()=>{
   const f=fixture(),building=f.game.addBuilding(0,'barracks',25.5,25.5);f.ui.selectedBuildings.add(building.id);
   f.canvas.dispatch('pointerdown',f.event());f.canvas.dispatch('pointerup',f.event());assert.equal(f.commands.length,0);assert.equal(building.rally.x,30);assert.equal(building.rally.y,30);
-  const before={...building.rally};f.canvas.dispatch('pointerdown',f.event());f.canvas.dispatch('pointermove',f.event({clientX:484,clientY:342}));f.canvas.dispatch('pointerup',f.event({clientX:484,clientY:342}));
-  assert.deepEqual(building.rally,before);assert.equal(f.commands.length,0);assert.equal(f.ui.facingPreview,null);
+  const before={...building.rally},camera={...f.context.view};f.canvas.dispatch('pointerdown',f.event());f.canvas.dispatch('pointermove',f.event({clientX:484,clientY:342}));assert.ok(f.ui.facingPreview);assert.equal(f.ui.facingPreview.count,0);f.canvas.dispatch('pointerup',f.event({clientX:484,clientY:342}));
+  assert.deepEqual(building.rally,before);assert.equal(f.commands.length,0);assert.equal(f.ui.facingPreview,null);assert.deepEqual(f.context.view,camera);
+});
+
+test('Only middle-drag pans; an empty-selection right-drag remains a facing preview without commanding anything',()=>{
+  const f=fixture(),camera={...f.context.view};f.canvas.dispatch('pointerdown',f.event());f.canvas.dispatch('pointermove',f.event({clientX:484,clientY:342}));assert.ok(f.ui.facingPreview);assert.equal(f.ui.facingPreview.count,0);f.canvas.dispatch('pointerup',f.event({clientX:484,clientY:342}));assert.deepEqual(f.context.view,camera);assert.equal(f.commands.length,0);
+  f.canvas.dispatch('pointerdown',f.event({button:1}));f.canvas.dispatch('pointermove',f.event({button:1,clientX:484,clientY:342}));f.canvas.dispatch('pointerup',f.event({button:1,clientX:484,clientY:342}));assert.equal(f.context.view.x,camera.x-84);assert.equal(f.context.view.y,camera.y-42);assert.equal(f.commands.length,0);
+});
+
+test('Left-drag always selects and right-drag always faces, including during placement and rally modes',()=>{
+  for(const mode of ['buildMode','rallyMode','teamOrderMode']){
+    const f=fixture(),u=f.game.addUnit(0,'infantry',28.5,30.5);f.ui[mode]=mode==='buildMode'?'barracks':mode==='teamOrderMode'?'assault':true;
+    f.canvas.dispatch('pointerdown',f.event({button:0}));f.canvas.dispatch('pointermove',f.event({button:0,clientX:300,clientY:260}));assert.ok(f.ui.drag,mode);assert.equal(f.ui.facingPreview,null);f.canvas.dispatch('pointerup',f.event({button:0,clientX:300,clientY:260}));assert.deepEqual(ids(f.ui.selected),[u.id],mode);assert.equal(f.commands.length,0);assert.equal(f.effects.includes('teamOrder'),false);assert.equal(f.game.buildings.length,0);
+    f.canvas.dispatch('pointerdown',f.event());f.canvas.dispatch('pointermove',f.event({clientX:484,clientY:342}));assert.ok(f.ui.facingPreview,mode);f.canvas.dispatch('pointerup',f.event({clientX:484,clientY:342}));assert.equal(f.commands.length,1,mode);assert.ok(Math.abs(f.commands[0][5].x-1)<1e-9);assert.equal(f.ui[mode],mode==='buildMode'||mode==='teamOrderMode'?null:false);assert.equal(f.game.buildings.length,0);
+  }
+});
+
+test('Patrol N and the patrol button command only selected cavalry and preserve ordinary infantry orders',()=>{
+  for(const trigger of [f=>f.win.dispatch('keydown',f.event({key:'n',code:'KeyN'})),f=>f.element('patrolButton').onclick()]){
+    const f=fixture(),horse=f.game.addUnit(0,'cavalry',28.5,30.5),foot=f.game.addUnit(0,'infantry',29,31);f.game.hold([foot.id]);const old=foot.order;f.ui.selected=new Set([horse.id,foot.id]);trigger(f);assert.equal(horse.order.mode,'patrol');assert.equal(foot.order,old);assert.equal(f.commands.length,0);
+  }
+  const f=fixture(),foot=f.game.addUnit(0,'infantry',29,31);f.ui.selected.add(foot.id);f.context.patrolBorder();assert.ok(f.messages.at(-1).includes('Select cavalry'));assert.equal(foot.order,null);
 });
 
 test('Type selection filters living owned classes including house specialists and existing spear factions',()=>{
