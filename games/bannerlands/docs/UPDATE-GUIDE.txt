@@ -1,3 +1,9 @@
+INDIVIDUAL ATTACK NEAREST
+A and Attack nearest choose a separate nearest enemy unit for every selected
+soldier. Spread-out armies engage locally instead of gathering at one common
+point. With no enemy troops remaining, each soldier targets its nearest enemy
+structure. Press A again to choose from current positions.
+
 PERFORMANCE EDITION
 Large armies share bounded, resumable route planning; open-ground collision
 checks, capture updates and strategic scenery avoid repeated work. Menu and

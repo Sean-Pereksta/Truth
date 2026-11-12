@@ -141,7 +141,7 @@ Move orders march directly. Hold defends the current position. Retreat returns t
 Q selects your entire army; F selects and centers your commander.
 H holds; V retreats; R selects all buildings; X switches Conquer/Move.
 E activates your house's signature power on the selected troops. The always-visible House power button shows readiness; Council explains its effects and cost.
-A attack-moves the selected soldiers toward their nearest living enemy unit or structure, engaging enemies along the way. The Attack nearest button gives the same order.
+A gives each selected soldier its own attack-move order toward the nearest living enemy unit to that soldier. Spread-out troops engage separate local fronts. If no hostile troops remain, each soldier targets its own nearest enemy structure. Normal local combat targeting continues along the way; press A again to choose from current enemy positions. The Attack nearest button gives the same order.
 Ctrl+1 through Ctrl+5 saves a company; 1 through 5 recalls one.
 Use Line, Wedge, or Spread to position troops. Spread limits artillery losses.
 
