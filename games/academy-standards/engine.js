@@ -32,6 +32,18 @@
   const FLAG_CAPTURE_DURATION=3;
   const FLAG_CAPTURE_RADIUS=29;
   const FLAG_CONTEST_RADIUS=96;
+  const VISION_TILE=80, VISION_COLS=Math.ceil(WORLD_W/VISION_TILE), VISION_ROWS=Math.ceil(WORLD_H/VISION_TILE);
+  const TERRAIN_PROFILES={
+    grass:{type:'grass',speed:1,sight:1,concealment:1},
+    forest:{type:'forest',speed:.62,mountedSpeed:.42,sight:.74,concealment:.58},
+    marsh:{type:'marsh',speed:.52,mountedSpeed:.30,sight:.9,concealment:.8},
+    hill:{type:'hill',speed:.82,mountedSpeed:.78,sight:1.28,concealment:1},
+    ruins:{type:'ruins',speed:.65,mountedSpeed:.48,sight:.9,concealment:.7},
+    road:{type:'road',speed:1.18,mountedSpeed:1.25,sight:1,concealment:1},
+    river:{type:'river',speed:.66,mountedSpeed:.55,sight:1,concealment:1},
+    ridge:{type:'ridge',speed:0,sight:0,concealment:1},
+    water:{type:'water',speed:0,sight:1,concealment:1}
+  };
 
   const HOUSE_DEFS = [
     { id:'player',   name:'House Augustus', color:'#5ca8ff', castle:{x:520,y:3250} },
@@ -79,7 +91,11 @@
     traps:[],
     blacksmiths:[],
     objectives:[],
-    terrain:{ dirt:[], waters:[], rivers:[], forestRects:[], hills:[], stones:[] },
+    terrain:{ dirt:[], waters:[], rivers:[], forestRects:[], hills:[], stones:[], marshes:[], ridges:[], ruins:[], roads:[] },
+    visibility:{},
+    terrainGrid:[],
+    visionSources:{},
+    visibilityAt:-1,
     walkable:[],
     gameOver:false,
     paused:true,
@@ -185,11 +201,102 @@
     return factor;
   }
 
+  function insideEllipse(x,y,p){return ((x-p.x)/(p.rx||p.r))**2+((y-p.y)/(p.ry||p.r))**2<=1;}
+  function insideRect(x,y,p,pad=0){return x>=p.x-pad&&x<=p.x+p.w+pad&&y>=p.y-pad&&y<=p.y+p.h+pad;}
+  function onTerrainPath(x,y,path){
+    return path.points.some((p,i)=>i&&distToSegment(x,y,path.points[i-1].x,path.points[i-1].y,p.x,p.y)<path.width/2);
+  }
+  function terrainProfileAt(x,y){
+    const t=game.terrain;
+    if((t.ridges||[]).some(p=>insideRect(x,y,p)))return TERRAIN_PROFILES.ridge;
+    if(t.waters.some(p=>insideEllipse(x,y,p)))return TERRAIN_PROFILES.water;
+    if(t.forestRects.some(p=>insideRect(x,y,p)))return TERRAIN_PROFILES.forest;
+    if((t.marshes||[]).some(p=>insideEllipse(x,y,p)))return TERRAIN_PROFILES.marsh;
+    if((t.ruins||[]).some(p=>insideEllipse(x,y,p)))return TERRAIN_PROFILES.ruins;
+    if(t.rivers.some(p=>onTerrainPath(x,y,p)))return TERRAIN_PROFILES.river;
+    if((t.roads||[]).some(p=>onTerrainPath(x,y,p)))return TERRAIN_PROFILES.road;
+    if(t.hills.some(p=>insideEllipse(x,y,p)))return TERRAIN_PROFILES.hill;
+    return TERRAIN_PROFILES.grass;
+  }
+  function terrainAt(x,y){return game.terrainGrid[Math.floor(y/TILE)]?.[Math.floor(x/TILE)]||TERRAIN_PROFILES.grass;}
+  function terrainMoveFactor(s,x=s.x,y=s.y){const p=terrainAt(x,y);return s.mount?(p.mountedSpeed??p.speed):p.speed;}
+
+  // A ridge is opaque; woodland and ruined walls allow short-range fighting
+  // inside the cover, but cannot be seen through from the other side.
+  function lineOfSight(ax,ay,bx,by){
+    const distance=dist(ax,ay,bx,by),steps=Math.max(1,Math.ceil(distance/20));
+    let coverDepth=0;
+    for(let i=1;i<=steps;i++){
+      const x=lerp(ax,bx,i/steps),y=lerp(ay,by,i/steps),p=terrainAt(x,y);
+      if(p.type==='ridge')return false;
+      if(p.type==='forest'||p.type==='ruins')coverDepth+=distance/steps;
+      if(coverDepth>100)return false;
+      for(const b of game.barricades)if(b.alive&&x>b.x-b.w/2&&x<b.x+b.w/2&&y>b.y-b.h/2&&y<b.y+b.h/2)return false;
+    }
+    return true;
+  }
+  function visionIndex(x,y){
+    if(x<0||y<0||x>=WORLD_W||y>=WORLD_H)return -1;
+    return Math.floor(y/VISION_TILE)*VISION_COLS+Math.floor(x/VISION_TILE);
+  }
+  function sourceSees(source,x,y,conceal=true){
+    const distance=dist(source.x,source.y,x,y);
+    if(distance<=58)return lineOfSight(source.x,source.y,x,y);
+    const concealment=conceal?terrainAt(x,y).concealment:1;
+    return distance<=source.range*concealment&&lineOfSight(source.x,source.y,x,y);
+  }
+  function refreshVisibility(force=false){
+    if(!force&&game.visibilityAt>=0&&game.time-game.visibilityAt<.20)return;
+    game.visibilityAt=game.time;
+    const size=VISION_COLS*VISION_ROWS;
+    game.visionSources={};
+    for(const house of game.houses){
+      const id=house.controller;
+      if(!game.visionSources[id])game.visionSources[id]=[];
+      game.visionSources[id].push({x:house.castle.x,y:house.castle.y,range:470});
+    }
+    for(const s of game.students){
+      if(s.state==='knocked')continue;
+      (game.visionSources[s.controller]??=[]).push({x:s.x,y:s.y,range:360*terrainAt(s.x,s.y).sight*(s.mount?1.12:1)});
+    }
+    for(const id of HOUSE_DEFS.map(h=>h.id)){
+      const vision=game.visibility[id]??={visible:new Uint8Array(size),explored:new Uint8Array(size)};
+      vision.visible.fill(0);
+      for(const source of game.visionSources[id]||[]){
+        const minX=clamp(Math.floor((source.x-source.range)/VISION_TILE),0,VISION_COLS-1),maxX=clamp(Math.floor((source.x+source.range)/VISION_TILE),0,VISION_COLS-1);
+        const minY=clamp(Math.floor((source.y-source.range)/VISION_TILE),0,VISION_ROWS-1),maxY=clamp(Math.floor((source.y+source.range)/VISION_TILE),0,VISION_ROWS-1);
+        for(let gy=minY;gy<=maxY;gy++)for(let gx=minX;gx<=maxX;gx++){
+          const index=gy*VISION_COLS+gx;
+          if(vision.visible[index])continue;
+          if(sourceSees(source,gx*VISION_TILE+VISION_TILE/2,gy*VISION_TILE+VISION_TILE/2,false)){
+            vision.visible[index]=1;vision.explored[index]=1;
+          }
+        }
+      }
+    }
+  }
+  function canSee(controller,x,y){
+    refreshVisibility();
+    return (game.visionSources[controller]||[]).some(source=>sourceSees(source,x,y));
+  }
+  function isTerrainVisible(controller,x,y){refreshVisibility();const index=visionIndex(x,y);return index>=0&&!!game.visibility[controller]?.visible[index];}
+  function isExplored(controller,x,y){const index=visionIndex(x,y);return index>=0&&!!game.visibility[controller]?.explored[index];}
+  function isVisibleTo(controller,entity){
+    if(!entity)return false;
+    if(entity.carriedBy){const carrier=game.students.find(s=>s.id===entity.carriedBy);return carrier?.controller===controller||canSee(controller,entity.x,entity.y);}
+    // A stolen or dropped friendly standard has no sight of its own.
+    if(entity.houseId)return canSee(controller,entity.x,entity.y);
+    if(entity.controller===controller)return true;
+    return canSee(controller,entity.x,entity.y);
+  }
+  const canSeePoint=canSee,canSeeStudent=isVisibleTo;
+
   function log(msg){
     game.logs.unshift(msg);
     if(game.logs.length>110) game.logs.length=110;
     if(!window.AcademyUI) ui.log.innerHTML = game.logs.map(m=>`<div>${m}</div>`).join('');
   }
+  function logWorld(msg,entity){if(entity?.controller==='player'||(entity&&canSee('player',entity.x,entity.y)))log(msg);}
 
   function makeHouse(def){
     const stock = {};
@@ -360,6 +467,9 @@
   }
 
   function buildTerrain(){
+    // A new trial rebuilds the same terrain object, including after an import.
+    // Discard profiles computed for the previous trial's terrain contents.
+    game.terrainGridReference=null;
     game.terrain.dirt = [
       {x:700,y:900,r:220},{x:1280,y:1460,r:260},{x:2100,y:980,r:280},{x:3040,y:1680,r:280},{x:3940,y:2860,r:300},
       {x:1680,y:3600,r:340},{x:900,y:4300,r:260},{x:2860,y:4600,r:250}
@@ -378,6 +488,43 @@
     ];
     game.terrain.hills = [
       {x:1550,y:2200,r:220},{x:2450,y:2550,r:170},{x:3280,y:3920,r:220},{x:820,y:1850,r:160},{x:4220,y:1640,r:190}
+    ];
+    game.terrain.forestRects.push(
+      {x:1050,y:1870,w:240,h:260},{x:1740,y:1280,w:260,h:280},{x:2220,y:1720,w:290,h:210},
+      {x:3500,y:1260,w:250,h:300},{x:4230,y:2200,w:210,h:310},{x:3280,y:3060,w:250,h:270},
+      {x:1550,y:2780,w:260,h:230},{x:740,y:3730,w:240,h:280},{x:2340,y:4480,w:290,h:240},
+      {x:3680,y:4100,w:260,h:290},{x:100,y:1850,w:220,h:270},{x:2940,y:4440,w:220,h:240},
+      {x:1980,y:2180,w:240,h:190},{x:3670,y:3440,w:240,h:220},{x:570,y:4720,w:220,h:180}
+    );
+    game.terrain.hills.push(
+      {x:1880,y:1680,r:180},{x:2780,y:1220,r:160},{x:3870,y:2360,r:180},
+      {x:3550,y:3580,r:160},{x:2700,y:4180,r:180},{x:1280,y:4020,r:150},
+      {x:1280,y:3000,r:160},{x:650,y:2150,r:150},{x:2270,y:3400,r:170}
+    );
+    game.terrain.marshes=[
+      {x:1260,y:1180,rx:170,ry:120},{x:1910,y:1940,rx:190,ry:130},{x:3320,y:1500,rx:150,ry:180},
+      {x:3860,y:2920,rx:160,ry:130},{x:2810,y:2800,rx:160,ry:120},{x:2020,y:3750,rx:180,ry:140},
+      {x:1180,y:3470,rx:150,ry:150},{x:3090,y:4080,rx:150,ry:130},{x:4220,y:4040,rx:140,ry:190},
+      {x:1650,y:4560,rx:160,ry:120},{x:590,y:1580,rx:130,ry:110},{x:2540,y:960,rx:150,ry:110}
+    ];
+    game.terrain.ridges=[
+      {x:1320,y:2460,w:100,h:290},{x:1960,y:1460,w:300,h:85},{x:2970,y:820,w:90,h:300},
+      {x:3950,y:1710,w:290,h:90},{x:3460,y:2440,w:85,h:300},{x:2420,y:3540,w:280,h:90},
+      {x:1710,y:3860,w:90,h:300},{x:3160,y:4280,w:290,h:90},{x:3970,y:3750,w:85,h:260},
+      {x:400,y:4020,w:270,h:85}
+    ];
+    game.terrain.ruins=[
+      {x:1600,y:1010,r:110},{x:2710,y:1900,r:130},{x:3700,y:1760,r:120},
+      {x:3090,y:3540,r:115},{x:1720,y:3290,r:125},{x:1070,y:2660,r:110},
+      {x:3800,y:4560,r:100},{x:2710,y:4840,r:100},{x:1470,y:4720,r:110},
+      {x:4350,y:2750,r:110},{x:2170,y:2670,r:100},{x:710,y:700,r:100}
+    ];
+    game.terrain.roads=[
+      {width:76,points:[{x:520,y:3250},{x:1080,y:3120},{x:1570,y:2470},{x:2460,y:2460},{x:3180,y:2140},{x:3900,y:2450},{x:4620,y:2360}]},
+      {width:72,points:[{x:1220,y:760},{x:1300,y:1460},{x:1570,y:2470},{x:1800,y:3120},{x:2120,y:4920}]},
+      {width:72,points:[{x:2280,y:520},{x:2320,y:1260},{x:2460,y:2460},{x:2860,y:3140},{x:3360,y:4620}]},
+      {width:72,points:[{x:3550,y:640},{x:3360,y:1200},{x:3180,y:2140},{x:3580,y:3120},{x:4280,y:3620}]},
+      {width:72,points:[{x:4440,y:1180},{x:4100,y:1440},{x:3900,y:2450},{x:3580,y:3120},{x:2860,y:3140},{x:1800,y:3120},{x:960,y:4480}]}
     ];
     game.terrain.stones = [];
     for(let i=0;i<130;i++) game.terrain.stones.push({x:rand(80,WORLD_W-80), y:rand(80,WORLD_H-80), r:rand(3,8)});
@@ -400,22 +547,25 @@
 
   function rebuildWalkableGrid(){
     game.walkable = Array.from({length:ROWS},()=>Array(COLS).fill(true));
+    const rebuildProfiles=game.terrainGridReference!==game.terrain;
+    if(rebuildProfiles){game.terrainGrid=Array.from({length:ROWS},()=>Array(COLS));game.terrainGridReference=game.terrain;}
     for(let gy=0; gy<ROWS; gy++){
       for(let gx=0; gx<COLS; gx++){
         const cx = gx*TILE + TILE/2;
         const cy = gy*TILE + TILE/2;
+        if(rebuildProfiles)game.terrainGrid[gy][gx]=terrainProfileAt(cx,cy);
         let blocked = false;
 
         for(const w of game.terrain.waters){
-          const nx=(cx-w.x)/(w.rx+18), ny=(cy-w.y)/(w.ry+18);
+          const nx=(cx-w.x)/(w.rx+20), ny=(cy-w.y)/(w.ry+20);
           if(nx*nx + ny*ny < 1) blocked = true;
         }
-        for(const f of game.terrain.forestRects){
+        for(const f of game.terrain.ridges||[]){
           if(cx>f.x-18 && cx<f.x+f.w+18 && cy>f.y-18 && cy<f.y+f.h+18) blocked = true;
         }
         for(const b of game.barricades){
           if(!b.alive) continue;
-          if(cx > b.x - b.w/2 - 2 && cx < b.x + b.w/2 + 2 && cy > b.y - b.h/2 - 2 && cy < b.y + b.h/2 + 2) blocked = true;
+          if(cx > b.x - b.w/2 - 18 && cx < b.x + b.w/2 + 18 && cy > b.y - b.h/2 - 18 && cy < b.y + b.h/2 + 18) blocked = true;
         }
         for(const h of HOUSE_DEFS){
           if(dist(cx,cy,h.castle.x,h.castle.y) < 64) blocked = false;
@@ -431,7 +581,7 @@
   function terrainClear(x,y,radius=12){
     if(x<radius+2||y<radius+2||x>WORLD_W-radius-2||y>WORLD_H-radius-2)return false;
     for(const w of game.terrain.waters)if(((x-w.x)/(w.rx+radius+3))**2+((y-w.y)/(w.ry+radius+3))**2<1)return false;
-    for(const f of game.terrain.forestRects)if(x>f.x-radius-2&&x<f.x+f.w+radius+2&&y>f.y-radius-2&&y<f.y+f.h+radius+2)return false;
+    for(const f of game.terrain.ridges||[])if(insideRect(x,y,f,radius+2))return false;
     for(const b of game.barricades)if(b.alive&&x>b.x-b.w/2-radius&&x<b.x+b.w/2+radius&&y>b.y-b.h/2-radius&&y<b.y+b.h/2+radius)return false;
     return !!game.walkable[Math.floor(y/TILE)]?.[Math.floor(x/TILE)];
   }
@@ -514,28 +664,35 @@
     return walkCount >= 4;
   }
 
-  function pathfind(sx,sy,tx,ty,avoid=null){
+  function pathfind(sx,sy,tx,ty,avoid=null,mover=null){
     const start = nearestWalkable(sx,sy);
     const goal = nearestWalkable(tx,ty);
-    const open = [start];
+    const open = [];
+    const heuristic=(gx,gy)=>Math.abs(goal.gx-gx)+Math.abs(goal.gy-gy);
+    const before=(a,b)=>a.f<b.f||(a.f===b.f&&a.h<b.h);
+    const push=node=>{
+      open.push(node);let i=open.length-1;
+      while(i>0){const parent=(i-1)>>1;if(!before(open[i],open[parent]))break;[open[i],open[parent]]=[open[parent],open[i]];i=parent;}
+    };
+    const pop=()=>{
+      const result=open[0],last=open.pop();
+      if(open.length){open[0]=last;let i=0;while(true){let child=i*2+1;if(child>=open.length)break;if(child+1<open.length&&before(open[child+1],open[child]))child++;if(!before(open[child],open[i]))break;[open[i],open[child]]=[open[child],open[i]];i=child;}}
+      return result;
+    };
+    push({...start,f:.8*heuristic(start.gx,start.gy),h:heuristic(start.gx,start.gy)});
     const came = new Map();
     const gScore = new Map([[keyXY(start.gx,start.gy), 0]]);
-    const fScore = new Map([[keyXY(start.gx,start.gy), Math.abs(goal.gx-start.gx)+Math.abs(goal.gy-start.gy)]]);
+    const fScore = new Map([[keyXY(start.gx,start.gy), .8*(Math.abs(goal.gx-start.gx)+Math.abs(goal.gy-start.gy))]]);
     const closed = new Set();
     const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
     let loops = 0;
     let bestReached=start,bestRemaining=Infinity;
 
-    while(open.length && loops < 1800){
+    while(open.length && loops < 5000){
       loops++;
-      let bestIdx=0, bestF=Infinity,bestH=Infinity;
-      for(let i=0;i<open.length;i++){
-        const k=keyXY(open[i].gx,open[i].gy), f=fScore.get(k) ?? Infinity;
-        const h=Math.abs(goal.gx-open[i].gx)+Math.abs(goal.gy-open[i].gy);
-        if(f<bestF||(f===bestF&&h<bestH)){ bestF=f;bestH=h;bestIdx=i; }
-      }
-      const current = open.splice(bestIdx,1)[0];
+      const current = pop();
       const ck = keyXY(current.gx,current.gy);
+      if(closed.has(ck)||current.f>(fScore.get(ck)??Infinity))continue;
       const remaining=Math.abs(goal.gx-current.gx)+Math.abs(goal.gy-current.gy);
       if(remaining<bestRemaining){bestRemaining=remaining;bestReached=current;}
 
@@ -555,15 +712,16 @@
       for(const [dx,dy] of dirs){
         const nx=current.gx+dx, ny=current.gy+dy;
         if(nx<0||ny<0||nx>=COLS||ny>=ROWS) continue;
-        if(!game.walkable[ny][nx]||!terrainClear(nx*TILE+TILE/2,ny*TILE+TILE/2,16)) continue;
+        if(!game.walkable[ny][nx]) continue;
         const nk=keyXY(nx,ny);
         if(closed.has(nk)) continue;
-        const tentative=(gScore.get(ck)??Infinity)+1+(avoid?.has(nk)?3:0);
+        const profile=terrainAt(nx*TILE+TILE/2,ny*TILE+TILE/2),speed=mover?.mount?(profile.mountedSpeed??profile.speed):profile.speed;
+        const tentative=(gScore.get(ck)??Infinity)+1/Math.max(.2,speed)+(avoid?.has(nk)?3:0);
         if(tentative < (gScore.get(nk)??Infinity)){
           came.set(nk,ck);
           gScore.set(nk,tentative);
-          fScore.set(nk,tentative + Math.abs(goal.gx-nx)+Math.abs(goal.gy-ny));
-          if(!open.some(o=>o.gx===nx&&o.gy===ny)) open.push({gx:nx,gy:ny});
+          fScore.set(nk,tentative + .8*(Math.abs(goal.gx-nx)+Math.abs(goal.gy-ny)));
+          push({gx:nx,gy:ny,f:fScore.get(nk),h:heuristic(nx,ny)});
         }
       }
     }
@@ -614,7 +772,7 @@
     student.buildProgress = 0;
     student.tx = student.order.x;
     student.ty = student.order.y;
-    student.path = pathfind(student.x, student.y, student.tx, student.ty);
+    student.path = pathfind(student.x, student.y, student.tx, student.ty,null,student);
     student.pathIndex = 0;
     student.lastPathAt = game.time;
     student.state = 'move';
@@ -706,6 +864,7 @@
 
   function init(){
     game.time=0; game.last=0; game.gameOver=false;
+    game.visibility={};game.visibilityAt=-1;game.visionSources={};
     game.paused=true;
     game.squads={2:null,3:null,4:null};
     game.activeSquad=1;
@@ -767,6 +926,8 @@
     spawnInitialLootBoxes();
     game.particles=[];
     game.projectiles=[];
+
+    refreshVisibility(true);
 
     const rect = canvas.getBoundingClientRect();
     const vw = rect.width || 1200;
@@ -1171,60 +1332,34 @@
     return true;
   }
 
-  function equipPreset(role){
-    const aliases={frontline:'vanguard',archer:'ranged',medic:'support',scout:'cavalry'};
-    role=aliases[role]||role;
-    const presets={
-      vanguard:{weapon:['Spear','Sword'],armor:['Heavy','Light'],item:['Shield','FireOil','Boots']},
-      ranged:{weapon:['Longbow','Bow'],armor:['Light'],item:['Boots','FireOil','Shield']},
-      support:{weapon:['Spear','Sword','Bow'],armor:['Light'],item:['Medkit','EngineerKit','TrapKit','WarHorn']},
-      cavalry:{weapon:['Sword','Spear'],armor:['Light'],item:['Boots','WarHorn','Shield'],mount:['Horse']}
-    };
-    const selected=getSelectedUnits().filter(s=>s.controller==='player'&&s.state!=='knocked');
-    let changed=0,missing=0;
-    selected.forEach((s,i)=>{
-      const chosen=role==='balanced'? (i%10<5?'vanguard':i%10<8?'ranged':i%10===8?'support':'cavalry'):role;
-      const preset=presets[chosen];
-      if(!preset)return;
-      for(const [slot,choices]of Object.entries(preset)){
-        if(slot==='mount'&&s.mount)continue;
-        if(choices.includes(s[slot]))continue;
-        const item=choices.find(k=>getPlayerHouse().stockpile[k]>0);
-        if(item&&equipItemOn(s,item,true))changed++;
-        else missing++;
-      }
-    });
-    log(changed?`${changed} equipment changes applied from your supplies.`:'No matching spare equipment is available. Collect supply crates for more options.');
-    refreshUI();
-    return {changed,missing};
+  function equipmentTargets(scope='selected'){
+    const units=scope==='team'?game.students:scope==='selected'?getSelectedUnits():getSquadUnits(Number(scope));
+    return units.filter(s=>s.controller==='player'&&s.state!=='knocked');
   }
 
-  function autoEquipSelected(){
-    const selected=getSelectedUnits().filter(s=>s.controller==='player'&&s.state!=='knocked');
-    let changed=0;
-    selected.forEach((s,i)=>{
-      let desired=getRole(s);
-      if(s.weapon==='None')desired=i%5===3?'ranged':i%5===4?'support':'vanguard';
-      const stock=getPlayerHouse().stockpile;
-      if(s.weapon==='None'){
-        const choices=desired==='ranged'?['Longbow','Bow','Spear','Sword']:['Spear','Sword','Bow','Longbow'];
-        const key=choices.find(k=>stock[k]>0);if(key&&equipItemOn(s,key))changed++;
-      }else if(s.weapon==='Bow'&&s.weaponLevel<=1&&stock.Longbow>0){if(equipItemOn(s,'Longbow',true))changed++;}
-      if(s.armor==='None'){
-        const key=(getRole(s)==='vanguard'?['Heavy','Light']:['Light','Heavy']).find(k=>stock[k]>0);
-        if(key&&equipItemOn(s,key))changed++;
-      }
-      if(s.item==='None'){
-        const allied=game.students.filter(t=>t.controller==='player'&&t.state!=='knocked');
-        const choices=!allied.some(t=>t.item==='Medkit')?['Medkit','Shield','Boots','EngineerKit','WarHorn']:getRole(s)==='ranged'?['Boots','FireOil','Shield']:['Shield','WarHorn','EngineerKit','Boots','Medkit'];
-        const key=choices.find(k=>stock[k]>0);if(key&&equipItemOn(s,key))changed++;
-      }
-      if(!s.mount && getRole(s)==='vanguard' && s.weapon==='Sword'&&stock.Horse>0){if(equipItemOn(s,'Horse'))changed++;}
-    });
-    log(changed?`Party equipped: ${changed} items assigned.`:'Your selected students are equipped. Use a role preset to change their jobs.');
-    refreshUI();
-    return changed;
+  function planEquipment(options={}){
+    return window.AcademyEquipment.plan(equipmentTargets(options.scope),getPlayerHouse().stockpile,options);
   }
+
+  function applyEquipment(options={}){
+    const plan=planEquipment(options),stock=getPlayerHouse().stockpile;
+    for(const key of LOOT_KEYS)stock[key]=plan.stock[key]||0;
+    for(const copy of plan.units){
+      const s=game.students.find(t=>t.id===copy.id);
+      if(!s)continue;
+      for(const key of ['weapon','weaponLevel','armor','item','mount'])s[key]=copy[key];
+      applyLoadout(s);
+    }
+    const report=plan.changed?`Party equipped: ${plan.changed} changes across ${plan.affected} students.`:plan.students?'No upgrades available in your supplies.':'Select ready students to equip.';
+    log(report);refreshUI();return {...plan,report};
+  }
+
+  function equipPreset(role,scope='selected'){
+    const aliases={frontline:'vanguard',archer:'ranged',medic:'support',scout:'cavalry'};
+    return applyEquipment({mode:aliases[role]||role,scope});
+  }
+  function autoEquipSelected(){return applyEquipment({mode:'auto',scope:'selected'}).changed;}
+  function autoEquipTeam(){return applyEquipment({mode:'auto',scope:'team'}).changed;}
 
   function setPaused(value){
     game.paused=!!value;
@@ -1282,6 +1417,7 @@
     state.selected=[...game.selected];
     state.selectedOneId=game.selectedOne?.id||null;
     state.controlMode=controlMode;
+    state.fogExplored=Object.fromEntries(Object.entries(game.visibility).map(([id,vision])=>[id,Array.from(vision.explored)]));
     return JSON.parse(JSON.stringify({version:2,savedAt:new Date().toISOString(),game:state}));
   }
 
@@ -1426,7 +1562,18 @@
       candidate.terrain.forestRects=readShapes('forestRects',['w','h']);
       candidate.terrain.hills=readShapes('hills',['r']);
       candidate.terrain.stones=readShapes('stones',['r']);
+      for(const [name,extra] of [['marshes',['rx','ry']],['ridges',['w','h']],['ruins',['r']]])candidate.terrain[name]=terrain[name]===undefined?[]:readShapes(name,extra);
+      candidate.terrain.roads=terrain.roads===undefined?[]:array(terrain.roads,30,'roads').map(row=>({width:num(row.width,1,200,'road width'),points:array(row.points,100,'road path').map(p=>point(p,'road'))}));
       candidate.terrain.rivers=array(terrain.rivers,10,'rivers').map(row=>({width:num(row.width,1,200,'river width'),points:array(row.points,100,'river path').map(p=>point(p,'river'))}));
+      candidate.visibility={};
+      if(raw.fogExplored!==undefined){
+        object(raw.fogExplored,'explored map');
+        for(const [id,values]of Object.entries(raw.fogExplored)){
+          houseId(id);const explored=array(values,VISION_COLS*VISION_ROWS,'explored map');
+          if(explored.length!==VISION_COLS*VISION_ROWS)fail('Invalid explored map size.');
+          candidate.visibility[id]={visible:new Uint8Array(explored.length),explored:Uint8Array.from(explored.map(value=>choice(value,[0,1],'explored map cell')))};
+        }
+      }
       const winner=candidate.houses.every(h=>h.controller==='player')?'victory':candidate.houses.find(h=>h.id==='player').controller!=='player'?'defeat':null;
       if(candidate.gameOver!==!!winner||candidate.result!==winner)fail('Invalid trial result.');
     }catch(error){return {ok:false,error:error.message||'This saved trial is damaged.'};}
@@ -1449,6 +1596,7 @@
       if(s.flagCaptureId){const standard=getStandard(s.flagCaptureId);if(dist(s.x,s.y,standard.x,standard.y)>FLAG_CAPTURE_RADIUS)clearFlagCapture(standard);else s.flagCaptureProgress=standard.captureProgress;}
     }
     const view=canvas.getBoundingClientRect();game.cam.x=clamp(game.cam.x,0,Math.max(0,WORLD_W-view.width));game.cam.y=clamp(game.cam.y,0,Math.max(0,WORLD_H-view.height));
+    game.visibilityAt=-1;refreshVisibility(true);
     refreshUI();
     if(window.onAcademyPause)window.onAcademyPause(true);
     return {ok:true};
@@ -1649,32 +1797,33 @@
     for(let i=game.students.length-1;i>=0;i--){
       const s=game.students[i];
       if(s.state==='knocked') continue;
+      if(!isVisibleTo('player',s))continue;
       if(pred && !pred(s)) continue;
       if(dist(x,y,s.x,s.y) <= s.radius+8) return s;
     }
     return null;
   }
-  function hitBox(x,y){ for(const b of game.lootBoxes){ if(b.alive && Math.abs(x-b.x)<18 && Math.abs(y-b.y)<18) return b; } return null; }
-  function hitGroundLoot(x,y){ for(const g of game.groundLoot){ if(g.alive && dist(x,y,g.x,g.y) < 14) return g; } return null; }
+  function hitBox(x,y){ for(const b of game.lootBoxes){ if(b.alive && canSee('player',b.x,b.y) && Math.abs(x-b.x)<18 && Math.abs(y-b.y)<18) return b; } return null; }
+  function hitGroundLoot(x,y){ for(const g of game.groundLoot){ if(g.alive && canSee('player',g.x,g.y) && dist(x,y,g.x,g.y) < 14) return g; } return null; }
   function hitStandard(x,y){
-    const candidates=game.standards.filter(st=>dist(x,y,st.x,st.y)<25||(Math.abs(x-st.x)<31&&y>st.y-88&&y<st.y+17));
+    const candidates=game.standards.filter(st=>isVisibleTo('player',st)&&(dist(x,y,st.x,st.y)<25||(Math.abs(x-st.x)<31&&y>st.y-88&&y<st.y+17)));
     candidates.sort((a,b)=>dist(x,y,a.x,a.y-36)-dist(x,y,b.x,b.y-36));
     if(candidates[0])return candidates[0];
     for(const house of game.houses){
       const standard=getStandard(house.id);
-      if(!standard||standard.carriedBy||standard.controller==='player'||dist(standard.x,standard.y,house.castle.x,house.castle.y)>150)continue;
+      if(!standard||!isVisibleTo('player',standard)||standard.carriedBy||standard.controller==='player'||dist(standard.x,standard.y,house.castle.x,house.castle.y)>150)continue;
       if(Math.abs(x-house.castle.x)<=115&&y>=house.castle.y-220&&y<=house.castle.y+72)return standard;
     }
     return null;
   }
-  function hitBarricade(x,y){ for(const b of game.barricades){ if(b.alive && x > b.x - b.w/2 && x < b.x + b.w/2 && y > b.y - b.h/2 && y < b.y + b.h/2) return b; } return null; }
+  function hitBarricade(x,y){ for(const b of game.barricades){ if(b.alive && isVisibleTo('player',b) && x > b.x - b.w/2 && x < b.x + b.w/2 && y > b.y - b.h/2 && y < b.y + b.h/2) return b; } return null; }
 
   function nearestEnemyInAggro(s){
     let best=null, bd=1e9;
     for(const e of game.students){
       if(e.state==='knocked' || !enemies(s,e)) continue;
       const d=dist(s.x,s.y,e.x,e.y);
-      if(d < bd && d <= s.aggro){ bd=d; best=e; }
+      if(d < bd && d <= s.aggro&&isVisibleTo(s.controller,e)){ bd=d; best=e; }
     }
     return best;
   }
@@ -1684,15 +1833,15 @@
     for(const e of game.students){
       if(e.state==='knocked' || !enemies(s,e)) continue;
       const d=dist(s.x,s.y,e.x,e.y);
-      if(d < bd && d <= range){ bd=d; best=e; }
+      if(d < bd && d <= range&&isVisibleTo(s.controller,e)){ bd=d; best=e; }
     }
     return best;
   }
 
   function nearestLootTaskTarget(houseId){
     const house = getHouse(houseId);
-    const boxes = game.lootBoxes.filter(b=>b.alive);
-    const ground = game.groundLoot.filter(g=>g.alive);
+    const boxes = game.lootBoxes.filter(b=>b.alive&&canSee(houseId,b.x,b.y));
+    const ground = game.groundLoot.filter(g=>g.alive&&canSee(houseId,g.x,g.y));
     const all = [
       ...boxes.map(x=>({kind:'box', obj:x, d:dist(house.castle.x,house.castle.y,x.x,x.y)})),
       ...ground.map(x=>({kind:'ground', obj:x, d:dist(house.castle.x,house.castle.y,x.x,x.y)}))
@@ -1705,9 +1854,9 @@
     if(!others.length) return null;
     return others.map(t=>{
       const d = dist(house.castle.x,house.castle.y,t.castle.x,t.castle.y);
-      const defenders = game.students.filter(s=>s.controller===t.id && s.state!=='knocked' && dist(s.x,s.y,t.castle.x,t.castle.y) < 300).length;
-      const active = game.students.filter(s=>s.controller===t.id && s.state!=='knocked').length;
-      const mids = game.objectives.filter(o=>o.controller===t.id).length;
+      const defenders = game.students.filter(s=>s.controller===t.id && s.state!=='knocked' && isVisibleTo(house.id,s) && dist(s.x,s.y,t.castle.x,t.castle.y) < 300).length;
+      const active = game.students.filter(s=>s.controller===t.id && s.state!=='knocked'&&isVisibleTo(house.id,s)).length;
+      const mids = game.objectives.filter(o=>o.controller===t.id&&canSee(house.id,o.x,o.y)).length;
       const score = d*0.55 + defenders*65 + active*8 + mids*28;
       return {house:t, score};
     }).sort((a,b)=>a.score-b.score)[0]?.house || null;
@@ -1802,7 +1951,7 @@
             const previous=o.controller;
             o.controller=team;
             o.progress={};
-            log(`<span style="color:${getHouse(team).color}">${getHouse(team).name}</span> secures the ${o.type}.`);
+            logWorld(`<span style="color:${getHouse(team).color}">${getHouse(team).name}</span> secures the ${o.type}.`,o);
             for(const s of game.students) if(s.controller===team || s.controller===previous) applyLoadout(s);
           }
         }else if(team===o.controller){
@@ -1830,7 +1979,7 @@
     if(att.mount && (target.weapon==='Bow' || target.weapon==='Longbow')){
       multiplier*=1.30;label=label||'CAVALRY';
     }
-    if(att.controller!=='player') multiplier*=game.difficulty==='relaxed'?.80:game.difficulty==='veteran'?1.12:1;
+    if(att.controller!=='player'&&game.difficulty==='relaxed') multiplier*=.80;
     return {multiplier,defense,label,facingDot};
   }
 
@@ -1901,6 +2050,7 @@
 
   function beginAttack(att,target,targetType='student'){
     if(att.attackCd>0||att.attackAction||att.flagCaptureId||!targetIsValid(att,target,targetType))return false;
+    if(!canSee(att.controller,target.x,target.y)||!lineOfSight(att.x,att.y,target.x,target.y))return false;
     if(dist(att.x,att.y,target.x,target.y)>attackReach(att,target,{targetType,weapon:att.weapon,range:att.atkRange}))return false;
     const ranged=att.weapon==='Bow'||att.weapon==='Longbow';
     const windup=att.weapon==='Longbow'?.40:att.weapon==='Bow'?.32:att.weapon==='Spear'?.28:att.weapon==='None'?.18:.23;
@@ -1952,7 +2102,7 @@
     if(action.impactDone)return false;
     action.impactDone=true;
     const target=attackEntity(action);
-    if(!targetIsValid(att,target,action.targetType)||att.controller!==action.controller||dist(att.x,att.y,target.x,target.y)>attackReach(att,target,action)){
+    if(!targetIsValid(att,target,action.targetType)||att.controller!==action.controller||!canSee(att.controller,target.x,target.y)||!lineOfSight(att.x,att.y,target.x,target.y)||dist(att.x,att.y,target.x,target.y)>attackReach(att,target,action)){
       emitHitEffect(att.x,att.y-28,'miss','MISS','#b3c2c7');return false;
     }
     setFacingTowardPoint(att,target.x,target.y);
@@ -2034,7 +2184,7 @@
     box.alive=false;
     const house=getHouse(controllerId);
     for(const item of box.loot) house.stockpile[item] = (house.stockpile[item]||0) + 1;
-    log(`<span style="color:${house.color}">${house.name}</span> breaks a loot box and finds <b>${box.loot.join(', ')}</b>.`);
+    logWorld(`<span style="color:${house.color}">${house.name}</span> breaks a loot box and finds <b>${box.loot.join(', ')}</b>.`,{...box,controller:controllerId});
     if(controllerId==='player') renderStockSummary();
     refreshEquipButtons();
     partAround(box.x, box.y, controllerId);
@@ -2056,7 +2206,7 @@
       else if(ITEM_SET.has(item))target.item='None';
       else if(item==='Horse')target.mount=false;
       applyLoadout(target);
-      log(`<span style="color:#d8bd66">Dropped gear:</span> ${item} falls to the ground.`);
+      logWorld(`<span style="color:#d8bd66">Dropped gear:</span> ${item} falls to the ground.`,target);
     }
   }
 
@@ -2088,7 +2238,7 @@
       }
       target.carryingStandard=null;
       applyLoadout(target);
-      log(`<span style="color:${getHouse(target.controller).color}">${target.name}</span> is knocked out and drops the banner.`);
+      logWorld(`<span style="color:${getHouse(target.controller).color}">${target.name}</span> is knocked out and drops the banner.`,target);
     }
 
     if(game.selected.has(target.id)) game.selected.delete(target.id);
@@ -2106,7 +2256,7 @@
     carrier.carryingStandard = standard.houseId;
     applyLoadout(carrier);
     setOrder(carrier, {type:'returnBanner', x:getHouse(carrier.controller).castle.x, y:getHouse(carrier.controller).castle.y, manual:true});
-    log(`<span style="color:${getHouse(carrier.controller).color}">${carrier.name}</span> takes the banner of <span style="color:${getHouse(standard.houseId).color}">${getHouse(standard.houseId).name}</span>.`);
+    logWorld(`<span style="color:${getHouse(carrier.controller).color}">${carrier.name}</span> takes the banner of <span style="color:${getHouse(standard.houseId).color}">${getHouse(standard.houseId).name}</span>.`,carrier);
     for(const ally of game.students){
       if(ally===carrier || ally.controller!==carrier.controller || ally.state==='knocked' || ally.order.type!=='attackMove')continue;
       if(dist(ally.x,ally.y,carrier.x,carrier.y)<280){
@@ -2128,7 +2278,7 @@
     standard.x = getHouse(carrier.controller).castle.x;
     standard.y = getHouse(carrier.controller).castle.y - 34;
     if(alreadyOwned){
-      log(`<span style="color:${getHouse(carrier.controller).color}">${getHouse(carrier.controller).name}</span> recovers its ${getHouse(houseId).name} standard.`);
+      logWorld(`<span style="color:${getHouse(carrier.controller).color}">${getHouse(carrier.controller).name}</span> recovers its ${getHouse(houseId).name} standard.`,carrier);
     }else transferHouse(houseId, carrier.controller);
   }
 
@@ -2236,20 +2386,20 @@
         stock.Longbow--;stock.Bow++;s.weapon='Longbow';s.weaponLevel=1;
       }
       if(s.armor==='None'){
-        if(stock.Heavy>0 && Math.random()<0.42){ stock.Heavy--; s.armor='Heavy'; }
+        if(stock.Heavy>0 && (game.difficulty==='veteran'?!['Bow','Longbow'].includes(s.weapon)&&s.item!=='Medkit':Math.random()<0.42)){ stock.Heavy--; s.armor='Heavy'; }
         else if(stock.Light>0){ stock.Light--; s.armor='Light'; }
       }
       if(s.item==='None'){
         if(s.roleHint==='support' && stock.Medkit>0){stock.Medkit--;s.item='Medkit';}
-        else if(stock.WarHorn>0 && Math.random()<0.16){ stock.WarHorn--; s.item='WarHorn'; }
+        else if(stock.WarHorn>0 && (game.difficulty==='veteran'?!active.some(a=>a.item==='WarHorn'):Math.random()<0.16)){ stock.WarHorn--; s.item='WarHorn'; }
         else if(stock.FireOil>0 && Math.random()<0.20){ stock.FireOil--; s.item='FireOil'; }
         else if(stock.Medkit>0 && Math.random()<0.11){ stock.Medkit--; s.item='Medkit'; }
         else if(stock.EngineerKit>0 && Math.random()<0.10){ stock.EngineerKit--; s.item='EngineerKit'; }
         else if(stock.TrapKit>0 && Math.random()<0.10){ stock.TrapKit--; s.item='TrapKit'; }
-        else if(stock.Shield>0 && Math.random()<0.28){ stock.Shield--; s.item='Shield'; }
+        else if(stock.Shield>0 && (game.difficulty==='veteran'?!['Bow','Longbow'].includes(s.weapon):Math.random()<0.28)){ stock.Shield--; s.item='Shield'; }
         else if(stock.Boots>0 && Math.random()<0.20){ stock.Boots--; s.item='Boots'; }
       }
-      if(!s.mount && stock.Horse>0 && Math.random()<0.11){ stock.Horse--; s.mount=true; }
+      if(!s.mount && stock.Horse>0 && (game.difficulty==='veteran'?s.weapon==='Sword'&&s.item!=='Medkit':Math.random()<0.11)){ stock.Horse--; s.mount=true; }
       applyLoadout(s);
     }
   }
@@ -2258,9 +2408,9 @@
     const ownBanner = getStandard(house.id);
     if(ownBanner.carriedBy){
       const carrier = game.students.find(s=>s.id===ownBanner.carriedBy && s.state!=='knocked');
-      if(carrier) return {type:'chaseCarrier', target:carrier};
+      if(carrier&&isVisibleTo(house.id,carrier)) return {type:'chaseCarrier', target:carrier};
     }
-    if(ownBanner.dropped) return {type:'recoverDropped', target:ownBanner};
+    if(ownBanner.dropped&&canSee(house.id,ownBanner.x,ownBanner.y)) return {type:'recoverDropped', target:ownBanner};
     return null;
   }
 
@@ -2344,7 +2494,7 @@
       'a small raid';
 
     const styleText = plan.style === 'battle' ? 'to break resistance before seizing the flag' : 'to grab the flag and run';
-    log(`<span style="color:${house.color}">${house.name}</span> launches ${raidText} on <span style="color:${targetHouse.color}">${targetHouse.name}</span> ${styleText}.`);
+    if(raiders.some(s=>isVisibleTo('player',s)))log(`<span style="color:${house.color}">${house.name}</span> launches ${raidText} on <span style="color:${targetHouse.color}">${targetHouse.name}</span> ${styleText}.`);
 
     return true;
   }
@@ -2375,7 +2525,7 @@
     const others = committed.filter(s=>!escorts.includes(s) && !vanguard.includes(s) && s!==carrier);
 
     const defenders = game.students
-      .filter(e=>e.state!=='knocked' && e.controller!==house.id && dist(e.x,e.y,targetHouse.castle.x,targetHouse.castle.y) < 360)
+      .filter(e=>e.state!=='knocked' && e.controller!==house.id && isVisibleTo(house.id,e) && dist(e.x,e.y,targetHouse.castle.x,targetHouse.castle.y) < 360)
       .sort((a,b)=>{
         const aw = dist(a.x,a.y,targetHouse.castle.x,targetHouse.castle.y) + a.hp*0.25;
         const bw = dist(b.x,b.y,targetHouse.castle.x,targetHouse.castle.y) + b.hp*0.25;
@@ -2532,6 +2682,8 @@
 
     autoEquipAI(house);
 
+    if(game.difficulty!=='relaxed'&&window.AcademyStrategy?.think({game,setOrder,canSee,isVisibleTo,terrainAt},house))return;
+
     if(house.ai.raid && sustainRaid(house)) return;
     if(house.ai.regroupUntil > game.time) return;
 
@@ -2560,7 +2712,7 @@
     }
 
     const nearEnemies = game.students.filter(
-      s=>s.controller!==house.id && s.state!=='knocked' && dist(s.x,s.y,house.castle.x,house.castle.y)<340
+      s=>s.controller!==house.id && s.state!=='knocked' && isVisibleTo(house.id,s) && dist(s.x,s.y,house.castle.x,house.castle.y)<340
     );
 
     if(nearEnemies.length){
@@ -2638,7 +2790,7 @@
       if(dist(s.x,s.y,t.x,t.y) < 12){
         t.alive = false;
         s.trappedUntil = game.time + 18;
-        log(`<span style="color:${getHouse(s.controller).color}">${s.name}</span> is trapped.`);
+        logWorld(`<span style="color:${getHouse(s.controller).color}">${s.name}</span> is trapped.`,s);
         for(let i=0;i<7;i++) addParticle({x:s.x,y:s.y,c:'#f2d25a',vx:rand(-38,38),vy:rand(-38,38),t:.4,r:2.2});
       }
     }
@@ -2653,7 +2805,7 @@
         house.stockpile[g.item] = (house.stockpile[g.item]||0) + 1;
         if(s.controller==='player') renderStockSummary();
         refreshEquipButtons();
-        log(`<span style="color:${house.color}">${house.name}</span> recovers <b>${g.item}</b>.`);
+        logWorld(`<span style="color:${house.color}">${house.name}</span> recovers <b>${g.item}</b>.`,s);
         return true;
       }
     }
@@ -2768,7 +2920,7 @@
         s.weaponLevel++;
         s.smithTimer = 0;
         applyLoadout(s);
-        log(`<span style="color:${getHouse(s.controller).color}">${s.name}</span> upgrades ${s.weapon} to level <b>${s.weaponLevel}</b>.`);
+        logWorld(`<span style="color:${getHouse(s.controller).color}">${s.name}</span> upgrades ${s.weapon} to level <b>${s.weaponLevel}</b>.`,s);
       }
     } else {
       s.smithTimer = 0; s.smithingAt = null;
@@ -2780,7 +2932,7 @@
     const destination=resolveDestination(targetPoint.x,targetPoint.y,s.radius||13);
     s.tx = destination.x;
     s.ty = destination.y;
-    s.path = pathfind(s.x,s.y,s.tx,s.ty);
+    s.path = pathfind(s.x,s.y,s.tx,s.ty,null,s);
     s.pathIndex = 0;
     s.lastPathAt = game.time;
   }
@@ -2907,13 +3059,14 @@
     if(s.stuckFor>1.2 && game.time-(s.lastStuckRepath||0)>1.2){
       const avoid=new Set();
       for(const other of game.students)if(other!==s&&other.state!=='knocked'&&dist(s.x,s.y,other.x,other.y)<180)avoid.add(keyXY(Math.floor(other.x/TILE),Math.floor(other.y/TILE)));
-      s.path=pathfind(s.x,s.y,s.tx,s.ty,avoid);s.pathIndex=0;s.lastPathAt=game.time;s.lastStuckRepath=game.time;s.stuckFor=0;
+      s.path=pathfind(s.x,s.y,s.tx,s.ty,avoid,s);s.pathIndex=0;s.lastPathAt=game.time;s.lastStuckRepath=game.time;s.stuckFor=0;
     }
   }
 
   function update(dt){
     if(game.gameOver || game.paused) return;
     game.time += dt;
+    refreshVisibility();
 
     updateObjectives(dt);
 
@@ -2925,14 +3078,14 @@
         if(spot){
           spawnLootBoxAt(spot.x, spot.y, Math.random()<0.12, false);
           game.earlyBaseLootRemaining--;
-          log(`A nearby supply box appears beside a house base.`);
+          logWorld(`A nearby supply box appears beside a house base.`,spot);
         }
         game.nextLootSpawnAt = game.time + rand(4.6, 6.8);
       }else{
         spot = randomLootSpawnPoint(false);
         if(spot){
           spawnLootBoxAt(spot.x, spot.y, Math.random()<0.25, false);
-          log(`A new loot box appears on the field.`);
+          logWorld(`A new loot box appears on the field.`,spot);
         }
         game.nextLootSpawnAt = game.time + rand(7, 11);
       }
@@ -2942,7 +3095,7 @@
       const spot = randomLootSpawnPoint(true);
       if(spot){
         spawnLootBoxAt(spot.x, spot.y, true, true);
-        log(`<b style="color:#d8bd66">A great loot crate appears near the center!</b>`);
+        logWorld(`<b style="color:#d8bd66">A great loot crate appears near the center!</b>`,spot);
       }
       game.nextBigMidLootAt = game.time + rand(20, 30);
     }
@@ -3068,6 +3221,17 @@
         groundTarget = game.groundLoot.find(x=>x.id===s.order.targetId && x.alive);
       }
 
+      // Commands remember the last reported position, never a hidden unit's
+      // live position. Reacquisition requires friendly line of sight.
+      if(fightTarget&&enemies(s,fightTarget)&&!isVisibleTo(s.controller,fightTarget)){
+        fightTarget=null;s.engageId=null;
+        if(s.order.type==='attack'){
+          s.order={...s.order,type:'attackMove',targetId:null,targetType:null};
+          s.tx=s.order.x;s.ty=s.order.y;
+          s.path=pathfind(s.x,s.y,s.tx,s.ty,null,s);s.pathIndex=0;
+        }
+      }
+
       if(s.order.type==='heal'){
         const ally = game.students.find(x=>x.id===s.order.targetId && x.state!=='knocked');
         if(!ally || ally.hp >= ally.maxHp){
@@ -3112,7 +3276,7 @@
       }
 
       if(s.order.type==='attack'){
-        const tgt = game.students.find(x=>x.id===s.order.targetId && x.state!=='knocked' && enemies(s,x));
+        const tgt = game.students.find(x=>x.id===s.order.targetId && x.state!=='knocked' && enemies(s,x)&&isVisibleTo(s.controller,x));
         if(tgt){
           fightTarget = tgt;
           if(s.weapon==='Bow' || s.weapon==='Longbow') targetPoint = getRangedCombatPoint(s, tgt);
@@ -3127,8 +3291,12 @@
       if(s.order.type==='capture' && s.order.targetId){
         const standard=getStandard(s.order.targetId);
         if(standard && (standard.controller!==s.controller || standard.dropped || standard.carriedBy)){
-          targetPoint={x:standard.x,y:standard.y};
-          if(standard.carriedBy){
+          targetPoint={x:s.order.x,y:s.order.y};
+          if(isVisibleTo(s.controller,standard)){
+            targetPoint={x:standard.x,y:standard.y};
+            s.order.x=standard.x;s.order.y=standard.y;
+          }
+          if(standard.carriedBy&&isVisibleTo(s.controller,standard)){
             const carrier=game.students.find(a=>a.id===standard.carriedBy&&a.state!=='knocked');
             if(carrier && carrier.controller===s.controller){
               setOrder(s,{type:'escort',x:carrier.x,y:carrier.y,targetId:carrier.id,targetType:'student',manual:true});
@@ -3148,7 +3316,7 @@
       }
 
       if(s.order.type==='escort' && s.order.targetType==='student'){
-        const car = game.students.find(x=>x.id===s.order.targetId && x.state!=='knocked');
+        const car = game.students.find(x=>x.id===s.order.targetId && x.state!=='knocked'&&isVisibleTo(s.controller,x));
         if(car){const angle=(hashId(s.id)%628)/100;targetPoint = {x:car.x + Math.cos(angle)*46, y:car.y + Math.sin(angle)*46};}
       }
 
@@ -3167,7 +3335,7 @@
               s.buildProgress = 0;
               s.engineerCdUntil = game.time + 12;
               s.order = {type:'idle', x:s.x, y:s.y, targetId:null, targetType:null, manual:false};
-              log(`<span style="color:${getHouse(s.controller).color}">${s.name}</span> builds a barricade.`);
+              logWorld(`<span style="color:${getHouse(s.controller).color}">${s.name}</span> builds a barricade.`,s);
             }
           }
         }
@@ -3183,7 +3351,7 @@
               s.buildProgress = 0;
               s.engineerCdUntil = game.time + 12;
               s.order = {type:'idle', x:s.x, y:s.y, targetId:null, targetType:null, manual:false};
-              log(`<span style="color:${getHouse(s.controller).color}">${s.name}</span> places a trap.`);
+              logWorld(`<span style="color:${getHouse(s.controller).color}">${s.name}</span> places a trap.`,s);
             }
           }
         }
@@ -3214,7 +3382,7 @@
         let dx = px - s.x;
         let dy = py - s.y;
         const dd = Math.hypot(dx,dy);
-        const slow = riverSlowFactor(s.x, s.y);
+        const slow = terrainMoveFactor(s);
         const attackSlow=s.attackAction?.phase==='windup'?.12:s.attackAction?.phase==='release'?.6:1;
         const moveSpeedNow = (s.moveSpeed + hornBonus) * slow * (s.bracedUntil>game.time?.55:1)*attackSlow;
         if(dd>1.5&&!s.attackAction)setFacingTowardPoint(s,px,py);
@@ -3881,12 +4049,13 @@
   }
 
   const api={
+    VISION_TILE,VISION_COLS,VISION_ROWS,terrainAt,terrainMoveFactor,lineOfSight,canSee,isTerrainVisible,isVisibleTo,isExplored,refreshVisibility,canSeePoint,canSeeStudent,
     game,canvas,ctx,DPR,TILE,COLS,ROWS,WORLD_W,WORLD_H,HOUSE_DEFS,LOOT_KEYS,FLAG_CAPTURE_DURATION,
     getHouse,getStandard,getPlayerHouse,objectiveBuffsFor,getSelectedUnits,
     selectUnits,selectSquad,saveSquad,resetSquad,getSquadUnits,getSquadName,getRole,
     issueFormationOrder,setOrder,issueBuildOrder,applyLoadout,refreshUI,resize,
     init,restart:init,setPaused,getPaused:()=>game.paused,setDifficulty,exportSave,importSave,
-    equipPreset,autoEquipSelected,equipItemOn,spendLootOnSelected,
+    equipPreset,autoEquipSelected,autoEquipTeam,equipItemOn,spendLootOnSelected,planEquipment,applyEquipment,equipmentTargets,
     focusParty,focusHome,centerCamera,setFollowTargets,
     setMode,getMode:()=>controlMode,getPlacementMode:()=>placementMode,
     setFormation,stopSelected,
