@@ -13,9 +13,14 @@ Mormont: Bear Lance Lodge       Martell: Sun Lance Court
 Arryn: Sky Lance Stable
 These houses can build their own mounted academy (450 gold) to train one
 Lance Champion every 90 seconds before house bonuses. Paid champion: 300 gold.
-They have long 1.35-tile lance reach, a strong first charge impact and heavy
-knockback, then much weaker hits and a slow 2.3-second weapon attack. Their
-charge still requires a real run-up, and braced Frey/Bolton spears counter it.
+They have 400 base health, 18 base damage and long 1.35-tile lance reach.
+Their first charge impact and heavy knockback remain their strongest attack;
+ordinary weapon attacks retain a slow 2.3-second interval. Move orders gain
+30% base speed and quicker turns for disengagement. Crowds still slow them,
+but they pull out more easily than ordinary cavalry. Retreat V
+returns champions to their own training facility's rally, then their army rally
+or home if needed. Rival champions regroup between successful charges.
+Charges still require a real run-up; braced Frey/Bolton spears counter them.
 
 Each of the seven houses has its own eight-frame troop sprite sheet, armor,
 colors and production-building artwork. The buildings unlock paid recruitment,
