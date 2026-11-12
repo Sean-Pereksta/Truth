@@ -910,17 +910,54 @@ export class Game {
   }
   aiTaskOf(u){return u.order?.aiTask==='spearBrace'?u.spearResumeOrder?.aiTask:u.order?.aiTask;}
   aiTarget(s,plan){
-    const candidates=this.buildings.filter(b=>b.hp>0&&this.hostile(s.id,b.team)&&(b.type==='keep'||plan.style==='raider'&&!!BUILD_DEFS[b.type].unit));
+    const candidates=this.buildings.filter(b=>b.hp>0&&this.teams[b.team]?.alive&&this.hostile(s.id,b.team)&&(b.type==='keep'||plan.style==='raider'&&!!BUILD_DEFS[b.type].unit));
+    if(!candidates.length)return null;
     const leader=Math.max(1,...this.teams.filter(t=>t.alive&&this.hostile(s.id,t.id)).map(t=>t.tiles||0));
-    let target=null,best=Infinity;
+    // Waves muster at home; a remote foothold can support an invasion, but cannot erase its march.
+    const frontier=[s.home],borders=new Map(),pressure=new Map();
+    for(const tile of this.tiles){
+      if(tile.owner!==s.id||tile.terrain==='water')continue;
+      let edge=false;
+      for(const [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1]]){
+        const x=tile.x+dx,y=tile.y+dy;if(x<0||y<0||x>=this.W||y>=this.H)continue;
+        const next=this.tiles[y*this.W+x];if(next.terrain==='water'||this.allied(s.id,next.owner))continue;
+        edge=true;
+        if(this.teams[next.owner]?.alive&&this.hostile(s.id,next.owner)){const alliance=this.teams[next.owner].alliance;borders.set(alliance,(borders.get(alliance)||0)+1);}
+      }
+      if(edge)frontier.push({x:tile.x+.5,y:tile.y+.5});
+    }
+    // Independent rivals avoid piling onto an already contested front. Allied joint assaults stay useful.
+    for(const rival of this.teams){
+      const wave=rival.aiPlan,goal=this.byId.get(wave?.targetId);
+      if(!rival.alive||!this.hostile(s.id,rival.id)||wave?.phase!=='advance'||!goal||goal.hp<=0||!this.teams[goal.team]?.alive||!this.hostile(rival.id,goal.team)||this.time-wave.startedAt>wave.timeout)continue;
+      const troops=(wave.cohort||[]).filter(id=>{const u=this.byId.get(id);return u?.hp>0&&u.team===rival.id&&['assault','raid'].includes(this.aiTaskOf(u));}).length;
+      if(troops){const alliance=this.teams[goal.team].alliance;pressure.set(alliance,(pressure.get(alliance)||0)+Math.min(1,troops/Math.max(1,wave.initialSize||wave.cohort.length)));}
+    }
+    const forts=this.buildings.filter(b=>b.hp>0&&this.teams[b.team]?.alive&&this.hostile(s.id,b.team)&&['keep','tower'].includes(b.type));
+    let target=null,best=Infinity,bestTie=Infinity;
     for(const b of candidates){
       let guards=0,retaliation=0;this.hash.visit(b.x,b.y,10,u=>{if(u.hp>0&&this.allied(u.team,b.team)&&ds(u,b)<100)guards+=this.unitClass(u)==='siege'?2:this.unitClass(u)==='hero'?3:1;});
       this.hash.visit(s.home.x,s.home.y,13,u=>{if(u.hp>0&&u.team===b.team&&ds(u,s.home)<169)retaliation++;});
       const towers=this.buildings.filter(p=>p.hp>0&&this.allied(p.team,b.team)&&p.type==='tower'&&ds(p,b)<81).length;
       const distance=Math.sqrt(ds(b,s.home)),vulnerability=b.hp/b.maxHp;
-      let score=distance*.7+guards*(plan.style==='siege'?.65:1.5)+towers*(plan.style==='siege'?3:9)+vulnerability*22-retaliation*3-(this.teams[b.team].tiles||0)/leader*12;
+      let frontierDistance=distance;for(const point of frontier)frontierDistance=Math.min(frontierDistance,Math.sqrt(ds(b,point)));
+      const alliance=this.teams[b.team].alliance,dx=b.x-s.home.x,dy=b.y-s.home.y,length2=distance*distance;
+      // Sample the actual approach for third-party land, then account for forts along that corridor.
+      const samples=Math.max(1,Math.ceil(distance/3));let crossings=0;
+      for(let i=1;i<=samples;i++){const t=i/(samples+1),tile=this.tileAt(s.home.x+dx*t,s.home.y+dy*t);if(tile&&this.teams[tile.owner]?.alive&&this.hostile(s.id,tile.owner)&&!this.allied(tile.owner,b.team))crossings++;}
+      let routeForts=0;
+      for(const fort of forts){
+        if(ds(fort,b)<100)continue;
+        const t=length2?((fort.x-s.home.x)*dx+(fort.y-s.home.y)*dy)/length2:0;if(t<=0||t>=1)continue;
+        const point={x:s.home.x+dx*t,y:s.home.y+dy*t},range=fort.type==='keep'?this.townHallDetails(fort.team).range:this.towerDetails(fort.id,fort.team).range;
+        if(ds(fort,point)<(range+1)**2)routeForts+=fort.type==='keep'?8:5;
+      }
+      const geography=distance+frontierDistance*.3-Math.min(10,Math.sqrt(borders.get(alliance)||0)*2)+crossings/samples*20+Math.min(24,routeForts);
+      let score=geography+guards*(plan.style==='siege'?.65:1.5)+towers*(plan.style==='siege'?3:9)+vulnerability*22-Math.min(12,retaliation*1.5)-(this.teams[b.team].tiles||0)/leader*12+Math.min(16,(pressure.get(alliance)||0)*8);
       if(plan.style==='raider'){score+=b.type==='keep'?22:-18;score+=guards*.5;}
-      if(score<best){best=score;target=b;}
+      // Stable seeded ties neither favor the first-created (player) building nor change on every decision.
+      let tie=(Number(this.config.seed)||44277)^Math.imul(s.id+1,0x9e3779b1)^Math.imul(b.id,0x85ebca6b);tie=Math.imul(tie^(tie>>>16),0x7feb352d);tie=Math.imul(tie^(tie>>>15),0x846ca68b);tie=(tie^(tie>>>16))>>>0;
+      if(score<best-1e-7||Math.abs(score-best)<=1e-7&&tie<bestTie){best=score;bestTie=tie;target=b;}
     }
     return target;
   }
@@ -1142,3 +1179,4 @@ export class Game {
   }
 
 }
+
