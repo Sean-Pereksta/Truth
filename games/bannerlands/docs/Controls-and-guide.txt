@@ -1,3 +1,10 @@
+CAMPAIGN SETUP
+Choose from all sixteen painted house emblems, inspect your house profile, and
+set the victory condition, rivals, difficulty, map size, graphics and landscape.
+On smaller screens, switch between Your house and The campaign. Arrow keys
+switch focused tabs. House details shows the complete guide. The start and
+resume buttons remain available; resuming preserves the existing battle.
+
 PERFORMANCE EDITION
 Large armies share bounded, resumable route planning; open-ground collision
 checks, capture updates and strategic scenery avoid repeated work. Menu and

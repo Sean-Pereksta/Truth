@@ -1,3 +1,11 @@
+CAMPAIGN MENU
+All sixteen painted house choices, your selected house and campaign settings
+fit together on desktop. Smaller screens use Your house and The campaign tabs;
+the start and resume buttons stay available. Arrow keys switch focused tabs.
+House details opens the complete house guide at your selected house.
+Switching tabs or returning to the battlefield preserves your choices.
+Revisited landscapes reuse their map preview to keep setup responsive.
+
 INDIVIDUAL ATTACK NEAREST
 A and Attack nearest choose a separate nearest enemy unit for every selected
 soldier. Spread-out armies engage locally instead of gathering at one common

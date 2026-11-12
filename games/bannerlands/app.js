@@ -53,12 +53,22 @@ function initAudio(){if(!audio)try{audio=new(window.AudioContext||window.webkitA
 function tone(freq=240,kind='click',gain=.025){if(!sound||!audio||audio.state!=='running')return;const t=audio.currentTime;const osc=audio.createOscillator(),g=audio.createGain();osc.type=kind==='battle'?'triangle':'sine';osc.frequency.setValueAtTime(freq,t);osc.frequency.exponentialRampToValueAtTime(freq*.55,t+.12);g.gain.setValueAtTime(gain,t);g.gain.exponentialRampToValueAtTime(.0001,t+.16);osc.connect(g).connect(audio.destination);osc.start(t);osc.stop(t+.18);}
 
 function chooseHouse(index){
- chosenHouse=index;const h=HOUSES[index],power=powerData(h);document.querySelectorAll('.house-choice').forEach((b,i)=>b.classList.toggle('active',i===index));$('chosenTrait').textContent=`“${h.motto}.”`;
+ chosenHouse=index;const h=HOUSES[index],power=powerData(h);document.querySelectorAll('.house-choice').forEach((b,i)=>{b.classList.toggle('active',i===index);b.setAttribute('aria-pressed',String(i===index));});$('chosenTrait').textContent=`“${h.motto}.”`;
+ $('chosenHouseName').textContent=h.name;$('menuSelectedHouse').textContent=h.name;$('chosenHouseEmblem').style.backgroundPosition=`${index%4*100/3}% ${Math.floor(index/4)*100/3}%`;$('chosenHouseEmblem').setAttribute('aria-label',h.name+' heraldry');
  $('chosenPlaystyle').textContent=h.playstyle||h.trait;$('chosenAdvantages').innerHTML=houseAdvantages(h).map(text=>`<li>${escapeHTML(text)}</li>`).join('');
  $('chosenWeaknesses').innerHTML=houseWeaknesses(h).map(text=>`<li>${escapeHTML(text)}</li>`).join('');
  $('chosenPower').innerHTML=`<b>${escapeHTML(power.name)}</b><span>${escapeHTML(power.description)}</span><small>${power.cost?`${power.cost} gold · `:''}${power.cooldown}s cooldown · Activate with E</small>`;
- $('compareHousesButton').textContent=`Compare all ${HOUSES.length} houses →`;$('compareHousesCouncilButton').textContent=`Compare all ${HOUSES.length} houses →`;$('houseCountPromise').textContent=`${HOUSES.length} houses. ${HOUSES.length} ways to conquer.`;labelMenuHotkeys();paintHousePreview();
+ $('compareHousesButton').textContent='House details';$('compareHousesCouncilButton').textContent=`Compare all ${HOUSES.length} houses →`;$('houseCountPromise').textContent=`${HOUSES.length} houses · Equal starts`;labelMenuHotkeys();paintHousePreview();
 }
+function chooseMenuTab(tab,focus=false){
+ const selected=tab==='campaign'?'campaign':'house';$('menuOverlay').dataset.menuTab=selected;
+ for(const [name,id]of [['house','menuHouseTab'],['campaign','menuCampaignTab']]){const button=$(id),active=name===selected;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;if(active&&focus)button.focus();}
+}
+for(const [name,id]of [['house','menuHouseTab'],['campaign','menuCampaignTab']]){
+ $(id).addEventListener('click',()=>chooseMenuTab(name));
+ $(id).addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();chooseMenuTab(e.key==='Home'?'house':e.key==='End'?'campaign':name==='house'?'campaign':'house',true);});
+}
+chooseMenuTab('house');
 $('houseChoices').innerHTML=HOUSES.map((h,i)=>`<button class="house-choice${i===0?' active':''}" data-house="${i}" title="${h.motto}" style="--color:${h.color}">${houseEmblem(i)}${short(h.name)}</button>`).join('');
 $('houseChoices').addEventListener('click',e=>{const b=e.target.closest('[data-house]');if(b)chooseHouse(+b.dataset.house);});chooseHouse(0);
 const difficultyDescriptions={relaxed:'Easy · Deliberate expansion gives you time to gather and plan.',standard:'Normal · Balanced expansion, defenses, and coordinated attacks.',veteran:'Hard · Rivals coordinate attacks and react quickly to exposed frontiers.',warlord:'Warlord · Quick strategic decisions, adaptive reserves and coordinated attacks across multiple fronts.'};
@@ -72,13 +82,16 @@ function updateModeDescription(){
  $('factionCountLabel').textContent=team?'Alliance setup':'Rival houses';$('modeDescription').textContent=modeDescriptions[base]+(team?' You lead one house with an allied bot. Share flag control, score and team colors.':' Every house fights for itself.')+' Your town hall must survive.';
 }
 $('modeSelect').addEventListener('change',updateModeDescription);updateModeDescription();
+const landscapePreviewCache=new Map();
 function updateLandscapeDescription(){
  const map=LAND_MAPS.find(m=>m.id===$('landscapeSelect').value)||LAND_MAPS[0];$('landscapeDescription').textContent=map.description;
- const preview=$('landscapePreview'),c=preview.getContext('2d'),sample=new Game({landscape:map.id,scale:'standard',enemies:3,seed:628410}),sx=preview.width/sample.W,sy=preview.height/sample.H;
+ const preview=$('landscapePreview'),c=preview.getContext('2d'),key=map.id+':'+preview.width+'x'+preview.height,cached=landscapePreviewCache.get(key);$('landscapePreviewName').textContent=map.label;
+ if(cached){c.putImageData(cached,0,0);return;}
+ const sample=new Game({landscape:map.id,scale:'standard',enemies:3,seed:628410}),sx=preview.width/sample.W,sy=preview.height/sample.H;
  c.fillStyle='#182b2e';c.fillRect(0,0,preview.width,preview.height);
  for(const t of sample.tiles){c.fillStyle=t.feature==='bridge'?'#e4c995':t.feature==='ford'?'#a4b5a3':t.feature==='road'?'#bfa676':t.feature==='pass'?'#b9b39a':t.terrain==='water'?'#397a88':t.terrain==='mountain'?'#8b8c80':t.terrain==='forest'?'#34543d':t.terrain==='hill'?'#797b54':'#67805a';c.fillRect(t.x*sx,t.y*sy,Math.ceil(sx),Math.ceil(sy));}
  for(const s of sample.teams){c.beginPath();c.arc(s.home.x*sx,s.home.y*sy,3.5,0,Math.PI*2);c.fillStyle='#ead7a5';c.fill();c.strokeStyle='#21322c';c.lineWidth=1.5;c.stroke();}
- $('landscapePreviewName').textContent=map.label;
+ landscapePreviewCache.set(key,c.getImageData(0,0,preview.width,preview.height));
 }
 $('landscapeSelect').innerHTML=LAND_MAPS.map(m=>'<option value="'+escapeHTML(m.id)+'">'+escapeHTML(m.label)+'</option>').join('');$('landscapeSelect').value='crownlands';$('landscapeSelect').addEventListener('change',updateLandscapeDescription);updateLandscapeDescription();
 function terrainDescription(t){
@@ -219,7 +232,8 @@ function renderHouseGuide(){
 }
 function showHouses(){housesWasPaused=game.paused;game.paused=true;keys.clear();renderHouseGuide();$('housesDialog').showModal();updatePause();}
 function closeHouses(){$('housesDialog').close();game.paused=housesWasPaused;updatePause();if(started&&!menuOpen)canvas.focus();}
-$('compareHousesButton').onclick=showHouses;$('compareHousesCouncilButton').onclick=showHouses;$('houseCardButton').onclick=()=>showTab('council');$('closeHouses').onclick=closeHouses;$('houseGuideDone').onclick=closeHouses;$('housesDialog').addEventListener('cancel',e=>{e.preventDefault();closeHouses();});
+function showChosenHouse(){showHouses();$('houseGuideGrid').querySelector(`[data-house-guide="${chosenHouse}"]`)?.scrollIntoView({block:'start'});}
+$('compareHousesButton').onclick=showChosenHouse;$('compareHousesCouncilButton').onclick=showHouses;$('houseCardButton').onclick=()=>showTab('council');$('closeHouses').onclick=closeHouses;$('houseGuideDone').onclick=closeHouses;$('housesDialog').addEventListener('cancel',e=>{e.preventDefault();closeHouses();});
 function start(){
  edgeMouse=null;
  game=new Game({house:chosenHouse,landscape:$('landscapeSelect').value,mode:$('modeSelect').value,enemies:+$('enemySelect').value,difficulty:$('difficultySelect').value,scale:$('scaleSelect').value,seed:Math.floor(Math.random()*1e9)});

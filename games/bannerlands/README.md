@@ -12,6 +12,11 @@ The performance edition reduces route-planning stalls, caches strategic scenery,
 and limits capture checks to affected ground. House selection now uses sixteen
 painted heraldic emblems. See `docs/Performance-Update.txt` for details.
 
+The campaign menu keeps all sixteen houses, a selected-house profile, landscape
+preview, and campaign settings on one desktop screen. Smaller screens use House
+and Campaign tabs with the start and resume actions always available. House
+details opens the full bonuses, weaknesses, and power guide.
+
 The playable web entry is `index.html`. The current editable JavaScript, CSS, and artwork are beside it. Serve this folder over HTTP; opening the split-module entry directly with `file://` is unsupported.
 
 - Local preview: `npm start` (http://127.0.0.1:4173).
