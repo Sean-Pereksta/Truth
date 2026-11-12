@@ -1,0 +1,80 @@
+THE LANDS UPDATE
+
+The realm now has geography that changes the war. Select a landscape when
+starting a campaign. Every landscape works with all three sizes, all six victory
+modes, and up to sixteen houses. The same seed reproduces the same terrain.
+
+FIVE NEW LANDSCAPES
+
+Crownlands: rolling woodland, a winding river, and royal roads linked by stone
+crossings. A balanced landscape for learning how roads and bridges shape a front.
+
+Riverlands: twin rivers and a broad tributary divide the battlefield. Multiple
+bridges and shallow fords offer different approaches across the waterways.
+
+Highland Marches: mountain walls divide wooded valleys. Broad passes become
+defensible invasion routes; an open-looking destination can require a long march.
+
+Shattered Coast: tidal inlets create peninsulas and coastal approaches. Causeways
+and roads connect the land, while water protects otherwise exposed flanks.
+
+Kingsroad: deep woods surround a dense road network and a central river. Roads
+favor mobile forces, while forest detours are expensive for cavalry and artillery.
+
+Open Realm preserves the original battlefield without interior water or mountain
+barriers. It remains available for open-field battles.
+
+BRIDGES, PASSES AND MOVEMENT
+
+Water and solid mountains block every troop type. Bridges and fords cross water;
+passes cross mountains. All sides use the same movement and routing rules.
+
+Designed bridges have five actual walkable lanes and wide approaches. The stone
+deck covers those lanes, with parapets on the outside. Companies retain separate
+lanes instead of being forced through one point. Mountain passes are also broad.
+Ordinary roads are three tiles wide; the Kingsroad has broader main roads.
+
+Roads take 0.78 times ordinary grass travel time (about 28% faster movement), and
+bridge decks take 0.9 times grass travel time. Woods, slopes, passes and shallow
+fords take longer, particularly for cavalry and siege troops. Route choices and
+movement speed use these same costs. House movement bonuses still apply.
+
+Troops find routes around rivers and mountain walls, use suitable crossings, and
+reform near the destination. Move orders, attack orders, expansion parties, rally
+points, retreats, and enemy armies share the routing system. Charges, knockback
+and crowd separation cannot push troops through blocked terrain. Troops continue
+marching across bridges and passes while claiming land rather than stopping on
+the deck to capture every tile.
+
+Buildings need clear ground. Roads, bridges, fords and passes remain open for
+traffic. A building footprint cannot straddle a riverbank or mountain wall.
+Crossings can be claimed as territory and defended by troops or nearby towers.
+
+LORD STRATEGY
+
+Lords compare reachable routes and travel costs when selecting a rival. A nearby
+capital across a mountain wall can be a worse target than a farther capital on
+an open road. Defenders at bridges, fords and passes add danger to an approach.
+Fortifications and other hostile territory are checked along the actual route.
+Raiders evaluate cavalry travel costs; siege columns evaluate artillery costs.
+Invasion and flanking timers allow for the length and difficulty of the march.
+Standards are also chosen using route cost rather than straight-line distance.
+
+Safe starting reservations remain equally clear for every house, with the same
+starting army, gold and owned land. Generated maps connect usable land and
+starting positions, and standards are placed on reachable ground.
+
+READING THE LAND
+
+The campaign selector includes a generated preview and a description of each
+landscape. The battlefield and minimap show roads, mountains, water and crossings.
+Hover over terrain to read its access and movement effects. The terrain legend
+explains the map colors. Mountain, woodland, ford and roadside artwork accompany
+riverbanks, animated river ripples, continuous bridge decks and road tracks.
+
+VALIDATION
+
+Run npm run check and npm test from the game directory. Tests cover generated
+map connectivity, starting safety, bridge widths, weighted routes, collision,
+formation traffic, enemy target decisions, and the existing combat/economy rules.
+Build an offline edition with node source/build-standalone.mjs <output-directory>.

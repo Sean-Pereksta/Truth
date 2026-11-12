@@ -7,18 +7,23 @@ const out=process.argv[2]?path.resolve(process.argv[2]):path.join(root,'outputs'
 fs.mkdirSync(out,{recursive:true});
 const read=name=>fs.readFileSync(path.join(dist,name),'utf8');
 const css=read('style.css');
-const core=read('core.js').replaceAll('export const ','const ').replaceAll('export class ','class ');
+const moduleCode=name=>read(name).replace(/^import .*?;\r?\n/gm,'').replaceAll('export const ','const ').replaceAll('export class ','class ').replaceAll('export function ','function ');
+const lands=moduleCode('lands.js'),navigation=moduleCode('navigation.js');
+const core=moduleCode('core.js');
 const render=read('render.js').replaceAll('export function ','function ').replaceAll('export class ','class ');
 const atlas=fs.readFileSync(path.join(dist,'assets/troops-atlas.png')).toString('base64');
 const structures=fs.readFileSync(path.join(dist,'assets/structures-atlas.png')).toString('base64');
 const campaign=fs.readFileSync(path.join(dist,'assets/campaign-structures.png')).toString('base64');
 const ground=fs.readFileSync(path.join(dist,'assets/ground-textures.png')).toString('base64');
 const props=fs.readFileSync(path.join(dist,'assets/terrain-props.png')).toString('base64');
+const landsAtlas=fs.readFileSync(path.join(dist,'assets/lands-atlas.png')).toString('base64');
+const landsGround=fs.readFileSync(path.join(dist,'assets/lands-ground.png')).toString('base64');
 const {HOUSES}=await import('../core.js');
 const png=name=>'data:image/png;base64,'+fs.readFileSync(path.join(dist,name)).toString('base64');
 const houseArt={troops:Object.fromEntries(HOUSES.map(h=>[h.sigil,png(`assets/houses/${h.sigil}-troops.png`)])),castles:png('assets/house-castles.png'),production:png('assets/house-production.png')};
 const app=read('app.js').replace(/^import .*?;\r?\n/gm,'').replace(/^const HOUSE_ART_SOURCES=.*?;\r?\n/m,'const HOUSE_ART_SOURCES='+JSON.stringify(houseArt)+';\n').replace("'assets/troops-atlas.png'",JSON.stringify('data:image/png;base64,'+atlas)).replace("'assets/structures-atlas.png'",JSON.stringify('data:image/png;base64,'+structures)).replace("'assets/campaign-structures.png'",JSON.stringify('data:image/png;base64,'+campaign)).replace("'assets/ground-textures.png'",JSON.stringify('data:image/png;base64,'+ground)).replace("'assets/terrain-props.png'",JSON.stringify('data:image/png;base64,'+props));
-const script=`const __core=(()=>{${core}\nreturn {Game,HOUSES,UNIT_DEFS,BUILD_DEFS,HOUSE_CONTENT};})();\nconst {Game,HOUSES,UNIT_DEFS,BUILD_DEFS,HOUSE_CONTENT}=__core;\nconst __render=(()=>{${render}\nreturn {Renderer,worldToScreen,screenToWorld};})();\nconst {Renderer,worldToScreen,screenToWorld}=__render;\n(async()=>{${app}\n})();`;
+const embeddedApp=app.replace("'assets/lands-atlas.png'",JSON.stringify('data:image/png;base64,'+landsAtlas)).replace("'assets/lands-ground.png'",JSON.stringify('data:image/png;base64,'+landsGround));
+const script=`const __lands=(()=>{${lands}\nreturn {LAND_MAPS,generateLands,isPassableTile,tileTravelCost};})();\nconst {LAND_MAPS,generateLands,isPassableTile,tileTravelCost}=__lands;\nconst __navigation=(()=>{${navigation}\nreturn {LandsNavigation};})();\nconst {LandsNavigation}=__navigation;\nconst __core=(()=>{${core}\nreturn {Game,HOUSES,UNIT_DEFS,BUILD_DEFS,HOUSE_CONTENT};})();\nconst {Game,HOUSES,UNIT_DEFS,BUILD_DEFS,HOUSE_CONTENT}=__core;\nconst __render=(()=>{${render}\nreturn {Renderer,worldToScreen,screenToWorld};})();\nconst {Renderer,worldToScreen,screenToWorld}=__render;\n(async()=>{${embeddedApp}\n})();`;
 const html=read('index.html').replace('<link rel="stylesheet" href="style.css">',`<style>${css}</style>`).replace('<script type="module" src="app.js"></script>',`<script type="module">${script.replaceAll('</script','<\\/script')}</script>`);
 fs.writeFileSync(path.join(out,'Bannerlands.html'),html);
 

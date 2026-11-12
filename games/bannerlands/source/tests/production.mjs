@@ -4,7 +4,7 @@ import {Game,BUILD_DEFS} from '../../core.js';
 let cases=0;
 const test=(name,fn)=>{fn();cases++;console.log(`PASS ${name}`);};
 const setup=(style='mass',team=1)=>{
-  const g=new Game({house:0,enemies:3,scale:'standard',seed:44277}),s=g.teams[team];s.strategy=style;s.powerReadyAt=1e9;
+  const g=new Game({landscape:'open',house:0,enemies:3,scale:'standard',seed:44277}),s=g.teams[team];s.strategy=style;s.powerReadyAt=1e9;
   const p=g.aiPlanFor(s);g.time=60;return {g,s,p};
 };
 const tick=({g,s,p},threat=false)=>{p.economyAt=0;g.hash.rebuild(g.units);g.aiEconomy(s,p,g.group(s.id),threat);};
@@ -35,7 +35,7 @@ test('A chosen factory keeps its savings across decisions and cannot be drained 
 });
 
 test('Free mustering powers remain available while factory and capital money is reserved',()=>{
-  const g=new Game({house:0,enemies:5,scale:'standard',seed:44277}),s=g.teams[4];assert.equal(s.sigil,'rose');
+  const g=new Game({landscape:'open',house:0,enemies:5,scale:'standard',seed:44277}),s=g.teams[4];assert.equal(s.sigil,'rose');
   const p=g.aiPlanFor(s);p.production={reserved:400,status:'saving'};p.economyReserve=680;s.gold=0;g.time=20;
   const before=g.group(s.id).length;g.aiHousePower(s,g.group(s.id));assert.ok(g.group(s.id).length>before);assert.equal(s.gold,0);
 });

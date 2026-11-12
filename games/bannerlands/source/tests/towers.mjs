@@ -4,7 +4,7 @@ import {Game} from '../../core.js';
 let passed=0;
 const test=(name,fn)=>{fn();console.log('PASS '+name);passed++;};
 const make=(config={})=>{
-  const g=new Game({scale:'standard',seed:44277,...config});
+  const g=new Game({landscape:'open',scale:'standard',seed:44277,...config});
   g.units=[];g.buildings=[];g.byId=new Map();
   for(const team of g.teams){team.count=0;team.gold=3000;}
   g.hash.rebuild(g.units);return g;
