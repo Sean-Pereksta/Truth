@@ -12,7 +12,7 @@ and its home moves to a surviving castle if the original capital falls.
 
 Bolton and Hightower can build dedicated siege yards for long-range trebuchets
 that need 15 stationary seconds to deploy. Free Folk Giant Camps muster one
-high-health, splash-damage giant per 130 seconds; paid and automatic mustering
+high-health giant with splash damage and knockback per 130 seconds; paid and automatic mustering
 share each camp's cadence. Tully Sharpshooter Lodges train marksmen with longer
 range and slower attacks than archers. Build these facilities with Shift+J and
 recruit the extra regiment with U, Shift+6. Rival armies use the same facilities,
@@ -50,6 +50,12 @@ sheet with its own armor and colors, plus illustrated production buildings.
 The new facilities unlock paid companies and train automatically under normal
 supply and rally rules. River Rangers, Free Folk Berserkers and Ironborn Reavers
 move 10% faster.
+
+Lance Champions now have 400 base health and 18 base damage. Their charge remains
+their strongest strike. Move orders improve disengagement with 30% extra speed,
+faster turns and less crowd drag. Crowds still slow champions, but they escape more easily than ordinary cavalry. Retreat (V) returns champions to their
+training facility’s rally, then their army rally or keep if needed. Rival
+champions withdraw and regroup between successful charges.
 
 The playable web entry is `index.html`. The current editable JavaScript, CSS, and artwork are beside it. Serve this folder over HTTP; opening the split-module entry directly with `file://` is unsupported.
 

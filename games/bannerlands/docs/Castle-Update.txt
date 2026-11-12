@@ -32,7 +32,10 @@ They need 15 stationary seconds to deploy; moving or being knocked aside resets
 setup. The battlefield shows setup progress and the deployed machine.
 
 Free Folk: Giant Camp.
-Giants have 1,250 base health and splash nearby enemy troops with each club hit.
+Giants have 1,250 base health. Each club hit damages and pushes back the main
+target and nearby enemy troops. Heavier units, frontal shields and knockback
+resistance reduce the shove. Allies and buildings are never pushed, and terrain
+blocks displacement.
 Each camp musters one giant per 130 seconds. Paid and automatic mustering share
 the same camp cycle. Paid companies contain exactly one giant. The recruitment
 card shows the remaining wait.
@@ -41,6 +44,13 @@ Tully: Sharpshooter Lodge.
 Sharpshooters fire at 6.25 tiles, farther than ordinary archers, but reload for
 3.4 seconds. They still need direct sightlines. The lodge trains two every
 48 seconds before house modifiers.
+
+CHAMPION BALANCE AND REGROUPING
+Lance Champions have 400 base health and 18 base damage. The first charge
+remains their main weapon; normal attacks still take 2.3 seconds. Move orders
+gain 30% speed, faster turns and less crowd drag. Crowds still slow champions, but they escape more easily than ordinary cavalry. Retreat V sends them
+to their training facility’s rally, then army rally or home as a fallback.
+Rival champions disengage after successful charges and regroup for another run.
 
 RIVAL STRATEGY AND ARTWORK
 Armies treat ruins as major objectives, assign capture companies, hold the ring,

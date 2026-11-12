@@ -102,7 +102,8 @@ function chargeTrial({enemy='infantry',distance=7,rear=true,rows=2}={}){
   return {g,horse,foes,hits,charging,blocked};
 }
 
-test('A real lance charge reaches ahead, hits first much harder, and leaves slow weak follow-up attacks',()=>{
+test('Champions are tougher and hit harder while their real first charge remains decisive',()=>{
+  assert.equal(UNIT_DEFS.lance_champion.hp,400);assert.equal(UNIT_DEFS.lance_champion.damage,18);
   assert.ok(UNIT_DEFS.lance_champion.range>UNIT_DEFS.dread_pike.range);
   assert.ok(UNIT_DEFS.lance_champion.rate>UNIT_DEFS.cavalry.rate);
   const f=chargeTrial();assert.ok(f.charging,'The rider must actually build and enter a charge.');
@@ -113,6 +114,86 @@ test('A real lance charge reaches ahead, hits first much harder, and leaves slow
   target.hp=target.maxHp;const before=target.hp;f.g.attack(f.horse,target);const followUp=before-target.hp;
   assert.ok(followUp>0&&followUp<f.hits[0].damage*.15,'Ordinary follow-ups are weak after charge momentum is spent.');
   assert.ok(f.horse.cooldown>=UNIT_DEFS.lance_champion.rate-.001,'Ordinary lance swings retain their slow attack interval.');
+});
+
+test('Champion Retreat returns to its own training rally and safely falls back when rallies become invalid',()=>{
+  const g=fixture('bear'),s=g.teams[0],origin=post(g,'bear_lance_lodge',0,20,20),near=post(g,'bear_lance_lodge',0,38,20);
+  origin.rally={x:24,y:24};near.rally={x:36,y:25};s.rally={x:16,y:16};g.spawnBatch(origin,'lance_champion',1);
+  const horse=members(g,'lance_champion')[0];horse.x=38;horse.y=22;assert.equal(horse.spawnOriginId,origin.id);
+  g.retreat([horse.id]);assert.equal(horse.order.groupX,24);assert.equal(horse.order.groupY,24);assert.equal(horse.order.mode,'move');assert.ok(horse.order.championWithdraw);assert.equal(horse.target,null);
+  origin.hp=0;g.retreat([horse.id]);assert.equal(horse.order.groupX,36);assert.equal(horse.order.groupY,25);
+  near.rally={x:NaN,y:20};g.retreat([horse.id]);assert.equal(horse.order.groupX,16);assert.equal(horse.order.groupY,16);
+  s.rally={x:-10,y:-10};g.retreat([horse.id]);assert.equal(horse.order.groupX,s.home.x);assert.equal(horse.order.groupY,s.home.y);
+  const infantry=g.addUnit(0,'infantry',34,20);g.retreat([infantry.id]);assert.equal(infantry.order.groupX,s.home.x);assert.equal(infantry.order.groupY,s.home.y);
+});
+
+test('A moving champion disengages faster and can escape a melee crowd without crossing blocked terrain',()=>{
+  const trial=(withdrawing,crowded=false)=>{const g=fixture('bear'),horse=g.addUnit(0,'lance_champion',40,40);horse.facingX=-1;horse.facingY=0;horse.cooldown=100;
+    if(crowded)for(let i=0;i<12;i++){const angle=i*Math.PI/6,foe=g.addUnit(1,'infantry',40+Math.cos(angle)*.48,40+Math.sin(angle)*.48);foe.cooldown=100;g.hold([foe.id]);}
+    g.command([horse.id],30,40,withdrawing?'move':'attack','line');
+    for(let i=0;i<180;i++){g.time+=1/60;g.hash.rebuild(g.units);g.updateUnits(1/60);assert.ok(g.isWalkable(horse.x,horse.y));}
+    return {g,horse,travel:40-horse.x};};
+  const moving=trial(true),marching=trial(false);assert.ok(moving.travel>marching.travel*1.2,'A pure withdrawal must gain a material speed advantage.');
+  const crowded=trial(true,true);assert.ok(crowded.travel>5,'A champion should pull out of a tight melee rather than remain body locked.');
+  const g=fixture('bear'),horse=g.addUnit(0,'lance_champion',40,40);for(let y=0;y<g.H;y++)g.tiles[y*g.W+38].terrain='water';g.navigation.invalidate();g.command([horse.id],35,40,'move');
+  for(let i=0;i<240;i++){g.time+=1/60;g.hash.rebuild(g.units);g.updateUnits(1/60);assert.ok(horse.x>=39.2,'Disengagement cannot tunnel through an impassable river.');assert.ok(g.isWalkable(horse.x,horse.y));}
+});
+
+test('Crowds materially slow withdrawing champions, while champions escape them better than ordinary cavalry',()=>{
+  const trial=(type,rings)=>{const g=fixture('bear'),horse=g.addUnit(0,type,40,40);horse.facingX=-1;horse.facingY=0;horse.cooldown=100;
+    for(let ring=0;ring<rings;ring++)for(let i=0;i<12;i++){const angle=i*Math.PI/6,foe=g.addUnit(1,'infantry',40+Math.cos(angle)*(.48+ring*.4),40+Math.sin(angle)*(.48+ring*.4));foe.cooldown=100;g.hold([foe.id]);}
+    g.command([horse.id],30,40,'move','line');let firstSecond=0;
+    for(let i=0;i<180;i++){g.time+=1/60;g.hash.rebuild(g.units);g.updateUnits(1/60);if(i===59)firstSecond=40-horse.x;assert.ok(g.isWalkable(horse.x,horse.y));}
+    return {firstSecond,total:40-horse.x};};
+  const clear=trial('lance_champion',0);
+  for(const rings of [1,3]){const champion=trial('lance_champion',rings),cavalry=trial('cavalry',rings);
+    assert.ok(champion.firstSecond<clear.firstSecond*.85,'Body crowds must impose a substantial initial slowdown rather than being ignored.');
+    assert.ok(champion.total>cavalry.total*1.08,'Champions should escape the same crowd sooner than ordinary cavalry.');
+    assert.ok(champion.total<clear.total,'The crowd must impose an escape cost even after the champion reaches clear ground.');
+  }
+});
+
+test('Rival champions regroup after a genuine charge, retain their wave task and make another real charge',()=>{
+  const g=fixture('wolf');g.teams[1].sigil='bear';g.teams[1].home={x:30,y:40};g.teams[1].rally={x:30,y:40};
+  const horse=g.addUnit(1,'lance_champion',30,40),foe=g.addUnit(0,'infantry',37,40);horse.cooldown=100;foe.hp=foe.maxHp=10000;foe.cooldown=100;g.hold([foe.id]);
+  g.command([horse.id],50,40,'attack','line');horse.order.aiTask='assault';horse.order.aiTarget=foe.id;
+  let withdrawing=false,resumed=false,firstHit=false,secondCharge=false;
+  for(let i=0;i<2400;i++){
+    g.time+=1/60;g.hash.rebuild(g.units);g.updateUnits(1/60);
+    if(g.stats.chargeImpacts>0)firstHit=true;
+    if(horse.championRegroup){withdrawing=true;assert.equal(horse.order.mode,'move');assert.equal(horse.order.aiTask,'assault');assert.equal(horse.target,null);}
+    if(withdrawing&&!horse.championRegroup&&horse.order.mode==='attack')resumed=true;
+    if(resumed&&horse.charging){secondCharge=true;break;}
+  }
+  assert.ok(firstHit&&withdrawing&&resumed&&secondCharge,'The full charge-withdraw-regroup-charge cycle must run through physical movement.');
+  g.stopCharge(horse);g.updateUnits(1/60);g.command([horse.id],44,44,'move');assert.equal(horse.championRegroup,null);assert.equal(horse.championCyclePending,false);
+  horse.championRegroup={resumeOrder:{x:50,y:40,mode:'attack'},rally:{x:44,y:44}};g.hold([horse.id]);assert.equal(horse.championRegroup,null,'Explicit Hold cancels a saved attack rather than reviving it later.');
+});
+
+test('A real rival strategy decision preserves an active champion withdrawal and its assault wave',()=>{
+  const g=fixture('wolf'),s=g.teams[1];s.sigil='bear';s.home={x:30,y:40};s.rally={...s.home};s.powerReadyAt=1e9;
+  const target=post(g,'keep',0,60,40),horse=g.addUnit(1,'lance_champion',48,40),force=[horse];
+  for(let i=0;i<8;i++)force.push(g.addUnit(1,'infantry',46+i*.3,42));
+  for(let i=0;i<12;i++){const guard=g.addUnit(1,'infantry',29+i*.3,39);g.hold([guard.id]);}
+  const p=g.aiPlanFor(s);Object.assign(p,{phase:'advance',cohort:force.map(u=>u.id),initialSize:force.length,targetId:target.id,targetTeam:0,startedAt:0,timeout:1000,economyAt:1e9,frontierAt:1e9});
+  g.time=20;g.aiIssue(force,target,'attack','assault',{aiTarget:target.id});g.regroupChampion(horse);const cycle=horse.championRegroup;
+  g.hash.rebuild(g.units);g.ai(s);
+  assert.equal(horse.championRegroup,cycle);assert.equal(horse.order.mode,'move');assert.equal(horse.order.aiTask,'assault');assert.equal(p.phase,'advance');assert.ok(p.cohort.includes(horse.id));
+});
+
+test('Replacement orders cancel champion cycles and stale targets or expired calls cannot resurrect attacks',()=>{
+  const g=fixture('wolf');g.teams[1].sigil='bear';g.teams[1].rally={x:30,y:40};
+  const horse=g.addUnit(1,'lance_champion',40,40),target=g.addUnit(0,'infantry',50,40);
+  for(const replace of [()=>g.command([horse.id],44,44,'move'),()=>g.hold([horse.id]),()=>g.expand([horse.id])]){
+    g.command([horse.id],50,40,'attack');horse.order.aiTask='assault';g.regroupChampion(horse);assert.ok(horse.championRegroup);replace();assert.equal(horse.championRegroup,null);assert.equal(horse.championCyclePending,false);
+  }
+  for(const reason of ['dead','allied','expired-call']){
+    target.hp=100;target.team=0;horse.chargeCooldown=0;
+    const resume={x:50,y:40,mode:'attack',aiTask:reason==='expired-call'?'team':'assault',...(reason==='expired-call'?{aiOrder:999}:{aiTarget:target.id})};
+    horse.championRegroup={resumeOrder:resume,rally:{x:horse.x,y:horse.y}};horse.order={x:horse.x,y:horse.y,mode:'move'};
+    if(reason==='dead')target.hp=0;if(reason==='allied')target.team=1;
+    g.hash.rebuild(g.units);g.updateUnits(1/60);assert.equal(horse.championRegroup,null);assert.equal(horse.order.mode,'hold');assert.equal(horse.order.aiTask,'muster');
+  }
 });
 
 test('Point-blank lances cannot invent charge damage and living frontal Frey or Bolton spears stop champions',()=>{

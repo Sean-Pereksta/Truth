@@ -238,7 +238,7 @@ function useHousePower(){
  const result=game.useHousePower([...ui.selected],0);toast(result.message,!result.ok);if(result.ok)tone(540,'click',.035);updateHud();
 }
 function hold(){if(!ui.selected.size)return toast('Select troops to hold the line.');cancelBuild();game.hold(ui.selected);toast('Hold the line. Your troops will defend their facing.');tone(260);}
-function retreat(){if(!ui.selected.size)return toast('Select troops to retreat.');cancelBuild();game.retreat(ui.selected);toast('Fall back! Regroup at your keep. Right-drag for a facing retreat.');tone(190);}
+function retreat(){if(!ui.selected.size)return toast('Select troops to retreat.');const champions=selected().some(u=>UNIT_DEFS[u.type].lanceChampion);cancelBuild();game.retreat(ui.selected);toast(champions?'Champions are disengaging to their rally; other troops fall back to the keep.':'Fall back! Regroup at your keep. Right-drag for a facing retreat.');tone(190);}
 $('allButton').onclick=selectArmy;$('heroButton').onclick=findHero;$('attackNearestButton').onclick=attackNearest;$('expandButton').onclick=expandNearby;$('holdButton').onclick=hold;$('retreatButton').onclick=retreat;
 $('faceOrderButton').onclick=beginFacing;
 $('troopTypeButtons').addEventListener('click',e=>{const button=e.target.closest('[data-select-type]');if(button)selectTroopType(button.dataset.selectType,e.shiftKey);});
@@ -435,6 +435,7 @@ function updateHud(){
  if(troops.some(u=>game.unitClass(u)==='cavalry'))passive.push({label:'Charge · Automatic',description:'Conquer or attack with a straight 3-tile run-up. Flank braced spearmen.'});
  if(troops.some(u=>UNIT_DEFS[u.type].spearBrace))passive.push({label:'Spear brace · Hold H',description:'Set a facing with right-drag, then hold still to stop frontal cavalry. Rear attacks bypass the brace.'});
  if(troops.some(u=>u.backpedaling))passive.push({label:'Orderly retreat · Slower march',description:'Troops keep their facing while backing toward the destination.'});
+ if(troops.some(u=>UNIT_DEFS[u.type].lanceChampion&&u.order?.mode==='move'))passive.push({label:'Champion disengage · Quicker withdrawal',description:'Champions gain 30% base movement and faster turns while withdrawing. Crowds still slow them, but they escape more easily than ordinary cavalry. Retreat V returns them to their rally point; charge again after a fresh run-up.'});
  $('selectedPassiveAbilities').textContent=passive.map(p=>p.label).join(' · ');$('selectedPassiveAbilities').title=passive.map(p=>`${p.label}: ${p.description}`).join('\n');$('selectionAbility').hidden=!hasSelectedPower&&!passive.length;
  const specialist=game.houseContent(0);setHudHTML($('housePassives'),`<b>${escapeHTML(h.playstyle||h.trait)}</b><div class="specialist-impact"><b>${escapeHTML(UNIT_DEFS[specialist.unit].label)} · ${escapeHTML(specialist.impactName||'House specialist')}</b><p>${escapeHTML(specialist.impact||'')}</p></div><div class="house-trait-label">BONUSES</div><ul>${houseAdvantages(h).map(a=>`<li>${escapeHTML(a)}</li>`).join('')}</ul><div class="house-trait-label weakness-label">WEAKNESSES</div><ul class="house-weaknesses">${houseWeaknesses(h).map(a=>`<li>${escapeHTML(a)}</li>`).join('')}</ul>`);
  updateCampaignHud();

@@ -75,6 +75,37 @@ test('Giants have high health and splash nearby enemies without harming allies',
   const start=[target.hp,near.hp,far.hp,friendly.hp,ally.hp];g.attack(giant,target);
   assert.ok(target.hp<start[0]);assert.ok(near.hp<start[1]);assert.equal(far.hp,start[2]);assert.equal(friendly.hp,start[3]);assert.equal(ally.hp,start[4]);
   assert.ok(start[1]-near.hp<start[0]-target.hp,'The main blow is stronger than its surrounding splash.');
+  assert.ok(target.knockVX>0&&near.knockVX>0);assert.equal(far.knockT,0);assert.equal(friendly.knockT,0);assert.equal(ally.knockT,0);
+});
+
+test('Giant swings visibly shove surviving main and splash victims away and break cavalry charges',()=>{
+  const g=fixture('bone'),giant=g.addUnit(0,'giant',30,30),target=g.addUnit(1,'infantry',31,30),splash=g.addUnit(1,'cavalry',31,30.9),dead=g.addUnit(1,'archer',31,29.5),fort=g.addBuilding(1,'barracks',31,29.2);
+  g.teams[1].sigil='lion';
+  for(const foe of [target,splash]){foe.hp=foe.maxHp=1000;g.hold([foe.id]);foe.cooldown=1e9;}dead.hp=1;
+  splash.charging=true;splash.momentum=1;splash.chargeDir={x:-1,y:0};
+  g.hash.rebuild(g.units);g.attack(giant,target);
+  assert.ok(target.knockVX>0);assert.ok(splash.knockVX>0&&splash.knockVY>0);assert.equal(splash.charging,false);assert.ok(dead.hp<=0);assert.equal(dead.knockT,0);assert.equal(fort.knockT,undefined);
+  const start={x:target.x,y:target.y};giant.x=20;giant.y=20;giant.cooldown=1e9;
+  for(let i=0;i<30;i++)step(g,.02);
+  assert.ok(target.x-start.x>.75,'The main club hit visibly moves an infantry victim.');
+  assert.ok(splash.x>31.2&&splash.y>31,'Splash shoves survivors radially away from the giant.');
+});
+
+test('Giant knockback respects defensive resistance, buildings, terrain and exact-overlap positions',()=>{
+  const g=fixture('bone'),giant=g.addUnit(0,'giant',31.5,40),victim=g.addUnit(1,'infantry',32.5,40);
+  victim.hp=victim.maxHp=1000;victim.cooldown=1e9;g.hold([victim.id]);g.hash.rebuild(g.units);
+  g.attack(giant,victim);const ordinary=Math.hypot(victim.knockVX,victim.knockVY);victim.resolveUntil=100;g.attack(giant,victim);assert.ok(Math.hypot(victim.knockVX,victim.knockVY)<ordinary*.7);
+  for(let y=0;y<g.H;y++)g.tiles[y*g.W+33].terrain='water';g.navigation.invalidate();giant.x=20;giant.y=20;giant.cooldown=1e9;
+  for(let i=0;i<35;i++){step(g,.02);assert.ok(victim.x<33);assert.ok(g.isWalkable(victim.x,victim.y));}
+  const fort=g.addBuilding(1,'barracks',20.5,20);g.attack(giant,fort);assert.equal(fort.knockT,undefined,'Buildings are never displaced.');
+  const overlap=g.addUnit(1,'infantry',giant.x,giant.y);overlap.hp=1000;g.hash.rebuild(g.units);g.attack(giant,overlap);assert.ok(Number.isFinite(overlap.knockVX)&&Number.isFinite(overlap.knockVY));assert.ok(Math.hypot(overlap.knockVX,overlap.knockVY)>0);
+  const shield=g.addUnit(1,'shield_bearer',giant.x+1,giant.y);shield.hp=shield.maxHp=1000;shield.facingX=-1;shield.facingY=0;g.hash.rebuild(g.units);g.attack(giant,shield);const front=Math.hypot(shield.knockVX,shield.knockVY);shield.facingX=1;g.attack(giant,shield);assert.ok(Math.hypot(shield.knockVX,shield.knockVY)>front*1.7,'A frontal greatshield resists the shove, but its rear does not.');
+});
+
+test('A giant attacking a building shoves nearby enemy defenders while the structure stays fixed',()=>{
+  const g=fixture('bone'),giant=g.addUnit(0,'giant',29,30),fort=g.addBuilding(1,'barracks',30,30),defender=g.addUnit(1,'infantry',30,30.8),friendly=g.addUnit(0,'infantry',30,29.8);
+  defender.hp=defender.maxHp=1000;g.hash.rebuild(g.units);g.attack(giant,fort);
+  assert.equal(fort.x,30);assert.equal(fort.y,30);assert.equal(fort.knockT,undefined);assert.ok(defender.knockVX>0&&defender.knockVY>0);assert.equal(friendly.knockT,0);
 });
 
 test('Giant Camps muster only one giant per very long production interval and respect supply',()=>{
