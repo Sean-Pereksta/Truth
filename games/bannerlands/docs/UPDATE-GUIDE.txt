@@ -1,3 +1,12 @@
+COMBAT FORMATIONS AND TERRAIN
+Right-drag from a destination toward the direction for the line to face.
+Troops keep that facing while marching, including slower backward retreats.
+Frey Bridge Wardens and Bolton Dread Pikes provide frontal cavalry defenses;
+rear cavalry charges hit harder and spend less momentum. Mountains block
+direct fire, forests provide missile cover and hills favor archers.
+Alt+letter selects troop types. Ctrl+1-9 saves groups; 1-9 recalls them.
+Buildings now use Shift+letters. See Combat-Update.txt for all controls.
+
 CAMPAIGN MENU
 All sixteen painted house choices, your selected house and campaign settings
 fit together on desktop. Smaller screens use Your house and The campaign tabs;

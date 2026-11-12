@@ -1,22 +1,26 @@
 import {Game,HOUSES,UNIT_DEFS,BUILD_DEFS,HOUSE_CONTENT} from './core.js';
 import {Renderer,worldToScreen,screenToWorld} from './render.js';
 import {LAND_MAPS,isPassableTile,tileTravelCost} from './lands.js';
+import {regimentForHouse,regimentBuildingForHouse} from './regiments.js';
 
 const $=id=>document.getElementById(id),canvas=$('battleCanvas'),field=$('battlefield');
 const hudMarkup=new WeakMap();
 function setHudHTML(element,markup){if(hudMarkup.get(element)!==markup){element.innerHTML=markup;hudMarkup.set(element,markup);}}
 const renderer=new Renderer(canvas),view={x:0,y:0,zoom:1,w:800,h:600,dpr:Math.min(window.devicePixelRatio||1,2)};
-const ui={selected:new Set(),selectedBuildings:new Set(),rallyMode:false,teamOrderMode:null,hover:null,drag:null,buildMode:null,orderMarker:null,showGrid:true,quality:'auto',formation:'line'};
+const ui={selected:new Set(),selectedBuildings:new Set(),rallyMode:false,teamOrderMode:null,facingMode:false,facingPreview:null,hover:null,drag:null,buildMode:null,orderMarker:null,showGrid:true,quality:'auto',formation:'line'};
 let game=new Game({enemies:3,scale:'epic',seed:628410}),started=false,menuOpen=true,chosenHouse=0,orderMode='attack',speed=1;
 let toastUntil=0,lastEvent=0,lastHud=0,lastMini=0,lastNow=performance.now(),accumulator=0,fps=60,frameMs=16.7,lastResult=null,wasPaused=false;
 const keys=new Set(),groups=new Map(),pointers=new Map();let gesture=null,pinch=null,edgeMouse=null,allSelected=false,allBuildingsSelected=false;
 let audio=null,sound=true,lastSfx=0,lastBattle=0,tab='army';
 const icons={infantry:'shield',archer:'bow',cavalry:'horse',siege:'siege',barracks:'shield',range:'bow',stables:'horse',tower:'castle',workshop:'siege',weapons:'swords',armor:'shield',economy:'coin'};
 const HOUSE_ART_SOURCES={troops:Object.fromEntries(HOUSES.map(h=>[h.sigil,`assets/houses/${h.sigil}-troops.png`])),castles:'assets/house-castles.png',production:'assets/house-production.png'};
+const REGIMENT_ART_SOURCES={wolf:'assets/regiments/wolf-shield-bearer.png',lion:'assets/regiments/lion-shield-bearer.png',dragon:'assets/regiments/dragon-shield-bearer.png',rose:'assets/regiments/rose-shield-bearer.png',bear:'assets/regiments/bear-lance-champion.png',sun:'assets/regiments/sun-lance-champion.png',falcon:'assets/regiments/falcon-lance-champion.png'};
 const MENU_TAB_KEYS={u:'army',b:'build',c:'council'};
+const BUILD_HOTKEYS={b:'[data-build="barracks"]',a:'[data-build="range"]',s:'[data-build="stables"]',t:'[data-build="tower"]',w:'[data-build="workshop"]',h:'[data-special-build]',j:'[data-regiment-build]'};
+const TYPE_HOTKEYS={i:'infantry',s:'spears',a:'archer',c:'cavalry',g:'siege',h:'hero',b:'shield_bearer',l:'lance_champion'};
 const MENU_ACTIONS={
- army:['[data-recruit="infantry"]','[data-recruit="archer"]','[data-recruit="cavalry"]','[data-recruit="siege"]','[data-special-recruit]'],
- build:['[data-build="barracks"]','[data-build="range"]','[data-build="stables"]','[data-build="tower"]','[data-build="workshop"]','[data-special-build]'],
+ army:['[data-recruit="infantry"]','[data-recruit="archer"]','[data-recruit="cavalry"]','[data-recruit="siege"]','[data-special-recruit]','[data-regiment-recruit]'],
+ build:['[data-build="barracks"]','[data-build="range"]','[data-build="stables"]','[data-build="tower"]','[data-build="workshop"]','[data-special-build]','[data-regiment-build]'],
  council:['#housePowerButton','[data-upgrade="weapons"]','[data-upgrade="armor"]','[data-upgrade="economy"]','#compareHousesCouncilButton','#townHallUpgradeButton']
 };
 const icon=name=>`<svg aria-hidden="true"><use href="#i-${name}"/></svg>`;
@@ -97,27 +101,29 @@ $('landscapeSelect').innerHTML=LAND_MAPS.map(m=>'<option value="'+escapeHTML(m.i
 function terrainDescription(t){
  if(!t)return 'Sea · choose a bridge or ford to cross';
  const label=t.feature==='bridge'?'Bridge':t.feature==='ford'?'Shallow ford':t.feature==='pass'?'Mountain pass':t.feature==='road'?'Road':({water:'Deep water',mountain:'Mountain',forest:'Forest',hill:'Highlands',grass:'Open ground'})[t.terrain]||'Ground';
- if(!isPassableTile(t))return label+' · impassable';
+ if(!isPassableTile(t))return label+(t.terrain==='mountain'?' · blocks movement and direct fire':' · impassable');
  if(t.feature==='bridge')return label+' · narrow crossing · keep approaches clear';
  if(t.feature==='ford')return label+' · slow crossing · exposed troops';
  if(t.feature==='pass')return label+' · the route through impassable peaks';
  if(t.feature==='road')return label+' · faster march · all houses';
- const foot=tileTravelCost(t,'infantry'),horse=tileTravelCost(t,'cavalry');return label+(horse>foot+.1?' · cavalry moves slower':t.terrain==='hill'?' · slower climb · valuable land':' · passable');
+ if(t.terrain==='forest')return label+' · 25% cover against arrows and bolts · slower march';
+ if(t.terrain==='hill')return label+' · archers gain 0.6 range · slower climb';
+ const foot=tileTravelCost(t,'infantry'),horse=tileTravelCost(t,'cavalry');return label+(horse>foot+.1?' · cavalry moves slower':' · passable');
 }
 function buildActionLists(){
- const house=game.houseContent(0);
- $('recruitList').innerHTML=['infantry','archer','cavalry','siege',house.unit].map(type=>{const d=UNIT_DEFS[type],special=type===house.unit;return `<button class="action-card${special?' house-special-card':''}" data-recruit="${type}"${special?' data-special-recruit':''} title="${escapeHTML(specialistTooltip(type))}">${special?`<span class="building-art" aria-hidden="true"><canvas data-unit-icon="${type}" width="96" height="96"></canvas></span>`:icon(icons[type])}<span class="action-copy"><span class="action-title"><b>${d.label}<span id="recruitBatch-${type}" style="font:8px 'Segoe UI';color:#718e87"> ×${d.batch}</span></b></span><small>${special?`Requires ${BUILD_DEFS[house.building].label}`:d.role.split(' · ').pop()}</small></span><span class="cost" id="recruitCost-${type}">${d.cost}<small>GOLD</small></span></button>`;}).join('');
- $('buildList').innerHTML=['barracks','range','stables','tower','workshop',house.building].map(type=>{const d=BUILD_DEFS[type];return `<button class="action-card building-card${type===house.building?' house-special-card':''}" data-build="${type}"${type===house.building?' data-special-build':''} title="${d.role}"><span class="building-art" aria-hidden="true"><canvas data-building-icon="${type}" width="96" height="96"></canvas></span><span class="action-copy"><span class="action-title"><b>${d.label}</b></span><small>${d.role.replace(' · ',' / ')}</small></span><span class="cost">${d.cost}<small>GOLD</small></span></button>`;}).join('');
+ const house=game.houseContent(0),sigil=game.teams[0].sigil,regiment=regimentForHouse(sigil),regimentBuilding=regimentBuildingForHouse(sigil);
+ $('recruitList').innerHTML=['infantry','archer','cavalry','siege',house.unit,...(regiment?[regiment]:[])].map(type=>{const d=UNIT_DEFS[type],special=type===house.unit,drawn=special||d.regiment;return `<button class="action-card${drawn?' house-special-card':''}" data-recruit="${type}"${special?' data-special-recruit':''}${d.regiment?' data-regiment-recruit':''} title="${escapeHTML(specialistTooltip(type))}">${drawn?`<span class="building-art" aria-hidden="true"><canvas data-unit-icon="${type}" width="96" height="96"></canvas></span>`:icon(icons[type])}<span class="action-copy"><span class="action-title"><b>${d.label}<span id="recruitBatch-${type}" style="font:8px 'Segoe UI';color:#718e87"> ×${d.batch}</span></b></span><small>${special?`Requires ${BUILD_DEFS[house.building].label}`:d.regiment?`Requires ${BUILD_DEFS[regimentBuilding].label}`:d.role.split(' · ').pop()}</small></span><span class="cost" id="recruitCost-${type}">${d.cost}<small>GOLD</small></span></button>`;}).join('');
+ $('buildList').innerHTML=['barracks','range','stables','tower','workshop',house.building,...(regimentBuilding?[regimentBuilding]:[])].map(type=>{const d=BUILD_DEFS[type];return `<button class="action-card building-card${type===house.building||d.regimentBuilding?' house-special-card':''}" data-build="${type}"${type===house.building?' data-special-build':''}${d.regimentBuilding?' data-regiment-build':''} title="${d.role}"><span class="building-art" aria-hidden="true"><canvas data-building-icon="${type}" width="96" height="96"></canvas></span><span class="action-copy"><span class="action-title"><b>${d.label}</b></span><small>${d.role.replace(' · ',' / ')}</small></span><span class="cost">${d.cost}<small>GOLD</small></span></button>`;}).join('');
  $('upgradeList').innerHTML=[['weapons','Tempered steel'],['armor','Reinforced armor'],['economy','Royal treasury']].map(([type,label])=>`<button class="action-card" data-upgrade="${type}">${icon(icons[type])}<span class="action-copy"><span class="action-title"><b>${label}</b></span><small id="upgradeEffect-${type}">${upgradeSummary(type,game.upgradeDetails(type,0))}</small></span><span class="cost" id="cost-${type}">200<small>0 / 500</small></span></button>`).join('');
  labelMenuHotkeys();
 }
 function labelMenuHotkeys(){
- for(const actions of Object.values(MENU_ACTIONS))actions.forEach((selector,index)=>{
+ for(const [menu,actions]of Object.entries(MENU_ACTIONS))actions.forEach((selector,index)=>{
   const button=document.querySelector(selector);if(!button)return;
-  const shortcut=`Shift+${index+1}`;button.setAttribute('aria-keyshortcuts',shortcut+(selector==='#housePowerButton'?' E':''));
+  const letter=menu==='build'?Object.keys(BUILD_HOTKEYS).find(key=>BUILD_HOTKEYS[key]===selector):null,shortcut=`Shift+${letter?letter.toUpperCase():index+1}`;button.setAttribute('aria-keyshortcuts',shortcut+(selector==='#housePowerButton'?' E':''));
   if(button.dataset.shortcutTitle===undefined)button.dataset.shortcutTitle=button.title;
   button.title=[button.dataset.shortcutTitle,shortcut].filter(Boolean).join(' · ');
-  if(!button.querySelector('.menu-hotkey')){const badge=document.createElement('kbd');badge.className='menu-hotkey';badge.textContent=`⇧${index+1}`;badge.setAttribute('aria-hidden','true');(button.querySelector('.action-title')||button).append(badge);}
+  if(!button.querySelector('.menu-hotkey')){const badge=document.createElement('kbd');badge.className='menu-hotkey';badge.textContent=`⇧${letter?letter.toUpperCase():index+1}`;badge.setAttribute('aria-hidden','true');(button.querySelector('.action-title')||button).append(badge);}
  });
 }
 function paintBuildingIcons(){
@@ -135,6 +141,7 @@ function paintStructurePortrait(canvas,type,house){
   ctx.drawImage(sprite,(70-frame.drawWidth/2)*2,(146-frame.drawHeight)*2,frame.drawWidth*2,frame.drawHeight*2,(96-w)/2,(96-h)/2,w,h);
 }
 function paintTroopPortrait(canvas,type,house){
+ if(UNIT_DEFS[type]?.regiment){if(renderer.regimentArtReady)renderer.drawTroopPortrait(canvas,type,house);return;}
  const row=renderer.getTroopFrame(type,house.sigil),frame=row?.frames[0];if(!frame)return;
  const ctx=canvas.getContext('2d'),scale=Math.min(88/frame.width,88/frame.height),w=frame.width*scale,h=frame.height*scale;
  ctx.clearRect(0,0,96,96);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(frame.image,frame.left,frame.top,frame.width,frame.height,(96-w)/2,(96-h)/2,w,h);
@@ -147,25 +154,30 @@ function paintHousePreview(){
  paintTroopPortrait($('chosenTroopArt'),content.unit,house);paintStructurePortrait($('chosenProductionArt'),content.building,house);paintStructurePortrait($('chosenCastleArt'),'keep',house);
 }
 buildActionLists();
-function showTab(name){if(!MENU_ACTIONS[name])return;cancelBuild();tab=name;document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.tab===name);b.setAttribute('aria-selected',String(b.dataset.tab===name));});['army','build','council'].forEach(n=>$(n+'Tab').hidden=n!==name);$('menuShortcutHint').textContent=`Shift+1–${MENU_ACTIONS[name].length}: ${name==='army'?'recruit companies':name==='build'?'choose a building':'Council actions'} · ⇧ means Shift`;$('panelTabs').scrollIntoView({block:'nearest'});}
+function showTab(name){if(!MENU_ACTIONS[name])return;cancelBuild();tab=name;document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.tab===name);b.setAttribute('aria-selected',String(b.dataset.tab===name));});['army','build','council'].forEach(n=>$(n+'Tab').hidden=n!==name);$('menuShortcutHint').textContent=name==='build'?'Shift + B / A / S / T / W / H / J: buildings':`Shift+1–${name==='army'&&!regimentForHouse(game.teams[0].sigil)?5:MENU_ACTIONS[name].length}: ${name==='army'?'recruit companies':'Council actions'} · ⇧ means Shift`;$('panelTabs').scrollIntoView({block:'nearest'});}
+function activateMenuAction(selector){
+ updateHud();const button=selector?document.querySelector(selector):null;
+ if(!button)toast('No item is assigned to that shortcut.');
+ else if(button.disabled)toast('This item is unavailable. Check gold, supply, required buildings or power cooldown.',true);
+ else button.click();
+}
 function handleMenuHotkey(e){
  if(e.ctrlKey||e.metaKey||e.altKey)return false;
- const name=MENU_TAB_KEYS[e.key.toLowerCase()];
+ const letter=e.key.toLowerCase();
+ if(e.shiftKey&&BUILD_HOTKEYS[letter]){e.preventDefault();showTab('build');activateMenuAction(BUILD_HOTKEYS[letter]);return true;}
+ const name=MENU_TAB_KEYS[letter];
  if(name){e.preventDefault();showTab(name);updateHud();return true;}
  const digit=/^(?:Digit|Numpad)([1-6])$/.exec(e.code)?.[1];
  if(!e.shiftKey||!digit)return false;
- e.preventDefault();updateHud();
- const selector=MENU_ACTIONS[tab][Number(digit)-1],button=selector?document.querySelector(selector):null;
- if(!button)toast(`This menu has ${MENU_ACTIONS[tab].length} items. Use Shift+1–${MENU_ACTIONS[tab].length}.`);
- else if(button.disabled)toast('This item is unavailable. Check gold, supply, structure capacity or power cooldown.',true);
- else button.click();
+ e.preventDefault();if(tab==='build'){toast('Build with Shift + B / A / S / T / W / H / J.');return true;}
+ activateMenuAction(MENU_ACTIONS[tab][Number(digit)-1]);
  return true;
 }
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 $('recruitList').addEventListener('click',e=>{const b=e.target.closest('[data-recruit]');if(!b||b.disabled||!started||menuOpen)return;const r=game.recruit(b.dataset.recruit);toast(r.message,!r.ok);if(r.ok)tone(360);updateHud();});
 $('buildList').addEventListener('click',e=>{const b=e.target.closest('[data-build]');if(!b||b.disabled||!started||menuOpen)return;cancelBuild();ui.buildMode=b.dataset.build;$('buildBanner').hidden=false;document.body.classList.add('placing');toast(`Place ${BUILD_DEFS[ui.buildMode].label.toLowerCase()} on your land.`);});
 $('upgradeList').addEventListener('click',e=>{const b=e.target.closest('[data-upgrade]');if(!b||b.disabled||!started||menuOpen)return;const r=game.upgrade(b.dataset.upgrade);toast(r.message,!r.ok);if(r.ok)tone(480);updateHud();});
-function cancelBuild(){ui.buildMode=null;ui.rallyMode=false;ui.teamOrderMode=null;$('buildBanner').hidden=true;$('buildBanner').firstChild.textContent='Choose a clear tile in your territory ';document.body.classList.remove('placing');}
+function cancelBuild(){ui.buildMode=null;ui.rallyMode=false;ui.teamOrderMode=null;ui.facingMode=false;ui.facingPreview=null;$('buildBanner').hidden=true;$('buildBanner').firstChild.textContent='Choose a clear tile in your territory ';document.body.classList.remove('placing');}
 $('cancelBuild').onclick=()=>{cancelBuild();updateHud();};
 function beginTeamOrder(kind){
  if(!started||menuOpen||game.winner!==null||!game.teams[0].alive)return;
@@ -184,12 +196,28 @@ document.querySelectorAll('[data-order]').forEach(b=>b.onclick=()=>{setMode(b.da
 document.querySelectorAll('[data-formation]').forEach(b=>b.onclick=()=>{ui.formation=b.dataset.formation;document.querySelectorAll('[data-formation]').forEach(z=>z.classList.toggle('active',z===b));if(ui.selected.size)toast(`${b.dataset.formation[0].toUpperCase()+b.dataset.formation.slice(1)} formation on your next order.`);});
 function clearBuildingSelection(){ui.selectedBuildings.clear();allBuildingsSelected=false;}
 function selectArmy(){cancelBuild();clearBuildingSelection();ui.selected=new Set(game.units.filter(u=>u.team===0&&u.hp>0).map(u=>u.id));allSelected=true;tone(400);updateHud();}
+function selectTroopType(type,add=false){
+ const matches=game.units.filter(u=>u.team===0&&u.hp>0&&(type==='spears'?UNIT_DEFS[u.type].spearBrace:['shield_bearer','lance_champion'].includes(type)?u.type===type:game.unitClass(u)===type));
+ cancelBuild();clearBuildingSelection();if(!add)ui.selected.clear();for(const u of matches)ui.selected.add(u.id);allSelected=false;
+ toast(matches.length?`${matches.length} ${type==='spears'?'spearmen and pikemen':type==='hero'?'commanders':UNIT_DEFS[type]?.label.toLowerCase()||type} selected.`:'No living troops of that type.');updateHud();
+}
+function commandGroup(number,assign=false,add=false){
+ const key=String(number);if(!/^[1-9]$/.test(key))return;
+ if(assign){const ids=add?new Set(groups.get(key)||[]):new Set();for(const u of selected())ids.add(u.id);const living=[...ids].filter(id=>{const u=game.byId.get(id);return u?.team===0&&u.hp>0&&UNIT_DEFS[u.type];});if(living.length)groups.set(key,living);else groups.delete(key);toast(living.length?`Group ${key} saved · ${living.length} soldiers.`:`Group ${key} cleared.`);}
+ else{const ids=groups.get(key);if(!ids?.length){toast(`Select troops, then Ctrl+${key} to save this group.`);return;}cancelBuild();clearBuildingSelection();if(!add)ui.selected.clear();for(const id of ids){const u=game.byId.get(id);if(u?.team===0&&u.hp>0&&UNIT_DEFS[u.type])ui.selected.add(id);}allSelected=false;}
+ updateHud();
+}
+function beginFacing(){
+ if(!started||menuOpen)return;const wasFacing=ui.facingMode;cancelBuild();if(wasFacing){updateHud();return;}
+ if(!selected().length)return toast('Select soldiers before setting a facing.');clearBuildingSelection();ui.facingMode=true;
+ $('buildBanner').firstChild.textContent='Drag from the destination toward the direction to face ';$('buildBanner').hidden=false;canvas.focus();updateHud();
+}
 function selectAllBuildings(){cancelBuild();ui.selected.clear();allSelected=false;ui.selectedBuildings=new Set(game.buildings.filter(b=>b.team===0&&b.hp>0).map(b=>b.id));allBuildingsSelected=true;tone(400);updateHud();$('buildingOrders').scrollIntoView({block:'nearest'});}
 function beginRally(){if(!selectedBuildings().length)return;cancelBuild();ui.rallyMode=true;$('buildBanner').firstChild.textContent='Click land to set the selected buildings’ rally point ';$('buildBanner').hidden=false;document.body.classList.add('placing');canvas.focus();updateHud();}
 function setSelectedRally(x,y){const buildings=selectedBuildings();if(!buildings.length){cancelBuild();return;}const r=game.setRally(x,y,0,allBuildingsSelected?null:buildings.map(b=>b.id));toast(r.message,!r.ok);if(r.ok){ui.orderMarker={x,y,time:game.time,mode:'rally'};cancelBuild();tone(380);}updateHud();}
 function clearSelectedRally(){const r=game.clearRally(0,allBuildingsSelected?null:ui.selectedBuildings);toast(r.message,!r.ok);cancelBuild();updateHud();}
 function findHero(){const u=game.units.find(u=>u.team===0&&u.type==='hero'&&u.hp>0);if(!u){toast('Your commander will return while a keep remains.');return;}cancelBuild();clearBuildingSelection();ui.selected=new Set([u.id]);allSelected=false;focusPoint(u.x,u.y,1.7);updateHud();}
-function issue(x,y,mode=orderMode){if(!ui.selected.size){toast('Select soldiers first. Drag a box or press Q.');return;}const t=game.tileAt(x,y);if(!isPassableTile(t)){toast('Choose reachable ground, a bridge, a ford or a pass.',true);return;}game.command(ui.selected,x,y,mode,ui.formation);ui.orderMarker={x,y,time:game.time,mode};tone(mode==='attack'?240:340);}
+function issue(x,y,mode=orderMode,facing=null){if(!selected().length){toast('Select soldiers first. Drag a box or press Q.');return false;}const t=game.tileAt(x,y);if(!isPassableTile(t)){toast('Choose reachable ground, a bridge, a ford or a pass.',true);return false;}game.command(ui.selected,x,y,mode,ui.formation,facing);ui.orderMarker={x,y,time:game.time,mode};tone(mode==='attack'?240:340);return true;}
 function expandNearby(){
  if(!started||menuOpen||game.winner!==null||!game.teams[0].alive)return;
  const troops=selected();if(!troops.length)return toast('Select soldiers first. Drag a box or press Q.');
@@ -207,9 +235,13 @@ function useHousePower(){
  if(typeof game.useHousePower!=='function')return toast('House powers are preparing.');
  const result=game.useHousePower([...ui.selected],0);toast(result.message,!result.ok);if(result.ok)tone(540,'click',.035);updateHud();
 }
-function hold(){if(!ui.selected.size)return toast('Select troops to hold the line.');game.hold(ui.selected);toast('Hold the line. Your troops will defend their ground.');tone(260);}
-function retreat(){if(!ui.selected.size)return toast('Select troops to retreat.');game.retreat(ui.selected);toast('Fall back! Regroup at your keep.');tone(190);}
+function hold(){if(!ui.selected.size)return toast('Select troops to hold the line.');cancelBuild();game.hold(ui.selected);toast('Hold the line. Your troops will defend their facing.');tone(260);}
+function retreat(){if(!ui.selected.size)return toast('Select troops to retreat.');cancelBuild();game.retreat(ui.selected);toast('Fall back! Regroup at your keep. Right-drag for a facing retreat.');tone(190);}
 $('allButton').onclick=selectArmy;$('heroButton').onclick=findHero;$('attackNearestButton').onclick=attackNearest;$('expandButton').onclick=expandNearby;$('holdButton').onclick=hold;$('retreatButton').onclick=retreat;
+$('faceOrderButton').onclick=beginFacing;
+$('troopTypeButtons').addEventListener('click',e=>{const button=e.target.closest('[data-select-type]');if(button)selectTroopType(button.dataset.selectType,e.shiftKey);});
+$('commandGroups').innerHTML=Array.from({length:9},(_,i)=>`<button type="button" data-command-group="${i+1}" aria-label="Group ${i+1}: empty. Ctrl-click to assign." title="Group ${i+1} · click recalls · Ctrl-click saves · Ctrl+Shift-click adds">${i+1}<small>—</small></button>`).join('');
+$('commandGroups').addEventListener('click',e=>{const button=e.target.closest('[data-command-group]');if(button)commandGroup(button.dataset.commandGroup,e.ctrlKey||e.metaKey,e.shiftKey);});
 $('housePowerButton').onclick=useHousePower;
 $('houseQuickPowerButton').onclick=useHousePower;
 $('selectedPowerButton').onclick=useHousePower;$('selectBuildingsButton').onclick=selectAllBuildings;$('setRallyButton').onclick=beginRally;$('clearRallyButton').onclick=clearSelectedRally;
@@ -261,14 +293,16 @@ canvas.addEventListener('contextmenu',e=>e.preventDefault());
 canvas.addEventListener('wheel',e=>{e.preventDefault();const p=pointerPos(e);zoomAt(Math.exp(-e.deltaY*.0013),p.x,p.y);},{passive:false});
 canvas.addEventListener('pointerdown',e=>{
  rememberMouse(e);if(menuOpen||!started)return;e.preventDefault();initAudio();canvas.focus();canvas.setPointerCapture(e.pointerId);const p=pointerPos(e);pointers.set(e.pointerId,p);
- if(pointers.size===2){const [a,b]=[...pointers.values()];pinch={dist:Math.hypot(a.x-b.x,a.y-b.y),zoom:view.zoom,anchor:screenToWorld((a.x+b.x)/2,(a.y+b.y)/2,view)};gesture=null;ui.drag=null;return;}
- gesture={id:e.pointerId,button:e.button,x0:p.x,y0:p.y,x:p.x,y:p.y,camX:view.x,camY:view.y,shift:e.shiftKey,moved:false,touch:e.pointerType==='touch'};
+ if(pointers.size===2){const [a,b]=[...pointers.values()];pinch={dist:Math.hypot(a.x-b.x,a.y-b.y),zoom:view.zoom,anchor:screenToWorld((a.x+b.x)/2,(a.y+b.y)/2,view)};gesture=null;ui.drag=null;ui.facingPreview=null;return;}
+ const facing=(e.button===2||e.button===0&&ui.facingMode)&&!ui.buildMode&&!ui.rallyMode&&!ui.teamOrderMode&&selected().length>0;
+ gesture={id:e.pointerId,button:e.button,x0:p.x,y0:p.y,x:p.x,y:p.y,anchor:screenToWorld(p.x,p.y,view),facing,camX:view.x,camY:view.y,shift:e.shiftKey,moved:false,touch:e.pointerType==='touch'};
 });
 canvas.addEventListener('pointermove',e=>{
  rememberMouse(e);const p=pointerPos(e);ui.hover=screenToWorld(p.x,p.y,view);if(pointers.has(e.pointerId))pointers.set(e.pointerId,p);
  if(pinch&&pointers.size>=2){const[a,b]=[...pointers.values()],sx=(a.x+b.x)/2,sy=(a.y+b.y)/2;view.zoom=clamp(pinch.zoom*Math.hypot(a.x-b.x,a.y-b.y)/Math.max(10,pinch.dist),minZoom(),2.6);const q=iso(pinch.anchor);view.x=q.x-(sx-view.w/2)/view.zoom;view.y=q.y-(sy-view.h/2)/view.zoom;boundCamera();return;}
  if(!gesture||gesture.id!==e.pointerId)return;gesture.x=p.x;gesture.y=p.y;if(Math.hypot(p.x-gesture.x0,p.y-gesture.y0)>6)gesture.moved=true;
- if(gesture.button===2||gesture.button===1){if(gesture.moved){view.x=gesture.camX-(p.x-gesture.x0)/view.zoom;view.y=gesture.camY-(p.y-gesture.y0)/view.zoom;boundCamera();}}else if(gesture.moved&&!ui.buildMode&&!ui.rallyMode&&!ui.teamOrderMode){ui.drag={x0:gesture.x0,y0:gesture.y0,x1:p.x,y1:p.y};}
+ if(gesture.facing){if(gesture.moved){const end=screenToWorld(p.x,p.y,view),dx=end.x-gesture.anchor.x,dy=end.y-gesture.anchor.y,length=Math.hypot(dx,dy);if(length>.001)ui.facingPreview={...gesture.anchor,faceX:dx/length,faceY:dy/length,formation:ui.formation,count:selected().length};}}
+ else if(gesture.button===2||gesture.button===1){if(gesture.moved){view.x=gesture.camX-(p.x-gesture.x0)/view.zoom;view.y=gesture.camY-(p.y-gesture.y0)/view.zoom;boundCamera();}}else if(gesture.moved&&!ui.buildMode&&!ui.rallyMode&&!ui.teamOrderMode){ui.drag={x0:gesture.x0,y0:gesture.y0,x1:p.x,y1:p.y};}
 });
 function buildingAt(p){
  let target=null,best=Infinity;
@@ -278,8 +312,10 @@ function buildingAt(p){
  }return target;
 }
 function finishPointer(e,cancel=false){
- pointers.delete(e.pointerId);if(pinch){if(pointers.size<2)pinch=null;gesture=null;ui.drag=null;return;}
- if(!gesture||gesture.id!==e.pointerId)return;const z=gesture;gesture=null;ui.drag=null;if(cancel)return;const p=pointerPos(e),w=screenToWorld(p.x,p.y,view);
+ pointers.delete(e.pointerId);if(pinch){if(pointers.size<2)pinch=null;gesture=null;ui.drag=null;ui.facingPreview=null;return;}
+ if(!gesture||gesture.id!==e.pointerId)return;const z=gesture;gesture=null;ui.drag=null;ui.facingPreview=null;if(cancel||menuOpen||!started)return;const p=pointerPos(e),w=screenToWorld(p.x,p.y,view);
+ if(z.facing&&z.moved){const dx=w.x-z.anchor.x,dy=w.y-z.anchor.y,length=Math.hypot(dx,dy);if(length>.001&&issue(z.anchor.x,z.anchor.y,'move',{x:dx/length,y:dy/length})){cancelBuild();toast('March to the line and keep this facing. Backward movement is slower.');updateHud();}return;}
+ if(z.facing&&z.button===0){toast('Drag from your destination toward the direction to face.');return;}
  if(z.button===1)return;if(z.button===2){if(!z.moved){if(ui.buildMode||ui.rallyMode||ui.teamOrderMode){cancelBuild();updateHud();}else if(ui.selectedBuildings.size)setSelectedRally(w.x,w.y);else issue(w.x,w.y,'move');}return;}
  if(ui.teamOrderMode){if(!z.moved)placeTeamOrder(w.x,w.y);return;}
  if(ui.rallyMode){if(!z.moved)setSelectedRally(w.x,w.y);return;}
@@ -292,23 +328,25 @@ function finishPointer(e,cancel=false){
  else{clearBuildingSelection();updateHud();const t=game.tileAt(w.x,w.y);if(t)toast(terrainDescription(t)+(t.owner>=0?' · '+game.teams[t.owner].name:''));}
 }
 canvas.addEventListener('pointerup',e=>finishPointer(e));canvas.addEventListener('pointercancel',e=>{edgeMouse=null;finishPointer(e,true);});canvas.addEventListener('pointerleave',()=>{edgeMouse=null;ui.hover=null;});
-canvas.addEventListener('dblclick',e=>{if(!started||menuOpen||ui.buildMode||ui.rallyMode||ui.teamOrderMode)return;const p=pointerPos(e);if(buildingAt(p))return;let target=null,best=28;for(const u of game.units){if(u.team!==0||u.hp<=0)continue;const s=worldToScreen(u.x,u.y,view),d=Math.hypot(s.x-p.x,s.y-10*view.zoom-p.y);if(d<best){target=u;best=d;}}if(target){clearBuildingSelection();allSelected=false;ui.selected=new Set(game.units.filter(u=>u.team===0&&u.hp>0&&u.type===target.type).map(u=>u.id));updateHud();}});
+canvas.addEventListener('dblclick',e=>{if(!started||menuOpen||ui.buildMode||ui.rallyMode||ui.teamOrderMode||ui.facingMode)return;const p=pointerPos(e);if(buildingAt(p))return;let target=null,best=28;for(const u of game.units){if(u.team!==0||u.hp<=0)continue;const s=worldToScreen(u.x,u.y,view),d=Math.hypot(s.x-p.x,s.y-10*view.zoom-p.y);if(d<best){target=u;best=d;}}if(target){clearBuildingSelection();allSelected=false;ui.selected=new Set(game.units.filter(u=>u.team===0&&u.hp>0&&u.type===target.type).map(u=>u.id));updateHud();}});
 
 let miniDragging=false;function navigateMini(e){const m=renderer.minimapTransform;if(!m)return;const r=$('minimap').getBoundingClientRect();view.x=((e.clientX-r.left)-m.ox)/m.scale;view.y=((e.clientY-r.top)-m.oy)/m.scale;boundCamera();}
 $('minimap').addEventListener('pointerdown',e=>{e.preventDefault();miniDragging=true;$('minimap').setPointerCapture(e.pointerId);navigateMini(e);});$('minimap').addEventListener('pointermove',e=>{if(miniDragging)navigateMini(e);});$('minimap').addEventListener('pointerup',()=>miniDragging=false);$('minimap').addEventListener('pointercancel',()=>miniDragging=false);
 window.addEventListener('keydown',e=>{
  if(e.defaultPrevented||e.isComposing||/INPUT|SELECT|TEXTAREA/.test(e.target?.tagName||'')||e.target?.isContentEditable||e.target?.closest?.('[contenteditable="true"],[contenteditable=""],[role="textbox"]')||$('helpDialog').open||$('housesDialog').open)return;
- if(e.key==='Escape'){if(ui.buildMode||ui.rallyMode||ui.teamOrderMode){cancelBuild();updateHud();return;}if(started){if(menuOpen)resume();else{ui.selected.clear();clearBuildingSelection();allSelected=false;updateHud();}}return;}
- if(!started||menuOpen||game.winner!==null||!$('resultOverlay').hidden)return;const k=e.key.toLowerCase(),digit=/^(?:Digit|Numpad)([1-5])$/.exec(e.code)?.[1]||(/^[1-5]$/.test(k)?k:null);
- if(e.metaKey||e.altKey||e.ctrlKey&&(!digit||e.shiftKey))return;
+ if(e.key==='Escape'){if(ui.buildMode||ui.rallyMode||ui.teamOrderMode||ui.facingMode||gesture?.facing){cancelBuild();gesture=null;updateHud();return;}if(started){if(menuOpen)resume();else{ui.selected.clear();clearBuildingSelection();allSelected=false;updateHud();}}return;}
+ if(!started||menuOpen||game.winner!==null||!$('resultOverlay').hidden)return;const k=e.key.toLowerCase(),digit=/^(?:Digit|Numpad)([1-9])$/.exec(e.code)?.[1]||(/^[1-9]$/.test(k)?k:null);
+ if(e.altKey&&!e.ctrlKey&&!e.metaKey&&TYPE_HOTKEYS[k]){e.preventDefault();if(!e.repeat)selectTroopType(TYPE_HOTKEYS[k],e.shiftKey);return;}
+ if(e.metaKey||e.altKey||e.ctrlKey&&!digit)return;
+ if(digit&&e.ctrlKey){e.preventDefault();if(!e.repeat)commandGroup(digit,true,e.shiftKey);return;}
  if([' ','tab','arrowup','arrowdown','arrowleft','arrowright','home','+','-','='].includes(k)||digit)e.preventDefault();
  if(e.repeat){keys.add(k);return;}
  if(handleMenuHotkey(e))return;
  keys.add(k);
- if(k===' '||k==='p')togglePause();else if(k==='a'&&!e.ctrlKey&&!e.metaKey){e.preventDefault();attackNearest();}else if(k==='t'){e.preventDefault();expandNearby();}else if(k==='e'&&!e.ctrlKey&&!e.metaKey){e.preventDefault();useHousePower();}else if(k==='q')selectArmy();else if(k==='f')findHero();else if(k==='h')hold();else if(k==='r'){e.preventDefault();selectAllBuildings();}else if(k==='v')retreat();else if(k==='g')toggleGrid();else if(k==='tab')fitMap();else if(k==='home')home();else if(k==='+'||k==='=')zoomAt(1.2);else if(k==='-')zoomAt(1/1.2);else if(k==='x')setMode(orderMode==='attack'?'move':'attack');
- else if(/^[1-5]$/.test(k)){if(e.ctrlKey){groups.set(k,[...ui.selected]);toast(`Company ${k} assigned · ${ui.selected.size} soldiers.`);}else{const ids=groups.get(k);if(ids){cancelBuild();clearBuildingSelection();ui.selected=new Set(ids.filter(id=>game.byId.get(id)?.hp>0));allSelected=false;updateHud();}else toast(`Select troops, then Ctrl + ${k} to assign this company.`);}}
+ if(k===' '||k==='p')togglePause();else if(k==='a'&&!e.ctrlKey&&!e.metaKey){e.preventDefault();attackNearest();}else if(k==='t'){e.preventDefault();expandNearby();}else if(k==='e'&&!e.ctrlKey&&!e.metaKey){e.preventDefault();useHousePower();}else if(k==='q')selectArmy();else if(k==='f')findHero();else if(k==='h')hold();else if(k==='d'){e.preventDefault();beginFacing();}else if(k==='r'){e.preventDefault();selectAllBuildings();}else if(k==='v')retreat();else if(k==='g')toggleGrid();else if(k==='tab')fitMap();else if(k==='home')home();else if(k==='+'||k==='=')zoomAt(1.2);else if(k==='-')zoomAt(1/1.2);else if(k==='x')setMode(orderMode==='attack'?'move':'attack');
+ else if(digit&&!e.shiftKey)commandGroup(digit);
 });
-window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>{edgeMouse=null;keys.clear();gesture=null;ui.drag=null;});
+window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>{edgeMouse=null;keys.clear();gesture=null;ui.drag=null;ui.facingPreview=null;pointers.clear();pinch=null;});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)edgeMouse=null;if(document.hidden&&started&&!menuOpen&&game.winner===null){game.paused=true;updatePause();}lastNow=performance.now();accumulator=0;});
 
 let townHallPortraitKey='';
@@ -362,6 +400,8 @@ function updateHud(){
  const rallyKey=[...rallyKeys][0];$('buildingRallyStatus').textContent=ui.rallyMode?'Click land · Esc cancels':rallyKeys.size>1?'Individual rally points':rallyKey==='none'?'No rally · Troops defend their building':rallyKey?`Rally: ${rallyKey}`:'';
  $('clearRallyButton').disabled=!buildings.some(b=>b.rally)&&!(allBuildingsSelected&&s.rally);$('setRallyButton').disabled=!buildings.length;
  const troops=selected(),counts={};for(const u of troops)counts[u.type]=(counts[u.type]||0)+1;$('selectedCount').textContent=`${troops.length} SELECTED`;
+ $('faceOrderButton').disabled=!started||menuOpen||!s.alive||!troops.length;$('faceOrderButton').classList.toggle('active',ui.facingMode);$('faceOrderButton').setAttribute('aria-pressed',String(ui.facingMode));
+ for(const button of $('commandGroups').querySelectorAll('[data-command-group]')){const key=button.dataset.commandGroup,ids=(groups.get(key)||[]).filter(id=>{const u=game.byId.get(id);return u?.team===0&&u.hp>0&&UNIT_DEFS[u.type];});const active=ids.length>0&&ids.length===troops.length&&ids.every(id=>ui.selected.has(id));button.classList.toggle('populated',ids.length>0);button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));button.setAttribute('aria-label',`Group ${key}: ${ids.length} soldiers. Click recalls, Ctrl-click saves.`);button.querySelector('small').textContent=ids.length||'—';}
  const expanding=troops.filter(u=>u.order?.mode==='expand').length;
  $('expandButton').disabled=!started||menuOpen||game.winner!==null||!s.alive||!troops.length;
  $('expandButton').classList.toggle('active',expanding>0);$('expandButton').setAttribute('aria-pressed',String(expanding>0));
@@ -388,7 +428,8 @@ function updateHud(){
  setHudHTML(selectedPower,`${escapeHTML(status.name||fallback.name)} <kbd>E</kbd>${status.remaining>0?` · ${Math.ceil(status.remaining)}s`:s.gold<(status.cost||0)?' · Need gold':status.ready?' · Ready':''}`);selectedPower.title=status.description||fallback.description;
  const passive=[];for(const type of Object.keys(counts)){const d=UNIT_DEFS[type];if(d.impactName)passive.push({label:`${d.impactName} · Automatic`,description:d.impact});}
  if(troops.some(u=>game.unitClass(u)==='cavalry'))passive.push({label:'Charge · Automatic',description:'Conquer or attack with a straight 3-tile run-up. Flank braced spearmen.'});
- if(troops.some(u=>['dread_pike','bridge_warden'].includes(u.type)))passive.push({label:'Spear brace · Hold H',description:'Hold facing an incoming charge to break it. Moving or flanked spearmen cannot brace.'});
+ if(troops.some(u=>UNIT_DEFS[u.type].spearBrace))passive.push({label:'Spear brace · Hold H',description:'Set a facing with right-drag, then hold still to stop frontal cavalry. Rear attacks bypass the brace.'});
+ if(troops.some(u=>u.backpedaling))passive.push({label:'Orderly retreat · Slower march',description:'Troops keep their facing while backing toward the destination.'});
  $('selectedPassiveAbilities').textContent=passive.map(p=>p.label).join(' · ');$('selectedPassiveAbilities').title=passive.map(p=>`${p.label}: ${p.description}`).join('\n');$('selectionAbility').hidden=!hasSelectedPower&&!passive.length;
  const specialist=game.houseContent(0);setHudHTML($('housePassives'),`<b>${escapeHTML(h.playstyle||h.trait)}</b><div class="specialist-impact"><b>${escapeHTML(UNIT_DEFS[specialist.unit].label)} · ${escapeHTML(specialist.impactName||'House specialist')}</b><p>${escapeHTML(specialist.impact||'')}</p></div><div class="house-trait-label">BONUSES</div><ul>${houseAdvantages(h).map(a=>`<li>${escapeHTML(a)}</li>`).join('')}</ul><div class="house-trait-label weakness-label">WEAKNESSES</div><ul class="house-weaknesses">${houseWeaknesses(h).map(a=>`<li>${escapeHTML(a)}</li>`).join('')}</ul>`);
  updateCampaignHud();
@@ -430,7 +471,7 @@ function frame(now){
 }
 async function boot(){
  $('startButton').disabled=true;$('startButton').innerHTML='PREPARING THE REALM…';
- try{await Promise.all([renderer.loadTroops('assets/troops-atlas.png'),renderer.loadStructures('assets/structures-atlas.png'),renderer.loadCampaignArt('assets/campaign-structures.png'),renderer.loadTerrain('assets/ground-textures.png','assets/terrain-props.png'),renderer.loadHouseArt(HOUSE_ART_SOURCES),renderer.loadLandsArt('assets/lands-atlas.png').catch(error=>console.warn('Using drawn landscape details.',error)),renderer.loadLandsGround('assets/lands-ground.png').catch(error=>console.warn('Using base landscape textures.',error))]);
+ try{await Promise.all([renderer.loadTroops('assets/troops-atlas.png'),renderer.loadStructures('assets/structures-atlas.png'),renderer.loadCampaignArt('assets/campaign-structures.png'),renderer.loadTerrain('assets/ground-textures.png','assets/terrain-props.png'),renderer.loadHouseArt(HOUSE_ART_SOURCES),renderer.loadRegimentArt(REGIMENT_ART_SOURCES),renderer.loadRegimentBuildings('assets/regiments/production-buildings.png'),renderer.loadLandsArt('assets/lands-atlas.png').catch(error=>console.warn('Using drawn landscape details.',error)),renderer.loadLandsGround('assets/lands-ground.png').catch(error=>console.warn('Using base landscape textures.',error))]);
   $('startButton').disabled=false;$('startButton').innerHTML='RAISE THE BANNERS <span>→</span>';
   paintBuildingIcons();paintHousePreview();paintTownHall();fitMap();updateHud();requestAnimationFrame(frame);
  }catch(error){$('startButton').innerHTML='ARTWORK COULD NOT LOAD';$('chosenTrait').textContent='Open the complete game file or keep the assets folder beside index.html.';console.error('Sprite artwork failed to load',error);}

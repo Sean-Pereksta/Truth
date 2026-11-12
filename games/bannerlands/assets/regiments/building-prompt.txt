@@ -1,0 +1,13 @@
+Use case: stylized-concept. Asset: production-ready transparent isometric medieval RTS building sprite atlas.
+Create exactly FOUR EQUAL COLUMNS and TWO EQUAL ROWS of isolated buildings: seven different house production buildings in positions described below and the eighth cell completely transparent/empty. Each is a compact one-building complex with actual military training equipment, full architectural outline, detailed hand-painted stone, timber, tiles, doors and cloth. Orthographic isometric 3/4 camera from above, consistent scale and soft top-left lighting. Every entire structure and roof entirely within its own equal cell with wide transparent gutters, same ground baseline, NO ground/terrain plate outside footprint, no backdrop. No labels, words, numbers, cell borders, grid, watermarks or drawn checkerboard. True clean RGBA transparency, no colored fringe, no effects or smoke extending beyond a cell.
+Top row left→right:
+1 STARK Winter Shield Hall: rugged northern dark grey stone and timber hall with steep slate roof, icy blue cloth banners, small wolf-carved iron shield over door, stout fur-lined training racks.
+2 LANNISTER Gilded Guard Hall: ornate rich red-and-gold armored guard barracks, golden lion shields, red tiled roof, golden-trimmed battlements and orderly shield racks.
+3 TARGARYEN Dragonshield Foundry: charcoal volcanic stone vaulted forge hall with angular wing-like buttresses, dark purple and muted crimson banners, dragon-wing iron relief, heavy shield racks outside, no fire outside footprint.
+4 TYRELL Roseguard Pavilion: elegant cream stone training hall, leaf-green glazed roof, gold rose motifs, arched doorway, decorative vine columns and green tower-shield racks.
+Bottom row left→right:
+5 MORMONT Bear Lance Lodge: rugged dark timber and green-roof northern mounted training lodge, bear-carved portal, stable arch, heavy lance racks, green quilted saddlecloths, no horse figures.
+6 MARTELL Sun Lance Court: warm sandstone domed stable court, copper/orange awnings, horseshoe arches, sun motifs, slender lance racks, sandy bronze palette, no horse figures.
+7 ARRYN Sky Lance Stable: silver-white stone stable with tall pointed blue slate roof, falcon relief, pale-blue banners, elegant lance racks and silver tack, no horse figures.
+8 EMPTY transparent cell.
+These are recognizable strategy-game sprites, polished painterly raster art rather than icons or schematic silhouettes; architecture should differ strongly between houses.

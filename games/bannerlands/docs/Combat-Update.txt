@@ -1,0 +1,105 @@
+FORMATIONS, SIGHTLINES AND HOUSE REGIMENTS
+
+NEW HOUSE TROOPS AND BUILDINGS
+Stark: Winter Shield Hall       Lannister: Gilded Guard Hall
+Targaryen: Dragonshield Foundry  Tyrell: Roseguard Pavilion
+These houses can build their own hall (360 gold) to train Shield Bearers.
+Two train every 64 seconds before house bonuses. Paid company: 250 gold for 4.
+Their heavy shields block 75% of frontal arrows/bolts, 65% of frontal melee
+weapon damage and 55% of frontal charge damage. Their flanks and rear are
+exposed. They move slowly and deal modest damage.
+
+Mormont: Bear Lance Lodge       Martell: Sun Lance Court
+Arryn: Sky Lance Stable
+These houses can build their own mounted academy (450 gold) to train one
+Lance Champion every 90 seconds before house bonuses. Paid champion: 300 gold.
+They have long 1.35-tile lance reach, a strong first charge impact and heavy
+knockback, then much weaker hits and a slow 2.3-second weapon attack. Their
+charge still requires a real run-up, and braced Frey/Bolton spears counter it.
+
+Each of the seven houses has its own eight-frame troop sprite sheet, armor,
+colors and production-building artwork. The buildings unlock paid recruitment,
+follow individual rally points and respect supply, placement and cost rules.
+Destroying every matching facility locks further paid recruitment.
+Rival houses can build and use only their own facilities under the same rules.
+
+River Rangers, Free Folk Berserkers and Ironborn Reavers move 10% faster.
+
+Build the extra house facility with Shift+J, then recruit its troop with
+U followed by Shift+6. Each button displays its actual artwork and shortcut.
+
+MOVE AND FACE
+Select troops, hold right mouse at the destination, then drag toward the way
+the line should face. A line, front arrow and formation slots preview the order.
+Release to march there while keeping that facing. The Move & face button (D)
+also lets you give the order with a left drag or a touch drag.
+
+Right-click without dragging remains a direct Move order. Middle drag and
+screen edges pan the camera. Right drag pans when no troops are selected.
+Escape or a canceled gesture clears the preview without issuing an order.
+
+Facing marches do not chase enemies. Backward movement uses 55% of forward
+speed, sideways movement uses 80%, and troops turn gradually to their facing.
+When a Move reaches its position it becomes Hold and preserves the facing.
+H holds the line at its current positions. A new ordinary movement or attack
+order releases the explicit facing. Cavalry cannot charge while backpedaling.
+
+FREY SPEARS AND BOLTON PIKES
+Bridge Wardens and Dread Pikes remain their houses' specialists. Their normal
+house production buildings and recruitment requirements are unchanged.
+Face them toward an approaching charge, settle the line and wait about half
+a second for their brace. A living, braced spear stops a frontal rider and
+retaliates. They hit cavalry harder than ordinary swordsmen; pikes have the
+stronger anti-cavalry attack, while the Frey shield line offers better frontal
+protection. Moving, flanked or rear-attacked spears cannot stop a charge.
+
+Held or explicitly facing infantry in Line formation reduces frontal damage.
+Melee attacks from the rear deal 30% extra damage, or 12% from the side.
+Facing and protection rules apply to player and rival soldiers alike.
+
+CAVALRY FLANKS
+A real straight run-up is still required. Charge impacts from the rear deal
+45% more damage and spend 55% less collision momentum; side impacts gain 15%
+damage and spend 25% less momentum. Braced spears still stop frontal charges.
+Terrain, physical contact and the existing charge hit limits still apply.
+
+SIGHTLINES AND TERRAIN
+Mountains block direct arrows and bolts, including keep and watchtower fire.
+Mountain passes remain open. An exact mountain corner cannot be used as a
+firing slit. Archers choose visible targets; blocked direct shots do no damage.
+Troops in forests take 25% less damage from arrows and bolts. Archers firing
+from hills gain 0.6 tiles of range. Arcing catapult rocks pass over mountains
+and ignore woodland cover. Player and enemy armies use the same rules.
+
+The sightline index refreshes when terrain changes. Open ground uses a fast
+terrain lookup; difficult rays have a fixed cache limit. Facing previews are
+capped, and extra facing marks are drawn only for selected troops.
+
+SELECT TROOP TYPES
+Alt+I selects infantry, including the house's infantry specialists.
+Alt+S selects Frey spears or Bolton pikes when present in your army.
+Alt+A selects archers. Alt+C selects cavalry. Alt+G selects siege engines.
+Alt+H selects commanders. Hold Shift as well to add a type to your selection.
+Alt+B selects Shield Bearers; Alt+L selects Lance Champions.
+The Army selection buttons offer the same actions; Shift-click adds troops.
+
+COMMAND GROUPS
+Ctrl+1 through Ctrl+9 saves the selected soldiers to a group.
+1 through 9 recalls it. Ctrl+Shift+1 through 9 adds selected soldiers to it.
+Saving an empty selection clears the group. Fallen soldiers are skipped.
+Group buttons show living counts: click recalls; Ctrl-click saves;
+Ctrl+Shift-click adds. Groups last for the current campaign and do not change
+troop orders or recruitment rally points merely by saving or selecting them.
+
+BUILD WITH LETTERS
+Shift+B: Barracks         Shift+A: Archery range
+Shift+S: Stables          Shift+T: Watchtower
+Shift+W: Siege works      Shift+H: House production building
+Shift+J: New shield/champion facility, for the seven eligible houses
+These shortcuts work from any battlefield panel. Click owned ground to build.
+Esc or right-click cancels. Shift while placing keeps the building tool active.
+B opens the Build panel. Building buttons show their letter shortcuts.
+Muster uses Shift+1 through 5 and Shift+6 for an eligible new house regiment;
+Council uses Shift+1 through 6.
+
+The compact campaign menu is included in this playable copy as well.

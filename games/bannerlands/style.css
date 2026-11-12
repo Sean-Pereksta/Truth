@@ -272,3 +272,12 @@
  #menuOverlay .landscape-description{font-size:10px;margin-bottom:9px}
 }
 @media(max-width:360px){#menuOverlay .menu-edition{display:none}}
+
+/* Formation facing and saved companies. */
+.face-order-button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px;margin:0 0 12px;color:#d9c797;border-color:#827447;background:#c9aa6110;font:11px 'Segoe UI',sans-serif;text-align:left}
+.face-order-button small{display:block;color:#94a995;font-size:9px;margin-top:4px}.face-order-button.active{border-color:#d6b675;background:#c9aa6126;color:#f1d89c}.face-order-button:disabled{opacity:.45}
+.army-selection{margin:0 0 12px;border-bottom:1px solid #49615066;padding-bottom:11px}.army-selection>summary{cursor:pointer;color:#c7d0b8;font:10px 'Segoe UI',sans-serif}.army-selection>summary>span{float:right;color:#8eab9a;font-size:8px}
+#troopTypeButtons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin-top:9px}#troopTypeButtons button{display:flex;align-items:center;justify-content:space-between;gap:3px;min-width:0;padding:7px;color:#bfcdb8;font:10px 'Segoe UI',sans-serif;background:#172b2f}#troopTypeButtons kbd{font-size:8px;padding:1px 4px}
+.command-group-panel{margin-bottom:12px}.command-group-panel .section-label{font-size:9px;letter-spacing:.5px}.command-group-panel .section-label>span{font-size:6px;letter-spacing:.1px;color:#8fa391}.command-group-panel>p{font:8px/1.5 'Segoe UI',sans-serif;color:#8fa391;margin:5px 0 0}
+#commandGroups{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:3px}#commandGroups button{display:flex;flex-direction:column;align-items:center;padding:6px 0 4px;gap:3px;font:11px 'Segoe UI',sans-serif;color:#75948a;border-color:#36544a;background:#10262b}#commandGroups button small{font-size:7px;color:#75948a}#commandGroups button.populated{border-color:#7d7954;color:#d6c38f}#commandGroups button.active{border-color:#c7ae70;background:#bca56626;color:#f0db9c}#commandGroups button.active small{color:#dacb9c}
+@media(max-width:700px){.army-selection>summary>span{float:none;display:block;margin-top:3px}#troopTypeButtons{grid-template-columns:minmax(0,1fr)}#commandGroups{grid-template-columns:repeat(5,minmax(0,1fr))}.command-group-panel .section-label>span{display:block;margin-top:4px}.face-order-button{padding:8px;font-size:10px}}
