@@ -1,4 +1,4 @@
-import {BUILD_DEFS} from './core.js';
+import {BUILD_DEFS,UNIT_DEFS} from './core.js';
 
 const HW=28, HH=14;
 const TAU=Math.PI*2;
@@ -6,6 +6,8 @@ const HOUSE_ART_ORDER=['wolf','lion','dragon','stag','rose','sun','kraken','falc
 const HOUSE_UNIT_CLASSES={wolf:'infantry',lion:'archer',dragon:'siege',stag:'cavalry',rose:'cavalry',sun:'archer',kraken:'infantry',falcon:'archer',flayed:'infantry',bridge:'infantry',bear:'infantry',fish:'archer',frog:'archer',beacon:'siege',huntsman:'archer',bone:'infantry'};
 const REGIMENT_ART_TYPES=['shield_bearer','lance_champion'];
 const REGIMENT_ART_HOUSES={wolf:'shield_bearer',lion:'shield_bearer',dragon:'shield_bearer',rose:'shield_bearer',bear:'lance_champion',sun:'lance_champion',falcon:'lance_champion'};
+const CONQUEST_ART_HOUSES={trebuchet:['flayed','beacon'],giant:['bone'],sharpshooter:['fish']};
+const CONQUEST_ART_BUILDINGS=['dread_siege_yard','hightower_siege_yard','giant_camp','sharpshooter_lodge'];
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const iso=(x,y)=>({x:(x-y)*HW,y:(x+y)*HH});
 const hash=(x,y=0)=>{let n=(x*374761393+y*668265263)^0x45d9f3b;n=Math.imul(n^(n>>>13),1274126177);return ((n^(n>>>16))>>>0)/4294967295;};
@@ -183,7 +185,30 @@ export class Renderer{
     this.regimentBuildingFrames=frames;this.regimentBuildingsReady=true;this.structureSprites.clear();this.cachedGame=null;this.assetError=null;
     this.regimentBuildingArtInfo={source:typeof image.src==='string'&&!image.src.startsWith('data:')?image.src:'embedded regiment production PNG atlas',columns:4,rows:2,frames:7,houses};return this.regimentBuildingArtInfo;
   }
+  async loadConquestArt(sources){
+    this.conquestArtReady=false;
+    const entries=await Promise.all(Object.entries(sources).map(async([key,src])=>[key,await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('Castle conquest artwork could not be loaded: '+key));im.src=src;})]));
+    return this.setConquestArt(Object.fromEntries(entries));
+  }
+  setConquestArt(images){
+    this.conquestArtReady=false;const troops={},buildings={},sizes={trebuchet:[58,55],giant:[44,58],sharpshooter:[27,34]};
+    for(const type of Object.keys(CONQUEST_ART_HOUSES)){
+      if(!images[type])throw new Error('Missing '+type+' conquest artwork.');
+      const extracted=Array.from({length:8},(_,i)=>atlasCell(images[type],i%4,Math.floor(i/4),4,2,type+' frame '+i)),scale=Math.min(sizes[type][0]/Math.max(...extracted.map(f=>f.width)),sizes[type][1]/Math.max(...extracted.map(f=>f.height))),frames=extracted.map(f=>compactAtlasFrame(f,scale*3));
+      troops[type]={frames,scale:1/3,width:Math.max(...frames.map(f=>f.width))/3,height:Math.max(...frames.map(f=>f.height))/3,...(type==='trebuchet'?{}:{house:CONQUEST_ART_HOUSES[type][0]})};
+    }
+    if(!images.buildings||!images.castles)throw new Error('Missing castle or conquest production artwork.');
+    for(const [i,type]of CONQUEST_ART_BUILDINGS.entries()){
+      const cell=atlasCell(images.buildings,i%2,Math.floor(i/2),2,2,type),scale=Math.min(98/cell.width,100/cell.height),frame=compactAtlasFrame(cell,scale*3);
+      buildings[type]={...frame,scale:1/3,drawWidth:frame.width/3,drawHeight:frame.height/3,conquest:true};
+    }
+    const castles=Array.from({length:4},(_,i)=>{const cell=atlasCell(images.castles,i%2,Math.floor(i/2),2,2,'castle state '+i),scale=Math.min(132/cell.width,138/cell.height),frame=compactAtlasFrame(cell,scale*3);return {...frame,scale:1/3,drawWidth:frame.width/3,drawHeight:frame.height/3,conquest:true};});
+    this.conquestTroopFrames=troops;this.conquestBuildingFrames=buildings;this.castleStateFrames=castles;this.conquestArtReady=true;this.sprites.clear();this.structureSprites.clear();this.cachedGame=null;
+    return this.conquestArtInfo={troops:3,troopFrames:24,buildings:4,castleStates:4};
+  }
   getStructureFrame(type,houseSigil=null,level=1){
+    if(CONQUEST_ART_BUILDINGS.includes(type))return this.conquestArtReady&&BUILD_DEFS[type]?.house===houseSigil?this.conquestBuildingFrames[type]:null;
+    if(type==='restored_castle')return this.conquestArtReady?this.castleStateFrames[1]:null;
     const definition=BUILD_DEFS[type];
     if(definition?.regimentBuilding)return this.regimentBuildingsReady&&definition.house===houseSigil?this.regimentBuildingFrames[houseSigil]||null:null;
     if(this.campaignArtReady&&(type==='keep'||type==='tower'))return this.campaignFrames[type][clamp(Math.floor(level)||1,1,3)-1];
@@ -191,6 +216,7 @@ export class Renderer{
     return this.structureFrames[type]||null;
   }
   getTroopFrame(type,houseSigil=null){
+    if(CONQUEST_ART_HOUSES[type])return this.conquestArtReady&&CONQUEST_ART_HOUSES[type].includes(houseSigil)?this.conquestTroopFrames[type]:null;
     if(REGIMENT_ART_TYPES.includes(type))return this.regimentArtReady?this.regimentTroopFrames[type]?.[houseSigil]||null:null;
     return this.troopFrames[type]||(houseSigil&&this.houseArtReady?this.houseTroopFrames[houseSigil]:null)||null;
   }
@@ -321,7 +347,7 @@ export class Renderer{
     for(const team of g.teams){for(const type of ['infantry','archer','cavalry','siege','hero'])this.soldierSprite(type,team.color,team.dark,1,0,false);for(const type of ['keep','barracks','range'])this.structureSprite(type,team.color,team.sigil);const house=g.houseContent?.(team.id);if(house){this.soldierSprite(house.unit,team.color,team.dark,1,0,false,team.sigil);this.structureSprite(house.building,team.color,team.sigil);}}
   }
   clearBuildingSites(g){
-    this.decor=this.decor.filter(z=>!g.buildings.some(b=>b.hp>0&&(z.x-b.x)**2+(z.y-b.y)**2<(b.type==='keep'?5:1.25))&&!(g.objectives||[]).some(o=>(z.x-o.x)**2+(z.y-o.y)**2<1.7));
+    this.decor=this.decor.filter(z=>!g.buildings.some(b=>b.hp>0&&(z.x-b.x)**2+(z.y-b.y)**2<(b.type==='keep'?5:1.25))&&!(g.objectives||[]).some(o=>(z.x-o.x)**2+(z.y-o.y)**2<1.7)&&!(g.castles||[]).some(o=>(z.x-o.x)**2+(z.y-o.y)**2<5));
     this.lastBuildingCount=g.buildings.length;this.lastBuildingId=g.buildings.at(-1)?.id||0;
     this.decorChunks=new Map();for(const z of this.decor){const key=Math.floor(z.x/16)+','+Math.floor(z.y/16);if(!this.decorChunks.has(key))this.decorChunks.set(key,[]);this.decorChunks.get(key).push(z);}
     this.sceneryChunkCache?.clear();this.sceneryChunkBytes=0;
@@ -433,8 +459,8 @@ export class Renderer{
     return this.terrainPropSprite(kind==='rock'?'rock':kind==='bush'?'oak':variant%3===0?'oak':'pine',variant);
   }
   soldierSprite(type,color,dark,dir,frame,attack=false,specialHouse=null){
-    if(!this.rasterSpritesReady&&!this.houseArtReady&&!this.regimentArtReady)return null;
-    const row=this.getTroopFrame(type,specialHouse)||(REGIMENT_ART_TYPES.includes(type)?null:this.troopFrames[HOUSE_UNIT_CLASSES[specialHouse]]||this.troopFrames.infantry);if(!row)return null;const index=(attack?4:0)+clamp(Math.floor(frame),0,3);
+    if(!this.rasterSpritesReady&&!this.houseArtReady&&!this.regimentArtReady&&!this.conquestArtReady)return null;
+    const row=this.getTroopFrame(type,specialHouse)||((REGIMENT_ART_TYPES.includes(type)||CONQUEST_ART_HOUSES[type])?null:this.troopFrames[HOUSE_UNIT_CLASSES[specialHouse]]||this.troopFrames.infantry);if(!row)return null;const index=(attack?4:0)+clamp(Math.floor(frame),0,3);
     const key=[type,row.house?'house:'+row.house:color,dir,index].join('|');if(this.sprites.has(key))return this.sprites.get(key);
     const f=row.frames[index],a=makeCanvas(128,144),c=a.getContext('2d',{willReadFrequently:true});
     c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';c.save();c.scale(2,2);c.translate(32,64);c.scale(dir,1);
@@ -488,6 +514,13 @@ export class Renderer{
     polygon(c,[[-10,depth],[1,depth+6],[11,depth+3],[0,depth-2]],'#aa9b76');
     if(level===3){this.flag(c,-width,-height-17,'#e2c878',time,.26);this.flag(c,width,-height-17,'#e2c878',time+2,.26);}
   }
+  castleRuin(c,site,g,zoom){
+    if(!this.conquestArtReady)return;const p=iso(site.x,site.y),f=this.castleStateFrames[site.captures>0?2:0];
+    c.save();c.translate(p.x,p.y);c.drawImage(f.image,f.left,f.top,f.width,f.height,-f.drawWidth/2,8-f.drawHeight,f.drawWidth,f.drawHeight);
+    if(zoom>.36){const progress=site.progress||[],leader=site.controller??progress.reduce((best,value,i)=>value>(progress[best]||0)?i:best,0),team=g.teams.find(t=>t.alliance===leader),amount=clamp((progress[leader]||0)/(site.required||60),0,1),color=site.contested?'#efab7c':amount>0?team?.teamColor||team?.color||'#e5cb89':'#e5cb89';
+      c.fillStyle='rgba(9,28,29,.92)';c.fillRect(-57,13,114,27);c.strokeStyle=color;c.lineWidth=1;c.strokeRect(-57,13,114,27);c.font='bold 8px Segoe UI';c.textAlign='center';c.fillStyle='#ead9b3';c.fillText(site.contested?'CONTESTED':amount>0?'CAPTURING '+Math.floor((progress[leader]||0))+' / 60s':'RUINED CASTLE · +60',0,24);c.fillStyle='#30413c';c.fillRect(-51,31,102,4);c.fillStyle=color;c.fillRect(-51,31,102*amount,4);
+    }c.restore();
+  }
   objectiveGround(c,o,g,zoom){
     const p=iso(o.x,o.y),team=g.teams.find(s=>s.alliance===o.controller),color=team?.teamColor||team?.color||'#e5c87f',radius=o.radius||4;
     c.save();c.translate(p.x,p.y);c.strokeStyle=o.contested?'#f1ac75':color;c.fillStyle=o.contested?'rgba(211,126,74,.08)':'rgba(228,199,124,.07)';c.lineWidth=1.5/zoom;c.setLineDash([9/zoom,6/zoom]);
@@ -522,8 +555,8 @@ export class Renderer{
     if(roof){polygon(c,[[x-w-3,y-h-4],[x,y-h-22],[x+w+3,y-h-4],[x,y-h+1]],color);polygon(c,[[x,y-h-22],[x+w+3,y-h-4],[x,y-h+1]],'#263d42');}
   }
   building(c,b,g){
-    const team=g.teams[b.team];if(!team)return;const keep=b.type==='keep',tower=b.type==='tower',level=keep||tower?clamp(b.level||1,1,3):1,f=this.getStructureFrame(b.type,team.sigil,level);if(!f)return;
-    const p=iso(b.x,b.y),color=team.color,sprite=this.structureSprite(b.type,color,team.sigil,level),t=g.time,w=f.drawWidth,h=f.drawHeight;
+    const team=g.teams[b.team];if(!team)return;const keep=b.type==='keep',tower=b.type==='tower',artType=b.restoredCastle&&this.conquestArtReady?'restored_castle':b.type,level=keep||tower?clamp(b.level||1,1,3):1,f=this.getStructureFrame(artType,team.sigil,level);if(!f)return;
+    const p=iso(b.x,b.y),color=team.color,sprite=this.structureSprite(artType,color,team.sigil,level),t=g.time,w=f.drawWidth,h=f.drawHeight;
     const size=keep&&!f.campaign?[0,.85,1,1.16][level]:1;
     c.save();c.translate(p.x,p.y);c.save();c.scale(size,size);
     if(sprite){if(f.campaign)c.drawImage(sprite,-w/2,12-h,w,h);else c.drawImage(sprite,-70,-134,140,160);}
@@ -571,8 +604,8 @@ export class Renderer{
     else{c.font='bold 19px Segoe UI';c.textAlign='center';c.fillText((team.sigil||'?')[0].toUpperCase(),12,20);}c.restore();c.restore();
   }
   unit(c,u,g,ui,zoom){
-    if(!this.rasterSpritesReady&&!this.houseArtReady&&!this.regimentArtReady)return;
-    const p=iso(u.x,u.y),team=g.teams[u.team];if(!team)return;const specialHouse=REGIMENT_ART_TYPES.includes(u.type)||g.houseContent?.(u.team)?.unit===u.type?team.sigil:null,unitClass=g.unitClass?.(u)||HOUSE_UNIT_CLASSES[specialHouse]||u.type,vx=Number.isFinite(u.motionVX)?u.motionVX:(u.vx||0),vy=Number.isFinite(u.motionVY)?u.motionVY:(u.vy||0),selected=ui.selected?.has(u.id),moving=Math.hypot(vx,vy)>.07;
+    if(!this.rasterSpritesReady&&!this.houseArtReady&&!this.regimentArtReady&&!this.conquestArtReady)return;
+    const p=iso(u.x,u.y),team=g.teams[u.team];if(!team)return;const specialHouse=REGIMENT_ART_TYPES.includes(u.type)||CONQUEST_ART_HOUSES[u.type]||g.houseContent?.(u.team)?.unit===u.type?team.sigil:null,unitClass=g.unitClass?.(u)||HOUSE_UNIT_CLASSES[specialHouse]||u.type,vx=Number.isFinite(u.motionVX)?u.motionVX:(u.vx||0),vy=Number.isFinite(u.motionVY)?u.motionVY:(u.vy||0),selected=ui.selected?.has(u.id),moving=Math.hypot(vx,vy)>.07;
     if(g.mode?.teams&&zoom>.32){const color=team.teamColor||team.color;c.save();c.globalAlpha=.55;ellipse(c,p.x,p.y+2,unitClass==='cavalry'?8:5,unitClass==='cavalry'?3.3:2.2,color);c.globalAlpha=.95;polygon(c,[[p.x-2,p.y+2],[p.x,p.y+4],[p.x+2,p.y+2],[p.x,p.y]],team.color);c.restore();}
     if(u.elite){c.save();c.beginPath();c.ellipse(p.x,p.y+1,unitClass==='cavalry'?11:8,unitClass==='cavalry'?5:3.8,0,0,TAU);c.strokeStyle='#f4d785';c.lineWidth=1.4;c.stroke();if(zoom>.45){polygon(c,[[p.x,p.y-37],[p.x+2,p.y-33],[p.x+6,p.y-32],[p.x+2,p.y-30],[p.x,p.y-26],[p.x-2,p.y-30],[p.x-6,p.y-32],[p.x-2,p.y-33]],'#ffe7a0','#7f6b3f');}c.restore();}
     if(unitClass==='cavalry'&&u.charging&&moving&&zoom>.35){
@@ -586,7 +619,8 @@ export class Renderer{
     const phase=Number.isFinite(u.phase)?u.phase:0;let frame=attack?Math.min(3,Math.floor((1-clamp(u.attackAnim,0,1))*4)):moving?Math.floor(phase/TAU*4):0;frame=((frame%4)+4)%4;
     if(u.backpedaling&&moving&&!attack)frame=3-frame;
     const braced=zoom>.6&&u.braceDir&&(u.braceTime||0)>=.45&&!(u.knockT>0);
-    const sprite=this.soldierSprite(u.type,team.color,team.dark,facing,frame,attack,specialHouse);if(sprite)c.drawImage(sprite,p.x-32,p.y-64,64,72);
+    const sprite=this.soldierSprite(u.type,team.color,team.dark,facing,frame,attack||u.type==='trebuchet'&&(u.setupProgress||0)>=UNIT_DEFS.trebuchet.setupSeconds,specialHouse);if(sprite)c.drawImage(sprite,p.x-32,p.y-64,64,72);
+    if(u.type==='trebuchet'&&zoom>.5){const setup=UNIT_DEFS.trebuchet.setupSeconds,progress=clamp((u.setupProgress||0)/setup,0,1);c.fillStyle='#142c2c';c.fillRect(p.x-20,p.y-61,40,4);c.fillStyle=progress>=1?'#b8d4a0':'#d6b773';c.fillRect(p.x-20,p.y-61,40*progress,4);if(selected){c.font='bold 8px Segoe UI';c.textAlign='center';c.fillStyle='#f2deac';c.fillText(progress>=1?'DEPLOYED':'SETUP '+Math.ceil(setup-(u.setupProgress||0))+'s',p.x,p.y-65);}}
     if(selected&&zoom>.55&&Math.hypot(direction.x,direction.y)>.01){
       const dx=screenFacing.x/faceLength,dy=screenFacing.y/faceLength,color=u.backpedaling?'#a8ddd1':'#e7cc89';
       c.save();c.globalAlpha=.85;line(c,p.x+dx*9,p.y+1+dy*9,p.x+dx*17,p.y+1+dy*17,color,1.2);
@@ -697,7 +731,7 @@ export class Renderer{
     const range=this.visibleWorldRange(g,bounds);this.lastVisibleRange=range;
     for(let i=0;i<(lowDetail?22:44);i++){const x=this.left+hash(i,4)*(this.mapW),y=-60+hash(i,8)*this.mapH;if(x<bounds.left||x>bounds.right||y<bounds.top||y>bounds.bottom)continue;const wave=Math.sin(g.time*.8+i)*3;line(c,x+wave,y,x+8+wave,y,'rgba(106,152,159,.16)',.8);if(!lowDetail)line(c,x+4+wave,y+3,x+15+wave,y+3,'rgba(106,152,159,.10)',.7);}
     this.drawGround(c,g,v,bounds,range);
-    for(const objective of g.objectives||[]){const p=iso(objective.x,objective.y),radius=(objective.radius||4)*HW*1.5;if(p.x+radius>bounds.left&&p.x-radius<bounds.right&&p.y+radius>bounds.top&&p.y-radius<bounds.bottom)this.objectiveGround(c,objective,g,v.zoom);}
+    for(const objective of [...(g.objectives||[]),...(g.castles||[]).filter(site=>site.ruined)]){const p=iso(objective.x,objective.y),radius=(objective.radius||4)*HW*1.5;if(p.x+radius>bounds.left&&p.x-radius<bounds.right&&p.y+radius>bounds.top&&p.y-radius<bounds.bottom)this.objectiveGround(c,objective,g,v.zoom);}
     if(ui.showGrid){
       if(v.zoom>.48){c.lineWidth=.65;for(let y=range.y0;y<=range.y1;y++)for(let x=range.x0;x<=range.x1;x++){const p=iso(x+.5,y+.5);if(p.x<bounds.left||p.x>bounds.right||p.y<bounds.top||p.y>bounds.bottom)continue;diamond(c,p.x,p.y,HW,HH,null,'rgba(197,211,174,.11)');}}
       else{for(let x=Math.ceil(range.x0/4)*4;x<=range.x1;x+=4){const a=iso(x,range.y0),b=iso(x,range.y1+1);line(c,a.x,a.y,b.x,b.y,'rgba(197,211,174,.10)',.65/v.zoom);}for(let y=Math.ceil(range.y0/4)*4;y<=range.y1;y+=4){const a=iso(range.x0,y),b=iso(range.x1+1,y);line(c,a.x,a.y,b.x,b.y,'rgba(197,211,174,.10)',.65/v.zoom);}}
@@ -718,12 +752,13 @@ export class Renderer{
     for(const b of g.buildings){if(b.hp<=0)continue;const p=iso(b.x,b.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:1,obj:b});}
     for(const u of g.units){if(u.hp<=0)continue;const p=iso(u.x,u.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:2,obj:u});}
     for(const objective of g.objectives||[]){const p=iso(objective.x,objective.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:3,obj:objective});}
+    for(const site of g.castles||[]){if(!site.ruined)continue;const p=iso(site.x,site.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:4,obj:site});}
     items.sort((a,b)=>a.depth-b.depth||a.kind-b.kind);
     for(const it of items){if(it.kind===0){const z=it.obj,a=this.treeSprite(z.kind,z.variant),s=z.scale*(z.kind==='bush'?.38:1);if(!a)continue;const wind=!lowDetail&&z.kind==='tree'?Math.sin(g.time*1.3+z.x*.2)*.65:0;
       // Nearby armies remain readable through foreground vegetation and rocks.
       if(z.occlusionTime===undefined||g.time-z.occlusionTime>.1){let occupied=false;const radius=z.kind==='tree'?1:.75;g.hash?.visit(z.x,z.y,radius,u=>{if(u.hp>0&&(u.x-z.x)**2+(u.y-z.y)**2<radius*radius)occupied=true;});z.opacity=occupied?(z.kind==='tree'?.23:.35):1;z.occlusionTime=g.time;}
       c.globalAlpha=z.opacity??1;c.drawImage(a,it.p.x-48*s+wind,it.p.y-100*s,96*s,112*s);c.globalAlpha=1;
-    }else if(it.kind===1)this.building(c,it.obj,g);else if(it.kind===2)this.unit(c,it.obj,g,ui,v.zoom);else this.objectiveFlag(c,it.obj,g,v.zoom);}
+    }else if(it.kind===1)this.building(c,it.obj,g);else if(it.kind===2)this.unit(c,it.obj,g,ui,v.zoom);else if(it.kind===4)this.castleRuin(c,it.obj,g,v.zoom);else this.objectiveFlag(c,it.obj,g,v.zoom);}
     this.projectiles(c,g);this.effects(c,g,lowDetail);
     this.teamOrderMarkers(c,g,v.zoom);
     if(ui.teamOrderMode&&ui.hover){const p=iso(ui.hover.x,ui.hover.y),color=ui.teamOrderMode==='defend'?'#8fdfca':'#f3b77c';c.save();c.strokeStyle=color;c.lineWidth=2/v.zoom;c.setLineDash([5/v.zoom,4/v.zoom]);diamond(c,p.x,p.y,32,16,null,color);c.setLineDash([]);this.flag(c,p.x,p.y,color,g.time,.8);c.restore();}
@@ -740,6 +775,7 @@ export class Renderer{
     if(!this.miniBase||this.miniBase.width!==Math.round(w*d)||this.miniBase.height!==Math.round(h*d)||this.miniRevision!==this.minimapRevision){this.miniBase=makeCanvas(Math.round(w*d),Math.round(h*d));const m=this.miniBase.getContext('2d');m.scale(d,d);m.fillStyle='#10272c';m.fillRect(0,0,w,h);m.imageSmoothingEnabled=false;m.transform(HW*scale,HH*scale,-HW*scale,HH*scale,ox,oy);m.drawImage(this.miniTerrainPixels,0,0);m.globalAlpha=.78;m.drawImage(this.ownerPixels,0,0);m.globalAlpha=1;m.drawImage(this.miniFeaturePixels,0,0);this.miniRevision=this.minimapRevision;}
     c.drawImage(this.miniBase,0,0,w,h);
     for(const b of g.buildings){if(b.hp<=0||b.type!=='keep')continue;const p=iso(b.x,b.y),x=p.x*scale+ox,y=p.y*scale+oy,size=2+(b.level||1)*.5;c.fillStyle=g.teams[b.team]?.teamColor||g.teams[b.team]?.color||'#f3e4b0';c.fillRect(x-size,y-size,size*2,size*2);c.strokeStyle='#eee3bc';c.lineWidth=.65;c.strokeRect(x-size,y-size,size*2,size*2);}
+    for(const site of g.castles||[]){if(!site.ruined)continue;const p=iso(site.x,site.y),x=p.x*scale+ox,y=p.y*scale+oy;c.fillStyle=site.contested?'#efab7c':'#d6c59b';c.strokeStyle='#172f31';c.lineWidth=1;polygon(c,[[x,y-4],[x+4,y],[x,y+4],[x-4,y]],c.fillStyle,c.strokeStyle);}
     for(const u of g.units){if(u.hp<=0)continue;const p=iso(u.x,u.y);c.fillStyle=g.teams[u.team]?.color||'#ddd';c.globalAlpha=.9;c.fillRect(p.x*scale+ox-1,p.y*scale+oy-1,2,2);}c.globalAlpha=1;
     for(const o of g.objectives||[]){const p=iso(o.x,o.y),x=p.x*scale+ox,y=p.y*scale+oy,team=g.teams.find(s=>s.alliance===o.controller),color=o.contested?'#f0ab77':team?.teamColor||'#edd490';line(c,x-2,y+3,x-2,y-5,'#f1ead2',1);polygon(c,[[x-1,y-5],[x+5,y-4],[x+3,y],[x-1,y-1]],color,'#153331');}
     for(const order of g.teamOrders||[]){if(order.expiresAt<=g.time||order.alliance!==g.teams[0]?.alliance)continue;const p=iso(order.x,order.y),x=p.x*scale+ox,y=p.y*scale+oy,color=order.kind==='defend'?'#8fdfca':'#f3b77c';c.beginPath();c.arc(x,y,5,0,TAU);c.strokeStyle=color;c.lineWidth=1.2;c.stroke();line(c,x-3,y,x+3,y,color,1);line(c,x,y-3,x,y+3,color,1);}

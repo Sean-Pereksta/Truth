@@ -3,7 +3,9 @@ import {Game,BUILD_DEFS} from '../../core.js';
 
 let cases=0;
 const test=(name,fn)=>{fn();cases++;console.log(`PASS ${name}`);};
-const game=(config={})=>new Game({landscape:'open',house:0,enemies:3,scale:'standard',seed:44277,...config});
+// These wave/flag checks isolate their original targets; castle missions have
+// their own regression suite, including priority over an ordinary invasion.
+const game=(config={})=>{const g=new Game({landscape:'open',house:0,enemies:3,scale:'standard',seed:44277,...config});g.castles=g.castles.filter(c=>!c.ruined);return g;};
 const prepare=(g,team=1,style='mass')=>{
   const s=g.teams[team];s.strategy=style;s.gold=0;s.powerReadyAt=1e9;
   const p=g.aiPlanFor(s);p.economyAt=1e9;p.frontierAt=1e9;

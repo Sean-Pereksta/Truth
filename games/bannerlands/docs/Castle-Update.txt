@@ -1,0 +1,52 @@
+BANNERLANDS - RUINS AND REINFORCEMENTS
+
+CASTLE REALMS
+Standard: 3 neutral ruins. Epic: 5. Continent: 6.
+Starting castles are additional to these neutral ruins.
+
+Hold at least 90% of living troops inside a ruin's four-tile capture ring for
+60 seconds. The same alliance dominance rules as flags apply. Empty or contested
+time pauses each alliance's saved progress. The house with the strongest local
+presence receives the castle when its alliance completes the capture.
+
+Every standing castle grants 60 troop capacity, including the opening keep.
+These bonuses stack beyond the ordinary territory supply limit. Restoring a
+castle immediately claims passable tiles within an eight-tile radius, preserving
+allied territory. Restored castles train and defend like keeps.
+
+A destroyed castle becomes a neutral ruin and can be captured again. Its supply
+bonus is removed immediately; existing excess troops survive, but further
+recruitment waits for supply. Losing the opening capital moves home to another
+surviving castle. Your faction falls only when its last castle is destroyed.
+Flag and Dominion victory conditions still apply in their respective modes.
+
+ADDITIONAL HOUSE REGIMENTS
+Build each facility with Shift+J. Muster its regiment with U, then Shift+6.
+Each facility must survive to unlock paid recruitment. Supply, gold and rally
+rules remain in force.
+
+Bolton: Dreadfort Siege Yard. Hightower: Hightower Siege Yard.
+Both train trebuchets, one every 85 seconds before house modifiers. Trebuchets
+have 10.5-tile range, powerful arcing splash bombardment and a 7.5-second reload.
+They need 15 stationary seconds to deploy; moving or being knocked aside resets
+setup. The battlefield shows setup progress and the deployed machine.
+
+Free Folk: Giant Camp.
+Giants have 1,250 base health and splash nearby enemy troops with each club hit.
+Each camp musters one giant per 130 seconds. Paid and automatic mustering share
+the same camp cycle. Paid companies contain exactly one giant. The recruitment
+card shows the remaining wait.
+
+Tully: Sharpshooter Lodge.
+Sharpshooters fire at 6.25 tiles, farther than ordinary archers, but reload for
+3.4 seconds. They still need direct sightlines. The lodge trains two every
+48 seconds before house modifiers.
+
+RIVAL STRATEGY AND ARTWORK
+Armies treat ruins as major objectives, assign capture companies, hold the ring,
+defend allied castles and convert successful castle sieges into capture missions.
+Their production plans include the new faction facilities.
+
+The castle states, three eight-frame troop sheets and four production buildings
+are generated transparent PNG artwork. The source assets and exact prompts are
+in assets/conquest. All are embedded in the standalone Bannerlands.html file.

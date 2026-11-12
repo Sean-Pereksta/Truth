@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import {Game,BUILD_DEFS} from '../../core.js';
+import {Game,HOUSES,BUILD_DEFS} from '../../core.js';
+import {CONQUEST_BUILDINGS} from '../../regiments.js';
 
 let cases=0;
 const test=(name,fn)=>{fn();cases++;console.log(`PASS ${name}`);};
@@ -14,6 +15,17 @@ const scoutEnemy=(state,type,n)=>{
   const {g,s}=state;for(const u of g.units)if(g.hostile(s.id,u.team)){u.x=2;u.y=2;}
   for(let i=0;i<n;i++)g.addUnit(0,type,s.home.x-8-(i%3)*.3,s.home.y-8-Math.floor(i/3)*.3);g.hash.rebuild(g.units);
 };
+
+test('Faction planners build their new facilities, reserve the price and unlock their exclusive regiment',()=>{
+  for(const [sigil,definition]of Object.entries(CONQUEST_BUILDINGS)){
+    const g=new Game({house:HOUSES.findIndex(h=>h.sigil===sigil),landscape:'open',scale:'standard',enemies:3,seed:44277}),s=g.teams[0];
+    if(sigil==='flayed')s.strategy='siege';
+    const p=g.aiPlanFor(s);g.time=60;s.gold=0;s.powerReadyAt=1e9;g.hash.rebuild(g.units);g.aiEconomy(s,p,g.group(s.id),false);
+    assert.equal(p.production.type,definition.type,sigil);assert.equal(p.production.status,'saving');assert.ok(p.production.reserved>=definition.cost);assert.match(p.production.reason,/Unlock/i);assert.equal(g.recruitDetails(definition.unit,s.id).unlocked,false);
+    const foreign=Object.values(CONQUEST_BUILDINGS).filter(d=>d.house!==sigil).map(d=>d.type);assert.ok(p.production.options.every(o=>!foreign.includes(o.type)));
+    s.gold=p.production.reserved;g.time+=8;p.economyAt=0;g.aiEconomy(s,p,g.group(s.id),false);assert.equal(p.production.status,'built');assert.ok(g.buildings.some(b=>b.team===s.id&&b.type===definition.type&&b.hp>0));assert.equal(g.recruitDetails(definition.unit,s.id).unlocked,true);assert.ok(s.gold>=0);
+  }
+});
 
 test('Personality changes actual facility purchases and every purchase pays the normal price',()=>{
   for(const [style,team,expectedKind] of [['mass',1,'infantry'],['raider',3,'cavalry'],['siege',2,'siege']]){

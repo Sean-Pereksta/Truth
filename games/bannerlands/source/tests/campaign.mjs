@@ -30,8 +30,8 @@ test('A destroyed capital immediately wipes its entire faction and prevents late
   const g=make(),h=g.buildings.find(b=>b.team===1&&b.type==='keep');g.projectiles.push({team:1});g.addFireZone(1,30,30,2,5,10);g.damage(h,h.maxHp+1,{team:0});
   assert.equal(g.teams[1].alive,false);assert.equal(g.group(1).length,0);assert.ok(g.buildings.filter(b=>b.team===1).every(b=>b.hp<=0));assert.ok(g.tiles.every(t=>t.owner!==1));assert.equal(g.projectiles.filter(p=>p.team===1).length,0);const u=g.group(0)[0],hp=u.hp;g.damage(u,20,{team:1});assert.equal(u.hp,hp);
 });
-test('Player capital loss ends the match immediately even with a surviving teammate',()=>{
-  const g=make('team-conquest');g.damage(g.buildings[0],3000,{team:2});assert.equal(g.teams[0].alive,false);assert.equal(g.teams[1].alive,true);assert.ok(g.hostile(g.winner,0));assert.equal(g.victoryReason,'Your town hall was destroyed');
+test('Player last castle loss ends the match immediately even with a surviving teammate',()=>{
+  const g=make('team-conquest');g.damage(g.buildings[0],3000,{team:2});assert.equal(g.teams[0].alive,false);assert.equal(g.teams[1].alive,true);assert.ok(g.hostile(g.winner,0));assert.equal(g.victoryReason,'Your last castle was destroyed');
 });
 test('Allies cannot be targeted, damaged by direct hits, splash, poison, fire or cavalry',()=>{
   const g=make('team-conquest');empty(g);const a=g.addUnit(0,'cavalry',50,50),b=g.addUnit(1,'infantry',50.8,50);g.hash.rebuild(g.units);const hp=b.hp;assert.equal(g.findTarget(a),null);g.attack(a,b);g.damage(b,500,{team:0});assert.equal(b.hp,hp);

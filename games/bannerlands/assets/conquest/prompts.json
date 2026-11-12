@@ -1,0 +1,46 @@
+{
+  "generator": "built-in image_gen",
+  "transparent_background": true,
+  "assets": [
+    {
+      "filename": "castles.png",
+      "grid": [
+        2,
+        2
+      ],
+      "prompt": "Use case: stylized-concept. Production asset for Bannerlands isometric fantasy medieval RTS. Hand-painted realistic miniature game sprites with crisp silhouettes, natural detailed materials, gentle warm upper-left lighting, isometric 3/4 perspective matching classic Age of Empires painted unit art. Genuine transparent background. No text, no labels, no grid lines, no frame borders. Every object fully inside its cell, at least 12% padding on each side, same ground baseline and consistent scale across frames. Do not paint checkerboard. Square sprite sheet EXACTLY 2 columns and 2 rows equal cells, four separate castles. Top-left a neutral ruined castle: broken gray stone towers, collapsed gate and walls, ivy and scattered rubble, no flags. Top-right the same footprint completely rebuilt as a small stone castle with battlements and wooden central hall, subdued neutral banner cloth ready to tint. Bottom-left a more damaged variant of the ruined castle with broken arch and rubble. Bottom-right alternate restored castle on same footprint, small stone keep with complete towers. All face front-right isometrically, ground contact centered. Buildings fill about 72% of each cell, no ground tile base beyond tiny attached rubble."
+    },
+    {
+      "filename": "trebuchet.png",
+      "grid": [
+        4,
+        2
+      ],
+      "prompt": "Use case: stylized-concept. Production asset for Bannerlands isometric fantasy medieval RTS. Hand-painted realistic miniature game sprites with crisp silhouettes, natural detailed materials, gentle warm upper-left lighting, isometric 3/4 perspective matching classic Age of Empires painted unit art. Genuine transparent background. No text, no labels, no grid lines, no frame borders. Every object fully inside its cell, at least 12% padding on each side, same ground baseline and consistent scale across frames. Do not paint checkerboard. Landscape sprite sheet EXACTLY 4 columns and 2 rows equal cells. Eight animation frames of one medieval counterweight TREBUCHET, timber A-frame, large suspended stone counterweight, long hinged throwing arm, rope sling, wheeled transport undercarriage and iron bands. NO people. Muted dark timber, neutral pale cloth ties. Top row frames 0 1 2 3 packed transportation rolling cycle with throwing arm lowered and wheels changing slightly. Bottom row frames 4 5 6 7 deployed firing animation: braced legs spread and arm drawn low; arm swinging upward; released arm high with empty sling whipping; recovery lowered halfway. Same machine and camera angle in every cell, facing front-right, clearly identifiable long counterweight lever, proportions realistic, whole machine including vertical arm fits inside each cell without overlap."
+    },
+    {
+      "filename": "giant.png",
+      "grid": [
+        4,
+        2
+      ],
+      "prompt": "Use case: stylized-concept. Production asset for Bannerlands isometric fantasy medieval RTS. Hand-painted realistic miniature game sprites with crisp silhouettes, natural detailed materials, gentle warm upper-left lighting, isometric 3/4 perspective matching classic Age of Empires painted unit art. Genuine transparent background. No text, no labels, no grid lines, no frame borders. Every object fully inside its cell, at least 12% padding on each side, same ground baseline and consistent scale across frames. Do not paint checkerboard. Landscape sprite sheet EXACTLY 4 columns and 2 rows equal cells, EIGHT frames of the SAME towering Free Folk wild giant warrior. Full body in each cell, rugged bearded broad-shouldered muscular giant, shaggy brown fur cloak, hide tunic, big bare lower arms, leather boots, wielding a massive rough tree-trunk club with both hands. Earth brown fur and bone details, no armor helmet, no modern objects. Top row 4 walking-cycle frames: left foot, passing, right foot, passing. Bottom row 4 attack frames: ready club at waist, raises trunk overhead, mighty sweeping downward blow, recovers club. Same scale and camera, facing front-right. Deliberate clear animation differences, no background scene."
+    },
+    {
+      "filename": "sharpshooter.png",
+      "grid": [
+        4,
+        2
+      ],
+      "prompt": "Use case: stylized-concept. Production asset for Bannerlands isometric fantasy medieval RTS. Hand-painted realistic miniature game sprites with crisp silhouettes, natural detailed materials, gentle warm upper-left lighting, isometric 3/4 perspective matching classic Age of Empires painted unit art. Genuine transparent background. No text, no labels, no grid lines, no frame borders. Every object fully inside its cell, at least 12% padding on each side, same ground baseline and consistent scale across frames. Do not paint checkerboard. Landscape sprite sheet EXACTLY 4 columns and 2 rows equal cells, EIGHT frames of the SAME House Tully elite longbow sharpshooter. Full body human, blue and muted red layered gambeson and chainmail, blue hood, small silver trout insignia, long powerful yew war bow, quiver of long arrows, leather boots. Top row 4 walking-cycle frames with bow held relaxed: left step, passing, right step, passing. Bottom row 4 firing frames: nocks arrow, draws longbow fully, releases arrow, relaxed recovery. Clearly longbow marksman rather than crossbowman. Same camera and scale every frame, faces front-right, no text."
+    },
+    {
+      "filename": "buildings.png",
+      "grid": [
+        2,
+        2
+      ],
+      "prompt": "Use case: stylized-concept. Production asset for Bannerlands isometric fantasy medieval RTS. Hand-painted realistic miniature game sprites with crisp silhouettes, natural detailed materials, gentle warm upper-left lighting, isometric 3/4 perspective matching classic Age of Empires painted unit art. Genuine transparent background. No text, no labels, no grid lines, no frame borders. Every object fully inside its cell, at least 12% padding on each side, same ground baseline and consistent scale across frames. Do not paint checkerboard. Square sprite sheet EXACTLY 2 columns and 2 rows equal cells, FOUR distinct isometric medieval recruitment buildings. TOP LEFT Bolton trebuchet yard: dark timber open siege shed, pink muted cloth, stone ammunition stack, spare trebuchet arm and woodworking tools. TOP RIGHT Hightower trebuchet yard: pale stone engineer workshop, lavender banners, timber siege arm and rope winch, small beacon turret. BOTTOM LEFT Free Folk giant camp: huge fur hide longhouse and giant-sized stone arch, tusk frame, enormous spare tree clubs and fire pit, no people. BOTTOM RIGHT Tully sharpshooter lodge: blue tiled archery hall, red-blue cloth banners with small silver fish, longbow rack, straw practice targets, arrow bundles. Every building separate, no scene background or ground tile, architectural silhouette clear at small size, each fills 72% cell."
+    }
+  ]
+}

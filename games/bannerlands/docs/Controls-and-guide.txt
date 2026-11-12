@@ -62,16 +62,16 @@ BANNERLANDS - STRATEGIES, STANDARDS AND ALLIANCES
 Open Bannerlands.html to play offline. Start a new campaign to use the new rules.
 
 SIX GAME MODES
-Capital Conquest: destroy every rival capital.
-Bannerfall: first side to capture 5 standards wins; destroying all rival capitals also wins.
-Dominion: hold 65% of the realm after 90 seconds, or destroy all rival capitals.
+Castle Conquest: destroy every rival castle.
+Bannerfall: first side to capture 5 standards wins; destroying all rival castles also wins.
+Dominion: hold 65% of the realm after 90 seconds, or destroy all rival castles.
 Each mode has a team version. Choose 2v2, 3 paired teams, up to 8 paired teams.
 You have one allied bot; opposing houses are paired into their own alliances.
 Allies share a main team color, with lighter shades identifying individual houses.
 Allies do not damage each other or steal one another's land. Their forces support
 each other's territorial captures, flag control and capital defense.
 
-TOWN HALLS - YOUR CAPITAL IS YOUR LIFELINE
+CASTLES - KEEP AT LEAST ONE STANDING
 Level 1 Town Hall:       2,500 health, 24 base damage, 5.5 range.
 Level 2 Fortified Keep:  4,500 health, 36 base damage, 6.2 range; costs 500 gold.
 Level 3 Royal Citadel:   7,500 health, 52 base damage, 7.0 range; costs 950 gold.
@@ -79,9 +79,9 @@ Open Council and use Upgrade Town Hall. The portrait and battlefield artwork gro
 through three levels, adding fortified walls, towers and animated banners.
 Upgrades preserve the percentage of health remaining. Ordinary weapons upgrades
 also improve capital firepower. Bots buy the same upgrades with their own gold.
-When a capital is destroyed, its entire faction's troops, buildings and territory
-are wiped immediately. If YOUR capital falls, you lose even if your ally survives.
-Protect it and answer allied calls for defense.
+Destroyed castles become neutral ruins. Your faction survives while one castle
+remains; its home relocates if the original keep falls. Losing your last castle
+wipes your faction and ends your campaign, even if an ally still survives.
 
 CAPTURE STANDARDS - AVAILABLE IN EVERY MODE
 There are three physical flags on the battlefield. Click an objective in the
@@ -395,8 +395,8 @@ Build forward production and watchtowers. Every Council upgrade has 500 levels, 
 Your commander returns after 35 seconds while a keep survives.
 Enemies expand in parties, defend their capitals, counter troop mixes, retreat and launch coordinated assaults.
 Difficulty changes decision frequency, not enemy combat statistics.
-Choose Capital Conquest, Bannerfall or Dominion, each with a team version. See the update guide above for victory rules.
-Losing your town hall immediately wipes your faction and ends your campaign.
+Choose Castle Conquest, Bannerfall or Dominion, each with a team version. See the update guide above for victory rules.
+Losing your last castle wipes your faction and ends your campaign.
 
 ARTWORK
 assets/troops-atlas.png is the original transparent sprite sheet for common troops. Each house specialist also has its own sheet in assets/houses/.
