@@ -82,9 +82,14 @@ Flanking raiders: fast, smaller waves take side routes toward exposed production
 Siege column: gather artillery and escorts to break defended capitals.
 Bastion & counterattack: stronger home guard, fortifications and patient counterattacks.
 Banner guard: prioritize standards and hold their capture areas.
-Bots score targets by distance, guards, towers, damaged buildings, territory and
-nearby threats rather than always choosing the nearest house. They recruit for
-their plan and counter nearby hostile troop types. They muster recruits at home,
+Bots weigh every hostile house equally, including other computer-controlled lords.
+Target location includes the march from home, distance from owned frontiers,
+shared borders, and exposure to other hostile lands and forts along the approach.
+Guards, towers, damaged buildings and territory still matter. Retaliation has a
+limited influence, and independent rivals prefer to open another viable front
+when a house is already under invasion. Allied houses can still coordinate attacks.
+Equal target scores use a stable seeded choice without favoring the player.
+Bots recruit for their plan and counter nearby hostile troop types. They muster at home,
 keep reserves, retreat wounded soldiers and regroup between committed waves.
 Small scouting parties expand separately; new recruits do not trickle into an invasion.
 
@@ -101,6 +106,7 @@ Esc or right-click cancels placing a call.
 
 Existing troop selection, building rally points, formations, house powers,
 specialist production, expansion and 500-level upgrades remain available.
+
 
 
 
