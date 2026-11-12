@@ -9,9 +9,10 @@ const read=name=>fs.readFileSync(path.join(dist,name),'utf8');
 const emblemAtlas='data:image/png;base64,'+fs.readFileSync(path.join(dist,'assets/house-emblems.png')).toString('base64');
 const css=read('style.css').replaceAll('assets/house-emblems.png',emblemAtlas);
 const moduleCode=name=>read(name).replace(/^import .*?;\r?\n/gm,'').replaceAll('export const ','const ').replaceAll('export class ','class ').replaceAll('export function ','function ');
-const lands=moduleCode('lands.js'),navigation=moduleCode('navigation.js');
+const lands=moduleCode('lands.js'),navigation=moduleCode('navigation.js'),cover=moduleCode('cover.js');
 const core=moduleCode('core.js');
-const render=read('render.js').replaceAll('export function ','function ').replaceAll('export class ','class ');
+const render=moduleCode('render.js');
+const regiments=moduleCode('regiments.js'),regimentExports=[...read('regiments.js').matchAll(/export (?:const|class|function) (\w+)/g)].map(match=>match[1]).join(',');
 const atlas=fs.readFileSync(path.join(dist,'assets/troops-atlas.png')).toString('base64');
 const structures=fs.readFileSync(path.join(dist,'assets/structures-atlas.png')).toString('base64');
 const campaign=fs.readFileSync(path.join(dist,'assets/campaign-structures.png')).toString('base64');
@@ -22,9 +23,10 @@ const landsGround=fs.readFileSync(path.join(dist,'assets/lands-ground.png')).toS
 const {HOUSES}=await import('../core.js');
 const png=name=>'data:image/png;base64,'+fs.readFileSync(path.join(dist,name)).toString('base64');
 const houseArt={troops:Object.fromEntries(HOUSES.map(h=>[h.sigil,png(`assets/houses/${h.sigil}-troops.png`)])),castles:png('assets/house-castles.png'),production:png('assets/house-production.png')};
+const regimentArt=Object.fromEntries(['wolf','lion','dragon','rose','bear','sun','falcon'].map(sigil=>[sigil,png(`assets/regiments/${sigil}-${['wolf','lion','dragon','rose'].includes(sigil)?'shield-bearer':'lance-champion'}.png`)]));
 const app=read('app.js').replace(/^import .*?;\r?\n/gm,'').replace(/^const HOUSE_ART_SOURCES=.*?;\r?\n/m,'const HOUSE_ART_SOURCES='+JSON.stringify(houseArt)+';\n').replace("'assets/troops-atlas.png'",JSON.stringify('data:image/png;base64,'+atlas)).replace("'assets/structures-atlas.png'",JSON.stringify('data:image/png;base64,'+structures)).replace("'assets/campaign-structures.png'",JSON.stringify('data:image/png;base64,'+campaign)).replace("'assets/ground-textures.png'",JSON.stringify('data:image/png;base64,'+ground)).replace("'assets/terrain-props.png'",JSON.stringify('data:image/png;base64,'+props));
-const embeddedApp=app.replace("'assets/lands-atlas.png'",JSON.stringify('data:image/png;base64,'+landsAtlas)).replace("'assets/lands-ground.png'",JSON.stringify('data:image/png;base64,'+landsGround));
-const script=`const __lands=(()=>{${lands}\nreturn {LAND_MAPS,generateLands,isPassableTile,tileTravelCost};})();\nconst {LAND_MAPS,generateLands,isPassableTile,tileTravelCost}=__lands;\nconst __navigation=(()=>{${navigation}\nreturn {LandsNavigation};})();\nconst {LandsNavigation}=__navigation;\nconst __core=(()=>{${core}\nreturn {Game,HOUSES,UNIT_DEFS,BUILD_DEFS,HOUSE_CONTENT};})();\nconst {Game,HOUSES,UNIT_DEFS,BUILD_DEFS,HOUSE_CONTENT}=__core;\nconst __render=(()=>{${render}\nreturn {Renderer,worldToScreen,screenToWorld};})();\nconst {Renderer,worldToScreen,screenToWorld}=__render;\n(async()=>{${embeddedApp}\n})();`;
+const embeddedApp=app.replace(/^const REGIMENT_ART_SOURCES=.*?;\r?\n/m,'const REGIMENT_ART_SOURCES='+JSON.stringify(regimentArt)+';\n').replace("'assets/regiments/production-buildings.png'",JSON.stringify(png('assets/regiments/production-buildings.png'))).replace("'assets/lands-atlas.png'",JSON.stringify('data:image/png;base64,'+landsAtlas)).replace("'assets/lands-ground.png'",JSON.stringify('data:image/png;base64,'+landsGround));
+const script=`const __lands=(()=>{${lands}\nreturn {LAND_MAPS,generateLands,isPassableTile,tileTravelCost};})();\nconst {LAND_MAPS,generateLands,isPassableTile,tileTravelCost}=__lands;\nconst __navigation=(()=>{${navigation}\nreturn {LandsNavigation};})();\nconst {LandsNavigation}=__navigation;\nconst __cover=(()=>{${cover}\nreturn {CombatTerrain};})();\nconst {CombatTerrain}=__cover;\nconst __regiments=(()=>{${regiments}\nreturn {${regimentExports}};})();\nconst {${regimentExports}}=__regiments;\nconst __core=(()=>{${core}\nreturn {Game,HOUSES,UNIT_DEFS,BUILD_DEFS,HOUSE_CONTENT};})();\nconst {Game,HOUSES,UNIT_DEFS,BUILD_DEFS,HOUSE_CONTENT}=__core;\nconst __render=(()=>{${render}\nreturn {Renderer,worldToScreen,screenToWorld};})();\nconst {Renderer,worldToScreen,screenToWorld}=__render;\n(async()=>{${embeddedApp}\n})();`;
 const html=read('index.html').replace('<link rel="stylesheet" href="style.css">',`<style>${css}</style>`).replace('<script type="module" src="app.js"></script>',`<script type="module">${script.replaceAll('</script','<\\/script')}</script>`);
 fs.writeFileSync(path.join(out,'Bannerlands.html'),html);
 
@@ -33,4 +35,4 @@ fs.copyFileSync(path.join(dist,'assets/structures-atlas.png'),path.join(out,'Str
 fs.copyFileSync(path.join(dist,'assets/campaign-structures.png'),path.join(out,'Campaign-structures-sprite-sheet.png'));
 fs.copyFileSync(path.join(dist,'assets/ground-textures.png'),path.join(out,'Ground-textures.png'));
 fs.copyFileSync(path.join(dist,'assets/terrain-props.png'),path.join(out,'Terrain-sprite-sheet.png'));
-console.log('Built self-contained Bannerlands.html with three drawn capital levels, three drawn watchtower levels, objective standards, 16 house troop sheets, and all artwork embedded.');
+console.log('Built self-contained Bannerlands.html with directional combat, 23 house troop sheets, seven new production buildings, and all artwork embedded.');

@@ -184,6 +184,8 @@ FREE FOLK
 
 QUICK ORDERS
 U: Muster. B: Build. C: Council.
-Muster Shift+5: your specialist company. Build Shift+6: its production structure.
+Muster Shift+5: your original specialist company. Build Shift+H: its production structure.
+Seven houses also have a new regiment: build its facility with Shift+J and
+recruit its company with Muster Shift+6. See Combat-Update.txt for details.
 Council Shift+1: house power; Shift+2: weapons; Shift+3: armor; Shift+4: Treasury; Shift+5: house guide.
 Q: select your army. T: continuously expand nearby land until given another order or attacked.

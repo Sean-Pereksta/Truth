@@ -12,6 +12,26 @@ The performance edition reduces route-planning stalls, caches strategic scenery,
 and limits capture checks to affected ground. House selection now uses sixteen
 painted heraldic emblems. See `docs/Performance-Update.txt` for details.
 
+The campaign menu keeps all sixteen houses, a selected-house profile, landscape
+preview, and campaign settings on one desktop screen. Smaller screens use House
+and Campaign tabs with the start and resume actions always available. House
+details opens the full bonuses, weaknesses, and power guide.
+
+Right-drag formation orders now set a destination and facing, including slower
+backward marches. Frey spears and Bolton pikes anchor frontal defenses, while
+rear cavalry charges retain momentum and hit harder. Mountains block direct
+fire, woods give missile cover and hills extend archer range. Troop-type
+shortcuts, nine command groups and letter-based building shortcuts are listed
+in `docs/Combat-Update.txt`.
+
+Stark, Lannister, Targaryen and Tyrell can train Shield Bearers from distinct
+shield halls. Mormont, Martell and Arryn can train Lance Champions from their
+own mounted academies. Each of these seven houses has a separate troop sprite
+sheet with its own armor and colors, plus illustrated production buildings.
+The new facilities unlock paid companies and train automatically under normal
+supply and rally rules. River Rangers, Free Folk Berserkers and Ironborn Reavers
+move 10% faster.
+
 The playable web entry is `index.html`. The current editable JavaScript, CSS, and artwork are beside it. Serve this folder over HTTP; opening the split-module entry directly with `file://` is unsupported.
 
 - Local preview: `npm start` (http://127.0.0.1:4173).

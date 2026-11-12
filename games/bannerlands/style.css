@@ -69,9 +69,215 @@
 .selected-tower-upgrade{margin:9px 0;padding:9px;border:1px solid #786b49;background:#c8aa6109}.selected-tower-heading{display:flex;align-items:center;gap:6px}.selected-tower-heading canvas{display:block;width:64px;height:64px;flex:0 0 64px;filter:drop-shadow(0 2px 3px #0008)}.selected-tower-heading>div{min-width:0}.selected-tower-heading b{font:12px/1.4 Georgia,serif;color:#e2cb97;display:block}.selected-tower-heading small{display:block;font:8px/1.65 'Segoe UI',sans-serif;color:#b1c1a9;margin-top:4px}.selected-tower-upgrade p{font:8px/1.6 'Segoe UI',sans-serif;color:#a5b49e;margin:7px 0}.selected-tower-upgrade button{display:flex;align-items:center;justify-content:space-between;gap:5px;padding:8px 6px;width:100%;font:9px 'Segoe UI',sans-serif;color:#e2c58c;border-color:#8e7b50;background:#d3b66b0b}.selected-tower-upgrade button b{font-size:8px;white-space:nowrap}@media(max-width:700px){.selected-tower-heading canvas{width:44px;height:52px;flex-basis:44px}.selected-tower-heading b{font-size:10px}.selected-tower-heading small{font-size:7px}.selected-tower-upgrade{padding:7px}.selected-tower-upgrade button{font-size:8px}}@media(max-width:480px){.selected-tower-heading{display:block}.selected-tower-heading canvas{width:62px;height:62px;margin:auto}.selected-tower-upgrade button{flex-wrap:wrap}}
 
 /* Painted house emblems share one decoded atlas across all menu buttons. */
-.house-choice .house-sigil-art{display:block;width:48px;height:48px;margin:0 auto 4px;background-image:url('assets/house-emblems.png');background-size:400% 400%;background-repeat:no-repeat;border-radius:4px;filter:none}.house-choice{min-height:86px}
+.house-sigil-art{background-image:url('assets/house-emblems.png');background-size:400% 400%;background-repeat:no-repeat;border-radius:4px}.house-choice .house-sigil-art{display:block;width:48px;height:48px;margin:0 auto 4px;filter:none}.house-choice{min-height:86px}
 
 /* Lands Update: landscape selection and battlefield terrain guidance. */
 .lands-badge{display:inline-block;border:1px solid #9f8b58;padding:8px 12px;background:#b39a5f10;color:#e3ca8c!important;letter-spacing:3px!important}.landscape-config{grid-column:1/-1}.landscape-preview{position:relative;margin:17px 0 8px;height:112px;overflow:hidden;border:1px solid #53634d;background:#172b2d}.landscape-preview canvas{width:100%;height:100%;display:block;image-rendering:pixelated;opacity:.88}.landscape-preview:after{content:'';position:absolute;inset:0;background:linear-gradient(transparent 20%,#0c1e21bb)}.landscape-preview>span{position:absolute;bottom:10px;left:13px;z-index:1;font:18px Georgia,serif;letter-spacing:.6px;color:#f0dfb5;text-shadow:0 2px 7px #000}.landscape-description{font:10px/1.65 'Segoe UI',sans-serif;color:#bcc4ad;margin:0 0 15px;padding:0 2px}.terrain-readout{position:absolute;left:25px;bottom:128px;max-width:calc(100% - 275px);padding:8px 11px;background:#112329d9;border-left:2px solid #b9a06a;color:#c9d1bd;pointer-events:none;font:9px/1.5 'Segoe UI',sans-serif;box-shadow:0 3px 12px #0003}.terrain-legend{display:flex;flex-wrap:wrap;gap:5px 10px;font:7px/1.4 'Segoe UI',sans-serif;color:#93aaa4;margin:7px 0 0}.terrain-legend>span{display:flex;gap:4px;align-items:center}.terrain-legend i{width:7px;height:5px;border-radius:1px}.legend-water{background:#397a88}.legend-road{background:#b49f6c}.legend-bridge{background:#dac58e}.legend-mountain{background:#727b78}.map-heading{max-width:65%}.map-heading #objective{display:block;max-width:520px;line-height:1.5}.map-meta{max-width:32%;text-align:right;line-height:1.5}.map-meta #landsStatus{color:#c5b583;letter-spacing:.4px}.menu-story{align-self:start;position:sticky;top:30px}.menu-wrap{padding-top:20px;padding-bottom:20px}.menu-story h1{font-size:74px}.menu-story>p{font-size:21px;line-height:1.7}.menu-story>.menu-features{max-width:340px;line-height:1.6}
 @media(max-width:900px){.menu-story{position:static}.terrain-readout{max-width:calc(100% - 190px);font-size:8px;left:18px}.map-heading{max-width:70%}.map-heading #objective{max-width:350px}.map-meta #landsStatus{display:none}}
 @media(max-width:650px){.landscape-preview{height:88px}.terrain-readout{bottom:130px;max-width:calc(100% - 125px);padding:6px 7px;font-size:7px}.map-meta #battleCount{display:none}.map-heading{max-width:78%}.map-heading #objective{font-size:8px}.terrain-legend{gap:4px 6px;font-size:6px}.menu-story h1{font-size:60px}.menu-story>p{font-size:16px}.lands-badge{padding:6px 9px}.landscape-description{font-size:9px}}
+
+/* Campaign setup has its own layout so battle controls keep their existing scale. */
+#menuOverlay{padding:16px;align-items:center;background:radial-gradient(ellipse at 12% 0,#28444099,transparent 55%),radial-gradient(ellipse at 100% 100%,#4b402733,transparent 48%),#0b181ef7;backdrop-filter:none}
+#menuOverlay .campaign-menu{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;gap:16px;width:min(1440px,100%);max-width:none;height:min(820px,calc(100dvh - 32px));min-height:0;margin:auto;padding:0}
+#menuOverlay .campaign-menu-header{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:60px;padding:0 3px 10px;border-bottom:1px solid #a08e583d}
+#menuOverlay .menu-brand{display:flex;align-items:center;gap:14px;color:#e6cc98}
+#menuOverlay .menu-brand>svg{width:35px;height:39px;fill:none;stroke:currentColor;stroke-width:1.1}
+#menuOverlay .menu-brand h1{font:400 30px/1 Georgia,serif;letter-spacing:4px;margin:0}
+#menuOverlay .menu-brand>div>span{display:block;margin-top:7px;font:9px 'Segoe UI',sans-serif;letter-spacing:3.7px;color:#92aaa1}
+#menuOverlay .menu-edition{text-align:right}
+#menuOverlay .menu-edition .eyebrow{font-size:9px;letter-spacing:2.4px}
+#menuOverlay .menu-edition b{display:block;margin-top:8px;font:400 14px Georgia,serif;color:#b7c1ad}
+#menuOverlay .campaign-menu-tabs{display:none}
+#menuOverlay .campaign-menu-body{display:grid;grid-template-columns:minmax(0,1.85fr) minmax(300px,1fr);gap:16px;min-height:0}
+#menuOverlay .menu-house-panel{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);gap:16px;min-width:0;min-height:0}
+#menuOverlay .menu-panel{display:flex;flex-direction:column;min-width:0;min-height:0;padding:18px;border:1px solid #61715a77;border-top-color:#a18b566e;border-radius:5px;background:linear-gradient(135deg,#243b3b5c,#14252cdd 65%);box-shadow:0 12px 35px #0002}
+#menuOverlay .house-selection-panel{overflow:auto;scrollbar-width:thin;scrollbar-color:#667458 transparent}
+#menuOverlay .menu-panel-heading{display:flex;align-items:center;gap:11px;flex-shrink:0}
+#menuOverlay .menu-step{display:flex;align-items:center;justify-content:center;width:29px;height:29px;flex:0 0 29px;border:1px solid #a18b5666;border-radius:50%;font:10px 'Segoe UI',sans-serif;color:#c3ad7b}
+#menuOverlay .menu-panel .eyebrow{display:block;font-size:8px;letter-spacing:1.8px;color:#99ac91}
+#menuOverlay .menu-panel h2{margin:5px 0 0;font:400 24px/1.1 Georgia,serif;color:#ebe5d1;letter-spacing:-.3px}
+#menuOverlay #houseChoices{flex:1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(4,minmax(64px,1fr));gap:8px;margin-top:17px;padding:0;max-height:none;overflow:visible}
+#menuOverlay .house-choice{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0;min-height:0;padding:8px 3px;border-color:#52706466;background:#12252a99;font:11px/1.2 'Segoe UI',sans-serif;color:#b3c3b6;white-space:nowrap;transition:background .15s,border-color .15s}
+#menuOverlay .house-choice .house-sigil-art{display:block;flex:0 0 48px;width:48px;height:48px;margin:0;filter:none}
+#menuOverlay .house-choice:hover{border-color:#bdab78;background:#c1aa6910;color:#e5ddbf}
+#menuOverlay .house-choice.active{border-color:#d6b675;background:linear-gradient(145deg,#c6a56329,#c6a5630b);color:#f0d49a;box-shadow:inset 0 0 0 1px #c8ae6226}
+#menuOverlay .house-choice.active:after{content:'';position:absolute;top:5px;right:5px;width:4px;height:4px;background:#e6c583;transform:rotate(45deg)}
+#menuOverlay .house-selection-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;margin-top:13px;font:10px 'Segoe UI',sans-serif;color:#91a698}
+#menuOverlay .compare-houses-link{padding:5px 0;font:11px 'Segoe UI',sans-serif;white-space:nowrap;color:#d9bd83}
+#menuOverlay .compare-houses-link:after{content:' ↗';margin-left:3px}
+#menuOverlay .selected-house-profile{background:radial-gradient(ellipse at 50% 10%,#a5904d16,transparent 60%),linear-gradient(145deg,#1d3336,#12242b);overflow:auto;scrollbar-width:thin;scrollbar-color:#667458 transparent}
+#menuOverlay .selected-house-heading{display:flex;align-items:center;gap:11px;flex-shrink:0}
+#menuOverlay #chosenHouseEmblem{display:block;width:58px;height:58px;flex:0 0 58px;box-shadow:0 3px 15px #0002}
+#menuOverlay .selected-house-heading h2{font-size:25px;line-height:1.15}
+#menuOverlay #chosenTrait{margin:12px 0 8px;font:italic 12px/1.45 Georgia,serif;color:#aebda8}
+#menuOverlay #chosenPlaystyle{display:block;font:500 13px/1.4 'Segoe UI',sans-serif;color:#d9c18a}
+#menuOverlay .chosen-house-assets{gap:6px;padding:12px 0;margin:12px 0 0;border-top:1px solid #59685255;border-bottom:1px solid #59685255;flex-shrink:0}
+#menuOverlay .chosen-house-assets>div{padding:6px 2px;background:#ffffff03;border-color:#5b6e5944}
+#menuOverlay .chosen-house-assets canvas{width:54px;height:54px;max-width:100%}
+#menuOverlay .chosen-house-assets span{min-height:26px;margin-top:3px;font:9px/1.45 'Segoe UI',sans-serif;color:#bac5af}
+#menuOverlay .menu-power-label{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:15px 0 8px;font:8px 'Segoe UI',sans-serif;letter-spacing:1.6px;color:#a8ad8d}
+#menuOverlay .menu-power-label kbd{font:9px 'Segoe UI',sans-serif;padding:2px 5px;color:#d1bd8c;border-color:#766b4d;letter-spacing:0}
+#menuOverlay .chosen-house-power{padding:12px;border:1px solid #92805255;border-radius:3px;background:#c6aa6510}
+#menuOverlay .chosen-house-power b{font:15px/1.2 Georgia,serif;color:#e0ca99}
+#menuOverlay .chosen-house-power span{margin-top:7px;font:11px/1.5 'Segoe UI',sans-serif;color:#b4c1b3}
+#menuOverlay .chosen-house-power small{margin-top:9px;font:9px/1.45 'Segoe UI',sans-serif;color:#9eaf99}
+#menuOverlay .campaign-settings-panel{overflow:auto;scrollbar-width:thin;scrollbar-color:#667458 transparent}
+#menuOverlay .config-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;margin-top:17px}
+#menuOverlay .config-grid label{min-width:0;font:11px/1.25 'Segoe UI',sans-serif;color:#adbcac}
+#menuOverlay .config-grid select{display:block;height:33px;min-width:0;margin-top:5px;padding:6px 8px;border-color:#63745c99;border-radius:3px;background:#0d2026;color:#dedfcb;font:11px 'Segoe UI',sans-serif}
+#menuOverlay .config-grid .mode-config,#menuOverlay .config-grid .landscape-config{grid-column:1/-1}
+#menuOverlay .landscape-preview{flex-shrink:0;height:82px;margin:14px 0 8px;border-color:#89926a66;border-radius:3px}
+#menuOverlay .landscape-preview>span{font-size:18px;bottom:9px;left:11px}
+#menuOverlay .landscape-description{margin:0 0 12px;padding:0;font:11px/1.45 'Segoe UI',sans-serif;color:#abbca7}
+#menuOverlay .campaign-note-details{margin-top:auto;border-top:1px solid #5e71564d;font-family:'Segoe UI',sans-serif;flex-shrink:0}
+#menuOverlay .campaign-note-details>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;padding:11px 0 0;list-style:none;font-size:10px;color:#c0c4a8}
+#menuOverlay .campaign-note-details>summary::-webkit-details-marker{display:none}
+#menuOverlay .campaign-note-details>summary>span{font-size:15px;color:#cbb579}
+#menuOverlay .campaign-note-details[open]>summary>span{transform:rotate(45deg)}
+#menuOverlay .mode-note{margin:10px 0 0;padding:9px;font:11px/1.5 'Segoe UI',sans-serif}
+#menuOverlay .difficulty-note{margin:9px 0 0;font:11px/1.5 'Segoe UI',sans-serif}
+#menuOverlay .campaign-menu-footer{display:flex;align-items:center;justify-content:space-between;gap:20px;min-width:0;padding:14px 3px 0;border-top:1px solid #a08e583d}
+#menuOverlay .fair-start{min-width:0;gap:11px;margin:0;line-height:1.4}
+#menuOverlay .fair-start svg{width:25px;height:29px;flex:0 0 25px}
+#menuOverlay .fair-start strong{display:block;font:400 17px Georgia,serif;color:#d8cfac}
+#menuOverlay .fair-start small{display:block;margin-top:5px;font:10px/1.5 'Segoe UI',sans-serif;color:#9eb09e}
+#menuOverlay #houseCountPromise{font-weight:400;color:#c7bb91;white-space:nowrap;margin-left:5px}
+#menuOverlay .campaign-menu-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
+#menuOverlay #startButton{width:auto;min-width:231px;min-height:47px;gap:22px;padding:14px 17px;font-size:10px;letter-spacing:1.6px;white-space:nowrap;box-shadow:0 3px 12px #0002}
+#menuOverlay #startButton>span{font-size:16px;line-height:1}
+#menuOverlay #resumeButton{width:auto;min-height:47px;margin:0;padding:12px 16px;font:11px 'Segoe UI',sans-serif;color:#c6d3b8;border-color:#748366;background:#192e30;white-space:nowrap}
+@media(max-width:1150px){
+ #menuOverlay .campaign-menu-body{grid-template-columns:minmax(0,1.85fr) minmax(300px,1fr);gap:12px}
+ #menuOverlay .menu-house-panel{gap:12px;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr)}
+ #menuOverlay .menu-panel{padding:14px}
+ #menuOverlay .menu-panel h2{font-size:22px}
+ #menuOverlay .menu-step{display:none}
+ #menuOverlay #houseChoices{gap:6px}
+ #menuOverlay .house-selection-footer>span{display:none}
+ #menuOverlay .selected-house-heading{gap:8px}
+ #menuOverlay #chosenHouseEmblem{width:50px;height:50px;flex-basis:50px}
+ #menuOverlay .selected-house-heading h2{font-size:22px}
+ #menuOverlay .chosen-house-assets canvas{width:48px;height:48px}
+ #menuOverlay .chosen-house-power{padding:10px}
+ #menuOverlay .fair-start small{max-width:320px}
+ #menuOverlay #houseCountPromise{display:block;margin-left:0}
+}
+@media(max-width:980px){
+ #menuOverlay .campaign-menu{grid-template-rows:auto auto minmax(0,1fr) auto;gap:12px}
+ #menuOverlay .campaign-menu-header{min-height:49px;padding-bottom:9px}
+ #menuOverlay .menu-brand h1{font-size:25px}
+ #menuOverlay .menu-brand>div>span{font-size:8px;letter-spacing:3px;margin-top:6px}
+ #menuOverlay .menu-brand>svg{width:29px;height:33px}
+ #menuOverlay .menu-edition b{font-size:12px;margin-top:6px}
+ #menuOverlay .campaign-menu-tabs{display:flex;gap:8px}
+ #menuOverlay .campaign-menu-tabs button{display:flex;align-items:center;gap:9px;flex:1;padding:9px 13px;border-color:#59705d88;font:10px 'Segoe UI',sans-serif;color:#8fa393;text-align:left;background:#192e3055}
+ #menuOverlay .campaign-menu-tabs button span{font-size:12px;color:#b4c4b4}
+ #menuOverlay .campaign-menu-tabs button[aria-selected="true"]{border-color:#b59e68;background:#bca06413;color:#dfc28a}
+ #menuOverlay .campaign-menu-tabs button[aria-selected="true"] span{color:#ebd59f}
+ #menuOverlay .campaign-menu-body{display:block}
+ #menuOverlay .menu-house-panel{height:100%;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr)}
+ #menuOverlay .campaign-settings-panel{height:100%}
+ #menuOverlay[data-menu-tab="campaign"] #menuHousePanel{display:none}
+ #menuOverlay:not([data-menu-tab="campaign"]) #menuCampaignPanel{display:none}
+ #menuOverlay .menu-step{display:flex}
+ #menuOverlay .menu-panel h2{font-size:24px}
+ #menuOverlay .selected-house-heading h2{font-size:24px}
+ #menuOverlay #houseChoices{margin-top:14px;gap:8px}
+ #menuOverlay .house-selection-footer>span{display:inline}
+ #menuOverlay .config-grid{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:14px;gap:12px}
+ #menuOverlay .config-grid .mode-config{grid-column:span 2}
+ #menuOverlay .config-grid .landscape-config{grid-column:span 2}
+ #menuOverlay .landscape-preview{height:105px;margin-top:15px}
+ #menuOverlay .landscape-description{margin-bottom:12px}
+ #menuOverlay .campaign-menu-footer{padding-top:12px;gap:12px}
+ #menuOverlay .fair-start small{font-size:9px}
+ #menuOverlay #startButton{min-width:215px}
+ #menuOverlay #resumeButton{padding:12px;font-size:10px}
+}
+@media(max-width:640px){
+ #menuOverlay{padding:12px}
+ #menuOverlay .campaign-menu{height:calc(100dvh - 24px);gap:10px}
+ #menuOverlay .campaign-menu-header{min-height:51px;gap:10px}
+ #menuOverlay .menu-brand{gap:9px}
+ #menuOverlay .menu-brand h1{font-size:23px;letter-spacing:2px}
+ #menuOverlay .menu-brand>div>span{font-size:7px;letter-spacing:2px}
+ #menuOverlay .menu-brand>svg{width:24px;height:29px}
+ #menuOverlay .menu-edition .eyebrow{font-size:8px;letter-spacing:1px}
+ #menuOverlay .menu-edition b{display:none}
+ #menuOverlay .campaign-menu-tabs button{padding:9px 11px}
+ #menuOverlay .menu-house-panel{grid-template-columns:minmax(0,1fr)}
+ #menuOverlay .selected-house-profile{display:none}
+ #menuOverlay .menu-panel{padding:15px}
+ #menuOverlay .menu-panel h2{font-size:25px}
+ #menuOverlay #houseChoices{grid-template-rows:repeat(4,minmax(68px,1fr));margin-top:15px;gap:8px}
+ #menuOverlay .house-choice{font-size:11px;padding:7px 3px;gap:5px}
+ #menuOverlay .house-choice .house-sigil-art{width:48px;height:48px;flex-basis:48px}
+ #menuOverlay .house-selection-footer{margin-top:12px}
+ #menuOverlay .config-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 12px;margin-top:17px}
+ #menuOverlay .config-grid .mode-config,#menuOverlay .config-grid .landscape-config{grid-column:1/-1}
+ #menuOverlay .config-grid label{font-size:11px}
+ #menuOverlay .config-grid select{font-size:12px;height:36px}
+ #menuOverlay .landscape-preview{height:100px;margin-top:15px}
+ #menuOverlay .landscape-description{font-size:11px;line-height:1.5}
+ #menuOverlay .campaign-menu-footer{flex-direction:column;align-items:stretch;gap:10px;padding-top:10px}
+ #menuOverlay .fair-start{gap:7px}
+ #menuOverlay .fair-start svg{width:17px;height:21px;flex-basis:17px}
+ #menuOverlay .fair-start strong{font-size:15px}
+ #menuOverlay .fair-start small{display:none}
+ #menuOverlay .campaign-menu-actions{width:100%;gap:8px}
+ #menuOverlay #startButton{flex:1;justify-content:space-between;min-width:0;min-height:44px;padding:13px 14px;font-size:10px;letter-spacing:1.1px;gap:12px}
+ #menuOverlay #resumeButton{flex:1;min-width:0;min-height:44px;padding:10px 8px;font-size:10px;white-space:normal;line-height:1.3}
+}
+@media(max-height:700px) and (min-width:641px){
+ #menuOverlay{padding:12px}
+ #menuOverlay .campaign-menu{height:calc(100dvh - 24px);gap:10px}
+ #menuOverlay .campaign-menu-header{min-height:49px;padding-bottom:8px}
+ #menuOverlay .menu-brand h1{font-size:25px}
+ #menuOverlay .menu-brand>div>span{margin-top:5px;font-size:8px}
+ #menuOverlay .menu-brand>svg{width:28px;height:32px}
+ #menuOverlay .menu-panel{padding:13px}
+ #menuOverlay .menu-panel h2{font-size:22px}
+ #menuOverlay .menu-step{width:26px;height:26px;flex-basis:26px}
+ #menuOverlay #houseChoices{margin-top:12px;gap:6px}
+ #menuOverlay .house-selection-footer{margin-top:9px}
+ #menuOverlay .house-selection-footer>span{font-size:9px}
+ #menuOverlay #chosenHouseEmblem{width:47px;height:47px;flex-basis:47px}
+ #menuOverlay #chosenTrait{margin:9px 0 6px;font-size:11px}
+ #menuOverlay #chosenPlaystyle{font-size:12px}
+ #menuOverlay .chosen-house-assets{padding:8px 0;margin-top:9px}
+ #menuOverlay .chosen-house-assets canvas{width:45px;height:45px}
+ #menuOverlay .chosen-house-assets>div{padding:4px 2px}
+ #menuOverlay .menu-power-label{margin-top:11px}
+ #menuOverlay .chosen-house-power{padding:10px}
+ #menuOverlay .chosen-house-power span{font-size:11px;line-height:1.45}
+ #menuOverlay .config-grid{margin-top:12px;gap:9px 10px}
+ #menuOverlay .config-grid select{height:31px;margin-top:4px}
+ #menuOverlay .landscape-preview{height:70px;margin-top:10px}
+ #menuOverlay .landscape-description{margin-bottom:9px;font-size:10px}
+ #menuOverlay .campaign-menu-footer{padding-top:10px}
+ #menuOverlay #startButton,#menuOverlay #resumeButton{min-height:43px}
+}
+@media(max-height:700px) and (max-width:640px){
+ #menuOverlay .campaign-menu-header{min-height:43px}
+ #menuOverlay .menu-brand h1{font-size:21px}
+ #menuOverlay .menu-panel{padding:12px}
+ #menuOverlay .menu-panel h2{font-size:22px}
+ #menuOverlay #houseChoices{margin-top:11px;gap:6px;grid-template-rows:repeat(4,minmax(59px,1fr))}
+ #menuOverlay .house-choice{gap:3px;padding:5px 2px}
+ #menuOverlay .house-choice .house-sigil-art{width:40px;height:40px;flex-basis:40px}
+ #menuOverlay .house-selection-footer{margin-top:8px;font-size:9px}
+ #menuOverlay .config-grid{gap:10px;margin-top:13px}
+ #menuOverlay .config-grid select{height:32px;font-size:11px}
+ #menuOverlay .landscape-preview{height:66px;margin-top:11px}
+ #menuOverlay .landscape-description{font-size:10px;margin-bottom:9px}
+}
+@media(max-width:360px){#menuOverlay .menu-edition{display:none}}
+
+/* Formation facing and saved companies. */
+.face-order-button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px;margin:0 0 12px;color:#d9c797;border-color:#827447;background:#c9aa6110;font:11px 'Segoe UI',sans-serif;text-align:left}
+.face-order-button small{display:block;color:#94a995;font-size:9px;margin-top:4px}.face-order-button.active{border-color:#d6b675;background:#c9aa6126;color:#f1d89c}.face-order-button:disabled{opacity:.45}
+.army-selection{margin:0 0 12px;border-bottom:1px solid #49615066;padding-bottom:11px}.army-selection>summary{cursor:pointer;color:#c7d0b8;font:10px 'Segoe UI',sans-serif}.army-selection>summary>span{float:right;color:#8eab9a;font-size:8px}
+#troopTypeButtons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin-top:9px}#troopTypeButtons button{display:flex;align-items:center;justify-content:space-between;gap:3px;min-width:0;padding:7px;color:#bfcdb8;font:10px 'Segoe UI',sans-serif;background:#172b2f}#troopTypeButtons kbd{font-size:8px;padding:1px 4px}
+.command-group-panel{margin-bottom:12px}.command-group-panel .section-label{font-size:9px;letter-spacing:.5px}.command-group-panel .section-label>span{font-size:6px;letter-spacing:.1px;color:#8fa391}.command-group-panel>p{font:8px/1.5 'Segoe UI',sans-serif;color:#8fa391;margin:5px 0 0}
+#commandGroups{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:3px}#commandGroups button{display:flex;flex-direction:column;align-items:center;padding:6px 0 4px;gap:3px;font:11px 'Segoe UI',sans-serif;color:#75948a;border-color:#36544a;background:#10262b}#commandGroups button small{font-size:7px;color:#75948a}#commandGroups button.populated{border-color:#7d7954;color:#d6c38f}#commandGroups button.active{border-color:#c7ae70;background:#bca56626;color:#f0db9c}#commandGroups button.active small{color:#dacb9c}
+@media(max-width:700px){.army-selection>summary>span{float:none;display:block;margin-top:3px}#troopTypeButtons{grid-template-columns:minmax(0,1fr)}#commandGroups{grid-template-columns:repeat(5,minmax(0,1fr))}.command-group-panel .section-label>span{display:block;margin-top:4px}.face-order-button{padding:8px;font-size:10px}}

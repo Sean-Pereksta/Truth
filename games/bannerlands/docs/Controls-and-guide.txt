@@ -1,3 +1,10 @@
+CAMPAIGN SETUP
+Choose from all sixteen painted house emblems, inspect your house profile, and
+set the victory condition, rivals, difficulty, map size, graphics and landscape.
+On smaller screens, switch between Your house and The campaign. Arrow keys
+switch focused tabs. House details shows the complete guide. The start and
+resume buttons remain available; resuming preserves the existing battle.
+
 PERFORMANCE EDITION
 Large armies share bounded, resumable route planning; open-ground collision
 checks, capture updates and strategic scenery avoid repeated work. Menu and
@@ -31,7 +38,7 @@ The house roster shows what each bot is building or saving for; hover for its re
 MOUSE CAMERA MOVEMENT
 Move the mouse to any battlefield edge to pan the camera. Corners pan diagonally.
 Move toward the center or onto the sidebar to stop. The closer you are to the edge,
-the faster the view moves. This also works while paused. Right/middle dragging and
+the faster the view moves. This also works while paused. Middle dragging and
 arrow keys remain available. Edge scrolling stops during drags, menus and dialogs.
 
 DRAWN ARTWORK AND UPGRADEABLE WATCHTOWERS
@@ -142,7 +149,8 @@ Q selects your entire army; F selects and centers your commander.
 H holds; V retreats; R selects all buildings; X switches Conquer/Move.
 E activates your house's signature power on the selected troops. The always-visible House power button shows readiness; Council explains its effects and cost.
 A gives each selected soldier its own attack-move order toward the nearest living enemy unit to that soldier. Spread-out troops engage separate local fronts. If no hostile troops remain, each soldier targets its own nearest enemy structure. Normal local combat targeting continues along the way; press A again to choose from current enemy positions. The Attack nearest button gives the same order.
-Ctrl+1 through Ctrl+5 saves a company; 1 through 5 recalls one.
+Ctrl+1 through Ctrl+9 saves a group; 1 through 9 recalls it.
+Ctrl+Shift+1 through 9 adds selected soldiers to an existing group.
 Use Line, Wedge, or Spread to position troops. Spread limits artillery losses.
 
 MANUAL RALLY POINTS
@@ -330,19 +338,22 @@ FREE FOLK
 MENU ICONS AND HOTKEYS
 The Build menu shows the actual painted artwork for every building. Common structures take house colors; specialist structures have their own house artwork.
 U opens Muster (unit recruitment). B opens Build. C opens Council.
-Shift + 1 through Shift + 6 activates a labeled item in the currently selected menu. Muster and Council have 5 items; Build has 6.
+Shift+numbers activates the labeled Muster or Council item. Buildings use
+Shift+letters. Seven eligible houses also have a sixth Muster item and a new
+production building. See Combat-Update.txt for facing and troop-type shortcuts.
 Each item displays its shortcut; the up-arrow symbol means Shift.
 
-Muster: Shift+1 swordsmen; Shift+2 archers; Shift+3 cavalry; Shift+4 catapults; Shift+5 your house specialist.
-Build: Shift+1 barracks; Shift+2 archery range; Shift+3 stables; Shift+4 watchtower; Shift+5 siege works; Shift+6 your house specialist production structure. Then click owned land to place the chosen building. Escape or right-click cancels placement; Shift-click places multiple buildings.
-Council: Shift+1 house power; Shift+2 weapons; Shift+3 armor; Shift+4 economy; Shift+5 complete house guide.
+Muster: Shift+1 swordsmen; Shift+2 archers; Shift+3 cavalry; Shift+4 catapults; Shift+5 original house specialist; Shift+6 shield bearer or lance champion for eligible houses.
+Build: Shift+B barracks; Shift+A archery range; Shift+S stables; Shift+T watchtower; Shift+W siege works; Shift+H original house specialist structure; Shift+J new shield/champion facility for eligible houses. Click owned land to place. Escape or right-click cancels; Shift-click places multiple buildings.
+Council: Shift+1 house power; Shift+2 weapons; Shift+3 armor; Shift+4 economy; Shift+5 complete house guide; Shift+6 town hall upgrade.
 E also activates your house power. Q selects your entire army; F selects your commander.
-1 through 5 still recalls a company; Ctrl+1 through Ctrl+5 still saves a company.
+1 through 9 recalls a group; Ctrl+1 through Ctrl+9 saves it.
 Menu shortcuts work while paused. Unavailable items cannot be activated, and holding a key does not repeatedly spend gold. Shortcuts are inactive while typing or choosing settings, and while a dialog or campaign menu is open.
 
 CAMERA
 Scroll or use +/− to zoom toward the cursor.
-Right-drag or middle-drag to pan; arrow keys also pan. A is reserved for attacking.
+Right-drag orders selected troops to move and face; middle-drag or arrow keys
+pan. Right-drag pans when no troops are selected. A attacks each troop's nearest enemy.
 Tab fits the whole map; Home returns to your keep.
 Click or drag the minimap to navigate. G toggles the grid.
 Touch: pinch to zoom, tap a soldier then a destination; drag to select.

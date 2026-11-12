@@ -16,11 +16,12 @@ const scoutEnemy=(state,type,n)=>{
 };
 
 test('Personality changes actual facility purchases and every purchase pays the normal price',()=>{
-  for(const [style,team,expected] of [['mass',1,'barracks'],['raider',3,'storm_paddock'],['siege',2,'dragonfire_foundry']]){
+  for(const [style,team,expectedKind] of [['mass',1,'infantry'],['raider',3,'cavalry'],['siege',2,'siege']]){
     const state=setup(style,team),{g,s,p}=state;s.gold=700;
     const spend=[],build=g.build.bind(g);g.build=(...args)=>{const before=s.gold,result=build(...args);if(result.ok)spend.push({type:args[0],cost:before-s.gold});return result;};
-    tick(state);assert.equal(p.production.type,expected);assert.equal(p.production.status,'built');
-    assert.equal(spend[0].cost,BUILD_DEFS[expected].cost);assert.equal(spend[0].type,expected);assert.ok(s.gold>=0);
+    tick(state);const chosen=BUILD_DEFS[p.production.type];assert.equal(g.unitClass(chosen.unit),expectedKind);assert.equal(p.production.status,'built');
+    assert.ok(!chosen.house||chosen.house===s.sigil,'A personality can only buy its own faction facility.');
+    assert.equal(spend[0].cost,chosen.cost);assert.equal(spend[0].type,p.production.type);assert.ok(s.gold>=0);
     assert.ok(p.production.options.length>=3);assert.ok(p.production.reason.length>15);
   }
 });
@@ -41,7 +42,7 @@ test('Free mustering powers remain available while factory and capital money is 
 });
 
 test('Visible enemy archers change a mass planner toward cavalry production',()=>{
-  const state=setup(),{g,s,p}=state;s.gold=0;tick(state);assert.equal(p.production.type,'barracks');
+  const state=setup(),{g,s,p}=state;s.gold=0;tick(state);const initial=BUILD_DEFS[p.production.type];assert.equal(g.unitClass(initial.unit),'infantry');assert.ok(!initial.house||initial.house===s.sigil);
   scoutEnemy(state,'archer',35);g.time+=8;tick(state);
   assert.equal(p.production.counter,'archers');assert.equal(p.production.type,'stables');assert.match(p.production.reason,/archers/);
 });
