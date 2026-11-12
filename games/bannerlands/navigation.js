@@ -1,7 +1,7 @@
 import {isPassableTile, tileTravelCost} from './lands.js';
 
 const SQRT2=Math.SQRT2;
-const directions=[[-1,0,1],[1,0,1],[0,-1,1],[0,1,1],[-1,-1,SQRT2],[1,-1,SQRT2],[-1,1,SQRT2],[1,1,SQRT2]];
+const neighborDX=[-1,1,0,0,-1,1,-1,1],neighborDY=[0,0,-1,1,-1,-1,1,1],neighborLength=[1,1,1,1,SQRT2,SQRT2,SQRT2,SQRT2];
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 
 // A duplicate-entry binary heap keeps both searches allocation-light. Old entries
@@ -27,11 +27,22 @@ export class LandsNavigation {
   constructor(game){
     this.game=game;this.W=game.W;this.H=game.H;this.version=0;
     this.maxFields=64;this.maxRoutes=256;this.fields=new Map();this.routes=new Map();
-    this.stats={fieldBuilds:0,routeSearches:0,fieldHits:0};this.invalidate();
+    this.fieldWorkBudget=8000;this.fieldWorkRemaining=Infinity;this.fieldWorkTime=NaN;
+    this.stats={fieldBuilds:0,routeSearches:0,fieldHits:0,fieldSteps:0,fieldBudgetStops:0};this.invalidate();
   }
+  beginUpdate(workBudget=this.fieldWorkBudget){this.fieldWorkRemaining=Math.max(1,workBudget);this.fieldWorkTime=this.game.time;}
   invalidate(){
     this.version++;this.fields.clear();this.routes.clear();this.costs=new Map();
     this.walkable=Uint8Array.from(this.game.tiles,tile=>isPassableTile(tile)?1:0);
+    // Static terrain lets an entire swept rectangle be certified in four reads.
+    // Near shores and blocked corners we still use the precise swept checks below.
+    const stride=this.W+1;this.obstacleStride=stride;this.obstacles=new Uint32Array(stride*(this.H+1));
+    for(let y=0;y<this.H;y++){let row=0;for(let x=0;x<this.W;x++){row+=1-this.walkable[y*this.W+x];this.obstacles[(y+1)*stride+x+1]=this.obstacles[y*stride+x+1]+row;}}
+    this.neighbors=new Int32Array(this.walkable.length*8);this.neighbors.fill(-1);
+    for(let i=0;i<this.walkable.length;i++)if(this.walkable[i]){
+      const x=i%this.W,y=Math.floor(i/this.W);
+      for(let d=0;d<8;d++){const xx=x+neighborDX[d],yy=y+neighborDY[d];if(xx<0||yy<0||xx>=this.W||yy>=this.H||!this.walkable[yy*this.W+xx])continue;if(d>3&&(!this.walkable[y*this.W+xx]||!this.walkable[yy*this.W+x]))continue;this.neighbors[i*8+d]=yy*this.W+xx;}
+    }
   }
   index(point){
     if(!point||!Number.isFinite(point.x)||!Number.isFinite(point.y))return -1;
@@ -62,26 +73,30 @@ export class LandsNavigation {
     return null;
   }
   forNeighbors(index,visit){
-    const x=index%this.W,y=Math.floor(index/this.W);
-    for(const [dx,dy,length] of directions){
-      const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=this.W||yy>=this.H)continue;
-      const next=yy*this.W+xx;if(!this.walkable[next])continue;
-      if(dx&&dy&&(!this.walkable[y*this.W+xx]||!this.walkable[yy*this.W+x]))continue;
-      visit(next,length);
-    }
+    const offset=index*8;for(let d=0;d<8;d++){const next=this.neighbors[offset+d];if(next>=0)visit(next,neighborLength[d]);}
   }
-  field(goal,kind){
+  field(goal,kind,origin=-1){
     const target=this.index(goal);if(target<0||!this.walkable[target])return null;
     kind=this.kind(kind);const key=`${kind}:${target}`;
-    if(this.fields.has(key)){this.stats.fieldHits++;return this.remember(this.fields,key,this.fields.get(key),this.maxFields);}
-    const {values}=this.costGrid(kind),distance=new Float32Array(this.walkable.length),next=new Int32Array(this.walkable.length),heap=new MinHeap();
-    distance.fill(Infinity);next.fill(-1);distance[target]=0;heap.push(target,0);
-    while(heap.length){
-      const i=heap.pop(),base=distance[i];if(heap.score>base+1e-4)continue;
-      this.forNeighbors(i,(neighbor,length)=>{const cost=base+length*(values[i]+values[neighbor])*.5;if(cost<distance[neighbor]-1e-5){distance[neighbor]=cost;next[neighbor]=i;heap.push(neighbor,distance[neighbor]);}});
+    let field=this.fields.get(key);
+    if(field){this.stats.fieldHits++;this.remember(this.fields,key,field,this.maxFields);}else{
+      const {values}=this.costGrid(kind),distance=new Float32Array(this.walkable.length),next=new Int32Array(this.walkable.length),heap=new MinHeap(),settled=new Uint8Array(this.walkable.length);
+      distance.fill(Infinity);next.fill(-1);distance[target]=0;heap.push(target,0);
+      field={distance,next,target,kind,values,heap,settled,complete:false};this.stats.fieldBuilds++;this.remember(this.fields,key,field,this.maxFields);
     }
-    this.stats.fieldBuilds++;
-    return this.remember(this.fields,key,{distance,next,target,kind},this.maxFields);
+    if(field.complete||origin>=0&&field.settled[origin])return field;
+    // Expand only as far as this company needs, preserving the heap for the next
+    // soldier. A nearby home order no longer floods the entire continent.
+    const {distance,next,values,heap,settled}=field;
+    if(origin>=0&&Number.isFinite(this.game.time)&&this.fieldWorkTime!==this.game.time)this.beginUpdate();
+    while(heap.length){
+      if(origin>=0){if(this.fieldWorkRemaining<=0){this.stats.fieldBudgetStops++;return field;}this.fieldWorkRemaining--;}
+      this.stats.fieldSteps++;
+      const i=heap.pop(),base=distance[i];if(settled[i]||heap.score>base+1e-4)continue;settled[i]=1;
+      const offset=i*8;for(let d=0;d<8;d++){const neighbor=this.neighbors[offset+d];if(neighbor<0)continue;const cost=base+neighborLength[d]*(values[i]+values[neighbor])*.5;if(cost<distance[neighbor]-1e-5){distance[neighbor]=cost;next[neighbor]=i;heap.push(neighbor,distance[neighbor]);}}
+      if(i===origin)return field;
+    }
+    field.complete=true;field.heap=null;return field;
   }
   route(from,to,kind='infantry',options={}){
     const origin=this.nearestPassable(from),goal=this.nearestPassable(to),empty={points:[],distance:Infinity,cost:Infinity,reachable:false,crossings:[]};
@@ -97,7 +112,7 @@ export class LandsNavigation {
       while(heap.length){
         const i=heap.pop();if(heap.score>distance[i]+heuristic(i)+1e-4)continue;
         if(i===target){found=true;break;}if(++visited>(options.maxVisited||this.walkable.length*2))break;
-        this.forNeighbors(i,(neighbor,length)=>{const cost=distance[i]+length*(values[i]+values[neighbor])*.5;if(cost<distance[neighbor]-1e-5){distance[neighbor]=cost;previous[neighbor]=i;heap.push(neighbor,distance[neighbor]+heuristic(neighbor));}});
+        const offset=i*8;for(let d=0;d<8;d++){const neighbor=this.neighbors[offset+d];if(neighbor<0)continue;const cost=distance[i]+neighborLength[d]*(values[i]+values[neighbor])*.5;if(cost<distance[neighbor]-1e-5){distance[neighbor]=cost;previous[neighbor]=i;heap.push(neighbor,distance[neighbor]+heuristic(neighbor));}}
       }
       if(!found)return empty;
       const indices=[];for(let i=target;i>=0;i=previous[i]){indices.push(i);if(i===start)break;}
@@ -110,17 +125,28 @@ export class LandsNavigation {
     const cost=path.cost+(Math.hypot(origin.x-(start%this.W+.5),origin.y-(Math.floor(start/this.W)+.5))+Math.hypot(goal.x-(target%this.W+.5),goal.y-(Math.floor(target/this.W)+.5)))*this.costGrid(className).values[start];
     return {points,distance,cost:start===target?distance*this.costGrid(className).values[start]:cost,reachable:true,crossings,goal};
   }
+  isOpen(x,y){return x>=0&&y>=0&&x<this.W&&y<this.H&&this.walkable[Math.floor(y)*this.W+Math.floor(x)]===1;}
+  openRectangle(x0,y0,x1,y1){
+    if(!(x0>=0&&y0>=0&&x1<this.W&&y1<this.H))return false;
+    const left=Math.floor(x0),top=Math.floor(y0),right=Math.floor(x1)+1,bottom=Math.floor(y1)+1,stride=this.obstacleStride,a=this.obstacles;
+    return a[bottom*stride+right]-a[top*stride+right]-a[bottom*stride+left]+a[top*stride+left]===0;
+  }
   isClearPoint(x,y,radius=0){
-    const open=(xx,yy)=>{const i=this.index({x:xx,y:yy});return i>=0&&this.walkable[i];};
-    if(!open(x,y))return false;if(!radius)return true;
-    for(const [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1],[-.707,-.707],[.707,-.707],[-.707,.707],[.707,.707]])if(!open(x+dx*radius,y+dy*radius))return false;
-    return true;
+    if(!this.isOpen(x,y))return false;if(!radius)return true;
+    if(this.openRectangle(x-radius,y-radius,x+radius,y+radius))return true;
+    const diagonal=radius*.707;
+    return this.isOpen(x-radius,y)&&this.isOpen(x+radius,y)&&this.isOpen(x,y-radius)&&this.isOpen(x,y+radius)&&this.isOpen(x-diagonal,y-diagonal)&&this.isOpen(x+diagonal,y-diagonal)&&this.isOpen(x-diagonal,y+diagonal)&&this.isOpen(x+diagonal,y+diagonal);
   }
   clearSegment(from,to,radius=0){
-    const dx=to.x-from.x,dy=to.y-from.y,steps=Math.max(1,Math.ceil(Math.hypot(dx,dy)/.22));let previous=this.index(from);
-    if(previous<0||!this.isClearPoint(from.x,from.y,radius))return false;
+    return this.clearSegmentXY(from.x,from.y,to.x,to.y,radius);
+  }
+  clearSegmentXY(fromX,fromY,toX,toY,radius=0){
+    if(!Number.isFinite(fromX)||!Number.isFinite(fromY)||!Number.isFinite(toX)||!Number.isFinite(toY))return false;
+    if(this.openRectangle(Math.min(fromX,toX)-radius,Math.min(fromY,toY)-radius,Math.max(fromX,toX)+radius,Math.max(fromY,toY)+radius))return true;
+    const dx=toX-fromX,dy=toY-fromY,steps=Math.max(1,Math.ceil(Math.hypot(dx,dy)/.22));let previous=Math.floor(fromY)*this.W+Math.floor(fromX);
+    if(!this.isClearPoint(fromX,fromY,radius))return false;
     for(let step=1;step<=steps;step++){
-      const x=from.x+dx*step/steps,y=from.y+dy*step/steps,index=this.index({x,y});if(!this.isClearPoint(x,y,radius))return false;
+      const x=fromX+dx*step/steps,y=fromY+dy*step/steps,index=Math.floor(y)*this.W+Math.floor(x);if(!this.isClearPoint(x,y,radius))return false;
       if(index!==previous&&index%this.W!==previous%this.W&&Math.floor(index/this.W)!==Math.floor(previous/this.W)){
         if(!this.walkable[Math.floor(previous/this.W)*this.W+index%this.W]||!this.walkable[Math.floor(index/this.W)*this.W+previous%this.W])return false;
       }
@@ -140,7 +166,7 @@ export class LandsNavigation {
       if(Math.hypot(unit.x-order.groupX,unit.y-order.groupY)>3)shared=this.nearestPassable({x:order.groupX,y:order.groupY})||destination;
       else if(this.clearSegment(unit,destination,radius))return destination;
     }
-    const field=this.field(shared,kind);if(!field||!Number.isFinite(field.distance[originIndex]))return {x:unit.x,y:unit.y,blocked:true};
+    const field=this.field(shared,kind,originIndex);if(!field||!field.settled[originIndex])return {x:unit.x,y:unit.y,blocked:true};
     if(originIndex===field.target){if(this.clearSegment(unit,destination,radius))return destination;return this.point(originIndex);}
     const next=field.next[originIndex];if(next<0)return {x:unit.x,y:unit.y,blocked:true};
     let point=this.point(next);
@@ -167,6 +193,8 @@ export class LandsNavigation {
   /** Returns true when any part of the attempted displacement hit solid terrain. */
   constrain(unit,oldX,oldY){
     if(!Number.isFinite(unit.x)||!Number.isFinite(unit.y)){unit.x=oldX;unit.y=oldY;return true;}
+    const radius=unit.radius||.1;
+    if(this.openRectangle(Math.min(oldX,unit.x)-radius,Math.min(oldY,unit.y)-radius,Math.max(oldX,unit.x)+radius,Math.max(oldY,unit.y)+radius))return false;
     const start={x:oldX,y:oldY};
     if(!this.isClearPoint(oldX,oldY)){
       const rescued=this.nearestPassable(start);if(rescued){unit.x=rescued.x;unit.y=rescued.y;}return true;
@@ -174,15 +202,14 @@ export class LandsNavigation {
     const dx=unit.x-oldX,dy=unit.y-oldY,steps=Math.max(1,Math.ceil(Math.hypot(dx,dy)/.18)),stepX=dx/steps,stepY=dy/steps;
     // Unit data does not duplicate definition radii. A small navigation margin
     // keeps every class on the deck; troop spacing remains the combat engine's job.
-    const radius=unit.radius||.1;
     if(!this.isClearPoint(oldX,oldY,radius)){const center=this.point(this.index(start));unit.x=center.x;unit.y=center.y;return true;}
     let x=oldX,y=oldY,blocked=false;
     for(let i=0;i<steps;i++){
-      const next={x:x+stepX,y:y+stepY};
-      if(this.clearSegment({x,y},next,radius)){x=next.x;y=next.y;continue;}
+      const nextX=x+stepX,nextY=y+stepY;
+      if(this.clearSegmentXY(x,y,nextX,nextY,radius)){x=nextX;y=nextY;continue;}
       blocked=true;
-      if(this.clearSegment({x,y},{x:x+stepX,y},radius))x+=stepX;
-      if(this.clearSegment({x,y},{x,y:y+stepY},radius))y+=stepY;
+      if(this.clearSegmentXY(x,y,x+stepX,y,radius))x+=stepX;
+      if(this.clearSegmentXY(x,y,x,y+stepY,radius))y+=stepY;
     }
     unit.x=x;unit.y=y;return blocked;
   }

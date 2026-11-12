@@ -1,3 +1,9 @@
+PERFORMANCE EDITION
+Large armies share bounded, resumable route planning; open-ground collision
+checks, capture updates and strategic scenery avoid repeated work. Menu and
+roster updates are lighter. The sixteen house buttons have painted emblems.
+See Performance-Update.txt for details and benchmark commands.
+
 THE LANDS UPDATE
 Choose Crownlands, Riverlands, Highland Marches, Shattered Coast or Kingsroad
 in the campaign menu. Open Realm preserves the original open battlefield.

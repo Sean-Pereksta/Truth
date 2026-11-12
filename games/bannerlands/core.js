@@ -771,7 +771,7 @@ export class Game {
   }
 
   update(dt){
-    if(this.paused||this.winner!==null)return;dt=clamp(dt,0,.06);this.time+=dt;this.hash.rebuild(this.units);
+    if(this.paused||this.winner!==null)return;dt=clamp(dt,0,.06);this.time+=dt;this.navigation.beginUpdate();this.hash.rebuild(this.units);
     for(const s of this.teams)if(s.alive){s.gold+=s.income*dt;if(s.id!==0){s.aiClock-=dt;if(s.aiClock<=0){this.ai(s);s.aiClock=this.aiRules.decision;}}
       if(s.heroTimer>0){s.heroTimer-=dt;if(s.heroTimer<=0){const keep=this.buildings.find(b=>b.team===s.id&&b.type==='keep'&&b.hp>0);if(keep){this.addUnit(s.id,'hero',keep.x+this.buildingRadius(keep)+.5,keep.y);this.event(`${s.name}'s commander returns.`,s.id);}}}
     }
@@ -877,9 +877,14 @@ export class Game {
   canCapture(tile,team){if(tile.owner===team)return true;if(this.allied(tile.owner,team))return false;const x=tile.x,y=tile.y;return (x>0&&this.allied(this.tiles[y*this.W+x-1].owner,team))||(x<this.W-1&&this.allied(this.tiles[y*this.W+x+1].owner,team))||(y>0&&this.allied(this.tiles[(y-1)*this.W+x].owner,team))||(y<this.H-1&&this.allied(this.tiles[(y+1)*this.W+x].owner,team));}
   capture(dt){
     const len=this.tiles.length,power=this.capturePower;power.fill(0);
-    for(const u of this.units){if(u.hp<=0)continue;const x=Math.floor(u.x),y=Math.floor(u.y);for(let yy=y-1;yy<=y+1;yy++)for(let xx=x-1;xx<=x+1;xx++){if(xx<1||yy<1||xx>=this.W-1||yy>=this.H-1)continue;const dd=(u.x-(xx+.5))**2+(u.y-(yy+.5))**2;if(dd<1.3){const i=yy*this.W+xx;power[u.team*len+i]+=(this.unitClass(u)==='hero'?1.7:1)*Math.max(.15,1-dd*.65);}}}
+    // Only occupied or decaying tiles need faction comparisons. Keep ascending
+    // tile order so connected captures and seeded rewards match the full scan.
+    const marked=this.captureMarked?.length===len?this.captureMarked:(this.captureMarked=new Uint8Array(len)),touched=this.captureTouched;touched.length=0;marked.fill(0);
+    for(const u of this.units){if(u.hp<=0)continue;const x=Math.floor(u.x),y=Math.floor(u.y),strength=this.unitClass(u)==='hero'?1.7:1;for(let yy=y-1;yy<=y+1;yy++)for(let xx=x-1;xx<=x+1;xx++){if(xx<1||yy<1||xx>=this.W-1||yy>=this.H-1)continue;const dd=(u.x-(xx+.5))**2+(u.y-(yy+.5))**2;if(dd<1.3){const i=yy*this.W+xx;power[u.team*len+i]+=strength*Math.max(.15,1-dd*.65);if(!marked[i]){marked[i]=1;touched.push(i);}}}}
+    for(let i=0;i<len;i++){const tile=this.tiles[i];if(!isPassableTile(tile))continue;if(tile.capture>0&&!marked[i])touched.push(i);else if(!marked[i]&&tile.capture===0)tile.claim=-1;}
+    touched.sort((a,b)=>a-b);
     const alliancePower=Array(this.objectiveScores.length).fill(0);
-    for(let i=0;i<len;i++){const tile=this.tiles[i];if(!isPassableTile(tile))continue;alliancePower.fill(0);let best=-1,max=0,second=0,strongest=0;
+    for(const i of touched){const tile=this.tiles[i];if(!isPassableTile(tile))continue;alliancePower.fill(0);let best=-1,max=0,second=0,strongest=0;
       for(let t=0;t<this.teams.length;t++)if(this.teams[t].alive)alliancePower[this.teams[t].alliance]+=power[t*len+i];
       let leading=-1;for(let a=0;a<alliancePower.length;a++){const v=alliancePower[a];if(v>max){second=max;max=v;leading=a;}else if(v>second)second=v;}
       for(let t=0;t<this.teams.length;t++)if(this.teams[t].alive&&this.teams[t].alliance===leading&&power[t*len+i]>strongest){best=t;strongest=power[t*len+i];}
