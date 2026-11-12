@@ -185,11 +185,9 @@ function expandNearby(){
 function attackNearest(){
  if(!started||menuOpen||game.winner!==null||!game.teams[0].alive)return;
  const troops=selected();if(!troops.length)return toast('Select soldiers first. Drag a box or press Q.');
- const center=troops.reduce((p,u)=>({x:p.x+u.x/troops.length,y:p.y+u.y/troops.length}),{x:0,y:0});let target=null,best=Infinity;
- for(const enemy of [...game.units,...game.buildings]){if(!game.hostile(0,enemy.team)||enemy.hp<=0||!game.teams[enemy.team]?.alive)continue;const distance=(enemy.x-center.x)**2+(enemy.y-center.y)**2;if(distance<best){best=distance;target=enemy;}}
- if(!target)return toast('No enemy remains to attack.');
- cancelBuild();setMode('attack');game.command(troops.map(u=>u.id),target.x,target.y,'attack',ui.formation);
- ui.orderMarker={x:target.x,y:target.y,time:game.time,mode:'attack'};tone(240);toast(`Attack-move! Engage the nearest ${short(game.teams[target.team].name)} force.`);
+ const result=game.attackNearest(troops.map(u=>u.id),ui.formation);
+ if(!result.ok)return toast(result.message);
+ cancelBuild();setMode('attack');ui.orderMarker=null;tone(240);toast(result.message);
 }
 function useHousePower(){
  if(!started||menuOpen||game.winner!==null||!game.teams[0].alive)return;

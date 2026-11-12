@@ -386,9 +386,29 @@ export class Game {
     arr.sort((a,b)=>((this.unitClass(a)==='siege'?3:this.unitClass(a)==='archer'?2:0)-(this.unitClass(b)==='siege'?3:this.unitClass(b)==='archer'?2:0))||a.id-b.id);
     const spacing=formation==='spread'?.7:.43,cols=Math.max(3,Math.ceil(Math.sqrt(arr.length)*1.45)),rows=Math.ceil(arr.length/cols);
     arr.forEach((u,i)=>{let side=(i%cols-(Math.min(cols,arr.length)-1)/2)*spacing,back=(Math.floor(i/cols)-(rows-1)/2)*spacing;
-      if(formation==='wedge'){side=(i%cols-(cols-1)/2)*spacing;back=Math.abs(side)*.7+Math.floor(i/cols)*spacing-rows*spacing*.45;}
+      if(formation==='wedge'&&arr.length>1){side=(i%cols-(cols-1)/2)*spacing;back=Math.abs(side)*.7+Math.floor(i/cols)*spacing-rows*spacing*.45;}
       let goal=this.bound({x:x+sideX*side-fx*back,y:y+sideY*side-fy*back});if(!this.isWalkable(goal.x,goal.y))goal=this.navigation.nearestPassable(goal)||destination;if(!this.navigation.isClearPoint(goal.x,goal.y,u.radius))goal={x:Math.floor(goal.x)+.5,y:Math.floor(goal.y)+.5};if(this.unitClass(u)==='cavalry'&&(mode!=='attack'||u.charging&&((goal.x-u.x)*u.chargeDir.x+(goal.y-u.y)*u.chargeDir.y)<0))this.stopCharge(u);u.order={...goal,mode,formation,groupX:x,groupY:y};u.target=null;u.seek=0;u.sweepWait=0;
     });
+  }
+  attackNearest(ids,formation='line'){
+    const troops=[...new Set(ids||[])].map(id=>this.byId.get(id)).filter(u=>u?.hp>0&&UNIT_DEFS[u.type]&&this.teams[u.team]?.alive);
+    if(!troops.length)return {...result(false,'Select soldiers first.'),count:0};
+    const candidates=new Map();let count=0,structures=0;
+    for(const u of troops){
+      let foes=candidates.get(u.team);
+      if(!foes){
+        foes=this.units.filter(e=>e.hp>0&&this.teams[e.team]?.alive&&this.hostile(u.team,e.team));
+        if(!foes.length)foes=this.buildings.filter(e=>e.hp>0&&this.teams[e.team]?.alive&&this.hostile(u.team,e.team));
+        candidates.set(u.team,foes);
+      }
+      let target=null,best=Infinity;
+      for(const enemy of foes){const distance=ds(u,enemy);if(distance<best||target&&distance===best&&enemy.id<target.id){best=distance;target=enemy;}}
+      if(!target)continue;
+      // Independent normal attack orders preserve local combat and bounded path planning.
+      this.command([u.id],target.x,target.y,'attack',formation);
+      u.target=target;u.seek=.2+(u.id%7)*.018;count++;if(BUILD_DEFS[target.type])structures++;
+    }
+    return {...result(count>0,count?(structures===count?'Each selected troop attacks its nearest enemy structure.':'Each selected troop attacks its nearest enemy unit.'):'No enemy remains to attack.'),count};
   }
   hold(ids){for(const id of ids){const u=this.byId.get(id);if(u&&UNIT_DEFS[u.type]){if(this.unitClass(u)==='cavalry')this.stopCharge(u);if(UNIT_DEFS[u.type].spearBrace){const dx=u.target?u.target.x-u.x:u.vx||u.facingX||0,dy=u.target?u.target.y-u.y:u.vy||u.facingY||0,length=Math.hypot(dx,dy);u.braceDir=length>.01?{x:dx/length,y:dy/length}:null;u.braceTime=0;}u.order={x:u.x,y:u.y,mode:'hold',formation:u.order?.formation||'line'};u.target=null;}}}
   retreat(ids){const teams=new Map();for(const id of ids){const u=this.byId.get(id);if(u&&UNIT_DEFS[u.type]){if(!teams.has(u.team))teams.set(u.team,[]);teams.get(u.team).push(id);}}for(const [team,list]of teams){const h=this.teams[team].home;this.command(list,h.x,h.y,'move','spread');}}
