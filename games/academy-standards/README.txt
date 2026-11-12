@@ -71,9 +71,12 @@ the troop and in the roster. If the captain is knocked out, original housemates
 serving the same ruler become morale shaken: 15% less damage and 10% slower
 movement for up to 20 seconds. The captain's recovery rallies them early.
 Captured recruits have a separate, lasting penalty while serving another house:
-23% less damage and movement. The roster and visible troop information label
-them Recruited. Recruits can also become morale shaken; both reductions apply.
-Roster and visible troop information show the remaining shaken time. Unseen
+23% less damage and movement. Recruited houses are grouped in the compact party
+list. Each row shows name, health, role and a small captain marker. Open its
+arrow to inspect equipment and penalties; only one student's details open at
+a time. Squad controls sit under Squads. Recruits can also become morale shaken;
+both reductions apply. Student details and visible troop hover show the remaining
+shaken time. Unseen
 enemy captain state is not shown in house standings or through fog.
 
 ARMOR AND HOUSE CHAMPIONS
