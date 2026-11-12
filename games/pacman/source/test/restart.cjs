@@ -16,10 +16,11 @@ async function main(){
       this.classList={toggle:(name,on)=>{const set=new Set(this.className.split(/\s+/).filter(Boolean));if(on===undefined)on=!set.has(name);on?set.add(name):set.delete(name);this.className=[...set].join(' ');return on;},add:(...names)=>names.forEach(n=>this.classList.toggle(n,true)),remove:(...names)=>names.forEach(n=>this.classList.toggle(n,false)),contains:name=>this.className.split(/\s+/).includes(name)};
       all.push(this);
     }
-    append(...nodes){for(const node of nodes){node.parentElement=this;this.children.push(node);}}
-    insertBefore(node,before){if(node.parentElement)node.remove();const index=this.children.indexOf(before);node.parentElement=this;if(index<0)this.children.push(node);else this.children.splice(index,0,node);}
-    remove(){if(this.parentElement){const index=this.parentElement.children.indexOf(this);if(index>=0)this.parentElement.children.splice(index,1);this.parentElement=null;}}
-    replaceChildren(...nodes){this.children=[];this.append(...nodes);}
+    markRemoved(value){this.removed=value;for(const child of this.children)child.markRemoved(value);}
+    append(...nodes){for(const node of nodes){node.markRemoved(false);node.parentElement=this;this.children.push(node);}}
+    insertBefore(node,before){if(node.parentElement)node.remove();const index=this.children.indexOf(before);node.markRemoved(false);node.parentElement=this;if(index<0)this.children.push(node);else this.children.splice(index,0,node);}
+    remove(){if(this.parentElement){const index=this.parentElement.children.indexOf(this);if(index>=0)this.parentElement.children.splice(index,1);this.parentElement=null;}this.markRemoved(true);}
+    replaceChildren(...nodes){for(const child of this.children){child.parentElement=null;child.markRemoved(true);}this.children=[];this.append(...nodes);}
     setAttribute(k,v){this.attributes[k]=String(v);}
     getAttribute(k){return this.attributes[k]??null;}
     addEventListener(name,fn){(this.listeners[name]??=[]).push(fn);}
@@ -53,7 +54,8 @@ async function main(){
   for(const side of ['pac','ghost']){const el=new Element('button');el.dataset.side=side;}
   for(const teamId of ['pac','pac2','pac3']){const el=new Element('button');el.dataset.team=teamId;}
   for(const difficulty of ['easy','normal','hard','nightmare']){const el=new Element('button');el.dataset.difficulty=difficulty;}
-  const document={documentElement,fullscreenEnabled:false,fullscreenElement:null,hidden:false,getElementById:id=>ids.get(id),createElement:tag=>new Element(tag),querySelector:s=>all.find(e=>matches(e,s))||null,querySelectorAll:s=>all.filter(e=>matches(e,s)),addEventListener(){}};
+  const documentListeners={};
+  const document={documentElement,fullscreenEnabled:false,fullscreenElement:null,hidden:false,getElementById:id=>ids.get(id),createElement:tag=>new Element(tag),querySelector:s=>all.find(e=>!e.removed&&matches(e,s))||null,querySelectorAll:s=>all.filter(e=>!e.removed&&matches(e,s)),addEventListener(name,fn){(documentListeners[name]??=[]).push(fn);}};
   class Renderer{
     constructor(canvas,game){this.camera={x:0,y:0,zoom:.9};this.game=game;this.assetReady=Promise.resolve({units:true,terrain:true,buildings:true});}
     setGame(game){if(Renderer.failNext){Renderer.failNext=false;throw new Error('Fixture: renderer restart failed');}this.game=game;}
@@ -61,14 +63,19 @@ async function main(){
     resize(){}drawMinimap(){}render(){}pan(){}zoomAt(){}
     screenToWorld(x,y){return{x,y};}worldToScreen(x,y){return{x,y};}
   }
-  const storage=new Map(),frames=[];
+  const storage=new Map(),frames=[];let fixtureTime=0;
   const window={addEventListener(){}};
   const reportedErrors=[];
-  const context={...engine,AIController,Renderer,document,window,console:{...console,error:(...args)=>reportedErrors.push(args)},matchMedia:()=>({matches:false}),localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v)},performance:{now:()=>0},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout:()=>1,clearTimeout(){}};
+  const context={...engine,AIController,Renderer,document,window,console:{...console,error:(...args)=>reportedErrors.push(args)},matchMedia:()=>({matches:false}),localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v)},performance:{now:()=>fixtureTime},requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},setTimeout:()=>1,clearTimeout(){}};
   vm.createContext(context);
   const source=fs.readFileSync(path.join(project,'main.js'),'utf8').replace(/^import[^\n]*\n/gm,'');
-  vm.runInContext(source+`\n globalThis.__restartTest={startGame,openMenu,closeMenu,endMatch,frame,settings,updateHUD,ownUnits,entityAt,getState:()=>({game,ai,started,ended,selected,keys,pointer,panPointer,mouseCanvas,buildType,orderMode,productionTab,speed}),seedTransient:()=>{keys.add('arrowright');pointer={id:9};panPointer={id:10,x:4,y:4};mouseCanvas={x:795,y:200};buildType='tower';orderMode='attack';productionTab='buildings';speed=2;}};`,context);
+  vm.runInContext(source+`\n globalThis.__restartTest={startGame,openMenu,closeMenu,endMatch,frame,settings,updateHUD,ownUnits,entityAt,setSelection:ids=>{selected=new Set(ids);updateSelection();},getState:()=>({game,ai,started,ended,selected,keys,pointer,panPointer,mouseCanvas,buildType,orderMode,productionTab,speed,controlGroups}),seedTransient:()=>{keys.add('arrowright');pointer={id:9};panPointer={id:10,x:4,y:4};mouseCanvas={x:795,y:200};buildType='tower';orderMode='attack';productionTab='buildings';speed=2;}};`,context);
   const api=context.__restartTest;
+  const press=(key,options={})=>{
+    const event={key,code:/^[1-9]$/.test(key)?'Digit'+key:'Key'+key.toUpperCase(),target:documentElement,repeat:false,ctrlKey:false,metaKey:false,shiftKey:false,altKey:false,preventDefault(){this.prevented=true;},stopImmediatePropagation(){this.stopped=true;},...options};
+    for(const listener of documentListeners.keydown||[]){listener(event);if(event.stopped)break;}
+    return event;
+  };
   const hidden=id=>ids.get(id).hidden;
   const assertPlaying=side=>{
     const {game,started,ended}=api.getState();
@@ -76,6 +83,25 @@ async function main(){
     for(const id of ['setup-screen','result-screen','help-screen','pause-label'])assert.equal(hidden(id),true,id+' must not cover a new match');
   };
   ids.get('launch-btn').click();assertPlaying('pac');
+  const controlGame=api.getState().game,hero=controlGame.getHero(),miner=api.ownUnits().find(unit=>unit.type==='miner'),nest=controlGame.buildings.find(building=>building.teamId===controlGame.playerTeam&&building.type==='nest'),ally=controlGame.getHero('pac2');
+  api.setSelection([hero.id,nest.id,ally.id]);
+  assert.equal(press('1',{ctrlKey:true}).prevented,true,'Assign must suppress the browser shortcut');
+  assert.deepEqual([...api.getState().controlGroups[0]].sort(),[hero.id,nest.id].sort(),'Groups include owned structures and exclude allies');
+  api.setSelection([miner.id]);press('1',{shiftKey:true});assert.equal(api.getState().controlGroups[0].size,3,'Shift adds selected members');
+  press('1');assert.equal(api.getState().selected.size,3,'A bare number recalls instead of training');
+  fixtureTime=100;press('1');assert.equal(context.window.blackout.renderer.camera.x,(hero.x+miner.x+nest.x)/3,'Double recall focuses the group');
+  api.setSelection([miner.id]);press('9',{metaKey:true});api.setSelection([]);press('9',{code:'Numpad9'});assert.deepEqual([...api.getState().selected],[miner.id],'Command assigns and numpad recalls');
+  miner.hp=0;api.updateHUD();assert.equal(api.getState().controlGroups[8].size,0,'Dead members disappear from groups');
+  api.setSelection([]);press('1',{ctrlKey:true});assert.equal(api.getState().controlGroups[0].size,0,'Assigning an empty selection clears a group');
+  api.setSelection([hero.id]);press('2',{ctrlKey:true,target:ids.get('seed-input')});assert.equal(api.getState().controlGroups[1].size,0,'Typing in fields must not change groups');
+  press('2',{ctrlKey:true});press('2',{repeat:true});assert.equal(api.getState().controlGroups[1].size,1);
+  press('t');controlGame.resources.pac=1000;const queued=nest.queue.length;press('z');assert.equal(nest.queue.length,queued+1,'T then Z queues the first troop');
+  press('b');press('z');assert.equal(api.getState().buildType,'nest','B then Z selects the first structure');
+  const sanctuaryKey=Object.keys(engine.BUILDING_DEFS).filter(type=>engine.BUILDING_DEFS[type].side==='pac').indexOf('sanctuary');
+  if(sanctuaryKey>=0){press(['z','c','v','n','g'][sanctuaryKey]);assert.equal(api.getState().buildType,'sanctuary','The fifth building has a usable visible shortcut');}
+  press('e');assert.equal(controlGame.powerCharges,0,'E retains Power even while the build tab is open');
+  api.startGame();assertPlaying('pac');assert.ok(api.getState().controlGroups.every(group=>group.size===0),'Restart clears all stale group IDs');
+  console.log('Control-group and production checks passed: owned troops/structures, Ctrl/Command assignment, Shift addition, number/numpad recall, double focus, dead-member cleanup, clear, field guards, restart reset, production keys and reserved Power.');
   assert.equal(api.getState().ai.length,3,'Exactly the three non-human teams receive controllers');
   assert.ok(api.getState().ai.every(controller=>controller.teamId!==api.getState().game.playerTeam));
   const original=api.getState().game;original.update(.1);api.openMenu();assert.equal(hidden('setup-screen'),false);assert.equal(original.paused,true);

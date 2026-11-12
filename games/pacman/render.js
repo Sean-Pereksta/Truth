@@ -520,7 +520,8 @@ export class Renderer {
   }
 
   _drawBuilding(ctx, b, selected, remembered = false) {
-    if (this.buildingAtlas || this.assets.buildings) {
+    // The Sanctuary has a medical silhouette; the original atlas has no healer frame.
+    if (b.type !== 'sanctuary' && (this.buildingAtlas || this.assets.buildings)) {
       this._drawBuildingSprite(ctx, b, selected, remembered);
       return;
     }
@@ -569,6 +570,20 @@ export class Renderer {
       ctx.fillStyle = rgba(C.teal, .35 + Math.sin(this.clock * 2) * .08); ctx.beginPath(); ctx.ellipse(b.x, cy, .55, .44, 0, 0, Math.PI * 2); ctx.fill();
       for (let n = 0; n < 3; n++) { const a = this.clock + n * Math.PI * 2 / 3; ctx.fillStyle = C.pacSoft; ctx.fillRect(b.x + Math.cos(a) * .45 - .06, cy + Math.sin(a) * .3 - .06, .12, .12); }
       ctx.fillStyle = C.teal; ctx.fillRect(x + .45, y + h - .48, w - .9, .09);
+    } else if (b.type === 'sanctuary') {
+      const glow = ctx.createRadialGradient(b.x, cy, .1, b.x, cy, 1.5);
+      glow.addColorStop(0, rgba(C.green, b.healingCount > 0 ? .32 : .15)); glow.addColorStop(1, rgba(C.green, 0));
+      ctx.fillStyle = glow; ctx.fillRect(b.x - 1.5, cy - 1.5, 3, 3);
+      ctx.fillStyle = '#163f3b'; ctx.strokeStyle = '#91f3cf'; ctx.lineWidth = .075;
+      ctx.beginPath(); ctx.ellipse(b.x, cy + .05, .98, .75, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#21584d'; ctx.beginPath(); ctx.ellipse(b.x, cy - .19, .82, .63, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#c2ffe1'; ctx.fillRect(b.x - .16, cy - .70, .32, 1.02); ctx.fillRect(b.x - .51, cy - .35, 1.02, .32);
+      for (const ox of [-.98, .98]) {
+        ctx.fillStyle = '#446b60'; rect(ctx, b.x + ox - .13, cy - .32, .26, .94, .07); ctx.fill();
+        ctx.fillStyle = C.green; ctx.beginPath(); ctx.arc(b.x + ox, cy - .40, .16, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.fillStyle = this._teamColor(b); ctx.fillRect(b.x - .62, cy + .82, 1.24, .10);
+      if (b.healingCount > 0) ring(ctx, b.x, cy, 1.1 + Math.sin(this.clock * 4) * .05, C.green, .04, .65);
     } else if (b.type === 'watch') {
       ctx.fillStyle = '#3b3049'; rect(ctx, b.x - .38, cy - .38, .76, .95, .12); ctx.fill();
       ctx.strokeStyle = '#c58cbd'; ctx.lineWidth = .12; ctx.beginPath(); ctx.moveTo(b.x, cy + .15); ctx.lineTo(b.x, cy - .95); ctx.stroke();
@@ -662,6 +677,51 @@ export class Renderer {
         const first = b.queue[0], total = first.total || first.remaining || 1;
         this._bar(ctx, b.x, b.y + h / 2 + .2, w * .85, 1 - (first.remaining || 0) / total, C.teal, .075);
       }
+    }
+  }
+
+  _drawHealingRanges(ctx, selected) {
+    for (const b of this.game.buildings) {
+      const def = BUILDING_DEFS[b.type];
+      if (!alive(b) || !this._owns(b) || !selected.has(b.id) || b.progress < 1 || !def?.healRange || !this._inView(b.x, b.y, def.healRange)) continue;
+      const cells = this._spellCells(b.x, b.y, def.healRange, `heal-${b.id}`);
+      ctx.save(); this._clipSpell(ctx, cells);
+      ctx.fillStyle = 'rgba(137,239,176,.065)';
+      ctx.beginPath(); ctx.arc(b.x, b.y, def.healRange, 0, Math.PI * 2); ctx.fill();
+      ctx.setLineDash([.17, .14]); ring(ctx, b.x, b.y, def.healRange, C.green, .045, .6); ctx.setLineDash([]);
+      for (const cell of cells) if (Math.hypot(cell.x + .5 - b.x, cell.y + .5 - b.y) < def.healRange - .8) {
+        ctx.fillStyle = 'rgba(137,239,176,.25)'; ctx.fillRect(cell.x + .46, cell.y + .33, .08, .34); ctx.fillRect(cell.x + .33, cell.y + .46, .34, .08);
+      }
+      ctx.restore();
+    }
+  }
+
+  _drawBuildingLabels(ctx, selected) {
+    const types = Object.keys(BUILDING_DEFS).filter(type => BUILDING_DEFS[type].side === this.game.side);
+    const keys = ['Z', 'C', 'V', 'N', 'G'];
+    for (const b of this.game.buildings) {
+      if (!alive(b) || !this._owns(b) || b.isHQ || !this._inView(b.x, b.y, 5) || (this.camera.zoom < .60 && !selected.has(b.id))) continue;
+      const def = BUILDING_DEFS[b.type]; if (!def) continue;
+      const h = b.h || def.h || 3, sprite = b.type !== 'sanctuary' && !!(this.buildingAtlas || this.assets.buildings);
+      const y = b.y - h / 2 - (sprite ? 1.33 : .68), key = keys[types.indexOf(b.type)];
+      this._worldLabel(ctx, `${key ? 'B ' + key + '  ' : ''}${def.name.toUpperCase()}`, b.x, y, this._teamColor(b), selected.has(b.id) ? 11 : 10);
+      const state = b.progress < 1 ? 'UNDER CONSTRUCTION' : b.type === 'sanctuary' ? (b.healingCount > 0 ? `HEALING ${b.healingCount} ALLIES` : `HEALING · ${def.healRate} HP/s`) : def.role || '';
+      if (state && (this.camera.zoom >= .78 || selected.has(b.id))) this._worldLabel(ctx, state, b.x, y + 14 / (TILE * this.camera.zoom), b.type === 'sanctuary' ? C.green : C.white, 9);
+    }
+  }
+
+  _drawHidingPlaces(ctx) {
+    if (this.camera.zoom < .6) return;
+    for (const place of this.game.map.hidingPlaces || []) {
+      if (!this._inView(place.x, place.y, 4) || !this._visible(place.x, place.y)) continue;
+      const halfW = (place.w || 7) / 2 - .45, halfH = (place.h || 7) / 2 - .45;
+      ctx.save(); ctx.strokeStyle = 'rgba(157,192,133,.50)'; ctx.lineWidth = .045;
+      for (const dx of [-1, 1]) for (const dy of [-1, 1]) {
+        const x = place.x + dx * halfW, y = place.y + dy * halfH;
+        ctx.beginPath(); ctx.moveTo(x - dx * .55, y); ctx.lineTo(x, y); ctx.lineTo(x, y - dy * .55); ctx.stroke();
+      }
+      ctx.restore();
+      this._worldLabel(ctx, 'RUIN COVER', place.x, place.y + halfH + .4, '#bdd89d', 10);
     }
   }
 
@@ -837,6 +897,10 @@ export class Renderer {
         const text = effect.text || `+${effect.amount || 0} Dread`, y = effect.y - .45 - age * .9;
         ctx.strokeStyle = 'rgba(3,7,15,.95)'; ctx.strokeText(text, effect.x, y);
         ctx.fillStyle = C.ghostSoft; ctx.fillText(text, effect.x, y);
+      } else if (effect.type === 'heal') {
+        const y = effect.y - .55 - age * .6;
+        ring(ctx, effect.x, effect.y + .15, .4 + age * .28, C.green, .045, ratio * .6);
+        ctx.fillStyle = C.green; ctx.fillRect(effect.x - .04, y - .15, .08, .3); ctx.fillRect(effect.x - .15, y - .04, .3, .08);
       } else if (effect.type === 'power' || effect.type === 'surge') {
         ring(ctx, effect.x, effect.y, .5 + age * 4, C.teal, .08, ratio);
         ring(ctx, effect.x, effect.y, .2 + age * 3.3, C.pacSoft, .04, ratio * .65);
@@ -899,7 +963,9 @@ export class Renderer {
     ctx.save(); ctx.translate(this.width / 2, this.height / 2); ctx.scale(scale, scale); ctx.translate(-this.camera.x, -this.camera.y);
     ctx.imageSmoothingEnabled = this.camera.zoom < .65;
     ctx.drawImage(this.terrainCanvas, 0, 0, game.map.width, game.map.height);
+    this._drawHidingPlaces(ctx);
     this._drawPellets(ctx);
+    this._drawHealingRanges(ctx, selected);
     this._drawCastTelegraphs(ctx, false);
     const currentBuildings = new Set();
     for (const b of game.buildings) {
@@ -921,6 +987,7 @@ export class Renderer {
     ctx.imageSmoothingEnabled = true;
     ctx.drawImage(this.fogCanvas, 0, 0, game.map.width, game.map.height);
     this._drawHQOverlay(ctx, selected);
+    this._drawBuildingLabels(ctx, selected);
     this._drawCastTelegraphs(ctx, true);
     this._drawOrders(ctx, selected);
     this._drawBuild(ctx, ui.buildType, ui.mouseWorld);

@@ -35,6 +35,7 @@ export class AIController {
     this.heroGoal=null;
     this.goalAt=0;
     this.retreating=false;
+    this.recovering=new Set();
     this.lastHeroSight=null;
     this.evidence=[];
     this.lastAlertTime=-1;
@@ -261,10 +262,17 @@ export class AIController {
     return buildings.filter(b=>completed(b)&&(!types||types.includes(b.type))).sort((a,b)=>sq(unit,a)-sq(unit,b))[0];
   }
 
+  healerFor(unit,enemies=[]){
+    // Allied Sanctuaries serve the entire Pac alliance. Choose a reachable,
+    // currently safe healer using only threats this commander can observe.
+    const candidates=this.game.buildings.filter(b=>b.side===this.side&&completed(b)&&BUILDING_DEFS[b.type]?.healRate>0&&!enemies.some(e=>distance(e,b)<8)).sort((a,b)=>sq(unit,a)-sq(unit,b));
+    return candidates.find(b=>distance(unit,b)<1.5||this.game.findPath(unit.x,unit.y,b.x,b.y).length>0);
+  }
+
   flee(unit,threats,buildings){
     const threat=threats.slice().sort((a,b)=>sq(unit,a)-sq(unit,b))[0];
     if(!threat)return;
-    const bases=buildings.filter(b=>completed(b)&&['nest','refuge','lair','tower','spike'].includes(b.type));
+    const bases=buildings.filter(b=>completed(b)&&['nest','refuge','sanctuary','lair','tower','spike'].includes(b.type));
     const away={x:unit.x+(unit.x-threat.x)*2,y:unit.y+(unit.y-threat.y)*2};
     const candidates=[this.floor(away.x,away.y)];
     const base=this.baseFor(unit,bases);
@@ -474,7 +482,7 @@ export class AIController {
     if(threatened){
       this.retreating=true;this.heroGoal=null;this.flee(hero,close,buildings);
     }else{
-      const healer=this.baseFor(hero,buildings,['nest','refuge']);
+      const healer=this.healerFor(hero,enemies);
       if((health<.55||(this.retreating&&health<.83))&&healer&&!powered){
         this.retreating=true;
         this.issue(hero,'move',healer.x,healer.y);
@@ -489,6 +497,12 @@ export class AIController {
       if(unit.type==='hero')continue;
       if(this.isDodging(unit))continue;
       const threats=enemies.filter(e=>distance(unit,e)<5);
+      if(unit.hp<unit.maxHp*.5)this.recovering.add(unit.id);
+      if(unit.hp>=unit.maxHp*.85)this.recovering.delete(unit.id);
+      if(this.recovering.has(unit.id)&&!threats.length){
+        const healer=this.healerFor(unit,enemies);
+        if(healer){this.issue(unit,'move',healer.x,healer.y);continue;}
+      }
       if(unit.type==='guardian'){
         const partners=this.game.units.filter(u=>u.side===this.side&&living(u)&&!this.owns(u)&&['hero','miner','extractor'].includes(u.type)&&distance(unit,u)<12);
         const vulnerable=allies.concat(partners).filter(u=>['hero','miner','extractor'].includes(u.type)).sort((a,b)=>{
@@ -506,6 +520,8 @@ export class AIController {
       const target=this.choosePellet(unit,routeThreats,unit.type==='extractor');
       if(target)this.issue(unit,'harvest',target.x,target.y);
     }
+    const liveIds=new Set(allies.map(u=>u.id));
+    for(const id of this.recovering)if(!liveIds.has(id))this.recovering.delete(id);
   }
 
   heroHarvest(hero,enemies){
@@ -593,9 +609,13 @@ export class AIController {
     if(this.side==='pac'){
       const hero=allies.find(u=>u.type==='hero');
       const refuge=hero&&this.baseFor(hero,buildings,['nest','refuge']);
+      const healer=hero&&this.healerFor(hero,enemies);
       if(!count('nest')&&!count('refuge')){type='refuge';anchor=hero??ownBase;}
+      else if(!count('sanctuary')&&allies.some(u=>u.hp<u.maxHp*.65))type='sanctuary';
       else if(!count('well'))type='well';
+      else if(!count('sanctuary'))type='sanctuary';
       else if(hero&&(!refuge||distance(hero,refuge)>17)&&count('refuge')<4){type='refuge';anchor=hero;}
+      else if(hero&&(!healer||distance(hero,healer)>22)&&count('sanctuary')<3&&cash>160){type='sanctuary';anchor=refuge??hero;}
       else if(count('well')<Math.min(4,1+Math.floor(this.elapsed/180))&&cash>180)type='well';
       else if(count('tower')<Math.max(1,count('refuge'))&&cash>120){type='tower';anchor=refuge??ownBase;}
       else return;

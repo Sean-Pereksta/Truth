@@ -1,0 +1,30 @@
+/* Keep production roles, keyboard choices and assigned groups visible in battle. */
+.bottom-panel{height:120px;max-width:1040px;grid-template-columns:180px 190px minmax(0,1fr)}
+.production-grid{grid-template-columns:repeat(var(--production-count,4),minmax(0,1fr))}
+.production-card{min-height:80px;padding:5px 7px;gap:3px}
+.production-card .construction-key{top:4px;right:5px;min-width:19px;line-height:19px;font:700 12px/19px 'Courier New',monospace;background:#08121de8;border:1px solid #70899e;color:#fff;text-align:center;box-shadow:0 1px 3px #0009}
+.production-card strong{font-size:9px;white-space:normal;line-height:1.2}
+.production-card .production-role{font:7px/1.2 'Courier New',monospace;letter-spacing:.2px;color:#b2c8da;white-space:normal}
+.production-card .unit-art,.production-card .building-art{width:28px;height:28px;left:6px;top:2px}
+.production-tabs button[aria-selected=true]{color:var(--team);border-bottom-color:var(--team)}
+#production-note{color:#ccdeed;font:8px 'Courier New',monospace;white-space:nowrap}
+.selection-details{flex-wrap:wrap;margin-top:6px}
+.selection-top p{display:block;font-size:8px;line-height:1.35;max-height:32px;overflow:auto;color:#afc3d6;margin-top:4px}
+.selection-top{align-items:flex-start}
+.selection-top h2{font-size:12px}
+.map-tools{bottom:145px}.toast{bottom:215px}
+.control-groups{position:absolute;z-index:4;bottom:142px;left:50%;transform:translateX(-50%);width:min(422px,calc(100% - 220px));padding:6px 9px;background:#0b1522ed;border:1px solid #334b63;border-radius:5px;box-shadow:0 3px 12px #0005}
+.control-group-caption{display:flex;flex-wrap:wrap;justify-content:space-between;gap:3px;margin-bottom:5px;font:7px/1.3 'Courier New',monospace;color:#a7bfd1}
+.control-group-caption b{font-weight:400;letter-spacing:.6px;color:#dbe9f4}
+.control-group-buttons{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:5px}
+.control-group{display:flex;justify-content:space-around;align-items:center;gap:3px;height:26px;padding:2px 4px;border:1px solid #344b62;background:#112031;color:#718ca3;border-radius:3px}
+.control-group kbd{font:10px 'Courier New',monospace;background:transparent;border:0;padding:0;min-width:0;color:inherit}
+.control-group>span{font:9px 'Courier New',monospace;color:inherit}
+.control-group.assigned{border-color:#688395;color:#ddeaf5}.control-group.active{border-color:var(--team);background:#263a45;color:var(--team)}
+.control-group:hover{border-color:var(--team);color:var(--team)}
+.production-card[data-type=sanctuary] .building-art{background-position:33.3333% 0!important}
+.production-card[data-type=sanctuary] .building-art::after,#selection-portrait[data-type=sanctuary]::after{content:'✚';display:block;position:absolute;right:0;bottom:0;color:#a0ffe0;font:bold 20px/1 Arial,sans-serif;text-shadow:0 1px 3px #000,1px 0 3px #000;transform:none;background:none;border:0}
+#selection-portrait[data-type=sanctuary]{position:relative;background-position:33.3333% 0!important}
+@media(min-width:601px) and (max-width:1000px){.training-queue{top:96px}}
+@media(max-width:850px){.bottom-panel{grid-template-columns:140px 150px minmax(0,1fr);height:120px}.bottom-panel>section{padding:7px}.production-card{padding:5px;min-height:81px}.production-card strong{font-size:8px}.production-card .production-role{font-size:6px;letter-spacing:0}.production-card .construction-key{right:3px;top:3px;min-width:17px;font-size:11px;line-height:17px}.production-card .unit-art,.production-card .building-art{left:3px;width:24px;height:24px}.production-tabs{gap:8px}.selection-top p{font-size:7px;max-height:30px}#production-note{font-size:7px}.control-groups{bottom:138px;width:min(400px,calc(100% - 30px));left:12px;transform:none}.map-tools{bottom:144px;right:8px}}
+@media(max-width:600px){.bottom-panel{grid-template-columns:104px minmax(0,1fr);grid-template-rows:48px 97px;height:147px}.selection-panel{grid-column:1;grid-row:1/3}.orders-panel{grid-column:2;grid-row:1}.production-panel{grid-column:2;grid-row:2}.production-card{min-height:69px;padding:4px 3px;gap:2px}.production-card strong{font-size:7px}.production-card .production-role{font-size:5.5px}.production-card .construction-key{min-width:15px;line-height:15px;font-size:10px;top:1px;right:1px}.production-card .unit-art,.production-card .building-art{width:20px;height:20px;left:2px;top:1px}.production-card small{font-size:7px}.selection-top p{max-height:54px;font-size:7px}.selection-details{font-size:6px;line-height:1.5}.selection-top h2{font-size:10px}#production-note{font-size:6px}.production-tabs{gap:6px}.production-tabs button{font-size:7px}.control-groups{bottom:162px;left:6px;right:6px;width:auto;padding:5px 6px}.control-group-caption{font-size:6px}.control-group{height:25px}.control-group-buttons{gap:4px}.team-roster{bottom:224px}.toast{bottom:288px}.map-tools{bottom:250px}.map-tools .quiet{display:flex}.order-buttons kbd{display:block}.production-card[data-type=sanctuary] .building-art::after{font-size:14px}}
