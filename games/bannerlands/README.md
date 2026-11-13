@@ -2,6 +2,13 @@
 
 Command armies, conquer the grid, and unite the realm in an isometric real-time strategy game.
 
+The House Reinforcements update adds Stormbreakers with physical hammer knockback,
+Saltwind Axethrowers, Tollhouse Crossbows, forest-fast Crannog Spearhands, and
+long-reach Horn Hill Halberdiers. Martell replaces catapults with Sun Horse Archers
+while keeping Lance Champions. Every new troop has a dedicated training building
+and an eight-frame painted sprite sheet. Existing house weaknesses remain.
+See `docs/House-Reinforcements.txt` for recruitment, combat and control details.
+
 The Kings and Battlefields update adds cosmetic faction-colored casualties
 that fade over two minutes, plus three landscapes: Twin Lakes, Mountain Crown
 and Four Rivers. Defend the King pits four armies against each other with one

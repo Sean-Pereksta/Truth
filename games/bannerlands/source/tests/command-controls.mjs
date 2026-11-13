@@ -4,7 +4,7 @@ import vm from 'node:vm';
 import {Game,HOUSES,UNIT_DEFS,BUILD_DEFS} from '../../core.js';
 import {isPassableTile} from '../../lands.js';
 import {worldToScreen,screenToWorld} from '../../render.js';
-import {regimentForHouse,regimentBuildingForHouse} from '../../regiments.js';
+import {regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit} from '../../regiments.js';
 
 const source=fs.readFileSync(new URL('../../app.js',import.meta.url),'utf8');
 let cases=0;
@@ -43,7 +43,7 @@ function fixture({house=0,realMenu=false}={}){
   const element=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id);};
   const canvas=element('battleCanvas'),win=new Element('window'),ui={selected:new Set(),selectedBuildings:new Set(),formation:'line',buildMode:null,rallyMode:false,teamOrderMode:null,facingMode:false,facingPreview:null,drag:null,hover:null};
   element('resultOverlay').hidden=true;
-  const context={console,Math,Map,Set,String,Array,HOUSES,UNIT_DEFS,BUILD_DEFS,isPassableTile,worldToScreen,screenToWorld,regimentForHouse,regimentBuildingForHouse,game,canvas,window:win,
+  const context={console,Math,Map,Set,String,Array,HOUSES,UNIT_DEFS,BUILD_DEFS,isPassableTile,worldToScreen,screenToWorld,regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit,game,canvas,window:win,
     ui,view:{x:0,y:840,w:800,h:600,zoom:1},battleHud:{open(){},close(){},isOpen:false,touchSelect:false,syncSelection(){}},started:true,menuOpen:false,orderMode:'attack',tab:'army',allSelected:false,allBuildingsSelected:false,
     pointers:new Map(),keys:new Set(),groups:new Map(),gesture:null,pinch:null,edgeMouse:null,
     $:element,document:{body:{classList:{add(){},remove(){}}},createElement:()=>new Element(),querySelector:selector=>{if(realMenu)return selector?.startsWith('#')?element(selector.slice(1)):actions.get(selector)||null;if(!actions.has(selector))actions.set(selector,new Element(selector));return actions.get(selector);},querySelectorAll:selector=>selector==='[data-tab]'?tabs:[]},
@@ -73,7 +73,7 @@ function fixture({house=0,realMenu=false}={}){
         for(const attribute of match[1].matchAll(/([\w-]+)(?:="([^"]*)")?/g)){
           const [name,value]=[attribute[1],attribute[2]??''];button.setAttribute(name,value);if(name==='title')button.title=value;if(name.startsWith('data-'))button.dataset[name.slice(5).replace(/-([a-z])/g,(_,letter)=>letter.toUpperCase())]=value;
         }
-        for(const attribute of ['data-recruit','data-build','data-special-recruit','data-special-build','data-regiment-recruit','data-regiment-build'])if(button.attributes.has(attribute)){const value=button.getAttribute(attribute);actions.set(value?'['+attribute+'="'+value+'"]':'['+attribute+']',button);}
+        for(const attribute of ['data-recruit','data-build','data-special-recruit','data-special-build','data-regiment-recruit','data-regiment-build','data-horse-recruit','data-horse-build'])if(button.attributes.has(attribute)){const value=button.getAttribute(attribute);actions.set(value?'['+attribute+'="'+value+'"]':'['+attribute+']',button);}
         button.click=()=>{button.clicks++;element(id).dispatch('click',{target:{closest:()=>button}});};rows[kind].push(button);
       }
     }
@@ -176,12 +176,12 @@ test('Alt-type hotkeys and Ctrl command groups avoid menu and battle key conflic
 });
 
 test('All sixteen houses retain their original menus while eligible houses gain the sixth regiment and seventh building shortcuts',()=>{
-  const expectedRegiments={wolf:'shield_bearer',lion:'shield_bearer',dragon:'shield_bearer',rose:'shield_bearer',bear:'lance_champion',sun:'lance_champion',falcon:'lance_champion',flayed:'trebuchet',beacon:'trebuchet',bone:'giant',fish:'sharpshooter'};
+  const expectedRegiments={wolf:'shield_bearer',lion:'shield_bearer',dragon:'shield_bearer',rose:'shield_bearer',bear:'lance_champion',sun:'lance_champion',falcon:'lance_champion',flayed:'trebuchet',beacon:'trebuchet',bone:'giant',fish:'sharpshooter',stag:'stormbreaker',kraken:'saltwind_axethrower',bridge:'tollhouse_crossbow',frog:'crannog_spearhand',huntsman:'hornhill_halberdier'};
   for(let house=0;house<HOUSES.length;house++){
     const f=fixture({house,realMenu:true}),sigil=HOUSES[house].sigil,regiment=expectedRegiments[sigil]||null,building=regimentBuildingForHouse(sigil),original=f.game.houseContent(0);
     assert.equal(regimentForHouse(sigil),regiment);f.context.buildActionLists();const rows=f.refreshMenu();
-    assert.deepEqual(rows.recruit.map(button=>button.dataset.recruit),['infantry','archer','cavalry','siege',original.unit,...(regiment?[regiment]:[])]);
-    assert.deepEqual(rows.build.map(button=>button.dataset.build),['barracks','range','stables','tower','workshop',original.building,...(building?[building]:[])]);
+    assert.deepEqual(rows.recruit.map(button=>button.dataset.recruit),['infantry','archer','cavalry',sigil==='sun'?'sun_horse_archer':'siege',original.unit,...regimentsForHouse(sigil).filter(type=>type!=='sun_horse_archer')].filter(type=>houseCanRecruit(type,sigil)));
+    assert.deepEqual(rows.build.map(button=>button.dataset.build),['barracks','range','stables','tower',sigil==='sun'?'sunbow_corral':'workshop',original.building,...regimentBuildingsForHouse(sigil).filter(type=>type!=='sunbow_corral')].filter(type=>houseCanBuild(type,sigil)));
     assert.equal(rows.recruit.length,regiment?6:5);assert.equal(rows.build.length,regiment?7:6);
     assert.equal(rows.recruit[4].attributes.has('data-special-recruit'),true);assert.equal(rows.build[5].attributes.has('data-special-build'),true);
     assert.equal(rows.recruit[4].getAttribute('aria-keyshortcuts'),'Shift+5');assert.equal(rows.build[5].getAttribute('aria-keyshortcuts'),'Shift+H');
@@ -201,13 +201,13 @@ test('All sixteen houses retain their original menus while eligible houses gain 
 });
 
 await testAsync('Boot waits for regiment and conquest art, and failed new art keeps Start disabled',async()=>{
-  for(const failed of [null,'loadRegimentArt','loadRegimentBuildings','loadConquestArt']){
+  for(const failed of [null,'loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt']){
     const f=fixture({realMenu:true}),loads=[],errors=[],effects=[];
     f.context.console={warn(){},error:(...args)=>errors.push(args)};f.context.renderer={};
-    for(const method of ['loadTroops','loadStructures','loadCampaignArt','loadTerrain','loadHouseArt','loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadLandsArt','loadLandsGround'])f.context.renderer[method]=(...args)=>{loads.push({method,args});return method===failed?Promise.reject(new Error('Missing test artwork')):Promise.resolve();};
+    for(const method of ['loadTroops','loadStructures','loadCampaignArt','loadTerrain','loadHouseArt','loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadLandsArt','loadLandsGround'])f.context.renderer[method]=(...args)=>{loads.push({method,args});return method===failed?Promise.reject(new Error('Missing test artwork')):Promise.resolve();};
     for(const name of ['paintBuildingIcons','paintHousePreview','paintTownHall','fitMap','updateHud'])f.context[name]=()=>effects.push(name);
     f.context.frame=()=>{};f.context.requestAnimationFrame=()=>effects.push('frame');
-    for(const prefix of ['const HOUSE_ART_SOURCES=','const REGIMENT_ART_SOURCES=','const CONQUEST_ART_SOURCES=']){const line=source.split('\n').find(line=>line.startsWith(prefix));assert.ok(line);vm.runInContext(line,f.context);}
+    for(const prefix of ['const HOUSE_ART_SOURCES=','const REGIMENT_ART_SOURCES=','const CONQUEST_ART_SOURCES=','const REINFORCEMENT_ART_SOURCES=']){const line=source.split('\n').find(line=>line.startsWith(prefix));assert.ok(line);vm.runInContext(line,f.context);}
     vm.runInContext(extract('boot'),f.context);const boot=f.context.boot();assert.equal(f.element('startButton').disabled,true);assert.ok(f.element('startButton').innerHTML.includes('PREPARING'));
     await boot;
     const sheets=loads.find(load=>load.method==='loadRegimentArt')?.args[0];assert.ok(sheets);assert.deepEqual(Object.keys(sheets).sort(),['bear','dragon','falcon','lion','rose','sun','wolf']);assert.equal(new Set(Object.values(sheets)).size,7);

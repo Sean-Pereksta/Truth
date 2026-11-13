@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {Game,HOUSES,UNIT_DEFS,BUILD_DEFS} from '../../core.js';
-import {REGIMENT_UNITS,REGIMENT_BUILDINGS,CONQUEST_BUILDINGS,SHIELD_HOUSES,CHAMPION_HOUSES,CHAMPION_TRAINING_SECONDS,registerRegiments,regimentForHouse,regimentAllowed,regimentBuildingForHouse,regimentRequiredBuilding} from '../../regiments.js';
+import {REGIMENT_UNITS,REGIMENT_BUILDINGS,CONQUEST_BUILDINGS,FRONTIER_BUILDINGS,SHIELD_HOUSES,CHAMPION_HOUSES,CHAMPION_TRAINING_SECONDS,registerRegiments,regimentForHouse,regimentAllowed,regimentBuildingForHouse,regimentRequiredBuilding} from '../../regiments.js';
 
 let cases=0;
 const test=(name,fn)=>{fn();cases++;console.log('PASS '+name);};
@@ -20,7 +20,7 @@ test('Only the requested houses gain shield or lance regiments and existing spea
   assert.equal(UNIT_DEFS.shield_bearer.class,'infantry');assert.equal(UNIT_DEFS.lance_champion.class,'cavalry');
   assert.deepEqual(Object.keys(UNIT_DEFS).filter(type=>UNIT_DEFS[type].spearBrace).sort(),['bridge_warden','dread_pike']);
   for(const house of HOUSES){
-    const expected=SHIELD_HOUSES.includes(house.sigil)?'shield_bearer':CHAMPION_HOUSES.includes(house.sigil)?'lance_champion':CONQUEST_BUILDINGS[house.sigil]?.unit||null;
+    const expected=SHIELD_HOUSES.includes(house.sigil)?'shield_bearer':CHAMPION_HOUSES.includes(house.sigil)?'lance_champion':CONQUEST_BUILDINGS[house.sigil]?.unit||FRONTIER_BUILDINGS[house.sigil]?.unit||null;
     assert.equal(regimentForHouse(house.sigil),expected);
     const g=fixture(house.sigil);post(g,'barracks',0,10,20);post(g,'stables',0,10,25);
     for(const type of Object.keys(REGIMENT_UNITS))assert.equal(g.recruitDetails(type).unlocked,false,'Ordinary facilities must not unlock '+type);

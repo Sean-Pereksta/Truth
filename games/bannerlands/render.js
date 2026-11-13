@@ -7,6 +7,8 @@ const HOUSE_ART_ORDER=['wolf','lion','dragon','stag','rose','sun','kraken','falc
 const HOUSE_UNIT_CLASSES={wolf:'infantry',lion:'archer',dragon:'siege',stag:'cavalry',rose:'cavalry',sun:'archer',kraken:'infantry',falcon:'archer',flayed:'infantry',bridge:'infantry',bear:'infantry',fish:'archer',frog:'archer',beacon:'siege',huntsman:'archer',bone:'infantry'};
 const REGIMENT_ART_TYPES=['shield_bearer','lance_champion'];
 const REGIMENT_ART_HOUSES={wolf:'shield_bearer',lion:'shield_bearer',dragon:'shield_bearer',rose:'shield_bearer',bear:'lance_champion',sun:'lance_champion',falcon:'lance_champion'};
+const REINFORCEMENT_HOUSES={"stormbreaker": "stag", "saltwind_axethrower": "kraken", "tollhouse_crossbow": "bridge", "crannog_spearhand": "frog", "hornhill_halberdier": "huntsman", "sun_horse_archer": "sun"};
+const REINFORCEMENT_BUILDINGS=["stormbreaker_forge", "saltwind_lodge", "tollhouse_range", "crannog_spear_lodge", "hornhill_drill_hall", "sunbow_corral"];
 const CONQUEST_ART_HOUSES={trebuchet:['flayed','beacon'],giant:['bone'],sharpshooter:['fish']};
 const CONQUEST_ART_BUILDINGS=['dread_siege_yard','hightower_siege_yard','giant_camp','sharpshooter_lodge'];
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
@@ -207,7 +209,29 @@ export class Renderer{
     this.conquestTroopFrames=troops;this.conquestBuildingFrames=buildings;this.castleStateFrames=castles;this.conquestArtReady=true;this.sprites.clear();this.structureSprites.clear();this.cachedGame=null;
     return this.conquestArtInfo={troops:3,troopFrames:24,buildings:4,castleStates:4};
   }
+  async loadReinforcementArt(sources){
+    const entries=await Promise.all(Object.entries(sources).map(async([key,src])=>[key,await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('Reinforcement artwork could not load: '+key));im.src=src;})]));
+    return this.setReinforcementArt(Object.fromEntries(entries));
+  }
+  setReinforcementArt(images){
+    this.reinforcementArtReady=false;const troops={},buildings={};
+    const sizes={stormbreaker:[30,37],saltwind_axethrower:[27,34],tollhouse_crossbow:[28,35],crannog_spearhand:[30,35],hornhill_halberdier:[39,52],sun_horse_archer:[48,49]};
+    for(const [type,house]of Object.entries(REINFORCEMENT_HOUSES)){
+      if(!images[type])throw new Error('Missing reinforcement sheet: '+type);
+      const extracted=Array.from({length:8},(_,i)=>atlasCell(images[type],i%4,Math.floor(i/4),4,2,type+' frame '+i));
+      const scale=Math.min(sizes[type][0]/Math.max(...extracted.map(f=>f.width)),sizes[type][1]/Math.max(...extracted.map(f=>f.height))),frames=extracted.map(f=>compactAtlasFrame(f,scale*3));
+      troops[type]={frames,scale:1/3,width:Math.max(...frames.map(f=>f.width))/3,height:Math.max(...frames.map(f=>f.height))/3,house,reinforcement:true};
+    }
+    if(!images.buildings)throw new Error('Missing reinforcement buildings.');
+    for(const [i,type]of REINFORCEMENT_BUILDINGS.entries()){
+      const cell=atlasCell(images.buildings,i%3,Math.floor(i/3),3,2,type),scale=Math.min(97/cell.width,100/cell.height),frame=compactAtlasFrame(cell,scale*3);
+      buildings[type]={...frame,scale:1/3,drawWidth:frame.width/3,drawHeight:frame.height/3,house:BUILD_DEFS[type].house,reinforcement:true};
+    }
+    this.reinforcementTroopFrames=troops;this.reinforcementBuildingFrames=buildings;this.reinforcementArtReady=true;this.sprites.clear();this.structureSprites.clear();this.cachedGame=null;
+    return {troops:6,troopFrames:48,buildings:6};
+  }
   getStructureFrame(type,houseSigil=null,level=1){
+    if(REINFORCEMENT_BUILDINGS.includes(type))return this.reinforcementArtReady&&BUILD_DEFS[type]?.house===houseSigil?this.reinforcementBuildingFrames[type]:null;
     if(CONQUEST_ART_BUILDINGS.includes(type))return this.conquestArtReady&&BUILD_DEFS[type]?.house===houseSigil?this.conquestBuildingFrames[type]:null;
     if(type==='restored_castle')return this.conquestArtReady?this.castleStateFrames[1]:null;
     const definition=BUILD_DEFS[type];
@@ -217,6 +241,7 @@ export class Renderer{
     return this.structureFrames[type]||null;
   }
   getTroopFrame(type,houseSigil=null){
+    if(REINFORCEMENT_HOUSES[type])return this.reinforcementArtReady&&REINFORCEMENT_HOUSES[type]===houseSigil?this.reinforcementTroopFrames[type]:null;
     if(CONQUEST_ART_HOUSES[type])return this.conquestArtReady&&CONQUEST_ART_HOUSES[type].includes(houseSigil)?this.conquestTroopFrames[type]:null;
     if(REGIMENT_ART_TYPES.includes(type))return this.regimentArtReady?this.regimentTroopFrames[type]?.[houseSigil]||null:null;
     return this.troopFrames[type]||(houseSigil&&this.houseArtReady?this.houseTroopFrames[houseSigil]:null)||null;
@@ -478,8 +503,8 @@ export class Renderer{
     return this.terrainPropSprite(kind==='rock'?'rock':kind==='bush'?'oak':variant%3===0?'oak':'pine',variant);
   }
   soldierSprite(type,color,dark,dir,frame,attack=false,specialHouse=null){
-    if(!this.rasterSpritesReady&&!this.houseArtReady&&!this.regimentArtReady&&!this.conquestArtReady)return null;
-    const row=this.getTroopFrame(type,specialHouse)||((REGIMENT_ART_TYPES.includes(type)||CONQUEST_ART_HOUSES[type])?null:this.troopFrames[HOUSE_UNIT_CLASSES[specialHouse]]||this.troopFrames.infantry);if(!row)return null;const index=(attack?4:0)+clamp(Math.floor(frame),0,3);
+    if(!this.rasterSpritesReady&&!this.houseArtReady&&!this.regimentArtReady&&!this.conquestArtReady&&!this.reinforcementArtReady)return null;
+    const row=this.getTroopFrame(type,specialHouse)||((REGIMENT_ART_TYPES.includes(type)||CONQUEST_ART_HOUSES[type]||REINFORCEMENT_HOUSES[type])?null:this.troopFrames[HOUSE_UNIT_CLASSES[specialHouse]]||this.troopFrames.infantry);if(!row)return null;const index=(attack?4:0)+clamp(Math.floor(frame),0,3);
     const key=[type,row.house?'house:'+row.house:color,dir,index].join('|');if(this.sprites.has(key))return this.sprites.get(key);
     const f=row.frames[index],a=makeCanvas(128,144),c=a.getContext('2d',{willReadFrequently:true});
     c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';c.save();c.scale(2,2);c.translate(32,64);c.scale(dir,1);
@@ -675,8 +700,8 @@ export class Renderer{
     c.restore();
   }
   unit(c,u,g,ui,zoom){
-    if(!this.rasterSpritesReady&&!this.houseArtReady&&!this.regimentArtReady&&!this.conquestArtReady)return;
-    const p=iso(u.x,u.y),team=g.teams[u.team];if(!team)return;const specialHouse=REGIMENT_ART_TYPES.includes(u.type)||CONQUEST_ART_HOUSES[u.type]||g.houseContent?.(u.team)?.unit===u.type?team.sigil:null,unitClass=g.unitClass?.(u)||HOUSE_UNIT_CLASSES[specialHouse]||u.type,vx=Number.isFinite(u.motionVX)?u.motionVX:(u.vx||0),vy=Number.isFinite(u.motionVY)?u.motionVY:(u.vy||0),selected=ui.selected?.has(u.id),moving=Math.hypot(vx,vy)>.07;
+    if(!this.rasterSpritesReady&&!this.houseArtReady&&!this.regimentArtReady&&!this.conquestArtReady&&!this.reinforcementArtReady)return;
+    const p=iso(u.x,u.y),team=g.teams[u.team];if(!team)return;const specialHouse=REGIMENT_ART_TYPES.includes(u.type)||CONQUEST_ART_HOUSES[u.type]||REINFORCEMENT_HOUSES[u.type]||g.houseContent?.(u.team)?.unit===u.type?team.sigil:null,unitClass=g.unitClass?.(u)||HOUSE_UNIT_CLASSES[specialHouse]||u.type,vx=Number.isFinite(u.motionVX)?u.motionVX:(u.vx||0),vy=Number.isFinite(u.motionVY)?u.motionVY:(u.vy||0),selected=ui.selected?.has(u.id),moving=Math.hypot(vx,vy)>.07;
     if(g.mode?.teams&&zoom>.32){const color=team.teamColor||team.color;c.save();c.globalAlpha=.55;ellipse(c,p.x,p.y+2,unitClass==='cavalry'?8:5,unitClass==='cavalry'?3.3:2.2,color);c.globalAlpha=.95;polygon(c,[[p.x-2,p.y+2],[p.x,p.y+4],[p.x+2,p.y+2],[p.x,p.y]],team.color);c.restore();}
     if(u.elite){c.save();c.beginPath();c.ellipse(p.x,p.y+1,unitClass==='cavalry'?11:8,unitClass==='cavalry'?5:3.8,0,0,TAU);c.strokeStyle='#f4d785';c.lineWidth=1.4;c.stroke();if(zoom>.45){polygon(c,[[p.x,p.y-37],[p.x+2,p.y-33],[p.x+6,p.y-32],[p.x+2,p.y-30],[p.x,p.y-26],[p.x-2,p.y-30],[p.x-6,p.y-32],[p.x-2,p.y-33]],'#ffe7a0','#7f6b3f');}c.restore();}
     if(unitClass==='cavalry'&&u.charging&&moving&&zoom>.35){
@@ -714,7 +739,7 @@ export class Renderer{
       if((u.specialGuardUntil||0)>g.time){c.beginPath();c.ellipse(p.x,p.y,10,4.4,0,0,TAU);c.strokeStyle='#b6dbe5';c.lineWidth=1;c.stroke();}
       if((u.berserkUntil||0)>g.time||u.type==='freefolk_berserker'&&u.hp<u.maxHp*.4){line(c,p.x-7,p.y-9,p.x-5,p.y-18,'#ef9a69',1.2);line(c,p.x+6,p.y-8,p.x+8,p.y-17,'#ef9a69',1.2);}
     }
-    if(attack&&unitClass!=='archer'&&unitClass!=='siege'&&u.attackAnim>.64){const a=(1-u.attackAnim)*5;c.beginPath();c.arc(p.x+facing*9,p.y-12,12,-1.7+a,-.4+a);c.strokeStyle=`rgba(248,226,156,${u.attackAnim*.7})`;c.lineWidth=1.4;c.stroke();}
+    if(attack&&!UNIT_DEFS[u.type].ranged&&unitClass!=='archer'&&unitClass!=='siege'&&u.attackAnim>.64){const a=(1-u.attackAnim)*5;c.beginPath();c.arc(p.x+facing*9,p.y-12,12,-1.7+a,-.4+a);c.strokeStyle=`rgba(248,226,156,${u.attackAnim*.7})`;c.lineWidth=1.4;c.stroke();}
     if((selected||u.isKing||u.hp<u.maxHp*.7)&&zoom>.57){const w=u.isKing?28:u.type==='hero'?19:12;c.fillStyle='#15302f';c.fillRect(p.x-w/2,p.y-29-(unitClass==='cavalry'?9:0),w,u.isKing?3:2);c.fillStyle=u.isKing?'#e8c870':(g.allied?.(u.team,0)??u.team===0)?'#b9d9a1':'#d4a18a';c.fillRect(p.x-w/2,p.y-29-(unitClass==='cavalry'?9:0),w*clamp(u.hp/u.maxHp,0,1),u.isKing?3:2);}
     if(u.isKing){c.save();c.lineWidth=1.6;c.strokeStyle='#f0d78b';c.beginPath();c.ellipse(p.x,p.y+1,14,6,0,0,TAU);c.stroke();
       polygon(c,[[p.x-6,p.y-42],[p.x-7,p.y-49],[p.x-3,p.y-46],[p.x,p.y-51],[p.x+3,p.y-46],[p.x+7,p.y-49],[p.x+6,p.y-42]],'#f3d77d','#6a5633');
@@ -742,6 +767,7 @@ export class Renderer{
       if(piercing){line(c,-15,0,7,0,'#d4c7a6',2);polygon(c,[[8,0],[2,-3],[2,3]],'#eef1d5');line(c,-15,0,-19,-3,'#99b8bc',1.5);}
       else if(firepot){ellipse(c,0,0,4,3.5,'#bd653a');ellipse(c,1,-2,2.5,3,'#ffce67');line(c,-8,0,-2,0,'#ed9c50',2);}
       else if(javelin){line(c,-12,0,5,0,'#bc9669',1.5);polygon(c,[[7,0],[2,-2],[2,2]],'#eee6c6');}
+      else if(b.type==='axe'){c.rotate(progress*TAU*3);line(c,-6,0,5,0,'#ab7c4f',2);polygon(c,[[3,-5],[8,-3],[8,3],[3,5],[4,0]],'#d9e0d4','#657477');}
       else if(b.type==='rock'){ellipse(c,0,0,4,3.3,'#b9aa86');ellipse(c,1,-1,2,1.5,'#e5cb8c');c.fillStyle='rgba(241,174,67,.5)';c.fillRect(-9,-1,8,2);}
       else{line(c,-7,0,3,0,'#dddcc0',1.1);polygon(c,[[3,0],[-.5,-2],[-.5,2]],'#f5f0d0');line(c,-7,0,-9,-2,'#a9b7a5',1);}
       c.restore();
@@ -774,6 +800,11 @@ export class Renderer{
         else if(f.kind==='loot'){for(let k=0;k<3;k++)ellipse(c,(k-1)*5,-8-r*15-k*2,2,2.8,color);}
         else if(f.kind==='poison'){ellipse(c,-3,-9-r*12,2,3,color);ellipse(c,4,-5-r*9,1.5,2.5,color);}
         else{c.beginPath();c.ellipse(0,1,6+r*12,3+r*5,0,0,TAU);c.strokeStyle=color;c.lineWidth=1.6*(1-r)+.4;c.stroke();line(c,-4,-8-r*6,0,-14-r*6,color,1.3);line(c,0,-14-r*6,4,-8-r*6,color,1.3);}
+      }else if(f.type==='hammerImpact'){
+        const heading=iso(f.dx||1,f.dy||0);c.rotate(Math.atan2(heading.y,heading.x));
+        c.beginPath();c.ellipse(0,0,7+r*25,4+r*13,0,0,TAU);c.strokeStyle='#f1cb72';c.lineWidth=3*(1-r)+.5;c.stroke();
+        for(let k=0;k<(lowDetail?4:8);k++){const angle=k*2.399963,travel=5+r*(16+k%3*4),x=Math.cos(angle)*travel,y=Math.sin(angle)*travel*.6;ellipse(c,x,y,1.8+r*2,1+r*1.5,k%2?'#b7a989':'#e0c999');line(c,x*.5,y*.5-4,x,y-6,'#fff0b6',1.8*(1-r));}
+        line(c,-5-r*12,-2,8+r*16,-2,'#ffe7a0',2.5*(1-r));
       }else if(f.type==='braceImpact'){
         c.globalAlpha=(1-r)*.9;const size=9+r*20;line(c,-size,-size*.6,size,size*.6,'#f2b190',2.4);line(c,-size,size*.6,size,-size*.6,'#dce6d6',2.4);c.beginPath();c.ellipse(0,0,8+r*25,4+r*12,0,0,TAU);c.strokeStyle='#edb18e';c.lineWidth=2*(1-r)+.5;c.stroke();
       }else if(f.type==='chargeImpact'){

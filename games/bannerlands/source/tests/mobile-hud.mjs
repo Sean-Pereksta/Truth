@@ -13,7 +13,7 @@ catch(error){
   if(!process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES)throw error;
   ({chromium}=require(path.join(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES,'playwright')));
 }
-const root=fileURLToPath(new URL('../..',import.meta.url));
+const root=path.resolve(fileURLToPath(new URL('../..',import.meta.url)));
 const mime={'.html':'text/html','.css':'text/css','.js':'text/javascript','.png':'image/png','.svg':'image/svg+xml'};
 const server=http.createServer((req,res)=>{
   const url=new URL(req.url,'http://localhost');

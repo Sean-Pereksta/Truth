@@ -57,5 +57,5 @@ export class CombatTerrain {
     return false;
   }
   hillRange(source,kind){return kind==='archer'&&this.game.tileAt(source.x,source.y)?.terrain==='hill'?.6:0;}
-  coverMultiplier(target,projectileType){return (projectileType==='arrow'||projectileType==='bolt')&&this.game.tileAt(target.x,target.y)?.terrain==='forest'?.75:1;}
+  coverMultiplier(target,projectileType){return (projectileType==='arrow'||projectileType==='bolt'||projectileType==='axe')&&this.game.tileAt(target.x,target.y)?.terrain==='forest'?.75:1;}
 }
