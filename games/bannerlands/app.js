@@ -18,7 +18,7 @@ const HOUSE_ART_SOURCES={troops:Object.fromEntries(HOUSES.map(h=>[h.sigil,`asset
 const REGIMENT_ART_SOURCES={wolf:'assets/regiments/wolf-shield-bearer.png',lion:'assets/regiments/lion-shield-bearer.png',dragon:'assets/regiments/dragon-shield-bearer.png',rose:'assets/regiments/rose-shield-bearer.png',bear:'assets/regiments/bear-lance-champion.png',sun:'assets/regiments/sun-lance-champion.png',falcon:'assets/regiments/falcon-lance-champion.png'};
 const REINFORCEMENT_ART_SOURCES={"stormbreaker": "assets/reinforcements/stormbreaker.png", "saltwind_axethrower": "assets/reinforcements/saltwind_axethrower.png", "tollhouse_crossbow": "assets/reinforcements/tollhouse_crossbow.png", "crannog_spearhand": "assets/reinforcements/crannog_spearhand.png", "hornhill_halberdier": "assets/reinforcements/hornhill_halberdier.png", "sun_horse_archer": "assets/reinforcements/sun_horse_archer.png", "buildings": "assets/reinforcements/buildings.png"};
 const CONQUEST_ART_SOURCES={castles:'assets/conquest/castles.png',trebuchet:'assets/conquest/trebuchet.png',giant:'assets/conquest/giant.png',sharpshooter:'assets/conquest/sharpshooter.png',buildings:'assets/conquest/buildings.png'};
-const MENU_TAB_KEYS={u:'army',b:'build',c:'council'};
+const MENU_TAB_KEYS={u:'army',b:'build',c:'council',o:'orders',m:'map'};
 const BUILD_HOTKEYS={b:'[data-build="barracks"]',a:'[data-build="range"]',s:'[data-build="stables"]',t:'[data-build="tower"]',w:'[data-build="workshop"]',h:'[data-special-build]',j:'[data-regiment-build]',k:'[data-horse-build]'};
 const TYPE_HOTKEYS={i:'infantry',s:'spears',a:'archer',c:'cavalry',g:'siege',h:'hero',b:'shield_bearer',l:'lance_champion'};
 const MENU_ACTIONS={
@@ -179,7 +179,7 @@ function handleMenuHotkey(e){
  const letter=e.key.toLowerCase();
  if(e.shiftKey&&BUILD_HOTKEYS[letter]){e.preventDefault();showTab('build');activateMenuAction(BUILD_HOTKEYS[letter]);return true;}
  const name=MENU_TAB_KEYS[letter];
- if(name){e.preventDefault();showTab(name);updateHud();return true;}
+ if(name){e.preventDefault();if(MENU_ACTIONS[name])showTab(name);else{cancelBuild();battleHud.open(name);}updateHud();return true;}
  const digit=/^(?:Digit|Numpad)([1-6])$/.exec(e.code)?.[1];
  if(!e.shiftKey||!digit)return false;
  e.preventDefault();if(tab==='build'){toast('Build with Shift + B / A / S / T / W / H / J.');return true;}
@@ -372,7 +372,7 @@ canvas.addEventListener('pointerup',e=>finishPointer(e));canvas.addEventListener
 canvas.addEventListener('dblclick',e=>{if(!started||menuOpen||ui.buildMode||ui.rallyMode||ui.teamOrderMode||ui.facingMode)return;const p=pointerPos(e);if(buildingAt(p))return;let target=null,best=28;for(const u of game.units){if(u.team!==0||u.hp<=0)continue;const s=worldToScreen(u.x,u.y,view),d=Math.hypot(s.x-p.x,s.y-10*view.zoom-p.y);if(d<best){target=u;best=d;}}if(target){clearBuildingSelection();allSelected=false;ui.selected=new Set(game.units.filter(u=>u.team===0&&u.hp>0&&u.type===target.type).map(u=>u.id));updateHud();}});
 
 let miniDragging=false;function navigateMini(e){const m=renderer.minimapTransform;if(!m)return;const r=$('minimap').getBoundingClientRect();view.x=((e.clientX-r.left)-m.ox)/m.scale;view.y=((e.clientY-r.top)-m.oy)/m.scale;boundCamera();}
-$('minimap').addEventListener('pointerdown',e=>{e.preventDefault();miniDragging=true;$('minimap').setPointerCapture(e.pointerId);navigateMini(e);});$('minimap').addEventListener('pointermove',e=>{if(miniDragging)navigateMini(e);});$('minimap').addEventListener('pointerup',()=>{miniDragging=false;battleHud.close();});$('minimap').addEventListener('pointercancel',()=>miniDragging=false);
+$('minimap').addEventListener('pointerdown',e=>{e.preventDefault();miniDragging=true;$('minimap').setPointerCapture(e.pointerId);navigateMini(e);});$('minimap').addEventListener('pointermove',e=>{if(miniDragging)navigateMini(e);});$('minimap').addEventListener('pointerup',()=>{miniDragging=false;});$('minimap').addEventListener('pointercancel',()=>miniDragging=false);
 window.addEventListener('keydown',e=>{
  if(e.defaultPrevented||e.isComposing||/INPUT|SELECT|TEXTAREA/.test(e.target?.tagName||'')||e.target?.isContentEditable||e.target?.closest?.('[contenteditable="true"],[contenteditable=""],[role="textbox"]')||$('helpDialog').open||$('housesDialog').open)return;
  if(e.key==='Escape'){if(battleHud.isOpen){e.preventDefault();battleHud.close(true);return;}if(ui.buildMode||ui.rallyMode||ui.teamOrderMode||ui.facingMode||gesture?.facing){cancelBuild();gesture=null;updateHud();return;}if(started){if(menuOpen)resume();else{ui.selected.clear();clearBuildingSelection();allSelected=false;updateHud();}}return;}
@@ -525,7 +525,7 @@ function frame(now){
  const menuView=renderer.menuView;
  if(!menuOpen||!menuView||menuView.game!==game||menuView.x!==view.x||menuView.y!==view.y||menuView.zoom!==view.zoom||menuView.w!==view.w||menuView.h!==view.h||menuView.dpr!==view.dpr){renderer.draw(game,view,ui);renderer.menuView=menuOpen?{...view,game}:null;}
  if(now-lastHud>220){updateHud();$('zoomLabel').textContent=Math.round(view.zoom*100)+'%';$('performance').textContent=Math.round(Math.min(240,fps))+' FPS';lastHud=now;}
- if(!menuOpen&&now-lastMini>150&&!$('commandPanel').hidden&&$('commandPanel').dataset.pane==='map'){renderer.drawMinimap(game,$('minimap'),view);lastMini=now;}
+ if(started&&!menuOpen&&now-lastMini>150){renderer.drawMinimap(game,$('minimap'),view);lastMini=now;}
  if(toastUntil&&now>toastUntil){$('toast').classList.remove('visible');toastUntil=0;}
  requestAnimationFrame(frame);
 }

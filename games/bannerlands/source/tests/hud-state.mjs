@@ -27,6 +27,7 @@ test('HUD starts closed and each drawer exposes only its own controls',()=>{
  const f=fixture();assert.equal(f.hud.isOpen,false);assert.equal(f.element('commandPanel').hidden,true);assert.ok(f.panes.every(p=>p.hidden));
  for(const button of f.dock){
   button.click();assert.equal(f.hud.isOpen,true);assert.equal(f.element('commandPanel').dataset.pane,button.dataset.drawer);
+  const key={build:'B',army:'U',orders:'O',map:'M',council:'C'}[button.dataset.drawer];assert.ok(f.element('drawerTitle').textContent.includes('('+key+')'),'The selected panel title shows its opening key.');
   assert.ok(f.panes.every(p=>p.hidden===(p.dataset.hudPane!==button.dataset.drawer)));
   assert.equal(f.dock.filter(b=>b.getAttribute('aria-expanded')==='true').length,1);
   assert.equal(f.element('closeDrawer').focused,f.navigation.length);
@@ -47,9 +48,9 @@ test('More subpanels retain their navigation and restore focus to More when dism
 
 test('Selection state distinguishes rally controls and disappears when nothing is selected',()=>{
  const f=fixture();f.hud.syncSelection('building',1);
- assert.equal(f.body.dataset.hasSelection,'true');assert.equal(f.body.dataset.selectionKind,'building');assert.equal(f.element('selectionCommands').textContent,'Rally / upgrade');
+ assert.equal(f.body.dataset.hasSelection,'true');assert.equal(f.body.dataset.selectionKind,'building');assert.equal(f.element('selectionCommands').textContent,'Rally / upgrade (O)');
  f.hud.open('orders');f.hud.syncSelection('army',40);
- assert.equal(f.element('selectionCommands').textContent,'Commands');assert.equal(f.element('selectionCommands').getAttribute('aria-expanded'),'true');
+ assert.equal(f.element('selectionCommands').textContent,'Commands (O)');assert.equal(f.element('selectionCommands').getAttribute('aria-expanded'),'true');
  f.hud.close();f.hud.syncSelection('army',0);assert.equal(f.body.dataset.hasSelection,'false');assert.equal(f.element('selectionCommands').getAttribute('aria-expanded'),'false');
 });
 

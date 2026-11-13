@@ -2,6 +2,11 @@
 
 Command armies, conquer the grid, and unite the realm in an isometric real-time strategy game.
 
+The minimap is always visible in the battlefield corner. Command panels open
+above it, and minimap navigation preserves the current panel. Buttons and
+selected panel titles show opening shortcuts: Build (B), Muster (U), Orders (O),
+Map (M), and More/Council (C). The map refreshes at a bounded six times per second.
+
 The Battlefield Visuals update adds contact-timed attacks and reloads, blended
 terrain transitions, small floating house-selection crests, and painted bridge
 sidewalls. Cached scenery, lighter distant effects, and fewer repeated army

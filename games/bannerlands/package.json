@@ -11,6 +11,7 @@
     "benchmark:render": "node source/tests/render-performance.mjs",
     "test:mobile": "node source/tests/mobile-hud.mjs",
     "test:reinforcement-browser": "node source/tests/reinforcement-browser.mjs",
-    "test:visual-performance": "node source/tests/visual-performance-browser.mjs"
+    "test:visual-performance": "node source/tests/visual-performance-browser.mjs",
+    "test:minimap": "node source/tests/persistent-minimap.mjs"
   }
 }

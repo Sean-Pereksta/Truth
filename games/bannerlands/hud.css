@@ -380,3 +380,111 @@ body.placing #selectionDock { display: none; }
 #commandPanel .land-resource { display: flex; border: 0; padding: 0; margin-bottom: 14px; }
 #commandPanel .land-resource b { font-size: 18px; }
 #commandPanel .land-resource small { font-size: 10px; }
+
+/* A persistent corner map remains usable while the command drawer is open. */
+:root {
+  --mini-width: 236px;
+  --mini-height: 140px;
+  --mini-total-height: calc(var(--mini-height) + 32px);
+  --mini-bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+  --panel-above-map: calc(var(--mini-bottom) + var(--mini-total-height) + 8px);
+}
+#minimapDock {
+  position: absolute;
+  z-index: 20;
+  right: calc(var(--hud-edge) + env(safe-area-inset-right, 0px));
+  bottom: var(--mini-bottom);
+  width: var(--mini-width);
+  height: var(--mini-total-height);
+  padding: 6px;
+  overflow: hidden;
+  border: 1px solid var(--hud-border);
+  border-radius: 8px;
+  background: var(--hud-surface);
+  box-shadow: 0 3px 18px #0005;
+  pointer-events: auto;
+}
+#minimapDock[hidden] { display: none !important; }
+#minimapDock .minimap-section { padding: 0; border: 0; margin: 0; background: none; }
+#minimapDock .section-label {
+  display: flex;
+  align-items: flex-start;
+  height: 18px;
+  min-height: 18px;
+  margin: 0;
+  padding: 0 1px 4px;
+  color: #c8d0ba;
+  font: 600 10px/14px 'Segoe UI', Arial, sans-serif;
+  letter-spacing: .5px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+#minimapDock .section-label > span,
+#minimapDock .terrain-legend,
+#minimapDock .mini-footer { display: none; }
+#minimapDock #minimap {
+  display: block;
+  width: 100%;
+  height: var(--mini-height);
+  max-height: none;
+  border: 1px solid #58674e;
+  border-radius: 3px;
+  background: #0b1a20;
+  cursor: crosshair;
+  touch-action: none;
+}
+#commandPanel { bottom: var(--panel-above-map); }
+#gameplayDock { width: min(420px, calc(100% - 16px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px))); }
+#gameplayDock button { padding: 4px 2px; }
+#gameplayDock button > span { white-space: nowrap; }
+
+@media (orientation: portrait) {
+  :root { --portrait-panel-ceiling: calc(64px + env(safe-area-inset-top, 0px)); }
+  #commandPanel {
+    bottom: var(--panel-above-map);
+    max-height: min(52dvh, calc(100dvh - var(--panel-above-map) - var(--portrait-panel-ceiling)));
+  }
+  #selectionDock {
+    left: calc(var(--hud-edge) + env(safe-area-inset-left, 0px));
+    right: calc(var(--hud-edge) + env(safe-area-inset-right, 0px));
+    top: calc(116px + env(safe-area-inset-top, 0px));
+    bottom: auto;
+    transform: none;
+    width: auto;
+    max-width: 550px;
+  }
+  body[data-has-selection="true"] { --portrait-panel-ceiling: calc(176px + env(safe-area-inset-top, 0px)); }
+  body:has(#commandPanel:not([hidden]))[data-has-selection="true"] #selectionDock { display: flex; }
+}
+
+@media (max-width: 700px) and (orientation: portrait) {
+  :root { --mini-width: 154px; --mini-height: 102px; }
+}
+
+@media (max-width: 1100px) and (orientation: landscape) {
+  #selectionDock { left: calc(var(--hud-edge) + env(safe-area-inset-left, 0px)); right: auto; transform: none; width: min(550px, calc(100% - var(--mini-width) - 32px)); }
+}
+
+@media (max-width: 360px) and (orientation: portrait) {
+  :root { --mini-width: 132px; --mini-height: 88px; }
+  #gameplayDock button { font-size: 9.5px; letter-spacing: -.1px; }
+  #gameplayDock button svg { width: 19px; height: 19px; }
+}
+
+@media (max-height: 480px) and (orientation: landscape) {
+  :root { --mini-width: 174px; --mini-height: 82px; }
+  #commandPanel { top: calc(8px + env(safe-area-inset-top, 0px)); bottom: var(--panel-above-map); }
+  #selectionDock {
+    left: calc(var(--hud-edge) + env(safe-area-inset-left, 0px));
+    right: auto;
+    top: auto;
+    bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+    width: min(450px, calc(100% - var(--mini-width) - 32px));
+    transform: none;
+  }
+  #minimapDock .section-label { font-size: 9px; }
+}
+
+@media (max-width: 700px) and (orientation: landscape) {
+  #gameplayDock { width: calc(100% - 128px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)); }
+}
