@@ -80,9 +80,27 @@ clear On/Off choices and visible guidance.
 
 The playable web entry is `index.html`. The current editable JavaScript, CSS, and artwork are beside it. Serve this folder over HTTP; opening the split-module entry directly with `file://` is unsupported.
 
+The battlefield fills the screen. A compact resource strip and five controls
+open Construction, Muster, Orders, Map and More without reserving sidebar space.
+More contains Council, realm objectives and settings. Portrait screens use a
+scrollable bottom sheet; landscape screens use an on-demand side drawer.
+Tap the same dock button, the close button or empty battlefield to dismiss it.
+The first battlefield tap dismisses a panel without issuing an army order.
+
+On touch, drag to pan and pinch to zoom. Tap a soldier and then a destination;
+switch to **Drag: Select** for box selection. Construction and rally targeting
+always keep drag-to-pan available. Choosing a building closes the drawer; tap
+your land to place it, enable **Repeat** for multiple structures, or Cancel.
+Selected buildings expose rally points and tower upgrades through their small
+context strip. In Orders, **Assign selected troops** followed by a numbered slot
+saves a command group; tapping a saved slot recalls it. Move & face accepts a
+touch drag from the destination toward the intended front. Desktop shortcuts
+and right-drag orders remain available.
+
 - Local preview: `npm start` (http://127.0.0.1:4173).
 - Syntax checks: `npm run check`.
 - Gameplay regression checks: `npm test`.
+- Optional mobile browser checks: `npm run test:mobile` with Playwright and Chromium available.
 - Repeatable large-army simulation benchmark: `npm run benchmark`.
 - Optional native graphics checks: `npm run test:render` and `npm run benchmark:render`
   with `@napi-rs/canvas` installed or `LANDS_CANVAS_MODULE` pointing to it.

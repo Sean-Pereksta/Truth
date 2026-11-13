@@ -2,6 +2,7 @@ import {Game,HOUSES,UNIT_DEFS,BUILD_DEFS,HOUSE_CONTENT} from './core.js';
 import {Renderer,worldToScreen,screenToWorld} from './render.js';
 import {LAND_MAPS,isPassableTile,tileTravelCost} from './lands.js';
 import {regimentForHouse,regimentBuildingForHouse} from './regiments.js';
+import {createBattleHud} from './hud.js';
 
 const $=id=>document.getElementById(id),canvas=$('battleCanvas'),field=$('battlefield');
 const hudMarkup=new WeakMap();
@@ -24,6 +25,8 @@ const MENU_ACTIONS={
  build:['[data-build="barracks"]','[data-build="range"]','[data-build="stables"]','[data-build="tower"]','[data-build="workshop"]','[data-special-build]','[data-regiment-build]'],
  council:['#housePowerButton','[data-upgrade="weapons"]','[data-upgrade="armor"]','[data-upgrade="economy"]','#compareHousesCouncilButton','#townHallUpgradeButton']
 };
+let assigningGroup=false;
+const battleHud=createBattleHud({navigate:name=>{assigningGroup=false;$('assignGroupButton').setAttribute('aria-pressed','false');if(MENU_ACTIONS[name])showTab(name);else{cancelBuild();battleHud.open(name);if(name==='map')renderer.drawMinimap(game,$('minimap'),view);}},onClose:()=>{assigningGroup=false;$('assignGroupButton').setAttribute('aria-pressed','false');}});
 const icon=name=>`<svg aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const houseEmblem=index=>`<span class="sigil house-sigil-art" aria-hidden="true" style="background-position:${index%4*100/3}% ${Math.floor(index/4)*100/3}%"></span>`;
 const short=name=>name.replace('House ','');
@@ -160,7 +163,7 @@ function paintHousePreview(){
  paintTroopPortrait($('chosenTroopArt'),content.unit,house);paintStructurePortrait($('chosenProductionArt'),content.building,house);paintStructurePortrait($('chosenCastleArt'),'keep',house);
 }
 buildActionLists();
-function showTab(name){if(!MENU_ACTIONS[name])return;cancelBuild();tab=name;document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.tab===name);b.setAttribute('aria-selected',String(b.dataset.tab===name));});['army','build','council'].forEach(n=>$(n+'Tab').hidden=n!==name);$('menuShortcutHint').textContent=name==='build'?'Shift + B / A / S / T / W / H / J: buildings':`Shift+1–${name==='army'&&!regimentForHouse(game.teams[0].sigil)?5:MENU_ACTIONS[name].length}: ${name==='army'?'recruit companies':'Council actions'} · ⇧ means Shift`;$('panelTabs').scrollIntoView({block:'nearest'});}
+function showTab(name){if(!MENU_ACTIONS[name])return;cancelBuild();tab=name;document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.tab===name);b.setAttribute('aria-selected',String(b.dataset.tab===name));});['army','build','council'].forEach(n=>$(n+'Tab').hidden=n!==name);$('menuShortcutHint').textContent=name==='build'?'Shift + B / A / S / T / W / H / J: buildings':`Shift+1–${name==='army'&&!regimentForHouse(game.teams[0].sigil)?5:MENU_ACTIONS[name].length}: ${name==='army'?'recruit companies':'Council actions'} · ⇧ means Shift`;battleHud.open(name);}
 function activateMenuAction(selector){
  updateHud();const button=selector?document.querySelector(selector):null;
  if(!button)toast('No item is assigned to that shortcut.');
@@ -181,13 +184,13 @@ function handleMenuHotkey(e){
 }
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 $('recruitList').addEventListener('click',e=>{const b=e.target.closest('[data-recruit]');if(!b||b.disabled||!started||menuOpen)return;const r=game.recruit(b.dataset.recruit);toast(r.message,!r.ok);if(r.ok)tone(360);updateHud();});
-$('buildList').addEventListener('click',e=>{const b=e.target.closest('[data-build]');if(!b||b.disabled||!started||menuOpen)return;cancelBuild();ui.buildMode=b.dataset.build;$('buildBanner').hidden=false;document.body.classList.add('placing');toast(`Place ${BUILD_DEFS[ui.buildMode].label.toLowerCase()} on your land.`);});
+$('buildList').addEventListener('click',e=>{const b=e.target.closest('[data-build]');if(!b||b.disabled||!started||menuOpen)return;cancelBuild();ui.buildMode=b.dataset.build;$('buildBanner').firstChild.textContent=`Place ${BUILD_DEFS[ui.buildMode].label} on your land `;$('repeatBuild').checked=false;$('repeatBuildLabel').hidden=false;battleHud.close();$('buildBanner').hidden=false;document.body.classList.add('placing');toast(`Place ${BUILD_DEFS[ui.buildMode].label.toLowerCase()} on your land.`);});
 $('upgradeList').addEventListener('click',e=>{const b=e.target.closest('[data-upgrade]');if(!b||b.disabled||!started||menuOpen)return;const r=game.upgrade(b.dataset.upgrade);toast(r.message,!r.ok);if(r.ok)tone(480);updateHud();});
-function cancelBuild(){ui.buildMode=null;ui.rallyMode=false;ui.teamOrderMode=null;ui.facingMode=false;ui.facingPreview=null;$('buildBanner').hidden=true;$('buildBanner').firstChild.textContent='Choose a clear tile in your territory ';document.body.classList.remove('placing');}
+function cancelBuild(){ui.buildMode=null;ui.rallyMode=false;ui.teamOrderMode=null;ui.facingMode=false;ui.facingPreview=null;$('buildBanner').hidden=true;$('buildBanner').firstChild.textContent='Choose a clear tile in your territory ';document.body.classList.remove('placing');$('repeatBuildLabel').hidden=true;}
 $('cancelBuild').onclick=()=>{cancelBuild();updateHud();};
 function beginTeamOrder(kind){
  if(!started||menuOpen||game.winner!==null||!game.teams[0].alive)return;
- cancelBuild();ui.teamOrderMode=kind;$('buildBanner').firstChild.textContent=kind==='assault'?'Click a target for your allied assault ':'Click a position for allied defense ';$('buildBanner').hidden=false;document.body.classList.add('placing');canvas.focus();updateHud();
+ cancelBuild();ui.teamOrderMode=kind;battleHud.close();$('buildBanner').firstChild.textContent=kind==='assault'?'Click a target for your allied assault ':'Click a position for allied defense ';$('buildBanner').hidden=false;document.body.classList.add('placing');canvas.focus();updateHud();
 }
 function placeTeamOrder(x,y){
  const kind=ui.teamOrderMode,r=game.callTeamOrder(kind,x,y,0);toast(r.message,!r.ok);
@@ -196,17 +199,17 @@ function placeTeamOrder(x,y){
 $('teamAssaultButton').onclick=()=>beginTeamOrder('assault');$('teamDefendButton').onclick=()=>beginTeamOrder('defend');
 $('townHallUpgradeButton').onclick=()=>{if(!started||menuOpen)return;const r=game.upgradeTownHall(0);toast(r.message,!r.ok);if(r.ok){tone(470);paintTownHall();}updateHud();};
 $('upgradeTowerButton').onclick=()=>{if(!started||menuOpen||game.winner!==null)return;const towers=selectedBuildings();if(towers.length!==1||towers[0].type!=='tower')return;const r=game.upgradeTower(towers[0].id,0);toast(r.message,!r.ok);if(r.ok)tone(470);updateHud();};
-$('objectiveList').addEventListener('click',e=>{const button=e.target.closest('[data-objective]');if(!button)return;const objective=game.objectives.find(o=>String(o.id)===button.dataset.objective);if(objective)focusPoint(objective.x,objective.y,Math.max(view.zoom,.9));});
-$('castleList').addEventListener('click',e=>{const button=e.target.closest('[data-castle]');if(!button)return;const site=(game.castles||[]).find(o=>String(o.id)===button.dataset.castle);if(site)focusPoint(site.x,site.y,Math.max(view.zoom,.9));});
+$('objectiveList').addEventListener('click',e=>{const button=e.target.closest('[data-objective]');if(!button)return;const objective=game.objectives.find(o=>String(o.id)===button.dataset.objective);if(objective){focusPoint(objective.x,objective.y,Math.max(view.zoom,.9));battleHud.close();}});
+$('castleList').addEventListener('click',e=>{const button=e.target.closest('[data-castle]');if(!button)return;const site=(game.castles||[]).find(o=>String(o.id)===button.dataset.castle);if(site){focusPoint(site.x,site.y,Math.max(view.zoom,.9));battleHud.close();}});
 function setMode(mode){orderMode=mode;document.querySelectorAll('[data-order]').forEach(b=>b.classList.toggle('active',b.dataset.order===mode));}
-document.querySelectorAll('[data-order]').forEach(b=>b.onclick=()=>{setMode(b.dataset.order);toast(orderMode==='attack'?'Conquer: fight and capture along your route.':'Move: march directly to your destination.');});
+document.querySelectorAll('[data-order]').forEach(b=>b.onclick=()=>{setMode(b.dataset.order);battleHud.close();toast(orderMode==='attack'?'Conquer: fight and capture along your route.':'Move: march directly to your destination.');});
 document.querySelectorAll('[data-formation]').forEach(b=>b.onclick=()=>{ui.formation=b.dataset.formation;document.querySelectorAll('[data-formation]').forEach(z=>z.classList.toggle('active',z===b));if(ui.selected.size)toast(`${b.dataset.formation[0].toUpperCase()+b.dataset.formation.slice(1)} formation on your next order.`);});
 function clearBuildingSelection(){ui.selectedBuildings.clear();allBuildingsSelected=false;}
-function selectArmy(){cancelBuild();clearBuildingSelection();ui.selected=new Set(game.units.filter(u=>u.team===0&&u.hp>0).map(u=>u.id));allSelected=true;tone(400);updateHud();}
+function selectArmy(){cancelBuild();clearBuildingSelection();ui.selected=new Set(game.units.filter(u=>u.team===0&&u.hp>0).map(u=>u.id));allSelected=true;battleHud.close();tone(400);updateHud();}
 function selectTroopType(type,add=false){
  const matches=game.units.filter(u=>u.team===0&&u.hp>0&&(type==='spears'?UNIT_DEFS[u.type].spearBrace:['shield_bearer','lance_champion'].includes(type)?u.type===type:game.unitClass(u)===type));
  cancelBuild();clearBuildingSelection();if(!add)ui.selected.clear();for(const u of matches)ui.selected.add(u.id);allSelected=false;
- toast(matches.length?`${matches.length} ${type==='spears'?'spearmen and pikemen':type==='hero'?'commanders':UNIT_DEFS[type]?.label.toLowerCase()||type} selected.`:'No living troops of that type.');updateHud();
+ battleHud.close();toast(matches.length?`${matches.length} ${type==='spears'?'spearmen and pikemen':type==='hero'?'commanders':UNIT_DEFS[type]?.label.toLowerCase()||type} selected.`:'No living troops of that type.');updateHud();
 }
 function commandGroup(number,assign=false,add=false){
  const key=String(number);if(!/^[1-9]$/.test(key))return;
@@ -217,57 +220,60 @@ function commandGroup(number,assign=false,add=false){
 function beginFacing(){
  if(!started||menuOpen)return;const wasFacing=ui.facingMode;cancelBuild();if(wasFacing){updateHud();return;}
  if(!selected().length)return toast('Select soldiers before setting a facing.');clearBuildingSelection();ui.facingMode=true;
- $('buildBanner').firstChild.textContent='Right-drag from the destination toward the direction to face ';$('buildBanner').hidden=false;canvas.focus();updateHud();
+ battleHud.close();$('buildBanner').firstChild.textContent='Drag from the destination toward the direction to face ';document.body.classList.add('placing');$('buildBanner').hidden=false;canvas.focus();updateHud();
 }
-function selectAllBuildings(){cancelBuild();ui.selected.clear();allSelected=false;ui.selectedBuildings=new Set(game.buildings.filter(b=>b.team===0&&b.hp>0).map(b=>b.id));allBuildingsSelected=true;tone(400);updateHud();$('buildingOrders').scrollIntoView({block:'nearest'});}
-function beginRally(){if(!selectedBuildings().length)return;cancelBuild();ui.rallyMode=true;$('buildBanner').firstChild.textContent='Click land to set the selected buildings’ rally point ';$('buildBanner').hidden=false;document.body.classList.add('placing');canvas.focus();updateHud();}
+function selectAllBuildings(){cancelBuild();ui.selected.clear();allSelected=false;ui.selectedBuildings=new Set(game.buildings.filter(b=>b.team===0&&b.hp>0).map(b=>b.id));allBuildingsSelected=true;tone(400);updateHud();battleHud.open('orders');}
+function beginRally(){if(!selectedBuildings().length)return;cancelBuild();ui.rallyMode=true;battleHud.close();$('buildBanner').firstChild.textContent='Click land to set the selected buildings’ rally point ';$('buildBanner').hidden=false;document.body.classList.add('placing');canvas.focus();updateHud();}
 function setSelectedRally(x,y){const buildings=selectedBuildings();if(!buildings.length){cancelBuild();return;}const r=game.setRally(x,y,0,allBuildingsSelected?null:buildings.map(b=>b.id));toast(r.message,!r.ok);if(r.ok){ui.orderMarker={x,y,time:game.time,mode:'rally'};cancelBuild();tone(380);}updateHud();}
 function clearSelectedRally(){const r=game.clearRally(0,allBuildingsSelected?null:ui.selectedBuildings);toast(r.message,!r.ok);cancelBuild();updateHud();}
-function findHero(){const u=game.mode?.kingSurvival?game.kingFor?.(0):game.units.find(u=>u.team===0&&u.type==='hero'&&u.hp>0);if(!u){toast(game.mode?.kingSurvival?'Your king has fallen. Kings have one life.':'Your commander will return while a keep remains.');return;}cancelBuild();clearBuildingSelection();ui.selected=new Set([u.id]);allSelected=false;focusPoint(u.x,u.y,1.7);updateHud();}
+function findHero(){const u=game.mode?.kingSurvival?game.kingFor?.(0):game.units.find(u=>u.team===0&&u.type==='hero'&&u.hp>0);if(!u){toast(game.mode?.kingSurvival?'Your king has fallen. Kings have one life.':'Your commander will return while a keep remains.');return;}cancelBuild();clearBuildingSelection();ui.selected=new Set([u.id]);allSelected=false;battleHud.close();focusPoint(u.x,u.y,1.7);updateHud();}
 function issue(x,y,mode=orderMode,facing=null){if(!selected().length){toast('Select soldiers first. Drag a box or press Q.');return false;}const t=game.tileAt(x,y);if(!isPassableTile(t)){toast('Choose reachable ground, a bridge, a ford or a pass.',true);return false;}game.command(ui.selected,x,y,mode,ui.formation,facing);ui.orderMarker={x,y,time:game.time,mode};tone(mode==='attack'?240:340);return true;}
 function expandNearby(){
  if(!started||menuOpen||game.winner!==null||!game.teams[0].alive)return;
  const troops=selected();if(!troops.length)return toast('Select soldiers first. Drag a box or press Q.');
- cancelBuild();const result=game.expand(troops.map(u=>u.id));toast(result.message,!result.ok);if(result.ok)tone(310);updateHud();
+ cancelBuild();const result=game.expand(troops.map(u=>u.id));toast(result.message,!result.ok);if(result.ok){tone(310);battleHud.close();}updateHud();
 }
 function patrolBorder(){
  if(!started||menuOpen||game.winner!==null)return;
  const troops=selected();if(!troops.some(u=>game.unitClass(u)==='cavalry'))return toast('Select cavalry to patrol your territory’s edge.');
- cancelBuild();const result=game.patrol(troops.map(u=>u.id));toast(result.message,!result.ok);if(result.ok)tone(320);updateHud();
+ cancelBuild();const result=game.patrol(troops.map(u=>u.id));toast(result.message,!result.ok);if(result.ok){tone(320);battleHud.close();}updateHud();
 }
 function attackNearest(){
  if(!started||menuOpen||game.winner!==null||!game.teams[0].alive)return;
  const troops=selected();if(!troops.length)return toast('Select soldiers first. Drag a box or press Q.');
  const result=game.attackNearest(troops.map(u=>u.id),ui.formation);
  if(!result.ok)return toast(result.message);
- cancelBuild();setMode('attack');ui.orderMarker=null;tone(240);toast(result.message);
+ cancelBuild();battleHud.close();setMode('attack');ui.orderMarker=null;tone(240);toast(result.message);
 }
 function useHousePower(){
  if(!started||menuOpen||game.winner!==null||!game.teams[0].alive)return;
  if(typeof game.useHousePower!=='function')return toast('House powers are preparing.');
  const result=game.useHousePower([...ui.selected],0);toast(result.message,!result.ok);if(result.ok)tone(540,'click',.035);updateHud();
 }
-function hold(){if(!ui.selected.size)return toast('Select troops to hold the line.');cancelBuild();game.hold(ui.selected);toast('Hold the line. Your troops will defend their facing.');tone(260);}
-function retreat(){if(!ui.selected.size)return toast('Select troops to retreat.');const champions=selected().some(u=>UNIT_DEFS[u.type].lanceChampion);cancelBuild();game.retreat(ui.selected);toast(champions?'Champions are disengaging to their rally; other troops fall back to the keep.':'Fall back! Regroup at your keep. Right-drag for a facing retreat.');tone(190);}
+function hold(){if(!ui.selected.size)return toast('Select troops to hold the line.');cancelBuild();battleHud.close();game.hold(ui.selected);toast('Hold the line. Your troops will defend their facing.');tone(260);}
+function retreat(){if(!ui.selected.size)return toast('Select troops to retreat.');const champions=selected().some(u=>UNIT_DEFS[u.type].lanceChampion);cancelBuild();battleHud.close();game.retreat(ui.selected);toast(champions?'Champions are disengaging to their rally; other troops fall back to the keep.':'Fall back! Regroup at your keep. Right-drag for a facing retreat.');tone(190);}
 $('allButton').onclick=selectArmy;$('heroButton').onclick=findHero;$('attackNearestButton').onclick=attackNearest;$('expandButton').onclick=expandNearby;$('holdButton').onclick=hold;$('retreatButton').onclick=retreat;
 $('faceOrderButton').onclick=beginFacing;
 $('patrolButton').onclick=patrolBorder;
 $('troopTypeButtons').addEventListener('click',e=>{const button=e.target.closest('[data-select-type]');if(button)selectTroopType(button.dataset.selectType,e.shiftKey);});
 $('commandGroups').innerHTML=Array.from({length:9},(_,i)=>`<button type="button" data-command-group="${i+1}" aria-label="Group ${i+1}: empty. Ctrl-click to assign." title="Group ${i+1} · click recalls · Ctrl-click saves · Ctrl+Shift-click adds">${i+1}<small>—</small></button>`).join('');
-$('commandGroups').addEventListener('click',e=>{const button=e.target.closest('[data-command-group]');if(button)commandGroup(button.dataset.commandGroup,e.ctrlKey||e.metaKey,e.shiftKey);});
+$('commandGroups').addEventListener('click',e=>{const button=e.target.closest('[data-command-group]');if(button){commandGroup(button.dataset.commandGroup,assigningGroup||e.ctrlKey||e.metaKey,e.shiftKey);if(assigningGroup){assigningGroup=false;$('assignGroupButton').setAttribute('aria-pressed','false');}else battleHud.close();}});
+$('assignGroupButton').onclick=()=>{if(!selected().length)return toast('Select troops before assigning a group.');assigningGroup=!assigningGroup;$('assignGroupButton').setAttribute('aria-pressed',String(assigningGroup));toast(assigningGroup?'Tap a group slot to save your selected troops.':'Group assignment cancelled.');};
+$('selectionCommands').onclick=()=>battleHud.open('orders');
+$('clearSelection').onclick=()=>{cancelBuild();ui.selected.clear();clearBuildingSelection();allSelected=false;updateHud();};
 $('housePowerButton').onclick=useHousePower;
 $('houseQuickPowerButton').onclick=useHousePower;
 $('selectedPowerButton').onclick=useHousePower;$('selectBuildingsButton').onclick=selectAllBuildings;$('setRallyButton').onclick=beginRally;$('clearRallyButton').onclick=clearSelectedRally;
-$('zoomIn').onclick=()=>zoomAt(1.2);$('zoomOut').onclick=()=>zoomAt(1/1.2);$('fitButton').onclick=fitMap;$('homeButton').onclick=home;
+$('zoomIn').onclick=()=>zoomAt(1.2);$('zoomOut').onclick=()=>zoomAt(1/1.2);$('fitButton').onclick=()=>{fitMap();battleHud.close();};$('homeButton').onclick=()=>{home();battleHud.close();};
 function toggleGrid(){ui.showGrid=!ui.showGrid;$('gridButton').classList.toggle('active',ui.showGrid);}$('gridButton').onclick=toggleGrid;
 function togglePause(){if(!started||menuOpen||game.winner!==null)return;game.paused=!game.paused;updatePause();toast(game.paused?'The war is paused. Plan your next move.':'The war continues.');}
 function updatePause(){document.body.classList.toggle('paused',game.paused);$('pauseButton').textContent=game.paused?'▶':'Ⅱ';$('pauseButton').setAttribute('aria-label',game.paused?'Resume game':'Pause game');}
 $('pauseButton').onclick=togglePause;$('speedButton').onclick=()=>{speed=speed===1?1.5:speed===1.5?2:1;$('speedButton').textContent=speed+'×';};
 $('soundButton').onclick=()=>{sound=!sound;if(sound)initAudio();$('soundButton').textContent=sound?'♫':'♪';$('soundButton').style.opacity=sound?'1':'.4';};
 $('fullscreenButton').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{toast('Use your browser’s fullscreen control.');}};
-function openMenu(){if(!started)return;edgeMouse=null;wasPaused=game.paused;game.paused=true;menuOpen=true;$('menuOverlay').hidden=false;$('resumeButton').hidden=false;$('startButton').innerHTML='START A NEW CONQUEST <span>→</span>';updatePause();}
+function openMenu(){if(!started)return;cancelBuild();battleHud.close();edgeMouse=null;wasPaused=game.paused;game.paused=true;menuOpen=true;$('menuOverlay').hidden=false;$('resumeButton').hidden=false;$('startButton').innerHTML='START A NEW CONQUEST <span>→</span>';updatePause();}
 function resume(){menuOpen=false;$('menuOverlay').hidden=true;game.paused=wasPaused;updatePause();canvas.focus();}
-$('menuButton').onclick=openMenu;$('campaignMenuButton').onclick=openMenu;$('resumeButton').onclick=resume;
+$('settingsMenuButton').onclick=openMenu;$('menuButton').onclick=openMenu;$('campaignMenuButton').onclick=openMenu;$('resumeButton').onclick=resume;
 let helpWasPaused=false;function showHelp(){helpWasPaused=game.paused;game.paused=true;$('helpDialog').showModal();updatePause();}
 function closeHelp(){$('helpDialog').close();game.paused=helpWasPaused;updatePause();canvas.focus();}
 $('helpButton').onclick=showHelp;$('closeHelp').onclick=closeHelp;$('helpDone').onclick=closeHelp;$('helpDialog').addEventListener('cancel',e=>{e.preventDefault();closeHelp();});
@@ -303,7 +309,7 @@ function start(){
  $('menuOverlay').hidden=true;$('resultOverlay').hidden=true;$('speedButton').textContent='1×';$('mapTitle').textContent=game.landscape?.label||'The Shattered Realm';$('campaignLabel').textContent=game.mode.label.toUpperCase();$('landsStatus').textContent=(game.landmarks||[]).filter(l=>['bridge','ford','pass'].includes(l.kind)).length+' crossings & passes';$('objective').textContent=campaignObjectiveText();
  document.documentElement.style.setProperty('--house',game.teams[0].teamColor||game.teams[0].color);$('houseName').textContent=game.teams[0].name;$('houseTrait').textContent=houseData(0).playstyle||game.teams[0].trait;$('houseCardButton').title='Bonuses: '+houseAdvantages(houseData(0)).join(' ')+'\nWeaknesses: '+houseWeaknesses(houseData(0)).join(' ')+'\nOpen Council for your house power.';
  document.querySelector('.house-card .crest use').setAttribute('href','#i-'+game.teams[0].sigil);
- buildActionLists();paintBuildingIcons();showTab('army');home();updatePause();updateHud();initAudio();tone(390);canvas.focus();toast(game.mode.kingSurvival?'Protect your king. Press F to find him. Central flag waves bring reinforcements.':game.mode.controlGoal?'Hold the central crown for '+game.mode.controlGoal+' uncontested seconds.':game.mode.teams?'You share a color with your bot ally. Use Call assault or Call defense to coordinate.':'Capture ruined castles for +60 troop capacity each. Hold a ruin for 60 seconds.');
+ buildActionLists();paintBuildingIcons();showTab('army');battleHud.close();home();updatePause();updateHud();initAudio();tone(390);canvas.focus();toast(game.mode.kingSurvival?'Protect your king. Press F to find him. Central flag waves bring reinforcements.':game.mode.controlGoal?'Hold the central crown for '+game.mode.controlGoal+' uncontested seconds.':game.mode.teams?'You share a color with your bot ally. Use Call assault or Call defense to coordinate.':'Capture ruined castles for +60 troop capacity each. Hold a ruin for 60 seconds.');
 }
 $('startButton').onclick=start;
 $('playAgain').onclick=()=>{$('resultOverlay').hidden=true;openMenu();};$('inspectButton').onclick=()=>{$('resultOverlay').hidden=true;game.paused=true;updatePause();};
@@ -324,15 +330,17 @@ canvas.addEventListener('wheel',e=>{e.preventDefault();const p=pointerPos(e);zoo
 canvas.addEventListener('pointerdown',e=>{
  rememberMouse(e);if(menuOpen||!started)return;e.preventDefault();initAudio();canvas.focus();canvas.setPointerCapture(e.pointerId);const p=pointerPos(e);pointers.set(e.pointerId,p);
  if(pointers.size===2){const [a,b]=[...pointers.values()];pinch={dist:Math.hypot(a.x-b.x,a.y-b.y),zoom:view.zoom,anchor:screenToWorld((a.x+b.x)/2,(a.y+b.y)/2,view)};gesture=null;ui.drag=null;ui.facingPreview=null;return;}
- const facing=e.button===2;
- gesture={id:e.pointerId,button:e.button,x0:p.x,y0:p.y,x:p.x,y:p.y,anchor:screenToWorld(p.x,p.y,view),facing,camX:view.x,camY:view.y,shift:e.shiftKey,moved:false,touch:e.pointerType==='touch'};
+ const dismissOnly=battleHud.isOpen;battleHud.close();
+ const touch=e.pointerType==='touch',facing=e.button===2||touch&&ui.facingMode;
+ gesture={id:e.pointerId,button:e.button,x0:p.x,y0:p.y,x:p.x,y:p.y,anchor:screenToWorld(p.x,p.y,view),facing,camX:view.x,camY:view.y,shift:e.shiftKey,moved:false,touch,pan:touch&&(!battleHud.touchSelect||ui.buildMode||ui.rallyMode||ui.teamOrderMode)&&!facing,dismissOnly};
+ ui.hover=screenToWorld(p.x,p.y,view);
 });
 canvas.addEventListener('pointermove',e=>{
  rememberMouse(e);const p=pointerPos(e);ui.hover=screenToWorld(p.x,p.y,view);if(pointers.has(e.pointerId))pointers.set(e.pointerId,p);
  if(pinch&&pointers.size>=2){const[a,b]=[...pointers.values()],sx=(a.x+b.x)/2,sy=(a.y+b.y)/2;view.zoom=clamp(pinch.zoom*Math.hypot(a.x-b.x,a.y-b.y)/Math.max(10,pinch.dist),minZoom(),2.6);const q=iso(pinch.anchor);view.x=q.x-(sx-view.w/2)/view.zoom;view.y=q.y-(sy-view.h/2)/view.zoom;boundCamera();return;}
  if(!gesture||gesture.id!==e.pointerId)return;gesture.x=p.x;gesture.y=p.y;if(Math.hypot(p.x-gesture.x0,p.y-gesture.y0)>6)gesture.moved=true;
  if(gesture.facing){if(gesture.moved){const end=screenToWorld(p.x,p.y,view),dx=end.x-gesture.anchor.x,dy=end.y-gesture.anchor.y,length=Math.hypot(dx,dy);if(length>.001)ui.facingPreview={...gesture.anchor,faceX:dx/length,faceY:dy/length,formation:ui.formation,count:selected().length};}}
- else if(gesture.button===1){if(gesture.moved){view.x=gesture.camX-(p.x-gesture.x0)/view.zoom;view.y=gesture.camY-(p.y-gesture.y0)/view.zoom;boundCamera();}}else if(gesture.moved){ui.drag={x0:gesture.x0,y0:gesture.y0,x1:p.x,y1:p.y};}
+ else if(gesture.button===1||gesture.pan){if(gesture.moved){view.x=gesture.camX-(p.x-gesture.x0)/view.zoom;view.y=gesture.camY-(p.y-gesture.y0)/view.zoom;boundCamera();}}else if(gesture.moved){ui.drag={x0:gesture.x0,y0:gesture.y0,x1:p.x,y1:p.y};}
 });
 function buildingAt(p){
  let target=null,best=Infinity;
@@ -345,12 +353,12 @@ function finishPointer(e,cancel=false){
  pointers.delete(e.pointerId);if(pinch){if(pointers.size<2)pinch=null;gesture=null;ui.drag=null;ui.facingPreview=null;return;}
  if(!gesture||gesture.id!==e.pointerId)return;const z=gesture;gesture=null;ui.drag=null;ui.facingPreview=null;if(cancel||menuOpen||!started)return;const p=pointerPos(e),w=screenToWorld(p.x,p.y,view);
  if(z.facing&&z.moved){const dx=w.x-z.anchor.x,dy=w.y-z.anchor.y,length=Math.hypot(dx,dy);if(length>.001&&issue(z.anchor.x,z.anchor.y,'move',{x:dx/length,y:dy/length})){cancelBuild();toast('March to the line and keep this facing. Backward movement is slower.');updateHud();}return;}
- if(z.button===1)return;if(z.button===2){if(!z.moved){if(ui.buildMode||ui.rallyMode||ui.teamOrderMode){cancelBuild();updateHud();}else if(ui.selectedBuildings.size)setSelectedRally(w.x,w.y);else issue(w.x,w.y,'move');}return;}
+ if(z.button===1||z.pan&&z.moved||z.dismissOnly&&!z.moved)return;if(z.button===2){if(!z.moved){if(ui.buildMode||ui.rallyMode||ui.teamOrderMode){cancelBuild();updateHud();}else if(ui.selectedBuildings.size)setSelectedRally(w.x,w.y);else issue(w.x,w.y,'move');}return;}
  if(ui.teamOrderMode&&!z.moved){placeTeamOrder(w.x,w.y);return;}
  if(ui.rallyMode&&!z.moved){setSelectedRally(w.x,w.y);return;}
- if(ui.buildMode&&!z.moved){const r=game.build(ui.buildMode,Math.floor(w.x)+.5,Math.floor(w.y)+.5);toast(r.message,!r.ok);if(r.ok){tone(200);if(!e.shiftKey)cancelBuild();}updateHud();return;}
+ if(ui.buildMode&&!z.moved){const r=game.build(ui.buildMode,Math.floor(w.x)+.5,Math.floor(w.y)+.5);toast(r.message,!r.ok);if(r.ok){tone(200);if(!e.shiftKey&&!$('repeatBuild').checked)cancelBuild();}updateHud();return;}
  if(z.moved){cancelBuild();clearBuildingSelection();if(!z.shift)ui.selected.clear();const x0=Math.min(z.x0,p.x),x1=Math.max(z.x0,p.x),y0=Math.min(z.y0,p.y),y1=Math.max(z.y0,p.y);for(const u of game.units){if(u.team!==0||u.hp<=0)continue;const s=worldToScreen(u.x,u.y,view);if(s.x>=x0&&s.x<=x1&&s.y>=y0&&s.y<=y1)ui.selected.add(u.id);}allSelected=false;tone(420);updateHud();return;}
- const building=buildingAt(p);if(building){ui.selected.clear();allSelected=false;allBuildingsSelected=false;if(!z.shift)ui.selectedBuildings.clear();if(z.shift&&ui.selectedBuildings.has(building.id))ui.selectedBuildings.delete(building.id);else ui.selectedBuildings.add(building.id);tone(430);updateHud();$('buildingOrders').scrollIntoView({block:'nearest'});return;}
+ const building=buildingAt(p);if(building){ui.selected.clear();allSelected=false;allBuildingsSelected=false;if(!z.shift)ui.selectedBuildings.clear();if(z.shift&&ui.selectedBuildings.has(building.id))ui.selectedBuildings.delete(building.id);else ui.selectedBuildings.add(building.id);tone(430);updateHud();return;}
  let closest=null,best=22;for(const u of game.units){if(u.team!==0||u.hp<=0)continue;const s=worldToScreen(u.x,u.y,view),d=Math.hypot(s.x-p.x,s.y-9*view.zoom-p.y);if(d<best){closest=u;best=d;}}
  if(closest){clearBuildingSelection();if(!z.shift)ui.selected.clear();if(z.shift&&ui.selected.has(closest.id))ui.selected.delete(closest.id);else ui.selected.add(closest.id);allSelected=false;tone(430);updateHud();}
  else if(ui.selected.size)issue(w.x,w.y);
@@ -360,10 +368,10 @@ canvas.addEventListener('pointerup',e=>finishPointer(e));canvas.addEventListener
 canvas.addEventListener('dblclick',e=>{if(!started||menuOpen||ui.buildMode||ui.rallyMode||ui.teamOrderMode||ui.facingMode)return;const p=pointerPos(e);if(buildingAt(p))return;let target=null,best=28;for(const u of game.units){if(u.team!==0||u.hp<=0)continue;const s=worldToScreen(u.x,u.y,view),d=Math.hypot(s.x-p.x,s.y-10*view.zoom-p.y);if(d<best){target=u;best=d;}}if(target){clearBuildingSelection();allSelected=false;ui.selected=new Set(game.units.filter(u=>u.team===0&&u.hp>0&&u.type===target.type).map(u=>u.id));updateHud();}});
 
 let miniDragging=false;function navigateMini(e){const m=renderer.minimapTransform;if(!m)return;const r=$('minimap').getBoundingClientRect();view.x=((e.clientX-r.left)-m.ox)/m.scale;view.y=((e.clientY-r.top)-m.oy)/m.scale;boundCamera();}
-$('minimap').addEventListener('pointerdown',e=>{e.preventDefault();miniDragging=true;$('minimap').setPointerCapture(e.pointerId);navigateMini(e);});$('minimap').addEventListener('pointermove',e=>{if(miniDragging)navigateMini(e);});$('minimap').addEventListener('pointerup',()=>miniDragging=false);$('minimap').addEventListener('pointercancel',()=>miniDragging=false);
+$('minimap').addEventListener('pointerdown',e=>{e.preventDefault();miniDragging=true;$('minimap').setPointerCapture(e.pointerId);navigateMini(e);});$('minimap').addEventListener('pointermove',e=>{if(miniDragging)navigateMini(e);});$('minimap').addEventListener('pointerup',()=>{miniDragging=false;battleHud.close();});$('minimap').addEventListener('pointercancel',()=>miniDragging=false);
 window.addEventListener('keydown',e=>{
  if(e.defaultPrevented||e.isComposing||/INPUT|SELECT|TEXTAREA/.test(e.target?.tagName||'')||e.target?.isContentEditable||e.target?.closest?.('[contenteditable="true"],[contenteditable=""],[role="textbox"]')||$('helpDialog').open||$('housesDialog').open)return;
- if(e.key==='Escape'){if(ui.buildMode||ui.rallyMode||ui.teamOrderMode||ui.facingMode||gesture?.facing){cancelBuild();gesture=null;updateHud();return;}if(started){if(menuOpen)resume();else{ui.selected.clear();clearBuildingSelection();allSelected=false;updateHud();}}return;}
+ if(e.key==='Escape'){if(battleHud.isOpen){e.preventDefault();battleHud.close(true);return;}if(ui.buildMode||ui.rallyMode||ui.teamOrderMode||ui.facingMode||gesture?.facing){cancelBuild();gesture=null;updateHud();return;}if(started){if(menuOpen)resume();else{ui.selected.clear();clearBuildingSelection();allSelected=false;updateHud();}}return;}
  if(!started||menuOpen||game.winner!==null||!$('resultOverlay').hidden)return;const k=e.key.toLowerCase(),digit=/^(?:Digit|Numpad)([1-9])$/.exec(e.code)?.[1]||(/^[1-9]$/.test(k)?k:null);
  if(e.altKey&&!e.ctrlKey&&!e.metaKey&&TYPE_HOTKEYS[k]){e.preventDefault();if(!e.repeat)selectTroopType(TYPE_HOTKEYS[k],e.shiftKey);return;}
  if(e.metaKey||e.altKey||e.ctrlKey&&!digit)return;
@@ -427,11 +435,11 @@ function updateCampaignHud(){
 
 }
 function updateHud(){
- const s=game.teams[0];$('gold').textContent=num(s.gold);$('income').textContent=`+${s.income.toFixed(1)} / sec`;setHudHTML($('army'),`${num(s.count)} <i>/ ${s.cap}</i>`);setHudHTML($('land'),`${num(s.tiles)} <i>tiles</i>`);$('landPercent').textContent=`${percent(s)}% OF THE REALM`;
+ const s=game.teams[0];$('gold').textContent=compactGold(s.gold);$('gold').title=num(s.gold)+' gold';$('income').textContent=`+${s.income.toFixed(1)} / sec`;setHudHTML($('army'),`${num(s.count)} <i>/ ${s.cap}</i>`);setHudHTML($('land'),`${num(s.tiles)} <i>tiles</i>`);$('landPercent').textContent=`${percent(s)}% OF THE REALM`;
  $('clock').textContent=`${Math.floor(game.time/60).toString().padStart(2,'0')}:${Math.floor(game.time%60).toString().padStart(2,'0')}`;
  for(const id of ui.selected){const u=game.byId.get(id);if(!u||u.hp<=0)ui.selected.delete(id);}if(allSelected)for(const u of game.units)if(u.team===0&&u.hp>0)ui.selected.add(u.id);
  for(const id of ui.selectedBuildings){const b=game.byId.get(id);if(!b||b.hp<=0||b.team!==0||!BUILD_DEFS[b.type])ui.selectedBuildings.delete(id);}if(allBuildingsSelected)for(const b of game.buildings)if(b.team===0&&b.hp>0)ui.selectedBuildings.add(b.id);
- const buildings=selectedBuildings();if(ui.rallyMode&&!buildings.length)cancelBuild();
+ const buildings=selectedBuildings();battleHud.syncSelection(buildings.length?'building':'army',buildings.length||ui.selected.size);if(ui.rallyMode&&!buildings.length)cancelBuild();
  $('selectBuildingsButton').classList.toggle('active',allBuildingsSelected&&buildings.length>0);$('setRallyButton').classList.toggle('active',ui.rallyMode);
  $('buildingOrders').hidden=!buildings.length;
  updateSelectedTower(buildings);
@@ -449,7 +457,7 @@ function updateHud(){
  $('expandButton').classList.toggle('active',expanding>0);$('expandButton').setAttribute('aria-pressed',String(expanding>0));
  $('expandLabel').textContent=expanding?`Expanding nearby · ${expanding}`:'Expand nearby';
  $('selectionTitle').textContent=buildings.length?buildings.length===1?BUILD_DEFS[buildings[0].type].label:`${buildings.length} buildings selected`:troops.length?`${troops.length} ${troops.length===1?'soldier':'soldiers'} under your command`:'Your army awaits';
- $('selectionDetail').textContent=buildings.length?'Right-click land to rally · R selects all buildings':troops.length?Object.entries(counts).map(([t,n])=>`${n} ${t==='hero'?'commander':UNIT_DEFS[t].label.toLowerCase()}`).join(' · '):'Drag to select · Q army · R buildings';
+ $('selectionDetail').textContent=buildings.length?'Rally points & upgrades in Commands':troops.length?Object.entries(counts).map(([t,n])=>`${n} ${t==='hero'?'commander':UNIT_DEFS[t].label.toLowerCase()}`).join(' · '):'Tap a soldier or open Orders';
  document.querySelectorAll('[data-recruit]').forEach(b=>{const type=b.dataset.recruit,d=game.recruitDetails(type,0);$('recruitBatch-'+type).textContent=` ×${d.batch}`;$('recruitCost-'+type).innerHTML=`${d.cost}<small>GOLD</small>`;b.disabled=s.gold<d.cost||s.count+d.batch>s.cap||!s.alive||!d.unlocked||d.remaining>0;if(d.requiredBuilding)b.querySelector('.action-copy>small').textContent=!d.unlocked?`Build ${BUILD_DEFS[d.requiredBuilding].label} to unlock`:d.remaining>0?`Musters in ${Math.ceil(d.remaining)}s`:d.role.split(' · ').pop();});
  const structures=game.buildingStatus(0),atStructureLimit=structures.count>=structures.cap;
  const nextStructureSlot=`Capture ${structures.nextTiles} more land ${structures.nextTiles===1?'tile':'tiles'} to unlock another structure slot.`;
@@ -512,7 +520,7 @@ function frame(now){
  const menuView=renderer.menuView;
  if(!menuOpen||!menuView||menuView.game!==game||menuView.x!==view.x||menuView.y!==view.y||menuView.zoom!==view.zoom||menuView.w!==view.w||menuView.h!==view.h||menuView.dpr!==view.dpr){renderer.draw(game,view,ui);renderer.menuView=menuOpen?{...view,game}:null;}
  if(now-lastHud>220){updateHud();$('zoomLabel').textContent=Math.round(view.zoom*100)+'%';$('performance').textContent=Math.round(Math.min(240,fps))+' FPS';lastHud=now;}
- if(!menuOpen&&now-lastMini>150){renderer.drawMinimap(game,$('minimap'),view);lastMini=now;}
+ if(!menuOpen&&now-lastMini>150&&!$('commandPanel').hidden&&$('commandPanel').dataset.pane==='map'){renderer.drawMinimap(game,$('minimap'),view);lastMini=now;}
  if(toastUntil&&now>toastUntil){$('toast').classList.remove('visible');toastUntil=0;}
  requestAnimationFrame(frame);
 }

@@ -7,12 +7,12 @@ const out=process.argv[2]?path.resolve(process.argv[2]):path.join(root,'outputs'
 fs.mkdirSync(out,{recursive:true});
 const read=name=>fs.readFileSync(path.join(dist,name),'utf8');
 const emblemAtlas='data:image/png;base64,'+fs.readFileSync(path.join(dist,'assets/house-emblems.png')).toString('base64');
-const css=read('style.css').replaceAll('assets/house-emblems.png',emblemAtlas);
+const css=[read('style.css'),read('hud.css')].join('\n').replaceAll('assets/house-emblems.png',emblemAtlas);
 const moduleCode=name=>read(name).replace(/^import .*?;\r?\n/gm,'').replaceAll('export const ','const ').replaceAll('export class ','class ').replaceAll('export function ','function ');
 const lands=moduleCode('lands.js'),navigation=moduleCode('navigation.js'),cover=moduleCode('cover.js');
 const vision=moduleCode('vision.js'),aftermath=moduleCode('aftermath.js');
 const core=moduleCode('core.js');
-const render=moduleCode('render.js');
+const render=moduleCode('render.js'),hud=moduleCode('hud.js');
 const regiments=moduleCode('regiments.js'),regimentExports=[...read('regiments.js').matchAll(/export (?:const|class|function) (\w+)/g)].map(match=>match[1]).join(',');
 const atlas=fs.readFileSync(path.join(dist,'assets/troops-atlas.png')).toString('base64');
 const structures=fs.readFileSync(path.join(dist,'assets/structures-atlas.png')).toString('base64');
@@ -29,7 +29,7 @@ const conquestArt=Object.fromEntries(Object.entries({castles:'castles',trebuchet
 const app=read('app.js').replace(/^import .*?;\r?\n/gm,'').replace(/^const HOUSE_ART_SOURCES=.*?;\r?\n/m,'const HOUSE_ART_SOURCES='+JSON.stringify(houseArt)+';\n').replace("'assets/troops-atlas.png'",JSON.stringify('data:image/png;base64,'+atlas)).replace("'assets/structures-atlas.png'",JSON.stringify('data:image/png;base64,'+structures)).replace("'assets/campaign-structures.png'",JSON.stringify('data:image/png;base64,'+campaign)).replace("'assets/ground-textures.png'",JSON.stringify('data:image/png;base64,'+ground)).replace("'assets/terrain-props.png'",JSON.stringify('data:image/png;base64,'+props));
 const embeddedApp=app.replace(/^const REGIMENT_ART_SOURCES=.*?;\r?\n/m,'const REGIMENT_ART_SOURCES='+JSON.stringify(regimentArt)+';\n').replace(/^const CONQUEST_ART_SOURCES=.*?;\r?\n/m,'const CONQUEST_ART_SOURCES='+JSON.stringify(conquestArt)+';\n').replace("'assets/regiments/production-buildings.png'",JSON.stringify(png('assets/regiments/production-buildings.png'))).replace("'assets/lands-atlas.png'",JSON.stringify('data:image/png;base64,'+landsAtlas)).replace("'assets/lands-ground.png'",JSON.stringify('data:image/png;base64,'+landsGround));
 const script=`const __lands=(()=>{${lands}\nreturn {LAND_MAPS,generateLands,isPassableTile,tileTravelCost};})();\nconst {LAND_MAPS,generateLands,isPassableTile,tileTravelCost}=__lands;\nconst __navigation=(()=>{${navigation}\nreturn {LandsNavigation};})();\nconst {LandsNavigation}=__navigation;\nconst __cover=(()=>{${cover}\nreturn {CombatTerrain};})();\nconst {CombatTerrain}=__cover;\nconst __regiments=(()=>{${regiments}\nreturn {${regimentExports}};})();\nconst {${regimentExports}}=__regiments;\nconst __vision=(()=>{${vision}\nreturn {WarVision};})();\nconst {WarVision}=__vision;\nconst __aftermath=(()=>{${aftermath}\nreturn {BattleAftermath,corpseOpacity};})();\nconst {BattleAftermath,corpseOpacity}=__aftermath;\nconst __core=(()=>{${core}\nreturn {Game,HOUSES,UNIT_DEFS,BUILD_DEFS,HOUSE_CONTENT};})();\nconst {Game,HOUSES,UNIT_DEFS,BUILD_DEFS,HOUSE_CONTENT}=__core;\nconst __render=(()=>{${render}\nreturn {Renderer,worldToScreen,screenToWorld};})();\nconst {Renderer,worldToScreen,screenToWorld}=__render;\n(async()=>{${embeddedApp}\n})();`;
-const html=read('index.html').replace('<link rel="stylesheet" href="style.css">',`<style>${css}</style>`).replace('<script type="module" src="app.js"></script>',`<script type="module">${script.replaceAll('</script','<\\/script')}</script>`);
+const html=read('index.html').replace('<link rel="stylesheet" href="style.css">',`<style>${css}</style>`).replace('<link rel="stylesheet" href="hud.css">','').replace('<script type="module" src="app.js"></script>',`<script type="module">${hud}\n${script.replaceAll('</script','<\\/script')}</script>`);
 fs.writeFileSync(path.join(out,'Bannerlands.html'),html);
 
 fs.copyFileSync(path.join(dist,'assets/troops-atlas.png'),path.join(out,'Troops-sprite-sheet.png'));
