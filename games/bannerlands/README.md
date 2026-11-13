@@ -2,6 +2,11 @@
 
 Command armies, conquer the grid, and unite the realm in an isometric real-time strategy game.
 
+The Battlefield Visuals update adds contact-timed attacks and reloads, blended
+terrain transitions, small floating house-selection crests, and painted bridge
+sidewalls. Cached scenery, lighter distant effects, and fewer repeated army
+scans reduce avoidable drawing work. See `docs/Battlefield-Visuals.txt`.
+
 The House Reinforcements update adds Stormbreakers with physical hammer knockback,
 Saltwind Axethrowers, Tollhouse Crossbows, forest-fast Crannog Spearhands, and
 long-reach Horn Hill Halberdiers. Martell replaces catapults with Sun Horse Archers

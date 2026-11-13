@@ -7,6 +7,7 @@ const start=source.indexOf('function frame(now){'),end=source.indexOf('\nasync f
 assert.ok(start>=0&&end>start,'The production frame function must be available.');
 const frameSource=source.slice(start,end),helperStart=source.indexOf('function setHudHTML(');
 const helperSource=source.slice(helperStart,source.indexOf('\n',helperStart));
+const countsStart=source.indexOf('const knownSoldiers='),countsSource=source.slice(countsStart,source.indexOf('\n',countsStart));
 assert.ok(helperStart>=0,'The production HUD cache helper must be available.');
 let cases=0;
 const test=(name,fn)=>{fn();cases++;console.log('PASS '+name);};
@@ -106,9 +107,9 @@ test('The actual cached roster expression renders all houses and refreshes chang
   const marker="setHudHTML($('houseRoster'),game.teams.map(t=>{",rosterStart=source.indexOf(marker),closing="}).join(''));",rosterEnd=source.indexOf(closing,rosterStart)+closing.length;
   assert.ok(rosterStart>=0&&rosterEnd>rosterStart,'The cached roster must retain its complete map/join expression.');
   const roster=cachedElement(),teams=Array.from({length:16},(_,id)=>({id,house:id,name:'House '+id,count:70,tiles:49,alive:true,color:'#aabbcc'}));
-  const context={hudMarkup:new WeakMap(),game:{teams,mode:{teams:false}},HOUSES:teams,
+  const context={hudMarkup:new WeakMap(),game:{teams,units:[],mode:{teams:false}},HOUSES:teams,
     $:id=>{assert.equal(id,'houseRoster');return roster.element;},houseAdvantages:()=>[],houseWeaknesses:()=>[],powerData:()=>({name:'Test power'}),short:name=>name.replace('House ',''),percent:()=>1,escapeHTML:value=>String(value)};
-  vm.createContext(context);vm.runInContext(helperSource,context);const render=()=>vm.runInContext(source.slice(rosterStart,rosterEnd),context,{filename:'app.js:houseRoster'});
+  vm.createContext(context);vm.runInContext(helperSource,context);const render=()=>vm.runInContext('{'+countsSource+source.slice(rosterStart,rosterEnd)+'}',context,{filename:'app.js:houseRoster'});
   render();render();assert.equal(roster.writes,1);assert.equal((roster.markup.match(/class="roster-row/g)||[]).length,16);
   teams[5].count=99;render();assert.equal(roster.writes,2);assert.ok(roster.markup.includes('class="army-total">99</span>'));
 });
@@ -117,10 +118,10 @@ test('Fog rosters cannot reveal hidden army sizes, territory or production plans
   const start=source.indexOf("setHudHTML($('houseRoster'),game.teams.map(t=>{"),end=source.indexOf("}).join(''));",start)+"}).join(''));".length,roster=cachedElement();
   const teams=[{id:0,house:0,name:'House Stark',count:70,tiles:49,alive:true,color:'#aabbcc'},{id:1,house:1,name:'House Lannister',count:991,tiles:5000,alive:true,color:'#ffeeee',aiPlan:{label:'Secret invasion',phase:'advance',production:{label:'Hidden factory'}}}];
   const context={hudMarkup:new WeakMap(),game:{teams,config:{fogOfWar:true},mode:{teams:false},allied:(a,b)=>a===b,knownUnits:()=>[]},HOUSES:teams,$:()=>roster.element,houseAdvantages:()=>[],houseWeaknesses:()=>[],powerData:()=>({name:'Power'}),short:name=>name.replace('House ',''),percent:()=>99,escapeHTML:value=>String(value)};
-  vm.createContext(context);vm.runInContext(helperSource,context);const render=()=>vm.runInContext(source.slice(start,end),context);
+  vm.createContext(context);vm.runInContext(helperSource,context);let scans=0;const render=()=>{scans=0;const original=context.game.knownUnits;context.game.knownUnits=()=>{scans++;return original();};try{vm.runInContext('{'+countsSource+source.slice(start,end)+'}',context);assert.equal(scans,1,'The full fog roster reuses exactly one army scan.');}finally{context.game.knownUnits=original;}};
   render();const before=roster.markup;assert.ok(before.includes('Unknown'));assert.ok(!before.includes('991')&&!before.includes('Secret invasion')&&!before.includes('Hidden factory'));
   teams[1].count=500;teams[1].tiles=100;teams[1].alive=false;teams[1].aiPlan.label='Another secret';render();assert.equal(roster.markup,before);
-  context.game.knownUnits=()=>[{team:1},{team:1}];render();assert.ok(roster.markup.includes('Spotted nearby'));assert.ok(roster.markup.includes('army-total">2</span>'));
+  context.game.knownUnits=()=>[{team:1,hp:100},{team:1,hp:100}];render();assert.ok(roster.markup.includes('Spotted nearby'));assert.ok(roster.markup.includes('army-total">2</span>'));
 });
 
 console.log(`${cases} frame and HUD performance checks passed.`);

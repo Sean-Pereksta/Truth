@@ -116,4 +116,14 @@ if(output){
   r.draw(scene,{x:(55.8-47.5)*28,y:(55.8+47.5)*14,w:1400,h:900,dpr:1,zoom:1.7},{selected,selectedBuildings:new Set(),quality:'high',showGrid:false,facingPreview:{x:57.5,y:47.5,faceX:1,faceY:0,count:28,formation:'line'}});
   fs.writeFileSync(path.join(output,'Combat-formations.png'),r.canvas.toBuffer('image/png'));
 }
+test('Frey polearm bearers are larger without cropping weapons or changing other house sizes',()=>{
+  const row=r.getTroopFrame('bridge_warden','bridge'),width=Math.max(...row.frames.map(f=>f.width)),height=Math.max(...row.frames.map(f=>f.height)),oldScale=Math.min(26/width,31/height);
+  assert.ok(row.scale>oldScale*1.2&&row.scale<oldScale*1.35,'The bearer should be moderately larger, not fitted down around the spear.');
+  for(const sigil of ['wolf','flayed','bear']){const other=r.houseTroopFrames[sigil],w=Math.max(...other.frames.map(f=>f.width)),h=Math.max(...other.frames.map(f=>f.height));assert.equal(other.scale,Math.min(26/w,31/h),'Unrelated house infantry keeps its established scale.');}
+  for(const dir of [-1,1])for(let i=0;i<8;i++){
+    const sprite=r.soldierSprite('bridge_warden','#b6c4d1','#465763',dir,i%4,i>=4,'bridge'),p=pixels(sprite),w=sprite.width,h=sprite.height;
+    for(let x=0;x<w;x++)assert.ok(p[x*4+3]<40&&p[((h-1)*w+x)*4+3]<40,'Weapon tips and feet must fit vertically.');
+    for(let y=0;y<h;y++)assert.ok(p[(y*w)*4+3]<40&&p[(y*w+w-1)*4+3]<40,'The extended polearm must fit on both facings.');
+  }
+});
 console.log(`${cases} facing raster checks passed.`);
