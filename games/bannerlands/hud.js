@@ -1,7 +1,7 @@
-// One on-demand panel leaves the battlefield at its full viewport size.
+// Commands open above a persistent corner minimap; the battlefield stays full size.
 export function createBattleHud({navigate,onClose=()=>{}}){
  const $=id=>document.getElementById(id),panel=$('commandPanel');
- const titles={build:'Construction',army:'Muster troops',orders:'Army & building orders',map:'War table',council:'Council',realm:'Realm & objectives',settings:'Settings'};
+ const titles={build:'Build (B)',army:'Muster (U)',orders:'Orders (O)',map:'Map (M)',council:'Council (C)',realm:'Realm & objectives',settings:'Settings'};
  let pane=null,touchSelect=false;
  function sync(){
   panel.hidden=pane===null;
@@ -38,7 +38,7 @@ export function createBattleHud({navigate,onClose=()=>{}}){
  sync();
  return {open,close,get isOpen(){return pane!==null;},get touchSelect(){return touchSelect;},syncSelection(kind,count){
   document.body.dataset.hasSelection=String(count>0);document.body.dataset.selectionKind=kind;
-  $('selectionCommands').textContent=kind==='building'?'Rally / upgrade':'Commands';
+  $('selectionCommands').textContent=kind==='building'?'Rally / upgrade (O)':'Commands (O)';
   $('selectionCommands').setAttribute('aria-expanded',String(pane==='orders'));
  }};
 }

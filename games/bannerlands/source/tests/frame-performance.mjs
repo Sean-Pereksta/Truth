@@ -78,15 +78,16 @@ test('The covered menu background redraws only for camera changes and resumes im
   assert.equal(f.calls.draws,1);assert.equal(f.calls.minimaps,0);assert.equal(f.calls.frames,60);
   f.context.view.w=1200;f.frame(1020);assert.equal(f.calls.draws,2);
   f.context.view.zoom=.6;f.frame(1040);assert.equal(f.calls.draws,3);
-  f.context.menuOpen=false;f.frame(1060);f.frame(1080);assert.equal(f.calls.draws,5);assert.equal(f.calls.minimaps,0);
+  f.context.menuOpen=false;f.frame(1060);f.frame(1080);assert.equal(f.calls.draws,5);assert.ok(f.calls.minimaps>0);
   f.context.$('commandPanel').hidden=false;f.frame(1100);assert.ok(f.calls.minimaps>0);
 });
 
-test('The minimap only renders while its navigation drawer is visible',()=>{
-  const f=fixture();for(let i=1;i<=60;i++)f.frame(i*1000/60);assert.equal(f.calls.minimaps,0);
-  const panel=f.context.$('commandPanel');panel.hidden=false;panel.dataset.pane='build';f.frame(1200);assert.equal(f.calls.minimaps,0);
-  panel.dataset.pane='map';f.frame(1400);assert.equal(f.calls.minimaps,1);
-  panel.hidden=true;f.frame(1600);assert.equal(f.calls.minimaps,1);
+test('The persistent minimap refreshes at a bounded cadence regardless of command pane',()=>{
+  const f=fixture();for(let i=1;i<=60;i++)f.frame(i*1000/60);assert.ok(f.calls.minimaps>=5&&f.calls.minimaps<=7,'Map refreshes stay near six per second, not every frame.');
+  const panel=f.context.$('commandPanel'),before=f.calls.minimaps;panel.hidden=false;panel.dataset.pane='build';f.frame(1200);assert.equal(f.calls.minimaps,before+1);
+  panel.dataset.pane='map';f.frame(1400);assert.equal(f.calls.minimaps,before+2);
+  panel.hidden=true;f.frame(1600);assert.equal(f.calls.minimaps,before+3);
+  f.context.menuOpen=true;f.frame(1800);assert.equal(f.calls.minimaps,before+3);
 });
 
 function cachedElement(){

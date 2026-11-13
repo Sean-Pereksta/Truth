@@ -2,6 +2,11 @@
 
 Command armies, conquer the grid, and unite the realm in an isometric real-time strategy game.
 
+The minimap is always visible in the battlefield corner. Command panels open
+above it, and minimap navigation preserves the current panel. Buttons and
+selected panel titles show opening shortcuts: Build (B), Muster (U), Orders (O),
+Map (M), and More/Council (C). The map refreshes at a bounded six times per second.
+
 The Battlefield Visuals update adds contact-timed attacks and reloads, blended
 terrain transitions, small floating house-selection crests, and painted bridge
 sidewalls. Cached scenery, lighter distant effects, and fewer repeated army
@@ -24,8 +29,11 @@ three-capture campaign. See `docs/Kings-and-Battlefields.txt` for the rules.
 Ruined castles are major campaign objectives: Standard maps have 3 neutral ruins,
 Epic maps 5 and Continent maps 6. Hold a ruin with 90% local troop dominance for
 60 seconds to restore it. Contested or empty rings pause saved capture progress.
-Every living castle adds 60 troop capacity beyond the ordinary territory limit;
-restoring one immediately claims passable land within 8 tiles. Destroyed castles
+Every house starts with 280 troop capacity and one castle. Each additional held
+castle adds 60: two castles allow 340 troops, three allow 400. Land, completed
+Bannerlands, production buildings and upgrades do not raise troop capacity.
+Territory still provides income and structure slots. Restoring a castle also
+immediately claims passable land within 8 tiles. Destroyed castles
 become neutral ruins again. A faction survives while it has at least one castle,
 and its home moves to a surviving castle if the original capital falls.
 

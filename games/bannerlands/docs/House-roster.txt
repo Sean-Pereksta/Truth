@@ -41,6 +41,7 @@ Even owning the whole Continent produces only about 16.8 gold per second before 
 
 HOUSE TROOPS, MOVEMENT AND CASTLES
 Each of the 16 houses has its own specialist troop, production structure, and painted castle appearance. Common troop types remain available, and all houses still start with 70 soldiers, 700 gold and 49 owned tiles.
+Every house starts with 280 troop capacity and one castle. Each additional held castle adds 60 capacity: two castles allow 340 troops, three allow 400. Land, completed Bannerlands, production buildings and upgrades do not raise troop capacity; territory still supplies income and structure slots.
 Build your house's specialist structure to train its troops automatically and unlock paid specialist companies in Muster. Paid specialist recruitment requires a surviving structure of that exact type. You cannot build or recruit another house's specialists.
 Specialist troops use army supply; their buildings use normal structure slots. Displayed company costs and sizes include house bonuses and weaknesses. The automatic company sizes and training times below are base values before house modifiers.
 Player and rival AI houses use the same movement, recruitment, specialist effects and castle features. Castle artwork does not add starting health.

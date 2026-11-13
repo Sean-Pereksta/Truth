@@ -215,7 +215,7 @@ export class Game {
     this.spawnSafety={minCapitalDistance,armyRadius:6,minimumArmyGap:minCapitalDistance-12};
     for(let t=0;t<n;t++){
       const home=homes[t];
-      const h=HOUSES[houseIds[t]],alliance=this.mode.teams?Math.floor(t/2):t,teamColor=ALLIANCE_COLORS[alliance%ALLIANCE_COLORS.length],team={id:t,...h,houseColor:h.color,alliance,teamColor:this.mode.teams?teamColor:h.color,teamName:this.mode.teams?`Alliance ${alliance+1}`:h.name,house:houseIds[t],gold:700,income:0,count:0,cap:180,tiles:0,alive:true,kills:0,upgrades:{weapons:0,armor:0,economy:0},home,rally:t===0?null:{...home},aiClock:this.aiRules.opening+t*.28,heroTimer:0,assault:0,lastThreat:0};
+      const h=HOUSES[houseIds[t]],alliance=this.mode.teams?Math.floor(t/2):t,teamColor=ALLIANCE_COLORS[alliance%ALLIANCE_COLORS.length],team={id:t,...h,houseColor:h.color,alliance,teamColor:this.mode.teams?teamColor:h.color,teamName:this.mode.teams?`Alliance ${alliance+1}`:h.name,house:houseIds[t],gold:700,income:0,count:0,cap:280,tiles:0,alive:true,kills:0,upgrades:{weapons:0,armor:0,economy:0},home,rally:t===0?null:{...home},aiClock:this.aiRules.opening+t*.28,heroTimer:0,assault:0,lastThreat:0};
       if(this.mode.teams){team.color=t%2?this.tintColor(teamColor,.24):teamColor;team.dark=this.tintColor(teamColor,-.65);}
       this.teams.push(team);this.objectiveScores[alliance]=0;
       // Every opening army has a clear, equally valued mustering field.
@@ -258,7 +258,7 @@ export class Game {
     this.fireZones=[];this.stats.housePowerUses=0;this.stats.siegeImpacts=0;
     for(const team of this.teams){team.powerReadyAt=0;team.buffs={};}
     this.controlScores=Array(this.objectiveScores.length).fill(0);
-    this.navigation.invalidate();this.createObjectives();this.createCastleRuins();this.recount();this.hash.rebuild(this.units);this.vision=new WarVision(this);this.vision.update(true);this.event(`${this.landscape.label}: ${this.mode.label}. `+(this.mode.kingSurvival?'Protect your king. Central flags bring reinforcements; the first wave arrives in 15 seconds.':'Hold castle ruins for 60 seconds; every castle adds 60 supply.'),0);
+    this.navigation.invalidate();this.createObjectives();this.createCastleRuins();this.recount();this.hash.rebuild(this.units);this.vision=new WarVision(this);this.vision.update(true);this.event(`${this.landscape.label}: ${this.mode.label}. `+(this.mode.kingSurvival?'Protect your king. Central flags bring reinforcements; the first wave arrives in 15 seconds.':'Start with 280 troop capacity. Hold castle ruins for 60 seconds; each additional castle adds 60.'),0);
   }
 
   tintColor(hex,amount){const n=parseInt(hex.slice(1),16),mix=v=>Math.round(amount>=0?v+(255-v)*amount:v*(1+amount));return '#'+[n>>16,(n>>8)&255,n&255].map(v=>mix(v).toString(16).padStart(2,'0')).join('');}
@@ -394,7 +394,7 @@ export class Game {
     const keep=this.addBuilding(team,'keep',site.x,site.y);keep.restoredCastle=true;
     site.captures++;site.progress.fill(0);site.controller=null;site.contested=false;
     for(const tile of this.tiles){if(!isPassableTile(tile)||ds({x:tile.x+.5,y:tile.y+.5},site)>8**2||this.allied(tile.owner,team)&&tile.owner!==team)continue;tile.owner=team;tile.claim=-1;tile.capture=0;}
-    this.recount();this.event(`${this.teams[team].name} restored ${site.name}: +60 troop capacity and the surrounding realm claimed.`,team);
+    this.recount();this.event(`${this.teams[team].name} restored ${site.name}: ${this.teams[team].keeps>1?'+60 troop capacity and ':''}the surrounding realm claimed.`,team);
     this.effects.push({x:site.x,y:site.y,type:'capture',life:1.6,maxLife:1.6,team});return true;
   }
   ruinCastle(keep){
@@ -693,7 +693,7 @@ export class Game {
     if(!d.unlocked)return result(false,`Build a ${BUILD_DEFS[d.requiredBuilding].label} to recruit ${d.label.toLowerCase()}.`);
     if(d.remaining>0)return result(false,`${d.label} need ${Math.ceil(d.remaining)} more seconds to muster at their camp.`);
     const origin=this.recruitmentOrigin(team,type);if(!origin)return result(false,'A recruitment building is required.');
-    if(s.count+d.batch>s.cap)return result(false,'Supply limit. Capture more land to field a larger army.');
+    if(s.count+d.batch>s.cap)return result(false,'Supply limit. Capture another castle to field a larger army.');
     if(s.gold<d.cost)return result(false,`You need ${d.cost} gold.`);
     s.gold-=d.cost;const anchor=s.rally||s.home,twins=s.sigil==='bridge'?this.buildings.filter(b=>b.team===team&&b.hp>0&&(!d.house&&!d.regiment||b.type===d.requiredBuilding)).sort((a,b)=>ds(a,anchor)-ds(b,anchor)).slice(0,2):[];if(twins.length===2){this.spawnBatch(twins[0],type,Math.ceil(d.batch/2));this.spawnBatch(twins[1],type,Math.floor(d.batch/2));}else this.spawnBatch(origin,type,d.batch);return result(true,`${d.batch} ${d.label.toLowerCase()} join your banner.`);
   }
@@ -1226,7 +1226,8 @@ export class Game {
     for(const u of this.units)if(u.hp>0)this.teams[u.team].count++;
     for(let y=1;y<this.H-4;y+=4)for(let x=1;x<this.W-4;x+=4){const team=this.tiles[y*this.W+x].owner;if(team<0)continue;let owned=true;for(let yy=y;yy<y+4&&owned;yy++)for(let xx=x;xx<x+4;xx++)if(this.tiles[yy*this.W+xx].owner!==team){owned=false;break;}if(owned)this.teams[team].banners++;}
     for(const b of this.buildings)if(b.type==='keep'&&b.hp>0)this.teams[b.team].keeps++;
-    for(const s of this.teams){s.cap=Math.min(260,170+Math.floor(Math.sqrt(s.tiles)*2.8)+s.banners*2)+s.keeps*60;s.income=this.incomeFor(s.id);}
+    // The starting castle is included in 280; only additional standing castles raise army capacity.
+    for(const s of this.teams){s.cap=280+Math.max(0,s.keeps-1)*60;s.income=this.incomeFor(s.id);}
   }
   checkVictory(){
     if(this.winner!==null)return;
@@ -1450,7 +1451,7 @@ export class Game {
     plan.productionKnown={...plan.productionKnown};for(const [type,count] of Object.entries(sites))plan.productionKnown[type]=Math.max(plan.productionKnown[type]||0,count);
     const state={type:chosen?.type||null,label:chosen?.label||'Balanced training',reason:chosen?.reason||'Existing training covers the current army plan.',status:'enough',target:chosen?Math.max(target,total+Number(chosen.type!=='tower')):target,total,cost:chosen?.cost||0,reserved:0,throughput:current,desiredThroughput:desired,ratios,counts,spare,counter,options:options.map(({type,label,cost,reason,score})=>({type,label,cost,reason,score}))};
     if(threatened){state.status='threat';state.reason='Capital under attack: spend on immediate defenders.';}
-    else if(spare<Math.max(16,s.cap*.1)&&!(this.config.fogOfWar&&chosen?.type==='tower')){state.status='supply';state.reason='Army supply is nearly full; resume construction after losses or expansion.';}
+    else if(spare<Math.max(16,s.cap*.1)&&!(this.config.fogOfWar&&chosen?.type==='tower')){state.status='supply';state.reason='Army supply is nearly full; resume construction after losses or capturing another castle.';}
     else if(chosen&&slots.count>=slots.cap){state.status='blocked';state.reason='All land-based structure slots are occupied; capture more land.';}
     else if(chosen){state.status='saving';state.reserved=chosen.cost+100;state.decidedAt=previous?.type===chosen.type?previous.decidedAt:this.time;}
     plan.production=state;return state;

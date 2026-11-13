@@ -123,7 +123,7 @@ try{
   passed('Canceled drags and pinch navigation preserve construction targeting');
   await page.locator('#cancelBuild').click();assert.equal(await page.evaluate(()=>window.__bannerlands.ui.buildMode),null);
   await hidden(page,'#buildBanner');
-  await open(page,'map');await page.locator('#minimap').click({position:{x:100,y:60}});await hidden(page,'#commandPanel');
+  await open(page,'map');await page.locator('#minimap').click({position:{x:100,y:60}});assert.equal(await visible(page,'#commandPanel'),true);await page.locator('#closeDrawer').click();await hidden(page,'#commandPanel');
   await open(page,'orders');await page.keyboard.press('Escape');await hidden(page,'#commandPanel');
   await page.setViewportSize({width:390,height:844});
   for(const pane of ['build','army','orders','map','council'])await assertOnscreen(page,`[data-drawer="${pane}"]`);
