@@ -50,6 +50,7 @@ try{
       assert.match(title||'',new RegExp(`\\b${key}\\b`,'i'),`${pane} tooltip must name its opening hotkey.`);
       assert.equal(aria?.toUpperCase(),key);
       await button.click();assert.equal(await page.locator('#commandPanel').getAttribute('data-pane'),pane);
+      assert.match(await page.locator('#drawerTitle').innerText(),new RegExp(`\\b${key}\\b`,'i'),`${pane} must retain its opening hotkey in the selected panel title.`);
       assert.equal(await page.locator('#minimapDock').isVisible(),true);
       const map=await mapGeometry(page),panel=await page.locator('#commandPanel').boundingBox();
       assert.ok(panel.y+panel.height<=map.top+1,`${pane} overlaps the map at ${width}×${height}.`);
@@ -69,6 +70,17 @@ try{
     await page.locator('#closeDrawer').click();
     for(const [pane,key]of Object.entries(shortcuts)){await page.keyboard.press(key);assert.equal(await page.locator('#commandPanel').getAttribute('data-pane'),pane,`${key} must open ${pane}.`);assert.equal(await page.locator('#commandPanel').isVisible(),true);await page.keyboard.press('Escape');}
     passed(`Map navigation preserves Muster and B/U/O/M/C open their labeled panels at ${width}×${height}.`);
+    await page.evaluate(()=>{const s=window.__bannerlands.game.teams[0];s.gold=10000;s.powerReadyAt=0;});
+    for(const [first,next,pane]of [['U','M','map'],['C','O','orders']]){
+      await page.keyboard.press(first);await page.keyboard.press(next);
+      const before=await page.evaluate(()=>{const g=window.__bannerlands.game,s=g.teams[0];return {gold:s.gold,count:s.count,powerReadyAt:s.powerReadyAt,units:g.group(0).length};});
+      await page.keyboard.press('Shift+Digit1');
+      const after=await page.evaluate(()=>{const g=window.__bannerlands.game,s=g.teams[0];return {gold:s.gold,count:s.count,powerReadyAt:s.powerReadyAt,units:g.group(0).length};});
+      assert.deepEqual(after,before,`${first} → ${next} → Shift+1 must not recruit from or activate a hidden panel.`);
+      assert.equal(await page.locator('#commandPanel').isVisible(),true);assert.equal(await page.locator('#commandPanel').getAttribute('data-pane'),pane);
+      await page.keyboard.press('Escape');
+    }
+    passed(`Map and Orders ignore numbered actions from the previous hidden panel at ${width}×${height}.`);
     await context.close();
   }
   assert.deepEqual(errors,[],'Browser runtime errors');console.log(`${checks} persistent minimap integration checks passed.`);

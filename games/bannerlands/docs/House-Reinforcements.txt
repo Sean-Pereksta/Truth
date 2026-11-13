@@ -65,5 +65,8 @@ Alt+S includes Reed spears and Tarly halberds alongside Frey/Bolton spears.
 Horse archers are cavalry for Alt+C and border patrol. Their selected power
 button can activate Viper Venom; the Charge passive is not shown for them.
 All recruits obey supply, gold, surviving exact facility and local rally rules.
+Troop capacity starts at 280 with one castle. Each additional held castle adds
+60: two castles allow 340 troops, three allow 400. Land, completed Bannerlands,
+production buildings and upgrades do not increase troop capacity.
 Player and enemy houses use the same roster and effects. Existing house
 weaknesses remain; these are initial balance values subject to playtesting.

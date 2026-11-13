@@ -14,12 +14,12 @@ test('Castle ruins stay sparse, reachable and clear on every landscape and map s
     for(const c of ruins){assert.ok(isPassableTile(g.tileAt(c.x,c.y)));assert.ok(g.teams.some(s=>g.navigation.route(s.home,c).reachable));assert.ok(g.teams.every(s=>Math.hypot(s.home.x-c.x,s.home.y-c.y)>=14));assert.ok(g.objectives.every(o=>Math.hypot(o.x-c.x,o.y-c.y)>=9));assert.ok(ruins.every(o=>o===c||Math.hypot(o.x-c.x,o.y-c.y)>=18));assert.equal(c.progress.length,g.objectiveScores.length);}
   }
 });
-test('A full minute restores a castle, adds exactly 60 supply beyond the terrain cap and claims an eight-tile realm',()=>{
+test('A full minute restores a castle, raises the fixed 280 cap by 60 and claims an eight-tile realm',()=>{
   const g=make(),site=g.castles.find(c=>c.ruined);empty(g);
   for(const tile of g.tiles)if(isPassableTile(tile))tile.owner=0;
   const inside=g.tileAt(site.x+7,site.y),outside=g.tileAt(site.x+9,site.y);inside.owner=1;outside.owner=1;g.recount();const cap=g.teams[0].cap;
   occupy(g,site,0,3);g.updateCastles(59.9);assert.equal(site.ruined,true);g.updateCastles(.1);
-  assert.equal(site.ruined,false);assert.equal(site.team,0);assert.equal(g.teams[0].keeps,2);assert.equal(g.teams[0].cap,cap+60);assert.equal(g.teams[0].cap,380);assert.equal(inside.owner,0);assert.equal(outside.owner,1);
+  assert.equal(site.ruined,false);assert.equal(site.team,0);assert.equal(g.teams[0].keeps,2);assert.equal(cap,280);assert.equal(g.teams[0].cap,cap+60);assert.equal(g.teams[0].cap,340);assert.equal(inside.owner,0);assert.equal(outside.owner,1);
   const keep=g.byId.get(site.buildingId);assert.equal(keep.type,'keep');assert.equal(keep.restoredCastle,true);assert.equal(keep.castleId,site.id);
 });
 test('Contested and absent armies pause castle capture exactly like flags; 90 percent counts',()=>{

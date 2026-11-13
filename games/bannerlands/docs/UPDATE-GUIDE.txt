@@ -1,3 +1,11 @@
+CASTLE-BASED TROOP CAPACITY
+Every house starts with one castle and 280 troop capacity. Each additional held
+castle adds 60 capacity: two castles allow 340 troops, three allow 400. Land,
+completed Bannerlands, production buildings and upgrades never raise troop
+capacity. Territory still provides income and structure slots. Player and rival
+houses use the same rule. If castle loss leaves an army above its capacity,
+existing troops survive while further recruitment waits for free supply.
+
 COMBAT FORMATIONS AND TERRAIN
 Right-drag from a destination toward the direction for the line to face.
 Troops keep that facing while marching, including slower backward retreats.

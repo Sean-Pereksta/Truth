@@ -369,7 +369,11 @@ Difficulty changes strategic decisions. Starting resources stay equal, while eve
 
 CONQUEST
 All houses start with 70 soldiers, 700 gold and equal territory.
-Territory produces income and raises army supply. Capture is connected and contested.
+Army capacity starts at 280 with one castle. Each additional held castle adds
+60: two castles allow 340 troops, three allow 400. Territory produces income
+and structure slots, but never increases army capacity. Completed Bannerlands,
+production buildings and upgrades do not increase it either. Capture is
+connected and contested.
 Infantry counters cavalry, cavalry counters archers, archers counter infantry.
 Catapults bombard groups and inflict heavy building damage. Their area impact knocks nearby troops outward, with damage and push fading near the blast edge.
 Buildings automatically recruit over time. Buy extra companies in Muster.
@@ -380,7 +384,7 @@ The keep and all other living structures count toward this total. There is no fi
 Examples: 49 tiles allow 22 structures; 1,000 allow 141; 8,000 allow 1,016.
 The Build panel shows structures used / available and explains how to unlock more slots.
 Build on owned ground and leave room between structures. Losing territory never removes existing structures; if over capacity, reclaim land or wait until enough structures are lost before building again.
-Rival houses use the same land-based capacity.
+Rival houses use the same land-based structure limit and castle-based army capacity.
 
 Automatic recruitment takes twice as long as before, with the same company sizes:
   Keep: 3 swordsmen every 18 seconds.

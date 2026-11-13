@@ -54,7 +54,10 @@ test('Free mustering powers remain available while factory and capital money is 
 });
 
 test('Visible enemy archers change a mass planner toward cavalry production',()=>{
-  const state=setup(),{g,s,p}=state;s.gold=0;tick(state);const initial=BUILD_DEFS[p.production.type];assert.equal(g.unitClass(initial.unit),'infantry');assert.ok(!initial.house||initial.house===s.sigil);
+  const state=setup(),{g,s,p}=state;s.gold=0;
+  // Give this counter-planning scenario an infantry reserve under the fixed 280 cap.
+  for(let i=0;i<10;i++)g.addUnit(s.id,'infantry',s.home.x+3,s.home.y+3);
+  tick(state);const initial=BUILD_DEFS[p.production.type];assert.equal(g.unitClass(initial.unit),'infantry');assert.ok(!initial.house||initial.house===s.sigil);
   scoutEnemy(state,'archer',35);g.time+=8;tick(state);
   assert.equal(p.production.counter,'archers');assert.equal(p.production.type,'stables');assert.match(p.production.reason,/archers/);
 });

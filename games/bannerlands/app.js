@@ -182,8 +182,10 @@ function handleMenuHotkey(e){
  if(name){e.preventDefault();if(MENU_ACTIONS[name])showTab(name);else{cancelBuild();battleHud.open(name);}updateHud();return true;}
  const digit=/^(?:Digit|Numpad)([1-6])$/.exec(e.code)?.[1];
  if(!e.shiftKey||!digit)return false;
- e.preventDefault();if(tab==='build'){toast('Build with Shift + B / A / S / T / W / H / J.');return true;}
- activateMenuAction(MENU_ACTIONS[tab][Number(digit)-1]);
+ e.preventDefault();const activeTab=battleHud.isOpen?$('commandPanel').dataset.pane:tab;
+ if(!MENU_ACTIONS[activeTab])return true;
+ if(activeTab==='build'){toast('Build with Shift + B / A / S / T / W / H / J.');return true;}
+ activateMenuAction(MENU_ACTIONS[activeTab][Number(digit)-1]);
  return true;
 }
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
@@ -298,8 +300,8 @@ function campaignObjectiveText(){
 function updateKingHud(){
  const enabled=!!game.mode?.kingSurvival;$('kingSection').hidden=!enabled;
  setHudHTML($('heroButton'),enabled?'Find king <kbd>F</kbd>':'Commander <kbd>F</kbd>');$('heroButton').title=enabled?'Find your king · F':'Find your commander · F';
- $('capitalRule').textContent=enabled?'Your king has one life. Castles add supply, but king survival keeps your army in the battle.':'Each castle grants +60 troop capacity. Your faction survives while one castle stands.';
- $('castleRule').textContent=enabled?'Castles provide supply and recruit troops. Your king determines survival; his death defeats your army even if a castle remains.':'Hold 90% of troops in a ruin’s ring for 60s. Each castle grants +60 troop capacity and immediately claims an 8-tile radius. Destroyed castles become ruins again. Keep one castle standing to survive.';
+ $('capitalRule').textContent=enabled?'Your king has one life. Capacity starts at 280; each castle beyond the first adds 60. Your king determines survival.':'Start with 280 troop capacity; each additional standing castle adds 60. Your faction survives while one castle stands.';
+ $('castleRule').textContent=enabled?'Capacity is 280 plus 60 per castle beyond the first. Castles recruit troops. Your king determines survival; his death defeats your army even if a castle remains.':'Hold 90% of troops in a ruin’s ring for 60s. Start with 280 capacity; each additional standing castle adds 60 and claims an 8-tile radius. Destroyed castles become ruins again. Keep one castle standing to survive.';
  if(!enabled)return;
  setHudHTML($('kingList'),game.teams.map(team=>{
   const king=game.kingFor?.(team.id),friendly=team.id===0||game.allied(0,team.id),known=friendly||!game.config?.fogOfWar||king&&game.isVisibleTo(0,king),vitality=!known?'Unseen · scout for the king':king?Math.ceil(king.hp)+' / '+Math.ceil(king.maxHp)+' HP':'Fallen · army defeated',health=king&&known?Math.max(0,Math.min(100,king.hp/king.maxHp*100)):null;

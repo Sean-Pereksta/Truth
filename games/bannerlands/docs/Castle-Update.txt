@@ -9,15 +9,19 @@ Hold at least 90% of living troops inside a ruin's four-tile capture ring for
 time pauses each alliance's saved progress. The house with the strongest local
 presence receives the castle when its alliance completes the capture.
 
-Every standing castle grants 60 troop capacity, including the opening keep.
-These bonuses stack beyond the ordinary territory supply limit. Restoring a
-castle immediately claims passable tiles within an eight-tile radius, preserving
-allied territory. Restored castles train and defend like keeps.
+Every house begins with 280 troop capacity and its opening castle. Each
+additional held castle adds 60 capacity: one castle allows 280 troops, two allow
+340, three allow 400. Owned land, completed Bannerlands, production buildings
+and upgrades do not increase troop capacity. Territory still supplies income
+and structure slots. Restoring a castle immediately claims passable tiles
+within an eight-tile radius, preserving allied territory. Restored castles
+train and defend like keeps.
 
-A destroyed castle becomes a neutral ruin and can be captured again. Its supply
-bonus is removed immediately; existing excess troops survive, but further
-recruitment waits for supply. Losing the opening capital moves home to another
-surviving castle. Your faction falls only when its last castle is destroyed.
+A destroyed castle becomes a neutral ruin and can be captured again. Losing an
+additional castle removes its 60 capacity immediately; existing excess troops
+survive, but further recruitment waits for supply. Losing the opening capital
+moves home to another surviving castle. Your faction falls only when its last
+castle is destroyed.
 Flag and Dominion victory conditions still apply in their respective modes.
 
 ADDITIONAL HOUSE REGIMENTS
