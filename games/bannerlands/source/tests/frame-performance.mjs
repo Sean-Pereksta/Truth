@@ -24,7 +24,7 @@ function fixture({speed=1,tickCost=0}={}){
     mousePan:()=>({x:0,y:0}),boundCamera:()=>{},screenToWorld:()=>({x:0,y:0}),
     tone:()=>{},toast:()=>{},checkResult:()=>{},updateHud:()=>calls.hud++,
     requestAnimationFrame:()=>calls.frames++,
-    $:id=>{if(!elements.has(id))elements.set(id,{textContent:'',classList:{remove(){}}});return elements.get(id);}
+    $:id=>{if(!elements.has(id))elements.set(id,{textContent:'',hidden:id==='commandPanel',dataset:{pane:'map'},classList:{remove(){}}});return elements.get(id);}
   };
   vm.createContext(context);vm.runInContext(frameSource,context,{filename:'app.js:frame'});
   return {context,calls,frame(now){context.clock=now;context.frame(now);}};
@@ -77,7 +77,15 @@ test('The covered menu background redraws only for camera changes and resumes im
   assert.equal(f.calls.draws,1);assert.equal(f.calls.minimaps,0);assert.equal(f.calls.frames,60);
   f.context.view.w=1200;f.frame(1020);assert.equal(f.calls.draws,2);
   f.context.view.zoom=.6;f.frame(1040);assert.equal(f.calls.draws,3);
-  f.context.menuOpen=false;f.frame(1060);f.frame(1080);assert.equal(f.calls.draws,5);assert.ok(f.calls.minimaps>0);
+  f.context.menuOpen=false;f.frame(1060);f.frame(1080);assert.equal(f.calls.draws,5);assert.equal(f.calls.minimaps,0);
+  f.context.$('commandPanel').hidden=false;f.frame(1100);assert.ok(f.calls.minimaps>0);
+});
+
+test('The minimap only renders while its navigation drawer is visible',()=>{
+  const f=fixture();for(let i=1;i<=60;i++)f.frame(i*1000/60);assert.equal(f.calls.minimaps,0);
+  const panel=f.context.$('commandPanel');panel.hidden=false;panel.dataset.pane='build';f.frame(1200);assert.equal(f.calls.minimaps,0);
+  panel.dataset.pane='map';f.frame(1400);assert.equal(f.calls.minimaps,1);
+  panel.hidden=true;f.frame(1600);assert.equal(f.calls.minimaps,1);
 });
 
 function cachedElement(){

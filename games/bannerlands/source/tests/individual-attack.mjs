@@ -95,7 +95,7 @@ test('The production A and button handler dispatches individual orders without a
   const source=fs.readFileSync(new URL('../../app.js',import.meta.url),'utf8'),start=source.indexOf('function attackNearest(){'),end=source.indexOf('\nfunction useHousePower()',start);
   assert.ok(start>=0&&end>start);
   const g=fixture(),left=g.addUnit(0,'infantry',25.5,45.5),right=g.addUnit(0,'cavalry',85.5,45.5),west=g.addUnit(1,'infantry',15.5,45.5),east=g.addUnit(2,'archer',95.5,45.5);
-  let cancelled=0;const context={game:g,started:true,menuOpen:false,ui:{formation:'wedge',orderMarker:{x:50,y:50}},selected:()=>[left,right],toast:()=>{},tone:()=>{},cancelBuild:()=>cancelled++,setMode:mode=>assert.equal(mode,'attack')};
+  let cancelled=0;const context={game:g,started:true,menuOpen:false,battleHud:{close(){}},ui:{formation:'wedge',orderMarker:{x:50,y:50}},selected:()=>[left,right],toast:()=>{},tone:()=>{},cancelBuild:()=>cancelled++,setMode:mode=>assert.equal(mode,'attack')};
   vm.createContext(context);vm.runInContext(source.slice(start,end),context);context.attackNearest();
   targetPoint(left,west);targetPoint(right,east);assert.equal(context.ui.orderMarker,null);assert.equal(cancelled,1);
 });

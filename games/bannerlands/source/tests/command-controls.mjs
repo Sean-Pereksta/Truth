@@ -44,7 +44,7 @@ function fixture({house=0,realMenu=false}={}){
   const canvas=element('battleCanvas'),win=new Element('window'),ui={selected:new Set(),selectedBuildings:new Set(),formation:'line',buildMode:null,rallyMode:false,teamOrderMode:null,facingMode:false,facingPreview:null,drag:null,hover:null};
   element('resultOverlay').hidden=true;
   const context={console,Math,Map,Set,String,Array,HOUSES,UNIT_DEFS,BUILD_DEFS,isPassableTile,worldToScreen,screenToWorld,regimentForHouse,regimentBuildingForHouse,game,canvas,window:win,
-    ui,view:{x:0,y:840,w:800,h:600,zoom:1},started:true,menuOpen:false,orderMode:'attack',tab:'army',allSelected:false,allBuildingsSelected:false,
+    ui,view:{x:0,y:840,w:800,h:600,zoom:1},battleHud:{open(){},close(){},isOpen:false,touchSelect:false,syncSelection(){}},started:true,menuOpen:false,orderMode:'attack',tab:'army',allSelected:false,allBuildingsSelected:false,
     pointers:new Map(),keys:new Set(),groups:new Map(),gesture:null,pinch:null,edgeMouse:null,
     $:element,document:{body:{classList:{add(){},remove(){}}},createElement:()=>new Element(),querySelector:selector=>{if(realMenu)return selector?.startsWith('#')?element(selector.slice(1)):actions.get(selector)||null;if(!actions.has(selector))actions.set(selector,new Element(selector));return actions.get(selector);},querySelectorAll:selector=>selector==='[data-tab]'?tabs:[]},
     updateHud(){},toast:message=>messages.push(message),tone(){},initAudio(){},minZoom:()=>.05,boundCamera(){},buildingAt:()=>null,
@@ -215,6 +215,61 @@ await testAsync('Boot waits for regiment and conquest art, and failed new art ke
     if(failed){assert.equal(f.element('startButton').disabled,true);assert.equal(f.element('startButton').innerHTML,'ARTWORK COULD NOT LOAD');assert.equal(errors.length,1);assert.equal(effects.includes('frame'),false);}
     else{assert.equal(f.element('startButton').disabled,false);assert.ok(f.element('startButton').innerHTML.includes('RAISE THE BANNERS'));assert.equal(errors.length,0);assert.equal(effects.includes('frame'),true);}
   }
+});
+
+test('Default one-finger pan preserves construction, rally targeting and the current army selection',()=>{
+  for(const mode of ['build','rally']){
+    const f=fixture(),unit=f.game.addUnit(0,'infantry',28.5,30.5);f.ui.selected.add(unit.id);
+    if(mode==='build')f.ui.buildMode='barracks';else f.ui.rallyMode=true;
+    const event=f.event({button:0,pointerType:'touch'});
+    f.canvas.dispatch('pointerdown',event);f.canvas.dispatch('pointermove',f.event({button:0,pointerType:'touch',clientX:470,clientY:330}));
+    assert.equal(f.ui.drag,null);assert.equal(f.context.view.x,-70);assert.equal(f.context.view.y,810);
+    f.canvas.dispatch('pointerup',f.event({button:0,pointerType:'touch',clientX:470,clientY:330}));
+    assert.deepEqual(ids(f.ui.selected),[unit.id]);assert.equal(f.commands.length,0);
+    assert.equal(mode==='build'?f.ui.buildMode:f.ui.rallyMode,mode==='build'?'barracks':true);
+  }
+});
+
+test('Touch Select explicitly box-selects troops while touch facing issues a directional movement order',()=>{
+  const f=fixture(),unit=f.game.addUnit(0,'infantry',30,30);f.context.battleHud.touchSelect=true;
+  f.canvas.dispatch('pointerdown',f.event({button:0,pointerType:'touch',clientX:360,clientY:260}));
+  f.canvas.dispatch('pointermove',f.event({button:0,pointerType:'touch',clientX:450,clientY:340}));
+  assert.ok(f.ui.drag);f.canvas.dispatch('pointerup',f.event({button:0,pointerType:'touch',clientX:450,clientY:340}));
+  assert.deepEqual(ids(f.ui.selected),[unit.id]);assert.equal(f.context.view.x,0);assert.equal(f.context.view.y,840);
+  f.context.battleHud.touchSelect=false;f.ui.facingMode=true;
+  f.canvas.dispatch('pointerdown',f.event({button:0,pointerType:'touch'}));
+  f.canvas.dispatch('pointermove',f.event({button:0,pointerType:'touch',clientX:484,clientY:342}));
+  f.canvas.dispatch('pointerup',f.event({button:0,pointerType:'touch',clientX:484,clientY:342}));
+  assert.equal(f.commands.length,1);assert.equal(f.commands[0][3],'move');assert.ok(f.commands[0][5]);assert.equal(f.ui.facingMode,false);
+});
+
+test('Touch construction repeats only when requested and invalid placements keep targeting active',()=>{
+  const f=fixture();f.ui.buildMode='barracks';f.element('repeatBuild').checked=true;
+  const tap=(x=400,y=300)=>{f.canvas.dispatch('pointerdown',f.event({button:0,pointerType:'touch',clientX:x,clientY:y}));f.canvas.dispatch('pointerup',f.event({button:0,pointerType:'touch',clientX:x,clientY:y}));};
+  tap();assert.equal(f.game.buildings.length,1);assert.equal(f.ui.buildMode,'barracks');
+  tap();assert.equal(f.game.buildings.length,1);assert.equal(f.ui.buildMode,'barracks','Blocked ground keeps the chosen building active.');
+  f.element('repeatBuild').checked=false;tap(600,300);assert.equal(f.game.buildings.length,2);assert.equal(f.ui.buildMode,null);
+});
+
+test('Canceled touch navigation and a dismissed drawer do not issue unintended orders',()=>{
+  const f=fixture(),unit=f.game.addUnit(0,'infantry',28.5,30.5);f.ui.selected.add(unit.id);f.ui.buildMode='barracks';
+  f.canvas.dispatch('pointerdown',f.event({button:0,pointerType:'touch'}));
+  f.canvas.dispatch('pointercancel',f.event({button:0,pointerType:'touch'}));assert.equal(f.ui.buildMode,'barracks');assert.equal(f.game.buildings.length,0);
+  f.ui.buildMode=null;f.context.battleHud.isOpen=true;
+  f.canvas.dispatch('pointerdown',f.event({button:0,pointerType:'touch'}));f.canvas.dispatch('pointerup',f.event({button:0,pointerType:'touch'}));
+  assert.equal(f.commands.length,0);assert.deepEqual(ids(f.ui.selected),[unit.id]);
+});
+
+test('Pinch navigation preserves targeting and releasing either finger cannot place or command',()=>{
+  const f=fixture(),unit=f.game.addUnit(0,'infantry',28.5,30.5);f.ui.selected.add(unit.id);f.ui.buildMode='barracks';
+  f.canvas.dispatch('pointerdown',f.event({button:0,pointerType:'touch',pointerId:1,clientX:330,clientY:300}));
+  f.canvas.dispatch('pointerdown',f.event({button:0,pointerType:'touch',pointerId:2,clientX:470,clientY:300}));
+  assert.ok(f.context.pinch);assert.equal(f.context.gesture,null);
+  f.canvas.dispatch('pointermove',f.event({button:0,pointerType:'touch',pointerId:2,clientX:510,clientY:300}));
+  assert.ok(f.context.view.zoom>1);
+  f.canvas.dispatch('pointerup',f.event({button:0,pointerType:'touch',pointerId:1,clientX:330,clientY:300}));
+  f.canvas.dispatch('pointerup',f.event({button:0,pointerType:'touch',pointerId:2,clientX:510,clientY:300}));
+  assert.equal(f.ui.buildMode,'barracks');assert.equal(f.game.buildings.length,0);assert.equal(f.commands.length,0);assert.deepEqual(ids(f.ui.selected),[unit.id]);
 });
 
 console.log(`${cases} command control checks passed.`);

@@ -1,0 +1,382 @@
+/* Battlefield-first controls. The map never gives up space to a sidebar. */
+:root {
+  --hud-edge: 8px;
+  --hud-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  --hud-top: calc(8px + env(safe-area-inset-top, 0px));
+  --hud-surface: #122329f2;
+  --hud-border: #a18b5866;
+}
+
+#gameShell { height: 100%; height: 100dvh; }
+#battlefield { inset: 0; }
+#battleCanvas { width: 100%; height: 100%; }
+#battlefield > .map-hint { display: none; }
+
+/* Only essential live resources and pause/menu remain over the battlefield. */
+#topbar {
+  top: var(--hud-top);
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100% - 16px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+  height: 48px;
+  padding: 2px 5px 2px 10px;
+  gap: 12px;
+  border: 1px solid var(--hud-border);
+  border-radius: 8px;
+  background: var(--hud-surface);
+  box-shadow: 0 3px 16px #0004;
+}
+#topbar .brand,
+#topbar .land-resource,
+#topbar #clock,
+#topbar #speedButton,
+#topbar #soundButton,
+#topbar #helpButton,
+#topbar #fullscreenButton { display: none; }
+#topbar .top-stats { flex: 0 1 auto; gap: 14px; justify-content: flex-start; min-width: 0; }
+#topbar .resource { border: 0; padding: 0; min-width: 0; gap: 6px; }
+#topbar .resource svg { display: block; width: 18px; height: 20px; flex-shrink: 0; }
+#topbar .resource b { font: 600 16px/1.1 'Segoe UI', Arial, sans-serif; }
+#topbar .resource i { font-size: 12px; }
+#topbar .resource small { display: none; }
+#topbar .resource.gold small { display: block; margin-top: 2px; font-size: 10px; line-height: 1; letter-spacing: 0; }
+#topbar .top-actions { gap: 3px; }
+#topbar .top-actions button { min-width: 44px; height: 44px; padding: 5px 8px; font-size: 16px; border: 0; }
+#topbar #campaignMenuButton { font-size: 12px; color: #e4ce9d; }
+
+/* Five labeled controls occupy a small thumb-reachable island. */
+#gameplayDock {
+  position: absolute;
+  z-index: 25;
+  bottom: var(--hud-bottom);
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  width: min(370px, calc(100% - 16px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+  padding: 3px;
+  gap: 2px;
+  border: 1px solid var(--hud-border);
+  border-radius: 10px;
+  background: var(--hud-surface);
+  box-shadow: 0 3px 20px #0005;
+}
+#gameplayDock button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 44px;
+  min-height: 48px;
+  padding: 4px;
+  border-color: transparent;
+  border-radius: 7px;
+  color: #c3cec3;
+  font: 500 11px/1.15 'Segoe UI', Arial, sans-serif;
+}
+#gameplayDock button svg { display: block; width: 20px; height: 20px; }
+#gameplayDock button[aria-expanded="true"],
+#gameplayDock button.active { color: #f1d398; background: #d6b36c20; border-color: #c0a36599; }
+
+/* A selection has a small context strip; no empty selection card. */
+#selectionDock {
+  display: none;
+  position: absolute;
+  z-index: 15;
+  left: 50%;
+  right: auto;
+  bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  width: min(550px, calc(100% - 16px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+  min-height: 48px;
+  padding: 3px 5px 3px 10px;
+  gap: 8px;
+  border: 1px solid var(--hud-border);
+  border-radius: 7px;
+  background: var(--hud-surface);
+  box-shadow: 0 3px 16px #0004;
+}
+body[data-has-selection="true"] #selectionDock { display: flex; }
+#selectionDock .selection-crest { display: none; }
+#selectionDock .selection-copy { flex: 1; min-width: 0; }
+#selectionDock .selection-copy b { font: 500 13px/1.25 'Segoe UI', Arial, sans-serif; }
+#selectionDock .selection-copy > span { max-width: none; margin-top: 2px; font-size: 11px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#selectionCommands { display: flex; align-items: center; justify-content: center; gap: 4px; flex: 0 0 auto; min-width: 64px; min-height: 44px; padding: 5px 9px; font: 12px/1.2 'Segoe UI', Arial, sans-serif; }
+#selectionDock #clearSelection { min-width: 44px; min-height: 44px; padding: 5px 9px; font: 12px/1.2 'Segoe UI', Arial, sans-serif; }
+#selectionDock #clearSelection { padding: 3px; font-size: 23px; border-color: transparent; color: #a9b7ad; }
+#selectionAbility { display: flex; margin-top: 3px; gap: 6px; }
+#selectionDock #selectedPowerButton { min-height: 44px; font-size: 11px; padding: 5px 8px; }
+#selectionAbility #selectedPassiveAbilities { display: none; }
+
+/* One drawer is opened on demand. The battlefield remains full size behind it. */
+#commandPanel {
+  z-index: 22;
+  top: calc(64px + env(safe-area-inset-top, 0px));
+  right: calc(8px + env(safe-area-inset-right, 0px));
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  left: auto;
+  width: min(420px, 40vw);
+  max-width: calc(100% - 16px);
+  min-width: 300px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #a18b5888;
+  border-radius: 10px;
+  background: #122329fa;
+  box-shadow: 0 8px 35px #0006;
+}
+#commandPanel[hidden] { display: none !important; }
+#drawerHeader { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex: 0 0 auto; min-height: 48px; padding: 2px 4px 2px 14px; border-bottom: 1px solid #6e78554d; }
+#drawerTitle { margin: 0; font: 400 19px/1.2 Georgia, serif; color: #e7d3aa; }
+#closeDrawer { width: 44px; height: 44px; flex: 0 0 44px; border: 0; font: 25px/1 'Segoe UI', Arial, sans-serif; color: #bdc8b9; }
+#drawerNav { display: none; flex: 0 0 auto; gap: 4px; padding: 5px 10px; border-bottom: 1px solid #6e78554d; }
+#commandPanel[data-pane="council"] #drawerNav,
+#commandPanel[data-pane="realm"] #drawerNav,
+#commandPanel[data-pane="settings"] #drawerNav { display: flex; }
+#drawerNav button { flex: 1; min-width: 0; min-height: 44px; padding: 6px; font: 12px 'Segoe UI', Arial, sans-serif; }
+#drawerNav button[aria-selected="true"],
+#drawerNav button.active { color: #ecd299; border-color: #baa16c; background: #c6a56615; }
+#commandScroll { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 12px; scrollbar-gutter: stable; touch-action: pan-y; }
+#commandPanel .panel-tabs,
+#commandPanel #menuShortcutHint { display: none; }
+#commandScroll > [data-hud-pane] { display: none; }
+#commandPanel[data-pane="orders"] #commandScroll > [data-hud-pane="orders"],
+#commandPanel[data-pane="build"] #commandScroll > [data-hud-pane="build"],
+#commandPanel[data-pane="army"] #commandScroll > [data-hud-pane="army"],
+#commandPanel[data-pane="council"] #commandScroll > [data-hud-pane="council"],
+#commandPanel[data-pane="realm"] #commandScroll > [data-hud-pane="realm"],
+#commandPanel[data-pane="map"] #commandScroll > [data-hud-pane="map"],
+#commandPanel[data-pane="settings"] #commandScroll > [data-hud-pane="settings"] { display: block; }
+#commandPanel [hidden] { display: none !important; }
+
+/* Restore readable labels and useful hit areas after the original narrow sidebar rules. */
+#commandPanel button,
+#commandPanel select,
+#commandPanel summary { min-height: 44px; }
+#commandPanel button { font-size: 12px; }
+#commandPanel .section-label { font-size: 11px; letter-spacing: .5px; margin-bottom: 10px; }
+#commandPanel .section-label > span { display: inline; font-size: 10px; letter-spacing: 0; }
+#commandPanel .panel-note,
+#commandPanel .objective-rule,
+#commandPanel .flag-wave-status,
+#commandPanel .king-section > p,
+#commandPanel .command-group-panel > p,
+#commandPanel .specialist-impact p,
+#commandPanel .specialist-impact-preview,
+#commandPanel .house-passives,
+#commandPanel .house-power-button > span,
+#commandPanel #housePowerCost,
+#commandPanel #housePowerDescription { font: 11px/1.5 'Segoe UI', Arial, sans-serif; }
+#commandPanel .tab-content { min-height: 0; padding: 0; }
+#commandPanel .action-card { min-height: 66px; padding: 8px; gap: 9px; margin-bottom: 7px; }
+#commandPanel .action-card svg { display: block; flex: 0 0 24px; width: 24px; height: 24px; }
+#commandPanel .action-card .action-title { flex-wrap: wrap; align-items: center; gap: 4px; }
+#commandPanel .action-card .action-title b,
+#commandPanel .action-card b { font: 500 13px/1.25 'Segoe UI', Arial, sans-serif; overflow-wrap: anywhere; }
+#commandPanel .action-card .action-copy > small { display: block; font: 11px/1.35 'Segoe UI', Arial, sans-serif; color: #a4b4a6; margin-top: 4px; }
+#commandPanel .action-card .cost { font-size: 12px; text-align: right; }
+#commandPanel .action-card .cost small { font-size: 10px; }
+#commandPanel .building-art { width: 44px; height: 44px; flex: 0 0 44px; }
+#commandPanel .building-art canvas { width: 44px; height: 44px; }
+#commandPanel .menu-hotkey { font-size: 10px; padding: 2px 4px; }
+#commandPanel .orders { padding: 0 0 12px; }
+#commandPanel .order-modes button { font-size: 12px; padding: 7px; gap: 6px; }
+#commandPanel .order-modes button svg { display: block; width: 18px !important; height: 18px; }
+#commandPanel .formation-label { font-size: 11px; margin-top: 12px; }
+#commandPanel .formations { gap: 5px; }
+#commandPanel .formations button { font-size: 12px; padding: 5px; }
+#commandPanel .order-actions button { font-size: 12px; }
+#commandPanel .face-order-button { font-size: 12px; padding: 8px; }
+#commandPanel .face-order-button small { font-size: 11px; }
+#commandPanel .army-selection > summary { display: flex; align-items: center; justify-content: space-between; font-size: 12px; gap: 8px; }
+#commandPanel .army-selection > summary > span { float: none; margin: 0; font-size: 10px; }
+#commandPanel #troopTypeButtons { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+#commandPanel #troopTypeButtons button { font-size: 12px; padding: 7px; }
+#commandPanel #commandGroups { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
+#commandPanel #commandGroups button { font-size: 12px; min-width: 44px; padding: 5px 2px; }
+#commandPanel #commandGroups button small { font-size: 10px; }
+#commandPanel #assignGroupButton { width: 100%; margin-bottom: 7px; padding: 7px; font-size: 12px; }
+body[data-selection-kind="building"] #commandPanel .orders,
+body[data-selection-kind="building"] #commandPanel .face-order-button,
+body[data-selection-kind="building"] #commandPanel .army-selection,
+body[data-selection-kind="building"] #commandPanel .command-group-panel,
+body[data-selection-kind="building"] #commandPanel #touchOrderHelp { display: none; }
+.selection-shortcuts { display: flex; gap: 6px; margin-bottom: 12px; }
+#commandPanel .selection-shortcuts #allButton,
+#commandPanel .selection-shortcuts #heroButton { display: block; flex: 1; min-width: 0; padding: 8px; font: 12px 'Segoe UI', Arial, sans-serif; }
+#commandPanel .building-orders { margin: 12px 0; padding: 10px; }
+#commandPanel #buildingRallyStatus { font-size: 12px; line-height: 1.4; }
+#commandPanel .building-rally-actions button { font-size: 12px; padding: 8px; }
+#commandPanel .selected-tower-heading { display: flex; }
+#commandPanel .selected-tower-heading b { font-size: 14px; }
+#commandPanel .selected-tower-heading small,
+#commandPanel .selected-tower-upgrade p { font-size: 11px; line-height: 1.4; }
+#commandPanel .selected-tower-upgrade button { font-size: 12px; }
+#commandPanel .selected-tower-upgrade button b { font-size: 11px; }
+#commandPanel .team-command-buttons { flex-direction: row; }
+#commandPanel .team-command-buttons button,
+#commandPanel .team-order-status { font-size: 12px; }
+#commandPanel .objective-heading { flex-direction: row; align-items: center; }
+#commandPanel .objective-heading b { font-size: 12px; }
+#commandPanel .objective-heading > span,
+#commandPanel .objective-card small { font-size: 11px; }
+#commandPanel .roster-row { font-size: 12px; gap: 7px; }
+#commandPanel .roster-row b small { font-size: 10px; }
+#commandPanel .king-status b { font-size: 12px; }
+#commandPanel .king-status small { font-size: 11px; }
+#commandPanel .house-card { padding: 0 0 12px; }
+#commandPanel .house-card h2 { font-size: 21px; }
+#commandPanel .house-quick-power { font-size: 12px; padding: 8px; }
+#commandPanel .house-quick-power b { font-size: 11px; }
+#commandPanel .townhall-heading { display: flex; }
+#commandPanel .townhall-heading b { font-size: 15px; }
+#commandPanel .townhall-heading small,
+#commandPanel .townhall-card p,
+#commandPanel .townhall-card .capital-rule { font-size: 11px; line-height: 1.5; }
+#commandPanel .townhall-card button,
+#commandPanel .townhall-card button b { font-size: 12px; }
+#commandPanel .house-power-heading { display: flex; }
+#commandPanel .house-power-heading > b { font-size: 17px; }
+#commandPanel .house-power-heading strong { font-size: 11px; margin: 0; }
+#commandPanel .house-details summary { font-size: 12px; padding: 12px 0; }
+#commandPanel .house-passives > b { font-size: 13px; }
+
+/* Camera, terrain and scenario information live in the drawer. */
+#commandPanel .map-heading,
+#commandPanel .map-meta,
+#commandPanel .terrain-readout,
+#commandPanel .camera-controls { position: static; inset: auto; max-width: none; pointer-events: auto; }
+#commandPanel .map-heading { text-shadow: none; margin: 0 0 16px; }
+#commandPanel .map-heading .eyebrow { font-size: 10px; letter-spacing: 1px; }
+#commandPanel .map-heading h2 { font-size: 21px; max-width: none; margin: 8px 0; }
+#commandPanel .map-heading #objective { display: block; font: 12px/1.5 'Segoe UI', Arial, sans-serif; max-width: none; }
+#commandPanel .map-meta { display: flex; text-align: left; align-items: flex-start; flex-direction: row; flex-wrap: wrap; gap: 8px 14px; margin: 10px 0; font-size: 11px; letter-spacing: 0; }
+#commandPanel .map-meta #performance,
+#commandPanel .map-meta #landsStatus,
+#commandPanel .map-meta #battleCount { display: inline; font-size: 11px; }
+#commandPanel .terrain-readout { font-size: 12px; margin-top: 12px; padding: 10px; box-shadow: none; }
+#commandPanel .camera-controls { display: flex; flex-wrap: wrap; justify-content: center; margin-top: 12px; padding: 4px; box-shadow: none; }
+#commandPanel .camera-controls button { width: 44px; min-width: 44px; height: 44px; font-size: 22px; }
+#commandPanel .camera-controls span { font-size: 12px; }
+#commandPanel .minimap-section { padding: 0; border: 0; background: none; }
+#commandPanel #minimap { height: clamp(150px, 27dvh, 260px); width: 100%; }
+#commandPanel .terrain-legend { font-size: 11px; gap: 8px 12px; margin-top: 10px; }
+#commandPanel .terrain-legend i { width: 9px; height: 7px; }
+#commandPanel .mini-footer { font-size: 10px; letter-spacing: 0; }
+
+/* Placement and targeting feedback stay small and leave the map accessible. */
+#buildBanner {
+  z-index: 21;
+  top: calc(64px + env(safe-area-inset-top, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  max-width: calc(100% - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+  width: max-content;
+  padding: 4px 6px 4px 12px;
+  border-radius: 7px;
+  background: var(--hud-surface);
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: normal;
+}
+#buildBanner button { min-height: 44px; min-width: 44px; margin: 0; padding: 5px 9px; font-size: 12px; }
+#repeatBuildLabel { display: flex; align-items: center; gap: 6px; min-height: 44px; cursor: pointer; white-space: nowrap; }
+#repeatBuildLabel input { width: 18px; height: 18px; margin: 0; accent-color: var(--gold); }
+#toast { z-index: 24; top: calc(68px + env(safe-area-inset-top, 0px)); padding: 9px 12px; border-radius: 6px; max-width: min(460px, 85%); font-size: 12px; }
+body.placing #toast { top: calc(126px + env(safe-area-inset-top, 0px)); }
+#touchControls { display: none; position: absolute; z-index: 16; top: calc(64px + env(safe-area-inset-top, 0px)); left: calc(8px + env(safe-area-inset-left, 0px)); }
+#touchModeButton { min-height: 44px; padding: 6px 10px; border: 1px solid var(--hud-border); border-radius: 7px; background: var(--hud-surface); box-shadow: 0 3px 12px #0003; font: 12px 'Segoe UI', Arial, sans-serif; }
+
+/* Settings use the same large touch targets as construction and orders. */
+#commandPanel .settings-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+#commandPanel .settings-actions button { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 10px; }
+#commandPanel .settings-actions #fullscreenButton,
+#commandPanel .settings-actions #soundButton,
+#commandPanel .settings-actions #helpButton { display: flex; }
+#commandPanel .settings-note { font: 12px/1.5 'Segoe UI', Arial, sans-serif; color: #b5c4b4; }
+
+@media (pointer: coarse) {
+  #touchControls { display: block; }
+  #gameShell kbd,
+  #gameShell .menu-hotkey,
+  #commandPanel .army-selection > summary > span,
+  #commandPanel .command-group-panel .section-label > span { display: none; }
+  #commandPanel .command-group-panel > p { font-size: 11px; }
+  body.placing #touchControls { display: none; }
+}
+
+@media (orientation: portrait) {
+  #commandPanel {
+    top: auto;
+    right: calc(8px + env(safe-area-inset-right, 0px));
+    left: calc(8px + env(safe-area-inset-left, 0px));
+    bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    max-height: 52vh;
+    max-height: 52dvh;
+    border-radius: 12px;
+  }
+  #commandScroll { flex: 0 1 auto; }
+  #selectionDock { bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
+  body:has(#commandPanel:not([hidden])) #selectionDock { display: none; }
+}
+
+@media (max-height: 480px) and (orientation: landscape) {
+  #commandPanel { top: calc(8px + env(safe-area-inset-top, 0px)); bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
+  #topbar { left: calc(8px + env(safe-area-inset-left, 0px)); transform: none; }
+  #touchControls { top: auto; bottom: var(--hud-bottom); }
+  #selectionDock { left: calc(8px + env(safe-area-inset-left, 0px)); transform: none; width: min(450px, calc(60% - 20px)); }
+  #buildBanner { left: calc(8px + env(safe-area-inset-left, 0px)); transform: none; max-width: calc(60% - 20px); }
+  #commandPanel #minimap { height: 150px; }
+}
+
+@media (max-width: 420px) {
+  #topbar { gap: 7px; padding-left: 8px; }
+  #topbar .top-stats { gap: 10px; }
+  #topbar .resource { gap: 4px; }
+  #topbar .resource svg { width: 16px; }
+  #topbar .resource b { font-size: 14px; }
+  #topbar .resource i { font-size: 11px; }
+  #topbar .resource.gold small { font-size: 10px; }
+  #topbar .top-actions { gap: 0; }
+  #topbar .top-actions button { min-width: 44px; padding: 4px; }
+  #selectionDock { gap: 4px; padding-left: 8px; }
+  #selectionDock .selection-copy > span { display: none; }
+  #selectionDock #clearSelection { min-width: 44px; }
+  #selectionDock #selectedPowerButton { font-size: 11px; }
+  #commandPanel .action-card { gap: 7px; padding: 7px; }
+  #commandPanel .building-art,
+  #commandPanel .building-art canvas { width: 40px; height: 40px; }
+  #commandPanel .building-art { flex-basis: 40px; }
+}
+
+@media (max-width: 700px) and (orientation: landscape) {
+  #gameplayDock { left: auto; right: calc(8px + env(safe-area-inset-right, 0px)); transform: none; width: calc(100% - 128px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #gameplayDock button, #commandPanel, #selectionDock { transition: none; }
+}
+
+/* Keep the selected-object strip one row, including during targeting. */
+body.placing #selectionDock { display: none; }
+#commandPanel #selectionAbility { margin-bottom: 10px; align-items: center; }
+#commandPanel #selectedPowerButton { min-height: 44px; padding: 8px; }
+#commandPanel #selectionAbility #selectedPassiveAbilities { display: block; font: 11px/1.4 'Segoe UI', Arial, sans-serif; color: #adbdaf; }
+#commandPanel .setting-control { display: flex; align-items: center; justify-content: space-between; gap: 6px; font: 12px 'Segoe UI', Arial, sans-serif; }
+#commandPanel .setting-control button { flex: 0 0 44px; padding: 5px; }
+#commandPanel .land-resource { display: flex; border: 0; padding: 0; margin-bottom: 14px; }
+#commandPanel .land-resource b { font-size: 18px; }
+#commandPanel .land-resource small { font-size: 10px; }
