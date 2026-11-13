@@ -1,0 +1,48 @@
+TROOP ORDERS AND LARGE-ARMY PERFORMANCE
+
+Controls
+- A right-click over the battlefield now closes an open command drawer and
+  issues the selected army's Move order in the same click.
+- A right-drag that returns to its starting point issues an ordinary Move.
+  Directional drags still set the destination and facing at the pressed point.
+- Primary and touch taps keep their existing drawer-dismissal behavior.
+
+Routing
+- Once the shared route-search budget is spent, new destinations wait without
+  allocating full-map flow fields. This preserves unfinished routes instead
+  of evicting them under a stream of commands and leaving troops frozen.
+- Cached terrain regions reject disconnected destinations immediately.
+  Rivers and mountains remain impassable except at legal crossings.
+
+Performance
+- The collision grid clears only previously occupied buckets. Candidate order,
+  physical separation, combat results and troop speeds are preserved.
+- Unchanged territory reuses ownership pixels, border geometry and minimap
+  artwork. Changed borders avoid temporary per-tile arrays. Fog memory,
+  passability, faction colors and new campaigns invalidate the cache.
+
+Validation
+- The main test suite includes repeated orders for 320 mixed troops, complete
+  bridge crossings and reversal, 480 selected troops receiving a right-click,
+  deferred route contention, sparse collision queries and territory caching.
+- Real Chrome input checks cover 480 selected troops, an open command drawer,
+  twelve repeated right-clicks, returning drags and directional drags.
+- The full gameplay and native raster rendering suites pass.
+- A seeded continent simulation benchmark with 1,120 starting troops and
+  16 houses used 40 warm-up updates and 160 measured updates per scenario.
+  Idle, march and battle state digests matched the previous version exactly.
+  Two local runs reduced mean update time by 42-56% for idle armies, 30-48%
+  for marching armies and 20-31% for battles. Both runs retained matching state.
+  These are simulation CPU measurements, not whole-game FPS guarantees.
+- The ownership-generation benchmark on 39,424 tiles reduced unchanged
+  refreshes from 15.30 to 1.14 ms and changing refreshes from 15.67 to 3.00 ms.
+  This targeted measurement excludes the canvas upload and other rendering.
+
+Repeatable commands (from games/bannerlands)
+- npm run check
+- npm test
+- npm run test:render (requires @napi-rs/canvas or LANDS_CANVAS_MODULE)
+- node source/tests/performance.mjs --frames 160 --warmup 40
+- node source/tests/spatial-performance.mjs --benchmark
+- NAV_BASELINE_MODULE can select a previous navigation.js for:
+  node source/tests/navigation-contention.mjs --benchmark

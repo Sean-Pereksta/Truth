@@ -2,6 +2,13 @@
 
 Command armies, conquer the grid, and unite the realm in an isometric real-time strategy game.
 
+Movement orders remain active when a right-click also closes a command panel,
+and a right-drag that returns to its starting point still issues a Move order.
+Large batches of destinations now preserve unfinished route searches instead
+of repeatedly replacing them. Sparse collision-grid rebuilds and cached
+territory artwork reduce work on large maps. See
+`docs/Troop-Orders-and-Performance.txt` for details and validation.
+
 The minimap is always visible in the battlefield corner. Command panels open
 above it, and minimap navigation preserves the current panel. Buttons and
 selected panel titles show opening shortcuts: Build (B), Muster (U), Orders (O),

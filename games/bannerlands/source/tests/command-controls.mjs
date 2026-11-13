@@ -103,6 +103,22 @@ test('Simple right-click moves, while the directional button and D never turn le
   }
 });
 
+test('Right-click orders every selected troop even when it also closes the command drawer',()=>{
+  const f=fixture(),troops=Array.from({length:480},(_,i)=>f.game.addUnit(0,'infantry',20+i%20*.3,22+Math.floor(i/20)*.3));
+  f.ui.selected=new Set(troops.map(u=>u.id));f.context.battleHud.isOpen=true;
+  f.canvas.dispatch('pointerdown',f.event());f.canvas.dispatch('pointerup',f.event());
+  assert.equal(f.commands.length,1);assert.equal(f.commands[0][3],'move');
+  for(const u of troops){assert.equal(u.order.mode,'move');assert.equal(u.order.groupX,30);assert.equal(u.order.groupY,30);}
+  f.canvas.dispatch('pointerdown',f.event({button:0}));f.canvas.dispatch('pointerup',f.event({button:0}));
+  assert.equal(f.ui.selected.size,troops.length,'A primary click may still just close the drawer.');assert.equal(f.commands.length,1);
+});
+
+test('Right-drag that returns to its anchor still issues a move order',()=>{
+  const f=fixture(),u=f.game.addUnit(0,'infantry',28.5,30.5);f.ui.selected.add(u.id);
+  f.canvas.dispatch('pointerdown',f.event());f.canvas.dispatch('pointermove',f.event({clientX:420,clientY:310}));f.canvas.dispatch('pointermove',f.event());f.canvas.dispatch('pointerup',f.event());
+  assert.equal(f.commands.length,1);assert.equal(f.commands[0][3],'move');assert.equal(f.commands[0][5],null);assert.equal(u.order.groupX,30);assert.equal(u.order.groupY,30);assert.equal(u.order.facingX,undefined);
+});
+
 test('Cancel, Escape and lost focus discard a facing preview without issuing an order',()=>{
   for(const interruption of ['pointercancel','Escape','blur']){
     const f=fixture(),u=f.game.addUnit(0,'infantry',28.5,30.5);f.ui.selected.add(u.id);
@@ -113,7 +129,7 @@ test('Cancel, Escape and lost focus discard a facing preview without issuing an 
 });
 
 test('Building-only right-click sets its rally, while right-drag never pans or changes a rally',()=>{
-  const f=fixture(),building=f.game.addBuilding(0,'barracks',25.5,25.5);f.ui.selectedBuildings.add(building.id);
+  const f=fixture(),building=f.game.addBuilding(0,'barracks',25.5,25.5);f.ui.selectedBuildings.add(building.id);f.context.battleHud.isOpen=true;
   f.canvas.dispatch('pointerdown',f.event());f.canvas.dispatch('pointerup',f.event());assert.equal(f.commands.length,0);assert.equal(building.rally.x,30);assert.equal(building.rally.y,30);
   const before={...building.rally},camera={...f.context.view};f.canvas.dispatch('pointerdown',f.event());f.canvas.dispatch('pointermove',f.event({clientX:484,clientY:342}));assert.ok(f.ui.facingPreview);assert.equal(f.ui.facingPreview.count,0);f.canvas.dispatch('pointerup',f.event({clientX:484,clientY:342}));
   assert.deepEqual(building.rally,before);assert.equal(f.commands.length,0);assert.equal(f.ui.facingPreview,null);assert.deepEqual(f.context.view,camera);
