@@ -1,0 +1,69 @@
+BANNERLANDS — HOUSE REINFORCEMENTS
+
+Six new troops have separate painted 4-column by 2-row animation sheets:
+four walk frames and four attack frames. Six matching buildings are in a
+transparent 3-column by 2-row atlas. Artwork and prompts: assets/reinforcements.
+The standalone build embeds all of them. Start a new campaign for this roster.
+
+BARATHEON — STORMBREAKERS / STORMBREAKER FORGE
+Forge: 430 gold; trains 2 every 48 seconds. Paid company: 290 gold for 3.
+Heavy hammer infantry: 235 health, 36 damage, 2.1-second swings, 0.85 reach.
+Each blow produces a gold impact ring, sparks and dust, and physically shoves
+surviving enemies. Heavy troops, frontal greatshields and braced spears resist
+the shove. Braced spears take 25% extra hammer damage. Mountains and blocked
+terrain constrain knockback; buildings are never pushed. Slow movement and
+swings expose them to missiles. Baratheon's 15% cavalry surcharge remains.
+
+GREYJOY — SALTWIND AXETHROWERS / SALTWIND LODGE
+Lodge: 350 gold; trains 3 every 36 seconds. Paid company: 230 gold for 4.
+108 health, 29 damage, 2-second throws, 2.65 range. Visible spinning axe
+projectiles give raiders short-range support. Ordinary archers outrange them.
+Light armor and slow follow-up volleys punish prolonged exchanges.
+Greyjoy still recovers 50% more slowly on owned ground.
+
+FREY — TOLLHOUSE CROSSBOWS / TOLLHOUSE RANGE
+Range: 380 gold; trains 3 every 42 seconds. Paid company: 250 gold for 4.
+125 health, 28 damage, 4.25 range, 2.3-second base reload. After 2 seconds
+stationary, reloads are 25% faster. Movement and knockback reset readiness.
+Visible bolts obey sightlines. Vulnerable to flanks and arcing siege fire.
+Frey's 20% cavalry surcharge remains. Paid crossbows require a living
+Tollhouse Range; split companies use matching ranges when two survive.
+
+REED — CRANNOG SPEARHANDS / CRANNOG SPEAR LODGE
+Lodge: 330 gold; trains 3 every 34 seconds. Paid company: 220 gold for 5.
+142 health, 19 damage, 1.15 reach. Spears deal twice base damage to cavalry.
+They receive an extra 30% forest movement bonus on top of Reed's 20% house
+bonus, for a combined 1.56 movement multiplier before terrain costs.
+They have no charge-stopping brace and remain lightly armored.
+Reed's 20% slower automatic catapult training remains.
+
+TARLY — HORN HILL HALBERDIERS / HORN HILL DRILL HALL
+Hall: 390 gold; trains 3 every 42 seconds. Paid company: 260 gold for 4.
+188 health, 24 damage, 1.55-second attacks, 1.6-tile reach. Longer painted
+halberds and actual attack range let them hit before ordinary swordsmen close.
+Halberds deal twice base damage to cavalry but cannot hard-stop a charge.
+Slow movement and exposed flanks preserve the importance of disciplined lines.
+Tarly's slower automatic archer recruitment remains.
+
+MARTELL — SUN HORSE ARCHERS / SUNBOW CORRAL
+Corral: 430 gold; trains 2 every 46 seconds. Paid company: 300 gold for 3.
+132 health, 17 damage, 3.8 range, 1.65-second shots, 2.35 base riding speed.
+Mounted movement, arrow projectiles, Viper Venom and Attack-order skirmishing.
+They cannot initiate impact charges. Light armor and half damage to buildings
+leave them vulnerable to focused missiles and poor at breaking fortifications.
+Catapults and siege works are removed from Martell's menus and rejected by
+recruitment, construction, training and AI. The opening catapult becomes one
+horse archer, keeping the equal 70-soldier start. Lance Champions remain.
+Martell still pays 15% extra for paid infantry.
+
+CONTROLS AND SHARED RULES
+For the five newly expanded houses, Shift+J builds the additional facility;
+Muster Shift+6 recruits its company. Martell uses its former catapult slot:
+Muster Shift+4 recruits horse archers, Shift+W builds the Sunbow Corral
+(Shift+K is an alternative). Shift+J and Shift+6 retain Lance Champions.
+Alt+S includes Reed spears and Tarly halberds alongside Frey/Bolton spears.
+Horse archers are cavalry for Alt+C and border patrol. Their selected power
+button can activate Viper Venom; the Charge passive is not shown for them.
+All recruits obey supply, gold, surviving exact facility and local rally rules.
+Player and enemy houses use the same roster and effects. Existing house
+weaknesses remain; these are initial balance values subject to playtesting.
