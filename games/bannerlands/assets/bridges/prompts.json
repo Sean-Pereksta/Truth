@@ -1,0 +1,11 @@
+{
+  "tool": "Built-in image generation",
+  "grid": "2 columns by 2 rows",
+  "cellOrder": [
+    "masonry",
+    "arch",
+    "endPost",
+    "cornerPost"
+  ],
+  "prompt": "Use case: stylized-concept. Production PNG sprite atlas of painted stone BRIDGE EDGE graphics for Bannerlands medieval isometric RTS. EXACT TWO columns by TWO rows, four equal cells; genuinely transparent alpha-zero background, no scenery, no water, no ground, no text, no grid, no shadows outside object. Fine hand-painted realistic miniature game art matching classic Age of Empires masonry, warm weathered gray limestone, subtle moss near lower courses, individual beveled stones and pale cream coping blocks, warm light upper-left. Not flat vector lines or schematic. TOP LEFT cell: ONE horizontally straight continuous bridge SIDEWALL STRIP seen in exact FRONT ELEVATION (not perspective): width about 3 times its height, a low thick coping at top, stone masonry side face below, three staggered courses of dressed stone, clean VERTICAL LEFT AND RIGHT cut ends so it can repeat end-to-end, no end towers or posts, no bridge deck extending backward, no backdrop. TOP RIGHT cell: same FRONT ELEVATION horizontal strip at same overall dimensions and matching coping and stones, but one broad real open stone arch under its center, curved wedge-shaped voussoir stones with realistic recessed stone depth, actual opening under arch fully alpha-zero not colored blue or black, clean flat cut ends. BOTTOM LEFT cell: ONE small solid square stone bridge TERMINAL PIER, realistic isometric 3/4 view with top and two faces visible, stout upright pillar with broad beveled pale coping cap, weathered masonry, no flag, no floor, isolated. BOTTOM RIGHT cell: ONE matching slightly shorter square stone CORNER POST, same isometric camera/material/light, neat broad coping cap. All four complete isolated sprites stay strictly within central80% of their own cell width and central76% cell height, generous transparent gutters all sides. No elements cross cell boundaries. The upper strips are front-elevation textures which the engine will project onto isometric edge faces; keep their coping perfectly horizontal and ends vertical. Only bottom posts are isometric."
+}

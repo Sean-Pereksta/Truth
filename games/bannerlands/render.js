@@ -1,5 +1,9 @@
 import {BUILD_DEFS,UNIT_DEFS} from './core.js';
 import {corpseOpacity} from './aftermath.js';
+import {combatPose,drawCombatAccents} from './combat-visuals.js';
+import {paintTerrainPolish} from './terrain-polish.js';
+import {FormationBannerLayer} from './formation-banners.js';
+import {BridgeArtwork} from './bridge-art.js';
 
 const HW=28, HH=14;
 const TAU=Math.PI*2;
@@ -39,6 +43,32 @@ function compactAtlasFrame(frame,scale){
 
 export class Renderer{
   constructor(canvas){this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.sprites=new Map();this.treeSprites=new Map();this.structureSprites=new Map();this.structureFrames={};this.structuresReady=false;this.houseArtReady=false;this.houseTroopFrames={};this.houseKeepFrames={};this.houseProductionFrames={};this.regimentArtReady=false;this.regimentTroopFrames={};this.regimentBuildingsReady=false;this.regimentBuildingFrames={};this.campaignArtReady=false;this.campaignFrames={keep:[],tower:[],flag:[]};this.campaignSprites=new Map();this.cachedGame=null;this.territoryTime=-1;this.frame=0;this.minimapTransform=null;this.rasterSpritesReady=false;this.troopFrames={};this.assetError=null;this.terrainReady=false;this.terrainChunkCache=new Map();this.maxTerrainChunks=24;this.terrainChunkSize=16;this.terrainTileSprites=new Map();}
+  async loadBridgeArt(src='./assets/bridges/stone-edges.png'){
+    this.bridgeArtwork??=new BridgeArtwork();const info=await this.bridgeArtwork.load(src);
+    this.bridgeArchitectureCache=new Map();this.bridgeArchitectureBytes=0;return info;
+  }
+  async loadHouseEmblems(src='./assets/house-emblems.png'){
+    const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('House-selection crest artwork could not be loaded.'));im.src=src;});
+    return this.setHouseEmblems(image);
+  }
+  setHouseEmblems(image){
+    const width=image.naturalWidth||image.width,height=image.naturalHeight||image.height,frames={};
+    for(const [index,sigil]of HOUSE_ART_ORDER.entries()){
+      const sx=Math.floor(index%4*width/4),sy=Math.floor(Math.floor(index/4)*height/4),sw=Math.floor((index%4+1)*width/4)-sx,sh=Math.floor((Math.floor(index/4)+1)*height/4)-sy;
+      const crest=makeCanvas(64,64),ctx=crest.getContext('2d',{willReadFrequently:true});ctx.drawImage(image,sx,sy,sw,sh,0,0,64,64);
+      // The menu atlas has an opaque teal surround. Remove only teal pixels
+      // connected to a cell border, preserving the exact painted shield inside.
+      const pixels=ctx.getImageData(0,0,64,64),data=pixels.data,seen=new Uint8Array(4096),queue=new Uint16Array(4096);let head=0,tail=0;
+      const visit=(x,y)=>{if(x<0||y<0||x>=64||y>=64)return;const n=y*64+x;if(seen[n])return;seen[n]=1;const i=n*4,r=data[i],g=data[i+1],b=data[i+2];if(r<80&&g<110&&b<115&&g>r*1.12&&b>r*1.03){data[i+3]=0;queue[tail++]=n;}};
+      for(let k=0;k<64;k++){visit(k,0);visit(k,63);visit(0,k);visit(63,k);}
+      while(head<tail){const n=queue[head++],x=n%64,y=Math.floor(n/64);visit(x-1,y);visit(x+1,y);visit(x,y-1);visit(x,y+1);}
+      ctx.putImageData(pixels,0,0);frames[sigil]=crest;
+    }
+    this.houseEmblemFrames=frames;return {columns:4,rows:4,frames:16};
+  }
+  drawHouseCrest(c,team,x,y,size){
+    const crest=this.houseEmblemFrames?.[team.sigil];if(crest)c.drawImage(crest,x-size/2,y-size/2,size,size);
+  }
   async loadCampaignArt(src='./assets/campaign-structures.png'){
     this.campaignArtReady=false;
     const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('The capital, watchtower and standard artwork could not be loaded.'));im.src=src;});
@@ -139,7 +169,9 @@ export class Renderer{
     for(const [index,sigil]of HOUSE_ART_ORDER.entries()){
       const image=troops?.[sigil];if(!image)throw new Error('Missing '+sigil+' troop sprite sheet.');
       const frames=Array.from({length:8},(_,frame)=>atlasCell(image,frame%4,Math.floor(frame/4),4,2,sigil+' troop frame '+frame));
-      const largestWidth=Math.max(...frames.map(f=>f.width)),largestHeight=Math.max(...frames.map(f=>f.height)),size=sizes[HOUSE_UNIT_CLASSES[sigil]],scale=Math.min(size[0]/largestWidth,size[1]/largestHeight);
+      // Frey's extended polearm must not force its armored bearer into the
+      // compact shared infantry box. Keep the full weapon, at human scale.
+      const largestWidth=Math.max(...frames.map(f=>f.width)),largestHeight=Math.max(...frames.map(f=>f.height)),size=sigil==='bridge'?[33,40]:sizes[HOUSE_UNIT_CLASSES[sigil]],scale=Math.min(size[0]/largestWidth,size[1]/largestHeight);
       unitFrames[sigil]={frames,scale,width:largestWidth*scale,height:largestHeight*scale,house:sigil};
       for(const [kind,source,target,maxSize]of [['keep',castles,keepFrames,[124,132]],['production',production,productionFrames,[96,90]]]){
         if(!source)throw new Error('Missing house '+kind+' artwork.');
@@ -400,6 +432,7 @@ export class Renderer{
   buildOverview(g){
     this.overviewScale=Math.min(.32,2048/this.mapW);const s=this.overviewScale,w=Math.ceil(this.mapW*s),h=Math.ceil(this.mapH*s);this.terrainOverview=makeCanvas(w,h);this.decorOverview=makeCanvas(w,h);const c=this.terrainOverview.getContext('2d');c.scale(s,s);c.translate(-this.left,-this.top);
     for(const t of g.tiles){const p=iso(t.x+.5,t.y+.5),tile=this.landsTileSprite(g,t);c.drawImage(tile,p.x-HW-1,p.y-HH-1,58,33);}
+    paintTerrainPolish(c,g,{x0:0,y0:0,x1:g.W,y1:g.H},{detail:'overview'});
     this.rebuildDecorOverview();
     // Resolve the offscreen snapshots during preparation, rather than making
     // the first overview-camera jump perform a large deferred raster upload.
@@ -410,6 +443,7 @@ export class Renderer{
     const key=cx+','+cy;let ch=this.terrainChunkCache.get(key);if(ch){this.terrainChunkCache.delete(key);this.terrainChunkCache.set(key,ch);return ch;}
     const x0=cx*16,y0=cy*16,x1=Math.min(g.W,x0+16),y1=Math.min(g.H,y0+16),left=(x0-y1)*HW-2,top=(x0+y0)*HH-2,w=(x1-x0+y1-y0)*HW+4,h=(x1-x0+y1-y0)*HH+7,a=makeCanvas(w,h),c=a.getContext('2d');c.translate(-left,-top);
     for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const t=g.tiles[y*g.W+x],p=iso(x+.5,y+.5),tile=this.landsTileSprite(g,t);c.drawImage(tile,p.x-HW-1,p.y-HH-1,58,33);}
+    paintTerrainPolish(c,g,{x0,y0,x1,y1});
     ch={image:a,left,top,width:w,height:h};this.terrainChunkCache.set(key,ch);while(this.terrainChunkCache.size>this.maxTerrainChunks)this.terrainChunkCache.delete(this.terrainChunkCache.keys().next().value);return ch;
   }
   visibleWorldRange(g,bounds){const points=[[bounds.left,bounds.top],[bounds.right,bounds.top],[bounds.right,bounds.bottom],[bounds.left,bounds.bottom]].map(([x,y])=>({x:(x/HW+y/HH)/2,y:(y/HH-x/HW)/2}));return{x0:clamp(Math.floor(Math.min(...points.map(p=>p.x)))-1,0,g.W-1),x1:clamp(Math.ceil(Math.max(...points.map(p=>p.x)))+1,0,g.W-1),y0:clamp(Math.floor(Math.min(...points.map(p=>p.y)))-1,0,g.H-1),y1:clamp(Math.ceil(Math.max(...points.map(p=>p.y)))+1,0,g.H-1)};}
@@ -442,21 +476,22 @@ export class Renderer{
     const width=v.zoom<.45?1.2/v.zoom:1.35;for(const e of this.territoryEdges){if(Math.max(e.x1,e.x2)<bounds.left||Math.min(e.x1,e.x2)>bounds.right||Math.max(e.y1,e.y2)<bounds.top||Math.min(e.y1,e.y2)>bounds.bottom)continue;line(c,e.x1,e.y1,e.x2,e.y2,e.color,width);}
     if(v.zoom<.42){if(this.decorOverviewDirty)this.rebuildDecorOverview();c.drawImage(this.decorOverview,this.left,this.top,this.mapW,this.mapH);}
     else if(v.zoom<.75){if(v.w/v.zoom>4500||v.h/v.zoom>2800){if(this.decorOverviewDirty)this.rebuildDecorOverview();c.drawImage(this.decorOverview,this.left,this.top,this.mapW,this.mapH);}else this.drawStrategicScenery(c,range,bounds);}
-    this.drawBridgeArchitecture(c,g,range);
+    if(this.bridgeArtwork?.ready){this.drawBridgeArchitecture(c,g,range,'back');this.drawBridgeArchitecture(c,g,range,'front');}
+    else this.drawBridgeArchitecture(c,g,range);
   }
-  drawBridgeArchitecture(c,g,range){
+  drawBridgeArchitecture(c,g,range,layer='all'){
     // Bridge masonry is static. Rasterize each occupied chunk once instead of
     // scanning every visible tile and rebuilding hundreds of paths every frame.
     if(!this.bridgeArchitectureCache||this.bridgeArchitectureGame!==g){this.bridgeArchitectureCache=new Map();this.bridgeArchitectureGame=g;this.bridgeArchitectureBytes=0;}
     for(let cy=Math.floor(range.y0/16);cy<=Math.floor(range.y1/16);cy++)for(let cx=Math.floor(range.x0/16);cx<=Math.floor(range.x1/16);cx++){
-      const key=cx+','+cy;let chunk=this.bridgeArchitectureCache.get(key);
+      const key=layer+':'+cx+','+cy;let chunk=this.bridgeArchitectureCache.get(key);
       if(chunk===undefined){
         const x0=cx*16,y0=cy*16,x1=Math.min(g.W,x0+16),y1=Math.min(g.H,y0+16);let occupied=false,left=Infinity,top=Infinity,right=-Infinity,bottom=-Infinity;
         for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++)if(g.tiles[y*g.W+x].feature==='bridge'){const p=iso(x+.5,y+.5);occupied=true;left=Math.min(left,p.x-HW);right=Math.max(right,p.x+HW);top=Math.min(top,p.y-HH);bottom=Math.max(bottom,p.y+HH);}
         if(!occupied){this.bridgeArchitectureCache.set(key,null);continue;}
-        left-=12;top-=12;const width=right-left+24,height=bottom-top+32;
+        left-=20;top-=32;const width=right-left+20,height=bottom-top+32;
         const image=makeCanvas(width*2,height*2),ctx=image.getContext('2d');ctx.scale(2,2);ctx.translate(-left,-top);
-        this.paintBridgeArchitecture(ctx,g,{x0,y0,x1:x1-1,y1:y1-1});
+        this.paintBridgeArchitecture(ctx,g,{x0,y0,x1:x1-1,y1:y1-1},layer);
         chunk={image,left,top,width,height,bytes:image.width*image.height*4};this.bridgeArchitectureCache.set(key,chunk);this.bridgeArchitectureBytes+=chunk.bytes;
         while(this.bridgeArchitectureBytes>32*1024*1024&&this.bridgeArchitectureCache.size>1){const oldest=this.bridgeArchitectureCache.keys().next().value,entry=this.bridgeArchitectureCache.get(oldest);this.bridgeArchitectureBytes-=entry?.bytes||0;this.bridgeArchitectureCache.delete(oldest);}
       }
@@ -464,7 +499,19 @@ export class Renderer{
       if(chunk)c.drawImage(chunk.image,chunk.left,chunk.top,chunk.width,chunk.height);
     }
   }
-  paintBridgeArchitecture(c,g,range){
+  paintBridgeArchitecture(c,g,range,layer='all'){
+    if(this.bridgeArtwork?.ready){
+      if(layer==='front'){
+        // Repaint only the opaque deck over the back-wall layer. Drawing the
+        // entire terrain again would erase its coping as well; a tight tile
+        // clip occludes far arches below the walking plane without hiding rail.
+        for(let y=range.y0;y<=range.y1;y++)for(let x=range.x0;x<=range.x1;x++){
+          const t=g.tiles[y*g.W+x];if(t.feature!=='bridge')continue;const p=iso(x+.5,y+.5);
+          c.save();diamond(c,p.x,p.y,HW,HH,null);c.clip();c.drawImage(this.landsTileSprite(g,t),p.x-HW-1,p.y-HH-1,58,33);c.restore();
+        }
+      }
+      this.bridgeArtwork.paint(c,g,range,{layer});return;
+    }
     // Sidewalls extend down outside the deck. The walking surface stays on the same plane as troop feet.
     const bridgeAt=(x,y)=>x>=0&&y>=0&&x<g.W&&y<g.H&&g.tiles[y*g.W+x].feature==='bridge';
     for(let y=range.y0;y<=range.y1;y++)for(let x=range.x0;x<=range.x1;x++){
@@ -711,11 +758,13 @@ export class Renderer{
     if(selected){ellipse(c,p.x,p.y+1,unitClass==='cavalry'?11:8,unitClass==='cavalry'?5:3.8,'rgba(224,215,144,.19)');c.beginPath();c.ellipse(p.x,p.y+1,unitClass==='cavalry'?11:8,unitClass==='cavalry'?5:3.8,0,0,TAU);c.strokeStyle='#f6d986';c.lineWidth=1;c.stroke();}
     if(u.type==='hero'){c.beginPath();c.ellipse(p.x,p.y+1,11,5,0,0,TAU);c.strokeStyle='#e5cb74';c.lineWidth=1.5;c.stroke();}
     const direction=u.braceDir||(Number.isFinite(u.facingX)&&Number.isFinite(u.facingY)?{x:u.facingX,y:u.facingY}:{x:vx,y:vy}),screenFacing=iso(direction.x,direction.y),faceLength=Math.hypot(screenFacing.x,screenFacing.y)||1;
-    const facing=screenFacing.x<-.03?-1:1,attack=(u.attackAnim||0)>.05;
+    const pose=zoom>=.5?combatPose(u,g,UNIT_DEFS[u.type],moving):null,facing=screenFacing.x<-.03?-1:1,attack=pose?.attack||(u.attackAnim||0)>.05;
     const phase=Number.isFinite(u.phase)?u.phase:0;let frame=attack?Math.min(3,Math.floor((1-clamp(u.attackAnim,0,1))*4)):moving?Math.floor(phase/TAU*4):0;frame=((frame%4)+4)%4;
     if(u.backpedaling&&moving&&!attack)frame=3-frame;
+    if(pose?.attack)frame=pose.frame;
     const braced=zoom>.6&&u.braceDir&&(u.braceTime||0)>=.45&&!(u.knockT>0);
-    const sprite=this.soldierSprite(u.type,team.color,team.dark,facing,frame,attack||u.type==='trebuchet'&&(u.setupProgress||0)>=UNIT_DEFS.trebuchet.setupSeconds,specialHouse);if(sprite)c.drawImage(sprite,p.x-32,p.y-64,64,72);
+    const sprite=this.soldierSprite(u.type,team.color,team.dark,facing,frame,attack||u.type==='trebuchet'&&(u.setupProgress||0)>=UNIT_DEFS.trebuchet.setupSeconds,specialHouse);if(sprite){if(pose&&(!this.lowDetail||selected)&&(pose.dx||pose.dy||pose.tilt)){c.save();c.translate(p.x+(pose.dx||0),p.y+(pose.dy||0));c.rotate((pose.tilt||0)*facing);c.drawImage(sprite,-32,-64,64,72);c.restore();}else c.drawImage(sprite,p.x-32,p.y-64,64,72);}
+    if(!this.lowDetail||selected)drawCombatAccents(c,u,g,UNIT_DEFS[u.type],p,pose,zoom);
     if(u.type==='trebuchet'&&zoom>.5){const setup=UNIT_DEFS.trebuchet.setupSeconds,progress=clamp((u.setupProgress||0)/setup,0,1);c.fillStyle='#142c2c';c.fillRect(p.x-20,p.y-61,40,4);c.fillStyle=progress>=1?'#b8d4a0':'#d6b773';c.fillRect(p.x-20,p.y-61,40*progress,4);if(selected){c.font='bold 8px Segoe UI';c.textAlign='center';c.fillStyle='#f2deac';c.fillText(progress>=1?'DEPLOYED':'SETUP '+Math.ceil(setup-(u.setupProgress||0))+'s',p.x,p.y-65);}}
     if(selected&&zoom>.55&&Math.hypot(direction.x,direction.y)>.01){
       const dx=screenFacing.x/faceLength,dy=screenFacing.y/faceLength,color=u.backpedaling?'#a8ddd1':'#e7cc89';
@@ -800,6 +849,9 @@ export class Renderer{
         else if(f.kind==='loot'){for(let k=0;k<3;k++)ellipse(c,(k-1)*5,-8-r*15-k*2,2,2.8,color);}
         else if(f.kind==='poison'){ellipse(c,-3,-9-r*12,2,3,color);ellipse(c,4,-5-r*9,1.5,2.5,color);}
         else{c.beginPath();c.ellipse(0,1,6+r*12,3+r*5,0,0,TAU);c.strokeStyle=color;c.lineWidth=1.6*(1-r)+.4;c.stroke();line(c,-4,-8-r*6,0,-14-r*6,color,1.3);line(c,0,-14-r*6,4,-8-r*6,color,1.3);}
+      }else if(f.type==='blockImpact'){
+        const v=iso(f.dx||0,f.dy||0),length=Math.hypot(v.x,v.y)||1;c.translate(-v.x/length*5,-13-v.y/length*5);
+        for(let k=0;k<(lowDetail?3:5);k++){const angle=k*1.35+r*.5,travel=3+r*11;line(c,Math.cos(angle)*travel*.45,Math.sin(angle)*travel*.45,Math.cos(angle)*travel,Math.sin(angle)*travel,'#f4df9e',1.7*(1-r));}
       }else if(f.type==='hammerImpact'){
         const heading=iso(f.dx||1,f.dy||0);c.rotate(Math.atan2(heading.y,heading.x));
         c.beginPath();c.ellipse(0,0,7+r*25,4+r*13,0,0,TAU);c.strokeStyle='#f1cb72';c.lineWidth=3*(1-r)+.5;c.stroke();
@@ -839,9 +891,11 @@ export class Renderer{
     for(let i=0;i<(lowDetail?22:44);i++){const x=this.left+hash(i,4)*(this.mapW),y=-60+hash(i,8)*this.mapH;if(x<bounds.left||x>bounds.right||y<bounds.top||y>bounds.bottom)continue;const wave=Math.sin(g.time*.8+i)*3;line(c,x+wave,y,x+8+wave,y,'rgba(106,152,159,.16)',.8);if(!lowDetail)line(c,x+4+wave,y+3,x+15+wave,y+3,'rgba(106,152,159,.10)',.7);}
     this.drawGround(c,g,v,bounds,range);
     for(const objective of [...scene.objectives,...scene.castles.filter(site=>site.ruined)]){const p=iso(objective.x,objective.y),radius=(objective.radius||4)*HW*1.5;if(p.x+radius>bounds.left&&p.x-radius<bounds.right&&p.y+radius>bounds.top&&p.y-radius<bounds.bottom)this.objectiveGround(c,objective,g,v.zoom);}
-    if(ui.showGrid){
+    if(ui.showGrid||ui.buildMode||ui.facingPreview){
+      c.save();c.globalAlpha=ui.buildMode||ui.facingPreview?1:.24;
       if(v.zoom>.48){c.lineWidth=.65;for(let y=range.y0;y<=range.y1;y++)for(let x=range.x0;x<=range.x1;x++){const p=iso(x+.5,y+.5);if(p.x<bounds.left||p.x>bounds.right||p.y<bounds.top||p.y>bounds.bottom)continue;diamond(c,p.x,p.y,HW,HH,null,'rgba(197,211,174,.11)');}}
       else{for(let x=Math.ceil(range.x0/4)*4;x<=range.x1;x+=4){const a=iso(x,range.y0),b=iso(x,range.y1+1);line(c,a.x,a.y,b.x,b.y,'rgba(197,211,174,.10)',.65/v.zoom);}for(let y=Math.ceil(range.y0/4)*4;y<=range.y1;y+=4){const a=iso(range.x0,y),b=iso(range.x1+1,y);line(c,a.x,a.y,b.x,b.y,'rgba(197,211,174,.10)',.65/v.zoom);}}
+      c.restore();
     }
     if(v.zoom>.32)for(let y=range.y0;y<=range.y1;y++)for(let x=range.x0;x<=range.x1;x++){const t=g.tiles[y*g.W+x];if(t.claim<0||!t.capture||t.capture>.999||g.config?.fogOfWar&&!g.isVisibleTo(0,{x:x+.5,y:y+.5}))continue;const p=iso(t.x+.5,t.y+.5);if(p.x<bounds.left||p.x>bounds.right||p.y<bounds.top||p.y>bounds.bottom)continue;const color=g.teams[t.claim]?.color||'#dac589';c.globalAlpha=.08+Math.sin(g.time*4)*.03;diamond(c,p.x,p.y,HW,HH,color);c.globalAlpha=1;c.fillStyle='rgba(10,35,32,.7)';c.fillRect(p.x-11,p.y+5,22,2);c.fillStyle=color;c.fillRect(p.x-11,p.y+5,22*t.capture,2);}
     this.drawAftermath(c,g,bounds);
@@ -854,11 +908,11 @@ export class Renderer{
     for(const p of rallies.values()){c.save();c.strokeStyle='#f4d38b';c.lineWidth=1.8/v.zoom;c.beginPath();c.ellipse(p.x,p.y,13,6,0,0,TAU);c.stroke();this.flag(c,p.x,p.y-2,'#e8c377',g.time,.7);c.restore();}
     if(ui.orderMarker){const m=ui.orderMarker,age=g.time-m.time;if(age<1.7&&age>=0){const p=iso(m.x,m.y),a=1-age/1.7;c.globalAlpha=a;c.beginPath();c.ellipse(p.x,p.y,13+age*9,6+age*4,0,0,TAU);c.strokeStyle=m.mode==='move'?'#c2e0ce':'#edca78';c.lineWidth=2;c.stroke();line(c,p.x-4,p.y,p.x+4,p.y,'#ead89c',1.5);line(c,p.x,p.y-4,p.x,p.y+4,'#ead89c',1.5);c.globalAlpha=1;}}
     if(ui.facingPreview)this.facingPreview(c,g,ui.facingPreview,v.zoom);
-    const items=[];
+    const items=[],visibleTroops=[];
     let decorIndex=0;
     if(v.zoom>=.75)for(let cy=Math.floor(range.y0/16);cy<=Math.floor(range.y1/16);cy++)for(let cx=Math.floor(range.x0/16);cx<=Math.floor(range.x1/16);cx++)for(const z of this.decorChunks.get(cx+','+cy)||[]){const index=decorIndex++;if(lowDetail&&v.zoom<.8&&index%2)continue;const p=iso(z.x,z.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:0,obj:z,p});}
     for(const b of scene.buildings){if(b.hp<=0)continue;const p=iso(b.x,b.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:1,obj:b});}
-    for(const u of scene.units){if(u.hp<=0)continue;const p=iso(u.x,u.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:2,obj:u});}
+    for(const u of scene.units){if(u.hp<=0)continue;const p=iso(u.x,u.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom){items.push({depth:p.y,kind:2,obj:u});visibleTroops.push(u);}}
     for(const objective of scene.objectives){const p=iso(objective.x,objective.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:3,obj:objective});}
     for(const site of scene.castles){if(!site.ruined)continue;const p=iso(site.x,site.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:4,obj:site});}
     items.sort((a,b)=>a.depth-b.depth||a.kind-b.kind);
@@ -867,6 +921,7 @@ export class Renderer{
       if(z.occlusionTime===undefined||g.time-z.occlusionTime>.1){let occupied=false;const radius=z.kind==='tree'?1:.75;g.hash?.visit(z.x,z.y,radius,u=>{if(u.hp>0&&(!g.config?.fogOfWar||g.isVisibleTo(0,u))&&(u.x-z.x)**2+(u.y-z.y)**2<radius*radius)occupied=true;});z.opacity=occupied?(z.kind==='tree'?.23:.35):1;z.occlusionTime=g.time;}
       c.globalAlpha=z.opacity??1;c.drawImage(a,it.p.x-48*s+wind,it.p.y-100*s,96*s,112*s);c.globalAlpha=1;
     }else if(it.kind===1){if(it.obj.remembered)this.rememberedBuilding(c,it.obj,g);else this.building(c,it.obj,g);}else if(it.kind===2)this.unit(c,it.obj,g,ui,v.zoom);else if(it.kind===4)this.castleRuin(c,it.obj,g,v.zoom);else this.objectiveFlag(c,it.obj,g,v.zoom);}
+    (this.formationBannerLayer??=new FormationBannerLayer()).draw(c,visibleTroops,g.teams,{source:g,time:g.time,zoom:v.zoom,bounds,selected:ui.selected,lowDetail,visible:u=>!g.config?.fogOfWar||g.isVisibleTo(0,u),drawCrest:(ctx,team,x,y,size)=>this.drawHouseCrest(ctx,team,x,y,size)});
     this.projectiles(c,g);this.effects(c,g,lowDetail);this.drawFog(c,g);
     this.teamOrderMarkers(c,g,v.zoom);
     if(ui.teamOrderMode&&ui.hover){const p=iso(ui.hover.x,ui.hover.y),color=ui.teamOrderMode==='defend'?'#8fdfca':'#f3b77c';c.save();c.strokeStyle=color;c.lineWidth=2/v.zoom;c.setLineDash([5/v.zoom,4/v.zoom]);diamond(c,p.x,p.y,32,16,null,color);c.setLineDash([]);this.flag(c,p.x,p.y,color,g.time,.8);c.restore();}

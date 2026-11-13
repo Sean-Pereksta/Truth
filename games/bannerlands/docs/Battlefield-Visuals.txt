@@ -1,0 +1,58 @@
+BANNERLANDS — BATTLEFIELD VISUALS
+
+ATTACK WEIGHT AND CONTACT
+Weapon contact frames now coincide with the simulation's actual damage or
+projectile release. Hammer windups lead into the downward contact pose and
+recovery, long halberds show a thrust and retraction, and crossbows visibly
+cock and reload over their actual recruitment-independent attack interval.
+Struck troops briefly recoil; frontal defensive blocks produce compact sparks.
+Stormbreaker knockback remains physical and still respects terrain and resistance.
+Frey Bridge Wardens render about 27% larger so their extended polearms do not
+shrink the bearers. Every walk/attack frame and both facings retain the full
+weapon, shield and feet; other houses keep their established display sizes.
+These presentation changes do not delay attacks or alter damage, health,
+cooldowns, range, collision rules or house balance.
+
+TERRAIN
+Worn, uneven road shoulders and wheel impressions blend roads into grass.
+Forest boundaries gain undergrowth; land-side shorelines gain banks and reeds.
+Water, mountains, bridges, fords and passes retain their gameplay boundaries.
+The grid is faint during ordinary play and becomes clearer when building or
+previewing a formation facing order. G still toggles the ordinary grid.
+Terrain accents are baked into the existing overview and terrain chunk caches;
+they are not regenerated every frame.
+
+FORMATION CRESTS
+Nearby formations of at least six visible soldiers receive one small floating
+house crest. These are the exact painted shields in house selection, sampled
+from assets/house-emblems.png. No cloth flag or substitute symbol is used.
+The crest stays 17 screen pixels wide, above the formation's tallest soldiers.
+Isolated scouts receive no marker. Limits prevent clutter in large battles.
+Hidden troops cannot contribute to a crest or its position; fog loss removes
+the marker immediately, including while paused.
+
+BRIDGE GRAPHICS
+Bridge sidewalls use generated painted masonry, alpha-transparent arch spans
+and matching terminal/corner posts from assets/bridges/stone-edges.png.
+Pieces follow both isometric bridge directions and join at actual endpoints.
+The left/front rail overlaps its rear/start post and the deck; the deck covers
+the right/back wall and post bases. The near terminal post draws last.
+The walkable deck and all crossing/route rules remain unchanged.
+Graphics are baked into bounded bridge scenery caches.
+
+PERFORMANCE
+Idle and marching troops retain a direct cached-sprite drawing path. Distant
+views skip imperceptible cosmetic body poses. Auto detail retains contact frames
+and impact cues while reducing unselected body transforms and weapon accents.
+Formation linking refreshes at 10Hz; moving centroids and current visibility
+are still checked every rendered frame. Only on-screen troops are considered.
+The roster reuses one visible-army scan instead of repeating it for every house.
+The house crest atlas is decoded and cropped once; markers draw cached images.
+
+VALIDATION
+Run npm run check and npm test for syntax and gameplay regressions.
+Run npm run test:render with LANDS_CANVAS_MODULE for native raster checks.
+Run npm run test:visual-performance with Playwright and BANNERLANDS_BROWSER
+for repeatable browser comparisons against the previous main renderer.
+Initial and optimized measurements are environment-specific, not a promise
+of a fixed frame rate on every machine or at every army size.
