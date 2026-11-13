@@ -1,4 +1,5 @@
 import {BUILD_DEFS,UNIT_DEFS} from './core.js';
+import {corpseOpacity} from './aftermath.js';
 
 const HW=28, HH=14;
 const TAU=Math.PI*2;
@@ -621,6 +622,58 @@ export class Renderer{
     if(symbol){for(const node of symbol.querySelectorAll('path')){const shape=new Path2D(node.getAttribute('d'));if(node.getAttribute('fill')&&node.getAttribute('fill')!=='none')c.fill(shape);if(node.getAttribute('stroke')!=='none')c.stroke(shape);}for(const node of symbol.querySelectorAll('circle')){c.beginPath();c.arc(+node.getAttribute('cx'),+node.getAttribute('cy'),+node.getAttribute('r'),0,TAU);c.stroke();}}
     else{c.font='bold 19px Segoe UI';c.textAlign='center';c.fillText((team.sigil||'?')[0].toUpperCase(),12,20);}c.restore();c.restore();
   }
+  corpseSprite(body){
+    this.corpseSprites??=new Map();
+    const key=[body.type==='giant'?'giant':body.kind,body.color,body.dark,body.trim,body.variant,body.isKing].join('|');
+    // Cache pose families: sixteen factions, three palettes and all supported
+    // troop kinds fit in the cache together, even after a very large battle.
+    let frames=this.corpseSprites.get(key);if(!frames){frames=Array.from({length:4},(_,pose)=>this.makeCorpseSprite({...body,pose}));this.corpseSprites.set(key,frames);if(this.corpseSprites.size>384)this.corpseSprites.delete(this.corpseSprites.keys().next().value);}
+    return frames[body.pose%4];
+  }
+  makeCorpseSprite(body){
+    const kind=body.type==='giant'?'giant':body.kind==='cavalry'?'cavalry':body.kind==='siege'?'siege':'soldier';
+    const sprite=makeCanvas(80,44),c=sprite.getContext('2d');c.translate(40,22);
+    c.globalAlpha=.25;ellipse(c,0,1,kind==='cavalry'||kind==='siege'?19:13,kind==='cavalry'?7:5,'#111b16');c.globalAlpha=1;
+    c.scale(1,.63);c.rotate([-.38,.35,1.05,-1.12][body.pose]);c.lineCap='round';c.lineJoin='round';
+    if(kind==='siege'){
+      line(c,-17,-8,15,7,'#3f3327',4);line(c,-13,9,11,-10,'#796044',3.5);line(c,-12,-7,17,-2,'#9a805a',2.5);
+      for(const [x,y]of [[-10,9],[12,5]]){c.beginPath();c.ellipse(x,y,5,4,.4,0,TAU);c.strokeStyle='#3e4038';c.lineWidth=2;c.stroke();line(c,x-4,y,x+4,y,'#92724a',1.5);}
+      line(c,-3,-5,4,-17,'#8f7957',2);polygon(c,[[4,-17],[14,-13],[9,-7],[0,-10]],body.color,body.dark);line(c,-18,1,-9,-4,'#b6a081',1.2);
+    }else{
+      if(kind==='cavalry'){
+        // A fallen mount lies on its side beneath the rider and saddle cloth.
+        const hide=['#695646','#86715a','#514a41'][body.variant];ellipse(c,0,4,15,7,hide);ellipse(c,-15,1,6,4.5,hide);
+        line(c,-18,0,-23,3,'#4d4439',3);line(c,-6,8,-12,14,hide,3);line(c,7,8,15,14,hide,3);line(c,12,3,20,-1,'#332e29',2);
+        polygon(c,[[-6,-2],[5,-3],[11,5],[-5,8]],body.dark,'#292f2b');line(c,-2,-2,4,5,body.trim,1.6);c.translate(1,-3);c.scale(.9,.9);
+      }
+      if(kind==='giant')c.scale(1.35,1.35);
+      const bent=body.pose%2?1:-1;
+      // Distinct splayed/curled limbs, faction cloak, armor and dropped gear.
+      polygon(c,[[-6,-5],[6,-4],[9,7],[-9,5]],body.dark,'#26332e');
+      line(c,4,1,12,4*bent,body.armor,3.5);line(c,12,4*bent,17,6*bent,'#3e4440',3.2);
+      line(c,3,4,9,9,body.armor,3.2);line(c,9,9,14,10,'#3c443e',3.1);
+      line(c,-1,-3,-4,-9,body.color,3);line(c,-4,-9,-10,-9+bent*2,body.armor,2.6);
+      line(c,-1,3,-7,8,body.color,3);line(c,-7,8,-12,7,body.skin,2.3);
+      ellipse(c,-2,0,6,5,body.color);polygon(c,[[-7,-2],[1,-4],[4,2],[-3,4]],body.armor,'#404b45');line(c,-5,-1,2,2,'#bbc0ab',.8);
+      ellipse(c,-10,-1,3.4,3.5,body.skin);polygon(c,[[-13,-4],[-8,-5],[-6,-2],[-12,-1]],body.armor,'#404b45');
+      line(c,-2,-4,1,-2,body.trim,1.4);
+      if(body.kind==='archer'){c.beginPath();c.arc(8,-10,7,-1.15,1.2);c.strokeStyle='#a1885d';c.lineWidth=1.3;c.stroke();line(c,10,-16,10,-4,'#b7b496',.6);}
+      else{line(c,4,-10,18,-14,'#b2b9a4',1.2);line(c,6,-13,8,-8,'#7d7351',1.7);}
+      if(body.variant!==1){ellipse(c,10,-5,4.5,5.2,body.color);c.beginPath();c.ellipse(10,-5,4.5,5.2,0,0,TAU);c.strokeStyle=body.armor;c.lineWidth=1.2;c.stroke();ellipse(c,10,-5,1.3,1.5,'#b6b9a5');}
+      if(body.isKing)polygon(c,[[-18,2],[-18,-3],[-15,-1],[-13,-5],[-11,-1],[-8,-3],[-9,2]],'#e1c16c','#665332');
+    }
+    return sprite;
+  }
+  drawAftermath(c,g,bounds){
+    const aftermath=g.aftermath;if(!aftermath?.bodies?.length)return;
+    const time=aftermath.time??g.time;c.save();
+    for(const body of aftermath.bodies){
+      const alpha=corpseOpacity(body,time);if(alpha<=0||g.config?.fogOfWar&&!g.vision?.isVisible(0,body.x,body.y))continue;
+      const p=iso(body.x,body.y);if(p.x<bounds.left-40||p.x>bounds.right+40||p.y<bounds.top-24||p.y>bounds.bottom+24)continue;
+      c.globalAlpha=alpha*.92;c.drawImage(this.corpseSprite(body),p.x-40,p.y-22,80,44);
+    }
+    c.restore();
+  }
   unit(c,u,g,ui,zoom){
     if(!this.rasterSpritesReady&&!this.houseArtReady&&!this.regimentArtReady&&!this.conquestArtReady)return;
     const p=iso(u.x,u.y),team=g.teams[u.team];if(!team)return;const specialHouse=REGIMENT_ART_TYPES.includes(u.type)||CONQUEST_ART_HOUSES[u.type]||g.houseContent?.(u.team)?.unit===u.type?team.sigil:null,unitClass=g.unitClass?.(u)||HOUSE_UNIT_CLASSES[specialHouse]||u.type,vx=Number.isFinite(u.motionVX)?u.motionVX:(u.vx||0),vy=Number.isFinite(u.motionVY)?u.motionVY:(u.vy||0),selected=ui.selected?.has(u.id),moving=Math.hypot(vx,vy)>.07;
@@ -662,7 +715,10 @@ export class Renderer{
       if((u.berserkUntil||0)>g.time||u.type==='freefolk_berserker'&&u.hp<u.maxHp*.4){line(c,p.x-7,p.y-9,p.x-5,p.y-18,'#ef9a69',1.2);line(c,p.x+6,p.y-8,p.x+8,p.y-17,'#ef9a69',1.2);}
     }
     if(attack&&unitClass!=='archer'&&unitClass!=='siege'&&u.attackAnim>.64){const a=(1-u.attackAnim)*5;c.beginPath();c.arc(p.x+facing*9,p.y-12,12,-1.7+a,-.4+a);c.strokeStyle=`rgba(248,226,156,${u.attackAnim*.7})`;c.lineWidth=1.4;c.stroke();}
-    if((selected||u.hp<u.maxHp*.7)&&zoom>.57){const w=u.type==='hero'?19:12;c.fillStyle='#15302f';c.fillRect(p.x-w/2,p.y-29-(unitClass==='cavalry'?9:0),w,2);c.fillStyle=(g.allied?.(u.team,0)??u.team===0)?'#b9d9a1':'#d4a18a';c.fillRect(p.x-w/2,p.y-29-(unitClass==='cavalry'?9:0),w*clamp(u.hp/u.maxHp,0,1),2);}
+    if((selected||u.isKing||u.hp<u.maxHp*.7)&&zoom>.57){const w=u.isKing?28:u.type==='hero'?19:12;c.fillStyle='#15302f';c.fillRect(p.x-w/2,p.y-29-(unitClass==='cavalry'?9:0),w,u.isKing?3:2);c.fillStyle=u.isKing?'#e8c870':(g.allied?.(u.team,0)??u.team===0)?'#b9d9a1':'#d4a18a';c.fillRect(p.x-w/2,p.y-29-(unitClass==='cavalry'?9:0),w*clamp(u.hp/u.maxHp,0,1),u.isKing?3:2);}
+    if(u.isKing){c.save();c.lineWidth=1.6;c.strokeStyle='#f0d78b';c.beginPath();c.ellipse(p.x,p.y+1,14,6,0,0,TAU);c.stroke();
+      polygon(c,[[p.x-6,p.y-42],[p.x-7,p.y-49],[p.x-3,p.y-46],[p.x,p.y-51],[p.x+3,p.y-46],[p.x+7,p.y-49],[p.x+6,p.y-42]],'#f3d77d','#6a5633');
+      if(zoom>.5){c.font='bold 8px Segoe UI';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#11241f';c.strokeText('KING',p.x,p.y-56);c.fillStyle='#f3dda0';c.fillText('KING',p.x,p.y-56);}c.restore();}
   }
   facingPreview(c,g,preview,zoom){
     const {x,y,faceX,faceY}=preview,length=Math.hypot(faceX,faceY);if(!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(length)||length<.001)return;
@@ -757,6 +813,7 @@ export class Renderer{
       else{for(let x=Math.ceil(range.x0/4)*4;x<=range.x1;x+=4){const a=iso(x,range.y0),b=iso(x,range.y1+1);line(c,a.x,a.y,b.x,b.y,'rgba(197,211,174,.10)',.65/v.zoom);}for(let y=Math.ceil(range.y0/4)*4;y<=range.y1;y+=4){const a=iso(range.x0,y),b=iso(range.x1+1,y);line(c,a.x,a.y,b.x,b.y,'rgba(197,211,174,.10)',.65/v.zoom);}}
     }
     if(v.zoom>.32)for(let y=range.y0;y<=range.y1;y++)for(let x=range.x0;x<=range.x1;x++){const t=g.tiles[y*g.W+x];if(t.claim<0||!t.capture||t.capture>.999||g.config?.fogOfWar&&!g.isVisibleTo(0,{x:x+.5,y:y+.5}))continue;const p=iso(t.x+.5,t.y+.5);if(p.x<bounds.left||p.x>bounds.right||p.y<bounds.top||p.y>bounds.bottom)continue;const color=g.teams[t.claim]?.color||'#dac589';c.globalAlpha=.08+Math.sin(g.time*4)*.03;diamond(c,p.x,p.y,HW,HH,color);c.globalAlpha=1;c.fillStyle='rgba(10,35,32,.7)';c.fillRect(p.x-11,p.y+5,22,2);c.fillStyle=color;c.fillRect(p.x-11,p.y+5,22*t.capture,2);}
+    this.drawAftermath(c,g,bounds);
     this.fireZones(c,g,bounds,v.zoom);
     // Rally markers belong to the selected production posts, never army orders.
     const rallies=new Map();
@@ -796,7 +853,7 @@ export class Renderer{
     c.drawImage(this.miniBase,0,0,w,h);const fog=this.fogPixels(g);if(fog){c.save();c.imageSmoothingEnabled=false;c.transform(HW*scale,HH*scale,-HW*scale,HH*scale,ox,oy);c.drawImage(fog,0,0);c.restore();}
     for(const b of scene.buildings){if(b.hp<=0||b.type!=='keep'&&!(g.config?.fogOfWar&&b.type==='tower'))continue;const p=iso(b.x,b.y),x=p.x*scale+ox,y=p.y*scale+oy,size=2+(b.level||1)*.5;c.globalAlpha=b.remembered?.45:1;c.fillStyle=g.teams[b.team]?.teamColor||g.teams[b.team]?.color||'#f3e4b0';c.fillRect(x-size,y-size,size*2,size*2);c.strokeStyle='#eee3bc';c.lineWidth=.65;c.strokeRect(x-size,y-size,size*2,size*2);}c.globalAlpha=1;
     for(const site of scene.castles){if(!site.ruined)continue;const p=iso(site.x,site.y),x=p.x*scale+ox,y=p.y*scale+oy;c.globalAlpha=site.remembered?.45:1;c.fillStyle=site.contested?'#efab7c':'#d6c59b';c.strokeStyle='#172f31';c.lineWidth=1;polygon(c,[[x,y-4],[x+4,y],[x,y+4],[x-4,y]],c.fillStyle,c.strokeStyle);}c.globalAlpha=1;
-    for(const u of scene.units){if(u.hp<=0)continue;const p=iso(u.x,u.y);c.fillStyle=g.teams[u.team]?.color||'#ddd';c.globalAlpha=.9;c.fillRect(p.x*scale+ox-1,p.y*scale+oy-1,2,2);}c.globalAlpha=1;
+    for(const u of scene.units){if(u.hp<=0)continue;const p=iso(u.x,u.y),x=p.x*scale+ox,y=p.y*scale+oy;c.fillStyle=g.teams[u.team]?.color||'#ddd';c.globalAlpha=.9;c.fillRect(x-1,y-1,2,2);if(u.isKing){c.globalAlpha=1;polygon(c,[[x,y-5],[x+4,y],[x,y+5],[x-4,y]],g.teams[u.team]?.color||'#ddd','#f3d782');}}c.globalAlpha=1;
     for(const o of scene.objectives){const p=iso(o.x,o.y),x=p.x*scale+ox,y=p.y*scale+oy,team=g.teams.find(s=>s.alliance===o.controller),color=o.contested?'#f0ab77':team?.teamColor||'#edd490';line(c,x-2,y+3,x-2,y-5,'#f1ead2',1);polygon(c,[[x-1,y-5],[x+5,y-4],[x+3,y],[x-1,y-1]],color,'#153331');}
     for(const order of g.teamOrders||[]){if(order.expiresAt<=g.time||order.alliance!==g.teams[0]?.alliance)continue;const p=iso(order.x,order.y),x=p.x*scale+ox,y=p.y*scale+oy,color=order.kind==='defend'?'#8fdfca':'#f3b77c';c.beginPath();c.arc(x,y,5,0,TAU);c.strokeStyle=color;c.lineWidth=1.2;c.stroke();line(c,x-3,y,x+3,y,color,1);line(c,x,y-3,x,y+3,color,1);}
     c.strokeStyle='#f1e0a7';c.lineWidth=1;c.strokeRect((v.x-v.w/v.zoom/2)*scale+ox,(v.y-v.h/v.zoom/2)*scale+oy,v.w/v.zoom*scale,v.h/v.zoom*scale);

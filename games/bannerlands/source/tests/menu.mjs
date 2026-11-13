@@ -16,13 +16,14 @@ const extract=name=>{
   return source.slice(start,end+2);
 };
 class Element{
-  constructor(id=''){this.id=id;this.attributes=new Map();this.dataset={};this.style={setProperty(name,value){this[name]=value;}};this.innerHTML='';this.textContent='';this.value='';this.hidden=false;this.tabIndex=0;this.focusCount=0;this.listeners=new Map();this.classes=new Set();this.classList={toggle:(name,force)=>{const active=force===undefined?!this.classes.has(name):!!force;if(active)this.classes.add(name);else this.classes.delete(name);return active;},contains:name=>this.classes.has(name),add:name=>this.classes.add(name),remove:name=>this.classes.delete(name)};}
+  constructor(id=''){this.id=id;this.attributes=new Map();this.dataset={};this.style={setProperty(name,value){this[name]=value;}};this.innerHTML='';this.textContent='';this.value='';this.hidden=false;this.disabled=false;this.children=[];this.tabIndex=0;this.focusCount=0;this.listeners=new Map();this.classes=new Set();this.classList={toggle:(name,force)=>{const active=force===undefined?!this.classes.has(name):!!force;if(active)this.classes.add(name);else this.classes.delete(name);return active;},contains:name=>this.classes.has(name),add:name=>this.classes.add(name),remove:name=>this.classes.delete(name)};}
   setAttribute(name,value){this.attributes.set(name,String(value));}
   getAttribute(name){return this.attributes.get(name)??null;}
   focus(){this.focusCount++;}
   scrollIntoView(){}
   addEventListener(type,listener){if(!this.listeners.has(type))this.listeners.set(type,[]);this.listeners.get(type).push(listener);}
   dispatch(type,event={}){for(const listener of this.listeners.get(type)||[])listener(event);}
+  querySelectorAll(){return [];}
 }
 function fixture(){
   const elements=new Map(),buttons=[];
@@ -34,7 +35,7 @@ function fixture(){
     $:element,document:{querySelectorAll:selector=>selector==='.house-choice'?buttons:[],querySelector:()=>element('crestUse'),documentElement:{style:{setProperty(){}}}},
     canvas:element('battleCanvas'),powerData:h=>h.power,houseAdvantages:h=>h.advantages||[],houseWeaknesses:h=>h.weaknesses||[],
     icon:name=>`<svg data-icon="${name}"></svg>`,short:name=>name.replace('House ',''),escapeHTML:value=>String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'),
-    labelMenuHotkeys(){},paintHousePreview(){},clearBuildingSelection(){context.ui.selectedBuildings.clear();},cancelBuild(){},
+    labelMenuHotkeys(){},paintHousePreview(){},clearBuildingSelection(){context.ui.selectedBuildings.clear();},cancelBuild(){},setHudHTML:(element,value)=>{element.innerHTML=value;},num:Math.round,
     buildActionLists(){},paintBuildingIcons(){},showTab(){},home(){},updatePause(){},updateHud(){},initAudio(){},tone(){},toast(){},
     houseData:team=>HOUSES[context.game.teams[team].house],game:{paused:false,winner:null,teams:[{alive:true}],time:0}
   };
@@ -47,7 +48,8 @@ function fixture(){
     const button=new Element();for(const attribute of match[1].matchAll(/([\w-]+)="([^"]*)"/g)){button.setAttribute(attribute[1],attribute[2]);if(attribute[1]==='data-house')button.dataset.house=attribute[2];if(attribute[1]==='class')for(const name of attribute[2].split(' '))button.classes.add(name);}
     button.innerHTML=match[2];buttons.push(button);
   }
-  for(const name of ['chooseHouse','chooseMenuTab','renderHouseGuide','openMenu','resume','start'])vm.runInContext(extract(name),context,{filename:'app.js:'+name});
+  vm.runInContext(source.split('\n').find(line=>line.startsWith('const modeDescriptions=')),context);
+  for(const name of ['chooseHouse','chooseMenuTab','renderHouseGuide','openMenu','resume','campaignObjectiveText','updateModeDescription','updateKingHud','updateObjectivesHud','findHero','start'])vm.runInContext(extract(name),context,{filename:'app.js:'+name});
   const listenersStart=source.indexOf("\nfor(const [name,id]of [['house','menuHouseTab'],['campaign','menuCampaignTab']]){"),listenersEnd=source.indexOf("\nchooseMenuTab('house');",listenersStart);
   assert.ok(listenersStart>=0&&listenersEnd>listenersStart,'The production menu tab listeners must be wired.');
   vm.runInContext(source.slice(listenersStart,listenersEnd),context,{filename:'app.js:menu-tab-listeners'});
@@ -71,6 +73,48 @@ test('Fog of War is an explicit campaign setting with visible instructions and d
   assert.match(label,/aria-describedby="fogHelp"/);
   assert.match(label,/<small id="fogHelp">[^<]*enemy armies[^<]*last-seen buildings[^<]*rivals use the same rules\./);
   assert.doesNotMatch(label,/\bhidden\b/);
+});
+
+test('Defend the King fixes four armies and restores the prior rival count when changing modes',()=>{
+  const f=fixture();f.element('enemySelect').value='11';f.element('modeSelect').value='defend-king';
+  f.context.updateModeDescription();
+  assert.equal(f.element('enemySelect').value,'3');assert.equal(f.element('enemySelect').disabled,true);assert.match(f.element('enemySelect').innerHTML,/4 armies · 1 king each/);assert.match(f.element('modeDescription').textContent,/Kings have one life/);
+  f.context.updateModeDescription();f.element('modeSelect').value='crown-control';f.context.updateModeDescription();
+  assert.equal(f.element('enemySelect').value,'11');assert.equal(f.element('enemySelect').disabled,false);assert.match(f.element('modeDescription').textContent,/120 cumulative uncontested seconds/);
+  f.element('modeSelect').value='blitz-flags';f.context.updateModeDescription();assert.match(f.element('modeDescription').textContent,/10 seconds/);assert.match(f.element('modeDescription').textContent,/12 seconds/);
+  for(const mode of ['defend-king','crown-control','blitz-flags'])assert.match(html,new RegExp('<option value="'+mode+'">'));
+  assert.ok(html.indexOf('id="modeDescription"')<html.indexOf('<details class="campaign-note-details"'),'Mode rules are visible before optional difficulty details.');
+});
+
+test('King HUD shows friendly vitality and reveals enemy vitality only inside current sight',()=>{
+  const f=fixture(),teams=[{id:0,alliance:0,name:'House Stark',color:'#aaa'},{id:1,alliance:1,name:'House Bolton',color:'#bbb'}],kings=[{id:12,hp:250,maxHp:500},{id:13,hp:111,maxHp:999}];let visible=false;
+  f.context.game={mode:{kingSurvival:true},teams,config:{fogOfWar:true},kingFor:team=>kings[team],allied:(a,b)=>a===b,isVisibleTo:()=>visible};
+  f.context.updateKingHud();assert.equal(f.element('kingSection').hidden,false);assert.match(f.element('heroButton').innerHTML,/Find king/);assert.match(f.element('kingList').innerHTML,/250 \/ 500 HP/);assert.match(f.element('kingList').innerHTML,/Unseen/);assert.doesNotMatch(f.element('kingList').innerHTML,/111|999/);
+  visible=true;f.context.updateKingHud();assert.match(f.element('kingList').innerHTML,/111 \/ 999 HP/);
+  kings[0]=null;f.context.updateKingHud();assert.match(f.element('kingList').innerHTML,/Fallen · army defeated/);
+  f.context.game.mode={};f.context.updateKingHud();assert.equal(f.element('kingSection').hidden,true);assert.match(f.element('heroButton').innerHTML,/Commander/);
+});
+
+test('Find king selects the living king and never promises a respawn after king death',()=>{
+  const f=fixture();let king={id:91,x:22,y:30,hp:500},focused,message;
+  f.context.game={mode:{kingSurvival:true},kingFor:()=>king};f.context.focusPoint=(...point)=>{focused=point;};f.context.toast=text=>{message=text;};
+  f.context.findHero();assert.deepEqual([...f.context.ui.selected],[91]);assert.deepEqual(focused,[22,30,1.7]);
+  king=null;f.context.findHero();assert.match(message,/Kings have one life/);assert.doesNotMatch(message,/return/);
+});
+
+test('Flag-wave HUD remains available between waves and control scores use seconds',()=>{
+  const f=fixture(),teams=[{id:0,alliance:0,name:'House Stark',color:'#aaa'},{id:1,alliance:1,name:'House Bolton',color:'#bbb'}];
+  f.context.game={mode:{flagWaves:true,flagRequired:12,flagReinforcements:12},teams,objectives:[],objectiveScores:[2,1],time:20,nextFlagWaveAt:60};
+  f.context.updateObjectivesHud();assert.equal(f.element('objectiveSection').hidden,false);assert.match(f.element('flagWaveStatus').textContent,/40s · 0 active/);assert.match(f.element('objectiveRule').textContent,/12s/);assert.match(f.element('objectiveRule').textContent,/12 troops beside your king/);assert.equal(f.element('objectiveList').innerHTML,'');
+  f.context.game.mode={controlGoal:120};f.context.game.controlScores=[26.75,81.25];f.context.updateObjectivesHud();assert.equal(f.element('flagWaveStatus').hidden,true);assert.match(f.element('objectiveScore').innerHTML,/26.8 \/ 120s/);assert.match(f.element('objectiveScore').innerHTML,/81.3 \/ 120s/);
+  f.context.game.mode={objectiveGoal:3,flagRequired:10,flagCooldown:12,flagReinforcements:8};f.context.updateObjectivesHud();assert.match(f.element('objectiveGoal').textContent,/FIRST TO 3/);assert.match(f.element('objectiveRule').textContent,/10s/);assert.match(f.element('objectiveRule').textContent,/12s/);
+});
+
+test('Objective cards use each mode’s timer and remove captured flags from the list',()=>{
+  const f=fixture(),list=f.element('objectiveList'),card=new Element(),parts=new Map();card.dataset.objective='41';card.querySelector=selector=>{if(!parts.has(selector))parts.set(selector,new Element());return parts.get(selector);};list.children=[card];list.querySelectorAll=()=>list.children;
+  f.context.game={mode:{flagWaves:true,flagRequired:12,flagReinforcements:12},teams:[{id:0,alliance:0,name:'House Stark',color:'#aaa'}],objectives:[{id:41,name:'Central Standard',required:12,progress:[3],controller:0}],time:20,nextFlagWaveAt:60};
+  f.context.updateObjectivesHud();assert.equal(parts.get('.objective-heading>span').textContent,'3.0 / 12s');assert.equal(parts.get('.objective-progress i').style.width,'25%');
+  f.context.game.objectives=[];f.context.updateObjectivesHud();assert.equal(list.innerHTML,'');assert.match(f.element('flagWaveStatus').textContent,/0 active/);
 });
 
 test('All sixteen painted house choices update the selected profile and accessible state',()=>{
@@ -141,6 +185,18 @@ test('Starting a campaign passes every selected setting to the actual simulation
   assert.equal(captured.fogOfWar,true);assert.equal(f.context.game.config.fogOfWar,true);
   assert.equal(f.context.ui.quality,'high');assert.equal(f.context.started,true);assert.equal(f.context.menuOpen,false);assert.equal(f.element('menuOverlay').hidden,true);assert.equal(f.context.game.teams[0].house,14);
   for(const [id,value]of Object.entries(values))assert.equal(f.element(id).value,value,`Starting must not reset ${id}.`);
+});
+
+test('Each new mode starts the real simulation with its announced rules',()=>{
+  for(const mode of ['defend-king','crown-control','blitz-flags']){
+    const f=fixture();for(const [id,value]of Object.entries({modeSelect:mode,enemySelect:'7',difficultySelect:'standard',scaleSelect:'standard',landscapeSelect:'open',qualitySelect:'auto',fogSelect:'off'}))f.element(id).value=value;
+    f.context.Game=Game;f.context.updateModeDescription();f.context.start();const g=f.context.game;
+    assert.equal(g.mode.id,mode);
+    if(mode==='defend-king'){
+      assert.equal(g.teams.length,4);assert.equal(g.mode.kingSurvival,true);assert.ok(g.teams.every(t=>g.kingFor(t.id)?.isKing));assert.equal(g.objectives.length,0);assert.equal(g.nextFlagWaveAt,15);assert.match(f.element('objective').textContent,/Protect your king/);
+    }else if(mode==='crown-control'){assert.equal(g.mode.controlGoal,120);assert.equal(g.objectives.length,1);assert.match(f.element('objective').textContent,/120 cumulative/);}
+    else{assert.equal(g.mode.objectiveGoal,3);assert.equal(g.mode.flagRequired,10);assert.equal(g.mode.flagCooldown,12);assert.match(f.element('objective').textContent,/3 flag captures/);}
+  }
 });
 
 test('Opening and resuming the menu preserves the running campaign and pause state',()=>{
