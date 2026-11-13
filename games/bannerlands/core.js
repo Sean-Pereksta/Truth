@@ -170,8 +170,13 @@ const AI_DIFFICULTIES={
 };
 
 class SpatialHash {
-  constructor(w,h){this.size=1.25;this.w=Math.ceil(w/this.size)+2;this.h=Math.ceil(h/this.size)+2;this.buckets=Array.from({length:this.w*this.h},()=>[]);}
-  rebuild(units){for(const b of this.buckets)b.length=0;for(const u of units)if(u.hp>0){const x=clamp(Math.floor(u.x/this.size),0,this.w-1),y=clamp(Math.floor(u.y/this.size),0,this.h-1);this.buckets[y*this.w+x].push(u);}}
+  constructor(w,h){this.size=1.25;this.w=Math.ceil(w/this.size)+2;this.h=Math.ceil(h/this.size)+2;this.buckets=Array.from({length:this.w*this.h},()=>[]);this.occupied=[];}
+  rebuild(units){
+    // Large worlds are mostly empty. Reset only buckets populated on the last
+    // pass, preserving insertion order for identical combat and separation.
+    for(const b of this.occupied)b.length=0;this.occupied.length=0;
+    for(const u of units)if(u.hp>0){const x=clamp(Math.floor(u.x/this.size),0,this.w-1),y=clamp(Math.floor(u.y/this.size),0,this.h-1),bucket=this.buckets[y*this.w+x];if(!bucket.length)this.occupied.push(bucket);bucket.push(u);}
+  }
   visit(x,y,r,fn){const x0=clamp(Math.floor((x-r)/this.size),0,this.w-1),x1=clamp(Math.floor((x+r)/this.size),0,this.w-1),y0=clamp(Math.floor((y-r)/this.size),0,this.h-1),y1=clamp(Math.floor((y+r)/this.size),0,this.h-1);for(let yy=y0;yy<=y1;yy++)for(let xx=x0;xx<=x1;xx++){const b=this.buckets[yy*this.w+xx];for(let i=0;i<b.length;i++)fn(b[i]);}}
 }
 

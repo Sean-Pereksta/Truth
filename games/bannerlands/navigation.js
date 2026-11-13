@@ -43,6 +43,15 @@ export class LandsNavigation {
       const x=i%this.W,y=Math.floor(i/this.W);
       for(let d=0;d<8;d++){const xx=x+neighborDX[d],yy=y+neighborDY[d];if(xx<0||yy<0||xx>=this.W||yy>=this.H||!this.walkable[yy*this.W+xx])continue;if(d>3&&(!this.walkable[y*this.W+xx]||!this.walkable[yy*this.W+x]))continue;this.neighbors[i*8+d]=yy*this.W+xx;}
     }
+    // Connectivity is independent of movement costs. Reject impossible orders
+    // before allocating a flow field or repeatedly flooding an isolated island.
+    this.regions=new Int32Array(this.walkable.length);this.regions.fill(-1);
+    const queue=new Int32Array(this.walkable.length);let region=0;
+    for(let start=0;start<this.walkable.length;start++)if(this.walkable[start]&&this.regions[start]<0){
+      let head=0,tail=1;queue[0]=start;this.regions[start]=region;
+      while(head<tail){const offset=queue[head++]*8;for(let d=0;d<8;d++){const next=this.neighbors[offset+d];if(next>=0&&this.regions[next]<0){this.regions[next]=region;queue[tail++]=next;}}}
+      region++;
+    }
   }
   index(point){
     if(!point||!Number.isFinite(point.x)||!Number.isFinite(point.y))return -1;
@@ -75,19 +84,29 @@ export class LandsNavigation {
   forNeighbors(index,visit){
     const offset=index*8;for(let d=0;d<8;d++){const next=this.neighbors[offset+d];if(next>=0)visit(next,neighborLength[d]);}
   }
+  createField(target,kind,origin){
+    if(origin>=0&&this.regions[origin]!==this.regions[target])return null;
+    if(origin>=0&&Number.isFinite(this.game.time)&&this.fieldWorkTime!==this.game.time)this.beginUpdate();
+    // A spent search budget must also stop allocations. Otherwise a large set
+    // of new goals evicts every unfinished field without advancing any of them.
+    if(origin>=0&&this.fieldWorkRemaining<=0){this.stats.fieldBudgetStops++;return null;}
+    const {values}=this.costGrid(kind),distance=new Float32Array(this.walkable.length),next=new Int32Array(this.walkable.length),heap=new MinHeap(),settled=new Uint8Array(this.walkable.length);
+    distance.fill(Infinity);next.fill(-1);distance[target]=0;heap.push(target,0);
+    this.stats.fieldBuilds++;return {distance,next,target,kind,values,heap,settled,complete:false};
+  }
   field(goal,kind,origin=-1){
     const target=this.index(goal);if(target<0||!this.walkable[target])return null;
     kind=this.kind(kind);const key=`${kind}:${target}`;
     let field=this.fields.get(key);
     if(field){this.stats.fieldHits++;this.remember(this.fields,key,field,this.maxFields);}else{
-      const {values}=this.costGrid(kind),distance=new Float32Array(this.walkable.length),next=new Int32Array(this.walkable.length),heap=new MinHeap(),settled=new Uint8Array(this.walkable.length);
-      distance.fill(Infinity);next.fill(-1);distance[target]=0;heap.push(target,0);
-      field={distance,next,target,kind,values,heap,settled,complete:false};this.stats.fieldBuilds++;this.remember(this.fields,key,field,this.maxFields);
+      field=this.createField(target,kind,origin);if(!field)return null;
+      this.remember(this.fields,key,field,this.maxFields);
     }
     if(field.complete||origin>=0&&field.settled[origin])return field;
     // Expand only as far as this company needs, preserving the heap for the next
     // soldier. A nearby home order no longer floods the entire continent.
     const {distance,next,values,heap,settled}=field;
+    if(origin>=0&&this.regions[origin]!==this.regions[target])return null;
     if(origin>=0&&Number.isFinite(this.game.time)&&this.fieldWorkTime!==this.game.time)this.beginUpdate();
     while(heap.length){
       if(origin>=0){if(this.fieldWorkRemaining<=0){this.stats.fieldBudgetStops++;return field;}this.fieldWorkRemaining--;}
@@ -102,6 +121,7 @@ export class LandsNavigation {
     const origin=this.nearestPassable(from),goal=this.nearestPassable(to),empty={points:[],distance:Infinity,cost:Infinity,reachable:false,crossings:[]};
     if(!origin||!goal)return empty;
     const start=this.index(origin),target=this.index(goal),className=this.kind(kind),key=`${className}:${start}:${target}`;
+    if(this.regions[start]!==this.regions[target])return empty;
     let path=this.routes.get(key);
     if(path){this.remember(this.routes,key,path,this.maxRoutes);}else{
       this.stats.routeSearches++;

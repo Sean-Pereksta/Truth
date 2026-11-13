@@ -537,13 +537,30 @@ export class Renderer{
     }
   }
   updateTerritory(g){
-    const c=this.ownerPixels.getContext('2d'),data=this.ownerImageData.data,colors=g.teams.map(t=>[parseInt(t.color.slice(1,3),16),parseInt(t.color.slice(3,5),16),parseInt(t.color.slice(5,7),16)]),owners=g.config?.fogOfWar?g.vision.ownersFor(0):null,ownerAt=t=>t?(owners?owners[t.y*g.W+t.x]:t.owner):-1;data.fill(0);this.territoryEdges=[];
-    for(const t of g.tiles){const owner=ownerAt(t);if(owner<0||!g.isWalkable(t.x+.5,t.y+.5))continue;const team=g.teams[owner];if(!team)continue;const i=(t.y*g.W+t.x)*4;data.set([...colors[owner],255],i);const p=iso(t.x+.5,t.y+.5);
-      const corners=[[p.x,p.y-HH],[p.x+HW,p.y],[p.x,p.y+HH],[p.x-HW,p.y]];
-      const checks=[[t.x,t.y-1,0],[t.x+1,t.y,1],[t.x,t.y+1,2],[t.x-1,t.y,3]];
-      for(const [x,y,e]of checks){const nt=x>=0&&y>=0&&x<g.W&&y<g.H?g.tiles[y*g.W+x]:null;if(ownerAt(nt)!==owner){const a=corners[e],b=corners[(e+1)%4];this.territoryEdges.push({x1:a[0],y1:a[1],x2:b[0],y2:b[1],color:team.color});}}
+    const data=this.ownerImageData.data,owners=g.config?.fogOfWar?g.vision.ownersFor(0):null,palette=g.teams.map(t=>t.color).join('|');
+    let changed=this.territorySource!==g||this.territoryPixelData!==data||this.territoryPalette!==palette;
+    if(this.territorySource!==g||this.territoryOwners?.length!==g.tiles.length){this.territoryOwners=new Int16Array(g.tiles.length);this.territoryPassable=new Uint8Array(g.tiles.length);changed=true;}
+    const snapshot=this.territoryOwners,passable=this.territoryPassable;
+    // A scheduled refresh still checks the current ownership (including fog
+    // memory), but unchanged ground keeps its pixels, edges and minimap bake.
+    for(let index=0;index<g.tiles.length;index++){
+      const t=g.tiles[index],owner=owners?owners[index]:t.owner,clear=owner>=0&&g.teams[owner]&&g.isWalkable(t.x+.5,t.y+.5)?1:0;
+      if(snapshot[index]!==owner||passable[index]!==clear){snapshot[index]=owner;passable[index]=clear;changed=true;}
     }
-    c.putImageData(this.ownerImageData,0,0);this.territoryTime=g.time;this.minimapRevision=(this.minimapRevision||0)+1;
+    this.territoryTime=g.time;if(!changed)return;
+    this.territorySource=g;this.territoryPixelData=data;this.territoryPalette=palette;data.fill(0);this.territoryEdges=[];
+    const colors=g.teams.map(t=>[parseInt(t.color.slice(1,3),16),parseInt(t.color.slice(3,5),16),parseInt(t.color.slice(5,7),16)]),W=g.W,H=g.H,edges=this.territoryEdges;
+    for(let index=0;index<g.tiles.length;index++){
+      if(!passable[index])continue;const t=g.tiles[index],owner=snapshot[index],color=g.teams[owner].color,rgb=colors[owner],i=index*4,px=(t.x-t.y)*HW,py=(t.x+t.y+1)*HH;
+      data[i]=rgb[0];data[i+1]=rgb[1];data[i+2]=rgb[2];data[i+3]=255;
+      // Emit the four exposed sides directly, avoiding temporary corner and
+      // neighbor arrays for every owned tile on large maps.
+      if((t.y>0?snapshot[index-W]:-1)!==owner)edges.push({x1:px,y1:py-HH,x2:px+HW,y2:py,color});
+      if((t.x<W-1?snapshot[index+1]:-1)!==owner)edges.push({x1:px+HW,y1:py,x2:px,y2:py+HH,color});
+      if((t.y<H-1?snapshot[index+W]:-1)!==owner)edges.push({x1:px,y1:py+HH,x2:px-HW,y2:py,color});
+      if((t.x>0?snapshot[index-1]:-1)!==owner)edges.push({x1:px-HW,y1:py,x2:px,y2:py-HH,color});
+    }
+    this.ownerPixels.getContext('2d').putImageData(this.ownerImageData,0,0);this.minimapRevision=(this.minimapRevision||0)+1;
   }
   treeSprite(kind,variant=0){
     if(['mountain','woodland','stoneBridge','woodBridge','pass','ford','waymarker','ruin'].includes(kind))return this.landsPropSprite(kind,variant);
