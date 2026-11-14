@@ -52,7 +52,7 @@ These effects happen automatically when their stated conditions are met. Holding
 Guard auras protect nearby allies without adding their reductions together; only the strongest applicable guard applies. Repeated slow or poison hits refresh their duration rather than multiplying their strength, and weaker poison cannot replace stronger poison. Shock, snares, slows, poison and temporary fury expire after their listed durations.
 Sweeps and piercing shots have a limited number of targets. Their extra hits do not start further sweeps or an endless chain of bolts. River healing is limited for each recipient, so surrounding one soldier with healers cannot bypass its four-second recovery limit.
 Dragonfire Acolytes throw fire pots, Dune Skirmishers throw javelins, and Beacon Engineers launch piercing ballista bolts. Fire zones, charged strikes, guard protection and timed conditions also have their own battle cues.
-Enemy specialist hits and damaging poison or fire interrupt continuous expansion when they actually damage a member of that expansion party. Simply seeing an enemy does not stop it. After an interruption, select the troops and press T again to resume expansion.
+Enemy specialist hits and damaging poison or fire trigger local defensive engagement only when they actually damage an expanding troop. Nearby expanders defend within their aggro range, then automatically resume expansion. Distant troops keep their orders; simply seeing an enemy does not interrupt expansion.
 
 HOUSE STARK
   Specialist: Winter Guard — Frontline infantry.
@@ -189,4 +189,5 @@ Muster Shift+5: your original specialist company. Build Shift+H: its production 
 Seven houses also have a new regiment: build its facility with Shift+J and
 recruit its company with Muster Shift+6. See Combat-Update.txt for details.
 Council Shift+1: house power; Shift+2: weapons; Shift+3: armor; Shift+4: Treasury; Shift+5: house guide.
-Q: select your army. T: continuously expand nearby land until given another order or attacked.
+Q: select your army. T: continuously expand nearby land until given another order; nearby troops temporarily defend attacks and resume automatically.
+A: attack each selected troop's nearest known enemy troop or building. Right-click a visible enemy building to focus attacks on it.

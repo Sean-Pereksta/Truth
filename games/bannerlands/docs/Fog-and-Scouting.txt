@@ -38,6 +38,10 @@ Hold and drag LEFT: select troops. Shift adds to the selection.
 Hold and drag RIGHT: choose destination and facing, regardless of other modes.
 Press at the destination, drag toward the desired front, then release.
 Right-drag never pans the camera. With no troops selected it gives guidance.
-A simple right-click still issues a normal Move, or sets selected buildings'
-rally point. Middle-drag, map edges and arrow keys pan the camera.
+A simple right-click on ground issues a normal Move, or sets selected buildings'
+rally point. Right-click a visible enemy building with troops selected to focus
+attacks on it until invalid or given another order. A / Attack nearest considers
+known enemy troops and buildings, including last-seen building destinations;
+hidden changes remain unknown until scouted. Middle-drag, map edges and arrow
+keys pan the camera.
 The D / Move & face guide does not take over left-drag selection.

@@ -27,6 +27,9 @@ function idle(g,team,x,y,type='infantry'){
 function stationaryFoe(g,x=36,y=40,team=1){
   const u=g.addUnit(team,'infantry',x,y);g.hold([u.id]);u.cooldown=1e9;return u;
 }
+function expansionFrontier(g){
+  for(let y=38;y<=42;y++)for(let x=25;x<=31;x++)g.tileAt(x+.5,y+.5).owner=0;
+}
 
 test('Two rival capture companies close a contested castle gap and deal real damage',()=>{
   for(const fogOfWar of [false,true]){
@@ -82,6 +85,99 @@ test('Expand and retreat replace an automatic pursuit without acquiring new cont
     g.tileAt(30,40).owner=0;
     if(mode==='expand')assert.equal(g.expand([u.id]).ok,true);else g.retreat([u.id]);
     assert.equal(u.target,null);step(g,.5);assert.equal(u.target,null);assert.equal(u.order.mode,mode==='expand'?'expand':'move');
+  }
+});
+
+test('An attacked expansion responds locally while distant troops keep marching on the same order',()=>{
+  const g=fixture(),struck=idle(g,0,30,40),near=idle(g,0,31,43),separate=idle(g,0,32,42),far=idle(g,0,75,40),foe=stationaryFoe(g,36,40);
+  expansionFrontier(g);g.expand([struck.id,near.id,far.id]);g.expand([separate.id]);
+  const orders=new Map([struck,near,separate,far].map(u=>[u.id,u.order])),distant=structuredClone(far.order),farStart={x:far.x,y:far.y};
+  g.damage(struck,1,g.unitSource(foe));step(g,.7);
+  for(const u of [struck,near,separate]){
+    assert.equal(u.order,orders.get(u.id));assert.equal(u.order.mode,'expand');assert.equal(u.target,foe,'Each nearby expander must respond, even if assigned separately.');
+  }
+  assert.equal(far.order,orders.get(far.id));assert.deepEqual(far.order,distant);assert.equal(far.target,null);
+  assert.ok(Math.hypot(far.x-farStart.x,far.y-farStart.y)>.4,'Distant troops must keep physically following their frontier order.');
+  assert.ok(struck.x>30.4,'Defenders must close the gap rather than hold outside weapon range.');
+  step(g,4);assert.ok(foe.hp<foe.maxHp,'The local defensive response must deal real combat damage.');
+});
+
+test('Local expansion defense resumes the saved frontier after combat ends or an enemy leaves the leash',()=>{
+  for(const escapes of [false,true]){
+    const g=fixture(),u=idle(g,0,30,40),foe=stationaryFoe(g,36,40);expansionFrontier(g);g.expand([u.id]);
+    const order=u.order,goal={x:order.x,y:order.y,tile:order.expandTile};
+    g.damage(u,1,g.unitSource(foe));step(g,1);assert.equal(u.target,foe);assert.ok(u.x>30.4);
+    if(escapes){foe.x=55;foe.order.x=55;}else foe.hp=0;
+    step(g,10);
+    assert.equal(u.order,order);assert.equal(order.mode,'expand');assert.equal(order.expandTile,goal.tile);assert.equal(u.target,null);
+    assert.ok(Math.hypot(u.x-goal.x,u.y-goal.y)<.3,'The soldier must resume moving to its original frontier without another T command.');
+    if(escapes)assert.equal(foe.hp,foe.maxHp,'A local defense must not pursue a fleeing contact across the realm.');
+  }
+});
+
+test('Expansion defense uses each responding troop\'s range around the attacker rather than the whole party',()=>{
+  const g=fixture(),victim=idle(g,0,30,40),inRange=idle(g,0,43.5,40),outOfRange=idle(g,0,45,40),foe=stationaryFoe(g,36,40);
+  expansionFrontier(g);g.expand([victim.id,inRange.id,outOfRange.id]);const outside=outOfRange.order;
+  g.damage(victim,1,g.unitSource(foe));step(g,.2);
+  assert.equal(inRange.target,foe,'A troop in range of the attacker must assist, even on its far side.');
+  assert.equal(outOfRange.target,null);assert.equal(outOfRange.order,outside);assert.equal(outside.mode,'expand');
+});
+
+test('Expansion resumes even when a new building occupies the original defensive position',()=>{
+  const g=fixture(),u=idle(g,0,30.5,40.5),foe=stationaryFoe(g,36.5,40.5);expansionFrontier(g);g.expand([u.id]);const order=u.order;
+  g.damage(u,1,g.unitSource(foe));step(g,1);assert.equal(u.target,foe);
+  foe.hp=0;g.addBuilding(0,'barracks',30.5,40.5);step(g,12);
+  assert.equal(u.order,order);assert.equal(u.target,null);assert.ok(Math.hypot(u.x-order.x,u.y-order.y)<.3,'Resuming expansion must not depend on returning to a now-obstructed contact point.');
+});
+
+test('Rival spears resume frontier planning after bracing interrupts their local expansion defense',()=>{
+  const g=fixture(),u=idle(g,1,30.5,40.5,'bridge_warden'),horse=idle(g,0,34.5,40.5,'cavalry');
+  for(let y=38;y<=42;y++)for(let x=25;x<=31;x++)g.tileAt(x+.5,y+.5).owner=u.team;
+  g.expand([u.id]);const frontier=u.order.expandTile;assert.notEqual(frontier,null);
+  g.command([horse.id],28.5,40.5,'attack');horse.vx=-2;horse.vy=0;horse.momentum=.8;
+  g.damage(u,1,g.unitSource(horse));step(g,1/30);
+  assert.equal(u.order.mode,'hold');assert.equal(u.order.aiTask,'spearBrace','An incoming cavalry charge must temporarily brace the rival spears.');
+  horse.hp=0;g.tiles[frontier].owner=u.team;
+  step(g,8);
+  assert.equal(u.order.mode,'expand');assert.equal(u.target,null);
+  assert.notEqual(u.order.expandTile,frontier,'After the old frontier is secured, resumed spears must plan another capture destination.');
+  assert.ok(Math.hypot(u.x-30.5,u.y-40.5)>.5,'The rival company must physically resume expansion after its defensive brace.');
+  assert.ok(Math.hypot(u.x-u.order.x,u.y-u.order.y)<.3,'The resumed expansion must reach its new frontier.');
+});
+
+test('Damage without source coordinates remains a local expansion response',()=>{
+  const g=fixture(),victim=idle(g,0,30,40),near=idle(g,0,31,42),far=idle(g,0,75,40),foe=stationaryFoe(g,35,40);
+  expansionFrontier(g);g.expand([victim.id,near.id,far.id]);const order=far.order,saved=structuredClone(order);
+  g.damage(victim,1,{team:foe.team});step(g,.5);
+  assert.equal(victim.target,foe);assert.equal(near.target,foe);assert.equal(far.target,null);assert.equal(far.order,order);assert.deepEqual(order,saved);
+});
+
+test('A tower projectile triggers local retaliation without cancelling distant expansion',()=>{
+  const g=fixture(),victim=idle(g,0,30,40),far=idle(g,0,75,40),tower=g.addBuilding(1,'tower',34,40);
+  expansionFrontier(g);g.expand([victim.id,far.id]);const order=far.order,saved=structuredClone(order);tower.cooldown=0;
+  g.hash.rebuild(g.units);g.updateBuildings(.1);assert.ok(g.projectiles.some(p=>p.target===victim.id));
+  step(g,1);assert.ok(victim.hp<victim.maxHp);assert.equal(victim.target,tower);assert.equal(far.target,null);assert.equal(far.order,order);assert.deepEqual(order,saved);
+  step(g,4);assert.ok(tower.hp<tower.maxHp,'A defensive response must be able to retaliate against the attacking structure.');
+});
+
+test('Local expansion defense preserves nearby explicit orders and obeys a new command immediately',()=>{
+  for(const replacement of ['move','hold','attack','expand','retreat']){
+    const g=fixture(),victim=idle(g,0,30,40),marcher=idle(g,0,31,41),guard=idle(g,0,31,39),foe=stationaryFoe(g,36,40);
+    expansionFrontier(g);g.expand([victim.id]);g.command([marcher.id],20,40,'move');g.hold([guard.id]);const march=marcher.order,hold=guard.order;
+    g.damage(victim,1,g.unitSource(foe));step(g,.4);assert.equal(victim.target,foe);
+    assert.equal(marcher.order,march);assert.equal(marcher.target,null);assert.equal(guard.order,hold);assert.equal(guard.target,null);
+    if(replacement==='hold')g.hold([victim.id]);else if(replacement==='expand')g.expand([victim.id]);else if(replacement==='retreat')g.retreat([victim.id]);else g.command([victim.id],20,40,replacement);
+    const order=victim.order;assert.equal(victim.target,null);step(g,.3);assert.equal(victim.order,order);assert.equal(victim.target,null,'A fresh command must override the temporary local defense.');
+  }
+});
+
+test('Expansion defense cannot chase unseen or unreachable attackers',()=>{
+  for(const blocked of ['unseen','river']){
+    const g=fixture(),u=idle(g,0,30,40),foe=stationaryFoe(g,35,40);expansionFrontier(g);g.expand([u.id]);const order=u.order;
+    if(blocked==='unseen')g.isVisibleTo=(team,entity)=>entity!==foe;
+    else{for(let y=1;y<g.H-1;y++)g.tileAt(33.5,y+.5).terrain='water';g.navigation.invalidate();}
+    g.damage(u,1,g.unitSource(foe));step(g,2);
+    assert.equal(u.order,order);assert.equal(order.mode,'expand');assert.equal(u.target,null);assert.equal(foe.hp,foe.maxHp);assert.ok(u.x<33,'The local response must respect a blocked or unseen attack position.');
   }
 });
 

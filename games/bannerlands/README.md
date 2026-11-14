@@ -2,6 +2,12 @@
 
 Command armies, conquer the grid, and unite the realm in an isometric real-time strategy game.
 
+Attacks on expanding troops now trigger local defense within aggro range while
+distant troops continue their orders. Defenders pursue only locally and resume
+expansion automatically. A / Attack nearest considers both known enemy troops
+and buildings by distance. Right-click a visible enemy building to focus attacks
+on it until it becomes invalid or you issue another order.
+
 Movement orders remain active when a right-click also closes a command panel,
 and a right-drag that returns to its starting point still issues a Move order.
 Large batches of destinations now preserve unfinished route searches instead

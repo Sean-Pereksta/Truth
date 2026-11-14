@@ -234,6 +234,10 @@ function setSelectedRally(x,y){const buildings=selectedBuildings();if(!buildings
 function clearSelectedRally(){const r=game.clearRally(0,allBuildingsSelected?null:ui.selectedBuildings);toast(r.message,!r.ok);cancelBuild();updateHud();}
 function findHero(){const u=game.mode?.kingSurvival?game.kingFor?.(0):game.units.find(u=>u.team===0&&u.type==='hero'&&u.hp>0);if(!u){toast(game.mode?.kingSurvival?'Your king has fallen. Kings have one life.':'Your commander will return while a keep remains.');return;}cancelBuild();clearBuildingSelection();ui.selected=new Set([u.id]);allSelected=false;battleHud.close();focusPoint(u.x,u.y,1.7);updateHud();}
 function issue(x,y,mode=orderMode,facing=null){if(!selected().length){toast('Select soldiers first. Drag a box or press Q.');return false;}const t=game.tileAt(x,y);if(!isPassableTile(t)){toast('Choose reachable ground, a bridge, a ford or a pass.',true);return false;}game.command(ui.selected,x,y,mode,ui.formation,facing);ui.orderMarker={x,y,time:game.time,mode};tone(mode==='attack'?240:340);return true;}
+function issueTarget(target){
+ const result=game.attackTarget([...ui.selected],target.id,ui.formation);if(!result.ok){toast(result.message,true);return false;}
+ ui.orderMarker={x:target.x,y:target.y,time:game.time,mode:'attack'};tone(240);return true;
+}
 function expandNearby(){
  if(!started||menuOpen||game.winner!==null||!game.teams[0].alive)return;
  const troops=selected();if(!troops.length)return toast('Select soldiers first. Drag a box or press Q.');
@@ -348,9 +352,9 @@ canvas.addEventListener('pointermove',e=>{
  if(gesture.facing){if(gesture.moved){const end=screenToWorld(p.x,p.y,view),dx=end.x-gesture.anchor.x,dy=end.y-gesture.anchor.y,length=Math.hypot(dx,dy);if(length>.001)ui.facingPreview={...gesture.anchor,faceX:dx/length,faceY:dy/length,formation:ui.formation,count:selected().length};}}
  else if(gesture.button===1||gesture.pan){if(gesture.moved){view.x=gesture.camX-(p.x-gesture.x0)/view.zoom;view.y=gesture.camY-(p.y-gesture.y0)/view.zoom;boundCamera();}}else if(gesture.moved){ui.drag={x0:gesture.x0,y0:gesture.y0,x1:p.x,y1:p.y};}
 });
-function buildingAt(p){
+function buildingAt(p,enemy=false){
  let target=null,best=Infinity;
- for(const b of game.buildings){if(b.team!==0||b.hp<=0)continue;const s=worldToScreen(b.x,b.y,view),level=b.level||1,f=renderer.getStructureFrame(b.type,game.teams[0].sigil,level),scale=b.type==='keep'&&!renderer.campaignArtReady?[0,.85,1,1.16][level]:1,w=Math.max((f?.drawWidth||60)*scale,b.type==='keep'&&!renderer.campaignArtReady?[0,70,126,180][level]:0)*view.zoom,h=(f?.drawHeight||70)*scale*view.zoom,bottom=(b.type==='keep'?(level>1?62:44):b.type==='tower'?30:12)*view.zoom;
+ for(const b of game.buildings){if(b.hp<=0||(enemy?!game.hostile(0,b.team)||!game.teams[b.team]?.alive||!game.isVisibleTo(0,b):b.team!==0))continue;const s=worldToScreen(b.x,b.y,view),level=b.level||1,f=renderer.getStructureFrame(b.type,game.teams[b.team].sigil,level),scale=b.type==='keep'&&!renderer.campaignArtReady?[0,.85,1,1.16][level]:1,w=Math.max((f?.drawWidth||60)*scale,b.type==='keep'&&!renderer.campaignArtReady?[0,70,126,180][level]:0)*view.zoom,h=(f?.drawHeight||70)*scale*view.zoom,bottom=(b.type==='keep'?(level>1?62:44):b.type==='tower'?30:12)*view.zoom;
   if(p.x<s.x-w*.5||p.x>s.x+w*.5||p.y<s.y+12*view.zoom-h||p.y>s.y+bottom)continue;
   const d=Math.hypot((s.x-p.x)/Math.max(1,w),(s.y-h*.35-p.y)/Math.max(1,h));if(d<best){best=d;target=b;}
  }return target;
@@ -359,7 +363,7 @@ function finishPointer(e,cancel=false){
  pointers.delete(e.pointerId);if(pinch){if(pointers.size<2)pinch=null;gesture=null;ui.drag=null;ui.facingPreview=null;return;}
  if(!gesture||gesture.id!==e.pointerId)return;const z=gesture;gesture=null;ui.drag=null;ui.facingPreview=null;if(cancel||menuOpen||!started)return;const p=pointerPos(e),w=screenToWorld(p.x,p.y,view);
  if(z.facing&&z.moved){const dx=w.x-z.anchor.x,dy=w.y-z.anchor.y,length=Math.hypot(dx,dy),facing=length>.001?{x:dx/length,y:dy/length}:null;if(issue(z.anchor.x,z.anchor.y,'move',facing)){cancelBuild();if(facing)toast('March to the line and keep this facing. Backward movement is slower.');updateHud();}return;}
- if(z.button===1||z.pan&&z.moved||z.dismissOnly&&!z.moved&&z.button===0&&!z.facing)return;if(z.button===2){if(!z.moved){if(ui.buildMode||ui.rallyMode||ui.teamOrderMode){cancelBuild();updateHud();}else if(ui.selectedBuildings.size)setSelectedRally(w.x,w.y);else issue(w.x,w.y,'move');}return;}
+ if(z.button===1||z.pan&&z.moved||z.dismissOnly&&!z.moved&&z.button===0&&!z.facing)return;if(z.button===2){if(!z.moved){if(ui.buildMode||ui.rallyMode||ui.teamOrderMode){cancelBuild();updateHud();}else if(ui.selectedBuildings.size)setSelectedRally(w.x,w.y);else{const target=buildingAt(p,true);if(target)issueTarget(target);else issue(w.x,w.y,'move');}}return;}
  if(ui.teamOrderMode&&!z.moved){placeTeamOrder(w.x,w.y);return;}
  if(ui.rallyMode&&!z.moved){setSelectedRally(w.x,w.y);return;}
  if(ui.buildMode&&!z.moved){const r=game.build(ui.buildMode,Math.floor(w.x)+.5,Math.floor(w.y)+.5);toast(r.message,!r.ok);if(r.ok){tone(200);if(!e.shiftKey&&!$('repeatBuild').checked)cancelBuild();}updateHud();return;}

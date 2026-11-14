@@ -39,12 +39,85 @@ test('Allied, fallen and eliminated troops never become nearest-enemy targets',(
   assert.equal(g.attackNearest([soldier.id]).ok,true);targetPoint(soldier,enemy);
 });
 
-test('Enemy units take priority over nearby structures, with structures as the final fallback',()=>{
+test('Nearest attacks compare buildings and troops on equal distance terms',()=>{
   const g=fixture(),soldier=g.addUnit(0,'infantry',20.5,40.5);
   const post=g.addBuilding(1,'barracks',23.5,40.5),enemy=g.addUnit(1,'archer',40.5,40.5);
+  assert.equal(g.attackNearest([soldier.id]).ok,true);targetPoint(soldier,post);
+  enemy.x=21.5;
   assert.equal(g.attackNearest([soldier.id]).ok,true);targetPoint(soldier,enemy);
   enemy.hp=0;
   assert.equal(g.attackNearest([soldier.id]).ok,true);targetPoint(soldier,post);
+});
+
+test('Scattered troops choose their own nearest building or troop even with enemy armies remaining',()=>{
+  const g=fixture(),left=g.addUnit(0,'infantry',20.5,40.5),right=g.addUnit(0,'infantry',80.5,40.5);
+  const post=g.addBuilding(1,'barracks',15.5,40.5),enemy=g.addUnit(2,'infantry',85.5,40.5);
+  assert.equal(g.attackNearest([left.id,right.id]).count,2);targetPoint(left,post);targetPoint(right,enemy);
+});
+
+const advance=(g,seconds)=>{
+  for(let i=0;i<Math.round(seconds*30);i++){g.time+=1/30;g.navigation.beginUpdate();g.hash.rebuild(g.units);g.updateUnits(1/30);g.updateProjectiles(1/30);}
+};
+
+test('An explicit building attack closes the distance and damages that building despite nearer troops',()=>{
+  const g=fixture(),soldier=g.addUnit(0,'infantry',20.5,40.5),post=g.addBuilding(1,'barracks',27.5,40.5),enemy=g.addUnit(1,'infantry',20.5,43.5);
+  g.hold([enemy.id]);enemy.cooldown=1e9;soldier.cooldown=0;
+  assert.equal(g.attackTarget([soldier.id],post.id).ok,true);
+  advance(g,1);assert.equal(soldier.target,post);assert.ok(soldier.x>21,'The explicit target must pull the soldier toward the building.');
+  advance(g,5);assert.ok(post.hp<post.maxHp);assert.equal(enemy.hp,enemy.maxHp,'Nearby troops must not steal a focused building attack.');
+});
+
+test('An ordinary attack-move encounters and damages a building with enemy troops elsewhere',()=>{
+  const g=fixture(),soldier=g.addUnit(0,'infantry',20.5,40.5),post=g.addBuilding(1,'barracks',24.5,40.5),enemy=g.addUnit(1,'infantry',80.5,40.5);
+  g.hold([enemy.id]);enemy.cooldown=1e9;soldier.cooldown=0;g.command([soldier.id],35.5,40.5,'attack');
+  advance(g,5);assert.ok(post.hp<post.maxHp);assert.equal(enemy.hp,enemy.maxHp);
+});
+
+test('A focused archer routes around blocked sightlines to damage the chosen building',()=>{
+  const g=fixture(),soldier=g.addUnit(0,'archer',30.5,40.5),post=g.addBuilding(1,'barracks',34.5,40.5);
+  g.tileAt(32.5,40.5).terrain='mountain';g.navigation.invalidate();soldier.cooldown=0;
+  assert.equal(g.combatTerrain.canShoot(soldier,post),false);g.attackTarget([soldier.id],post.id);
+  advance(g,10);assert.equal(soldier.target,post);assert.ok(post.hp<post.maxHp,'A focused ranged troop must move for a clear shot, instead of waiting behind cover forever.');
+  assert.ok(g.isWalkable(soldier.x,soldier.y));
+});
+
+test('Invalid explicit targets preserve orders and a new player order overrides building focus',()=>{
+  const g=fixture(),soldier=g.addUnit(0,'infantry',20.5,40.5),post=g.addBuilding(1,'barracks',25.5,40.5);
+  for(const kind of ['allied','fallen','eliminated','hidden','missing']){
+    g.teams[1].alliance=g.teams[0].alliance+1;g.teams[1].alive=true;post.hp=post.maxHp;g.isVisibleTo=()=>true;
+    if(kind==='allied')g.teams[1].alliance=g.teams[0].alliance;
+    if(kind==='fallen')post.hp=0;
+    if(kind==='eliminated')g.teams[1].alive=false;
+    if(kind==='hidden')g.isVisibleTo=()=>false;
+    g.command([soldier.id],15.5,40.5,'move');const previous=soldier.order;
+    assert.equal(g.attackTarget([soldier.id],kind==='missing'?-99:post.id).ok,false,kind);assert.equal(soldier.order,previous,kind);
+  }
+  g.teams[1].alive=true;post.hp=post.maxHp;g.isVisibleTo=()=>true;
+  for(const mode of ['move','hold','expand','attack']){
+    assert.equal(g.attackTarget([soldier.id],post.id).ok,true);
+    if(mode==='hold')g.hold([soldier.id]);else if(mode==='expand')g.expand([soldier.id]);else g.command([soldier.id],15.5,40.5,mode);
+    const order=soldier.order;assert.equal(soldier.target,null);advance(g,.3);assert.equal(soldier.order,order);assert.equal(soldier.target,null);
+  }
+});
+
+test('A focused building releases combat when destroyed, allied, eliminated or out of sight',()=>{
+  for(const kind of ['fallen','allied','eliminated','hidden']){
+    const g=fixture(),soldier=g.addUnit(0,'infantry',20.5,40.5),post=g.addBuilding(1,'barracks',25.5,40.5);
+    g.attackTarget([soldier.id],post.id);advance(g,.4);assert.equal(soldier.target,post);
+    if(kind==='fallen')post.hp=0;
+    if(kind==='allied')g.teams[1].alliance=g.teams[0].alliance;
+    if(kind==='eliminated')g.teams[1].alive=false;
+    if(kind==='hidden')g.isVisibleTo=(team,entity)=>entity!==post;
+    advance(g,.4);assert.notEqual(soldier.target,post,kind);
+  }
+});
+
+test('Fog limits nearest attacks to visible troops and known building destinations',()=>{
+  const g=fixture(),soldier=g.addUnit(0,'infantry',20.5,40.5),hidden=g.addBuilding(1,'barracks',21.5,40.5),visible=g.addUnit(1,'infantry',30.5,40.5);
+  const memory={id:-500,team:2,type:'barracks',hp:500,x:25.5,y:40.5,remembered:true};g.config.fogOfWar=true;
+  g.knownBuildings=()=>[memory];g.knownUnits=()=>[visible];g.isVisibleTo=(team,entity)=>entity!==hidden;
+  g.attackNearest([soldier.id]);targetPoint(soldier,memory);assert.equal(soldier.target,null);
+  g.knownBuildings=()=>[];g.attackNearest([soldier.id]);targetPoint(soldier,visible);
 });
 
 test('Invalid, duplicate and dead selection entries cannot command extra troops',()=>{

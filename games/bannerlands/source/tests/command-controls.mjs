@@ -47,7 +47,7 @@ function fixture({house=0,realMenu=false}={}){
     ui,view:{x:0,y:840,w:800,h:600,zoom:1},battleHud:{open(){},close(){},isOpen:false,touchSelect:false,syncSelection(){}},started:true,menuOpen:false,orderMode:'attack',tab:'army',allSelected:false,allBuildingsSelected:false,
     pointers:new Map(),keys:new Set(),groups:new Map(),gesture:null,pinch:null,edgeMouse:null,
     $:element,document:{body:{classList:{add(){},remove(){}}},createElement:()=>new Element(),querySelector:selector=>{if(realMenu)return selector?.startsWith('#')?element(selector.slice(1)):actions.get(selector)||null;if(!actions.has(selector))actions.set(selector,new Element(selector));return actions.get(selector);},querySelectorAll:selector=>selector==='[data-tab]'?tabs:[]},
-    updateHud(){},toast:message=>messages.push(message),tone(){},initAudio(){},minZoom:()=>.05,boundCamera(){},buildingAt:()=>null,
+    updateHud(){},toast:message=>messages.push(message),tone(){},initAudio(){},minZoom:()=>.05,boundCamera(){},renderer:{campaignArtReady:true,getStructureFrame:()=>({drawWidth:60,drawHeight:70})},
     placeTeamOrder:()=>effects.push('teamOrder'),terrainDescription:()=>'',
     togglePause:()=>effects.push('pause'),attackNearest:()=>effects.push('attackNearest'),expandNearby:()=>effects.push('expand'),useHousePower:()=>effects.push('power'),
     selectArmy:()=>effects.push('army'),findHero:()=>effects.push('hero'),hold:()=>effects.push('hold'),selectAllBuildings:()=>effects.push('buildings'),retreat:()=>effects.push('retreat'),toggleGrid:()=>effects.push('grid'),fitMap:()=>effects.push('fit'),home:()=>effects.push('home'),zoomAt:()=>effects.push('zoom'),setMode:()=>effects.push('mode')
@@ -58,7 +58,7 @@ function fixture({house=0,realMenu=false}={}){
     const line=source.split('\n').find(line=>line.startsWith(prefix));assert.ok(line,prefix);vm.runInContext(line,context);
   }
   const actionsStart=source.indexOf('const MENU_ACTIONS='),actionsEnd=source.indexOf('\n};',actionsStart);vm.runInContext(source.slice(actionsStart,actionsEnd+3),context);
-  for(const name of ['clearBuildingSelection','selectTroopType','commandGroup','cancelBuild','showTab','activateMenuAction','handleMenuHotkey','beginFacing','patrolBorder','issue','setSelectedRally','pointerPos','rememberMouse','finishPointer','bonusText','upgradeSummary','specialistTooltip','labelMenuHotkeys','buildActionLists'])vm.runInContext(extract(name),context);
+  for(const name of ['clearBuildingSelection','selectTroopType','commandGroup','cancelBuild','showTab','activateMenuAction','handleMenuHotkey','beginFacing','patrolBorder','issue','issueTarget','buildingAt','setSelectedRally','pointerPos','rememberMouse','finishPointer','bonusText','upgradeSummary','specialistTooltip','labelMenuHotkeys','buildActionLists'])vm.runInContext(extract(name),context);
   vm.runInContext(listener('canvas','pointerdown'),context);vm.runInContext(listener('canvas','pointermove'),context);vm.runInContext(listener('window','keydown'),context);
   const cancelLine=source.split('\n').find(line=>line.startsWith("canvas.addEventListener('pointerup'"));vm.runInContext(cancelLine,context);
   const blurLine=source.split('\n').find(line=>line.startsWith("window.addEventListener('keyup'"));vm.runInContext(blurLine,context);
@@ -117,6 +117,43 @@ test('Right-drag that returns to its anchor still issues a move order',()=>{
   const f=fixture(),u=f.game.addUnit(0,'infantry',28.5,30.5);f.ui.selected.add(u.id);
   f.canvas.dispatch('pointerdown',f.event());f.canvas.dispatch('pointermove',f.event({clientX:420,clientY:310}));f.canvas.dispatch('pointermove',f.event());f.canvas.dispatch('pointerup',f.event());
   assert.equal(f.commands.length,1);assert.equal(f.commands[0][3],'move');assert.equal(f.commands[0][5],null);assert.equal(u.order.groupX,30);assert.equal(u.order.groupY,30);assert.equal(u.order.facingX,undefined);
+});
+
+test('Right-clicking enemy building artwork targets that building even when it also closes the drawer',()=>{
+  for(const type of ['barracks','keep','tower']){
+    const f=fixture(),u=f.game.addUnit(0,'infantry',26,30),building=f.game.addBuilding(1,type,30,30);f.ui.selected.add(u.id);f.context.battleHud.isOpen=true;
+    // Click the top of the building sprite, several world cells above its ground tile.
+    const click=f.event({clientX:400,clientY:250});f.canvas.dispatch('pointerdown',click);f.canvas.dispatch('pointerup',click);
+    assert.equal(f.commands.length,1,type);assert.equal(u.order.mode,'attack',type);assert.equal(u.order.targetId,building.id,type);assert.equal(u.target,building,type);
+    assert.equal(f.ui.orderMarker.x,building.x);assert.equal(f.ui.orderMarker.y,building.y);assert.equal(f.ui.orderMarker.mode,'attack');assert.deepEqual(ids(f.ui.selected),[u.id]);
+  }
+});
+
+test('Right-click ignores allied, hidden, destroyed and eliminated buildings as attack targets',()=>{
+  for(const state of ['own','allied','hidden','destroyed','eliminated']){
+    const f=fixture(),u=f.game.addUnit(0,'infantry',26,30),building=f.game.addBuilding(state==='own'?0:1,'barracks',30,30);f.ui.selected.add(u.id);
+    if(state==='allied')f.game.teams[1].alliance=f.game.teams[0].alliance;
+    if(state==='hidden'){f.game.config.fogOfWar=true;f.game.isVisibleTo=()=>false;}
+    if(state==='destroyed')building.hp=0;
+    if(state==='eliminated')f.game.teams[1].alive=false;
+    const click=f.event({clientX:400,clientY:250});f.canvas.dispatch('pointerdown',click);f.canvas.dispatch('pointerup',click);
+    assert.equal(f.commands.length,1,state);assert.equal(u.order.mode,'move',state);assert.equal(u.order.targetId,undefined,state);assert.equal(u.target,null,state);
+  }
+});
+
+test('Right-drag from enemy building artwork remains a facing move and building selection still sets rally',()=>{
+  const f=fixture(),u=f.game.addUnit(0,'infantry',26,30),enemy=f.game.addBuilding(1,'barracks',30,30);f.ui.selected.add(u.id);
+  const click=f.event({clientX:400,clientY:250});f.canvas.dispatch('pointerdown',click);f.canvas.dispatch('pointermove',f.event({clientX:484,clientY:292}));f.canvas.dispatch('pointerup',f.event({clientX:484,clientY:292}));
+  assert.equal(f.commands.length,1);assert.equal(u.order.mode,'move');assert.equal(u.order.targetId,undefined);assert.ok(Number.isFinite(u.order.facingX));
+  const own=f.game.addBuilding(0,'barracks',20,20);f.ui.selected.clear();f.ui.selectedBuildings.add(own.id);
+  f.canvas.dispatch('pointerdown',click);f.canvas.dispatch('pointerup',click);assert.equal(f.commands.length,1);assert.ok(own.rally);assert.notEqual(own.rally.y,enemy.y);
+});
+
+test('Enemy building hit testing uses the owning house artwork and follows camera zoom',()=>{
+  const f=fixture(),enemy=f.game.addBuilding(1,'barracks',30,30);f.context.view.zoom=2;
+  let house=null;f.context.renderer.getStructureFrame=(type,sigil)=>{house=sigil;return{drawWidth:120,drawHeight:100};};
+  assert.equal(f.context.buildingAt({x:510,y:150},true),enemy);assert.equal(house,f.game.teams[1].sigil);
+  assert.equal(f.context.buildingAt({x:530,y:150},true),null);assert.equal(f.context.buildingAt({x:400,y:250}),null);
 });
 
 test('Cancel, Escape and lost focus discard a facing preview without issuing an order',()=>{
