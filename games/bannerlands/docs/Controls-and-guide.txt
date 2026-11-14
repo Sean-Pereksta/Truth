@@ -142,13 +142,14 @@ Source version: run `node server.mjs`, then open http://127.0.0.1:4173. Source r
 COMMAND YOUR ARMY
 Drag to select soldiers. Shift-click/drag adds to the selection.
 Right-click ground to force selected troops to move immediately, overriding combat and charge orders. They can defend again after reaching the destination.
+Right-click a visible enemy building to focus selected troops on that structure until it becomes invalid or you give another order.
 Left-click empty ground uses your selected Conquer/Move mode. A gives the attack-nearest order.
 Conquer orders fight enemies and secure connected grid spaces along the route.
 Move orders march directly. Hold defends the current position. Retreat returns to your keep.
 Q selects your entire army; F selects and centers your commander.
 H holds; V retreats; R selects all buildings; X switches Conquer/Move.
 E activates your house's signature power on the selected troops. The always-visible House power button shows readiness; Council explains its effects and cost.
-A gives each selected soldier its own attack-move order toward the nearest living enemy unit to that soldier. Spread-out troops engage separate local fronts. If no hostile troops remain, each soldier targets its own nearest enemy structure. Normal local combat targeting continues along the way; press A again to choose from current enemy positions. The Attack nearest button gives the same order.
+A gives each selected soldier its own attack-move order toward the nearest known living enemy troop or building by distance. Spread-out troops engage separate local fronts. With fog enabled, remembered enemy buildings are valid destinations without revealing hidden changes. Normal local combat targeting continues along the way; press A again to choose from current known enemy positions. The Attack nearest button gives the same order.
 Ctrl+1 through Ctrl+9 saves a group; 1 through 9 recalls it.
 Ctrl+Shift+1 through 9 adds selected soldiers to an existing group.
 Use Line, Wedge, or Spread to position troops. Spread limits artillery losses.
@@ -171,8 +172,9 @@ Select troops and press T, or click Expand nearby in Battle Orders.
 They capture nearby land connected to your territory, then choose more nearby tiles automatically. They spread across the frontier and keep going without repeated clicks.
 If no connected frontier is available, they wait and check again.
 Move, Conquer, Attack nearest, Hold, or Retreat replaces expansion for the troops receiving that new order.
-An enemy attack stops the expansion party and makes it hold to defend. It does not automatically resume after combat; select the troops and press T again.
-Troops separately assigned to another expansion party keep their own orders.
+Actual hostile damage triggers temporary defense only for nearby expanding troops within their aggro range of the attacker. If the source location is unknown, the damaged troop's position defines the local response.
+Defenders pursue within a local leash, then automatically resume the same expansion order when local combat ends or the enemy leaves that leash. Simply seeing an enemy does not interrupt expansion.
+Distant expanding troops continue their assignments, even if selected in the same expansion party. Troops with other explicit orders keep those orders. A new command immediately replaces a defender's expansion order.
 The button shows how many selected troops are expanding. You can issue the order while paused.
 
 500 LEVEL PROGRESSION AND SLOWER INCOME
@@ -205,7 +207,7 @@ These effects happen automatically when their stated conditions are met. Holding
 Guard auras protect nearby allies without adding their reductions together; only the strongest applicable guard applies. Repeated slow or poison hits refresh their duration rather than multiplying their strength, and weaker poison cannot replace stronger poison. Shock, snares, slows, poison and temporary fury expire after their listed durations.
 Sweeps and piercing shots have a limited number of targets. Their extra hits do not start further sweeps or an endless chain of bolts. River healing is limited for each recipient, so surrounding one soldier with healers cannot bypass its four-second recovery limit.
 Dragonfire Acolytes throw fire pots, Dune Skirmishers throw javelins, and Beacon Engineers launch piercing ballista bolts. Fire zones, charged strikes, guard protection and timed conditions also have their own battle cues.
-Enemy specialist hits and damaging poison or fire interrupt continuous expansion when they actually damage a member of that expansion party. Simply seeing an enemy does not stop it. After an interruption, select the troops and press T again to resume expansion.
+Enemy specialist hits and damaging poison or fire trigger local defensive engagement only when they actually damage an expanding troop. Nearby expanders defend within their aggro range, then automatically resume expansion. Distant troops keep their orders; simply seeing an enemy does not interrupt expansion.
 
 HOUSE STARK
   Specialist: Winter Guard — Frontline infantry.
@@ -353,7 +355,7 @@ Menu shortcuts work while paused. Unavailable items cannot be activated, and hol
 CAMERA
 Scroll or use +/− to zoom toward the cursor.
 Right-drag orders selected troops to move and face; middle-drag or arrow keys
-pan. Right-drag never pans, even with no troops selected. A attacks each troop's nearest enemy.
+pan. Right-drag never pans, even with no troops selected. A attacks each troop's nearest known enemy troop or building.
 Tab fits the whole map; Home returns to your keep.
 Click or drag the minimap to navigate. G toggles the grid.
 Touch: pinch to zoom, tap a soldier then a destination; drag to select.

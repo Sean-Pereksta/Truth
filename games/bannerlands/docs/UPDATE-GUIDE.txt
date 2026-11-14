@@ -24,10 +24,17 @@ Switching tabs or returning to the battlefield preserves your choices.
 Revisited landscapes reuse their map preview to keep setup responsive.
 
 INDIVIDUAL ATTACK NEAREST
-A and Attack nearest choose a separate nearest enemy unit for every selected
-soldier. Spread-out armies engage locally instead of gathering at one common
-point. With no enemy troops remaining, each soldier targets its nearest enemy
-structure. Press A again to choose from current positions.
+A and Attack nearest choose the nearest known living enemy troop or building
+by distance for every selected soldier. Spread-out armies engage locally instead
+of gathering at one common point. Normal local combat targeting continues along
+the route. Press A again to choose from current known positions. Right-click a
+visible enemy building to focus attacks on it until invalid or given a new order.
+
+LOCAL EXPANSION DEFENSE
+Hostile damage prompts only nearby expanding troops within aggro range to
+defend. Pursuit stays local; defenders then resume their expansion orders
+automatically. Distant troops and troops with other explicit orders keep going.
+Simply seeing an enemy does not interrupt expansion.
 
 PERFORMANCE EDITION
 Large armies share bounded, resumable route planning; open-ground collision

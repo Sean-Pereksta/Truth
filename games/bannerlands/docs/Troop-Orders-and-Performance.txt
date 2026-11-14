@@ -1,8 +1,9 @@
 TROOP ORDERS AND LARGE-ARMY PERFORMANCE
 
 Controls
-- A right-click over the battlefield now closes an open command drawer and
-  issues the selected army's Move order in the same click.
+- A right-click over the battlefield closes an open command drawer and issues
+  the selected army's Move order in the same click. Clicking a visible enemy
+  building instead focuses attacks on that structure until invalid or replaced.
 - A right-drag that returns to its starting point issues an ordinary Move.
   Directional drags still set the destination and facing at the pressed point.
 - Primary and touch taps keep their existing drawer-dismissal behavior.

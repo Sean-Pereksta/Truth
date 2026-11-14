@@ -483,7 +483,7 @@ export class Game {
       u.order={x:u.x,y:u.y,mode:'idle',formation:u.order?.formation||'line'};u.target=null;u.seek=0;u.aggroAnchor=null;u.braceDir=null;u.braceTime=0;u.championRegroup=null;u.championCyclePending=false;
     }
   }
-  autonomousAggro(u){return !this.hasFacingOrder(u)&&['idle','patrol'].includes(u.order?.mode||'idle');}
+  autonomousAggro(u){return !this.hasFacingOrder(u)&&(['idle','patrol'].includes(u.order?.mode||'idle')||u.order?.mode==='expand'&&u.order.defending);}
   aggroRange(u){return Math.max(8,this.unitRange(u)+1.5);}
   canAggro(u,target,anchor=u.aggroAnchor||u.order||u){
     const leash=this.aggroRange(u)+2;
@@ -542,8 +542,7 @@ export class Game {
     for(const u of troops){
       let foes=candidates.get(u.team);
       if(!foes){
-        foes=this.knownUnits(u.team).filter(e=>e.hp>0&&this.hostile(u.team,e.team)&&(this.config.fogOfWar||this.teams[e.team]?.alive));
-        if(!foes.length)foes=this.knownBuildings(u.team).filter(e=>e.hp>0&&this.hostile(u.team,e.team)&&(this.config.fogOfWar||this.teams[e.team]?.alive));
+        foes=[...this.knownUnits(u.team),...this.knownBuildings(u.team)].filter(e=>e.hp>0&&this.hostile(u.team,e.team)&&(this.config.fogOfWar||this.teams[e.team]?.alive));
         candidates.set(u.team,foes);
       }
       let target=null,best=Infinity;
@@ -553,7 +552,16 @@ export class Game {
       this.command([u.id],target.x,target.y,'attack',formation);
       u.target=target.remembered?null:target;u.seek=.2+(u.id%7)*.018;count++;if(BUILD_DEFS[target.type])structures++;
     }
-    return {...result(count>0,count?(structures===count?'Each selected troop attacks its nearest enemy structure.':'Each selected troop attacks its nearest enemy unit.'):'No enemy remains to attack.'),count};
+    return {...result(count>0,count?(structures===count?'Each selected troop attacks its nearest enemy structure.':structures?'Each selected troop attacks its nearest enemy unit or structure.':'Each selected troop attacks its nearest enemy unit.'):'No enemy remains to attack.'),count};
+  }
+  attackTarget(ids,targetId,formation='line'){
+    const target=this.byId.get(targetId),troops=[...new Set(ids||[])].map(id=>this.byId.get(id)).filter(u=>u?.hp>0&&UNIT_DEFS[u.type]&&this.teams[u.team]?.alive);
+    if(!target||target.hp<=0||!this.teams[target.team]?.alive||!UNIT_DEFS[target.type]&&!BUILD_DEFS[target.type])return {...result(false,'Choose a living enemy target.'),count:0};
+    const attackers=troops.filter(u=>this.hostile(u.team,target.team)&&this.isVisibleTo(u.team,target));
+    if(!attackers.length)return {...result(false,'Select troops and a visible enemy target.'),count:0};
+    this.command(attackers.map(u=>u.id),target.x,target.y,'attack',formation);
+    for(const u of attackers){u.order.targetId=target.id;u.target=target;}
+    return {...result(true,`Attack the enemy ${BUILD_DEFS[target.type]?.label.toLowerCase()||'troop'}.`),count:attackers.length};
   }
   hold(ids){for(const id of ids){const u=this.byId.get(id);if(u&&UNIT_DEFS[u.type]){const locked=this.hasFacingOrder(u),facing=locked?{facingX:u.order.facingX,facingY:u.order.facingY}:{};if(this.unitClass(u)==='cavalry')this.stopCharge(u);u.championRegroup=null;u.championCyclePending=false;if(UNIT_DEFS[u.type].spearBrace){const dx=locked?u.facingX:u.target?u.target.x-u.x:u.vx||u.facingX||0,dy=locked?u.facingY:u.target?u.target.y-u.y:u.vy||u.facingY||0,length=Math.hypot(dx,dy);u.braceDir=length>.01?{x:dx/length,y:dy/length}:null;u.braceTime=0;}u.order={x:u.x,y:u.y,mode:'hold',formation:u.order?.formation||'line',...facing};u.target=null;u.aggroAnchor=null;u.seek=0;}}}
   championRally(u){
@@ -627,7 +635,7 @@ export class Game {
     if(!troops.length)return result(false,'Select troops to expand your territory.');
     const cohorts=new Map();for(const u of troops){if(!cohorts.has(u.team))cohorts.set(u.team,this.nextExpansionId=(this.nextExpansionId||0)+1);if(this.unitClass(u)==='cavalry')this.stopCharge(u);u.championRegroup=null;u.championCyclePending=false;u.target=null;u.aggroAnchor=null;u.seek=0;u.order={x:u.x,y:u.y,mode:'expand',formation:'spread',expandId:cohorts.get(u.team),expandTile:null};}
     this.expansionPlanAt=0;this.updateExpansionOrders();
-    return result(true,'Expand nearby: troops will keep claiming connected land until given another order or attacked.');
+    return result(true,'Expand nearby: troops keep claiming connected land, defend nearby attacks and resume until given another order.');
   }
   updateExpansionOrders(){
     if((this.expansionPlanAt||0)>this.time)return;this.expansionPlanAt=this.time+.75;
@@ -639,6 +647,7 @@ export class Game {
       // Finish a contested tile before choosing another; reservations keep companies spread out.
       for(const u of troops)if(valid(u)){const index=u.order.expandTile;reserved.set(index,(reserved.get(index)||0)+1);}
       for(const u of troops){
+        if(u.order.defending)continue;
         if(valid(u))continue;let best=null,bestScore=Infinity;
         for(const candidate of frontier){const score=ds(u,candidate)+(reserved.get(candidate.index)||0)*9;if(score<bestScore){best=candidate;bestScore=score;}}
         if(best){u.order.x=best.x;u.order.y=best.y;u.order.expandTile=best.index;reserved.set(best.index,(reserved.get(best.index)||0)+1);}
@@ -646,11 +655,17 @@ export class Game {
       }
     }
   }
-  interruptExpansion(target){
-    const cohort=target.order?.expandId;if(target.order?.mode!=='expand')return;
-    const ids=this.units.filter(u=>u.hp>0&&u.team===target.team&&u.order?.mode==='expand'&&u.order.expandId===cohort).map(u=>u.id);
-    this.hold(ids);for(const id of ids){const u=this.byId.get(id);u.seek=0;u.order.expandStopped='attacked';}
-    this.event('Expansion interrupted by an attack. Troops hold their ground to defend.',target.team);
+  interruptExpansion(target,source={}){
+    if(target.order?.mode!=='expand')return;
+    const attacker=this.byId.get(source.sourceId??source.id),origin=attacker?.hp>0&&this.isVisibleTo(target.team,attacker)?attacker:Number.isFinite(source.originX)&&Number.isFinite(source.originY)?{x:source.originX,y:source.originY}:target;
+    let engaged=false;
+    for(const u of this.units){
+      if(u.hp<=0||u.team!==target.team||u.order?.mode!=='expand'||ds(u,origin)>this.aggroRange(u)**2)continue;
+      // Preserve each frontier assignment. A hit recruits local expanders only,
+      // never everyone who happened to receive the same expansion command.
+      if(!u.order.defending){u.order.defending=true;u.aggroAnchor={x:u.x,y:u.y};u.seek=0;engaged=true;}
+    }
+    if(engaged)this.event('Nearby expanding troops defend the attack, then resume claiming land.',target.team);
   }
   setRally(x,y,team=0,buildingIds=null){
     const s=this.teams[team],tile=Number.isFinite(x)&&Number.isFinite(y)?this.tileAt(x,y):null;
@@ -885,7 +900,7 @@ export class Game {
     const lead=army.find(u=>u.target&&u.target.hp>0&&this.hostile(s.id,u.target.team)&&(!this.config.fogOfWar||this.isVisibleTo(s.id,u.target)))||army.find(u=>u.hp<u.maxHp*.75);if(!lead)return;const local=army.filter(u=>ds(u,lead)<36);this.useHousePower(local.map(u=>u.id),s.id);
   }
   damage(target,amount,source){
-    if(target.hp<=0||!Number.isFinite(amount)||amount<=0)return;source=source||{team:-1};if(this.allied(source.team,target.team)||source.team>=0&&!this.teams[source.team]?.alive)return;amount=this.specialistDamage(target,amount,source);const facingFactor=this.facingDamageMultiplier(target,source),shieldFactor=shieldFacingMultiplier(target,source);amount*=facingFactor*shieldFactor;if(UNIT_DEFS[target.type])amount*=this.combatTerrain.coverMultiplier(target,source.projectileType);amount*=target.bearUntil>this.time?.7:1;amount*=1-this.specialistGuard(target,source);if(this.hostile(source.team,target.team)&&target.order?.mode==='expand')this.interruptExpansion(target);const dealt=Math.min(target.hp,amount);target.hp-=amount;target.hit=.16;
+    if(target.hp<=0||!Number.isFinite(amount)||amount<=0)return;source=source||{team:-1};if(this.allied(source.team,target.team)||source.team>=0&&!this.teams[source.team]?.alive)return;amount=this.specialistDamage(target,amount,source);const facingFactor=this.facingDamageMultiplier(target,source),shieldFactor=shieldFacingMultiplier(target,source);amount*=facingFactor*shieldFactor;if(UNIT_DEFS[target.type])amount*=this.combatTerrain.coverMultiplier(target,source.projectileType);amount*=target.bearUntil>this.time?.7:1;amount*=1-this.specialistGuard(target,source);if(this.hostile(source.team,target.team)&&target.order?.mode==='expand')this.interruptExpansion(target,source);const dealt=Math.min(target.hp,amount);target.hp-=amount;target.hit=.16;
     if(UNIT_DEFS[target.type]&&!source.secondary&&Number.isFinite(source.originX)&&Number.isFinite(source.originY)){
       const dx=target.x-source.originX,dy=target.y-source.originY,length=Math.hypot(dx,dy)||1,blocked=shieldFactor<1||facingFactor<1;
       target.hitVisual={at:this.time,dx:dx/length,dy:dy/length,blocked};
@@ -903,10 +918,10 @@ export class Game {
       if(this.unitClass(u)==='infantry'&&this.unitClass(e)==='cavalry')score*=.75;
       if(score<bestScore&&(!direct||this.combatTerrain.canShoot(u,e))&&(!autonomous||this.canAggro(u,e))){best=e;bestScore=score;}
     });
-    // Autonomous soldiers react to enemy troops. Structure attacks remain an
-    // explicit attack order, so a nearby fort cannot pull guards off their post.
-    if(autonomous)return best;
-    for(const b of this.buildings){if(!this.hostile(b.team,u.team)||b.hp<=0||!this.isVisibleTo(u.team,b))continue;const distance=ds(u,b);if(distance>(range+.6)**2||!this.canAttackFacing(u,b))continue;const score=distance*(this.unitClass(u)==='siege'?.32:1.7);if(score<bestScore&&(!direct||this.combatTerrain.canShoot(u,b))){best=b;bestScore=score;}}
+    // Guards and patrols ignore forts; expanders defending an actual attack
+    // may retaliate against nearby structures within the same pursuit leash.
+    if(autonomous&&u.order?.mode!=='expand')return best;
+    for(const b of this.buildings){if(!this.hostile(b.team,u.team)||b.hp<=0||!this.teams[b.team]?.alive||!this.isVisibleTo(u.team,b))continue;const distance=ds(u,b);if(distance>(range+.6)**2||!this.canAttackFacing(u,b))continue;const score=distance*(this.unitClass(u)==='siege'?.32:1.7);if(score<bestScore&&(!direct||this.combatTerrain.canShoot(u,b))&&(!autonomous||this.canAggro(u,b))){best=b;bestScore=score;}}
     return best;
   }
   attack(u,target){
@@ -1113,8 +1128,8 @@ export class Game {
         if(anchor&&(ds(anchor,u)>leash*leash||u.target&&ds(anchor,u.target)>leash*leash)){u.target=null;anchor.returning=true;}
         if(u.target&&(!this.hostile(u.team,u.target.team)||!this.isVisibleTo(u.team,u.target)))u.target=null;
         if(u.target&&u.seek<=0){if(!this.canAggro(u,u.target))u.target=null;u.seek=.2+((u.id%7)*.018);}
-        if(anchor?.returning&&ds(u,anchor)<.3**2){u.aggroAnchor=null;u.seek=0;}
-        if(!u.target&&!u.aggroAnchor?.returning&&u.seek<=0){
+        if(anchor?.returning&&ds(u,anchor)<.3**2){u.aggroAnchor=null;u.seek=0;if(mode==='expand')delete order.defending;}
+        if(!u.target&&!u.aggroAnchor?.returning&&u.seek<=0&&(mode!=='expand'||order.defending)){
           // A patrol anchors pursuit where contact began, independent of its
           // next waypoint. Keep the original order intact for resumption.
           u.aggroAnchor??=mode==='idle'?{x:order.x,y:order.y}:{x:u.x,y:u.y};
@@ -1122,14 +1137,21 @@ export class Game {
           if(!u.target){if(anchor===u.aggroAnchor)u.aggroAnchor.returning=true;else u.aggroAnchor=null;}
           u.seek=.2+((u.id%7)*.018);
         }
+        // Expansion already has its own frontier to resume. Do not require a
+        // return to the contact point, which may now be occupied by a building.
+        if(mode==='expand'&&(!u.aggroAnchor||u.aggroAnchor.returning)){u.aggroAnchor=null;delete order.defending;}
       }else if(mode==='move'||mode==='expand')u.target=null;
-      else if(u.seek<=0){u.target=this.findTarget(u);u.seek=.2+((u.id%7)*.018);}
+      else if(mode==='attack'&&order.targetId!=null){
+        const explicit=this.byId.get(order.targetId);
+        if(explicit?.hp>0&&this.teams[explicit.team]?.alive&&this.hostile(u.team,explicit.team)&&this.isVisibleTo(u.team,explicit))u.target=explicit;
+        else{delete order.targetId;u.target=null;u.seek=0;}
+      }else if(u.seek<=0){u.target=this.findTarget(u);u.seek=.2+((u.id%7)*.018);}
       if(d.spearBrace&&this.formationSettled(u)&&!u.braceDir&&u.target){const dx=locked?u.facingX:u.target.x-u.x,dy=locked?u.facingY:u.target.y-u.y,length=Math.hypot(dx,dy)||1;u.braceDir={x:dx/length,y:dy/length};}
       let tx=u.x,ty=u.y,moving=false,target=u.target;
       if(!locked&&target&&(this.unitClass(u)!=='cavalry'||d.ranged)&&!(d.spearBrace&&u.braceDir))this.turnFacing(u,target.x-u.x,target.y-u.y,dt);
       if(target){const distance=Math.sqrt(ds(u,target)),extra=BUILD_DEFS[target.type]?this.buildingRadius(target):.07;
         const leash=mode==='hold'?range+1:6.5;if(distance>leash&&mode==='hold'){u.target=null;target=null;}
-        else if(distance<=range+extra){if(u.cooldown<=0)this.attack(u,target);if(u.charging&&BUILD_DEFS[target.type])this.stopCharge(u);}
+        else if(distance<=range+extra&&(order.targetId==null||!(this.isRanged(u)||u.type==='beacon_engineer'||d.lanceChampion)||this.combatTerrain.canShoot(u,target))){if(u.cooldown<=0)this.attack(u,target);if(u.charging&&BUILD_DEFS[target.type])this.stopCharge(u);}
         else if(mode!=='hold'&&!locked){tx=target.x;ty=target.y;moving=true;}
       }
       if(!target&&order){const goal=u.aggroAnchor?.returning?u.aggroAnchor:order,distance=Math.hypot(goal.x-u.x,goal.y-u.y);if(distance>.16){tx=goal.x;ty=goal.y;moving=true;}}
