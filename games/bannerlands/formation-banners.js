@@ -70,8 +70,12 @@ export class FormationBannerLayer{
     const zoom=options.zoom??1,time=options.time??0,active=new Set(),bounds=options.bounds;
     // Only the exact painted atlas crest supplied by the renderer is allowed.
     // No procedural badge, pole, cloth or text fallback may replace it.
-    if(!options.drawCrest||zoom<.42){this.anchors.clear();return [];}
-    const key=[units?.length,units?.[0]?.id,units?.at(-1)?.id,options.lowDetail,bounds?Math.floor(bounds.left/64):0,bounds?Math.floor(bounds.top/32):0].join(':');
+    if(!options.drawCrest||zoom<.42||!units?.length){this.anchors.clear();this.groupKey=null;this.groups=[];return [];}
+    // Troops constantly enter and leave the viewport in a large battle. Their
+    // count and first/last IDs cannot invalidate the expensive spatial linking
+    // on every frame. Visibility, death and the moving centroid are still
+    // checked below immediately, independently of this cosmetic 10 Hz cache.
+    const key=[options.lowDetail,bounds?Math.floor(bounds.left/64):0,bounds?Math.floor(bounds.top/32):0].join(':');
     // Spatial linking is the expensive part. Rebuild at10Hz; current members,
     // their moving centroids and fog visibility are still checked EVERY frame.
     if(key!==this.groupKey||time<this.groupedAt||time-this.groupedAt>=.1){

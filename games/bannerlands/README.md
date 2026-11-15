@@ -1,5 +1,12 @@
 # Bannerlands · The War of Crowns
 
+Large battles now use local structure and cavalry searches, shared sight queries,
+reused fog footprints, and terrain caches sized for the visible battlefield.
+Packed troop textures reduce drawing overhead while keeping the painted troops
+and their reload animations. Repeatable 3,000- and 6,000-soldier stress scenarios
+cover fog, marching, combat, developed realms, and camera movement. See
+`docs/Large-Army-Performance.txt` for details and benchmark commands.
+
 Command armies, conquer the grid, and unite the realm in an isometric real-time strategy game.
 
 Press W to advance and attack as one formation, turning toward an enemy force

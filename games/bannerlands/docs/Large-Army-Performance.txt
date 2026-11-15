@@ -1,0 +1,85 @@
+LARGE-ARMY PERFORMANCE
+
+This update reduces late-game work on large maps with fog of war and thousands
+of soldiers. It preserves the existing supply rules, combat cadence, formations,
+crossbow reloads, sight radii, and knowledge of hidden enemies.
+
+SIMULATION
+Soldiers query an ordered local structure index instead of scanning every
+building on the continent. Final collision, targeting, and aura checks still
+use their original geometry and tie order. Construction, upgrades, casualties,
+and replacement arrays cannot leave a stale index between updates.
+
+Cavalry threat checks consider cavalry, and commander auras use the relevant
+commanders. Combat uses the current sight grid for live troop positions rather
+than repeatedly checking whether the same fog refresh is due. These shortcuts
+are scoped to one simulation batch and release even when an update throws.
+
+Factory planning rejects sites that cannot beat the current best score before
+performing expensive safety checks. The chosen site and equal-score ordering
+remain identical to a full reference search.
+
+FOG OF WAR
+Exact circular sight footprints are reused while troops stand still. Moving
+sources update the changed perimeter, and overlapping allied sight uses counts
+so one departing scout cannot hide ground another scout still sees. Ownership
+refreshes scan the world once, then currently visible cells per alliance.
+
+Knowledge queries still inspect live positions, deaths, and newly spawned
+soldiers. Hidden building memories remain frozen until rescouting. Cached sight
+geometry is released when its source disappears. The extra grids use roughly
+7.6 MB on a continent with sixteen separate alliances, plus live source spans.
+
+DRAWING
+A normal wide viewport can need more than the previous 24 terrain chunks.
+The cache now adapts to the visible working set within a 96 MiB terrain budget,
+preventing the same chunks from being evicted and repainted every frame.
+Oversized views retain useful cached chunks and draw excess terrain transiently.
+
+Painted troop frames share texture pages. Portraits and all standing, walking,
+attacking, facing, and mechanical reload frames retain the same pixels.
+House crest grouping remains bounded to ten updates per second as troops enter
+or leave the camera; live positions and visibility are checked every frame.
+
+REPEATABLE CHECKS
+npm run check
+npm test
+npm run test:render
+npm run test:formations-browser
+npm run test:late-game-browser
+npm run benchmark:large-armies
+npm run benchmark:fog-render
+
+The simulation benchmark supports --counts, --scenes, --frames, --warmup,
+--fog on/off, --module for a saved baseline, and --output for JSON results.
+Use the realm scene for developed territory with live AI decisions, and battle
+for a deliberately dense engagement. The browser benchmark covers 3,000 and
+6,000 troops, fog, minimap refreshes, camera movement, and dispersed camps.
+
+LOCAL BEFORE/AFTER MEASUREMENTS
+Baseline: main at 4e2128b. Continent, Riverlands, sixteen houses, fog enabled,
+256 developed structures, seed 44277; 25 warmup and 75 measured 1/30-second steps.
+Mean simulation time per step, milliseconds (lower is better):
+
+                         Before     After
+3,000 marching troops      46.9      21.5
+3,000 dense battle         54.9      17.4
+3,000 developed realm/AI    62.2      26.4
+6,000 marching troops     105.2      48.6
+6,000 dense battle        194.4      52.2
+6,000 developed realm/AI   112.2      47.0
+
+Chrome at 1400 x 900, sixty sampled frames after warmup, using the same current
+simulation for both renderers to isolate drawing changes: median drawing time
+for the 6,000-troop dense fog scene fell from 107.3 to 27.4 ms (3,437 visible).
+The dispersed 6,000-troop scene with 375 visible troops stayed at 16.7 ms median
+frame intervals; drawing took 4.4 ms in the new renderer. The full-army overview
+still took 66.7 ms median frame intervals, so extremely dense, fully visible
+armies remain a demanding case rather than a universal sixty-frame target.
+
+The 6,000-soldier stress fixtures deliberately exceed ordinary starting supply;
+the playable game's recruitment and castle capacity rules are unchanged.
+
+Timing depends on hardware, zoom, density, and how many troops are in contact.
+Simulation milliseconds and drawing milliseconds are separate measurements;
+they should not be presented as a universal frame-rate guarantee.

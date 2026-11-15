@@ -113,7 +113,7 @@ export class Renderer{
     const types=['infantry','archer','cavalry','siege','hero'];
     const heights={infantry:28,archer:28,cavalry:37,siege:37,hero:35};
     const widths={infantry:20,archer:20,cavalry:31,siege:32,hero:24};
-    this.troopFrames={};this.sprites.clear();
+    this.troopFrames={};this.resetTroopSprites();
     for(let row=0;row<5;row++){
       const frames=[],type=types[row];let largestWidth=1,largestHeight=1;
       for(let col=0;col<8;col++){
@@ -179,7 +179,7 @@ export class Renderer{
         target[sigil]={...frame,scale,drawWidth:frame.width*scale,drawHeight:frame.height*scale,house:sigil};
       }
     }
-    this.houseTroopFrames=unitFrames;this.houseKeepFrames=keepFrames;this.houseProductionFrames=productionFrames;this.sprites.clear();this.structureSprites.clear();this.cachedGame=null;this.houseArtReady=true;this.assetError=null;
+    this.houseTroopFrames=unitFrames;this.houseKeepFrames=keepFrames;this.houseProductionFrames=productionFrames;this.resetTroopSprites();this.structureSprites.clear();this.cachedGame=null;this.houseArtReady=true;this.assetError=null;
     const source=image=>typeof image.src==='string'&&!image.src.startsWith('data:')?image.src:'embedded PNG atlas';
     this.houseArtInfo={houses:HOUSE_ART_ORDER.slice(),troops:Object.fromEntries(HOUSE_ART_ORDER.map(sigil=>[sigil,{source:source(troops[sigil]),columns:4,rows:2,frames:8,walkFrames:[0,1,2,3],attackFrames:[4,5,6,7]}])),castles:{source:source(castles),columns:4,rows:4,frames:16},production:{source:source(production),columns:4,rows:4,frames:16}};
     return this.houseArtInfo;
@@ -202,7 +202,7 @@ export class Renderer{
       (rows[type]??={})[sigil]={frames,scale:1/3,width:Math.max(...frames.map(f=>f.width))/3,height:Math.max(...frames.map(f=>f.height))/3,house:sigil,regiment:type};
       info[sigil]={type,source:typeof image.src==='string'&&!image.src.startsWith('data:')?image.src:'embedded regiment PNG atlas',columns:4,rows:2,frames:8,walkFrames:[0,1,2,3],attackFrames:[4,5,6,7]};
     }
-    this.regimentTroopFrames=rows;this.regimentArtInfo=info;this.regimentArtReady=true;this.sprites.clear();this.assetError=null;return info;
+    this.regimentTroopFrames=rows;this.regimentArtInfo=info;this.regimentArtReady=true;this.resetTroopSprites();this.assetError=null;return info;
   }
   async loadRegimentBuildings(src='./assets/regiments/production-buildings.png'){
     this.regimentBuildingsReady=false;
@@ -238,7 +238,7 @@ export class Renderer{
       buildings[type]={...frame,scale:1/3,drawWidth:frame.width/3,drawHeight:frame.height/3,conquest:true};
     }
     const castles=Array.from({length:4},(_,i)=>{const cell=atlasCell(images.castles,i%2,Math.floor(i/2),2,2,'castle state '+i),scale=Math.min(132/cell.width,138/cell.height),frame=compactAtlasFrame(cell,scale*3);return {...frame,scale:1/3,drawWidth:frame.width/3,drawHeight:frame.height/3,conquest:true};});
-    this.conquestTroopFrames=troops;this.conquestBuildingFrames=buildings;this.castleStateFrames=castles;this.conquestArtReady=true;this.sprites.clear();this.structureSprites.clear();this.cachedGame=null;
+    this.conquestTroopFrames=troops;this.conquestBuildingFrames=buildings;this.castleStateFrames=castles;this.conquestArtReady=true;this.resetTroopSprites();this.structureSprites.clear();this.cachedGame=null;
     return this.conquestArtInfo={troops:3,troopFrames:24,buildings:4,castleStates:4};
   }
   async loadReinforcementArt(sources){
@@ -259,7 +259,7 @@ export class Renderer{
       const cell=atlasCell(images.buildings,i%3,Math.floor(i/3),3,2,type),scale=Math.min(97/cell.width,100/cell.height),frame=compactAtlasFrame(cell,scale*3);
       buildings[type]={...frame,scale:1/3,drawWidth:frame.width/3,drawHeight:frame.height/3,house:BUILD_DEFS[type].house,reinforcement:true};
     }
-    this.reinforcementTroopFrames=troops;this.reinforcementBuildingFrames=buildings;this.reinforcementArtReady=true;this.sprites.clear();this.structureSprites.clear();this.cachedGame=null;
+    this.reinforcementTroopFrames=troops;this.reinforcementBuildingFrames=buildings;this.reinforcementArtReady=true;this.resetTroopSprites();this.structureSprites.clear();this.cachedGame=null;
     return {troops:6,troopFrames:48,buildings:6};
   }
   getStructureFrame(type,houseSigil=null,level=1){
@@ -298,14 +298,14 @@ export class Renderer{
     const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('The Lands Update artwork could not be loaded.'));im.src=src;});
     this.landsFrames={};
     ['mountain','woodland','stoneBridge','woodBridge','pass','ford','waymarker','ruin'].forEach((kind,i)=>{const f=atlasCell(image,i%4,Math.floor(i/4),4,2,'Lands '+kind),c=f.image.getContext('2d',{willReadFrequently:true}),pixels=c.getImageData(0,0,f.image.width,f.image.height),data=pixels.data;for(let p=0;p<data.length;p+=4){if(data[p]>180&&data[p]>data[p+1]*1.8&&data[p]>data[p+2]*1.8)data[p+3]=0;}c.putImageData(pixels,0,0);this.landsFrames[kind]=f;});
-    this.landsArtReady=true;this.treeSprites.clear();this.terrainChunkCache.clear();this.cachedGame=null;
+    this.landsArtReady=true;this.treeSprites.clear();this.terrainChunkCache.clear();this.terrainChunkBytes=0;this.cachedGame=null;
     return {source:src,columns:4,rows:2,classes:Object.keys(this.landsFrames)};
   }
   async loadLandsGround(src='./assets/lands-ground.png'){
     const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('The Lands ground textures could not be loaded.'));im.src=src;});
     this.landsGroundFrames={};const w=image.naturalWidth||image.width,h=image.naturalHeight||image.height;
     ['water','road','bridge','ford','pass','mountain','bank','timber'].forEach((kind,i)=>{const sx=Math.floor(i%4*w/4),sy=Math.floor(Math.floor(i/4)*h/2),sw=Math.floor((i%4+1)*w/4)-sx,sh=Math.floor((Math.floor(i/4)+1)*h/2)-sy,a=makeCanvas(sw,sh);a.getContext('2d').drawImage(image,sx,sy,sw,sh,0,0,sw,sh);this.landsGroundFrames[kind]=a;});
-    this.terrainTileSprites.clear();this.terrainChunkCache.clear();this.cachedGame=null;return {source:src,columns:4,rows:2,classes:Object.keys(this.landsGroundFrames)};
+    this.terrainTileSprites.clear();this.terrainChunkCache.clear();this.terrainChunkBytes=0;this.cachedGame=null;return {source:src,columns:4,rows:2,classes:Object.keys(this.landsGroundFrames)};
   }
   landsPropSprite(kind,variant=0){
     const f=this.landsFrames?.[kind];if(!f)return null;const key='lands|'+kind+'|'+variant;if(this.treeSprites.has(key))return this.treeSprites.get(key);
@@ -314,7 +314,7 @@ export class Renderer{
   setTerrainAtlases(ground,props){
     const gw=ground.naturalWidth||ground.width,gh=ground.naturalHeight||ground.height,pw=props.naturalWidth||props.width,ph=props.naturalHeight||props.height;
     if(gw<90||gh<30||pw<90||ph<30)throw new Error('Terrain artwork needs three ground textures and three prop sprites.');
-    this.groundFrames={};this.propFrames={};this.treeSprites.clear();this.terrainTileSprites.clear();this.terrainChunkCache.clear();
+    this.groundFrames={};this.propFrames={};this.treeSprites.clear();this.terrainTileSprites.clear();this.terrainChunkCache.clear();this.terrainChunkBytes=0;
     ['grass','forest','hill'].forEach((kind,index)=>{const left=Math.floor(index*gw/3),right=Math.floor((index+1)*gw/3),a=makeCanvas(right-left,gh);a.getContext('2d').drawImage(ground,left,0,right-left,gh,0,0,right-left,gh);this.groundFrames[kind]=a;});
     ['pine','oak','rock'].forEach((kind,index)=>{const sx=Math.floor(index*pw/3),sw=Math.floor((index+1)*pw/3)-sx,a=makeCanvas(sw,ph),c=a.getContext('2d',{willReadFrequently:true});c.drawImage(props,sx,0,sw,ph,0,0,sw,ph);const pixels=c.getImageData(0,0,sw,ph),data=pixels.data;let left=sw,top=ph,right=-1,bottom=-1;
       for(let y=0;y<ph;y++)for(let x=0;x<sw;x++){const i=(y*sw+x)*4;if(data[i+3]<18){data[i+3]=0;continue;}if(data[i+3]>45){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);}}
@@ -386,7 +386,7 @@ export class Renderer{
     this.cachedGame=g;this.left=-g.H*HW-80;this.top=-90;this.mapW=(g.W+g.H)*HW+160;this.mapH=(g.W+g.H)*HH+210;
     this.bridgeArchitectureCache=new Map();this.bridgeArchitectureGame=g;this.bridgeArchitectureBytes=0;
     this.sceneryChunkCache=new Map();this.sceneryChunkBytes=0;
-    this.terrainChunkCache.clear();this.decor=[];this.decorChunks=new Map();this.miniBase=null;this.miniTerrainPixels=makeCanvas(g.W,g.H);const miniCtx=this.miniTerrainPixels.getContext('2d'),miniData=miniCtx.createImageData(g.W,g.H);
+    this.terrainChunkCache.clear();this.terrainChunkBytes=0;this.decor=[];this.decorChunks=new Map();this.miniBase=null;this.miniTerrainPixels=makeCanvas(g.W,g.H);const miniCtx=this.miniTerrainPixels.getContext('2d'),miniData=miniCtx.createImageData(g.W,g.H);
     for(const t of g.tiles){const r=hash(t.x,t.y),i=(t.y*g.W+t.x)*4,color=t.feature==='bridge'?[218,197,142]:t.feature==='ford'?[131,174,169]:t.feature==='road'?[180,159,108]:t.feature==='pass'?[177,168,136]:t.terrain==='mountain'?[102,105,101]:t.terrain==='water'?[35,100,116]:t.terrain==='forest'?[48,71,37]:t.terrain==='hill'?[114,105,75]:[91,115,52];miniData.data.set([...color,255],i);if(t.feature||t.terrain==='water')continue;
       if(t.terrain==='mountain'){
         if(t.x%2===0&&t.y%2===0||r>.96)this.decor.push({x:t.x+.5,y:t.y+.5,kind:'mountain',variant:Math.floor(r*8),scale:.8+r*.32});
@@ -444,7 +444,14 @@ export class Renderer{
     const x0=cx*16,y0=cy*16,x1=Math.min(g.W,x0+16),y1=Math.min(g.H,y0+16),left=(x0-y1)*HW-2,top=(x0+y0)*HH-2,w=(x1-x0+y1-y0)*HW+4,h=(x1-x0+y1-y0)*HH+7,a=makeCanvas(w,h),c=a.getContext('2d');c.translate(-left,-top);
     for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const t=g.tiles[y*g.W+x],p=iso(x+.5,y+.5),tile=this.landsTileSprite(g,t);c.drawImage(tile,p.x-HW-1,p.y-HH-1,58,33);}
     paintTerrainPolish(c,g,{x0,y0,x1,y1});
-    ch={image:a,left,top,width:w,height:h};this.terrainChunkCache.set(key,ch);while(this.terrainChunkCache.size>this.maxTerrainChunks)this.terrainChunkCache.delete(this.terrainChunkCache.keys().next().value);return ch;
+    ch={image:a,left,top,width:w,height:h,bytes:w*h*4};this.terrainChunkCache.set(key,ch);this.terrainChunkBytes=(this.terrainChunkBytes||0)+ch.bytes;
+    while((this.terrainChunkCache.size>this.maxTerrainChunks||this.terrainChunkBytes>96*1024*1024)&&this.terrainChunkCache.size>1){
+      const oldest=[...this.terrainChunkCache.keys()].find(candidate=>!this.terrainFrameKeys?.has(candidate));
+      // An exceptionally large viewport may exceed the byte budget. Keep its
+      // existing working set and draw excess chunks transiently, instead of
+      // cycling out every useful chunk and rebaking the entire world each frame.
+      const victim=oldest??key;this.terrainChunkBytes-=this.terrainChunkCache.get(victim)?.bytes||0;this.terrainChunkCache.delete(victim);if(victim===key)break;
+    }return ch;
   }
   visibleWorldRange(g,bounds){const points=[[bounds.left,bounds.top],[bounds.right,bounds.top],[bounds.right,bounds.bottom],[bounds.left,bounds.bottom]].map(([x,y])=>({x:(x/HW+y/HH)/2,y:(y/HH-x/HW)/2}));return{x0:clamp(Math.floor(Math.min(...points.map(p=>p.x)))-1,0,g.W-1),x1:clamp(Math.ceil(Math.max(...points.map(p=>p.x)))+1,0,g.W-1),y0:clamp(Math.floor(Math.min(...points.map(p=>p.y)))-1,0,g.H-1),y1:clamp(Math.ceil(Math.max(...points.map(p=>p.y)))+1,0,g.H-1)};}
   drawStrategicScenery(c,range,bounds){
@@ -468,8 +475,16 @@ export class Renderer{
   }
   drawGround(c,g,v,bounds,range){
     if(v.zoom<.75)c.drawImage(this.terrainOverview,this.left,this.top,this.mapW,this.mapH);
-    else for(let cy=Math.floor(range.y0/16);cy<=Math.floor(range.y1/16);cy++)for(let cx=Math.floor(range.x0/16);cx<=Math.floor(range.x1/16);cx++){
-      const x0=cx*16,y0=cy*16,x1=Math.min(g.W,x0+16),y1=Math.min(g.H,y0+16),left=(x0-y1)*HW,right=(x1-y0)*HW,top=(x0+y0)*HH,bottom=(x1+y1)*HH+6;if(right<bounds.left||left>bounds.right||bottom<bounds.top||top>bounds.bottom)continue;const ch=this.terrainChunk(g,cx,cy);c.drawImage(ch.image,ch.left,ch.top);
+    else{
+      const visible=[];
+      for(let cy=Math.floor(range.y0/16);cy<=Math.floor(range.y1/16);cy++)for(let cx=Math.floor(range.x0/16);cx<=Math.floor(range.x1/16);cx++){
+        const x0=cx*16,y0=cy*16,x1=Math.min(g.W,x0+16),y1=Math.min(g.H,y0+16),left=(x0-y1)*HW,right=(x1-y0)*HW,top=(x0+y0)*HH,bottom=(x1+y1)*HH+6;if(right<bounds.left||left>bounds.right||bottom<bounds.top||top>bounds.bottom)continue;visible.push([cx,cy]);
+      }
+      // The old24-chunk limit was smaller than a normal zoomed-out viewport,
+      // evicting terrain that the very next frame needed to paint again.
+      this.maxTerrainChunks=Math.min(64,Math.max(24,visible.length+8));
+      this.terrainFrameKeys=new Set(visible.map(([cx,cy])=>cx+','+cy));
+      for(const [cx,cy]of visible){const ch=this.terrainChunk(g,cx,cy);c.drawImage(ch.image,ch.left,ch.top);}
     }
     if(v.zoom>.48&&!this.lowDetail)for(let y=range.y0;y<=range.y1;y++)for(let x=range.x0;x<=range.x1;x++){const t=g.tiles[y*g.W+x];if(t.terrain!=='water'||t.feature||hash(x,y)<.55)continue;const p=iso(x+.5,y+.5),drift=Math.sin(g.time*.7+x+y)*3;c.globalAlpha=.12+Math.sin(g.time*.8+x*.4+y*.7)*.06;line(c,p.x-5+drift,p.y,p.x+6+drift,p.y-.7,'#c5e6d9',.8);c.globalAlpha=1;}
     c.save();c.globalAlpha=.16;c.imageSmoothingEnabled=false;c.transform(HW,HH,-HW,HH,0,0);c.drawImage(this.ownerPixels,0,0);c.restore();
@@ -566,15 +581,31 @@ export class Renderer{
     if(['mountain','woodland','stoneBridge','woodBridge','pass','ford','waymarker','ruin'].includes(kind))return this.landsPropSprite(kind,variant);
     return this.terrainPropSprite(kind==='rock'?'rock':kind==='bush'?'oak':variant%3===0?'oak':'pine',variant);
   }
-  soldierSprite(type,color,dark,dir,frame,attack=false,specialHouse=null){
+  resetTroopSprites(){this.sprites.clear();this.troopAtlasPages=[];}
+  packTroopSprite(image){
+    // Share a small set of GPU textures across the whole army. Thousands of
+    // individual software canvases otherwise force repeated texture switches
+    // and uploads even though every painted frame is static.
+    this.troopAtlasPages??=[];
+    let page=this.troopAtlasPages.at(-1);
+    if(!page||page.count===224){const image=makeCanvas(2048,2016);page={image,context:image.getContext('2d'),count:0};this.troopAtlasPages.push(page);}
+    const index=page.count++,x=index%16*128,y=Math.floor(index/16)*144;
+    page.context.drawImage(image,x,y);
+    return {image:page.image,x,y,canvas:null};
+  }
+  troopSpriteCanvas(frame){
+    if(!frame.canvas){frame.canvas=makeCanvas(128,144);frame.canvas.getContext('2d').drawImage(frame.image,frame.x,frame.y,128,144,0,0,128,144);}
+    return frame.canvas;
+  }
+  soldierSprite(type,color,dark,dir,frame,attack=false,specialHouse=null,packed=false){
     if(!this.rasterSpritesReady&&!this.houseArtReady&&!this.regimentArtReady&&!this.conquestArtReady&&!this.reinforcementArtReady)return null;
     const row=this.getTroopFrame(type,specialHouse)||((REGIMENT_ART_TYPES.includes(type)||CONQUEST_ART_HOUSES[type]||REINFORCEMENT_HOUSES[type])?null:this.troopFrames[HOUSE_UNIT_CLASSES[specialHouse]]||this.troopFrames.infantry);if(!row)return null;const index=(attack?4:0)+clamp(Math.floor(frame),0,3);
-    const key=[type,row.house?'house:'+row.house:color,dir,index].join('|');if(this.sprites.has(key))return this.sprites.get(key);
-    const f=row.frames[index],a=makeCanvas(128,144),c=a.getContext('2d',{willReadFrequently:true});
+    const key=[type,row.house?'house:'+row.house:color,dir,index].join('|');if(this.sprites.has(key)){const cached=this.sprites.get(key);return packed?cached:this.troopSpriteCanvas(cached);}
+    const f=row.frames[index],a=makeCanvas(128,144),c=a.getContext('2d',{willReadFrequently:!row.house});
     c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';c.save();c.scale(2,2);c.translate(32,64);c.scale(dir,1);
     const w=f.width*row.scale,h=f.height*row.scale;
     c.drawImage(f.image,f.left,f.top,f.width,f.height,-w/2,-h,w,h);c.restore();
-    if(row.house){this.sprites.set(key,a);return a;}
+    if(row.house){const cached=this.packTroopSprite(a);this.sprites.set(key,cached);return packed?cached:this.troopSpriteCanvas(cached);}
     const pixels=c.getImageData(0,0,128,144),data=pixels.data;
     const target=/^#[0-9a-f]{6}$/i.test(color)?[parseInt(color.slice(1,3),16),parseInt(color.slice(3,5),16),parseInt(color.slice(5,7),16)]:[125,180,220];
     // Recolor blue cloth only. Steel highlights, skin, weapons and wood retain
@@ -582,7 +613,7 @@ export class Renderer{
     for(let i=0;i<data.length;i+=4){if(data[i+3]<16)continue;const r=data[i],g=data[i+1],b=data[i+2],blue=b-Math.max(r,g);
       if(blue>9&&b>r*1.1&&b>g*1.04){const shade=clamp(b/148,.14,1.18),mix=clamp(blue/38,.3,1);data[i]=r*(1-mix)+Math.min(255,target[0]*shade)*mix;data[i+1]=g*(1-mix)+Math.min(255,target[1]*shade)*mix;data[i+2]=b*(1-mix)+Math.min(255,target[2]*shade)*mix;}
     }
-    c.putImageData(pixels,0,0);this.sprites.set(key,a);return a;
+    c.putImageData(pixels,0,0);const cached=this.packTroopSprite(a);this.sprites.set(key,cached);return packed?cached:this.troopSpriteCanvas(cached);
   }
   drawTroopPortrait(canvas,type,house){
     const row=this.getTroopFrame(type,house.sigil);if(!row)return;
@@ -780,14 +811,14 @@ export class Renderer{
     if(u.backpedaling&&moving&&!attack)frame=3-frame;
     if(pose?.attack)frame=pose.frame;
     const braced=zoom>.6&&u.braceDir&&(u.braceTime||0)>=.45&&!(u.knockT>0);
-    const sprite=this.soldierSprite(u.type,team.color,team.dark,facing,frame,attack||u.type==='trebuchet'&&(u.setupProgress||0)>=UNIT_DEFS.trebuchet.setupSeconds,specialHouse);if(sprite){
+    const sprite=this.soldierSprite(u.type,team.color,team.dark,facing,frame,attack||u.type==='trebuchet'&&(u.setupProgress||0)>=UNIT_DEFS.trebuchet.setupSeconds,specialHouse,true);if(sprite){
       if(pose?.reload){
         // Feet stay planted while the painted torso bends at the waist. The
         // working hands and crossbow mechanism are articulated above this art.
-        c.drawImage(sprite,0,98,128,46,p.x-32,p.y-15,64,23);
+        c.drawImage(sprite.image,sprite.x,sprite.y+98,128,46,p.x-32,p.y-15,64,23);
         c.save();c.translate(p.x,p.y-15+(pose.bodyDrop||0));c.rotate((pose.bodyTilt||0)*facing);
-        c.drawImage(sprite,0,0,128,98,-32,-49,64,49);c.restore();
-      }else if(pose&&(!this.lowDetail||selected)&&(pose.dx||pose.dy||pose.tilt)){c.save();c.translate(p.x+(pose.dx||0),p.y+(pose.dy||0));c.rotate((pose.tilt||0)*facing);c.drawImage(sprite,-32,-64,64,72);c.restore();}else c.drawImage(sprite,p.x-32,p.y-64,64,72);
+        c.drawImage(sprite.image,sprite.x,sprite.y,128,98,-32,-49,64,49);c.restore();
+      }else if(pose&&(!this.lowDetail||selected)&&(pose.dx||pose.dy||pose.tilt)){c.save();c.translate(p.x+(pose.dx||0),p.y+(pose.dy||0));c.rotate((pose.tilt||0)*facing);c.drawImage(sprite.image,sprite.x,sprite.y,128,144,-32,-64,64,72);c.restore();}else c.drawImage(sprite.image,sprite.x,sprite.y,128,144,p.x-32,p.y-64,64,72);
     }
     if(!this.lowDetail||selected||pose?.reload)drawCombatAccents(c,u,g,UNIT_DEFS[u.type],p,pose,zoom);
     if(u.type==='trebuchet'&&zoom>.5){const setup=UNIT_DEFS.trebuchet.setupSeconds,progress=clamp((u.setupProgress||0)/setup,0,1);c.fillStyle='#142c2c';c.fillRect(p.x-20,p.y-61,40,4);c.fillStyle=progress>=1?'#b8d4a0':'#d6b773';c.fillRect(p.x-20,p.y-61,40*progress,4);if(selected){c.font='bold 8px Segoe UI';c.textAlign='center';c.fillStyle='#f2deac';c.fillText(progress>=1?'DEPLOYED':'SETUP '+Math.ceil(setup-(u.setupProgress||0))+'s',p.x,p.y-65);}}
