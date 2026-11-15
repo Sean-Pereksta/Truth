@@ -71,4 +71,14 @@ test('Cached linking avoids per-frame regrouping while moving centroids and fog 
   result=layer.draw(c,units,teams,{...options,time:5.04,visible:u=>u.id==null||u.id>9});assert.equal(result.length,0,'Fewer than six currently visible troops hides a cached crest immediately.');assert.equal(layer.anchors.size,0);
   layer.draw(c,units,teams,{...options,time:5.15});assert.equal(layer.rebuilds,2);
 });
+test('Viewport troop churn cannot force spatial linking on every frame',()=>{
+  const c={globalAlpha:1};for(const name of ['save','restore','translate','scale','beginPath','ellipse','stroke'])c[name]=()=>{};
+  const layer=new FormationBannerLayer(),units=company(60),source={},options={source,time:8,drawCrest:()=>{}};
+  layer.draw(c,units,teams,options);
+  for(let i=1;i<=5;i++)layer.draw(c,units.slice(i),teams,{...options,time:8+i*.01});
+  assert.equal(layer.rebuilds,1,'Entering and leaving troops may update centroids without uncapping regroup work.');
+  assert.deepEqual(layer.draw(c,[],teams,{...options,time:8.06}),[]);assert.equal(layer.anchors.size,0,'An empty viewport must hide cached crests immediately.');
+  layer.draw(c,units,teams,{...options,time:8.07});assert.equal(layer.rebuilds,2,'Newly populated viewports rebuild immediately.');
+});
+
 console.log(`${checks} formation crest checks passed.`);
