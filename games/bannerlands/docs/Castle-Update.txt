@@ -45,8 +45,9 @@ the same camp cycle. Paid companies contain exactly one giant. The recruitment
 card shows the remaining wait.
 
 Tully: Sharpshooter Lodge.
-Sharpshooters fire at 6.25 tiles, farther than ordinary archers, but reload for
-3.4 seconds. They still need direct sightlines. The lodge trains two every
+Sharpshooters fire at 7.5 tiles with 54 base damage and an 80% cavalry bonus,
+but need 3.4 stationary seconds for their windlass reload. Movement interrupts
+the cycle. They still need direct sightlines. The lodge trains two every
 48 seconds before house modifiers.
 
 CHAMPION BALANCE AND REGROUPING
