@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {combatPose} from '../../combat-visuals.js';
+import {combatPose,crossbowReloadPose,drawCombatAccents} from '../../combat-visuals.js';
 import {Game,HOUSES,UNIT_DEFS} from '../../core.js';
 let checks=0;
 const test=(name,fn)=>{fn();checks++;console.log('PASS '+name);};
@@ -16,8 +16,38 @@ test('Long halberds thrust on contact and retract through their painted recovery
 });
 test('Crossbows show release, cocking and reload over their actual reload interval',()=>{
   const u=soldier('tollhouse_crossbow'),def=UNIT_DEFS[u.type];
-  assert.equal(combatPose(u,visualGame(),def).frame,1);assert.equal(combatPose(u,visualGame(10.13),def).frame,2);assert.equal(combatPose(u,visualGame(11),def).frame,3);
+  assert.equal(combatPose(u,visualGame(),def).frame,1);
+  u.reload={progress:.35,duration:2.3};u.reloading=true;
+  assert.equal(combatPose(u,visualGame(10.13),def).frame,3);
+  u.reload.progress=1.8;assert.equal(combatPose(u,visualGame(11),def).frame,3);
   assert.equal(combatPose(u,visualGame(11),def,true),null,'Moving troops cannot freeze in a long stationary reload pose.');
+});
+
+test('Each crossbow class animates its own working mechanism from completed reload work',()=>{
+  const styles=[];
+  for(const type of ['gilded_crossbow','tollhouse_crossbow','sharpshooter']){
+    const u=soldier(type);u.reload={progress:1,duration:3};u.reloading=true;u.facingX=1;u.facingY=0;const def=UNIT_DEFS[type];
+    const first=crossbowReloadPose(u,def);styles.push(first.style);assert.equal(first.stage,'cock');assert.equal(first.bolt,false);
+    assert.equal(crossbowReloadPose(u,def).progress,first.progress,'Game time alone cannot advance reload work.');
+    u.reload.progress=2.4;const seating=crossbowReloadPose(u,def);assert.equal(seating.stage,'load');assert.equal(seating.bolt,true);assert.ok(seating.boltSeat>0);
+    u.reloading=false;assert.equal(crossbowReloadPose(u,def),null);assert.equal(combatPose(u,visualGame(14),def),null,'An interrupted empty crossbow cannot invent a release or reload from old cooldown time.');
+    u.reload.progress=0;u.reloading=true;assert.equal(crossbowReloadPose(u,def).stage,'lower');assert.equal(crossbowReloadPose(u,def).bolt,false);
+  }
+  assert.deepEqual(styles,['belt','lever','windlass']);
+});
+
+test('Reloads draw animated weapons, limbs, strings and separate class mechanisms',()=>{
+  const calls=[],context=new Proxy({}, {get:(target,key)=>key in target?target[key]:(...args)=>calls.push([key,...args]),set:(target,key,value)=>{target[key]=value;return true;}});
+  const drawings=[];
+  for(const type of ['gilded_crossbow','tollhouse_crossbow','sharpshooter']){
+    const u=soldier(type);u.attackVisual=null;u.reloading=true;u.reload={progress:1,duration:3};u.facingX=1;u.facingY=0;
+    calls.length=0;const pose=combatPose(u,visualGame(),UNIT_DEFS[type]);drawCombatAccents(context,u,visualGame(),UNIT_DEFS[type],{x:0,y:0},pose);
+    assert.ok(calls.filter(c=>c[0]==='lineTo').length>=15,'Reload needs actual articulated weapon and arms, not a cooldown indicator.');
+    drawings.push(JSON.stringify(calls));
+    u.reload.progress=1.1;calls.length=0;drawCombatAccents(context,u,visualGame(),UNIT_DEFS[type],{x:0,y:0},combatPose(u,visualGame(),UNIT_DEFS[type]));
+    assert.notEqual(JSON.stringify(calls),drawings.at(-1),'The weapon mechanism must move continuously inside one painted frame.');
+  }
+  assert.equal(new Set(drawings).size,3,'The three mechanisms cannot share the same animation.');
 });
 test('Hit reactions are cosmetic, distinguish blocked blows and expire on paused game time',()=>{
   const u=soldier();u.attackVisual=null;u.target=null;u.hitVisual={at:10,dx:1,dy:0,blocked:false};

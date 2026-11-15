@@ -49,7 +49,7 @@ function fixture({house=0,realMenu=false}={}){
     $:element,document:{body:{classList:{add(){},remove(){}}},createElement:()=>new Element(),querySelector:selector=>{if(realMenu)return selector?.startsWith('#')?element(selector.slice(1)):actions.get(selector)||null;if(!actions.has(selector))actions.set(selector,new Element(selector));return actions.get(selector);},querySelectorAll:selector=>selector==='[data-tab]'?tabs:[]},
     updateHud(){},toast:message=>messages.push(message),tone(){},initAudio(){},minZoom:()=>.05,boundCamera(){},renderer:{campaignArtReady:true,getStructureFrame:()=>({drawWidth:60,drawHeight:70})},
     placeTeamOrder:()=>effects.push('teamOrder'),terrainDescription:()=>'',
-    togglePause:()=>effects.push('pause'),attackNearest:()=>effects.push('attackNearest'),expandNearby:()=>effects.push('expand'),useHousePower:()=>effects.push('power'),
+    togglePause:()=>effects.push('pause'),attackNearest:()=>effects.push('attackNearest'),advanceAttack:()=>effects.push('advance'),expandNearby:()=>effects.push('expand'),useHousePower:()=>effects.push('power'),
     selectArmy:()=>effects.push('army'),findHero:()=>effects.push('hero'),hold:()=>effects.push('hold'),selectAllBuildings:()=>effects.push('buildings'),retreat:()=>effects.push('retreat'),toggleGrid:()=>effects.push('grid'),fitMap:()=>effects.push('fit'),home:()=>effects.push('home'),zoomAt:()=>effects.push('zoom'),setMode:()=>effects.push('mode')
   };
   const actualCommand=game.command;game.command=function(...args){commands.push(args);return actualCommand.apply(this,args);};
@@ -63,6 +63,7 @@ function fixture({house=0,realMenu=false}={}){
   const cancelLine=source.split('\n').find(line=>line.startsWith("canvas.addEventListener('pointerup'"));vm.runInContext(cancelLine,context);
   const blurLine=source.split('\n').find(line=>line.startsWith("window.addEventListener('keyup'"));vm.runInContext(blurLine,context);
   const patrolLine=source.split('\n').find(line=>line.startsWith("$('patrolButton').onclick="));assert.ok(patrolLine);vm.runInContext(patrolLine,context);
+  const advanceLine=source.split('\n').find(line=>line.startsWith("$('advanceButton').onclick="));assert.ok(advanceLine);vm.runInContext(advanceLine,context);
   for(const id of ['recruitList','buildList']){const line=source.split('\n').find(line=>line.startsWith("$('"+id+"').addEventListener('click'"));assert.ok(line);vm.runInContext(line,context);}
   const refreshMenu=()=>{
     actions.clear();const rows={};
@@ -83,6 +84,30 @@ function fixture({house=0,realMenu=false}={}){
   return {game,ui,context,canvas,win,element,actions,messages,effects,commands,event,refreshMenu};
 }
 const ids=value=>[...value].sort((a,b)=>a-b);
+
+test('W advances once and A charges, while Shift+W remains the siege-works shortcut',()=>{
+  const f=fixture();
+  const advance=f.event({key:'w',code:'KeyW'});f.win.dispatch('keydown',advance);
+  assert.equal(advance.defaultPrevented,true);assert.deepEqual(f.effects,['advance']);
+  f.win.dispatch('keydown',f.event({key:'w',code:'KeyW',repeat:true}));assert.deepEqual(f.effects,['advance']);
+  f.element('advanceButton').onclick();assert.deepEqual(f.effects,['advance','advance']);
+  f.win.dispatch('keydown',f.event({key:'a',code:'KeyA'}));assert.equal(f.effects.at(-1),'attackNearest');
+  f.win.dispatch('keydown',f.event({key:'W',code:'KeyW',shiftKey:true}));
+  assert.equal(f.actions.get('[data-build="workshop"]').clicks,1);assert.equal(f.effects.filter(x=>x==='advance').length,2);
+  for(const target of [{tagName:'INPUT'},{tagName:'TEXTAREA'},{tagName:'DIV',isContentEditable:true}])f.win.dispatch('keydown',f.event({key:'w',code:'KeyW',target}));
+  assert.equal(f.effects.filter(x=>x==='advance').length,2);
+});
+
+test('Formation advance uses only the selected living owned troops and does not change the click order mode',()=>{
+  const f=fixture(),a=f.game.addUnit(0,'infantry',20,20),b=f.game.addUnit(0,'archer',21,20),enemy=f.game.addUnit(1,'infantry',25,20),dead=f.game.addUnit(0,'infantry',22,20);dead.hp=0;
+  f.ui.selected=new Set([a.id,b.id,enemy.id,dead.id]);f.ui.formation='wedge';f.context.orderMode='move';f.ui.buildMode='barracks';f.ui.orderMarker={x:0,y:0};
+  const calls=[];f.game.advance=(...args)=>{calls.push(args);return {ok:true,message:'Advance together.'};};
+  vm.runInContext(extract('advanceAttack'),f.context);f.context.advanceAttack();
+  assert.equal(calls.length,1);assert.deepEqual(ids(calls[0][0]),ids([a.id,b.id]));assert.equal(calls[0][1],'wedge');
+  assert.equal(f.context.orderMode,'move');assert.equal(f.ui.buildMode,null);assert.equal(f.ui.orderMarker,null);assert.equal(f.messages.at(-1),'Advance together.');
+  f.ui.selected.clear();f.context.advanceAttack();assert.equal(calls.length,1);assert.ok(f.messages.at(-1).includes('Select soldiers'));
+  f.ui.selected.add(a.id);f.context.menuOpen=true;f.context.advanceAttack();assert.equal(calls.length,1);
+});
 
 test('Right-drag issues one order at the pressed destination with normalized world-space facing',()=>{
   const f=fixture(),u=f.game.addUnit(0,'infantry',28.5,30.5);f.ui.selected.add(u.id);

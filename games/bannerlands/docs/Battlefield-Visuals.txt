@@ -3,15 +3,17 @@ BANNERLANDS — BATTLEFIELD VISUALS
 ATTACK WEIGHT AND CONTACT
 Weapon contact frames now coincide with the simulation's actual damage or
 projectile release. Hammer windups lead into the downward contact pose and
-recovery, long halberds show a thrust and retraction, and crossbows visibly
-cock and reload over their actual recruitment-independent attack interval.
+recovery, and long halberds show a thrust and retraction. Crossbows now use
+simulation-driven stationary reloads with distinct moving belt, lever and
+windlass mechanisms. Movement interrupts the cycle; it restarts after arrival
+or the next attack command. See Crossbows-and-Formation-Advance.txt.
 Struck troops briefly recoil; frontal defensive blocks produce compact sparks.
 Stormbreaker knockback remains physical and still respects terrain and resistance.
 Frey Bridge Wardens render about 27% larger so their extended polearms do not
 shrink the bearers. Every walk/attack frame and both facings retain the full
 weapon, shield and feet; other houses keep their established display sizes.
-These presentation changes do not delay attacks or alter damage, health,
-cooldowns, range, collision rules or house balance.
+The original visual polish preserves attack timing. The crossbow and formation
+update separately changes reload rules, impact damage, range and frontal defense.
 
 TERRAIN
 Worn, uneven road shoulders and wheel impressions blend roads into grass.

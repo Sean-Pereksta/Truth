@@ -780,8 +780,16 @@ export class Renderer{
     if(u.backpedaling&&moving&&!attack)frame=3-frame;
     if(pose?.attack)frame=pose.frame;
     const braced=zoom>.6&&u.braceDir&&(u.braceTime||0)>=.45&&!(u.knockT>0);
-    const sprite=this.soldierSprite(u.type,team.color,team.dark,facing,frame,attack||u.type==='trebuchet'&&(u.setupProgress||0)>=UNIT_DEFS.trebuchet.setupSeconds,specialHouse);if(sprite){if(pose&&(!this.lowDetail||selected)&&(pose.dx||pose.dy||pose.tilt)){c.save();c.translate(p.x+(pose.dx||0),p.y+(pose.dy||0));c.rotate((pose.tilt||0)*facing);c.drawImage(sprite,-32,-64,64,72);c.restore();}else c.drawImage(sprite,p.x-32,p.y-64,64,72);}
-    if(!this.lowDetail||selected)drawCombatAccents(c,u,g,UNIT_DEFS[u.type],p,pose,zoom);
+    const sprite=this.soldierSprite(u.type,team.color,team.dark,facing,frame,attack||u.type==='trebuchet'&&(u.setupProgress||0)>=UNIT_DEFS.trebuchet.setupSeconds,specialHouse);if(sprite){
+      if(pose?.reload){
+        // Feet stay planted while the painted torso bends at the waist. The
+        // working hands and crossbow mechanism are articulated above this art.
+        c.drawImage(sprite,0,98,128,46,p.x-32,p.y-15,64,23);
+        c.save();c.translate(p.x,p.y-15+(pose.bodyDrop||0));c.rotate((pose.bodyTilt||0)*facing);
+        c.drawImage(sprite,0,0,128,98,-32,-49,64,49);c.restore();
+      }else if(pose&&(!this.lowDetail||selected)&&(pose.dx||pose.dy||pose.tilt)){c.save();c.translate(p.x+(pose.dx||0),p.y+(pose.dy||0));c.rotate((pose.tilt||0)*facing);c.drawImage(sprite,-32,-64,64,72);c.restore();}else c.drawImage(sprite,p.x-32,p.y-64,64,72);
+    }
+    if(!this.lowDetail||selected||pose?.reload)drawCombatAccents(c,u,g,UNIT_DEFS[u.type],p,pose,zoom);
     if(u.type==='trebuchet'&&zoom>.5){const setup=UNIT_DEFS.trebuchet.setupSeconds,progress=clamp((u.setupProgress||0)/setup,0,1);c.fillStyle='#142c2c';c.fillRect(p.x-20,p.y-61,40,4);c.fillStyle=progress>=1?'#b8d4a0':'#d6b773';c.fillRect(p.x-20,p.y-61,40*progress,4);if(selected){c.font='bold 8px Segoe UI';c.textAlign='center';c.fillStyle='#f2deac';c.fillText(progress>=1?'DEPLOYED':'SETUP '+Math.ceil(setup-(u.setupProgress||0))+'s',p.x,p.y-65);}}
     if(selected&&zoom>.55&&Math.hypot(direction.x,direction.y)>.01){
       const dx=screenFacing.x/faceLength,dy=screenFacing.y/faceLength,color=u.backpedaling?'#a8ddd1':'#e7cc89';

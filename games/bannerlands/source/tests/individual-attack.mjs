@@ -18,14 +18,15 @@ const targetPoint=(u,target)=>{
   assert.equal(u.order.x,target.x);assert.equal(u.order.y,target.y);
 };
 
-test('Scattered troops receive independent nearest-unit destinations in every formation',()=>{
+test('Charge releases every chosen formation into independent nearest-unit destinations',()=>{
   const g=fixture(),left=g.addUnit(0,'infantry',25.5,45.5),right=g.addUnit(0,'cavalry',85.5,45.5);
   const west=g.addUnit(1,'infantry',15.5,45.5),east=g.addUnit(2,'archer',95.5,45.5);
   for(const formation of ['line','spread','wedge']){
     const result=g.attackNearest(new Set([left.id,right.id]),formation);
     assert.equal(result.ok,true);assert.equal(result.count,2);
     targetPoint(left,west);targetPoint(right,east);
-    assert.equal(left.order.formation,formation);assert.equal(right.order.formation,formation);
+    assert.equal(left.order.formation,'spread');assert.equal(right.order.formation,'spread');
+    assert.equal(left.order.advanceId,undefined);assert.equal(right.order.advanceId,undefined);
   }
 });
 

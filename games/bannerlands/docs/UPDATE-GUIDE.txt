@@ -6,6 +6,13 @@ capacity. Territory still provides income and structure slots. Player and rival
 houses use the same rule. If castle loss leaves an army above its capacity,
 existing troops survive while further recruitment waits for free supply.
 
+CROSSBOW IMPACT AND RELOADING
+Gilded Crossbows, Tollhouse Crossbows and Sharpshooters have longer range,
+higher impact damage and extra damage against cavalry. Each has its own
+mechanical reload animation and stays still while reloading. Move orders
+interrupt immediately; arrival or the next attack order restarts the cycle.
+See Crossbows-and-Formation-Advance.txt for stats and controls.
+
 COMBAT FORMATIONS AND TERRAIN
 Right-drag from a destination toward the direction for the line to face.
 Troops keep that facing while marching, including slower backward retreats.
@@ -23,8 +30,12 @@ House details opens the complete house guide at your selected house.
 Switching tabs or returning to the battlefield preserves your choices.
 Revisited landscapes reuse their map preview to keep setup responsive.
 
-INDIVIDUAL ATTACK NEAREST
-A and Attack nearest choose the nearest known living enemy troop or building
+FORMATION ADVANCE AND INDEPENDENT CHARGE
+W and Advance in formation move a coherent formation toward the nearest
+substantial enemy force, keeping slots and turning gradually. A lone soldier
+does not swing a large formation away from a nearby enemy force. Formed
+infantry takes less frontal damage and resists displacement.
+A and Break & charge dissolve the formation and choose the nearest known living enemy troop or building
 by distance for every selected soldier. Spread-out armies engage locally instead
 of gathering at one common point. Normal local combat targeting continues along
 the route. Press A again to choose from current known positions. Right-click a

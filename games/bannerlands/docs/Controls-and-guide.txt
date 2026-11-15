@@ -141,15 +141,15 @@ Source version: run `node server.mjs`, then open http://127.0.0.1:4173. Source r
 
 COMMAND YOUR ARMY
 Drag to select soldiers. Shift-click/drag adds to the selection.
-Right-click ground to force selected troops to move immediately, overriding combat and charge orders. They can defend again after reaching the destination.
+Right-click ground to force selected troops to move immediately, overriding combat, charge and reload orders. Troops turn toward travel for a fast retreat. Right-drag keeps an explicit facing and its slower backward march. They can defend again after reaching the destination.
 Right-click a visible enemy building to focus selected troops on that structure until it becomes invalid or you give another order.
-Left-click empty ground uses your selected Conquer/Move mode. A gives the attack-nearest order.
+Left-click empty ground uses your selected Conquer/Move mode. W advances in formation; A breaks formation and charges.
 Conquer orders fight enemies and secure connected grid spaces along the route.
 Move orders march directly. Hold defends the current position. Retreat returns to your keep.
 Q selects your entire army; F selects and centers your commander.
 H holds; V retreats; R selects all buildings; X switches Conquer/Move.
 E activates your house's signature power on the selected troops. The always-visible House power button shows readiness; Council explains its effects and cost.
-A gives each selected soldier its own attack-move order toward the nearest known living enemy troop or building by distance. Spread-out troops engage separate local fronts. With fog enabled, remembered enemy buildings are valid destinations without revealing hidden changes. Normal local combat targeting continues along the way; press A again to choose from current known enemy positions. The Attack nearest button gives the same order.
+W advances the selection as a coherent formation, attacks in reach and turns gradually toward the closest substantial enemy force. A lone scout does not turn a large line away from a nearby enemy force. A breaks formation and gives each selected soldier its own attack-move order toward the nearest known living enemy troop or building by distance. Spread-out troops engage separate local fronts. With fog enabled, remembered enemy buildings are valid destinations without revealing hidden changes. Normal local combat targeting continues along the way; press A again to choose from current known enemy positions. The Break & charge button gives the same order.
 Ctrl+1 through Ctrl+9 saves a group; 1 through 9 recalls it.
 Ctrl+Shift+1 through 9 adds selected soldiers to an existing group.
 Use Line, Wedge, or Spread to position troops. Spread limits artillery losses.
@@ -171,7 +171,7 @@ CONTINUOUS NEARBY EXPANSION
 Select troops and press T, or click Expand nearby in Battle Orders.
 They capture nearby land connected to your territory, then choose more nearby tiles automatically. They spread across the frontier and keep going without repeated clicks.
 If no connected frontier is available, they wait and check again.
-Move, Conquer, Attack nearest, Hold, or Retreat replaces expansion for the troops receiving that new order.
+Move, Conquer, Advance in formation, Break & charge, Hold, or Retreat replaces expansion for the troops receiving that new order.
 Actual hostile damage triggers temporary defense only for nearby expanding troops within their aggro range of the attacker. If the source location is unknown, the damaged troop's position defines the local response.
 Defenders pursue within a local leash, then automatically resume the same expansion order when local combat ends or the enemy leaves that leash. Simply seeing an enemy does not interrupt expansion.
 Distant expanding troops continue their assignments, even if selected in the same expansion party. Troops with other explicit orders keep those orders. A new command immediately replaces a defender's expansion order.
@@ -218,7 +218,7 @@ HOUSE STARK
   Recruitment: Winter Halls within 6 tiles of your keep train 15% faster.
 
 HOUSE LANNISTER
-  Specialist: Gilded Crossbows — Ranged fighters.
+  Specialist: Gilded Crossbows — 5.5 range, 34 base damage, 65% bonus damage to cavalry; stationary belt-pull reload.
   Battlefield effect — Gilded Bolts: Crossbow hits deal 35% more damage to troops whose house has armor upgrades.
   Production: Mercenary Guild (380 gold); automatically trains 3 every 36 seconds before bonuses.
   Castle: Casterly Rock — distinct house architecture and colors.
@@ -355,7 +355,7 @@ Menu shortcuts work while paused. Unavailable items cannot be activated, and hol
 CAMERA
 Scroll or use +/− to zoom toward the cursor.
 Right-drag orders selected troops to move and face; middle-drag or arrow keys
-pan. Right-drag never pans, even with no troops selected. A attacks each troop's nearest known enemy troop or building.
+pan. Right-drag never pans, even with no troops selected. W advances together in formation. A breaks formation and charges each troop's nearest known enemy troop or building.
 Tab fits the whole map; Home returns to your keep.
 Click or drag the minimap to navigate. G toggles the grid.
 Touch: pinch to zoom, tap a soldier then a destination; drag to select.

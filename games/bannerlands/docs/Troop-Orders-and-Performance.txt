@@ -1,6 +1,13 @@
 TROOP ORDERS AND LARGE-ARMY PERFORMANCE
 
 Controls
+- W / Advance in formation keeps the selection together and turns gradually
+  toward the closest substantial enemy force. A / Break & charge releases
+  the ranks for independent pursuit.
+- A plain right-click turns troops toward travel for a faster withdrawal;
+  right-drag preserves the chosen facing and slower backward marching.
+- Crossbowmen reload while standing still. Explicit movement interrupts the
+  reload; arrival or the next attack command restarts the full cycle.
 - A right-click over the battlefield closes an open command drawer and issues
   the selected army's Move order in the same click. Clicking a visible enemy
   building instead focuses attacks on that structure until invalid or replaced.

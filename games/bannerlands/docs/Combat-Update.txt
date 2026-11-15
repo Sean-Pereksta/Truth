@@ -1,5 +1,18 @@
 FORMATIONS, SIGHTLINES AND HOUSE REGIMENTS
 
+COORDINATED ADVANCE AND CROSSBOW RELOADS
+W advances and attacks as one formation, keeping slots and turning gradually
+toward the closest enemy force of meaningful size. An isolated scout does not
+pull a large spear line away from a nearby force. A breaks the ranks and
+charges each troop toward its own nearest enemy. Formed infantry takes less
+frontal damage and resists knockback; flank and rear attacks remain dangerous.
+A plain right-click gives a fast direct withdrawal. Right-drag retains a
+deliberate facing, including slower backward movement.
+All crossbows gain range, impact damage and a cavalry bonus. Their distinct
+mechanical reload animations run only while stationary. Move interrupts
+reloading immediately; arrival or the next attack restarts the full cycle.
+See Crossbows-and-Formation-Advance.txt for the three classes and controls.
+
 NEW HOUSE TROOPS AND BUILDINGS
 Stark: Winter Shield Hall       Lannister: Gilded Guard Hall
 Targaryen: Dragonshield Foundry  Tyrell: Roseguard Pavilion
@@ -125,4 +138,4 @@ Expand acquires no contact from sight alone; hostile damage triggers temporary
 defense by nearby expanders within aggro range. Pursuit remains local, then
 defenders resume expansion automatically. Distant expanders retain
 their assignments. Hold defends in weapon range without chasing; Attack remains
-a combat order. A chooses each troop's nearest known enemy troop or building.
+a combat order. W advances in formation; A breaks formation and charges each troop's nearest known enemy troop or building.

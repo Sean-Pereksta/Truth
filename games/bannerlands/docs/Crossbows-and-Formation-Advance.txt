@@ -1,0 +1,45 @@
+CROSSBOWS AND FORMATION ADVANCE
+
+W — ADVANCE IN FORMATION
+Select soldiers, choose Line, Wedge or Spread, then press W or click Advance
+in formation. They advance together, retain their slots and strike enemies in
+reach. The formation turns gradually toward the nearest enemy force of
+meaningful size. A lone scout does not turn a large spear line away from a
+nearby enemy force. Use a broad Line to bring more spear points into contact.
+At narrow crossings, the formation narrows to pass, then restores its ranks.
+
+A — BREAK AND CHARGE
+Press A or click Break & charge to release the ranks. Each selected soldier
+pursues its own nearest known living enemy troop or building. Cavalry builds
+its normal charge with a real run-up. A charge gives up formation protection.
+Fog of war still limits target knowledge.
+
+H AND RIGHT MOUSE — HOLD OR WITHDRAW
+H holds current positions. Infantry in a held or coordinated formation takes
+less damage from the front and resists displacement; flanks and rear remain
+exposed. Spear bracing still needs a settled line facing the incoming charge.
+Right-click ground without dragging for direct movement and faster withdrawal:
+troops can turn toward travel. Right-drag sets a destination and explicit
+facing for an orderly march; backing away with weapons forward is slower.
+Right-clicking a visible enemy building still focuses attacks on that building.
+
+CROSSBOW CLASSES
+Class                Range  Base impact  Cavalry multiplier  Reload mechanism
+Gilded Crossbows      5.5        34             1.65          Belt pull
+Tollhouse Crossbows   5.8        40             1.75          Foot-stirrup lever
+Sharpshooters         7.5        54             1.80          Windlass crank
+
+Range is measured in map cells, before terrain bonuses. Weapon upgrades,
+house effects, target defenses and cover still affect final damage. Gilded
+Bolts retains its bonus against houses with armor upgrades. Tollhouse crews
+retain their faster reload after setting position. Direct bolts obey line of
+sight and inflict their damage on impact.
+
+REAL STATIONARY RELOADS
+After firing, a crossbowman remains stationary through a mechanical sequence
+of lowering the weapon, drawing the string, placing a bolt and raising it.
+The three classes use different moving reload mechanisms and timing.
+A movement command interrupts the reload immediately. No reload progress is
+earned while walking. After arrival, or on the next attack command when
+stationary, the crossbowman restarts the full reload before firing again.
+Protect the crews with a spear line while they prepare the next volley.

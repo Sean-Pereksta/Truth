@@ -2,9 +2,18 @@
 
 Command armies, conquer the grid, and unite the realm in an isometric real-time strategy game.
 
+Press W to advance and attack as one formation, turning toward an enemy force
+while keeping the ranks together. A breaks formation and charges independently.
+A plain right-click gives a faster direct withdrawal; right-drag preserves
+facing for a deliberate backward march. Formed infantry takes less frontal
+damage and resists displacement. All three crossbow classes have longer range,
+harder hits against cavalry and distinct mechanical reload animations. They
+reload while stationary; moving interrupts the cycle, which restarts after
+arrival or the next attack order. See `docs/Crossbows-and-Formation-Advance.txt`.
+
 Attacks on expanding troops now trigger local defense within aggro range while
 distant troops continue their orders. Defenders pursue only locally and resume
-expansion automatically. A / Attack nearest considers both known enemy troops
+expansion automatically. A / Break & charge considers both known enemy troops
 and buildings by distance. Right-click a visible enemy building to focus attacks
 on it until it becomes invalid or you issue another order.
 

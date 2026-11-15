@@ -32,12 +32,13 @@ test('Every new facility automatically trains its own troops and respects supply
   }
 });
 test('Hammer strikes damage and physically displace enemies, with visible impact and mass/brace resistance',()=>{
-  function hit(type='infantry',brace=false){const g=fixture(),u=g.addUnit(0,'stormbreaker',20,20),v=g.addUnit(1,type,20.75,20);g.hold([u.id,v.id]);u.facingX=1;u.facingY=0;v.facingX=-1;v.facingY=0;
+  function hit(type='infantry',brace=false,formation='spread'){const g=fixture(),u=g.addUnit(0,'stormbreaker',20,20),v=g.addUnit(1,type,20.75,20);g.hold([u.id,v.id]);v.order.formation=formation;u.facingX=1;u.facingY=0;v.facingX=-1;v.facingY=0;
     if(brace){v.braceDir={x:-1,y:0};v.braceTime=1;}
     g.hash.rebuild(g.units);g.attack(u,v);assert.ok(v.hp<v.maxHp);assert.ok(g.effects.some(e=>e.type==='hammerImpact'));const kick=v.knockVX;
     const before=v.x;step(g,8);assert.ok(v.x>before+.02,'The shove must actually move the target.');return kick;
   }
   const normal=hit();assert.ok(normal>hit('hero'));assert.ok(normal>hit('dread_pike',true));assert.ok(normal>hit('shield_bearer'));
+  assert.ok(hit('infantry',false,'line')<normal*.7,'A formed frontal line adds resistance beyond the same unformed infantry mass.');
   const g=fixture(),u=g.addUnit(0,'stormbreaker',20,20),b=g.addBuilding(1,'tower',20.8,20);g.attack(u,b);assert.equal(b.knockT,undefined);
 });
 test('Hammer knockback cannot move a fighter into an impassable mountain',()=>{

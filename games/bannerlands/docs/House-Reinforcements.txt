@@ -23,7 +23,10 @@ Greyjoy still recovers 50% more slowly on owned ground.
 
 FREY — TOLLHOUSE CROSSBOWS / TOLLHOUSE RANGE
 Range: 380 gold; trains 3 every 42 seconds. Paid company: 250 gold for 4.
-125 health, 28 damage, 4.25 range, 2.3-second base reload. After 2 seconds
+125 health, 40 damage, 5.8 range, 2.3-second base reload; +75% damage to
+cavalry. Uses a distinct foot-stirrup lever animation while stationary. Move
+orders interrupt reloading; arrival or the next attack restarts its full cycle.
+After 2 seconds
 stationary, reloads are 25% faster. Movement and knockback reset readiness.
 Visible bolts obey sightlines. Vulnerable to flanks and arcing siege fire.
 Frey's 20% cavalry surcharge remains. Paid crossbows require a living
