@@ -2,6 +2,23 @@
 
 Command armies, conquer the grid, and unite the realm in an isometric real-time strategy game.
 
+## Full-game multiplayer preview
+
+The Windows preview adds **Host Lobby**, **Browse Lobbies**, and **Join by
+Invite** to the maintained painted game. Up to **four humans** can command
+their assigned houses; bots fill the other participating houses, up to sixteen
+where the selected mode permits them. Browser guests join without downloading.
+The installer includes the hosting components and creates a Bannerlands desktop
+icon and Start menu entry.
+
+Use [Download Bannerlands](download.html) for the versioned Windows installer,
+or see [the multiplayer guide](docs/Online-Multiplayer.md) for setup, validation,
+measurements and remaining release gates. This is a testing preview: maximum
+army campaigns still exceed the measured real-time budget, and separate-location
+match completion must be validated before calling the public update complete.
+
+Single-player and the original self-contained offline build remain available.
+
 Each house now fields its own painted hero and physical battle standard. Click
 the small portrait and health bar at the top left to select and jump to your
 hero, or press F. Selecting a hero exposes a contextual Plant / Retrieve /

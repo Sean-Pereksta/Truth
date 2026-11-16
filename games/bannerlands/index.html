@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#101b20"><meta name="description" content="Command armies, conquer the grid, and unite the realm. An animated isometric strategy game.">
 <title>Bannerlands · The Lands Update</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="hud.css">
-</head>
+<link rel="stylesheet" href="multiplayer/lobby.css"><link rel="icon" href="assets/bannerlands.ico"></head>
 <body>
 <svg class="symbols" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs>
  <symbol id="i-swords" viewBox="0 0 24 24"><path d="m4 3 7 6-2 3-6-7V3Zm16 0-7 6 2 3 6-7V3ZM8 14l-5 6m0-4 5 5m8-7 5 6m0-4-5 5M10 12l4 4m0-4-4 4"/></symbol>
@@ -168,7 +168,7 @@
   </div>
   <footer class="campaign-menu-footer">
    <div class="fair-start"><svg aria-hidden="true"><use href="#i-shield"/></svg><span><strong id="menuSelectedHouse">House Stark</strong><small>Equal starting armies and gold. <b id="houseCountPromise">16 houses. 16 ways to conquer.</b></small></span></div>
-   <div class="campaign-menu-actions"><button id="resumeButton" type="button" hidden>Return to the battlefield</button><button id="startButton" class="primary" type="button">RAISE THE BANNERS <span>→</span></button></div>
+   <div class="online-menu-actions" aria-label="Multiplayer"><button type="button" id="hostLobbyButton">Host Lobby</button><button type="button" id="browseLobbiesButton">Browse Lobbies</button><button type="button" id="joinInviteButton">Join by Invite</button><button type="button" id="leaveOnlineButton" hidden>Online Lobby / Leave Match</button><a class="online-download" href="download.html">Download Bannerlands to unlock Multiplayer Hosting <span>↓</span></a><p>Guests join the full game in a browser. No download required.</p></div><div class="campaign-menu-actions"><button id="resumeButton" type="button" hidden>Return to the battlefield</button><button id="startButton" class="primary" type="button">RAISE THE BANNERS <span>→</span></button></div>
   </footer>
  </div>
 </div>

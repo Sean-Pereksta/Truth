@@ -13,7 +13,7 @@ function imageData(name){
   const absolute=path.resolve(dist,relative);
   if(!absolute.startsWith(dist+path.sep))throw new Error('Asset outside game: '+name);
   embeddedFiles.add(relative);
-  const mime=relative.endsWith('.webp')?'image/webp':relative.endsWith('.svg')?'image/svg+xml':'image/png';
+  const mime=relative.endsWith('.ico')?'image/x-icon':relative.endsWith('.webp')?'image/webp':relative.endsWith('.svg')?'image/svg+xml':'image/png';
   return 'data:'+mime+';base64,'+fs.readFileSync(absolute).toString('base64');
 }
 function embedImageLiterals(code){
@@ -78,11 +78,13 @@ for(const [name,module]of modules){
 }
 
 const emblemAtlas=imageData('assets/house-emblems.png');
-const css=[read('style.css'),read('hud.css')].join('\n').replaceAll('assets/house-emblems.png',emblemAtlas);
+const css=[read('style.css'),read('hud.css'),read('multiplayer/lobby.css')].join('\n').replaceAll('assets/house-emblems.png',emblemAtlas);
 const script=('const __modules=Object.create(null);\n'+compiled.join('\n')).replaceAll('</script','<\\/script');
 const html=read('index.html')
   .replace('<link rel="stylesheet" href="style.css">',()=>`<style>${css}</style>`)
   .replace('<link rel="stylesheet" href="hud.css">','')
+  .replace('<link rel="stylesheet" href="multiplayer/lobby.css">','')
+  .replace('href="assets/bannerlands.ico"',()=>`href="${imageData('assets/bannerlands.ico')}"`)
   .replace('<script type="module" src="app.js"></script>',()=>`<script type="module">\n${script}\n</script>`);
 if(html.includes('<script type="module" src="app.js">'))throw new Error('Standalone entry was not replaced.');
 fs.writeFileSync(path.join(out,'Bannerlands.html'),html);

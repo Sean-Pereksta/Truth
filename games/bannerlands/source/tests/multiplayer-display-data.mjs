@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {createAuthority} from '../../multiplayer/authority.js';
+import {createRemoteGame,applySnapshot} from '../../multiplayer/snapshot.js';
+import {HOUSES} from '../../core.js';
+const authority=createAuthority({enemies:3,scale:'standard',mode:'team-conquest',seed:44277},{humanTeams:[0,1],privateHomePermutation:[0,1,2,3]});
+const original=authority.snapshot(0,{initial:true}),copy=()=>structuredClone(original);
+const changed=copy();changed.teams[0].name='Untrusted display label';changed.teams[0].sigil='unknown-artwork';changed.teams[0].color='unrecognized color';changed.teams[0].teamColor='#123456';changed.mode.label='Untrusted campaign label';
+const view=createRemoteGame(changed),house=HOUSES[original.teams[0].house];assert.equal(view.teams[0].name,house.name);assert.equal(view.teams[0].sigil,house.sigil);assert.equal(view.teams[0].color,house.color);assert.equal(view.teams[0].teamColor,'#123456');assert.equal(view.mode.label,original.mode.label);
+const badCount=copy();badCount.teams[0].count='not a number';assert.throws(()=>applySnapshot(view,badCount),/counters/);
+const badScore=copy();badScore.objectiveScores[0]='not a score';assert.throws(()=>createRemoteGame(badScore),/scores/);
+const badType=copy();badType.units[0].type='unknown-unit';assert.throws(()=>createRemoteGame(badType),/entity/);
+const duplicate=copy();duplicate.units.push({...duplicate.units[0]});assert.throws(()=>createRemoteGame(duplicate),/entity/);
+console.log('PASS remote display uses shipped house/artwork/mode labels, preserves valid alliance colors, and rejects nonnumeric counters/scores and malformed entity types/IDs.');

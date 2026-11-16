@@ -7,7 +7,7 @@ export class WarVision {
   alliance(team){return this.game.teams[team]?.alliance??team;}
   dataFor(team){
     const alliance=this.alliance(team);let data=this.alliances.get(alliance);
-    if(!data){data={current:new Uint8Array(this.game.W*this.game.H),explored:new Uint8Array(this.game.W*this.game.H),owners:new Int16Array(this.game.W*this.game.H).fill(-1),territoryCounts:new Int32Array(this.game.teams.length),units:new Map(),buildings:new Map(),castles:new Map(),castleOwners:new Map(),campaignEvents:[]};this.alliances.set(alliance,data);}
+    if(!data){data={current:new Uint8Array(this.game.W*this.game.H),explored:new Uint8Array(this.game.W*this.game.H),owners:new Int16Array(this.game.W*this.game.H).fill(-1),territoryCounts:new Int32Array(this.game.teams.length),units:new Map(),buildings:new Map(),castles:new Map(),castleOwners:new Map(),objectives:new Map(),campaignEvents:[]};this.alliances.set(alliance,data);}
     return data;
   }
   gridFor(team){if(!this.enabled)return null;this.update();return this.dataFor(team).current;}
@@ -65,6 +65,9 @@ export class WarVision {
         if(site.team>=0){if(previous!==undefined&&previous!==site.team)data.campaignEvents.push({kind:'victory',team:site.team,time:g.time,amount:1});data.castleOwners.set(site.id,site.team);}
         data.castles.set(site.id,this.castleSnapshot(site));
       }
+      const objectives=new Map(g.objectives.map(value=>[value.id,value]));
+      for(const [id,memory]of data.objectives)if(!objectives.has(id)&&(visible(memory)||memory.expiresAt<=g.time))data.objectives.delete(id);
+      for(const value of objectives.values())if(visible(value))data.objectives.set(value.id,Object.freeze({...value,progress:Object.freeze([...(value.progress||[])])}));else if(!data.objectives.has(value.id))data.objectives.set(value.id,Object.freeze({id:value.id,name:value.name,x:value.x,y:value.y,radius:value.radius,required:value.required,expiresAt:value.expiresAt,wave:value.wave}));
       data.campaignEvents=data.campaignEvents.filter(event=>g.time-event.time<=120).slice(-256);
     }
     this.revision++;
@@ -86,5 +89,15 @@ export class WarVision {
   knownCastleSites(team){
     this.update();const current=(this.game.castles||[]).filter(site=>this.game.allied(team,site.team)||this.isVisible(team,site.x,site.y)),ids=new Set(current.map(site=>site.id));
     return [...current,...[...this.dataFor(team).castles.values()].filter(memory=>!ids.has(memory.id))];
+  }
+  knownObjectives(team){
+    if(!this.enabled)return this.game.objectives;
+    this.update();const game=this.game,data=this.dataFor(team),current=new Map(game.objectives.map(value=>[value.id,value]));
+    const visible=value=>this.isVisible(team,value.x,value.y);
+    // Read queries never change intelligence. Otherwise extra guest polls
+    // could refresh an allied bot's memory between its strategic turns.
+    // Publicly announced new waves may appear before the next sight refresh.
+    const values=[...data.objectives.values()];for(const value of game.objectives)if(!data.objectives.has(value.id))values.push({id:value.id,name:value.name,x:value.x,y:value.y,radius:value.radius,required:value.required,expiresAt:value.expiresAt,wave:value.wave});
+    return values.filter(value=>!(value.expiresAt<=game.time)&&(!visible(value)||current.has(value.id))).map(value=>visible(value)?current.get(value.id)||value:{id:value.id,name:value.name,x:value.x,y:value.y,radius:value.radius,required:value.required,expiresAt:value.expiresAt,wave:value.wave,progress:[],controller:null,contested:false,cooldownUntil:0,unseen:true});
   }
 }

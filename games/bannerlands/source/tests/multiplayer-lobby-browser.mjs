@@ -1,0 +1,72 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {createRequire} from 'node:module';
+import {createMatchServer} from '../multiplayer-server.mjs';
+const require=createRequire(import.meta.url);
+const {chromium}=require(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES?path.join(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES,'playwright'):'playwright');
+const server=await createMatchServer({simulation:false,lobby:{public:false,maxHumans:4},config:{enemies:15,scale:'standard',seed:44277}});
+const browser=await chromium.launch({headless:true,executablePath:process.env.BANNERLANDS_BROWSER});
+const context=await browser.newContext({viewport:{width:1440,height:960}}),page=await context.newPage(),errors=[];
+page.on('pageerror',error=>errors.push(error.message));
+await context.route('**/__lobby-qa',route=>route.fulfill({status:200,contentType:'text/html',body:'<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/multiplayer/lobby.css"></head><body></body></html>'}));
+try{
+  await page.goto(server.url+'/__lobby-qa');
+  await page.evaluate(async()=>{
+    const {mountLobbyUI}=await import('/multiplayer/lobby-ui.js');
+    window.__qaCalls=[];window.__lobbyQA=mountLobbyUI({canHost:true,getConfig:()=>({house:12,enemies:15,mode:'conquest',landscape:'four-rivers',scale:'continent',difficulty:'veteran',fogOfWar:true}),gameVersion:'qa-v1',assetVersion:'painted-qa',onHost:(...args)=>window.__qaCalls.push({type:'host',args}),onReady:value=>window.__qaCalls.push({type:'ready',value}),onChooseHouse:value=>window.__qaCalls.push({type:'house',value}),onStart:value=>window.__qaCalls.push({type:'start',value}),onEnd:()=>window.__qaCalls.push({type:'end'}),onVisibility:value=>window.__qaCalls.push({type:'visibility',value}),onConfigure:(...args)=>window.__qaCalls.push({type:'configure',args})});
+    window.__lobbyQA.show('host');
+  });
+  assert.equal(await page.locator('[name="participatingHouse"]:checked').count(),16);
+  assert.deepEqual(await page.locator('[name="maxHumans"] option').evaluateAll(elements=>elements.map(el=>Number(el.value))),[1,2,3,4]);
+  await page.locator('[name="maxHumans"]').selectOption('4');
+  await page.locator('[name="lobbyName"]').fill('Four banners, sixteen houses');
+  await page.locator('[data-pane="host"] button[type="submit"]').click();
+  await page.waitForFunction(()=>window.__qaCalls.some(call=>call.type==='host')||document.querySelector('.multiplayer-status.error'));
+  const hosted=await page.evaluate(()=>window.__qaCalls.find(call=>call.type==='host'));
+  assert.ok(hosted,await page.locator('.multiplayer-status').textContent());
+  assert.equal(hosted.args[1].maxHumans,4);assert.equal(hosted.args[0].houses.length,16);assert.equal(hosted.args[0].houses[0],12);
+  await page.evaluate(()=>{
+    const players=Array.from({length:4},(_,i)=>({id:'commander-'+i,name:'Commander '+(i+1),team:i,host:i===0,ready:true,connected:true,assetsReady:true}));
+    window.__qaSession={lobby:{id:'qa-match',name:'Four human commanders',status:'full',revision:7,maxHumans:4,humans:4,availableSeats:0,aiHouses:12,public:true,config:{enemies:15,mode:'conquest',landscape:'four-rivers',scale:'continent',difficulty:'veteran',fogOfWar:true},houses:Array.from({length:16},(_,i)=>({team:i,name:'House '+(i+1)})),players},session:{team:0},isHost:true,inviteUrl:'https://qa-match.trycloudflare.com/#invite=abcdefghijklmnop'};
+    window.__lobbyQA.setAssetsReady(true);window.__lobbyQA.renderSession(window.__qaSession);
+  });
+  assert.equal(await page.locator('.multiplayer-players p').count(),4);
+  assert.ok(await page.locator('[data-action="start"]').isEnabled());
+  await page.evaluate(()=>{window.__backgroundKeys=0;window.addEventListener('keydown',()=>window.__backgroundKeys++);});
+  await page.locator('[data-action="start"]').focus();await page.keyboard.press('Tab');assert.ok(await page.locator('[data-action="leave"]').evaluate(el=>el===document.activeElement),'Tab navigates lobby controls');await page.keyboard.press('h');assert.equal(await page.evaluate(()=>window.__backgroundKeys),0,'Lobby keyboard input cannot reach battlefield shortcuts');
+  await page.locator('[data-action="start"]').click();assert.equal((await page.evaluate(()=>window.__qaCalls.find(call=>call.type==='start'))).value.revision,7);
+  await page.evaluate(()=>{window.__qaSession.lobby.status='starting';window.__qaSession.lobby.players.forEach((player,index)=>{player.synchronized=index<2;});window.__lobbyQA.renderSession(window.__qaSession);});
+  assert.equal(await page.locator('.multiplayer-session-state').textContent(),'Synchronizing 2 / 4');assert.equal(await page.locator('.multiplayer-players p').filter({hasText:'Battle synchronized'}).count(),2);assert.equal(await page.locator('.multiplayer-players p').filter({hasText:'Receiving battlefield'}).count(),2);assert.ok(await page.locator('[data-action="ready"]').isDisabled());assert.ok(await page.locator('[data-action="start"]').isDisabled());assert.equal(await page.locator('[data-action="end"]').textContent(),'Cancel Start and Return to Lobby');await page.locator('[data-action="end"]').click();
+  await page.evaluate(()=>{window.__qaSession.lobby.status='full';window.__lobbyQA.renderSession(window.__qaSession);});assert.ok(!(await page.locator('.multiplayer-status').getAttribute('class')).includes('loading'),'Cancelled start clears the loading state');
+  await page.locator('[data-public]').uncheck();assert.deepEqual((await page.evaluate(()=>window.__qaCalls.find(call=>call.type==='visibility'))).value,{public:false});
+  await page.locator('[data-session-humans]').selectOption('3');await page.locator('[data-action="configure"]').click();assert.equal((await page.evaluate(()=>window.__qaCalls.find(call=>call.type==='configure'))).args[1].maxHumans,3);
+  const out=process.env.BANNERLANDS_QA_OUT;if(out){await fs.mkdir(out,{recursive:true});await page.locator('.multiplayer-panel').evaluate(panel=>{panel.scrollTop=0;});await page.screenshot({path:path.join(out,'bannerlands-lobby-desktop.png')});}
+  await page.setViewportSize({width:390,height:844});
+  const layout=await page.locator('.multiplayer-panel').evaluate(panel=>({width:panel.getBoundingClientRect().width,scrollWidth:panel.scrollWidth,clientWidth:panel.clientWidth,height:panel.getBoundingClientRect().height,viewport:innerHeight}));
+  assert.ok(layout.scrollWidth<=layout.clientWidth+1,'Mobile lobby has no horizontal overflow');assert.ok(layout.height<=layout.viewport,'Lobby stays inside the mobile viewport');
+  if(out){await page.locator('.multiplayer-panel').evaluate(panel=>{panel.scrollTop=0;});await page.screenshot({path:path.join(out,'bannerlands-lobby-mobile.png')});}
+  await page.evaluate(()=>{window.__qaSession.lobby.status='in-progress';window.__lobbyQA.renderSession(window.__qaSession);});
+  await page.locator('[data-action="end"]').click();assert.equal(await page.evaluate(()=>window.__qaCalls.filter(call=>call.type==='end').length),2);
+  await page.evaluate(()=>window.__lobbyQA.show('host'));
+  await page.locator('[name="participatingHouse"][value="0"]').uncheck();assert.ok(await page.locator('[data-pane="host"] button[type="submit"]').isDisabled());
+  assert.deepEqual(errors,[]);
+  const mainMenus=[];
+  for(const size of [{width:1440,height:960},{width:390,height:844}]){
+    await page.setViewportSize(size);await page.goto(server.url);await page.waitForFunction(()=>window.__bannerlands&&!document.getElementById('startButton').disabled,{timeout:120000});
+    for(const selector of ['#hostLobbyButton','#browseLobbiesButton','#joinInviteButton','.online-download'])assert.ok(await page.locator(selector).isVisible());
+    const menu=await page.locator('.campaign-menu').evaluate(el=>({rect:{x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y,width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height},scrollWidth:el.scrollWidth,clientWidth:el.clientWidth}));
+    assert.ok(menu.scrollWidth<=menu.clientWidth+1,'Original campaign menu has no horizontal overflow');assert.ok(menu.rect.y>=0&&menu.rect.y+menu.rect.height<=size.height+1,'Original campaign menu stays inside viewport');
+    if(size.width<600){await page.locator('#menuCampaignTab').click();assert.equal(await page.locator('#menuOverlay').getAttribute('data-menu-tab'),'campaign');if(out)await page.screenshot({path:path.join(out,'bannerlands-mobile-campaign-before-return.png')});await page.locator('#menuHouseTab').click();}
+    await page.locator('#hostLobbyButton').click();assert.ok(await page.locator('.multiplayer-download:visible').count()>0,'Browser host entry clearly offers the download');await page.locator('[data-action="close"]').click();
+    if(out)await page.screenshot({path:path.join(out,'bannerlands-main-menu-'+size.width+'.png')});
+    await page.locator('.online-download').click();await page.waitForURL('**/download.html');assert.equal(await page.title(),'Download Bannerlands for Windows');assert.ok(await page.locator('#downloadInstaller').isVisible());
+    const download=await page.evaluate(()=>({width:document.documentElement.scrollWidth,viewport:innerWidth}));assert.ok(download.width<=download.viewport+1,'Download page has no horizontal overflow');
+    if(out)await page.screenshot({path:path.join(out,'bannerlands-download-'+size.width+'.png')});
+    mainMenus.push({...size,menu,download});
+  }
+  assert.deepEqual(errors,[]);
+  const report={cases:['four-player sixteen-house lobby','host-house roster ordering','human capacity capped at four','ready/start revision','synchronization progress and cancellation','modal keyboard isolation and Tab navigation','visibility changes','reconfiguration consent text','end match control','roster count validation','mobile bounds','original menu links and tabs','download page','no browser runtime errors'],desktop:{width:1440,height:960},mobile:{width:390,height:844,layout},mainMenus,errors};
+  if(out)await fs.writeFile(path.join(out,'multiplayer-lobby-browser.json'),JSON.stringify(report,null,2));
+  console.log(JSON.stringify(report));
+}finally{await context.close();await browser.close();await server.close();}

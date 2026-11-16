@@ -1,3 +1,4 @@
+import {queueArtwork} from './asset-loader.js';
 import {BUILD_DEFS,UNIT_DEFS} from './core.js';
 import {corpseOpacity} from './aftermath.js';
 import {combatPose,drawCombatAccents} from './combat-visuals.js';
@@ -50,7 +51,7 @@ export class Renderer{
     this.bridgeArchitectureCache=new Map();this.bridgeArchitectureBytes=0;return info;
   }
   async loadHouseEmblems(src='./assets/house-emblems.png'){
-    const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('House-selection crest artwork could not be loaded.'));im.src=src;});
+    const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('House-selection crest artwork could not be loaded.'));queueArtwork(im,src);});
     return this.setHouseEmblems(image);
   }
   setHouseEmblems(image){
@@ -73,7 +74,7 @@ export class Renderer{
   }
   async loadCampaignArt(src='./assets/campaign-structures.png'){
     this.campaignArtReady=false;
-    const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('The capital, watchtower and standard artwork could not be loaded.'));im.src=src;});
+    const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('The capital, watchtower and standard artwork could not be loaded.'));queueArtwork(im,src);});
     return this.setCampaignArt(image);
   }
   setCampaignArt(image){
@@ -103,7 +104,7 @@ export class Renderer{
   async loadTroops(src='./assets/troops-atlas.png'){
     this.rasterSpritesReady=false;this.assetError=null;
     try{
-      const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('The troop sprite atlas could not be loaded.'));im.src=src;});
+      const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('The troop sprite atlas could not be loaded.'));queueArtwork(im,src);});
       this.setTroopAtlas(image);return this.troopAtlasInfo;
     }catch(error){this.assetError=error;throw error;}
   }
@@ -136,7 +137,7 @@ export class Renderer{
   }
   async loadStructures(src='./assets/structures-atlas.png'){
     this.structuresReady=false;
-    const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('The structure sprite atlas could not be loaded.'));im.src=src;});
+    const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('The structure sprite atlas could not be loaded.'));queueArtwork(im,src);});
     return this.setStructureAtlas(image);
   }
   setStructureAtlas(image){
@@ -159,7 +160,7 @@ export class Renderer{
   }
   async loadHouseArt({troops,castles,production}){
     this.houseArtReady=false;
-    const load=src=>new Promise((resolve,reject)=>{if(!src)return reject(new Error('A house artwork source is missing.'));const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('House artwork could not be loaded: '+(src.startsWith('data:')?'embedded PNG':src)));image.src=src;});
+    const load=src=>new Promise((resolve,reject)=>{if(!src)return reject(new Error('A house artwork source is missing.'));const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('House artwork could not be loaded: '+(src.startsWith('data:')?'embedded PNG':src)));queueArtwork(image,src);});
     try{
       const images=await Promise.all([...HOUSE_ART_ORDER.map(sigil=>load(troops?.[sigil])),load(castles),load(production)]);
       return this.setHouseArt({troops:Object.fromEntries(HOUSE_ART_ORDER.map((sigil,index)=>[sigil,images[index]])),castles:images[16],production:images[17]});
@@ -191,7 +192,7 @@ export class Renderer{
     try{
       const sigils=Object.keys(REGIMENT_ART_HOUSES),images=await Promise.all(sigils.map(sigil=>new Promise((resolve,reject)=>{
         const src=sources?.[sigil];if(!src)return reject(new Error('Missing '+sigil+' regiment artwork.'));
-        const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('The '+sigil+' regiment artwork could not be loaded.'));image.src=src;
+        const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('The '+sigil+' regiment artwork could not be loaded.'));queueArtwork(image,src);
       })));
       return this.setRegimentArt(Object.fromEntries(sigils.map((sigil,index)=>[sigil,images[index]])));
     }catch(error){this.assetError=error;throw error;}
@@ -209,7 +210,7 @@ export class Renderer{
   async loadRegimentBuildings(src='./assets/regiments/production-buildings.png'){
     this.regimentBuildingsReady=false;
     try{
-      const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('The house regiment production artwork could not be loaded.'));im.src=src;});
+      const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('The house regiment production artwork could not be loaded.'));queueArtwork(im,src);});
       return this.setRegimentBuildings(image);
     }catch(error){this.assetError=error;throw error;}
   }
@@ -224,7 +225,7 @@ export class Renderer{
   }
   async loadConquestArt(sources){
     this.conquestArtReady=false;
-    const entries=await Promise.all(Object.entries(sources).map(async([key,src])=>[key,await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('Castle conquest artwork could not be loaded: '+key));im.src=src;})]));
+    const entries=await Promise.all(Object.entries(sources).map(async([key,src])=>[key,await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('Castle conquest artwork could not be loaded: '+key));queueArtwork(im,src);})]));
     return this.setConquestArt(Object.fromEntries(entries));
   }
   setConquestArt(images){
@@ -244,7 +245,7 @@ export class Renderer{
     return this.conquestArtInfo={troops:3,troopFrames:24,buildings:4,castleStates:4};
   }
   async loadReinforcementArt(sources){
-    const entries=await Promise.all(Object.entries(sources).map(async([key,src])=>[key,await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('Reinforcement artwork could not load: '+key));im.src=src;})]));
+    const entries=await Promise.all(Object.entries(sources).map(async([key,src])=>[key,await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('Reinforcement artwork could not load: '+key));queueArtwork(im,src);})]));
     return this.setReinforcementArt(Object.fromEntries(entries));
   }
   setReinforcementArt(images){
@@ -289,7 +290,7 @@ export class Renderer{
   async loadPaintedHeroes(sources=null,ids=null){
     this.heroArtReady=false;const rows=new Map();
     await Promise.all(Object.values(PAINTED_HEROES).filter(d=>!ids||ids.includes(d.house)).map(async d=>{
-      const source=sources?.[d.house]||d.file,image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('Missing painted hero artwork: '+d.house));im.src=source;});
+      const source=sources?.[d.house]||d.file,image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('Missing painted hero artwork: '+d.house));queueArtwork(im,source);});
       const width=image.naturalWidth||image.width,height=image.naturalHeight||image.height,atlas=makeCanvas(width,height),ctx=atlas.getContext('2d',{willReadFrequently:true});ctx.drawImage(image,0,0);
       const imageData=ctx.getImageData(0,0,width,height),pixels=imageData.data,rowCounts=new Uint32Array(height);
       // Generated PNGs sometimes retain almost-transparent RGB at their edges.
@@ -342,7 +343,7 @@ export class Renderer{
   async loadPaintedTroops(sources=null,ids=null){
     const rows=new Map();
     await Promise.all(Object.values(PAINTED_TROOPS).filter(d=>!ids||ids.includes(d.id)).map(async d=>{
-      const src=sources?.[d.id]||d.file,image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('Missing painted troop artwork: '+d.id));im.src=src;});
+      const src=sources?.[d.id]||d.file,image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('Missing painted troop artwork: '+d.id));queueArtwork(im,src);});
       const width=image.naturalWidth||image.width,height=image.naturalHeight||image.height,frames=[];
       for(let row=0;row<d.rows;row++){
         const columns=d.rowColumns?.[row]||d.columns,cellTop=Math.round((d.rowCuts?.[row]??row/d.rows)*height),cellBottom=Math.round((d.rowCuts?.[row+1]??(row+1)/d.rows)*height);
@@ -400,7 +401,7 @@ export class Renderer{
     const f=row.frames[index]||row.frames[0],a=makeCanvas(f.width,f.height),c=a.getContext('2d');c.translate(facing<0?a.width:0,0);c.scale(facing,1);c.drawImage(f.image,0,0);a.anchorX=facing<0?a.width-f.anchorX:f.anchorX;a.anchorY=f.anchorY;a.worldScale=f.scale;this.paintedSpriteCache.set(key,a);return a;
   }
   async loadPikeBuildings(src='./assets/overhaul/pike-buildings.png'){
-    const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('Missing painted pike production artwork.'));im.src=src;});
+    const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('Missing painted pike production artwork.'));queueArtwork(im,src);});
     this.pikeBuildingFrames={};['winter_pike_hall','thornwall_pavilion'].forEach((type,col)=>{const f=atlasCell(image,col,0,2,1,type),scale=Math.min(95/f.width,100/f.height);this.pikeBuildingFrames[type]={...f,scale,drawWidth:f.width*scale,drawHeight:f.height*scale,house:col?'rose':'wolf'};});this.structureSprites.clear();this.cachedGame=null;
   }
   structureSprite(type,color,houseSigil=null,level=1){
@@ -416,18 +417,18 @@ export class Renderer{
     c.putImageData(pixels,0,0);this.structureSprites.set(key,a);return a;
   }
   async loadTerrain(groundSrc='./assets/ground-textures.png',propsSrc='./assets/terrain-props.png'){
-    this.terrainReady=false;const load=src=>new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('The terrain artwork could not be loaded.'));im.src=src;});
+    this.terrainReady=false;const load=src=>new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('The terrain artwork could not be loaded.'));queueArtwork(im,src);});
     const [ground,props]=await Promise.all([load(groundSrc),load(propsSrc)]);return this.setTerrainAtlases(ground,props);
   }
   async loadLandsArt(src='./assets/lands-atlas.png'){
-    const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('The Lands Update artwork could not be loaded.'));im.src=src;});
+    const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('The Lands Update artwork could not be loaded.'));queueArtwork(im,src);});
     this.landsFrames={};
     ['mountain','woodland','stoneBridge','woodBridge','pass','ford','waymarker','ruin'].forEach((kind,i)=>{const f=atlasCell(image,i%4,Math.floor(i/4),4,2,'Lands '+kind),c=f.image.getContext('2d',{willReadFrequently:true}),pixels=c.getImageData(0,0,f.image.width,f.image.height),data=pixels.data;for(let p=0;p<data.length;p+=4){if(data[p]>180&&data[p]>data[p+1]*1.8&&data[p]>data[p+2]*1.8)data[p+3]=0;}c.putImageData(pixels,0,0);this.landsFrames[kind]=f;});
     this.landsArtReady=true;this.treeSprites.clear();this.terrainChunkCache.clear();this.cachedGame=null;
     return {source:src,columns:4,rows:2,classes:Object.keys(this.landsFrames)};
   }
   async loadLandsGround(src='./assets/lands-ground.png'){
-    const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('The Lands ground textures could not be loaded.'));im.src=src;});
+    const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('The Lands ground textures could not be loaded.'));queueArtwork(im,src);});
     this.landsGroundFrames={};const w=image.naturalWidth||image.width,h=image.naturalHeight||image.height;
     ['water','road','bridge','ford','pass','mountain','bank','timber'].forEach((kind,i)=>{const sx=Math.floor(i%4*w/4),sy=Math.floor(Math.floor(i/4)*h/2),sw=Math.floor((i%4+1)*w/4)-sx,sh=Math.floor((Math.floor(i/4)+1)*h/2)-sy,a=makeCanvas(sw,sh);a.getContext('2d').drawImage(image,sx,sy,sw,sh,0,0,sw,sh);this.landsGroundFrames[kind]=a;});
     this.terrainTileSprites.clear();this.terrainChunkCache.clear();this.cachedGame=null;return {source:src,columns:4,rows:2,classes:Object.keys(this.landsGroundFrames)};
@@ -531,13 +532,13 @@ export class Renderer{
   }
   fogScene(g){
     if(!g.config?.fogOfWar)return {buildings:g.buildings,units:g.units,castles:g.castles||[],objectives:g.objectives||[]};
-    return {buildings:g.knownBuildings(0),units:g.knownUnits(0),castles:g.knownCastleSites(0),objectives:(g.objectives||[]).map(o=>g.isVisibleTo(0,o)?o:{...o,progress:[],controller:null,contested:false,cooldownUntil:0})};
+    return {buildings:g.knownBuildings((g.playerTeam??0)),units:g.knownUnits((g.playerTeam??0)),castles:g.knownCastleSites((g.playerTeam??0)),objectives:(g.objectives||[]).map(o=>g.isVisibleTo((g.playerTeam??0),o)?o:{...o,progress:[],controller:null,contested:false,cooldownUntil:0})};
   }
   fogPixels(g){
     if(!g.config?.fogOfWar||!g.vision)return null;
     if(this.fogGame===g&&this.fogRevision===g.vision.revision)return this.fogImage;
     if(this.fogGame!==g){this.fogImage=makeCanvas(g.W,g.H);this.fogGame=g;}
-    const c=this.fogImage.getContext('2d'),pixels=c.createImageData(g.W,g.H),visible=g.vision.gridFor(0),explored=g.vision.exploredFor(0);
+    const c=this.fogImage.getContext('2d'),pixels=c.createImageData(g.W,g.H),visible=g.vision.gridFor((g.playerTeam??0)),explored=g.vision.exploredFor((g.playerTeam??0));
     for(let i=0;i<g.W*g.H;i++){const p=i*4;pixels.data[p]=23;pixels.data[p+1]=35;pixels.data[p+2]=43;pixels.data[p+3]=visible[i]?0:explored[i]?72:119;}
     c.putImageData(pixels,0,0);this.fogRevision=g.vision.revision;return this.fogImage;
   }
@@ -677,7 +678,7 @@ export class Renderer{
     }
   }
   updateTerritory(g){
-    const data=this.ownerImageData.data,owners=g.config?.fogOfWar?g.vision.ownersFor(0):null,palette=g.teams.map(t=>t.color).join('|');
+    const data=this.ownerImageData.data,owners=g.config?.fogOfWar?g.vision.ownersFor((g.playerTeam??0)):null,palette=g.teams.map(t=>t.color).join('|');
     let changed=this.territorySource!==g||this.territoryPixelData!==data||this.territoryPalette!==palette;
     if(this.territorySource!==g||this.territoryOwners?.length!==g.tiles.length){this.territoryOwners=new Int16Array(g.tiles.length);this.territoryPassable=new Uint8Array(g.tiles.length);changed=true;}
     const snapshot=this.territoryOwners,passable=this.territoryPassable;
@@ -795,7 +796,7 @@ export class Renderer{
     const width=Math.max(c.measureText(title).width,c.measureText(status).width)+18;c.fillStyle='rgba(12,30,33,.92)';c.fillRect(-width/2,-10,width,31);c.strokeStyle=o.contested?'#bd8561':'#8f8b61';c.lineWidth=.7;c.strokeRect(-width/2,-10,width,31);c.fillStyle='#eee3ba';c.fillText(title,0,1);c.font='9px Segoe UI';c.fillStyle=o.contested?'#edb18a':'#bed3c5';c.fillText(status,0,14);c.restore();
   }
   teamOrderMarkers(c,g,zoom){
-    for(const order of g.teamOrders||[]){if(order.expiresAt<=g.time||order.alliance!==g.teams[0]?.alliance)continue;const p=iso(order.x,order.y),defend=order.kind==='defend',color=defend?'#8fdfca':'#f3b77c',countdown=Math.max(0,Math.ceil(order.launchAt-g.time)),scale=clamp(1/zoom,.8,2);
+    for(const order of g.teamOrders||[]){if(order.expiresAt<=g.time||order.alliance!==g.teams[g.playerTeam??0]?.alliance)continue;const p=iso(order.x,order.y),defend=order.kind==='defend',color=defend?'#8fdfca':'#f3b77c',countdown=Math.max(0,Math.ceil(order.launchAt-g.time)),scale=clamp(1/zoom,.8,2);
       c.save();c.translate(p.x,p.y);c.strokeStyle=color;c.lineWidth=1.6/zoom;c.setLineDash([6/zoom,5/zoom]);c.beginPath();c.ellipse(0,0,40,19,0,0,TAU);c.stroke();c.setLineDash([]);c.scale(scale,scale);
       if(defend)polygon(c,[[-8,-24],[8,-24],[7,-13],[0,-7],[-7,-13]],'rgba(26,67,57,.9)',color);else{line(c,-8,-23,7,-8,color,2);line(c,8,-23,-7,-8,color,2);line(c,-10,-13,-3,-20,color,1.5);line(c,3,-20,10,-13,color,1.5);}
       c.font='bold 9px Segoe UI';c.textAlign='center';c.strokeStyle='#142e31';c.lineWidth=3;const label=defend?'ALLIED DEFENSE':countdown?`ASSEMBLE · ${countdown}s`:'JOINT ASSAULT';c.strokeText(label,0,31);c.fillStyle=color;c.fillText(label,0,31);c.restore();
@@ -836,9 +837,9 @@ export class Renderer{
     c.restore();
     if(keep||tower){const bw=keep?52+level*8:66,y=f.campaign?20:level>1?42:24;
       c.fillStyle='rgba(12,31,33,.93)';c.fillRect(-bw/2-3,y-2,bw+6,20);c.strokeStyle=team.teamColor||color;c.lineWidth=.8;c.strokeRect(-bw/2-3,y-2,bw+6,20);
-      c.fillStyle='#29403d';c.fillRect(-bw/2,y+12,bw,3);c.fillStyle=(g.allied?.(b.team,0)??b.team===0)?'#a8d3ad':'#e2a080';c.fillRect(-bw/2,y+12,bw*health,3);
+      c.fillStyle='#29403d';c.fillRect(-bw/2,y+12,bw,3);c.fillStyle=(g.allied?.(b.team,(g.playerTeam??0))??b.team===(g.playerTeam??0))?'#a8d3ad':'#e2a080';c.fillRect(-bw/2,y+12,bw*health,3);
       c.textAlign='center';c.font='bold 8px Segoe UI';c.fillStyle='#efe0b2';c.fillText(`${(keep?['','HALL I','KEEP II','CITADEL III']:['','WATCH I','GUARD II','ROYAL III'])[level]} · ${Math.ceil(Math.max(0,b.hp))}`,0,y+7);
-    }else if(health<1){const bw=35;c.fillStyle='#10292a';c.fillRect(-bw/2,15,bw,3);c.fillStyle=(g.allied?.(b.team,0)??b.team===0)?'#a2c8a1':'#d39b7f';c.fillRect(-bw/2,15,bw*health,3);}
+    }else if(health<1){const bw=35;c.fillStyle='#10292a';c.fillRect(-bw/2,15,bw,3);c.fillStyle=(g.allied?.(b.team,(g.playerTeam??0))??b.team===(g.playerTeam??0))?'#a2c8a1':'#d39b7f';c.fillRect(-bw/2,15,bw*health,3);}
     c.restore();
   }
   drawTownHallPortrait(canvas,team,level=1){
@@ -905,7 +906,7 @@ export class Renderer{
     const aftermath=g.aftermath;if(!aftermath?.bodies?.length)return;
     const time=aftermath.time??g.time;c.save();
     for(const body of aftermath.bodies){
-      const alpha=corpseOpacity(body,time);if(alpha<=0||g.config?.fogOfWar&&!g.vision?.isVisible(0,body.x,body.y))continue;
+      const alpha=corpseOpacity(body,time);if(alpha<=0||g.config?.fogOfWar&&!g.vision?.isVisible((g.playerTeam??0),body.x,body.y))continue;
       const p=iso(body.x,body.y);if(p.x<bounds.left-140||p.x>bounds.right+140||p.y<bounds.top-70||p.y>bounds.bottom+70)continue;
       const painted=this.getPaintedTroop(body.type,body.sigil);c.globalAlpha=alpha*.92;
       if(painted){const index=body.type==='hero'?selectHeroFrame({...body,hp:0,heroMode:time-(body.bornAt??time)>.65?'signature':body.heroMode},{time}):selectPaintedFrame({...body,hp:0},g,painted),direction=iso(body.facingX??1,body.facingY??0);this.drawPaintedTroop(c,painted,index,direction.x<-.03?-1:1,p.x,p.y,body.color);}
@@ -969,7 +970,7 @@ export class Renderer{
       if((u.berserkUntil||0)>g.time||u.type==='freefolk_berserker'&&u.hp<u.maxHp*.4){line(c,p.x-7,p.y-9,p.x-5,p.y-18,'#ef9a69',1.2);line(c,p.x+6,p.y-8,p.x+8,p.y-17,'#ef9a69',1.2);}
     }
     if(attack&&!UNIT_DEFS[u.type].ranged&&unitClass!=='archer'&&unitClass!=='siege'&&u.attackAnim>.64){const a=(1-u.attackAnim)*5;c.beginPath();c.arc(p.x+facing*9,p.y-12,12,-1.7+a,-.4+a);c.strokeStyle=`rgba(248,226,156,${u.attackAnim*.7})`;c.lineWidth=1.4;c.stroke();}
-    if(u.type!=='hero'&&(selected||u.hp<u.maxHp*.7)&&zoom>.57){const w=12;c.fillStyle='#15302f';c.fillRect(p.x-w/2,p.y-29-(unitClass==='cavalry'?9:0),w,2);c.fillStyle=(g.allied?.(u.team,0)??u.team===0)?'#b9d9a1':'#d4a18a';c.fillRect(p.x-w/2,p.y-29-(unitClass==='cavalry'?9:0),w*clamp(u.hp/u.maxHp,0,1),2);}
+    if(u.type!=='hero'&&(selected||u.hp<u.maxHp*.7)&&zoom>.57){const w=12;c.fillStyle='#15302f';c.fillRect(p.x-w/2,p.y-29-(unitClass==='cavalry'?9:0),w,2);c.fillStyle=(g.allied?.(u.team,(g.playerTeam??0))??u.team===(g.playerTeam??0))?'#b9d9a1':'#d4a18a';c.fillRect(p.x-w/2,p.y-29-(unitClass==='cavalry'?9:0),w*clamp(u.hp/u.maxHp,0,1),2);}
     if(u.isKing){c.save();if(zoom>.57){c.fillStyle='#15302f';c.fillRect(p.x-8,p.y-29,16,3);c.fillStyle='#f3d77d';c.fillRect(p.x-8,p.y-29,16*clamp(u.hp/u.maxHp,0,1),3);}c.lineWidth=1.6;c.strokeStyle='#f0d78b';c.beginPath();c.ellipse(p.x,p.y+1,14,6,0,0,TAU);c.stroke();
       polygon(c,[[p.x-6,p.y-42],[p.x-7,p.y-49],[p.x-3,p.y-46],[p.x,p.y-51],[p.x+3,p.y-46],[p.x+7,p.y-49],[p.x+6,p.y-42]],'#f3d77d','#6a5633');
       if(zoom>.5){c.font='bold 8px Segoe UI';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#11241f';c.strokeText('KING',p.x,p.y-56);c.fillStyle='#f3dda0';c.fillText('KING',p.x,p.y-56);}c.restore();}
@@ -991,7 +992,7 @@ export class Renderer{
     c.font=`600 ${10/zoom}px Segoe UI`;c.textAlign='center';c.textBaseline='middle';c.strokeStyle='#10282d';c.lineWidth=4/zoom;const tx=q.x+dx*19/zoom,ty=q.y+dy*19/zoom;c.strokeText('FRONT',tx,ty);c.fillStyle='#f4dfb2';c.fillText('FRONT',tx,ty);c.restore();
   }
   projectiles(c,g){
-    for(const b of g.projectiles||[]){if(g.config?.fogOfWar&&!g.isVisibleTo(0,{x:b.x,y:b.y}))continue;const progress=clamp((b.t||0)/(b.duration||1),0,1),p=iso(b.x,b.y),piercing=b.sourceType==='beacon_engineer',firepot=b.sourceType==='dragonfire_acolyte',javelin=b.sourceType==='dune_skirmisher',lift=Math.sin(progress*Math.PI)*(piercing?7:firepot?42:b.type==='rock'?70:32);ellipse(c,p.x,p.y,3,1.2,'rgba(8,22,22,.2)');
+    for(const b of g.projectiles||[]){if(g.config?.fogOfWar&&!g.isVisibleTo((g.playerTeam??0),{x:b.x,y:b.y}))continue;const progress=clamp((b.t||0)/(b.duration||1),0,1),p=iso(b.x,b.y),piercing=b.sourceType==='beacon_engineer',firepot=b.sourceType==='dragonfire_acolyte',javelin=b.sourceType==='dune_skirmisher',lift=Math.sin(progress*Math.PI)*(piercing?7:firepot?42:b.type==='rock'?70:32);ellipse(c,p.x,p.y,3,1.2,'rgba(8,22,22,.2)');
       const art=this.getPaintedTroop(b.sourceType,g.teams[b.team]?.sigil),release=art?.projectileRelease?.point,releaseHeight=release?art.bodyHeight*(1-release[1]):10;
       const v=iso((b.tx??b.x)-(b.sx??b.x),(b.ty??b.y)-(b.sy??b.y));let a=Math.atan2(v.y,v.x);c.save();c.translate(p.x,p.y-lift-releaseHeight);c.rotate(a);
       if(piercing){line(c,-15,0,7,0,'#d4c7a6',2);polygon(c,[[8,0],[2,-3],[2,3]],'#eef1d5');line(c,-15,0,-19,-3,'#99b8bc',1.5);}
@@ -1005,7 +1006,7 @@ export class Renderer{
   }
   fireZones(c,g,bounds,zoom){
     const zones=g.fireZones||[];let visible=0;
-    for(let index=zones.length-1;index>=0&&visible<24;index--){const z=zones[index];if(!(z.life>0)||g.config?.fogOfWar&&!g.isVisibleTo(0,{x:z.x,y:z.y}))continue;const p=iso(z.x,z.y),radius=clamp(z.radius||1,.3,3),rw=radius*40,rh=radius*20;if(p.x+rw<bounds.left||p.x-rw>bounds.right||p.y+rh<bounds.top||p.y-rh-45>bounds.bottom)continue;visible++;
+    for(let index=zones.length-1;index>=0&&visible<24;index--){const z=zones[index];if(!(z.life>0)||g.config?.fogOfWar&&!g.isVisibleTo((g.playerTeam??0),{x:z.x,y:z.y}))continue;const p=iso(z.x,z.y),radius=clamp(z.radius||1,.3,3),rw=radius*40,rh=radius*20;if(p.x+rw<bounds.left||p.x-rw>bounds.right||p.y+rh<bounds.top||p.y-rh-45>bounds.bottom)continue;visible++;
       const fade=Math.min(1,z.life/.5),count=zoom<.3?5:this.lowDetail?8:14;c.save();c.globalAlpha=fade;ellipse(c,p.x,p.y+2,rw,rh,'rgba(38,22,12,.24)');
       for(let k=0;k<count;k++){const angle=k*2.399963+index*.71,distance=Math.sqrt(hash(k+index*3,z.team||0))*radius*.86,foot=iso(z.x+Math.cos(angle)*distance,z.y+Math.sin(angle)*distance),flicker=.84+Math.sin(g.time*12.2+k*2.1)*.12,scale=(.56+hash(k,17)*.24)*flicker,height=38*scale;
         const sprite=this.fireSprite(Math.floor(g.time*12+k*1.7)%8,k%3);c.drawImage(sprite,foot.x-24*scale,foot.y-60*scale,48*scale,64*scale);
@@ -1022,7 +1023,7 @@ export class Renderer{
   }
   effects(c,g,lowDetail=false){
     let detailIndex=0;
-    for(const f of g.effects||[]){if(g.config?.fogOfWar&&!g.isVisibleTo(0,{x:f.x,y:f.y}))continue;if(lowDetail&&(f.type==='dust'||(f.type==='hit'&&detailIndex++%2)))continue;const p=iso(f.x,f.y),r=clamp(1-f.life/(f.maxLife||1),0,1);c.save();c.translate(p.x,p.y-7);c.globalAlpha=1-r;
+    for(const f of g.effects||[]){if(g.config?.fogOfWar&&!g.isVisibleTo((g.playerTeam??0),{x:f.x,y:f.y}))continue;if(lowDetail&&(f.type==='dust'||(f.type==='hit'&&detailIndex++%2)))continue;const p=iso(f.x,f.y),r=clamp(1-f.life/(f.maxLife||1),0,1);c.save();c.translate(p.x,p.y-7);c.globalAlpha=1-r;
       if(f.type==='specialHit'){
         const color={guard:'#b4deec',pierce:'#c8e5f0',cleave:'#e4bd82',heal:'#a8dfa0',loot:'#f1ce73',shock:'#f3d26e',snare:'#d1a27e',poison:'#adcb6d',cripple:'#efb174',finish:'#df9292',fury:'#e8a275'}[f.kind]||'#e9d9a7';
         if(f.kind==='heal'){line(c,-4,-12-r*7,4,-12-r*7,color,2);line(c,0,-16-r*7,0,-8-r*7,color,2);}
@@ -1079,16 +1080,16 @@ export class Renderer{
       else{for(let x=Math.ceil(range.x0/4)*4;x<=range.x1;x+=4){const a=iso(x,range.y0),b=iso(x,range.y1+1);line(c,a.x,a.y,b.x,b.y,'rgba(197,211,174,.10)',.65/v.zoom);}for(let y=Math.ceil(range.y0/4)*4;y<=range.y1;y+=4){const a=iso(range.x0,y),b=iso(range.x1+1,y);line(c,a.x,a.y,b.x,b.y,'rgba(197,211,174,.10)',.65/v.zoom);}}
       c.restore();
     }
-    if(v.zoom>.32)for(let y=range.y0;y<=range.y1;y++)for(let x=range.x0;x<=range.x1;x++){const t=g.tiles[y*g.W+x];if(t.claim<0||!t.capture||t.capture>.999||g.config?.fogOfWar&&!g.isVisibleTo(0,{x:x+.5,y:y+.5}))continue;const p=iso(t.x+.5,t.y+.5);if(p.x<bounds.left||p.x>bounds.right||p.y<bounds.top||p.y>bounds.bottom)continue;const color=g.teams[t.claim]?.color||'#dac589';c.globalAlpha=.08+Math.sin(g.time*4)*.03;diamond(c,p.x,p.y,HW,HH,color);c.globalAlpha=1;c.fillStyle='rgba(10,35,32,.7)';c.fillRect(p.x-11,p.y+5,22,2);c.fillStyle=color;c.fillRect(p.x-11,p.y+5,22*t.capture,2);}
+    if(v.zoom>.32)for(let y=range.y0;y<=range.y1;y++)for(let x=range.x0;x<=range.x1;x++){const t=g.tiles[y*g.W+x];if(t.claim<0||!t.capture||t.capture>.999||g.config?.fogOfWar&&!g.isVisibleTo((g.playerTeam??0),{x:x+.5,y:y+.5}))continue;const p=iso(t.x+.5,t.y+.5);if(p.x<bounds.left||p.x>bounds.right||p.y<bounds.top||p.y>bounds.bottom)continue;const color=g.teams[t.claim]?.color||'#dac589';c.globalAlpha=.08+Math.sin(g.time*4)*.03;diamond(c,p.x,p.y,HW,HH,color);c.globalAlpha=1;c.fillStyle='rgba(10,35,32,.7)';c.fillRect(p.x-11,p.y+5,22,2);c.fillStyle=color;c.fillRect(p.x-11,p.y+5,22*t.capture,2);}
     this.drawAftermath(c,g,bounds);
     this.fireZones(c,g,bounds,v.zoom);
     // Rally markers belong to the selected production posts, never army orders.
     const rallies=new Map();
-    for(const b of g.buildings){if(b.team!==0||b.hp<=0||!ui.selectedBuildings?.has(b.id))continue;const p=iso(b.x,b.y),scale=b.type==='keep'?(1+((b.level||1)-1)*.25):1;c.save();c.strokeStyle='#f1d187';c.lineWidth=2/v.zoom;diamond(c,p.x,p.y+3,(b.type==='keep'?38:25)*scale,(b.type==='keep'?19:12)*scale,null,'#f1d187');
+    for(const b of g.buildings){if(b.team!==(g.playerTeam??0)||b.hp<=0||!ui.selectedBuildings?.has(b.id))continue;const p=iso(b.x,b.y),scale=b.type==='keep'?(1+((b.level||1)-1)*.25):1;c.save();c.strokeStyle='#f1d187';c.lineWidth=2/v.zoom;diamond(c,p.x,p.y+3,(b.type==='keep'?38:25)*scale,(b.type==='keep'?19:12)*scale,null,'#f1d187');
       if(g.config?.fogOfWar&&b.type==='tower'){const radius=g.vision.sightRadius(b);c.strokeStyle='#9fcac7';c.globalAlpha=.6;c.setLineDash([8/v.zoom,6/v.zoom]);c.beginPath();c.ellipse(p.x,p.y,radius*HW*Math.SQRT2,radius*HH*Math.SQRT2,0,0,TAU);c.stroke();}if(b.rally){const q=iso(b.rally.x,b.rally.y);c.globalAlpha=.5;c.setLineDash([5/v.zoom,5/v.zoom]);line(c,p.x,p.y,q.x,q.y,'#d9ce91',1/v.zoom);rallies.set(`${b.rally.x},${b.rally.y}`,q);}c.restore();
     }
     for(const p of rallies.values()){c.save();c.strokeStyle='#f4d38b';c.lineWidth=1.8/v.zoom;c.beginPath();c.ellipse(p.x,p.y,13,6,0,0,TAU);c.stroke();this.flag(c,p.x,p.y-2,'#e8c377',g.time,.7);c.restore();}
-    if(ui.orderMarker){const m=ui.orderMarker,age=g.time-m.time;if(age<1.7&&age>=0){const p=iso(m.x,m.y),a=1-age/1.7;c.globalAlpha=a;c.beginPath();c.ellipse(p.x,p.y,13+age*9,6+age*4,0,0,TAU);c.strokeStyle=m.mode==='move'?'#c2e0ce':'#edca78';c.lineWidth=2;c.stroke();line(c,p.x-4,p.y,p.x+4,p.y,'#ead89c',1.5);line(c,p.x,p.y-4,p.x,p.y+4,'#ead89c',1.5);c.globalAlpha=1;}}
+    if(ui.orderMarker){const m=ui.orderMarker,wall=globalThis.performance?.now()??Date.now(),age=g.remote?(wall-(m.wallStartedAt??=wall))/1000:g.time-m.time;if(age<1.7&&age>=0){const p=iso(m.x,m.y),a=1-age/1.7;c.globalAlpha=a;c.beginPath();c.ellipse(p.x,p.y,13+age*9,6+age*4,0,0,TAU);c.strokeStyle=m.mode==='move'?'#c2e0ce':'#edca78';c.lineWidth=2;if(m.pending)c.setLineDash([4/v.zoom,4/v.zoom]);c.stroke();c.setLineDash([]);line(c,p.x-4,p.y,p.x+4,p.y,'#ead89c',1.5);line(c,p.x,p.y-4,p.x,p.y+4,'#ead89c',1.5);c.globalAlpha=1;}}
     if(ui.facingPreview)this.facingPreview(c,g,ui.facingPreview,v.zoom);
     const items=[],visibleTroops=[];
     let decorIndex=0;
@@ -1103,21 +1104,21 @@ export class Renderer{
       if(standard.state==='fallen'&&g.aftermath?.bodies?.some(body=>body.type==='hero'&&body.standardId===standard.id&&body.heroMode!=='signature'&&g.time-(body.bornAt??-Infinity)<.65))continue;
       // Owners always know their standard's location; this does not reveal
       // nearby terrain or enemy units through the vision system.
-      if(g.config?.fogOfWar&&!g.isVisibleTo(0,standard))continue;
+      if(g.config?.fogOfWar&&!g.isVisibleTo((g.playerTeam??0),standard))continue;
       const p=iso(standard.x,standard.y);if(p.x>bounds.left&&p.x<bounds.right&&p.y>bounds.top&&p.y<bounds.bottom)items.push({depth:p.y,kind:5,obj:standard});
     }
     items.sort((a,b)=>a.depth-b.depth||a.kind-b.kind);
     for(const it of items){if(it.kind===0){const z=it.obj,a=this.treeSprite(z.kind,z.variant),s=z.scale*(z.kind==='bush'?.38:1);if(!a)continue;const wind=!lowDetail&&z.kind==='tree'?Math.sin(g.time*1.3+z.x*.2)*.65:0;
       // Nearby armies remain readable through foreground vegetation and rocks.
-      if(z.occlusionTime===undefined||g.time-z.occlusionTime>.1){let occupied=false;const radius=z.kind==='tree'?1:.75;g.hash?.visit(z.x,z.y,radius,u=>{if(u.hp>0&&(!g.config?.fogOfWar||g.isVisibleTo(0,u))&&(u.x-z.x)**2+(u.y-z.y)**2<radius*radius)occupied=true;});z.opacity=occupied?(z.kind==='tree'?.23:.35):1;z.occlusionTime=g.time;}
+      if(z.occlusionTime===undefined||g.time-z.occlusionTime>.1){let occupied=false;const radius=z.kind==='tree'?1:.75;g.hash?.visit(z.x,z.y,radius,u=>{if(u.hp>0&&(!g.config?.fogOfWar||g.isVisibleTo((g.playerTeam??0),u))&&(u.x-z.x)**2+(u.y-z.y)**2<radius*radius)occupied=true;});z.opacity=occupied?(z.kind==='tree'?.23:.35):1;z.occlusionTime=g.time;}
       c.globalAlpha=z.opacity??1;c.drawImage(a,it.p.x-48*s+wind,it.p.y-100*s,96*s,112*s);c.globalAlpha=1;
     }else if(it.kind===1){if(it.obj.remembered)this.rememberedBuilding(c,it.obj,g);else this.building(c,it.obj,g);}else if(it.kind===2)this.unit(c,it.obj,g,ui,v.zoom);else if(it.kind===4)this.castleRuin(c,it.obj,g,v.zoom);else if(it.kind===5)this.battleStandard(c,it.obj,g);else this.objectiveFlag(c,it.obj,g,v.zoom);}
-    (this.formationBannerLayer??=new FormationBannerLayer()).draw(c,visibleTroops,g.teams,{source:g,time:g.time,zoom:v.zoom,bounds,selected:ui.selected,lowDetail,visible:u=>!g.config?.fogOfWar||g.isVisibleTo(0,u),drawCrest:(ctx,team,x,y,size)=>this.drawHouseCrest(ctx,team,x,y,size)});
+    (this.formationBannerLayer??=new FormationBannerLayer()).draw(c,visibleTroops,g.teams,{source:g,time:g.time,zoom:v.zoom,bounds,selected:ui.selected,lowDetail,visible:u=>!g.config?.fogOfWar||g.isVisibleTo((g.playerTeam??0),u),drawCrest:(ctx,team,x,y,size)=>this.drawHouseCrest(ctx,team,x,y,size)});
     this.projectiles(c,g);this.effects(c,g,lowDetail);this.drawFog(c,g);
-    if(g.config?.fogOfWar)for(const standard of g.standards||[]){if(standard.team===0&&standard.carrierId==null&&!g.isVisibleTo(0,standard)&&!(standard.handlingHeroId!=null&&heroOwnsVisibleStandard(g.byId?.get(standard.handlingHeroId),g)))this.battleStandard(c,standard,g);}
+    if(g.config?.fogOfWar)for(const standard of g.standards||[]){if(standard.team===(g.playerTeam??0)&&standard.carrierId==null&&!g.isVisibleTo((g.playerTeam??0),standard)&&!(standard.handlingHeroId!=null&&heroOwnsVisibleStandard(g.byId?.get(standard.handlingHeroId),g)))this.battleStandard(c,standard,g);}
     this.teamOrderMarkers(c,g,v.zoom);
     if(ui.teamOrderMode&&ui.hover){const p=iso(ui.hover.x,ui.hover.y),color=ui.teamOrderMode==='defend'?'#8fdfca':'#f3b77c';c.save();c.strokeStyle=color;c.lineWidth=2/v.zoom;c.setLineDash([5/v.zoom,4/v.zoom]);diamond(c,p.x,p.y,32,16,null,color);c.setLineDash([]);this.flag(c,p.x,p.y,color,g.time,.8);c.restore();}
-    if(ui.hover&&ui.hover.x>=0&&ui.hover.y>=0&&ui.hover.x<g.W&&ui.hover.y<g.H){const tx=Math.floor(ui.hover.x),ty=Math.floor(ui.hover.y),p=iso(tx+.5,ty+.5),tile=g.tiles[ty*g.W+tx];c.lineWidth=1.2;diamond(c,p.x,p.y,HW,HH,null,ui.buildMode?(tile.owner===0&&g.isWalkable(tx+.5,ty+.5)&&!['bridge','ford','pass'].includes(tile.feature)?'#e8d38a':'#e28a71'):'rgba(229,223,174,.6)');if(ui.buildMode){c.globalAlpha=.55;this.building(c,{type:ui.buildMode,x:tx+.5,y:ty+.5,team:0,hp:1,maxHp:1},g);c.globalAlpha=1;}}
+    if(ui.hover&&ui.hover.x>=0&&ui.hover.y>=0&&ui.hover.x<g.W&&ui.hover.y<g.H){const tx=Math.floor(ui.hover.x),ty=Math.floor(ui.hover.y),p=iso(tx+.5,ty+.5),tile=g.tiles[ty*g.W+tx];c.lineWidth=1.2;diamond(c,p.x,p.y,HW,HH,null,ui.buildMode?(tile.owner===(g.playerTeam??0)&&g.isWalkable(tx+.5,ty+.5)&&!['bridge','ford','pass'].includes(tile.feature)?'#e8d38a':'#e28a71'):'rgba(229,223,174,.6)');if(ui.buildMode){c.globalAlpha=.55;this.building(c,{type:ui.buildMode,x:tx+.5,y:ty+.5,team:(g.playerTeam??0),hp:1,maxHp:1},g);c.globalAlpha=1;}}
     c.restore();
     const vignette=c.createRadialGradient(v.w/2,v.h/2,v.h*.3,v.w/2,v.h/2,v.w*.8);vignette.addColorStop(0,'rgba(2,14,19,0)');vignette.addColorStop(1,'rgba(2,14,19,.35)');c.fillStyle=vignette;c.fillRect(0,0,v.w,v.h);
     if(ui.drag){const r=ui.drag,x=Math.min(r.x0,r.x1),y=Math.min(r.y0,r.y1),w=Math.abs(r.x1-r.x0),h=Math.abs(r.y1-r.y0);c.fillStyle='rgba(221,208,140,.08)';c.fillRect(x,y,w,h);c.strokeStyle='#e0cc83';c.lineWidth=1;c.setLineDash([4,3]);c.strokeRect(x+.5,y+.5,w,h);c.setLineDash([]);}
@@ -1133,8 +1134,8 @@ export class Renderer{
     for(const site of scene.castles){if(!site.ruined)continue;const p=iso(site.x,site.y),x=p.x*scale+ox,y=p.y*scale+oy;c.globalAlpha=site.remembered?.45:1;c.fillStyle=site.contested?'#efab7c':'#d6c59b';c.strokeStyle='#172f31';c.lineWidth=1;polygon(c,[[x,y-4],[x+4,y],[x,y+4],[x-4,y]],c.fillStyle,c.strokeStyle);}c.globalAlpha=1;
     for(const u of scene.units){if(u.hp<=0)continue;const p=iso(u.x,u.y),x=p.x*scale+ox,y=p.y*scale+oy;c.fillStyle=g.teams[u.team]?.color||'#ddd';c.globalAlpha=.9;c.fillRect(x-1,y-1,2,2);if(u.isKing){c.globalAlpha=1;polygon(c,[[x,y-5],[x+4,y],[x,y+5],[x-4,y]],g.teams[u.team]?.color||'#ddd','#f3d782');}}c.globalAlpha=1;
     for(const o of scene.objectives){const p=iso(o.x,o.y),x=p.x*scale+ox,y=p.y*scale+oy,team=g.teams.find(s=>s.alliance===o.controller),color=o.contested?'#f0ab77':team?.teamColor||'#edd490';line(c,x-2,y+3,x-2,y-5,'#f1ead2',1);polygon(c,[[x-1,y-5],[x+5,y-4],[x+3,y],[x-1,y-1]],color,'#153331');}
-    for(const standard of g.standards||[]){if(standard.carrierId!=null||standard.state==='destroyed'||standard.team!==0&&g.config?.fogOfWar&&!g.isVisibleTo(0,standard))continue;const row=this.heroRows?.get(g.teams[standard.team]?.sigil);if(!row)continue;const p=iso(standard.x,standard.y);c.save();c.translate(p.x*scale+ox,p.y*scale+oy);c.scale(.22,.22);this.drawPaintedTroop(c,row,selectStandardFrame(standard,g),1,0,0);c.restore();}
-    for(const order of g.teamOrders||[]){if(order.expiresAt<=g.time||order.alliance!==g.teams[0]?.alliance)continue;const p=iso(order.x,order.y),x=p.x*scale+ox,y=p.y*scale+oy,color=order.kind==='defend'?'#8fdfca':'#f3b77c';c.beginPath();c.arc(x,y,5,0,TAU);c.strokeStyle=color;c.lineWidth=1.2;c.stroke();line(c,x-3,y,x+3,y,color,1);line(c,x,y-3,x,y+3,color,1);}
+    for(const standard of g.standards||[]){if(standard.carrierId!=null||standard.state==='destroyed'||standard.team!==(g.playerTeam??0)&&g.config?.fogOfWar&&!g.isVisibleTo((g.playerTeam??0),standard))continue;const row=this.heroRows?.get(g.teams[standard.team]?.sigil);if(!row)continue;const p=iso(standard.x,standard.y);c.save();c.translate(p.x*scale+ox,p.y*scale+oy);c.scale(.22,.22);this.drawPaintedTroop(c,row,selectStandardFrame(standard,g),1,0,0);c.restore();}
+    for(const order of g.teamOrders||[]){if(order.expiresAt<=g.time||order.alliance!==g.teams[g.playerTeam??0]?.alliance)continue;const p=iso(order.x,order.y),x=p.x*scale+ox,y=p.y*scale+oy,color=order.kind==='defend'?'#8fdfca':'#f3b77c';c.beginPath();c.arc(x,y,5,0,TAU);c.strokeStyle=color;c.lineWidth=1.2;c.stroke();line(c,x-3,y,x+3,y,color,1);line(c,x,y-3,x,y+3,color,1);}
     c.strokeStyle='#f1e0a7';c.lineWidth=1;c.strokeRect((v.x-v.w/v.zoom/2)*scale+ox,(v.y-v.h/v.zoom/2)*scale+oy,v.w/v.zoom*scale,v.h/v.zoom*scale);
   }
 }

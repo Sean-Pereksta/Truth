@@ -1,0 +1,36 @@
+// Add inside the CURRENT match /databases/{database}/documents block.
+// Preserve every unrelated rule and the prototype bannerlandsLobbies collection.
+match /bannerlandsCampaignLobbies/{ownerUid} {
+  function validCampaignLobby() {
+    let d=request.resource.data;
+    return request.auth != null && request.auth.uid == ownerUid
+      && d.keys().hasAll(['schema','id','ownerUid','name','hostName','hostIdentity','origin','public','status','mode','map','scale','difficulty','fogOfWar','maxHumans','humans','availableSeats','aiHouses','v','gameVersion','assetVersion','updatedAt'])
+      && d.keys().hasOnly(['schema','id','ownerUid','name','hostName','hostIdentity','origin','public','status','mode','map','scale','difficulty','fogOfWar','maxHumans','humans','availableSeats','aiHouses','v','gameVersion','assetVersion','updatedAt'])
+      && d.schema == 1 && d.ownerUid == ownerUid
+      && d.id is string && d.id.matches('^[A-Za-z0-9_-]{1,100}$')
+      && d.name is string && d.name.size() >= 1 && d.name.size() <= 80
+      && d.hostName is string && d.hostName.size() >= 1 && d.hostName.size() <= 40
+      && d.hostIdentity == 'unverified display name'
+      && d.origin is string && d.origin.size() <= 240
+      && d.origin.matches('^https://[a-z0-9-]+[.]trycloudflare[.]com$')
+      && d.public == true && d.status in ['waiting','full','starting','in-progress']
+      && d.mode in ['conquest','bannerfall','dominion','team-conquest','team-bannerfall','team-dominion','defend-king','crown-control','blitz-flags']
+      && d.map in ['crownlands','riverlands','highlands','coast','kingsroad','twin-lakes','mountain-crown','four-rivers','open']
+      && d.scale in ['standard','epic','continent']
+      && d.difficulty in ['relaxed','standard','veteran','warlord']
+      && d.fogOfWar is bool
+      && d.maxHumans is int && d.maxHumans >= 1 && d.maxHumans <= 4
+      && d.humans is int && d.humans >= 1 && d.humans <= d.maxHumans
+      && d.availableSeats is int && d.availableSeats >= 0 && d.availableSeats <= d.maxHumans-d.humans
+      && (d.status != 'full' || d.availableSeats == 0)
+      && d.aiHouses is int && d.aiHouses >= 0 && d.maxHumans+d.aiHouses <= 16
+      && d.v is int && d.v == 1
+      && d.gameVersion is string && d.gameVersion.size() >= 1 && d.gameVersion.size() <= 64
+      && d.assetVersion is string && d.assetVersion.size() >= 1 && d.assetVersion.size() <= 64
+      && d.updatedAt == request.time;
+  }
+  allow get: if true;
+  allow list: if request.query.limit != null && request.query.limit <= 50;
+  allow create, update: if validCampaignLobby();
+  allow delete: if request.auth != null && request.auth.uid == ownerUid;
+}

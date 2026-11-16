@@ -1,0 +1,886 @@
+{
+  "measuredAt": "2026-11-16T22:53:40.828Z",
+  "hardware": {
+    "cpu": "AMD Ryzen 7 5825U with Radeon Graphics         ",
+    "logicalProcessors": 16,
+    "memoryGiB": 13.841178894042969,
+    "os": "win32 10.0.26200",
+    "arch": "x64",
+    "node": "v24.19.0"
+  },
+  "method": {
+    "seed": 44277,
+    "landscape": "four-rivers",
+    "difficulty": "veteran",
+    "simulationHz": 30,
+    "snapshotHz": 10,
+    "sampleTicks": 900,
+    "warmupTicks": 300,
+    "measuredGameSeconds": 30,
+    "warmupGameSeconds": 10,
+    "compression": "gzip level 3, independent response per guest (matches host server)",
+    "transport": "property deltas with exact sequence baseline; static terrain initial only",
+    "scope": "Synthetic authoritative CPU, replication, compressed bandwidth and heap. No GPU/browser FPS, physical network, Firebase, thermal soak, or real-world latency measurement. Other task browser/build/test workloads were paused for the final run.",
+    "baseline": "The same game, seed, human/AI split, full-capacity positions and human commands run first with simulation only. Gameplay checksums must match the replication run; protocol projection cannot change combat outcomes. Full-update raw byte comparisons are sampled once per guest before the timed loop.",
+    "fullCapacity": "Every participating house keeps its normal 280 starting troop capacity; full fixtures fill all houses to capacity without changing combat or AI rules.",
+    "privateStartFixture": "Fixed identity [0..houseCount-1] start permutation supplied privately by the benchmark, preserving the measured scenario layout. Production hosting uses an independent OS-crypto permutation after terrain generation; this fixture is never read from lobby/config or published."
+  },
+  "scenarios": [
+    {
+      "id": "four-houses-two-humans",
+      "houses": 4,
+      "humans": 2,
+      "fog": false,
+      "full": false,
+      "scale": "standard",
+      "humanTeams": [
+        0,
+        1
+      ],
+      "aiHouses": 2,
+      "baseline": {
+        "wallMs": 1923.1857999999997,
+        "simulationMs": {
+          "samples": 900,
+          "mean": 2.135554111111115,
+          "p50": 1.9018000000000939,
+          "p95": 3.8198999999999614,
+          "p99": 5.15480000000025,
+          "max": 8.339500000000044
+        },
+        "checksum": {
+          "time": 40.00000000000029,
+          "seed": 1343307568,
+          "units": 343,
+          "positions": 4305785.2209779285,
+          "gold": [
+            941.0147903475275,
+            950.4572805439988,
+            381.71880268345535,
+            328.244564164601
+          ],
+          "counts": [
+            80,
+            73,
+            96,
+            94
+          ],
+          "winner": null
+        }
+      },
+      "gameplayParity": true,
+      "checksum": {
+        "time": 40.00000000000029,
+        "seed": 1343307568,
+        "units": 343,
+        "positions": 4305785.2209779285,
+        "gold": [
+          941.0147903475275,
+          950.4572805439988,
+          381.71880268345535,
+          328.244564164601
+        ],
+        "counts": [
+          80,
+          73,
+          96,
+          94
+        ],
+        "winner": null
+      },
+      "startupMs": 117.67230000000018,
+      "initialSync": {
+        "allGuestsSnapshotMs": 15.899799999999686,
+        "rawBytesPerGuest": {
+          "samples": 2,
+          "mean": 1460483.5,
+          "p50": 1460523,
+          "p95": 1460523,
+          "p99": 1460523,
+          "max": 1460523
+        },
+        "gzipBytesPerGuest": {
+          "samples": 2,
+          "mean": 177397.5,
+          "p50": 177420,
+          "p95": 177420,
+          "p99": 177420,
+          "max": 177420
+        }
+      },
+      "initialUnits": 280,
+      "peakUnits": 343,
+      "remainingUnits": 343,
+      "normalCapacities": [
+        280,
+        280,
+        280,
+        280
+      ],
+      "gameTime": 40.00000000000029,
+      "winner": null,
+      "wallMs": 4424.8616,
+      "simulatedSecondsPerWallSecond": 6.7798730699283345,
+      "simulationMs": {
+        "samples": 900,
+        "mean": 2.1467652222222204,
+        "p50": 2.0379000000002634,
+        "p95": 3.332399999999325,
+        "p99": 4.5009000000000015,
+        "max": 15.574399999999514
+      },
+      "snapshotPerGuestMs": {
+        "samples": 600,
+        "mean": 2.243829833333334,
+        "p50": 2.184700000000703,
+        "p95": 3.4224999999996726,
+        "p99": 4.666400000000976,
+        "max": 5.537900000000263
+      },
+      "deltaAndSerializePerGuestMs": {
+        "samples": 600,
+        "mean": 1.4332446666666647,
+        "p50": 1.3389999999999418,
+        "p95": 2.26720000000023,
+        "p99": 2.7842000000000553,
+        "max": 3.9583000000002357
+      },
+      "gzipPerGuestMs": {
+        "samples": 600,
+        "mean": 0.4334359999999947,
+        "p50": 0.42329999999947177,
+        "p95": 0.5934999999999491,
+        "p99": 0.689900000000307,
+        "max": 0.8184000000001106
+      },
+      "combinedHostTickMs": {
+        "samples": 900,
+        "mean": 4.902272111111124,
+        "p50": 2.4891999999999825,
+        "p95": 12.025300000000243,
+        "p99": 13.774200000000747,
+        "max": 18.695200000000114
+      },
+      "fullUpdateRawBytes": {
+        "samples": 2,
+        "mean": 177144.5,
+        "p50": 177153,
+        "p95": 177153,
+        "p99": 177153,
+        "max": 177153
+      },
+      "deltaRawBytes": {
+        "samples": 600,
+        "mean": 33024.958333333336,
+        "p50": 32201,
+        "p95": 41872,
+        "p99": 43034,
+        "max": 52916
+      },
+      "deltaGzipBytes": {
+        "samples": 600,
+        "mean": 7762.75,
+        "p50": 7628,
+        "p95": 10567,
+        "p99": 11006,
+        "max": 11733
+      },
+      "aggregateOutboundGzipBytesPerGameSecond": 155255,
+      "heap": {
+        "before": 21976808,
+        "after": 66898904,
+        "peak": 105959664,
+        "garbageCollectedBefore": true
+      },
+      "processedSnapshots": 600
+    },
+    {
+      "id": "sixteen-houses-four-humans-fog",
+      "houses": 16,
+      "humans": 4,
+      "fog": true,
+      "full": false,
+      "scale": "continent",
+      "humanTeams": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "aiHouses": 12,
+      "baseline": {
+        "wallMs": 13059.6998,
+        "simulationMs": {
+          "samples": 900,
+          "mean": 14.509238444444424,
+          "p50": 11.316500000000815,
+          "p95": 31.93289999999979,
+          "p99": 40.61139999999796,
+          "max": 64.2042999999976
+        },
+        "checksum": {
+          "time": 40.00000000000029,
+          "seed": 254990351,
+          "units": 1518,
+          "positions": 155185874.91697508,
+          "gold": [
+            940.1920149947551,
+            945.5116665817017,
+            933.9549193822307,
+            932.6760476213375,
+            388.24183221806766,
+            322.04984116826915,
+            456.3904701239423,
+            297.8463064856413,
+            346.19552174014484,
+            184.96125129259755,
+            85.46053103055984,
+            269.60780111649706,
+            269.47865429335803,
+            213.19125294202613,
+            314.2794471202665,
+            198.374900146098
+          ],
+          "counts": [
+            88,
+            73,
+            87,
+            88,
+            108,
+            91,
+            96,
+            92,
+            94,
+            109,
+            102,
+            91,
+            94,
+            96,
+            91,
+            118
+          ],
+          "winner": null
+        }
+      },
+      "gameplayParity": true,
+      "checksum": {
+        "time": 40.00000000000029,
+        "seed": 254990351,
+        "units": 1518,
+        "positions": 155185874.91697508,
+        "gold": [
+          940.1920149947551,
+          945.5116665817017,
+          933.9549193822307,
+          932.6760476213375,
+          388.24183221806766,
+          322.04984116826915,
+          456.3904701239423,
+          297.8463064856413,
+          346.19552174014484,
+          184.96125129259755,
+          85.46053103055984,
+          269.60780111649706,
+          269.47865429335803,
+          213.19125294202613,
+          314.2794471202665,
+          198.374900146098
+        ],
+        "counts": [
+          88,
+          73,
+          87,
+          88,
+          108,
+          91,
+          96,
+          92,
+          94,
+          109,
+          102,
+          91,
+          94,
+          96,
+          91,
+          118
+        ],
+        "winner": null
+      },
+      "startupMs": 824.9804000000004,
+      "initialSync": {
+        "allGuestsSnapshotMs": 58.6224000000002,
+        "rawBytesPerGuest": {
+          "samples": 4,
+          "mean": 4859222.75,
+          "p50": 4859267,
+          "p95": 4859440,
+          "p99": 4859440,
+          "max": 4859440
+        },
+        "gzipBytesPerGuest": {
+          "samples": 4,
+          "mean": 601727,
+          "p50": 601746,
+          "p95": 601749,
+          "p99": 601749,
+          "max": 601749
+        }
+      },
+      "initialUnits": 1120,
+      "peakUnits": 1521,
+      "remainingUnits": 1518,
+      "normalCapacities": [
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280
+      ],
+      "gameTime": 40.00000000000029,
+      "winner": null,
+      "wallMs": 19679.9988,
+      "simulatedSecondsPerWallSecond": 1.5243903368530693,
+      "simulationMs": {
+        "samples": 900,
+        "mean": 15.349822333333274,
+        "p50": 11.759899999997288,
+        "p95": 34.40430000000197,
+        "p99": 46.45470000000205,
+        "max": 70.25679999999556
+      },
+      "snapshotPerGuestMs": {
+        "samples": 1200,
+        "mean": 3.9098561666667107,
+        "p50": 2.923799999996845,
+        "p95": 7.476800000004005,
+        "p99": 10.288000000000466,
+        "max": 20.991000000001804
+      },
+      "deltaAndSerializePerGuestMs": {
+        "samples": 1200,
+        "mean": 0.687357583333387,
+        "p50": 0.6377999999967869,
+        "p95": 1.1600999999936903,
+        "p99": 1.4631000000008498,
+        "max": 2.9262000000016997
+      },
+      "gzipPerGuestMs": {
+        "samples": 1200,
+        "mean": 0.26034866666672013,
+        "p50": 0.2462999999988824,
+        "p95": 0.39479999999457505,
+        "p99": 0.4893999999985681,
+        "max": 1.8105999999970663
+      },
+      "combinedHostTickMs": {
+        "samples": 900,
+        "mean": 21.844849333333254,
+        "p50": 23.29330000000118,
+        "p95": 39.56270000000222,
+        "p99": 57.426100000004226,
+        "max": 70.26209999999992
+      },
+      "fullUpdateRawBytes": {
+        "samples": 4,
+        "mean": 60699.75,
+        "p50": 60843,
+        "p95": 61166,
+        "p99": 61166,
+        "max": 61166
+      },
+      "deltaRawBytes": {
+        "samples": 1200,
+        "mean": 11650.953333333333,
+        "p50": 10721,
+        "p95": 17285,
+        "p99": 31208,
+        "max": 40808
+      },
+      "deltaGzipBytes": {
+        "samples": 1200,
+        "mean": 3062.8858333333333,
+        "p50": 2845,
+        "p95": 4432,
+        "p99": 7901,
+        "max": 9630
+      },
+      "aggregateOutboundGzipBytesPerGameSecond": 122515.43333333333,
+      "heap": {
+        "before": 68675512,
+        "after": 114161880,
+        "peak": 163922728,
+        "garbageCollectedBefore": true
+      },
+      "processedSnapshots": 1200
+    },
+    {
+      "id": "sixteen-houses-four-humans-full-capacity",
+      "houses": 16,
+      "humans": 4,
+      "fog": false,
+      "full": true,
+      "scale": "continent",
+      "humanTeams": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "aiHouses": 12,
+      "baseline": {
+        "wallMs": 39880.74689999999,
+        "simulationMs": {
+          "samples": 900,
+          "mean": 44.31035866666678,
+          "p50": 39.694900000002235,
+          "p95": 78.73490000001038,
+          "p99": 106.8587000000116,
+          "max": 123.24529999999504
+        },
+        "checksum": {
+          "time": 40.00000000000029,
+          "seed": 3508816270,
+          "units": 4414,
+          "positions": 1268507549.2937753,
+          "gold": [
+            962.8938297878087,
+            981.9419033818787,
+            971.8694274697939,
+            953.4997562797313,
+            405.4885234805871,
+            408.3668136985957,
+            410.45116512156056,
+            399.01922550029246,
+            404.03560426147027,
+            407.9772026548533,
+            404.25460533776254,
+            152.55985291007173,
+            400.49618831099764,
+            395.2863921382183,
+            400.5079968534004,
+            362.6122795846842
+          ],
+          "counts": [
+            280,
+            230,
+            272,
+            278,
+            280,
+            280,
+            280,
+            279,
+            280,
+            280,
+            280,
+            278,
+            280,
+            280,
+            280,
+            275
+          ],
+          "winner": null
+        }
+      },
+      "gameplayParity": true,
+      "checksum": {
+        "time": 40.00000000000029,
+        "seed": 3508816270,
+        "units": 4414,
+        "positions": 1268507549.2937753,
+        "gold": [
+          962.8938297878087,
+          981.9419033818787,
+          971.8694274697939,
+          953.4997562797313,
+          405.4885234805871,
+          408.3668136985957,
+          410.45116512156056,
+          399.01922550029246,
+          404.03560426147027,
+          407.9772026548533,
+          404.25460533776254,
+          152.55985291007173,
+          400.49618831099764,
+          395.2863921382183,
+          400.5079968534004,
+          362.6122795846842
+        ],
+        "counts": [
+          280,
+          230,
+          272,
+          278,
+          280,
+          280,
+          280,
+          279,
+          280,
+          280,
+          280,
+          278,
+          280,
+          280,
+          280,
+          275
+        ],
+        "winner": null
+      },
+      "startupMs": 887.9294999999984,
+      "initialSync": {
+        "allGuestsSnapshotMs": 130.96699999998964,
+        "rawBytesPerGuest": {
+          "samples": 4,
+          "mean": 7231670.25,
+          "p50": 7231757,
+          "p95": 7232036,
+          "p99": 7232036,
+          "max": 7232036
+        },
+        "gzipBytesPerGuest": {
+          "samples": 4,
+          "mean": 741831,
+          "p50": 741825,
+          "p95": 741911,
+          "p99": 741911,
+          "max": 741911
+        }
+      },
+      "initialUnits": 4480,
+      "peakUnits": 4480,
+      "remainingUnits": 4414,
+      "normalCapacities": [
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280
+      ],
+      "gameTime": 40.00000000000029,
+      "winner": null,
+      "wallMs": 101655.6683,
+      "simulatedSecondsPerWallSecond": 0.2951138928275581,
+      "simulationMs": {
+        "samples": 900,
+        "mean": 51.525099111111146,
+        "p50": 46.1197000000102,
+        "p95": 95.44779999999446,
+        "p99": 126.8862000000081,
+        "max": 177.51600000000326
+      },
+      "snapshotPerGuestMs": {
+        "samples": 1200,
+        "mean": 19.88590358333366,
+        "p50": 16.150800000003073,
+        "p95": 33.03589999998803,
+        "p99": 37.38270000004559,
+        "max": 94.1706000000122
+      },
+      "deltaAndSerializePerGuestMs": {
+        "samples": 1200,
+        "mean": 22.34509016666708,
+        "p50": 21.17280000000028,
+        "p95": 30.776899999997113,
+        "p99": 39.911800000001676,
+        "max": 106.06530000001658
+      },
+      "gzipPerGuestMs": {
+        "samples": 1200,
+        "mean": 3.6613413333331604,
+        "p50": 3.564200000022538,
+        "p95": 4.690999999991618,
+        "p99": 5.270700000022771,
+        "max": 6.343499999988126
+      },
+      "combinedHostTickMs": {
+        "samples": 900,
+        "mean": 112.92910566666666,
+        "p50": 61.33850000001257,
+        "p95": 252.7277999999933,
+        "p99": 297.5978999999934,
+        "max": 383.3147000000172
+      },
+      "fullUpdateRawBytes": {
+        "samples": 4,
+        "mean": 2517931,
+        "p50": 2517936,
+        "p95": 2517938,
+        "p99": 2517938,
+        "max": 2517938
+      },
+      "deltaRawBytes": {
+        "samples": 1200,
+        "mean": 404476.56666666665,
+        "p50": 398333,
+        "p95": 471948,
+        "p99": 507398,
+        "max": 511031
+      },
+      "deltaGzipBytes": {
+        "samples": 1200,
+        "mean": 80424.31,
+        "p50": 77627,
+        "p95": 104628,
+        "p99": 115526,
+        "max": 116348
+      },
+      "aggregateOutboundGzipBytesPerGameSecond": 3216972.4,
+      "heap": {
+        "before": 123490240,
+        "after": 415094952,
+        "peak": 579875472,
+        "garbageCollectedBefore": true
+      },
+      "processedSnapshots": 1200
+    },
+    {
+      "id": "sixteen-houses-two-humans-full-capacity-fog",
+      "houses": 16,
+      "humans": 2,
+      "fog": true,
+      "full": true,
+      "scale": "continent",
+      "humanTeams": [
+        0,
+        1
+      ],
+      "aiHouses": 14,
+      "baseline": {
+        "wallMs": 41397.24609999999,
+        "simulationMs": {
+          "samples": 900,
+          "mean": 45.99534522222294,
+          "p50": 41.473500000021886,
+          "p95": 83.38490000000456,
+          "p99": 96.898199999996,
+          "max": 142.2724000000162
+        },
+        "checksum": {
+          "time": 40.00000000000029,
+          "seed": 463377843,
+          "units": 4430,
+          "positions": 1270444330.7756832,
+          "gold": [
+            962.8938297878087,
+            981.9419033818787,
+            400.6921629776272,
+            401.3183186320172,
+            402.4822196975832,
+            403.59750832639384,
+            405.57646237440184,
+            189.18351999431562,
+            400.27941388284796,
+            403.6310291716102,
+            399.4790102679547,
+            369.6255628997223,
+            397.0771032806287,
+            392.12143006164206,
+            397.3389644132428,
+            359.67534692888904
+          ],
+          "counts": [
+            280,
+            230,
+            280,
+            280,
+            280,
+            280,
+            280,
+            280,
+            280,
+            280,
+            280,
+            280,
+            280,
+            280,
+            280,
+            280
+          ],
+          "winner": null
+        }
+      },
+      "gameplayParity": true,
+      "checksum": {
+        "time": 40.00000000000029,
+        "seed": 463377843,
+        "units": 4430,
+        "positions": 1270444330.7756832,
+        "gold": [
+          962.8938297878087,
+          981.9419033818787,
+          400.6921629776272,
+          401.3183186320172,
+          402.4822196975832,
+          403.59750832639384,
+          405.57646237440184,
+          189.18351999431562,
+          400.27941388284796,
+          403.6310291716102,
+          399.4790102679547,
+          369.6255628997223,
+          397.0771032806287,
+          392.12143006164206,
+          397.3389644132428,
+          359.67534692888904
+        ],
+        "counts": [
+          280,
+          230,
+          280,
+          280,
+          280,
+          280,
+          280,
+          280,
+          280,
+          280,
+          280,
+          280,
+          280,
+          280,
+          280,
+          280
+        ],
+        "winner": null
+      },
+      "startupMs": 867.1651999999885,
+      "initialSync": {
+        "allGuestsSnapshotMs": 28.226699999999255,
+        "rawBytesPerGuest": {
+          "samples": 2,
+          "mean": 4974860,
+          "p50": 4975561,
+          "p95": 4975561,
+          "p99": 4975561,
+          "max": 4975561
+        },
+        "gzipBytesPerGuest": {
+          "samples": 2,
+          "mean": 608876,
+          "p50": 608934,
+          "p95": 608934,
+          "p99": 608934,
+          "max": 608934
+        }
+      },
+      "initialUnits": 4480,
+      "peakUnits": 4480,
+      "remainingUnits": 4430,
+      "normalCapacities": [
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280
+      ],
+      "gameTime": 40.00000000000029,
+      "winner": null,
+      "wallMs": 50949.91519999999,
+      "simulatedSecondsPerWallSecond": 0.5888135413422633,
+      "simulationMs": {
+        "samples": 900,
+        "mean": 47.48632277777664,
+        "p50": 40.81400000001304,
+        "p95": 92.01339999999618,
+        "p99": 111.36199999996461,
+        "max": 130.5225999999675
+      },
+      "snapshotPerGuestMs": {
+        "samples": 600,
+        "mean": 11.007383166665678,
+        "p50": 12.559200000017881,
+        "p95": 20.01540000003297,
+        "p99": 25.068299999984447,
+        "max": 45.79910000000382
+      },
+      "deltaAndSerializePerGuestMs": {
+        "samples": 600,
+        "mean": 2.034315999998944,
+        "p50": 1.6986000000033528,
+        "p95": 4.038500000024214,
+        "p99": 5.209300000045914,
+        "max": 28.430999999982305
+      },
+      "gzipPerGuestMs": {
+        "samples": 600,
+        "mean": 0.5878780000015589,
+        "p50": 0.5370000000111759,
+        "p95": 1.2519999999785796,
+        "p99": 1.5100999999558553,
+        "max": 1.6904000000213273
+      },
+      "combinedHostTickMs": {
+        "samples": 900,
+        "mean": 56.5913327777766,
+        "p50": 54.66059999994468,
+        "p95": 96.36569999996573,
+        "p99": 115.77439999999478,
+        "max": 144.8935000000056
+      },
+      "fullUpdateRawBytes": {
+        "samples": 2,
+        "mean": 189920.5,
+        "p50": 190819,
+        "p95": 190819,
+        "p99": 190819,
+        "max": 190819
+      },
+      "deltaRawBytes": {
+        "samples": 600,
+        "mean": 46792.136666666665,
+        "p50": 44058,
+        "p95": 105979,
+        "p99": 113432,
+        "max": 117421
+      },
+      "deltaGzipBytes": {
+        "samples": 600,
+        "mean": 11347.88,
+        "p50": 10570,
+        "p95": 25285,
+        "p99": 27010,
+        "max": 27413
+      },
+      "aggregateOutboundGzipBytesPerGameSecond": 226957.6,
+      "heap": {
+        "before": 88568832,
+        "after": 136115240,
+        "peak": 233386024,
+        "garbageCollectedBefore": true
+      },
+      "processedSnapshots": 600
+    }
+  ]
+}
