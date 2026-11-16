@@ -56,6 +56,7 @@ try{
         r.loadConquestArt(Object.fromEntries(['castles','trebuchet','giant','sharpshooter','buildings'].map(k=>[k,`/assets/conquest/${k}.png`]))),
         ...(r.loadReinforcementArt?[r.loadReinforcementArt(Object.fromEntries(['stormbreaker','saltwind_axethrower','tollhouse_crossbow','crannog_spearhand','hornhill_halberdier','sun_horse_archer','buildings'].map(k=>[k,`/assets/reinforcements/${k}.png`])))]:[]),
         ...(r.loadHouseEmblems?[r.loadHouseEmblems('/assets/house-emblems.png')]:[])
+        ,...(r.loadPaintedTroops?[r.loadPaintedTroops(),r.loadPikeBuildings('/assets/overhaul/pike-buildings.png')]:[])
       ]);
       r.resize(1400,900,1);window.__visualBench={Game,HOUSES,r};
       const gl=document.createElement('canvas').getContext('webgl'),extension=gl?.getExtension('WEBGL_debug_renderer_info');
@@ -77,7 +78,7 @@ try{
         if(slots.length<scenario.army)throw new Error('Insufficient legal benchmark slots.');
         const types=['infantry','archer','infantry','cavalry','archer','infantry','cavalry','archer','infantry','siege'];
         for(let i=0;i<scenario.army;i++){
-          const team=i%16,p=slots[Math.floor(i*slots.length/scenario.army)],type=types[i%types.length],u=g.addUnit(team,type,p.x,p.y);
+          const team=i%16,p=slots[Math.floor(i*slots.length/scenario.army)],special=g.teams[team].sigil==='wolf'?'winter_pikeman':g.teams[team].sigil==='rose'?'thornwall_pikeman':g.houseContent(team).unit,type=i%4===0?special:types[i%types.length],u=g.addUnit(team,type,p.x,p.y);
           u.cooldown=(i%19)*.07;u.seek=(i%7)*.02;
           u.order={x:scenario.combat?center.x:u.x,y:scenario.combat?center.y:u.y,mode:scenario.combat?'attack':'hold',formation:'line'};
           u.facingX=team%2?1:-1;u.facingY=0;

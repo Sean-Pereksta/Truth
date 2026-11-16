@@ -99,7 +99,7 @@ test('Giant knockback respects defensive resistance, buildings, terrain and exac
   for(let i=0;i<35;i++){step(g,.02);assert.ok(victim.x<33);assert.ok(g.isWalkable(victim.x,victim.y));}
   const fort=g.addBuilding(1,'barracks',20.5,20);g.attack(giant,fort);assert.equal(fort.knockT,undefined,'Buildings are never displaced.');
   const overlap=g.addUnit(1,'infantry',giant.x,giant.y);overlap.hp=1000;g.hash.rebuild(g.units);g.attack(giant,overlap);assert.ok(Number.isFinite(overlap.knockVX)&&Number.isFinite(overlap.knockVY));assert.ok(Math.hypot(overlap.knockVX,overlap.knockVY)>0);
-  const shield=g.addUnit(1,'shield_bearer',giant.x+1,giant.y);shield.hp=shield.maxHp=1000;shield.facingX=-1;shield.facingY=0;g.hash.rebuild(g.units);g.attack(giant,shield);const front=Math.hypot(shield.knockVX,shield.knockVY);shield.facingX=1;g.attack(giant,shield);assert.ok(Math.hypot(shield.knockVX,shield.knockVY)>front*1.7,'A frontal greatshield resists the shove, but its rear does not.');
+  const shield=g.addUnit(1,'shield_bearer',giant.x+1,giant.y);shield.hp=shield.maxHp=1000;shield.facingX=-1;shield.facingY=0;shield.shieldGuard='guard';g.hash.rebuild(g.units);g.attack(giant,shield);const front=Math.hypot(shield.knockVX,shield.knockVY);shield.facingX=1;g.attack(giant,shield);assert.ok(Math.hypot(shield.knockVX,shield.knockVY)>front*1.7,'A frontal greatshield resists the shove, but its rear does not.');
 });
 
 test('A giant attacking a building shoves nearby enemy defenders while the structure stays fixed',()=>{
@@ -134,9 +134,9 @@ test('Tully sharpshooters shoot beyond archer range but reload much more slowly'
   shooter.cooldown=0;shooter.seek=0;g.hold([shooter.id]);g.hold([target.id]);target.cooldown=100;
   assert.ok(UNIT_DEFS.sharpshooter.range>UNIT_DEFS.archer.range*1.6);
   assert.ok(UNIT_DEFS.sharpshooter.rate>UNIT_DEFS.archer.rate*2);
-  step(g,.01);assert.equal(g.projectiles.length,1);assert.equal(g.projectiles[0].sourceType,'sharpshooter');
+  step(g,.2);assert.equal(g.projectiles.length,1);assert.equal(g.projectiles[0].sourceType,'sharpshooter');
   for(let i=0;i<30;i++)step(g,.1);assert.equal(g.projectiles.length,1);
-  for(let i=0;i<5;i++)step(g,.1);assert.equal(g.projectiles.length,2);
+  for(let i=0;i<24;i++)step(g,.1);assert.equal(g.projectiles.length,2);
 });
 
 console.log(`${checks} conquest regiment checks passed.`);

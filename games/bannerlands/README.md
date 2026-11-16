@@ -2,14 +2,20 @@
 
 Command armies, conquer the grid, and unite the realm in an isometric real-time strategy game.
 
-Press W to advance and attack as one formation, turning toward an enemy force
-while keeping the ranks together. A breaks formation and charges independently.
-A plain right-click gives a faster direct withdrawal; right-drag preserves
-facing for a deliberate backward march. Formed infantry takes less frontal
-damage and resists displacement. All three crossbow classes have longer range,
-harder hits against cavalry and distinct mechanical reload animations. They
-reload while stationary; moving interrupts the cycle, which restarts after
-arrival or the next attack order. See `docs/Crossbows-and-Formation-Advance.txt`.
+Press Z to place a formation with chosen width, ranks, position and facing.
+Line, Pike Block, Shield Wall, Wedge and Loose presets support a visible facing
+lock. W advances the ranks; A releases them to charge independently. A plain
+right-click moves immediately; right-drag chooses the final front. D opens
+Move & Face, Shift+D faces in place, H holds/braces, and V retreats.
+
+Stark Winter Pikemen and Tyrell Thornwall Pikemen replace their additional
+Shield Bearers. Painted troop actions keep the original screen-right artwork
+and horizontal mirror, while equipment uses precise logical facing. Pike
+interception requires physical contact and settling; shields protect their
+guarded front and remain vulnerable from behind. All four crossbow regiments
+have powerful bolts and distinct stationary reload actions. Moving preserves
+completed loading stages. See `docs/Troop-Formation-Combat-Overhaul.md` for
+controls, equipment values, artwork contracts and validation commands.
 
 Attacks on expanding troops now trigger local defense within aggro range while
 distant troops continue their orders. Defenders pursue only locally and resume
