@@ -2,6 +2,20 @@
 
 Command armies, conquer the grid, and unite the realm in an isometric real-time strategy game.
 
+Each house now fields its own painted hero and physical battle standard. Click
+the small portrait and health bar at the top left to select and jump to your
+hero, or press F. Selecting a hero exposes a contextual Plant / Retrieve /
+Reforge Standard button; J performs the same action. Planting takes 3 seconds
+after arrival, pickup takes 2, and damaged or destroyed standards can be refitted
+or reforged at an owned keep in 8 seconds. Escape or a replacement order cancels
+handling. Shift+J keeps its existing building shortcut.
+
+All sixteen heroes and flags use generated painted raster artwork, including
+house heraldry, carrying, interaction, weapon handling, and standalone flag
+states. Artwork uses the same two views as the other troops: screen-right and
+its horizontal mirror. Precise combat facing remains independent. See
+`docs/Heroes-and-Standards.md` for benefits, controls, and validation.
+
 Press Z to place a formation with chosen width, ranks, position and facing.
 Line, Pike Block, Shield Wall, Wedge and Loose presets support a visible facing
 lock. W advances the ranks; A releases them to charge independently. A plain

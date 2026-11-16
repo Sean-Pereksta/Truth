@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import {Game,HOUSES,UNIT_DEFS,BUILD_DEFS,HOUSE_CONTENT} from '../../core.js';
 import {LAND_MAPS} from '../../lands.js';
+import {heroProfile} from '../../heroes.js';
 
 const source=fs.readFileSync(new URL('../../app.js',import.meta.url),'utf8');
 const html=fs.readFileSync(new URL('../../index.html',import.meta.url),'utf8');
@@ -28,7 +29,7 @@ class Element{
 function fixture(){
   const elements=new Map(),buttons=[];
   const element=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id);};
-  const context={console,Math,Map,Set,String,Array,HOUSES,UNIT_DEFS,BUILD_DEFS,HOUSE_CONTENT,
+  const context={console,Math,Map,Set,String,Array,HOUSES,heroProfile,UNIT_DEFS,BUILD_DEFS,HOUSE_CONTENT,
     chosenHouse:0,started:false,menuOpen:true,wasPaused:false,edgeMouse:null,battleHud:{open(){},close(){}},
     ui:{selected:new Set(),selectedBuildings:new Set(),quality:'auto'},groups:new Map(),keys:new Set(),
     allSelected:false,allBuildingsSelected:false,lastResult:null,lastEvent:0,lastBattle:0,accumulator:0,speed:1,
@@ -92,7 +93,7 @@ test('King HUD shows friendly vitality and reveals enemy vitality only inside cu
   f.context.updateKingHud();assert.equal(f.element('kingSection').hidden,false);assert.match(f.element('heroButton').innerHTML,/Find king/);assert.match(f.element('kingList').innerHTML,/250 \/ 500 HP/);assert.match(f.element('kingList').innerHTML,/Unseen/);assert.doesNotMatch(f.element('kingList').innerHTML,/111|999/);
   visible=true;f.context.updateKingHud();assert.match(f.element('kingList').innerHTML,/111 \/ 999 HP/);
   kings[0]=null;f.context.updateKingHud();assert.match(f.element('kingList').innerHTML,/Fallen · army defeated/);
-  f.context.game.mode={};f.context.updateKingHud();assert.equal(f.element('kingSection').hidden,true);assert.match(f.element('heroButton').innerHTML,/Commander/);
+  f.context.game.mode={};f.context.updateKingHud();assert.equal(f.element('kingSection').hidden,true);assert.match(f.element('heroButton').innerHTML,/Find hero/);
 });
 
 test('Find king selects the living king and never promises a respawn after king death',()=>{

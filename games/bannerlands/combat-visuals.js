@@ -20,7 +20,7 @@ export function crossbowReloadPose(u,definition={}){
     pull:style==='belt'?cock*(1-smooth(.65,.7,progress)):0};
 }
 export function combatPose(u,g,definition={},moving=false){
-  const now=g.time||0,event=u.attackVisual,age=event?now-event.at:Infinity;
+  const now=g.time||0,event=u.attackVisual,age=event?(event.elapsed??now-event.at):Infinity;
   const ranged=definition.class==='archer'||definition.ranged||u.type==='archer';
   const crossbow=crossbows.has(u.type),hammer=!!definition.hammer;
   const windup=hammer?.2:definition.spearWeapon?.16:.12;

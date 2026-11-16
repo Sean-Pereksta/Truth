@@ -1,0 +1,141 @@
+{
+  "generator": "built-in image_gen",
+  "grid": {
+    "columns": 8,
+    "rows": 8,
+    "frames": 64
+  },
+  "sourceFacing": "screen-right",
+  "otherFacing": "horizontal-mirror",
+  "facings": 2,
+  "assets": [
+    {
+      "sigil": "beacon",
+      "file": "assets/heroes/beacon.png",
+      "bytes": 3233485,
+      "width": 1254,
+      "height": 1254,
+      "sha256": "f052ec93ac7247319e1e063c4ca2c0f6d29886fd180aad4d876db0649b86dfcd"
+    },
+    {
+      "sigil": "bear",
+      "file": "assets/heroes/bear.png",
+      "bytes": 3358017,
+      "width": 1254,
+      "height": 1254,
+      "sha256": "67321c081189d94c2b13f03f2fc5b5c1d7f2080041201f05fbd9097e2d4a04d0"
+    },
+    {
+      "sigil": "bone",
+      "file": "assets/heroes/bone.png",
+      "bytes": 3192710,
+      "width": 1254,
+      "height": 1254,
+      "sha256": "1cff3838c7ad9e72a55e8283c637144ce228ca1bc08a0b0a371569d6a6f97e29"
+    },
+    {
+      "sigil": "bridge",
+      "file": "assets/heroes/bridge.png",
+      "bytes": 3723663,
+      "width": 1254,
+      "height": 1254,
+      "sha256": "3065881bcd2871c2b55f12583c5e4ce8ec28087029f4356a7094e12c656e47bc"
+    },
+    {
+      "sigil": "dragon",
+      "file": "assets/heroes/dragon.png",
+      "bytes": 1839775,
+      "width": 1254,
+      "height": 1254,
+      "sha256": "e479242eec096002b281e6c74bc4e660840d875ce4663fba210db230539fb32c"
+    },
+    {
+      "sigil": "falcon",
+      "file": "assets/heroes/falcon.png",
+      "bytes": 2740130,
+      "width": 1254,
+      "height": 1254,
+      "sha256": "1f7a9b0ede7e84702f715e636ab68de1d89aa7a60558cde7b51f5f395ff5fca2"
+    },
+    {
+      "sigil": "fish",
+      "file": "assets/heroes/fish.png",
+      "bytes": 2157401,
+      "width": 1254,
+      "height": 1254,
+      "sha256": "9a37db25e47ebee9021f99d24445ed6e3df9604df82612d9a122bbd1eb0f0586"
+    },
+    {
+      "sigil": "flayed",
+      "file": "assets/heroes/flayed.png",
+      "bytes": 2397579,
+      "width": 1254,
+      "height": 1254,
+      "sha256": "a64efe7e6a226764989abee7b684fded1e66ead901a05a0b334cf70516e108d2"
+    },
+    {
+      "sigil": "frog",
+      "file": "assets/heroes/frog.png",
+      "bytes": 3126163,
+      "width": 1254,
+      "height": 1254,
+      "sha256": "cff7f3975af0b66a6d5febfc07a09c4f97313d93b84e9816faccc2632959b24a"
+    },
+    {
+      "sigil": "huntsman",
+      "file": "assets/heroes/huntsman.png",
+      "bytes": 2583463,
+      "width": 1254,
+      "height": 1254,
+      "sha256": "d2328c781bc970d23d6d999f71bd8ba14d24c52f4a542c193d9accdee4b87545"
+    },
+    {
+      "sigil": "kraken",
+      "file": "assets/heroes/kraken.png",
+      "bytes": 4639858,
+      "width": 1254,
+      "height": 1254,
+      "sha256": "615bcb41b6efceb6735f8faed06060f5e7e1da375e202ab2da39291ac6d7dbd7"
+    },
+    {
+      "sigil": "lion",
+      "file": "assets/heroes/lion.png",
+      "bytes": 3482043,
+      "width": 1254,
+      "height": 1254,
+      "sha256": "2e41e43fef16b845022f8290f20ca0b693f2f6ea4842229c49f74a14eb9d2e39"
+    },
+    {
+      "sigil": "rose",
+      "file": "assets/heroes/rose.png",
+      "bytes": 2066609,
+      "width": 1254,
+      "height": 1254,
+      "sha256": "e176dfdfad122b4520ad965ffd3abd07a62034bd2f1d2c071c9d0c1a9ce947a1"
+    },
+    {
+      "sigil": "stag",
+      "file": "assets/heroes/stag.png",
+      "bytes": 1274520,
+      "width": 1254,
+      "height": 1254,
+      "sha256": "8ae764239297db38752a95645d4232383e858c63adc151d66fbc8148328454ee"
+    },
+    {
+      "sigil": "sun",
+      "file": "assets/heroes/sun.png",
+      "bytes": 2639999,
+      "width": 1254,
+      "height": 1254,
+      "sha256": "4099fc0715108833121c400e4ed3fbdf15f02d22bb00a045c89ecb5c81121cc8"
+    },
+    {
+      "sigil": "wolf",
+      "file": "assets/heroes/wolf.png",
+      "bytes": 2926872,
+      "width": 1254,
+      "height": 1254,
+      "sha256": "696101cc0edfeac67d125f71f1bd3861e46cce41453d881c06706ba0ded79add"
+    }
+  ]
+}
