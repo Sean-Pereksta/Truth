@@ -1,0 +1,20 @@
+Use case: stylized-concept. FULL CHARACTER DEATH ANIMATION sprite sheet for a painted medieval RTS. This is an ANIMATION: each column must show the SAME PERSON progressing continuously through four consecutive whole-body falling frames from TOP toBOTTOM, not four unrelated character poses or a direction study.
+Referenceimage1 supplies the EXACT River Ranger identity: barehumanhead with tiedbackdarkhair and RED HEADBAND, experiencedbeardedface, short asymmetric BLUE HALF-CLOAK, lighterbrownleatherarmor withred-and-blue Tullypanels/silvertrout, GREY TROUSERS, brownboots, large TAN MEDICAL SATCHEL onhip, compactcurvedwoodenBOW. No hood, helmet, crossbow, heavyplatemail or shield. Referenceimage2 is ONLY the correct SCREEN-LEFT profile of this samecharacter; use it to ensure WEST reallyfacesLEFT. Preserve bothrefs' naturalpaintedanatomy and materialstyle.
+1536×1024 landscapePNG, genuine transparentRGBA. EXACTLY8columns×4rows,32complete fullbody+wholebow frames, ONEframe inside each equal192×256cell. Every bodypart, cape, satchel, hand, bow and boot fullyinsidecell. Keep transparentpadding, no text, labels,gridlines,environment,floor,checkerboard or red/yellowcolorfringes. Samehuman proportions and size throughout. Do not shrink or flatten the character just because he isfalling; use naturalbentknees/diagonalpose tofit.
+Each COLUMN is a fixed elevated-isometric viewing direction for allfourframes:
+col1 southeast/front-right: nosepointsdown-right;
+col2 south/front: view his actual face/chest;
+col3 southwest/front-left: nosepointsdown-left;
+col4 WEST/LEFTPROFILE: noseandheadpointLEFT, EXACTLYlike referenceimage2, neverright;
+col5 northwest/backleft: see backlefthead/cape;
+col6 NORTH/FULLYBACK: see the BACK ofhead/cape, NOfacevisible;
+col7 northeast/backright: see backrighthead/cape;
+col8 EAST/RIGHTPROFILE: noseandheadpointRIGHT.
+These eightviews are genuinely different front/rear/diagonal paintings, notmirrors. Do not letallfigures faceoneway.
+
+The FOUR ROWS are consecutive body-animation PHASES; preserve the character's facingandgroundorigin through thefall within eachcolumn:
+ROW1 STAGGER/KNEES BREAK: struckbody pitches sideways, kneesfold, offbalance, feetstartlosingplant; torso/arms react and completebow stillinhand. Clearlynotidle, not walking.
+ROW2 MID-FALL: body tips diagonally45degrees towardtheground, onehandreaches tocatchfall, hipdrops, legsandcape followthrough, satchel swings; the wholebow stays connected tootherhand. Visibly halfwaybetweenrow1standing androw3ground.
+ROW3 GROUND CONTACT/SETTLING: shoulderandhip havejustmetground, headstilllifting/slightlybouncing, kneesnaturallybent, oneforearmbracingagainstground; bodyhasnotyetsettledflat. Bow is beingreleasedbesidehand. This is a differentphysicalframe frombothrow2androw4.
+ROW4 FULLY FALLEN: samebody nowsettled onside, headresting/eyesclosed, bentknees atrest, capeandsatchel lie withhim, completebowreleasedbesidehand. Naturalfullhumananatomy and originalbodylength/proportions. No gore, no detachedlimbs.
+Progress TOP→BOTTOM must read as continuous fullbody falling animation with real limb/torso/head/cape motion and hand-heldequipment. Do not reuseidlebody or draw separateeffectstrokes. Wholepaintedsoldierineveryframe, highdetail leather/fabric/wood, softupperleftlighting, actualtransparentbackground.

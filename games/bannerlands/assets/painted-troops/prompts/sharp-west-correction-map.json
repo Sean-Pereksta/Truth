@@ -1,0 +1,35 @@
+{
+  "file": "sharp-west-correction.png",
+  "columns": 4,
+  "rows": 4,
+  "direction": "screen-west",
+  "primaryDirectionColumn": 3,
+  "generatedBy": "built-in image_gen",
+  "review": {
+    "allLivingFiguresFaceLeft": true,
+    "allCrossbowMuzzlesLeft": true,
+    "noProgrammaticMirroring": true,
+    "fallAndCorpseHeadLeft": true,
+    "completeEquipment": true,
+    "bodyArtPainted": true,
+    "edgeMargins": "requires crop/edge QA, some helmet fringe near canvas top"
+  },
+  "cells": [
+    "ready",
+    "marchA",
+    "marchB",
+    "backstep",
+    "turn",
+    "aim",
+    "release",
+    "lower",
+    "span-start",
+    "span-finish",
+    "take-bolt",
+    "seat-bolt",
+    "raise",
+    "hit",
+    "fall",
+    "fallen"
+  ]
+}

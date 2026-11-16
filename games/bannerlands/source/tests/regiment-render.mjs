@@ -86,7 +86,7 @@ await r.loadRegimentArt(sources);
 const productionSource=path.join(root,'assets/regiments/production-buildings.png'),productionDefinitions=Object.entries(BUILD_DEFS).filter(([,d])=>d.regimentBuilding);
 test('Dedicated regiment buildings cannot fall back to the original house production picture',()=>{
   assert.equal(productionDefinitions.length,7);r.houseArtReady=true;r.houseProductionFrames.wolf={image:'wrong original building'};
-  for(const [type,d]of productionDefinitions){const f=r.getStructureFrame(type,d.house);if(['winter_pike_hall','thornwall_drill_hall'].includes(type))assert.equal(f.completePikeHall,true);else assert.equal(f,null);}r.houseArtReady=false;
+  for(const [type,d]of productionDefinitions){const f=r.getStructureFrame(type,d.house);if(f)assert.equal(f.paintedPikeHall,true);else assert.equal(f,null);}r.houseArtReady=false;
 });
 await r.loadRegimentBuildings(productionSource);
 test('Seven dedicated production buildings use unique illustrated atlas cells',()=>{

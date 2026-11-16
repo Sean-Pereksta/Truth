@@ -1,34 +1,35 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {createRequire} from 'node:module';
-import {createHash} from 'node:crypto';
-import {COMPLETE_TROOP_TYPES,AUTHORED_BODY_VIEWS,completeTroopFrame,completeArtCacheInfo,pikeProductionFrame,TROOP_CELL,authoredAnimationState} from '../../complete-troops.js';
-import {equipmentFor} from '../../equipment.js';
+import {setPaintedTroopAtlases,completeTroopFrame,hasCompleteTroopArt,paintedTroopCoverage,completeArtCacheInfo,authoredAnimationState} from '../../complete-troops.js';
+import {Renderer} from '../../render.js';
 const require=createRequire(import.meta.url);let raster;
-try{raster=require(process.env.LANDS_CANVAS_MODULE||'@napi-rs/canvas');}catch{console.log('SKIP complete troop raster checks: set LANDS_CANVAS_MODULE.');process.exit(0);}
+try{raster=require(process.env.LANDS_CANVAS_MODULE||'@napi-rs/canvas');}catch{console.log('SKIP painted PNG renderer checks: set LANDS_CANVAS_MODULE.');process.exit(0);}
+const root=fileURLToPath(new URL('../..',import.meta.url)),source='assets/houses/fish-troops.png',image=await raster.loadImage(path.join(root,source));
+const dirs=Array.from({length:8},(_,cell)=>[{sheet:'main',cell}]);
+const manifest={version:1,troops:{painted_fixture:{directions:8,bodyHeight:31,sheets:{main:{src:source,columns:4,rows:2,sourceBodyHeight:320,anchor:[.5,.88]}},clips:{ready:dirs,thrust:dirs}}}};
+setPaintedTroopAtlases(manifest,new Map([[source,image]]));
+assert.equal(hasCompleteTroopArt('infantry'),false,'Unaffected ordinary troops must retain the original generated PNG atlas.');
+assert.equal(hasCompleteTroopArt('painted_fixture'),true);
+globalThis.document={createElement:()=>{throw Error('Selecting painted troop frames must never draw a substitute figure or construct a new canvas.');}};
+for(let directionIndex=0;directionIndex<8;directionIndex++){
+ const cel=completeTroopFrame('painted_fixture',{}, {action:'ready',directionIndex,directions:8,frame:0,phase:0});
+ assert.equal(cel.image,image,'The visible figure must come directly from the image-generated source PNG.');assert.equal(cel.painted,true);assert.equal(cel.bodyHeight,31);assert.equal(cel.scale,31/320);
+ assert.equal(cel.sx,Math.floor(directionIndex%4*image.width/4));assert.equal(cel.sy,Math.floor(Math.floor(directionIndex/4)*image.height/2));
+ assert.ok(cel.sw>100&&cel.sh>100);assert.equal(completeTroopFrame('painted_fixture',{}, {action:'ready',directionIndex,directions:8,frame:0,phase:0}),cel);
+}
+assert.equal(completeTroopFrame('painted_fixture',{}, {action:'span',directionIndex:0,directions:8,frame:0}),null,'Missing authored actions cannot invent weapons, limbs or reload mechanisms.');
+assert.ok(paintedTroopCoverage().missingFrames.includes('painted_fixture:span'));
+assert.equal(paintedTroopCoverage().troops.painted_fixture.complete,false,'An incomplete painted sheet must not be reported as full animation coverage.');
+assert.ok(completeArtCacheInfo().hits>=8);
+const empty={type:'gilded_crossbow',x:0,y:0,hp:100,facingX:1,facingY:0,vx:1,reloading:false,reload:{stageIndex:1,stage:'span'}},g={time:1};
+assert.equal(authoredAnimationState(empty,g).cocked,false);assert.equal(authoredAnimationState(empty,g).boltSeated,false);empty.reload.stageIndex=2;assert.equal(authoredAnimationState(empty,g).cocked,true);assert.equal(authoredAnimationState(empty,g).boltSeated,false);empty.reload.stageIndex=4;assert.equal(authoredAnimationState(empty,g).boltSeated,true);
 globalThis.document={createElement:()=>raster.createCanvas(1,1)};
-const pixels=image=>image.getContext('2d').getImageData(0,0,image.width,image.height).data,digest=image=>createHash('sha256').update(pixels(image)).digest('hex');
-const team={sigil:'wolf',color:'#8ac9e8',dark:'#234c61'};
-assert.equal(new Set(AUTHORED_BODY_VIEWS.map(v=>JSON.stringify(v))).size,16,'All sixteen body views must be separately authored, including rear and diagonal silhouettes.');
-const priorities=['river_ranger','sharpshooter','hill_huntsman','tollhouse_crossbow','hornhill_halberdier','vale_sentinel','winter_pikeman','thornwall_pikeman'];
-const identities=priorities.map(type=>digest(completeTroopFrame(type,team,{action:'ready',directionIndex:0,directions:equipmentFor(type).directions,frame:0,equipment:equipmentFor(type)}).image));assert.equal(new Set(identities).size,priorities.length);
-let cels=0;
-for(const type of ['winter_pikeman','thornwall_pikeman','bridge_warden','dread_pike','crannog_spearhand','hornhill_halberdier','lance_champion','storm_rider','thorn_lancer','cavalry','dune_skirmisher']){
- const eq=equipmentFor(type),directions=eq.directions;assert.ok(directions>=8);if(eq.plantedLoss>0)assert.equal(directions,16);
- for(const action of ['ready','march','backward','turn','lower','brace','thrust','recovery','hit','death'])for(let directionIndex=0;directionIndex<directions;directionIndex++){
-  const cel=completeTroopFrame(type,team,{action,directionIndex,directions,frame:4,equipment:eq}),b=cel.sourceBounds;
-  const edge=pixels(cel.image);for(let x=0;x<cel.width;x++)assert.ok(edge[x*4+3]===0&&edge[((cel.height-1)*cel.width+x)*4+3]===0,`${type} ${action} direction ${directionIndex}: full weapon must fit vertically.`);for(let y=0;y<cel.height;y++)assert.ok(edge[y*cel.width*4+3]===0&&edge[(y*cel.width+cel.width-1)*4+3]===0,`${type} ${action} direction ${directionIndex}: full weapon must fit horizontally.`);
-  assert.equal(cel.bodyHeight,31,'Long weapons cannot shrink the human authoring scale.');
-  const data=pixels(cel.image);assert.ok(data.some((v,i)=>i%4===3&&v>0));cels++;
- }
-}
-const portraits=['winter_pike_hall','thornwall_drill_hall'].map((type,i)=>pikeProductionFrame(type,i?'rose':'wolf'));assert.notEqual(digest(portraits[0].image),digest(portraits[1].image));
-for(const type of ['river_ranger','dune_skirmisher','saltwind_axethrower']){
- const u={type,x:0,y:0,hp:100,facingX:1,facingY:0,pendingShot:{aimProgress:.1,aimDuration:.2,kind:type==='river_ranger'?'bow':type==='dune_skirmisher'?'javelin':'axe'}},g={time:2};
- const aim=authoredAnimationState(u,g);assert.equal(aim.action,'aiming');assert.equal(aim.phase,.5);delete u.pendingShot;u.releaseFrame=.1;assert.equal(authoredAnimationState(u,g).action,'release');
- if(type==='dune_skirmisher'){
-  const countForward=state=>{const cel=completeTroopFrame(type,team,state),data=pixels(cel.image);let count=0;for(let y=cel.anchorY-25;y<Math.min(cel.height,cel.anchorY+15);y++)for(let x=cel.anchorX+18;x<Math.min(cel.width,cel.anchorX+42);x++)if(y>=0&&data[(y*cel.width+x)*4+3]>0)count++;return count;};
-  const base={directionIndex:0,directions:8,frame:0,equipment:equipmentFor(type)};assert.ok(countForward({...base,action:'ready'})>5);assert.equal(countForward({...base,action:'release'}),0,'A thrown javelin cannot remain painted ahead of the releasing hand.');
- }
-}
-assert.ok(completeArtCacheInfo().frames<=completeArtCacheInfo().maxFrames);assert.ok(COMPLETE_TROOP_TYPES.length>=30);
-console.log('PASS '+cels+' complete directional long-weapon cels, eight redesign identities, unshrunk bodies, pike halls and bounded shared cache.');
+const renderer=new Renderer(raster.createCanvas(100,100));renderer.setTroopAtlas(await raster.loadImage(path.join(root,'assets/troops-atlas.png')));
+const calls=[],original=renderer.soldierSprite.bind(renderer);renderer.soldierSprite=(...args)=>{calls.push(args);return original(...args);};
+renderer.unit(raster.createCanvas(100,100).getContext('2d'),{id:1,type:'infantry',team:0,x:0,y:0,hp:100,maxHp:100,facingX:1,facingY:0,phase:0},{time:0,teams:[{color:'#8ac9e8',dark:'#234c61'}],unitClass:()=> 'infantry'},{selected:new Set()},1);
+assert.equal(calls[0][0],'infantry','Unchanged troops must flow through the original painted sprite renderer.');
+const code=fs.readFileSync(path.join(root,'complete-troops.js'),'utf8');assert.ok(!/paintCompleteCel|AUTHORED_BODY_VIEWS|quadraticCurveTo|\.fillRect\(|\.ellipse\(/.test(code),'The troop selector may not contain a shape-drawn character generator.');
+console.log('PASS native PNG selection, exact cells, stable body scale, no procedural figure fallback, honest missing coverage, loading metadata and restored ordinary troop artwork.');

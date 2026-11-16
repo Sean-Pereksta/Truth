@@ -1,0 +1,78 @@
+{
+  "draft": true,
+  "method": "Native generated PNGs, per-row transparent-separator rectangles, temporary eroded-alpha body/foot analysis only; painted pixels unchanged.",
+  "diagnostics": [
+    {
+      "type": "tollhouse_crossbow",
+      "standingSource": "tollhouse_crossbow-travel.png",
+      "standingRow": 1,
+      "sourceBodyHeight": 232,
+      "renderedBodyHeight": 31,
+      "frames": 128
+    },
+    {
+      "type": "vale_sentinel",
+      "standingSource": "vale_sentinel-travel.png",
+      "standingRow": 1,
+      "sourceBodyHeight": 238,
+      "renderedBodyHeight": 31,
+      "frames": 160
+    },
+    {
+      "type": "gilded_crossbow",
+      "standingSource": "gilded_crossbow-travel.png",
+      "standingRow": 1,
+      "sourceBodyHeight": 238,
+      "renderedBodyHeight": 31,
+      "frames": 160
+    },
+    {
+      "type": "river_ranger",
+      "standingSource": "river_ranger-travel.png",
+      "standingRow": 0,
+      "sourceBodyHeight": 210,
+      "renderedBodyHeight": 31,
+      "frames": 136
+    },
+    {
+      "type": "hill_huntsman",
+      "standingSource": "hill_huntsman-travel.png",
+      "standingRow": 0,
+      "sourceBodyHeight": 219,
+      "renderedBodyHeight": 31,
+      "frames": 104
+    },
+    {
+      "type": "sharpshooter",
+      "standingSource": "sharpshooter-travel-primary.png",
+      "standingRow": 0,
+      "sourceBodyHeight": 241,
+      "renderedBodyHeight": 31,
+      "frames": 128
+    },
+    {
+      "type": "winter_pikeman",
+      "standingSource": "winter_pikeman-travel-primary.png",
+      "standingRow": 0,
+      "sourceBodyHeight": 168,
+      "renderedBodyHeight": 31,
+      "frames": 32
+    },
+    {
+      "type": "thornwall_pikeman",
+      "standingSource": "thornwall_pikeman-travel-primary.png",
+      "standingRow": 0,
+      "sourceBodyHeight": 190,
+      "renderedBodyHeight": 31,
+      "frames": 32
+    },
+    {
+      "type": "hornhill_halberdier",
+      "standingSource": "hornhill_halberdier-travel-primary.png",
+      "standingRow": 0,
+      "sourceBodyHeight": 170,
+      "renderedBodyHeight": 31,
+      "frames": 32
+    }
+  ]
+}

@@ -2,6 +2,13 @@
 
 Command armies, conquer the grid, and unite the realm in an isometric real-time strategy game.
 
+The painted sprite update is a roster-wide work in progress. Every troop is
+targeted for eight authored directions, with sixteen for foot polearms. New
+image-generated PNG sheets keep each specialist's own design and complete
+equipment. The shape-drawn troop replacement has been removed; original painted
+art remains where a replacement is still under review. See
+`docs/Sprite-Production-Plan.md` for all units, batches and acceptance criteria.
+
 Press Z to place a formation with a center, width, one to four ranks and facing.
 Choose Line, Pike Block, Shield Wall, Wedge or Loose, then Enter to place or
 Escape to cancel. Right-click remains an immediate Move; right-drag sets a quick

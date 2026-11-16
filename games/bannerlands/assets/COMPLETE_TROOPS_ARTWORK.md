@@ -1,54 +1,101 @@
-# Complete troop animation artwork
+# Painted troop animation rollout
 
-`../complete-troops.js` is the editable vector artwork source. Every published
-cel starts on an empty transparent canvas and contains the complete body, hands,
-clothes, armor, weapon and any usable carried shield. The battlefield draws the
-result once; it never adds equipment, articulated arms or reload mechanisms on
-top of an old soldier sprite. Siege machines, giants and engineers retain their
-existing complete PNG artwork.
+Troop figures must be image-generated painted PNG artwork. Every source frame
+contains the complete character, hands, equipment and weapon. The renderer
+selects and draws that source frame; it does not construct a soldier from shapes
+or add replacement weapons, limbs, shields, reload devices or attack strokes.
 
-The priority designs include River Rangers, Sharpshooters, Hill Huntsmen,
-Tollhouse Crossbows, Horn Hill Halberdiers, Vale Sentinels, Winter Pikemen and
-Thornwall Pikemen. Shared whole-cel handling also covers the rest of the human
-and mounted roster, including shield bearers, lancers and javelin throwers.
+This is an unfinished, staged rollout. A direction reference sheet is not a
+completed animated troop. Full character movement and action cycles are the
+deliverable. Existing generated PNGs remain in use for troops outside the active
+painted atlas batch. New static design baselines, including the Martell javelin
+reference, are explicitly reference-only until proper animation sets are ready.
 
-`AUTHORED_TROOP_POSES` defines complete ready, travel, backward, advance, turn,
-lower, brace, thrust, recovery, hit, death, aim, release and support body poses.
-Crossbow lower, span, take-bolt, seat-bolt and raise cels use distinct belt,
-stirrup/lever, windlass and compact-lever mechanisms. Bows draw the string during
-the simulation's pending shot, and the arrow is absent from its release cel.
-Thrown weapons leave the hand at release and are retrieved in recovery cels.
+## Required coverage
 
-`AUTHORED_BODY_VIEWS` contains sixteen front, rear, side and quarter body views.
-The polearm roster uses all sixteen; other affected troops use eight. Shoulder
-depth, chest/back armor, cheek and helmet direction, arms and weapon grips turn
-together. A human stays at a 31-pixel authoring height. Weapon hulls expand the
-cel around the fixed foot anchor instead of scaling down the soldier.
+Every troop in `UNIT_DEFS`, including siege, giants and commanders, needs at
+least eight authored directions. Foot pikes, spears and halberds whose direction
+governs interception need sixteen. Lannister/Targaryen shield bearers,
+Mormont/Martell/Arryn lance champions and the king are tracked as separate
+variants. Mirrored copies do not create additional authored directions.
 
-The shared equipment module supplies actual quantized facing, lowering extent,
-thrust extension, shield presentation and projectile release point/height.
-Core decides whether physical loading continues during a minor collision
-shuffle; artwork consumes that state without a different movement threshold.
-All graphics levels use these complete cels and the same pose timing.
+For each direction, walking and backward walking require at least four real
+phases, preferably eight. Attacks need a real windup/draw, release or contact,
+and recovery. Hit reactions require at least two phases; death requires at least
+four. Applicable reload, support and other special actions require at least
+four phases. A held pose may have fewer frames, but cannot replace a movement,
+turn, loading or death animation. Body and gear must animate together.
 
-Frames are shared in a true LRU cache with a 128 MiB byte budget. Analytically
-authored body/weapon hulls allow direct rasterization into small canvases without
-runtime image readbacks. Fixed specialist palettes and invariant pose cels are
-shared across units. `completeArtCacheInfo()` exposes frame/byte counts and
-hit/miss counters for performance checks.
+Heavy pikes must remain approximately 2.5–3 standing body heights long. Sprite
+bounds expand around the full weapon instead of shrinking the wielder.
+Proportion, actual grip, front/rear visibility and release-point alignment need
+visual verification in motion, not just a count of sprite cells.
 
-Winter Pike Hall and Thornwall Drill Hall use separate complete vector
-illustrations with pike drill racks and house architecture. Their portraits and
-the troop portraits are rendered from the same artwork used in battle.
+## Runtime data
 
-To regenerate review sheets, provide `@napi-rs/canvas` (or set
-`LANDS_CANVAS_MODULE`) and run:
+`painted-troops/manifest.json` names the actual generated PNGs, explicit source
+rectangles, per-frame foot anchors, measured human body heights and animation
+clips. `../complete-troops.js` only selects these PNG rectangles. It contains no
+character drawing code. A source frame is scaled by its human body height,
+preserving the complete weapon. The selected unit and its portrait use the same
+painted source artwork. No lower graphics setting invents equipment.
+
+Generated pages are authoring sources. Mechanical packing copies their painted
+frames into compact per-troop runtime atlases using the same action/direction/
+phase schema across the roster. Runtime loading does not depend on a large
+fixed number of authoring files for every troop. Each troop's original design
+and all parts of each complete painted frame survive packing unchanged.
+
+Each `clips[action][direction][phase]` entry points to a sheet and cell or an
+explicit `rect`. `anchorPixels` describes the foot anchor inside that rectangle.
+Multiple house variants can coexist as keys such as `lance_champion:bear`, with
+`type: "lance_champion"` and `house: "bear"`.
+
+The simulation supplies direction, loading stage, loaded/cocked/seated-bolt
+state and release timing. Optional painted carry variants distinguish an empty
+weapon, a spanned empty weapon and a weapon with a seated bolt. Missing artwork
+is recorded as a gap; the renderer never draws a missing mechanism over a unit.
+
+During this draft rollout, an explicit `fallbackAction: "ready"` can keep a new
+pikeman visible when an action is unfinished. That complete painted frame is
+marked `draftFallback`, with its `requestedAction` retained. It does not count
+as finished bracing, loading, movement or death artwork. New pikemen never fall
+back to old shield-bearing troop art. `referenceOnly: true` excludes a static
+reference sheet from gameplay activation.
+
+## Review and audit
+
+`source/process-painted-atlas.mjs` and `source/assemble-painted-rollout.mjs`
+inspect and map native painted pixels, transparent gutters and anchors. They
+do not author body or equipment pixels. Some PNG viewers display RGB colors in
+nearly transparent pixels incorrectly; inspect alpha values and an opaque
+preview composite before judging a backdrop. A preview composite is not a
+replacement source asset.
+
+Run these commands from the Bannerlands directory with `@napi-rs/canvas`
+available (or set `LANDS_CANVAS_MODULE`):
 
 ```
-node source/author-troops.mjs path/to/review-output
+node source/author-troops.mjs path/to/painted-review
+node source/audit-troop-art.mjs
 ```
 
-The generator writes priority, crossbow-sequence and sixteen-direction polearm
-contact sheets plus a pose manifest. `source/tests/complete-troops.mjs` verifies
-1,360 long-weapon cels, including actual transparent alpha borders on every edge,
-stable body scale, all eight redesigned identities and distinct pike halls.
+The first command delegates to the actual PNG review tool. The second writes
+`painted-troops/coverage.json` for all 34 unit types and 38 current variants.
+The audit distinguishes declared directions, unique source phases, visually
+verified phases and directions, temporary aliases/fallbacks, alpha approval and
+weapon proportions. No target is complete until its full required animation
+set passes those checks. Ready-only references cannot satisfy walking or action
+coverage. Open source-quality issues are retained in `coverage-notes.json`.
+Motion previews are required alongside contact sheets to inspect actual gait,
+loading work and falls at gameplay scale. Use `npm run audit:troops` to refresh
+the report and `npm run test:coverage` to check the roster and phase rules.
+
+Exact generation prompts and built-in image-generation provenance for the
+Bridge Warden, Dread Pike, Crannog Spearhand and Martell reference work are in
+`painted-troops/raw/generation-prompts-artwork.json`.
+The main redesign and animation batch is recorded in
+`painted-troops/generation-prompts-root.json`, with the exact prompt text and
+source mappings in `painted-troops/prompts/`. These assets were made with the
+built-in image-generation tool; no CLI/API fallback or shape-drawn troop
+substitutes were used for the painted source artwork.

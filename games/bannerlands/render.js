@@ -1,6 +1,6 @@
 import {BUILD_DEFS,UNIT_DEFS} from './core.js';
 import {corpseOpacity} from './aftermath.js';
-import {authoredAnimationState,completeTroopFrame,hasCompleteTroopArt,pikeProductionFrame,TROOP_CELL} from './complete-troops.js';
+import {authoredAnimationState,completeTroopFrame,hasCompleteTroopArt,pikeProductionFrame,loadPaintedTroopAtlases,setPaintedTroopAtlases,paintedTroopCoverage} from './complete-troops.js';
 import {paintTerrainPolish} from './terrain-polish.js';
 import {FormationBannerLayer} from './formation-banners.js';
 import {BridgeArtwork} from './bridge-art.js';
@@ -43,6 +43,11 @@ function compactAtlasFrame(frame,scale){
 
 export class Renderer{
   constructor(canvas){this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.sprites=new Map();this.treeSprites=new Map();this.structureSprites=new Map();this.structureFrames={};this.structuresReady=false;this.houseArtReady=false;this.houseTroopFrames={};this.houseKeepFrames={};this.houseProductionFrames={};this.regimentArtReady=false;this.regimentTroopFrames={};this.regimentBuildingsReady=false;this.regimentBuildingFrames={};this.campaignArtReady=false;this.campaignFrames={keep:[],tower:[],flag:[]};this.campaignSprites=new Map();this.cachedGame=null;this.territoryTime=-1;this.frame=0;this.minimapTransform=null;this.rasterSpritesReady=false;this.troopFrames={};this.assetError=null;this.terrainReady=false;this.terrainChunkCache=new Map();this.maxTerrainChunks=24;this.terrainChunkSize=16;this.terrainTileSprites=new Map();}
+  async loadPaintedTroops(manifestOrURL='assets/painted-troops/manifest.json'){
+    this.paintedTroopsReady=false;const info=await loadPaintedTroopAtlases(manifestOrURL);this.paintedTroopsReady=true;this.paintedTroopInfo=info;return info;
+  }
+  async loadCompleteTroops(manifestOrURL){return this.loadPaintedTroops(manifestOrURL);}
+  setPaintedTroops(manifest,images){const info=setPaintedTroopAtlases(manifest,images);this.paintedTroopsReady=true;this.paintedTroopInfo=info;return info;}
   async loadBridgeArt(src='./assets/bridges/stone-edges.png'){
     this.bridgeArtwork??=new BridgeArtwork();const info=await this.bridgeArtwork.load(src);
     this.bridgeArchitectureCache=new Map();this.bridgeArchitectureBytes=0;return info;
@@ -263,7 +268,7 @@ export class Renderer{
     return {troops:6,troopFrames:48,buildings:6};
   }
   getStructureFrame(type,houseSigil=null,level=1){
-    if(type==='winter_pike_hall'&&houseSigil==='wolf'||type==='thornwall_drill_hall'&&houseSigil==='rose')return pikeProductionFrame(type,houseSigil);
+    if(type==='winter_pike_hall'&&houseSigil==='wolf'||type==='thornwall_drill_hall'&&houseSigil==='rose'){const painted=pikeProductionFrame(type,houseSigil);if(painted)return painted;}
     if(REINFORCEMENT_BUILDINGS.includes(type))return this.reinforcementArtReady&&BUILD_DEFS[type]?.house===houseSigil?this.reinforcementBuildingFrames[type]:null;
     if(CONQUEST_ART_BUILDINGS.includes(type))return this.conquestArtReady&&BUILD_DEFS[type]?.house===houseSigil?this.conquestBuildingFrames[type]:null;
     if(type==='restored_castle')return this.conquestArtReady?this.castleStateFrames[1]:null;
@@ -586,11 +591,11 @@ export class Renderer{
     c.putImageData(pixels,0,0);this.sprites.set(key,a);return a;
   }
   drawTroopPortrait(canvas,type,house){
-    if(hasCompleteTroopArt(type)){
+    if(hasCompleteTroopArt(type,house.sigil)){
       const state=authoredAnimationState({type,x:0,y:0,hp:1,facingX:Math.SQRT1_2,facingY:Math.SQRT1_2,attackAnim:0},{time:0},UNIT_DEFS[type]),cel=completeTroopFrame(type,house,state),c=canvas.getContext('2d');
       c.clearRect(0,0,canvas.width,canvas.height);c.imageSmoothingEnabled=true;
-      const scale=Math.min((canvas.width-6)/cel.width,(canvas.height-6)/cel.height),w=cel.width*scale,h=cel.height*scale;
-      c.drawImage(cel.image,0,0,cel.width,cel.height,(canvas.width-w)/2,(canvas.height-h)/2,w,h);return;
+      if(!cel)return;const scale=Math.min((canvas.width-6)/cel.width,(canvas.height-6)/cel.height),w=cel.width*scale,h=cel.height*scale;
+      if(cel)c.drawImage(cel.image,cel.sx,cel.sy,cel.sw,cel.sh,(canvas.width-w)/2,(canvas.height-h)/2,w,h);return;
     }
     const row=this.getTroopFrame(type,house.sigil);if(!row)return;
     const sprite=this.soldierSprite(type,house.color,house.dark,1,0,false,house.sigil);if(!sprite)return;
@@ -720,45 +725,18 @@ export class Renderer{
   }
   corpseSprite(body){
     this.corpseSprites??=new Map();
-    const key=[body.type==='giant'?'giant':body.kind,body.color,body.dark,body.trim,body.variant,body.isKing].join('|');
+    const key=[body.type||body.kind,body.sigil,body.color,body.dark,body.trim,body.variant,body.isKing,Math.sign((body.facingX||0)-(body.facingY||0))].join('|');
     // Cache pose families: sixteen factions, three palettes and all supported
     // troop kinds fit in the cache together, even after a very large battle.
     let frames=this.corpseSprites.get(key);if(!frames){frames=Array.from({length:4},(_,pose)=>this.makeCorpseSprite({...body,pose}));this.corpseSprites.set(key,frames);if(this.corpseSprites.size>384)this.corpseSprites.delete(this.corpseSprites.keys().next().value);}
     return frames[body.pose%4];
   }
   makeCorpseSprite(body){
-    const kind=body.type==='giant'?'giant':body.kind==='cavalry'?'cavalry':body.kind==='siege'?'siege':'soldier';
-    const sprite=makeCanvas(80,44),c=sprite.getContext('2d');c.translate(40,22);
-    c.globalAlpha=.25;ellipse(c,0,1,kind==='cavalry'||kind==='siege'?19:13,kind==='cavalry'?7:5,'#111b16');c.globalAlpha=1;
-    c.scale(1,.63);c.rotate([-.38,.35,1.05,-1.12][body.pose]);c.lineCap='round';c.lineJoin='round';
-    if(kind==='siege'){
-      line(c,-17,-8,15,7,'#3f3327',4);line(c,-13,9,11,-10,'#796044',3.5);line(c,-12,-7,17,-2,'#9a805a',2.5);
-      for(const [x,y]of [[-10,9],[12,5]]){c.beginPath();c.ellipse(x,y,5,4,.4,0,TAU);c.strokeStyle='#3e4038';c.lineWidth=2;c.stroke();line(c,x-4,y,x+4,y,'#92724a',1.5);}
-      line(c,-3,-5,4,-17,'#8f7957',2);polygon(c,[[4,-17],[14,-13],[9,-7],[0,-10]],body.color,body.dark);line(c,-18,1,-9,-4,'#b6a081',1.2);
-    }else{
-      if(kind==='cavalry'){
-        // A fallen mount lies on its side beneath the rider and saddle cloth.
-        const hide=['#695646','#86715a','#514a41'][body.variant];ellipse(c,0,4,15,7,hide);ellipse(c,-15,1,6,4.5,hide);
-        line(c,-18,0,-23,3,'#4d4439',3);line(c,-6,8,-12,14,hide,3);line(c,7,8,15,14,hide,3);line(c,12,3,20,-1,'#332e29',2);
-        polygon(c,[[-6,-2],[5,-3],[11,5],[-5,8]],body.dark,'#292f2b');line(c,-2,-2,4,5,body.trim,1.6);c.translate(1,-3);c.scale(.9,.9);
-      }
-      if(kind==='giant')c.scale(1.35,1.35);
-      const bent=body.pose%2?1:-1;
-      // Distinct splayed/curled limbs, faction cloak, armor and dropped gear.
-      polygon(c,[[-6,-5],[6,-4],[9,7],[-9,5]],body.dark,'#26332e');
-      line(c,4,1,12,4*bent,body.armor,3.5);line(c,12,4*bent,17,6*bent,'#3e4440',3.2);
-      line(c,3,4,9,9,body.armor,3.2);line(c,9,9,14,10,'#3c443e',3.1);
-      line(c,-1,-3,-4,-9,body.color,3);line(c,-4,-9,-10,-9+bent*2,body.armor,2.6);
-      line(c,-1,3,-7,8,body.color,3);line(c,-7,8,-12,7,body.skin,2.3);
-      ellipse(c,-2,0,6,5,body.color);polygon(c,[[-7,-2],[1,-4],[4,2],[-3,4]],body.armor,'#404b45');line(c,-5,-1,2,2,'#bbc0ab',.8);
-      ellipse(c,-10,-1,3.4,3.5,body.skin);polygon(c,[[-13,-4],[-8,-5],[-6,-2],[-12,-1]],body.armor,'#404b45');
-      line(c,-2,-4,1,-2,body.trim,1.4);
-      if(body.kind==='archer'){c.beginPath();c.arc(8,-10,7,-1.15,1.2);c.strokeStyle='#a1885d';c.lineWidth=1.3;c.stroke();line(c,10,-16,10,-4,'#b7b496',.6);}
-      else{line(c,4,-10,18,-14,'#b2b9a4',1.2);line(c,6,-13,8,-8,'#7d7351',1.7);}
-      if(body.variant!==1){ellipse(c,10,-5,4.5,5.2,body.color);c.beginPath();c.ellipse(10,-5,4.5,5.2,0,0,TAU);c.strokeStyle=body.armor;c.lineWidth=1.2;c.stroke();ellipse(c,10,-5,1.3,1.5,'#b6b9a5');}
-      if(body.isKing)polygon(c,[[-18,2],[-18,-3],[-15,-1],[-13,-5],[-11,-1],[-8,-3],[-9,2]],'#e1c16c','#665332');
-    }
-    return sprite;
+    // Preserve the original painted fighter as a whole image for older troops.
+    // New generated troops have their own authored death clips in drawAftermath.
+    const sprite=makeCanvas(80,44),c=sprite.getContext('2d'),type=body.type||body.kind,special=REGIMENT_ART_TYPES.includes(type)||CONQUEST_ART_HOUSES[type]||REINFORCEMENT_HOUSES[type]||!['infantry','archer','cavalry','siege','hero'].includes(type)?body.sigil:null;
+    const painted=this.soldierSprite(type,body.color,body.dark,(body.facingX||0)-(body.facingY||0)<0?-1:1,3,true,special);if(!painted)return sprite;
+    c.save();c.translate(40,22);c.rotate([1.4,-1.4,1.7,-1.7][body.pose%4]);c.scale(1,.65);c.drawImage(painted,-32,-64,64,72);c.restore();return sprite;
   }
   drawAftermath(c,g,bounds){
     const aftermath=g.aftermath;if(!aftermath?.bodies?.length)return;
@@ -767,9 +745,9 @@ export class Renderer{
       const alpha=corpseOpacity(body,time);if(alpha<=0||g.config?.fogOfWar&&!g.vision?.isVisible(0,body.x,body.y))continue;
       const p=iso(body.x,body.y);if(p.x<bounds.left-40||p.x>bounds.right+40||p.y<bounds.top-24||p.y>bounds.bottom+24)continue;
       c.globalAlpha=alpha*.92;
-      if(hasCompleteTroopArt(body.type)){
+      if(hasCompleteTroopArt(body.type,g.teams?.[body.team]?.sigil||body.sigil)){
         const team=g.teams?.[body.team]||body,state=authoredAnimationState({...body,hp:0,x:body.x,y:body.y},g,UNIT_DEFS[body.type]),cel=completeTroopFrame(body.type,team,state);
-        c.drawImage(cel.image,p.x-cel.anchorX,p.y-cel.anchorY);
+        if(cel)c.drawImage(cel.image,cel.sx,cel.sy,cel.sw,cel.sh,p.x-cel.anchorX,p.y-cel.anchorY,cel.width,cel.height);
       }else c.drawImage(this.corpseSprite(body),p.x-40,p.y-22,80,44);
     }
     c.restore();
@@ -788,11 +766,11 @@ export class Renderer{
     const direction=u.braceDir||(Number.isFinite(u.facingX)&&Number.isFinite(u.facingY)?{x:u.facingX,y:u.facingY}:{x:vx,y:vy}),screenFacing=iso(direction.x,direction.y),faceLength=Math.hypot(screenFacing.x,screenFacing.y)||1;
     const facing=screenFacing.x<-.03?-1:1;
     const phase=Number.isFinite(u.phase)?u.phase:0,attack=(u.attackAnim||0)>.05;
-    if(hasCompleteTroopArt(u.type)){
+    if(hasCompleteTroopArt(u.type,team.sigil)){
       const state=authoredAnimationState(u,g,UNIT_DEFS[u.type]),cel=completeTroopFrame(u.type,team,state);
-      c.drawImage(cel.image,p.x-cel.anchorX,p.y-cel.anchorY);
+      if(cel)c.drawImage(cel.image,cel.sx,cel.sy,cel.sw,cel.sh,p.x-cel.anchorX,p.y-cel.anchorY,cel.width,cel.height);
     }else{
-      const frame=attack?Math.min(3,Math.floor((1-clamp(u.attackAnim,0,1))*4)):moving?Math.floor(phase/TAU*4)%4:0;
+      let frame=attack?Math.min(3,Math.floor((1-clamp(u.attackAnim,0,1))*4)):moving?Math.floor(phase/TAU*4)%4:0;if(u.backpedaling&&moving&&!attack)frame=3-frame;
       const sprite=this.soldierSprite(u.type,team.color,team.dark,facing,frame,attack||u.type==='trebuchet'&&(u.setupProgress||0)>=UNIT_DEFS.trebuchet.setupSeconds,specialHouse);
       if(sprite)c.drawImage(sprite,p.x-32,p.y-64,64,72);
     }

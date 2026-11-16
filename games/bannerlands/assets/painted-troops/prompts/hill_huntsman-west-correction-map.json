@@ -1,0 +1,37 @@
+{
+  "file": "hill_huntsman-west-correction.png",
+  "columns": 4,
+  "rows": 4,
+  "primaryDirectionColumn": 3,
+  "direction": "screen-west",
+  "cells": [
+    "ready",
+    "marchA",
+    "marchB",
+    "backstep",
+    "turn",
+    "halfdraw-nock",
+    "aim",
+    "release",
+    "recovery",
+    "hit",
+    "fall",
+    "fallen",
+    "reach-quiver",
+    "nock",
+    "rise",
+    "low-ready"
+  ],
+  "review": {
+    "livingNosesLeft": true,
+    "bowAimLeft": true,
+    "releasedArrowGone": true,
+    "wholeBodyAndEquipment": true,
+    "noProgrammaticMirroring": true,
+    "needsFurtherQA": [
+      "colored edge/fringe contamination visible in preview",
+      "final cropped cel margins and foot anchors",
+      "full consistent facing across original other direction cells"
+    ]
+  }
+}

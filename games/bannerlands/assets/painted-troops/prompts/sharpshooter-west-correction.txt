@@ -1,0 +1,26 @@
+Use case: stylized-concept. TARGETED DIRECTION REPAIR sprite sheet. Paint NEW WEST-FACING animation cels of the EXACT NEW Tully SHARPSHOOTER from referenceimage1: steelhelmet with shortredreartassel, broadsteelpauldrons, navybrigandine, red-and-blue splitrivertabard, sideBOLTCASE, substantial WINDLASS CROSSBOW. Preserve painterlyrealisticidentity/materials/normalhumanproportions. This sheet repairs a missing WEST direction; do NOT repeat any right-facing pose fromreference.
+EVERY SINGLE PERSON MUST FACE SCREEN-LEFT / WEST in TRUE LEFT PROFILE. Nose points LEFT, chest is turned LEFT, crossbow MUZZLE and prod point LEFT, stock/windlass sit toward RIGHT behind his hands. View from an elevated isometric camera, but the forward aiming direction is strictly screenLEFT. NO front-facing, back-facing, diagonal-right or right-facing figure anywhere. An artist must draw the actual left-side view with coherent anatomical hands and mechanisms; do not make a mechanical mirrored sticker of the old poses.
+Square1536×1536 PNG, genuine transparentRGBA, EXACTLY4equalcolumns×4equalrows=16isolated fullbody-plus-whole-crossbow figures, ONEpercell. Transparentmargins, no text, gridlines,labels, borders, floor,environment,checkerboard or extrafigure. Keep normalbodyproportions and samebodysize acrossall16cells. All helmets, heads, bothhands, feet, crossbow, windlass, string and boltcase fullyinsideeachcell.
+
+Each cell is a DIFFERENT completebodyaction, in this exact ROW-MAJOR order. All actions remain LEFT FACING:
+ROW1:
+cell1 ready with loadedcrossbow at lowguard facingLEFT;
+cell2 march leftfootforward carryingwholeweapon safely, noseandmuzzleLEFT;
+cell3 march rightfootforward carryingwholeweapon safely, noseandmuzzleLEFT;
+cell4 backwardstep towardRIGHT while faceandcrossbow stillfaceLEFT.
+ROW2:
+cell5 turningstep finishingLEFT profile, fullbodyhandsweaponturntogether;
+cell6 planted AIM LEFT with ONEbolt seated on stock and cockedstring;
+cell7 RELEASE LEFT, string springsforward and bolt has LEFTstock, showEMPTYgroove, no flyingprojectile inpicture;
+cell8 LOWER emptycrossbow towardthigh, bothhands/torso visiblylowerit.
+ROW3:
+cell9 SPAN START, bentknees/torso, crossbowdownagainstthigh, starts operating realWINDLASScrank;
+cell10 SPAN FINISH, distinctdeeperworkingpose, right handturnscrank to drawstringinto catch, grooveEMPTY;
+cell11 TAKE BOLT, onehandholdscrossbow, otherhand extractsONESINGLEshortthickbolt fromsidecase;
+cell12 SEAT BOLT, headlooksdownLEFT, hand placesONEboltintogrooveofcockedcrossbow.
+ROW4:
+cell13 RAISE loadedcrossbow fromthightochest, facingLEFT;
+cell14 HIT reaction, bodyrecoils but headandweaponare stillLEFT-facing, fullweaponstaysinhands;
+cell15 FALL toside/oneknee, head towardLEFT, completecrossbowstillheld coherently;
+cell16 FALLEN DEAD fullsoldier lyingwithHEAD TO LEFT and boots toRIGHT, completecrossbow releasedbesidehand withMUZZLE TO LEFT.
+No detached arms, no idlebody with reload diagrams, no bow, no arrowquiver, no hood, no cape or shield. Everyframe is a complete richlypainted human physically operating his own heavywindlasscrossbow. LEFT-FACING IN EVERY CELL is the highest priority. Actual transparentbackground.

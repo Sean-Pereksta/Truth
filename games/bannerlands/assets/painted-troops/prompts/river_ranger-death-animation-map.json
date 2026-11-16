@@ -1,0 +1,42 @@
+{
+  "file": "river_ranger-death-animation.png",
+  "directions": [
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW",
+    "N",
+    "NE",
+    "E"
+  ],
+  "columns": 8,
+  "phases": [
+    "stagger-knees-break",
+    "mid-fall",
+    "ground-contact-settling",
+    "fallen-rest"
+  ],
+  "rows": 4,
+  "nominalGrid": "8x4",
+  "rowBandPixelGuides": [
+    0,
+    335,
+    640,
+    878,
+    1024
+  ],
+  "review": {
+    "continuousWholeBodyFall": true,
+    "allEightBodyDirectionsVisuallyVerified": true,
+    "westTrueLeft": true,
+    "northFullyBack": true,
+    "completeBow": true,
+    "consistentBodyScale": "use SAME normalization scalar across all death phases; do not normalize by shrinking alpha bbox height",
+    "rowSpacing": "nonuniform generated rows; nominal 256px cuts would clip standing/midfall frames; use approximate band guides with alpha bounds",
+    "needsFurtherQA": [
+      "per-column cell bounds and fixed animation ground anchor",
+      "final in-game temporal playback and transition timing"
+    ]
+  }
+}

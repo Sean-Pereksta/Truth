@@ -23,14 +23,19 @@ mantles and longbows. Tollhouse crews use broad flat helmets and stirrup-lever
 crossbows. Horn Hill Halberdiers carry complete axe-hook-point polearms. Vale
 Sentinels use a low marksman stance and compact lever crossbows.
 
-COMPLETE TROOP FRAMES
-The complete-troops module authors whole figures with their weapons and hands
-in the same frame. Shared cached frames retain full weapons at every detail
-level. Ground selection guides remain separate from troop artwork. Projectiles
-become world objects only on release. New pikes and foot polearms have sixteen
-directions; mounted lances, crossbows and other affected troops have eight.
-The pose metadata in equipment.js supplies grip, weapon tip, release point and
-protective direction to rendering and combat.
+COMPLETE PAINTED TROOP FRAMES — ROSTER ROLLOUT IN PROGRESS
+New artwork is generated as painted PNG sprite sheets. The complete-troops
+module only selects complete image frames and their foot anchors; it does not
+draw soldiers, weapons, limbs, shields or reload mechanisms. Original painted
+PNGs remain available while replacement sets are under review.
+The target is eight authored directions for EVERY troop and sixteen for foot
+polearms. Each troop needs movement, turning, attack, reaction and death frames,
+plus its relevant loading, support or brace actions. Generated columns are not
+counted as verified directions until the actual body and equipment have been
+visually checked. Missing actions, incorrect headings and short pikes remain
+open work rather than being described as complete. See Sprite-Production-Plan.md.
+Ground selection guides remain separate. Projectile release and protection
+metadata must be checked against the painted poses before a set is finalized.
 
 CONTROLS
 Right-click ground  Immediate Move and disengage

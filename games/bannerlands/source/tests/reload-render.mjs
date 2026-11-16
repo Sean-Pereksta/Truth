@@ -1,32 +1,37 @@
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
+import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 import {Renderer} from '../../render.js';
 import {UNIT_DEFS,HOUSES} from '../../core.js';
-import {authoredAnimationState,completeTroopFrame} from '../../complete-troops.js';
+import {authoredAnimationState,completeTroopFrame,paintedTroopCoverage} from '../../complete-troops.js';
+import {loadRuntimePaintedArt,frameSourceKey} from './painted-art-helpers.mjs';
 const require=createRequire(import.meta.url);let raster;
-try{raster=require(process.env.LANDS_CANVAS_MODULE||'@napi-rs/canvas');}
-catch{console.log('SKIP complete-cel reload raster checks: install @napi-rs/canvas or set LANDS_CANVAS_MODULE.');process.exit(0);}
+try{raster=require(process.env.LANDS_CANVAS_MODULE||'@napi-rs/canvas');}catch{console.log('SKIP painted reload raster checks: set LANDS_CANVAS_MODULE.');process.exit(0);}
 const canvas=(w=1,h=1)=>raster.createCanvas(w,h);globalThis.document={createElement:()=>canvas()};
+const root=fileURLToPath(new URL('../..',import.meta.url)),manifest=await loadRuntimePaintedArt(root,raster);assert.ok(manifest,'Painted PNG manifest is required for renderer integration checks.');
 const r=new Renderer(canvas(320,200)),digest=c=>createHash('sha256').update(c.getContext('2d').getImageData(0,0,c.width,c.height).data).digest('hex');
-const entries=[['gilded_crossbow','lion'],['tollhouse_crossbow','bridge'],['sharpshooter','fish'],['vale_sentinel','falcon']];
-const stages=['lower','span','take_bolt','seat_bolt','raise'];
-for(const [type,sigil]of entries){
+for(const [type,sigil]of [['gilded_crossbow','lion'],['tollhouse_crossbow','bridge'],['sharpshooter','fish'],['vale_sentinel','falcon']]){
+ const definition=manifest.troops[type];assert.ok(definition,type+' must have an actual painted PNG entry.');
  const team=HOUSES.find(h=>h.sigil===sigil),u={id:1,type,team:0,x:0,y:0,facingX:1,facingY:0,hp:100,maxHp:100,phase:0,order:{mode:'attack'},reloading:true,vx:0,vy:0},g={time:20,teams:[team],houseContent:()=>({unit:type}),unitClass:()=> 'archer'};
- const signatures=[];
- for(const stage of stages){u.reload={stage,stageProgress:.5,stageDuration:1,progress:1,duration:3};const state=authoredAnimationState(u,g,UNIT_DEFS[type]);assert.equal(state.action,stage);signatures.push(digest(completeTroopFrame(type,team,state).image));}
- assert.equal(new Set(signatures).size,stages.length,'Every physical loading stage must select a distinct complete body/weapon cel.');
- u.reload={stage:'span',stageProgress:.15,stageDuration:1,progress:.5,duration:3};const first=authoredAnimationState(u,g,UNIT_DEFS[type]);u.reload.stageProgress=.65;const second=authoredAnimationState(u,g,UNIT_DEFS[type]);assert.notEqual(digest(completeTroopFrame(type,team,first).image),digest(completeTroopFrame(type,team,second).image),'The authored stage contains actual hand and mechanism motion.');
- assert.equal(completeTroopFrame(type,team,second),completeTroopFrame(type,team,second),'Paused state reuses the identical immutable cel.');
- u.vx=.1;assert.equal(authoredAnimationState(u,g,UNIT_DEFS[type]).action,'span','Minor collision shuffles cannot display marching while physical reload work continues.');u.vx=1;u.reloading=false;const walking=authoredAnimationState(u,g,UNIT_DEFS[type]);assert.equal(walking.action,'march');
- u.vx=0;u.reloading=true;u.releaseFrame=.1;assert.equal(authoredAnimationState(u,g,UNIT_DEFS[type]).action,'release','Exactly-once release presentation precedes lower/reload even when reload state already exists.');
- u.releaseFrame=0;const draw=low=>{const c=canvas(200,180),ctx=c.getContext('2d');ctx.translate(90,140);r.lowDetail=low;r.unit(ctx,u,g,{selected:new Set()},1);return digest(c);};assert.equal(draw(false),draw(true),'Economy detail retains the same complete equipment and physical pose.');
- u.facingX=-1;const reversed=authoredAnimationState(u,g,UNIT_DEFS[type]);assert.notEqual(reversed.directionIndex,second.directionIndex);
- u.facingX=1;u.vx=1;u.reloading=false;u.reload={stage:'span',stageIndex:1,stageProgress:0,stageDuration:1,progress:.4,duration:3};
- const emptyTravel=authoredAnimationState(u,g,UNIT_DEFS[type]);assert.equal(emptyTravel.loaded,false);assert.equal(emptyTravel.cocked,false);assert.equal(emptyTravel.boltSeated,false);const emptyCel=digest(completeTroopFrame(type,team,emptyTravel).image);
- u.reload.stageIndex=2;const spannedTravel=authoredAnimationState(u,g,UNIT_DEFS[type]);assert.equal(spannedTravel.cocked,true);assert.equal(spannedTravel.boltSeated,false);assert.notEqual(digest(completeTroopFrame(type,team,spannedTravel).image),emptyCel,'Completed spanning stays visible while the empty crossbow is carried.');
- u.reload.stageIndex=4;const seatedTravel=authoredAnimationState(u,g,UNIT_DEFS[type]);assert.equal(seatedTravel.loaded,false);assert.equal(seatedTravel.cocked,true);assert.equal(seatedTravel.boltSeated,true);const seatedCel=digest(completeTroopFrame(type,team,seatedTravel).image);assert.notEqual(seatedCel,digest(completeTroopFrame(type,team,spannedTravel).image),'Interrupting the raise stage must retain the already seated physical bolt while carrying.');
- u.reload=null;const loadedTravel=authoredAnimationState(u,g,UNIT_DEFS[type]);assert.equal(loadedTravel.loaded,true);assert.equal(loadedTravel.cocked,true);assert.equal(loadedTravel.boltSeated,true);assert.equal(digest(completeTroopFrame(type,team,loadedTravel).image),seatedCel,'The completed physical loading stages must survive their carrying animation.');assert.notEqual(digest(completeTroopFrame(type,team,loadedTravel).image),digest(completeTroopFrame(type,team,spannedTravel).image),'A crossbow without a seated bolt must remain visibly empty.');
- u.vx=0;const ready=authoredAnimationState(u,g,UNIT_DEFS[type]);assert.equal(ready.cocked,true);assert.notEqual(digest(completeTroopFrame(type,team,ready).image),digest(completeTroopFrame(type,team,{...ready,cocked:false}).image),'The loaded ready cel must visibly hold its string at the nut.');
- console.log('PASS '+type+' complete reload stages, interruption, release ordering, pause, direction and economy rendering');
+ for(const stage of ['lower','span','take_bolt','seat_bolt','raise']){
+  u.reload={stage,stageProgress:.5,stageDuration:1,progress:1,duration:3};const state=authoredAnimationState(u,g,UNIT_DEFS[type]),cel=completeTroopFrame(type,team,state);
+  assert.equal(state.action,stage);assert.ok(cel?.painted,type+' '+stage+' must remain visible using a complete source PNG.');
+  if(definition.clips[stage]){assert.equal(cel.action,stage);assert.equal(cel.draftFallback,false);}
+  else{assert.equal(cel.draftFallback,true);assert.ok(paintedTroopCoverage().missingFrames.includes(type+':'+stage),'A temporary ready frame cannot be passed off as a finished reload animation.');}
+ }
+ u.reload={stage:'span',stageIndex:1,stageProgress:.15,stageDuration:1,progress:.5,duration:3};const first=authoredAnimationState(u,g,UNIT_DEFS[type]);u.reload.stageProgress=.85;const second=authoredAnimationState(u,g,UNIT_DEFS[type]);
+ if(definition.clips.span?.[0]?.length>1)assert.notEqual(frameSourceKey(completeTroopFrame(type,team,first)),frameSourceKey(completeTroopFrame(type,team,second)),'Declared loading phases must select different source PNG cells.');
+ assert.equal(completeTroopFrame(type,team,second),completeTroopFrame(type,team,second),'Pause reuses the same painted source rectangle.');
+ u.vx=.1;assert.equal(authoredAnimationState(u,g,UNIT_DEFS[type]).action,'span','Minor collision shuffles cannot make an actively loading figure march.');
+ u.vx=1;u.reloading=false;const empty=authoredAnimationState(u,g,UNIT_DEFS[type]);assert.equal(empty.action,'march');assert.equal(empty.cocked,false);assert.equal(empty.boltSeated,false);
+ u.reload.stageIndex=2;const spanned=authoredAnimationState(u,g,UNIT_DEFS[type]);assert.equal(spanned.cocked,true);assert.equal(spanned.boltSeated,false);
+ u.reload.stageIndex=4;const seated=authoredAnimationState(u,g,UNIT_DEFS[type]);assert.equal(seated.loaded,false);assert.equal(seated.cocked,true);assert.equal(seated.boltSeated,true);
+ for(const [state,variant]of [[empty,'march_empty'],[spanned,'march_spanned'],[seated,'march_bolt_seated']]){
+  const cel=completeTroopFrame(type,team,state);assert.ok(cel?.painted);if(definition.clips[variant])assert.equal(cel.action,variant);else assert.ok(paintedTroopCoverage().missingFrames.includes(type+':'+variant));
+ }
+ u.vx=0;u.reloading=true;u.releaseFrame=.1;assert.equal(authoredAnimationState(u,g,UNIT_DEFS[type]).action,'release','Release is shown before reload lowering.');
+ u.releaseFrame=0;const draw=low=>{const c=canvas(200,180),ctx=c.getContext('2d');ctx.translate(90,140);r.lowDetail=low;r.unit(ctx,u,g,{selected:new Set()},1);return digest(c);};assert.equal(draw(false),draw(true),'Low detail keeps the same complete painted source art.');
+ assert.equal(paintedTroopCoverage().troops[type].complete,false,'Draft sources must remain marked incomplete until per-direction animation phases and mechanics are visually verified.');
+ console.log('PASS '+type+' actual PNG selection, honest draft gaps, loading interruption, release ordering, pause and low-detail parity');
 }

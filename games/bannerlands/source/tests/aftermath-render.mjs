@@ -10,11 +10,11 @@ import {BattleAftermath,corpseOpacity} from '../../aftermath.js';
 const require=createRequire(import.meta.url);let raster;try{raster=require(process.env.LANDS_CANVAS_MODULE||'@napi-rs/canvas');}catch{console.log('SKIP aftermath rendering: install @napi-rs/canvas or set LANDS_CANVAS_MODULE.');process.exit(0);}
 const canvas=(w=300,h=150)=>{const c=raster.createCanvas(w,h);c.style={};return c;};
 globalThis.document={createElement:()=>canvas(),getElementById:()=>null};
-const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..'),r=new Renderer(canvas());
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..'),r=new Renderer(canvas()),originalTroopAtlas=await raster.loadImage(path.join(root,'assets/troops-atlas.png'));r.setTroopAtlas(originalTroopAtlas);
 const digest=c=>createHash('sha256').update(c.toBuffer('image/png')).digest('hex'),pixels=c=>c.getContext('2d').getImageData(0,0,c.width,c.height).data;
 const make=(kind='infantry',id=1,team=0,isKing=false)=>{const a=new BattleAftermath();a.record({id,team,type:kind,hp:0,x:0,y:0,isKing},HOUSES[team],0,kind);return a;};
 let cases=0;const test=(name,fn)=>{fn();cases++;console.log('PASS '+name);};
-test('Faction colors, fallen poses, riders and siege wreckage produce distinct corpse drawings',()=>{
+test('Original painted faction sprites, riders and siege images remain distinct when fallen',()=>{
   const images=new Set();for(const team of [0,1,2,3])for(const kind of ['infantry','archer','cavalry','siege'])images.add(digest(r.corpseSprite(make(kind,team+1,team).bodies[0])));assert.equal(images.size,16);
   const a=new BattleAftermath();for(let i=1;i<=4;i++)a.record({id:i,team:0,type:'infantry',hp:0,x:0,y:0},HOUSES[0],0,'infantry');assert.equal(new Set(a.bodies.map(b=>digest(r.corpseSprite(b)))).size,4);
 });
@@ -34,11 +34,11 @@ test('Sprite caching is bounded and rendering never mutates body data',()=>{
 test('A large mixed-faction aftermath reuses every pose without rebuilding canvases each frame',()=>{
   const renderer=new Renderer(canvas()),a=new BattleAftermath();let id=1;
   for(let team=0;team<16;team++)for(const type of ['infantry','archer','cavalry','siege','giant','hero','king'])for(let i=0;i<24;i++)a.record({id:id++,team,type:type==='king'?'hero':type,isKing:type==='king',hp:0,x:0,y:0},HOUSES[team],0,type==='king'?'hero':type==='giant'?'infantry':type);
-  for(const body of a.bodies)renderer.corpseSprite(body);assert.ok(renderer.corpseSprites.size<=336);let rebuilt=0;const make=renderer.makeCorpseSprite.bind(renderer);renderer.makeCorpseSprite=body=>{rebuilt++;return make(body);};
+  renderer.setTroopAtlas(originalTroopAtlas);for(const body of a.bodies)renderer.corpseSprite(body);assert.ok(renderer.corpseSprites.size<=336);let rebuilt=0;const make=renderer.makeCorpseSprite.bind(renderer);renderer.makeCorpseSprite=body=>{rebuilt++;return make(body);};
   for(const body of a.bodies)renderer.corpseSprite(body);assert.equal(rebuilt,0,'Visible corpses must reuse cached poses even when many factions and unit types die.');
 });
 r.setTroopAtlas(await raster.loadImage(path.join(root,'assets/troops-atlas.png')));
-test('A living king has an unmistakable crown, label and full-health gold bar',()=>{
+test('A living king keeps the painted commander, KING label and full-health gold bar',()=>{
   const g={teams:HOUSES,time:0,unitClass:()=> 'hero',allied:(a,b)=>a===b},u={id:1,type:'hero',team:0,x:0,y:0,hp:800,maxHp:800,facingX:1,facingY:0,phase:0},ui={selected:new Set()},draw=isKing=>{const c=canvas(100,110),ctx=c.getContext('2d');ctx.translate(50,82);const labels=[],text=ctx.fillText.bind(ctx);ctx.fillText=(value,...args)=>{labels.push(value);text(value,...args);};r.unit(ctx,{...u,isKing},g,ui,1);return {c,labels};};
   const ordinary=draw(false),king=draw(true);assert.notEqual(digest(ordinary.c),digest(king.c));assert.ok(king.labels.includes('KING'));assert.equal(ordinary.labels.includes('KING'),false);
   const p=king.c.getContext('2d').getImageData(50,89,1,1).data;assert.ok(p[0]>200&&p[1]>150&&p[2]<150,'The king keeps a gold health bar even at full health.');
