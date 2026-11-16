@@ -37,6 +37,21 @@ try{
       const data=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
       let hash=2166136261;for(let i=0;i<data.length;i++){hash^=data[i];hash=Math.imul(hash,16777619);}return hash>>>0;
     };
+    const alphaGeometry=canvas=>{
+      const data=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;let left=canvas.width,top=canvas.height,right=-1,bottom=-1,total=0,cx=0,cy=0;
+      for(let y=0;y<canvas.height;y++)for(let x=0;x<canvas.width;x++){const a=data[(y*canvas.width+x)*4+3];total+=a;cx+=x*a;cy+=y*a;if(a>48){left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x);bottom=Math.max(bottom,y);}}
+      return {bounds:[left,top,right,bottom],total,cx:cx/(total||1),cy:cy/(total||1)};
+    };
+    const drawRegression=row=>{
+      let boundDrift=0,centerDrift=0,coverageDrift=0;const indices=[row.actions.ready,row.actions.walk[2],row.actions.fire??row.actions.thrust??row.actions.guard,row.actions.death.at(-1)];
+      for(const index of indices)for(const facing of [-1,1])for(const offset of [0,.25]){
+        const a=document.createElement('canvas'),b=document.createElement('canvas');a.width=b.width=400;a.height=b.height=300;const ca=a.getContext('2d'),cb=b.getContext('2d'),f=row.frames[index];
+        ca.save();ca.translate(200+offset,210+offset);ca.scale(facing,1);ca.drawImage(f.image,f.left,f.top,f.width,f.height,-f.anchorX*f.scale,-f.anchorY*f.scale,f.width*f.scale,f.height*f.scale);ca.restore();
+        renderer.drawPaintedTroop(cb,row,index,facing,200+offset,210+offset);const x=alphaGeometry(a),y=alphaGeometry(b);
+        boundDrift=Math.max(boundDrift,...x.bounds.map((value,i)=>Math.abs(value-y.bounds[i])));centerDrift=Math.max(centerDrift,Math.hypot(x.cx-y.cx,x.cy-y.cy));coverageDrift=Math.max(coverageDrift,Math.abs(x.total-y.total)/(x.total||1));
+      }
+      return {boundDrift,centerDrift,coverageDrift};
+    };
     const atlasStats=async definition=>{
       const file=definition.file;
       const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=reject;im.src='/'+file;});
@@ -66,7 +81,7 @@ try{
       const reload=definition.kind==='crossbow'?['lower','span','retrieve','seat','raise'].map(stage=>selectPaintedFrame({hp:100,reloading:true,reload:{stage,progress:1,duration:3}},g,definition,false)):[];
       const pausedA=selectPaintedFrame({hp:100,reloading:true,reload:{stage:'span',progress:1,duration:3}},g,definition,false);
       const pausedB=selectPaintedFrame({hp:100,reloading:true,reload:{stage:'span',progress:1,duration:3}},g,definition,false);
-      rows.push({id:definition.id,kind:definition.kind,type:definition.type,frameCount:row.frames.length,expectedFrames:definition.rowColumns?.reduce((a,b)=>a+b,0)||definition.columns*definition.rows,bodyHeight:row.bodyHeight,counts,uniqueFrames:new Set(frames).size,mirrored:digest(right)!==digest(left),spriteWidth:right.width,spriteHeight:right.height,atlas:await atlasStats(definition),walk,ready,lowered,braced,fire,reload,paused:pausedA===pausedB,actions:definition.actions});
+      rows.push({id:definition.id,kind:definition.kind,type:definition.type,frameCount:row.frames.length,expectedFrames:definition.rowColumns?.reduce((a,b)=>a+b,0)||definition.columns*definition.rows,bodyHeight:row.bodyHeight,counts,uniqueFrames:new Set(frames).size,mirrored:digest(right)!==digest(left),spriteWidth:right.width,spriteHeight:right.height,drawRegression:drawRegression(row),atlas:await atlasStats(definition),walk,ready,lowered,braced,fire,reload,paused:pausedA===pausedB,actions:definition.actions});
     }
 
     // A contact sheet captures real renderer output without drawn replacement
@@ -98,6 +113,7 @@ try{
     assert.ok(row.counts.every(frame=>Number.isFinite(frame.anchorX)&&Number.isFinite(frame.anchorY)&&frame.scale>0),row.id+' complete foot registration');
     assert.ok(Math.max(...row.counts.map(frame=>frame.scale))-Math.min(...row.counts.map(frame=>frame.scale))<1e-8,row.id+' consistent scale across every action');
     assert.equal(row.mirrored,true,row.id+' original two-direction mirroring');assert.equal(row.paused,true,row.id+' paused animation remains stable');
+    assert.ok(row.drawRegression.boundDrift<=1&&row.drawRegression.centerDrift<.25&&row.drawRegression.coverageDrift<.02,row.id+' cached drawing preserves mirrored frame geometry and foot registration');
     assert.equal(row.ready,row.actions.ready,row.id+' ready state');assert.ok(row.actions.walk.includes(row.walk),row.id+' movement action');
     if(row.kind==='polearm'){assert.equal(row.lowered,row.actions.lower);assert.equal(row.braced,row.actions.brace);}
     if(row.kind==='crossbow'){assert.equal(new Set(row.reload).size,5,row.id+' five loading actions');assert.equal(row.fire,row.actions.fire);}
