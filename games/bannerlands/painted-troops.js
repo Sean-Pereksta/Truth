@@ -42,7 +42,7 @@ export function selectPaintedFrame(u,g,definition,moving=false){
   const a=definition.actions,now=g.time||0;
   if(u.hp<=0){const age=Math.max(0,now-(u.bornAt??now));return actionFrame(a,'death',Math.min(.999,age/.65));}
   if(u.hitVisual&&now-u.hitVisual.at<.15&&now>=u.hitVisual.at)return u.hitVisual.blocked&&u.shieldGuard==='guard'?(a.block??a.hit??a.ready):(a.hit??a.ready);
-  const strike=u.attackVisual,age=strike?now-strike.at:Infinity;
+  const strike=u.attackVisual,age=strike?(strike.elapsed??now-strike.at):Infinity;
   if(age>=0&&age<(definition.kind==='crossbow'?.10:.32))return age<.10?(a.fire??(strike.action==='swing'?a.swing:a.thrust)??a.thrust??a.ready):(a.recovery??a.ready);
   if(u.reloading&&u.reload&&!moving){
     const stage=u.reload.stage||'span',p=(u.reload.progress||0)/(u.reload.duration||1);

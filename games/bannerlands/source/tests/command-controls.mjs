@@ -6,6 +6,7 @@ import {isPassableTile} from '../../lands.js';
 import {worldToScreen,screenToWorld} from '../../render.js';
 import {regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit} from '../../regiments.js';
 import {formationPreview,formationRole,placeFormation} from '../../formation-placement.js';
+import {HERO_PROFILES,heroProfile} from '../../heroes.js';
 
 const source=fs.readFileSync(new URL('../../app.js',import.meta.url),'utf8');
 let cases=0;
@@ -22,7 +23,7 @@ const listener=(target,type)=>{
   const end=source.indexOf('\n});',start);assert.ok(end>start,'Incomplete production '+type+' listener');return source.slice(start,end+4);
 };
 class Element{
-  constructor(id=''){this.id=id;this.hidden=false;this.open=false;this.disabled=false;this.dataset={};this.title='';this.innerHTML='';this.children=[];this.firstChild={textContent:''};this.listeners=new Map();this.attributes=new Map();this.clicks=0;this.classList={add(){},remove(){},toggle(){}};}
+  constructor(id=''){this.id=id;this.hidden=false;this.open=false;this.disabled=false;this.dataset={};this.style={};this.title='';this.innerHTML='';this.children=[];this.firstChild={textContent:''};this.listeners=new Map();this.attributes=new Map();this.clicks=0;this.classList={add(){},remove(){},toggle(){}};}
   addEventListener(type,fn){if(!this.listeners.has(type))this.listeners.set(type,[]);this.listeners.get(type).push(fn);}
   dispatch(type,event){for(const fn of this.listeners.get(type)||[])fn(event);}
   setAttribute(name,value){this.attributes.set(name,String(value));}
@@ -44,7 +45,7 @@ function fixture({house=0,realMenu=false}={}){
   const element=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id);};
   const canvas=element('battleCanvas'),win=new Element('window'),ui={selected:new Set(),selectedBuildings:new Set(),formation:'line',formationOptions:{ranks:2,width:null,lockFacing:false},formMode:false,formPreview:null,buildMode:null,rallyMode:false,teamOrderMode:null,facingMode:false,facingPreview:null,drag:null,hover:null};
   element('resultOverlay').hidden=true;
-  const context={console,Math,Map,Set,String,Array,HOUSES,UNIT_DEFS,BUILD_DEFS,isPassableTile,worldToScreen,screenToWorld,regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit,formationPreview,formationRole,placeFormation,game,canvas,window:win,
+  const context={console,Math,Map,Set,String,Array,HOUSES,HERO_PROFILES,heroProfile,UNIT_DEFS,BUILD_DEFS,isPassableTile,worldToScreen,screenToWorld,regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit,formationPreview,formationRole,placeFormation,game,canvas,window:win,performance:{now:()=>100},standardTapBlock:null,
     ui,view:{x:0,y:840,w:800,h:600,zoom:1},battleHud:{open(){},close(){},isOpen:false,touchSelect:false,syncSelection(){}},started:true,menuOpen:false,orderMode:'attack',tab:'army',allSelected:false,allBuildingsSelected:false,
     pointers:new Map(),keys:new Set(),groups:new Map(),gesture:null,pinch:null,edgeMouse:null,
     $:element,document:{body:{classList:{add(){},remove(){}}},createElement:()=>new Element(),querySelector:selector=>{if(realMenu)return selector?.startsWith('#')?element(selector.slice(1)):actions.get(selector)||null;if(!actions.has(selector))actions.set(selector,new Element(selector));return actions.get(selector);},querySelectorAll:selector=>selector==='[data-tab]'?tabs:[]},
@@ -59,7 +60,7 @@ function fixture({house=0,realMenu=false}={}){
     const line=source.split('\n').find(line=>line.startsWith(prefix));assert.ok(line,prefix);vm.runInContext(line,context);
   }
   const actionsStart=source.indexOf('const MENU_ACTIONS='),actionsEnd=source.indexOf('\n};',actionsStart);vm.runInContext(source.slice(actionsStart,actionsEnd+3),context);
-  for(const name of ['clearBuildingSelection','selectTroopType','commandGroup','cancelBuild','showTab','activateMenuAction','handleMenuHotkey','beginFacing','beginForm','refreshFormationPreview','confirmFormation','formPointer','patrolBorder','issue','issueTarget','buildingAt','setSelectedRally','pointerPos','rememberMouse','finishPointer','bonusText','upgradeSummary','specialistTooltip','labelMenuHotkeys','buildActionLists'])vm.runInContext(extract(name),context);
+  for(const name of ['clearBuildingSelection','selectTroopType','commandGroup','cancelBuild','showTab','activateMenuAction','handleMenuHotkey','beginFacing','beginForm','refreshFormationPreview','confirmFormation','formPointer','patrolBorder','issue','issueTarget','buildingAt','standardAt','selectedHero','standardCommand','performStandardAction','placeStandard','cancelStandardInteraction','beginFormAtStandard','setSelectedRally','pointerPos','rememberMouse','finishPointer','bonusText','upgradeSummary','specialistTooltip','labelMenuHotkeys','buildActionLists'])vm.runInContext(extract(name),context);
   vm.runInContext(listener('canvas','pointerdown'),context);vm.runInContext(listener('canvas','pointermove'),context);vm.runInContext(listener('window','keydown'),context);
   const cancelLine=source.split('\n').find(line=>line.startsWith("canvas.addEventListener('pointerup'"));vm.runInContext(cancelLine,context);
   const blurLine=source.split('\n').find(line=>line.startsWith("window.addEventListener('keyup'"));vm.runInContext(blurLine,context);
@@ -280,17 +281,18 @@ test('All sixteen houses retain their original menus while eligible houses gain 
 });
 
 await testAsync('Boot waits for regiment and conquest art, and failed new art keeps Start disabled',async()=>{
-  for(const failed of [null,'loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt','loadPaintedTroops','loadPikeBuildings']){
+  for(const failed of [null,'loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt','loadPaintedTroops','loadPikeBuildings','loadPaintedHeroes']){
     const f=fixture({realMenu:true}),loads=[],errors=[],effects=[];
     f.context.console={warn(){},error:(...args)=>errors.push(args)};f.context.renderer={};
-    for(const method of ['loadTroops','loadStructures','loadCampaignArt','loadTerrain','loadHouseArt','loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt','loadPaintedTroops','loadPikeBuildings','loadLandsArt','loadLandsGround'])f.context.renderer[method]=(...args)=>{loads.push({method,args});return method===failed?Promise.reject(new Error('Missing test artwork')):Promise.resolve();};
+    for(const method of ['loadTroops','loadStructures','loadCampaignArt','loadTerrain','loadHouseArt','loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt','loadPaintedTroops','loadPikeBuildings','loadPaintedHeroes','loadLandsArt','loadLandsGround'])f.context.renderer[method]=(...args)=>{loads.push({method,args});return method===failed?Promise.reject(new Error('Missing test artwork')):Promise.resolve();};
     for(const name of ['paintBuildingIcons','paintHousePreview','paintTownHall','fitMap','updateHud'])f.context[name]=()=>effects.push(name);
     f.context.frame=()=>{};f.context.requestAnimationFrame=()=>effects.push('frame');
-    for(const prefix of ['const HOUSE_ART_SOURCES=','const REGIMENT_ART_SOURCES=','const CONQUEST_ART_SOURCES=','const REINFORCEMENT_ART_SOURCES=','const PAINTED_TROOP_SOURCES=']){const line=source.split('\n').find(line=>line.startsWith(prefix));assert.ok(line);vm.runInContext(line,f.context);}
+    for(const prefix of ['const HOUSE_ART_SOURCES=','const REGIMENT_ART_SOURCES=','const CONQUEST_ART_SOURCES=','const REINFORCEMENT_ART_SOURCES=','const PAINTED_TROOP_SOURCES=','const HERO_ART_SOURCES=']){const line=source.split('\n').find(line=>line.startsWith(prefix));assert.ok(line);vm.runInContext(line,f.context);}
     vm.runInContext(extract('boot'),f.context);const boot=f.context.boot();assert.equal(f.element('startButton').disabled,true);assert.ok(f.element('startButton').innerHTML.includes('PREPARING'));
     await boot;
     const sheets=loads.find(load=>load.method==='loadRegimentArt')?.args[0];assert.ok(sheets);assert.deepEqual(Object.keys(sheets).sort(),['bear','dragon','falcon','lion','rose','sun','wolf']);assert.equal(new Set(Object.values(sheets)).size,7);
     assert.equal(loads.find(load=>load.method==='loadRegimentBuildings')?.args[0],'assets/regiments/production-buildings.png');
+    assert.equal(Object.keys(loads.find(load=>load.method==='loadPaintedHeroes')?.args[0]||{}).length,16);
     if(failed){assert.equal(f.element('startButton').disabled,true);assert.equal(f.element('startButton').innerHTML,'ARTWORK COULD NOT LOAD');assert.equal(errors.length,1);assert.equal(effects.includes('frame'),false);}
     else{assert.equal(f.element('startButton').disabled,false);assert.ok(f.element('startButton').innerHTML.includes('RAISE THE BANNERS'));assert.equal(errors.length,0);assert.equal(effects.includes('frame'),true);}
   }
@@ -375,6 +377,54 @@ test('Command group recall restores preset, dimensions and facing-lock preferenc
   const f=fixture(),u=f.game.addUnit(0,'winter_pikeman',30,30);f.ui.selected.add(u.id);f.ui.formation='pike';f.ui.formationOptions={ranks:4,width:3.36,lockFacing:true};f.context.commandGroup(2,true);
   f.ui.formation='loose';f.ui.formationOptions={ranks:1,width:8,lockFacing:false};f.context.commandGroup(2);
   assert.equal(f.ui.formation,'pike');assert.equal(f.ui.formationOptions.ranks,4);assert.equal(f.ui.formationOptions.width,3.36);assert.equal(f.ui.formationOptions.lockFacing,true);assert.equal(f.commands.length,0);
+});
+
+test('Plain J opens hero planting without changing mixed-selection soldier orders, while Shift+J remains construction',()=>{
+  const f=fixture(),hero=f.game.addUnit(0,'hero',30,30),soldier=f.game.addUnit(0,'infantry',31,30),order=soldier.order;
+  f.game.standardFor=()=>({id:9901,hp:300,state:'carrying',carrierId:hero.id});f.ui.selected=new Set([hero.id,soldier.id]);
+  f.win.dispatch('keydown',f.event({key:'j',code:'KeyJ'}));assert.equal(f.ui.standardMode.heroId,hero.id);assert.equal(f.commands.length,0);assert.equal(soldier.order,order);
+  f.win.dispatch('keydown',f.event({key:'J',code:'KeyJ',shiftKey:true}));assert.equal(f.actions.get('[data-regiment-build]').clicks,1);
+  f.win.dispatch('keydown',f.event({key:'Escape',code:'Escape'}));assert.equal(f.ui.standardMode,null);assert.equal(f.commands.length,0);
+});
+
+test('A planting click validates through the hero API, preserves invalid placement, and never moves ordinary troops',()=>{
+  const f=fixture(),hero=f.game.addUnit(0,'hero',30,30),soldier=f.game.addUnit(0,'infantry',31,30),calls=[];
+  f.ui.selected=new Set([hero.id,soldier.id]);f.ui.standardMode={heroId:hero.id};let valid=false;
+  f.game.plantStandard=(...args)=>{calls.push(args);return {ok:valid,message:valid?'Planting':'Blocked ground'};};
+  const point=worldToScreen(35,35,f.context.view),event=f.event({button:0,clientX:point.x,clientY:point.y,pointerType:'touch'}),camera={...f.context.view};
+  f.canvas.dispatch('pointerdown',event);f.canvas.dispatch('pointerup',event);assert.equal(f.ui.standardMode.heroId,hero.id);assert.equal(f.commands.length,0);
+  valid=true;f.canvas.dispatch('pointerdown',event);f.canvas.dispatch('pointerup',event);assert.equal(f.ui.standardMode,null);assert.equal(calls.length,2);assert.equal(calls[1][0],hero.id);assert.ok(Math.abs(calls[1][1]-35)<1e-9);assert.ok(Math.abs(calls[1][2]-35)<1e-9);assert.equal(f.commands.length,0);assert.deepEqual(f.context.view,camera);
+});
+
+test('J retrieves the existing standard or reforges an absent one, and Escape cancels only the selected hero action',()=>{
+  const f=fixture(),hero=f.game.addUnit(0,'hero',30,30),soldier=f.game.addUnit(0,'infantry',31,30),order=soldier.order,calls=[];f.ui.selected=new Set([hero.id,soldier.id]);
+  let standard={id:9902,hp:250,state:'planted',carrierId:null};f.game.standardFor=()=>standard;
+  f.game.retrieveStandard=id=>{calls.push(['pickup',id]);return {ok:true,message:'Retrieve'};};f.game.reforgeStandard=id=>{calls.push(['reforge',id]);return {ok:true,message:'Reforge'};};
+  f.win.dispatch('keydown',f.event({key:'j',code:'KeyJ'}));assert.deepEqual(calls,[['pickup',hero.id]]);
+  standard=null;f.win.dispatch('keydown',f.event({key:'j',code:'KeyJ'}));assert.deepEqual(calls.at(-1),['reforge',hero.id]);
+  hero.standardAction={kind:'pickup',phase:'handling',progress:1.9,duration:2};f.game.cancelStandard=id=>{calls.push(['cancel',id]);delete hero.standardAction;return {ok:true,message:'Cancelled'};};
+  f.win.dispatch('keydown',f.event({key:'Escape',code:'Escape'}));assert.deepEqual(calls.at(-1),['cancel',hero.id]);assert.equal(soldier.order,order);assert.deepEqual(ids(f.ui.selected),[hero.id,soldier.id].sort((a,b)=>a-b));assert.equal(f.commands.length,0);
+});
+
+test('Only visible hostile ground standards accept a deliberate target click',()=>{
+  const f=fixture(),unit=f.game.addUnit(0,'infantry',30,30);f.ui.selected.add(unit.id);
+  const flag={id:9903,type:'standard',team:1,hp:300,state:'planted',carrierId:null,x:34,y:30};f.game.standards=[flag];let visible=false;f.game.isVisibleTo=()=>visible;
+  const foot=worldToScreen(flag.x,flag.y,f.context.view),point={x:foot.x,y:foot.y-23};assert.equal(f.context.standardAt(point),null);
+  visible=true;assert.equal(f.context.standardAt(point),flag);flag.team=0;assert.equal(f.context.standardAt(point),null);flag.team=1;flag.carrierId=unit.id;assert.equal(f.context.standardAt(point),null);flag.carrierId=null;flag.hp=0;assert.equal(f.context.standardAt(point),null);
+});
+
+test('Form at Standard previews around the real pole, preserves preferences, and leaves the hero order untouched',()=>{
+  const f=fixture(),hero=f.game.addUnit(0,'hero',40,40),troops=Array.from({length:12},(_,i)=>f.game.addUnit(0,'winter_pikeman',30,30+i*.1)),order=hero.order;
+  f.game.standardFor=()=>({id:9904,hp:300,state:'planted',carrierId:null,x:40,y:40});f.ui.selected=new Set([hero.id,...troops.map(u=>u.id)]);f.ui.formation='pike';f.ui.formationOptions={ranks:3,width:1.44,lockFacing:true};
+  f.context.beginFormAtStandard();assert.equal(f.ui.formPreview.x,40);assert.equal(f.ui.formPreview.y,40);assert.equal(f.ui.formPreview.slots.length,troops.length);assert.equal(f.ui.formationOptions.width,1.44);assert.equal(f.ui.formationOptions.ranks,3);assert.ok(f.ui.formPreview.slots.every(s=>Math.hypot(s.x-40,s.y-40)>=1.1));
+  f.context.confirmFormation();assert.equal(hero.order,order);assert.ok(troops.every(u=>u.order.placementId));assert.equal(f.commands.length,1);assert.ok(!f.commands[0][0].includes(hero.id));
+});
+
+test('The persistent hero portrait reports health, return countdown and irreplaceable king death without requiring selection',()=>{
+  const f=fixture(),hero=f.game.addUnit(0,'hero',30,30);f.ui.selected.clear();f.context.heroHudPortraitKey='';f.context.renderer.drawHeroPortrait=()=>{};
+  vm.runInContext(extract('updateHeroBeacon'),f.context);hero.hp=hero.maxHp/2;f.context.updateHeroBeacon();assert.equal(f.element('heroHudButton').hidden,false);assert.equal(f.element('heroHudHealthFill').style.width,'50%');assert.match(f.element('heroHudHealth').textContent,/HP/);assert.match(f.element('heroHudButton').getAttribute('aria-label'),/Winter Marshal/);
+  hero.hp=0;f.game.teams[0].heroTimer=23.2;f.context.updateHeroBeacon();assert.equal(f.element('heroHudHealth').textContent,'Returns in 24s');assert.equal(f.element('heroHudHealthFill').style.width,'0%');
+  f.game.mode={kingSurvival:true};f.context.updateHeroBeacon();assert.equal(f.element('heroHudHealth').textContent,'Fallen · one life');assert.doesNotMatch(f.element('heroHudHealth').textContent,/return/i);
 });
 
 console.log(`${cases} command control checks passed.`);

@@ -25,6 +25,16 @@ export function formationPreview(g,troops,options={},defs={}){
     const rank=Math.floor(i/settings.columns),inRank=Math.min(settings.columns,troops.length-rank*settings.columns);
     let side=(i%settings.columns-(inRank-1)/2)*settings.spacing,back=(rank-(settings.ranks-1)/2)*settings.spacing;
     if(settings.preset==='wedge')back+=Math.abs(side)*.7;
+    // A hero standard is an order anchor, never a front-rank soldier. Preserve
+    // the chosen columns/ranks and open a real central lane around its pole.
+    const anchor=options.standardAnchor;
+    if(anchor&&Number.isFinite(anchor.x)&&Number.isFinite(anchor.y)){
+      const clearance=Math.max(.7,anchor.clearance||1)+(troops[i]?.radius||.2);
+      if(Math.abs(back)<clearance){
+        const gap=Math.sqrt(clearance*clearance-back*back),column=i%settings.columns,left=Math.floor(inRank/2);
+        side=column<left?-(gap+(left-1-column)*settings.spacing):gap+(column-left)*settings.spacing;
+      }
+    }
     const x=center.x-fy*side-fx*back,y=center.y+fx*side-fy*back;
     const radius=troops[i]?.radius||.2,buildingBlocked=buildings.some(b=>{const dx=x-b.x,dy=y-b.y,r=b.radius+radius;return Math.abs(dx)<r&&Math.abs(dy)<r&&dx*dx+dy*dy<r*r;});
     const walkable=!buildingBlocked&&g.isWalkable(x,y)&&g.navigation.isClearPoint(x,y,radius);
@@ -33,7 +43,7 @@ export function formationPreview(g,troops,options={},defs={}){
     const reachable=walkable&&(!regions||origin>=0&&destination>=0&&regions[origin]===regions[destination]);
     slots.push({index:i,x,y,side,back,rank,blocked:!reachable});
   }
-  return {...settings,...center,angle,faceX:fx,faceY:fy,slots,blocked:slots.filter(s=>s.blocked).length};
+  return {...settings,...center,angle,faceX:fx,faceY:fy,standardAnchor:options.standardAnchor||null,slots,blocked:slots.filter(s=>s.blocked).length};
 }
 export function placeFormation(g,ids,options,defs){
   const troops=[...new Set(ids||[])].map(id=>g.byId.get(id)).filter(u=>u?.hp>0&&defs[u.type]&&g.teams[u.team]?.alive);

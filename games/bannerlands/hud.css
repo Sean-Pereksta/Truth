@@ -525,3 +525,35 @@ body.placing #selectionDock { display: none; }
  #quickFormationOrders{bottom:74px;left:8px}#quickFormationOrders button{padding:4px 7px;min-height:36px}
  body[data-has-selection="true"]:not(.forming) #selectionDock{bottom:124px}
 }
+
+/* Hero details stay in the selected-hero panel; the map keeps one compact
+   contextual command row reachable on touch screens. */
+#heroHudButton{position:absolute;z-index:20;top:calc(64px + env(safe-area-inset-top,0px));left:calc(8px + env(safe-area-inset-left,0px));display:flex;align-items:center;gap:7px;width:178px;min-height:56px;padding:5px;border:1px solid #a18b5888;border-radius:8px;background:#122329f2;text-align:left;box-shadow:0 3px 14px #0005}
+#heroHudButton[hidden]{display:none!important}#heroHudPortrait{width:42px;height:42px;flex:0 0 42px;border-radius:4px;background:#0d2024}
+.hero-hud-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px}.hero-hud-copy b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#efd6a5;font:600 11px/1.1 'Segoe UI',sans-serif}.hero-hud-copy small{font:10px/1.1 'Segoe UI',sans-serif;color:#d2d9c6}
+#heroHudHealthBar{display:block;height:4px;border-radius:2px;background:#3b4843;overflow:hidden}#heroHudHealthFill{display:block;height:100%;width:100%;background:#b2d59d;transition:width .15s linear}.critical #heroHudHealthFill{background:#d99177}
+@media (orientation:portrait){body:has(#heroHudButton:not([hidden])) #touchControls{left:calc(194px + env(safe-area-inset-left,0px))}body:has(#heroHudButton:not([hidden])) #toast{top:calc(192px + env(safe-area-inset-top,0px))}body.drawer-open:has(#heroHudButton:not([hidden])) #toast{top:calc(128px + env(safe-area-inset-top,0px))}body:has(#heroHudButton:not([hidden])) #selectionDock{top:calc(126px + env(safe-area-inset-top,0px))}body.drawer-open #selectionDock{display:none!important}body:has(#heroHudButton:not([hidden])) #buildBanner{top:calc(128px + env(safe-area-inset-top,0px))}}
+#heroPanel{margin:12px 0;padding:12px;border:1px solid #a18b5877;border-radius:8px;background:#183234;font:12px/1.4 'Segoe UI',sans-serif}
+#heroPanel[hidden],#quickStandardOrders[hidden],#heroPanel [hidden],#quickStandardOrders [hidden]{display:none!important}
+.hero-panel-heading{display:flex;align-items:center;gap:10px}
+.hero-panel-heading canvas{width:68px;height:68px;flex:0 0 68px;border:1px solid #a18b5866;border-radius:8px;background:#102328}
+.hero-panel-heading b{display:block;font-size:17px;color:#f0d6a0}.hero-panel-heading small{display:block;margin-top:5px;color:#bdc9ba}
+.hero-standard-summary{display:flex;flex-direction:column;gap:2px;margin:9px 0;color:#e3dcc3}.hero-standard-summary span{font-size:11px;color:#b7c4b7}
+#heroStandardProgress{width:100%;height:10px;accent-color:#d3b776}#heroStandardTimer{display:block;color:#d6cb9f;font-variant-numeric:tabular-nums}
+.hero-benefit{margin:10px 0}.hero-benefit>b{font-size:12px;color:#d5d9ad}.hero-benefit p{margin:4px 0;font-size:11px;color:#b8c8ba}
+.hero-standard-actions{display:flex;flex-wrap:wrap;gap:6px}.hero-standard-actions button{flex:1 1 44%;min-height:44px;padding:7px;font-size:11px;white-space:normal}
+.hero-standard-actions #standardButton{flex-basis:100%;border-color:#a9905d;color:#f0d7a4}
+#quickStandardOrders{position:absolute;z-index:22;left:12px;bottom:132px;display:flex;gap:4px;max-width:calc(100vw - var(--mini-width) - 32px);padding:4px;border:1px solid #a18b5888;border-radius:8px;background:#122329f2;pointer-events:auto}
+#quickStandardOrders button{min-height:44px;padding:6px 10px;white-space:normal;font:11px/1.2 'Segoe UI',sans-serif;color:#eed5a0}#quickStandardOrders kbd{margin-left:4px;font-size:9px}
+body.drawer-open #quickStandardOrders,.forming #quickStandardOrders,.placing #quickStandardOrders{display:none!important}
+body:has(#quickStandardOrders:not([hidden])) #selectionDock{bottom:190px}
+@media (orientation:portrait){
+ #quickStandardOrders{left:8px;bottom:calc(180px + env(safe-area-inset-bottom,0px));width:calc(100vw - var(--mini-width) - 24px);max-width:none;flex-wrap:wrap}
+ #quickStandardOrders button{flex:1 1 80px;padding:6px 5px;font-size:10px}#quickStandardOrders kbd{display:none}
+ body:has(#quickStandardOrders:not([hidden])) #selectionDock{bottom:calc(285px + env(safe-area-inset-bottom,0px))}
+}
+@media (max-height:480px) and (orientation:landscape){
+ #quickStandardOrders{left:8px;bottom:124px;max-width:calc(100vw - var(--mini-width) - 32px)}
+ #quickStandardOrders button{min-height:36px;padding:4px 7px}
+ body:has(#quickStandardOrders:not([hidden])) #selectionDock{bottom:174px}
+}

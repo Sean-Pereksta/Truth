@@ -1,3 +1,4 @@
+import {heroSightMultiplier} from './hero-benefits.js';
 // Shared alliance sight and deliberately stale observations. Terrain is public;
 // enemy armies and changing structures are intelligence, never global truth.
 export class WarVision {
@@ -16,10 +17,8 @@ export class WarVision {
     if(entity.type==='tower')return 12+Math.max(0,(entity.level||1)-1)*3;
     if(entity.type==='keep')return 9+Math.max(0,(entity.level||1)-1);
     const kind=this.game.unitClass(entity);
-    if(kind==='cavalry'||kind==='hero')return 8;
-    if(kind==='siege')return 5;
-    if(['infantry','archer'].includes(kind))return 6;
-    return 4;
+    const base=kind==='cavalry'||kind==='hero'?8:kind==='siege'?5:['infantry','archer'].includes(kind)?6:4;
+    return base*heroSightMultiplier(this.game,entity);
   }
   isVisible(team,x,y){
     if(!this.enabled)return true;this.update();const xx=Math.floor(x),yy=Math.floor(y);

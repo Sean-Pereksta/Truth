@@ -42,7 +42,9 @@ function collect(name){
 collect('app.js');
 
 const {HOUSES}=await import('../core.js');
+const {HERO_PROFILES}=await import('../heroes.js');
 const replacements={HOUSE_ART_SOURCES:{troops:Object.fromEntries(HOUSES.map(h=>[h.sigil,imageData(`assets/houses/${h.sigil}-troops.png`)])),castles:imageData('assets/house-castles.png'),production:imageData('assets/house-production.png')}};
+replacements.HERO_ART_SOURCES=Object.fromEntries(Object.values(HERO_PROFILES).map(p=>[p.sigil,imageData(p.artwork)]));
 const paintedModule=path.join(dist,'painted-troops.js');
 if(fs.existsSync(paintedModule)){
   const {PAINTED_TROOPS}=await import(pathToFileURL(paintedModule));
