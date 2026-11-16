@@ -1,38 +1,37 @@
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import path from 'node:path';
 import {createRequire} from 'node:module';
-import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
+import {createHash} from 'node:crypto';
 import {Renderer} from '../../render.js';
-import {HOUSES} from '../../core.js';
+import {UNIT_DEFS,HOUSES} from '../../core.js';
+import {authoredAnimationState,completeTroopFrame,paintedTroopCoverage} from '../../complete-troops.js';
+import {loadRuntimePaintedArt,frameSourceKey} from './painted-art-helpers.mjs';
 const require=createRequire(import.meta.url);let raster;
-try{raster=require(process.env.LANDS_CANVAS_MODULE||'@napi-rs/canvas');}
-catch{console.log('SKIP reload raster checks: install @napi-rs/canvas or set LANDS_CANVAS_MODULE.');process.exit(0);}
-const base=fileURLToPath(new URL('../..',import.meta.url)),src=name=>path.join(base,'assets',name);
-const canvas=(w=1,h=1)=>raster.createCanvas(w,h);globalThis.Image=raster.Image;globalThis.document={createElement:()=>canvas()};
-const r=new Renderer(canvas(320,200));
-await r.loadHouseArt({troops:Object.fromEntries(HOUSES.map(h=>[h.sigil,src('houses/'+h.sigil+'-troops.png')])),castles:src('house-castles.png'),production:src('house-production.png')});
-await r.loadConquestArt(Object.fromEntries(['castles','trebuchet','giant','sharpshooter','buildings'].map(k=>[k,src('conquest/'+k+'.png')])));
-await r.loadReinforcementArt(Object.fromEntries(['stormbreaker','saltwind_axethrower','tollhouse_crossbow','crannog_spearhand','hornhill_halberdier','sun_horse_archer','buildings'].map(k=>[k,src('reinforcements/'+k+'.png')])));
-const entries=[['gilded_crossbow','lion','Belt hook'],['tollhouse_crossbow','bridge','Foot-stirrup lever'],['sharpshooter','fish','Windlass crank']];
-const digest=c=>createHash('sha256').update(c.getContext('2d').getImageData(0,0,c.width,c.height).data).digest('hex');
-function draw(type,sigil,progress,{moving=false,face=1,low=false}={}){
-  const c=canvas(140,160),ctx=c.getContext('2d'),u={id:1,type,team:0,x:0,y:0,facingX:face,facingY:0,hp:100,maxHp:100,phase:0,order:{mode:'attack'},reloading:!moving,reload:{progress,duration:3},vx:moving?1:0,vy:0};
-  const g={time:20,teams:[HOUSES.find(h=>h.sigil===sigil)],houseContent:()=>({unit:type}),unitClass:()=> 'archer'};
-  ctx.translate(70,140);ctx.scale(3,3);r.lowDetail=low;r.unit(ctx,u,g,{selected:new Set()},1);return c;
+try{raster=require(process.env.LANDS_CANVAS_MODULE||'@napi-rs/canvas');}catch{console.log('SKIP painted reload raster checks: set LANDS_CANVAS_MODULE.');process.exit(0);}
+const canvas=(w=1,h=1)=>raster.createCanvas(w,h);globalThis.document={createElement:()=>canvas()};
+const root=fileURLToPath(new URL('../..',import.meta.url)),manifest=await loadRuntimePaintedArt(root,raster);assert.ok(manifest,'Painted PNG manifest is required for renderer integration checks.');
+const r=new Renderer(canvas(320,200)),digest=c=>createHash('sha256').update(c.getContext('2d').getImageData(0,0,c.width,c.height).data).digest('hex');
+for(const [type,sigil]of [['gilded_crossbow','lion'],['tollhouse_crossbow','bridge'],['sharpshooter','fish'],['vale_sentinel','falcon']]){
+ const definition=manifest.troops[type];assert.ok(definition,type+' must have an actual painted PNG entry.');
+ const team=HOUSES.find(h=>h.sigil===sigil),u={id:1,type,team:0,x:0,y:0,facingX:1,facingY:0,hp:100,maxHp:100,phase:0,order:{mode:'attack'},reloading:true,vx:0,vy:0},g={time:20,teams:[team],houseContent:()=>({unit:type}),unitClass:()=> 'archer'};
+ for(const stage of ['lower','span','take_bolt','seat_bolt','raise']){
+  u.reload={stage,stageProgress:.5,stageDuration:1,progress:1,duration:3};const state=authoredAnimationState(u,g,UNIT_DEFS[type]),cel=completeTroopFrame(type,team,state);
+  assert.equal(state.action,stage);assert.ok(cel?.painted,type+' '+stage+' must remain visible using a complete source PNG.');
+  if(definition.clips[stage]){assert.equal(cel.action,stage);assert.equal(cel.draftFallback,false);}
+  else{assert.equal(cel.draftFallback,true);assert.ok(paintedTroopCoverage().missingFrames.includes(type+':'+stage),'A temporary ready frame cannot be passed off as a finished reload animation.');}
+ }
+ u.reload={stage:'span',stageIndex:1,stageProgress:.15,stageDuration:1,progress:.5,duration:3};const first=authoredAnimationState(u,g,UNIT_DEFS[type]);u.reload.stageProgress=.85;const second=authoredAnimationState(u,g,UNIT_DEFS[type]);
+ if(definition.clips.span?.[0]?.length>1)assert.notEqual(frameSourceKey(completeTroopFrame(type,team,first)),frameSourceKey(completeTroopFrame(type,team,second)),'Declared loading phases must select different source PNG cells.');
+ assert.equal(completeTroopFrame(type,team,second),completeTroopFrame(type,team,second),'Pause reuses the same painted source rectangle.');
+ u.vx=.1;assert.equal(authoredAnimationState(u,g,UNIT_DEFS[type]).action,'span','Minor collision shuffles cannot make an actively loading figure march.');
+ u.vx=1;u.reloading=false;const empty=authoredAnimationState(u,g,UNIT_DEFS[type]);assert.equal(empty.action,'march');assert.equal(empty.cocked,false);assert.equal(empty.boltSeated,false);
+ u.reload.stageIndex=2;const spanned=authoredAnimationState(u,g,UNIT_DEFS[type]);assert.equal(spanned.cocked,true);assert.equal(spanned.boltSeated,false);
+ u.reload.stageIndex=4;const seated=authoredAnimationState(u,g,UNIT_DEFS[type]);assert.equal(seated.loaded,false);assert.equal(seated.cocked,true);assert.equal(seated.boltSeated,true);
+ for(const [state,variant]of [[empty,'march_empty'],[spanned,'march_spanned'],[seated,'march_bolt_seated']]){
+  const cel=completeTroopFrame(type,team,state);assert.ok(cel?.painted);if(definition.clips[variant])assert.equal(cel.action,variant);else assert.ok(paintedTroopCoverage().missingFrames.includes(type+':'+variant));
+ }
+ u.vx=0;u.reloading=true;u.releaseFrame=.1;assert.equal(authoredAnimationState(u,g,UNIT_DEFS[type]).action,'release','Release is shown before reload lowering.');
+ u.releaseFrame=0;const draw=low=>{const c=canvas(200,180),ctx=c.getContext('2d');ctx.translate(90,140);r.lowDetail=low;r.unit(ctx,u,g,{selected:new Set()},1);return digest(c);};assert.equal(draw(false),draw(true),'Low detail keeps the same complete painted source art.');
+ assert.equal(paintedTroopCoverage().troops[type].complete,false,'Draft sources must remain marked incomplete until per-direction animation phases and mechanics are visually verified.');
+ console.log('PASS '+type+' actual PNG selection, honest draft gaps, loading interruption, release ordering, pause and low-detail parity');
 }
-const sheet=canvas(1120,660),ctx=sheet.getContext('2d');ctx.fillStyle='#172d30';ctx.fillRect(0,0,sheet.width,sheet.height);ctx.font='bold 23px Georgia';ctx.fillStyle='#e9d8ad';ctx.fillText('Crossbow reloads · stationary work drives every mechanism',25,35);
-for(const [row,[type,sigil,label]]of entries.entries()){
-  ctx.font='18px Segoe UI';ctx.fillStyle=HOUSES.find(h=>h.sigil===sigil).color;ctx.fillText(label,25,80+row*190);
-  const frames=[.06,.6,1.05,1.6,2.25,2.85].map(t=>draw(type,sigil,t));
-  assert.equal(new Set(frames.map(digest)).size,frames.length,'Every reload stage must change the rendered soldier and weapon.');
-  assert.notEqual(digest(draw(type,sigil,1.05)),digest(draw(type,sigil,1.08)),'Mechanism motion must be continuous within a painted pose.');
-  assert.equal(digest(draw(type,sigil,1.05)),digest(draw(type,sigil,1.05)),'Paused simulation progress freezes the rendered mechanism.');
-  assert.equal(digest(draw(type,sigil,.6,{moving:true})),digest(draw(type,sigil,2.25,{moving:true})),'Moving soldiers must drop the stationary reload pose.');
-  assert.notEqual(digest(draw(type,sigil,1.05,{low:true})),digest(draw(type,sigil,1.08,{low:true})),'Economy detail must retain animated reloads at readable zoom.');
-  assert.notEqual(digest(draw(type,sigil,1.05,{face:-1})),digest(draw(type,sigil,1.05)),'Weapon and working arms mirror with the soldier.');
-  for(const [i,c]of frames.entries())ctx.drawImage(c,190+i*150,43+row*190);
-  console.log('PASS '+label+' actual renderer animation, pause, interruption, mirroring and economy detail.');
-}
-if(process.env.LANDS_RENDER_OUT){fs.mkdirSync(process.env.LANDS_RENDER_OUT,{recursive:true});fs.writeFileSync(path.join(process.env.LANDS_RENDER_OUT,'crossbow-reloads.png'),sheet.toBuffer('image/png'));}

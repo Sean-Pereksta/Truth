@@ -488,3 +488,29 @@ body.placing #selectionDock { display: none; }
 @media (max-width: 700px) and (orientation: landscape) {
   #gameplayDock { width: calc(100% - 128px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)); }
 }
+
+/* Live formation controls leave the battlefield and compact dock in place. */
+#formationQuickRow { position:absolute;z-index:16;left:50%;transform:translateX(-50%);bottom:calc(126px + env(safe-area-inset-bottom,0px));display:flex;gap:4px;padding:4px;border:1px solid #596755;border-radius:9px;background:#182722ed;max-width:calc(100% - 20px); }
+#formationQuickRow[hidden],#formationPlacementBar[hidden],#formationSettingsSheet[hidden] { display:none; }
+#formationQuickRow button { min-height:40px;min-width:56px;padding:5px 9px;font-size:11px;white-space:nowrap; }
+#formationQuickRow kbd { font-size:9px;margin-left:3px; }
+#formationPlacementBar { position:absolute;z-index:25;left:50%;transform:translateX(-50%);top:calc(68px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:6px;max-width:calc(100% - 20px);padding:7px 10px;border:1px solid #bdad76;border-radius:8px;background:#172722f5;box-shadow:0 5px 20px #0007; }
+#formationPlacementBar button { min-height:42px;padding:5px 9px;white-space:nowrap; }
+#formationPlacementStatus { font-size:11px;max-width:240px; }
+#formationSettingsSheet { position:absolute;z-index:28;left:50%;transform:translateX(-50%);bottom:calc(72px + env(safe-area-inset-bottom,0px));width:min(360px,calc(100% - 24px));box-sizing:border-box;padding:14px;border:1px solid #8f9b77;border-radius:12px;background:#172722fa;display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+#formationSettingsSheet>b,#formationSettingsDone { grid-column:1/-1; }
+#formationSettingsSheet label { display:grid;gap:5px;font-size:12px; }
+#formationSettingsSheet select { width:100%;min-height:44px;background:#25392d;color:#e9ebd8;border:1px solid #71806b;border-radius:6px; }
+#lockFacingButton,#placementLockFacing { color:#b8c5b5; }
+#lockFacingButton[aria-pressed="true"],#placementLockFacing[aria-pressed="true"] { color:#f3dfa0;border-color:#bda86c;background:#3b4530; }
+#lockFacingButton { width:100%;min-height:42px;margin:5px 0; }
+#formationState { color:#c1d9ad;font-size:11px;min-height:14px;margin:4px 0; }
+.formations { flex-wrap:wrap; }
+.formations button { flex:1 1 30%; }
+body.menu-open #formationQuickRow,body.drawer-open #formationQuickRow,body.placing #formationQuickRow { display:none; }
+@media (pointer:coarse),(max-width:700px) { #formationQuickRow { bottom:calc(122px + env(safe-area-inset-bottom,0px)); }#formationPlacementBar { flex-wrap:wrap;justify-content:center;width:calc(100% - 24px);box-sizing:border-box;top:calc(62px + env(safe-area-inset-top,0px)); }#formationPlacementStatus { flex:1 1 100%;max-width:none;text-align:center; }#formationQuickRow kbd { display:none; } }
+@media (max-height:480px) and (orientation:landscape) { #formationQuickRow { left:8px;transform:none;bottom:calc(115px + env(safe-area-inset-bottom,0px)); }#formationSettingsSheet { left:8px;transform:none;bottom:65px;max-width:320px; }#formationPlacementBar { left:8px;transform:none;width:min(520px,calc(100% - 190px)); } }
+@media (orientation:portrait) { #formationQuickRow { bottom:var(--panel-above-map); } }
+#formationQuickRow button { min-height:44px; }
+#formationSettingsDone { min-height:44px; }
+#formationPlacementBar button { min-height:44px; }

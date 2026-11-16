@@ -1,0 +1,124 @@
+{
+  "before": 251667368,
+  "after": 30323044,
+  "ratio": 0.12048858078414043,
+  "reports": [
+    {
+      "type": "tollhouse_crossbow",
+      "sourcePages": 4,
+      "uniquePaintedFrames": 128,
+      "atlases": [
+        {
+          "src": "assets/painted-troops/runtime/tollhouse_crossbow-atlas.png",
+          "width": 1024,
+          "height": 924,
+          "uniquePaintedFrames": 128
+        }
+      ]
+    },
+    {
+      "type": "vale_sentinel",
+      "sourcePages": 5,
+      "uniquePaintedFrames": 160,
+      "atlases": [
+        {
+          "src": "assets/painted-troops/runtime/vale_sentinel-atlas.png",
+          "width": 1024,
+          "height": 1088,
+          "uniquePaintedFrames": 160
+        }
+      ]
+    },
+    {
+      "type": "gilded_crossbow",
+      "sourcePages": 5,
+      "uniquePaintedFrames": 160,
+      "atlases": [
+        {
+          "src": "assets/painted-troops/runtime/gilded_crossbow-atlas.png",
+          "width": 1024,
+          "height": 1086,
+          "uniquePaintedFrames": 160
+        }
+      ]
+    },
+    {
+      "type": "river_ranger",
+      "sourcePages": 14,
+      "uniquePaintedFrames": 184,
+      "atlases": [
+        {
+          "src": "assets/painted-troops/runtime/river_ranger-atlas.png",
+          "width": 1024,
+          "height": 1369,
+          "uniquePaintedFrames": 184
+        }
+      ]
+    },
+    {
+      "type": "hill_huntsman",
+      "sourcePages": 4,
+      "uniquePaintedFrames": 97,
+      "atlases": [
+        {
+          "src": "assets/painted-troops/runtime/hill_huntsman-atlas.png",
+          "width": 1023,
+          "height": 775,
+          "uniquePaintedFrames": 97
+        }
+      ]
+    },
+    {
+      "type": "sharpshooter",
+      "sourcePages": 5,
+      "uniquePaintedFrames": 128,
+      "atlases": [
+        {
+          "src": "assets/painted-troops/runtime/sharpshooter-atlas.png",
+          "width": 1024,
+          "height": 885,
+          "uniquePaintedFrames": 128
+        }
+      ]
+    },
+    {
+      "type": "winter_pikeman",
+      "sourcePages": 1,
+      "uniquePaintedFrames": 32,
+      "atlases": [
+        {
+          "src": "assets/painted-troops/runtime/winter_pikeman-atlas.png",
+          "width": 971,
+          "height": 506,
+          "uniquePaintedFrames": 32
+        }
+      ]
+    },
+    {
+      "type": "thornwall_pikeman",
+      "sourcePages": 1,
+      "uniquePaintedFrames": 32,
+      "atlases": [
+        {
+          "src": "assets/painted-troops/runtime/thornwall_pikeman-atlas.png",
+          "width": 999,
+          "height": 338,
+          "uniquePaintedFrames": 32
+        }
+      ]
+    },
+    {
+      "type": "hornhill_halberdier",
+      "sourcePages": 1,
+      "uniquePaintedFrames": 32,
+      "atlases": [
+        {
+          "src": "assets/painted-troops/runtime/hornhill_halberdier-atlas.png",
+          "width": 957,
+          "height": 500,
+          "uniquePaintedFrames": 32
+        }
+      ]
+    }
+  ]
+}

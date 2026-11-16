@@ -4,6 +4,8 @@ import path from 'node:path';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import {Renderer} from '../../render.js';
+import {authoredAnimationState,completeTroopFrame,paintedTroopCoverage} from '../../complete-troops.js';
+import {loadRuntimePaintedArt} from './painted-art-helpers.mjs';
 
 // Raster integration uses the same optional native canvas as lands-render.mjs.
 const require=createRequire(import.meta.url);
@@ -18,6 +20,7 @@ const output=process.env.LANDS_RENDER_OUT?path.resolve(process.env.LANDS_RENDER_
 if(output)fs.mkdirSync(output,{recursive:true});
 const r=new Renderer(canvas());r.setTroopAtlas(await raster.loadImage(path.join(root,'assets/troops-atlas.png')));
 globalThis.Image=raster.Image;
+const paintedManifest=await loadRuntimePaintedArt(root,raster);
 const houseOrder=['wolf','lion','dragon','stag','rose','sun','kraken','falcon','flayed','bridge','bear','fish','frog','beacon','huntsman','bone'];
 await r.loadHouseArt({troops:Object.fromEntries(houseOrder.map(sigil=>[sigil,path.join(root,'assets/houses',sigil+'-troops.png')])),castles:path.join(root,'assets/house-castles.png'),production:path.join(root,'assets/house-production.png')});
 let cases=0;
@@ -38,14 +41,10 @@ test('Frey spearmen and Bolton pikes keep their existing distinct painted house 
   assert.notEqual(spear.frames[0].image,r.troopFrames.infantry.frames[0].image);
 });
 
-test('A backward march keeps the sprite facing forward and reverses its walk cycle',()=>{
-  const target=canvas(),ctx=target.getContext('2d'),u=unit(),calls=[],original=r.soldierSprite;
-  r.soldierSprite=(...args)=>{calls.push(args);return null;};ctx.translate(320,240);
-  try{
-    r.unit(ctx,u,g,{selected:new Set()},1);assert.equal(calls.at(-1)[3],1);assert.equal(calls.at(-1)[4],2);
-    u.facingX=-1;u.backpedaling=false;r.unit(ctx,u,g,{selected:new Set()},1);assert.equal(calls.at(-1)[3],-1);assert.equal(calls.at(-1)[4],1);
-    u.attackAnim=.8;u.facingX=1;r.unit(ctx,u,g,{selected:new Set()},1);assert.equal(calls.at(-1)[3],1);assert.equal(calls.at(-1)[5],true);
-  }finally{r.soldierSprite=original;}
+test('A backward march keeps the authored weapon direction and reverses body gait',()=>{
+  const u=unit(),first=authoredAnimationState(u,g);assert.equal(first.action,'backward');assert.equal(first.directionIndex,0);
+  u.facingX=-1;u.backpedaling=false;const second=authoredAnimationState(u,g);assert.equal(second.action,'march');assert.equal(second.directionIndex,4);
+  const target=canvas(),ctx=target.getContext('2d'),calls=[],original=r.soldierSprite;r.soldierSprite=(...args)=>{calls.push(args);return null;};try{u.facingX=1;u.backpedaling=true;r.unit(ctx,u,g,{selected:new Set()},1);assert.equal(calls.at(-1)[3],1);assert.equal(calls.at(-1)[4],2);u.facingX=-1;u.backpedaling=false;r.unit(ctx,u,g,{selected:new Set()},1);assert.equal(calls.at(-1)[3],-1);assert.equal(calls.at(-1)[4],1);}finally{r.soldierSprite=original;}
 });
 
 test('Selected troops expose their facing even while their velocity points backward',()=>{
@@ -54,14 +53,16 @@ test('Selected troops expose their facing even while their velocity points backw
   assert.ok(front.getContext('2d').getImageData(334,247,4,4).data.some((v,i)=>i%4===3&&v>50),'Forward direction tick remains in front of the soldier.');
 });
 
-test('A settled directional attack line draws its leveled pikes without a Hold order',()=>{
-  const draw=braced=>{const c=canvas(),ctx=c.getContext('2d'),u=unit();ctx.translate(320,240);u.type='dread_pike';u.order.mode='attack';u.vx=0;u.backpedaling=false;u.braceDir={x:1,y:0};u.braceTime=braced?1:0;const original=r.soldierSprite;r.soldierSprite=()=>null;try{r.unit(ctx,u,g,{selected:new Set()},1);}finally{r.soldierSprite=original;}return c;};
-  assert.ok(opaque(draw(true))>opaque(draw(false))+30,'The braced spear and front line are visible on the ground.');
+test('Draft pikes remain visible using complete PNGs while missing brace actions stay explicit',()=>{
+  const u=unit();Object.assign(u,{type:'winter_pikeman',vx:0,backpedaling:false,readyState:'Braced',braceTime:.5});u.order.mode='hold';
+  const braced=authoredAnimationState(u,g);assert.equal(braced.action,'brace');const cel=completeTroopFrame(u.type,g.teams[0],braced);assert.ok(cel?.painted);
+  if(!paintedManifest.troops[u.type].clips.brace){assert.equal(cel.action,'ready');assert.equal(cel.draftFallback,true);assert.ok(paintedTroopCoverage().missingFrames.includes(u.type+':brace'));}
+  u.readyState='Lowering';u.braceTime=.1;assert.equal(authoredAnimationState(u,g).action,'lower');assert.ok(completeTroopFrame(u.type,g.teams[0],authoredAnimationState(u,g)).painted);
 });
 
-test('Formation previews rotate with facing and sample at most thirty-six destination slots',()=>{
+test('Formation previews rotate with facing and display every actual destination slot',()=>{
   const draw=(faceX,faceY,count=1000)=>{const c=canvas(),ctx=c.getContext('2d');let checks=0;ctx.translate(320,240);r.facingPreview(ctx,{isWalkable:()=>{checks++;return true;}},{x:0,y:0,faceX,faceY,count,formation:'line'},1);return {c,checks};};
-  const a=draw(1,0),b=draw(0,1);assert.equal(a.checks,36);assert.equal(b.checks,36);assert.notDeepEqual(pixels(a.c),pixels(b.c));assert.ok(opaque(a.c)>100);
+  const a=draw(1,0),b=draw(0,1);assert.equal(a.checks,1000);assert.equal(b.checks,1000);assert.notDeepEqual(pixels(a.c),pixels(b.c));assert.ok(opaque(a.c)>100);
   assert.equal(draw(1,0,1).checks,1);
 });
 

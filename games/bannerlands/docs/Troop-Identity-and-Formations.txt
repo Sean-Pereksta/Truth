@@ -1,0 +1,121 @@
+TROOP IDENTITY, EQUIPMENT AND FORMATIONS
+
+This guide describes the coordinated equipment update. Numerical combat values
+are initial tuning targets. The older update notes describe historical releases.
+
+TROOPS AND RECRUITMENT
+Stark's Winter Pike Hall trains Winter Pikemen; Tyrell's Thornwall Drill Hall
+trains Thornwall Pikemen. These two-handed pike regiments have no shield
+protection. Winter Guard remains a separate shield-equipped Stark specialist.
+Lannister and Targaryen retain their heavy Shield Bearers. Build the extra
+regiment facility with Shift+J and recruit with Muster, Shift+6.
+
+Legacy Stark/Tyrell Shield Bearer records convert in place to their pike
+regiments. The migration preserves IDs, orders, group membership, upgrades and
+remaining-health percentage. Legacy facility names map to the corresponding
+pike hall. The game has no disk save/load interface; migrateRegimentState is the
+snapshot migration entry point, and Game.migrateLegacyRegiments updates a live
+simulation and its indexes.
+
+River Rangers carry compact bows, travel cloaks and satchels. Sharpshooters use
+heavy windlass crossbows and bolt cases. Hill Huntsmen have peaked hunting caps,
+mantles and longbows. Tollhouse crews use broad flat helmets and stirrup-lever
+crossbows. Horn Hill Halberdiers carry complete axe-hook-point polearms. Vale
+Sentinels use a low marksman stance and compact lever crossbows.
+
+COMPLETE PAINTED TROOP FRAMES — ROSTER ROLLOUT IN PROGRESS
+New artwork is generated as painted PNG sprite sheets. The complete-troops
+module only selects complete image frames and their foot anchors; it does not
+draw soldiers, weapons, limbs, shields or reload mechanisms. Original painted
+PNGs remain available while replacement sets are under review.
+The target is eight authored directions for EVERY troop and sixteen for foot
+polearms. Each troop needs movement, turning, attack, reaction and death frames,
+plus its relevant loading, support or brace actions. Generated columns are not
+counted as verified directions until the actual body and equipment have been
+visually checked. Missing actions, incorrect headings and short pikes remain
+open work rather than being described as complete. See Sprite-Production-Plan.md.
+Ground selection guides remain separate. Projectile release and protection
+metadata must be checked against the painted poses before a set is finalized.
+
+CONTROLS
+Right-click ground  Immediate Move and disengage
+Right-drag          Destination and final facing with saved dimensions
+Z                   Form Up placement
+D                   Move & Face
+Shift+D             Face in Place, preserving the current center
+H                   Hold / Brace
+W                   Advance in Formation
+A                   Break formation and charge individual targets
+V                   Immediate retreat
+Alt+S               Select foot spears, pikes and halberdiers
+1-9 / Ctrl+1-9      Recall / assign command groups
+
+Form Up shows every projected soldier slot, blocked ground, front and handles.
+Move its center, drag either side for width, and turn the front handle to face.
+Ranks range from one to four; width and rank controls update together. Enter
+places and Escape cancels. Pike Block and Shield Wall settle into Hold/Brace
+after arrival. Lock Facing preserves the commanded front. Group assignment
+remembers the preferred preset, dimensions and facing lock.
+
+Touch selection exposes Form, Hold/Brace, Advance and Retreat above the compact
+dock. Form first opens preset/rank controls, then battlefield placement with
+position, width and facing handles plus Place/Cancel. Ordinary touch drag pans
+and pinch zooms outside placement. Orders retains Face and Charge.
+
+FORMATION AND POLEARM READINESS
+Soldiers retain stable slot assignments. A nearby compatible rear soldier can
+fill a casualty gap without rebuilding every neighbor's stance. Advancing
+cohorts compress at narrow passages and reopen afterward. Separated members
+catch up without stopping the main body indefinitely. Ranged soldiers occupy
+rear ranks rather than being inserted into the polearm front.
+
+Moving, Forming, Turning, Lowering, Braced and Disrupted are distinct states.
+Full brace requires a valid slot, aligned weapon and about 0.5 seconds of
+settling. Movement, turning and displacement remove full readiness. The visible
+weapon can still offer reduced resistance while presented during an advance or
+backward march. Ordinary Move uses a travel carry.
+
+Interception checks the rider's swept movement against the actual forward
+weapon contact zone before body impact. It requires a living soldier, a clear
+lane and a presented point. The central planted sector is +/-45 degrees.
+Initial momentum losses are 90% for a planted heavy pike, 80% for a heavy spear,
+50-60% for lighter spears/halberds and 30% for aligned moving contact. A rear
+pass or a missed point has no interception effect. Contact events are discrete,
+so remaining against one shaft does not deal a free hit each simulation frame.
+
+CROSSBOWS
+Unit                  Bolt damage   Loading time   Cavalry multiplier
+Gilded Crossbows            60           3.0s                1.8
+Tollhouse Crossbows         72           3.6s                2.0
+Tully Sharpshooters        100           5.0s                2.0
+Vale Sentinels              64           3.2s                1.9
+
+Ready, aim, release, lower, span, take bolt, seat bolt, raise, ready are tied to
+simulation work. Each loaded bolt releases one projectile; damage belongs to
+impact. The shared crossbow path applies cavalry vulnerability once. Gilded
+crews span with a belt hook, Tollhouse crews with a stirrup/lever, Sharpshooters
+with a windlass, and Vale crews with their compact lever.
+
+Loaded weapons remain loaded in transit. Unloaded weapons cannot complete a
+loading stage while walking. Move/Retreat interrupt immediately. Completed
+physical stages survive, progress inside the interrupted stage is discarded,
+and stationary crews resume the next unfinished stage. Minor collision shuffles
+do not repeatedly restart loading. The selected panel reports loading state.
+
+SHIELD FACING
+Heavy shields receive 25% of frontal missile damage, 35% of frontal melee and
+45% of frontal charge damage. Their sides receive 100%; rear direct hits 150%.
+Small carried shields receive 60%, 75%, 80%, 100% and 125%, respectively.
+The front and rear sectors each span 120 degrees. Frontal protection requires
+an actual raised protective pose. Rear exposure remains during travel/turning.
+
+Missiles use their incoming travel direction at impact. Charges use the horse's
+approach and melee uses the attacker/contact direction. One directional
+modifier applies per direct hit; shield rear vulnerability replaces older rear
+bonuses. Poison, fire and area damage follow their own rules.
+
+VALIDATION
+Run npm run check, npm test, npm run test:render, npm run test:formations-browser,
+npm run test:mobile and npm run test:standalone. Native raster checks require
+@napi-rs/canvas (or LANDS_CANVAS_MODULE); browser checks require Playwright and
+Chromium (BANNERLANDS_BROWSER may select an installed executable).

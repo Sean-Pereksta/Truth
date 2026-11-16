@@ -1,0 +1,116 @@
+{
+  "river_ranger": {
+    "issues": [
+      "Eight walking phases, four shooting phases and four falling phases are mapped in every direction, but the troop remains a draft pending motion approval.",
+      "Turning has one unique phase per direction; aiming has two and recovery has one. More phases are required before the full animation set is complete.",
+      "Actual in-game projectile-to-bow alignment remains unverified, especially the foreshortened front view; release-origin height needs a combat scene check.",
+      "Mild source cloth variation and gait-loop bob remain open for review."
+    ]
+  },
+  "bridge_warden": {
+    "candidates": [
+      {
+        "src": "assets/painted-troops/raw/bridge-warden-travel-v1.png",
+        "directionsDeclared": 8,
+        "actions": [
+          "ready",
+          "march",
+          "backward"
+        ],
+        "status": "design-review",
+        "referenceOnly": true
+      },
+      {
+        "src": "assets/painted-troops/raw/bridge-warden-combat-main-v1.png",
+        "directionsDeclared": 8,
+        "actions": [
+          "brace",
+          "thrust"
+        ],
+        "status": "action-review",
+        "referenceOnly": true
+      }
+    ],
+    "issues": [
+      "Source weapon length and complete forward reach need visual verification.",
+      "Sixteen directions and all action phases are unfinished.",
+      "Travel source contains a translucent background; it is not approved as a runtime atlas."
+    ]
+  },
+  "dread_pike": {
+    "candidates": [
+      {
+        "src": "assets/painted-troops/raw/dread-pike-design-master.png",
+        "directionsDeclared": 8,
+        "actions": [
+          "ready"
+        ],
+        "status": "design-review",
+        "referenceOnly": true
+      },
+      {
+        "src": "assets/painted-troops/raw/dread-pike-combat-main-v1.png",
+        "directionsDeclared": 8,
+        "actions": [
+          "brace",
+          "thrust"
+        ],
+        "status": "action-review",
+        "referenceOnly": true
+      }
+    ],
+    "issues": [
+      "Pike is approximately 1.5–1.8 body heights in current sources, below the requested 2.5–3; not approved as finished long-weapon artwork.",
+      "Sixteen authored directions and the full action set remain unfinished."
+    ]
+  },
+  "crannog_spearhand": {
+    "candidates": [
+      {
+        "src": "assets/painted-troops/raw/crannog-spearhand-design-master.png",
+        "directionsDeclared": 8,
+        "actions": [
+          "ready"
+        ],
+        "status": "design-review",
+        "referenceOnly": true
+      },
+      {
+        "src": "assets/painted-troops/raw/crannog-spearhand-combat-main-v1.png",
+        "directionsDeclared": 8,
+        "actions": [
+          "brace",
+          "thrust"
+        ],
+        "status": "action-review",
+        "referenceOnly": true
+      }
+    ],
+    "issues": [
+      "Full-length spear proportions and alpha edges still need verification.",
+      "Sixteen directions and remaining travel, turn, recovery and death phases remain unfinished."
+    ]
+  },
+  "dune_skirmisher": {
+    "candidates": [
+      {
+        "src": "assets/painted-troops/raw/dune-skirmisher-direction-baseline-v2.png",
+        "directionsDeclared": 8,
+        "readyViewsReviewed": 8,
+        "phasesPerDirection": 1,
+        "actions": [
+          "ready"
+        ],
+        "status": "reference-only",
+        "referenceOnly": true,
+        "alphaZeroPixels": 916615,
+        "alphaBelow70Pixels": 1137468
+      }
+    ],
+    "issues": [
+      "Eight directional ready poses are a design/direction reference only, not a completed animated troop.",
+      "Walking, throwing windup/release/recovery, hit and death full-character animation cycles are unfinished.",
+      "Upper-right west view was repainted by image generation; v2 contains both actual left and right profiles."
+    ]
+  }
+}

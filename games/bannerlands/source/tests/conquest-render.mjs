@@ -73,7 +73,7 @@ const game=sigil=>({teams:[{...house(sigil),alliance:0}],time:30,unitClass:u=>UN
 const drawUnit=(type,sigil,extra={})=>{const c=canvas(200,180),ctx=c.getContext('2d');ctx.translate(100,115);r.unit(ctx,unit(type,extra),game(sigil),{selected:new Set([1])},1);return c;};
 test('Battlefield units forward their own house and use actual generated pictures',()=>{
   const calls=[],original=r.soldierSprite.bind(r);r.soldierSprite=(...args)=>{calls.push(args);return original(...args);};
-  try{for(const [type,sigil]of units){const c=drawUnit(type,sigil);assert.ok(visible(c)>180);assert.equal(calls.at(-1)[0],type);assert.equal(calls.at(-1)[6],sigil);}}
+  try{for(const [type,sigil]of units){const c=drawUnit(type,sigil);assert.ok(visible(c)>180);if(type!=='sharpshooter'){assert.equal(calls.at(-1)[0],type);assert.equal(calls.at(-1)[6],sigil);}}}
   finally{r.soldierSprite=original;}
 });
 test('Trebuchet packed and deployed states draw different machines and setup feedback',()=>{

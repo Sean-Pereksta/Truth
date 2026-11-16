@@ -14,8 +14,9 @@ const fixture=()=>{
 const tile=(g,x,y)=>g.tiles[y*g.W+x];
 const mountain=(g,x,y,feature=null)=>{Object.assign(tile(g,x,y),{terrain:'mountain',feature});g.navigation.invalidate();};
 const terrain=g=>g.combatTerrain||new CombatTerrain(g);
+const releaseShot=(g,source,target)=>{const dx=target.x-source.x,dy=target.y-source.y,length=Math.hypot(dx,dy)||1;source.facingX=dx/length;source.facingY=dy/length;g.attack(source,target);if(source.pendingShot)g.updateWeaponActions(source,source.pendingShot.aimDuration+.001);};
 const shoot=(g,source,target)=>{
-  g.projectiles=[];source.cooldown=0;g.hash.rebuild(g.units);const before=target.hp;g.attack(source,target);g.updateProjectiles(2);return before-target.hp;
+  g.projectiles=[];source.cooldown=0;g.hash.rebuild(g.units);const before=target.hp;releaseShot(g,source,target);g.updateProjectiles(2);return before-target.hp;
 };
 
 test('Mountains block direct fire in both directions and open passes restore the sightline',()=>{
@@ -43,7 +44,7 @@ test('Actual archers and both defensive buildings choose clear enemies instead o
     mountain(g,32,30);g.hash.rebuild(g.units);
     if(kind==='archer'){
       assert.equal(g.findTarget(source),clear);g.attack(source,blocked);assert.equal(g.projectiles.length,0);
-      g.attack(source,clear);
+      assert.equal(source.pendingShot,undefined);releaseShot(g,source,clear);
     }else{source.cooldown=0;g.updateBuildings(.01);}
     assert.equal(g.projectiles.length,1,kind+' must still fire down its clear lane.');assert.equal(g.projectiles[0].target,clear.id);
   }
@@ -80,7 +81,7 @@ test('High-ground archers gain modest range and actually fire from a hill at an 
   const g=fixture(),archer=g.addUnit(0,'archer',30.5,30.5),target=g.addUnit(1,'infantry',34.45,30.5);
   archer.order={x:archer.x,y:archer.y,mode:'hold'};target.order={x:target.x,y:target.y,mode:'hold'};archer.cooldown=0;archer.seek=0;g.hash.rebuild(g.units);
   assert.equal(g.unitRange(archer),UNIT_DEFS.archer.range);g.updateUnits(.01);assert.equal(g.projectiles.length,0);
-  tile(g,30,30).terrain='hill';assert.equal(g.unitRange(archer),UNIT_DEFS.archer.range+.6);archer.cooldown=0;archer.seek=0;g.hash.rebuild(g.units);g.updateUnits(.01);assert.equal(g.projectiles.length,1);
+  tile(g,30,30).terrain='hill';assert.equal(g.unitRange(archer),UNIT_DEFS.archer.range+.6);archer.cooldown=0;archer.seek=0;g.hash.rebuild(g.units);g.updateUnits(.01);assert.ok(archer.pendingShot);archer.facingX=1;archer.facingY=0;g.updateWeaponActions(archer,.21);assert.equal(g.projectiles.length,1);
   const sword=g.addUnit(0,'infantry',30.5,30.5);assert.equal(g.unitRange(sword),UNIT_DEFS.infantry.range,'Melee reach must not gain a hill bonus.');
 });
 
@@ -91,7 +92,7 @@ test('Arcing catapult stones cross ridges while direct ballista bolts remain blo
 });
 
 test('A newly blocked sightline prevents an already launched direct projectile from damaging through the ridge',()=>{
-  const g=fixture(),archer=g.addUnit(0,'archer',30.5,30.5),target=g.addUnit(1,'infantry',33.5,30.5);g.attack(archer,target);assert.equal(g.projectiles.length,1);
+  const g=fixture(),archer=g.addUnit(0,'archer',30.5,30.5),target=g.addUnit(1,'infantry',33.5,30.5);releaseShot(g,archer,target);assert.equal(g.projectiles.length,1);
   mountain(g,32,30);g.updateProjectiles(2);assert.equal(target.hp,target.maxHp);assert.equal(g.projectiles.length,0);
 });
 

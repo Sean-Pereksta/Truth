@@ -1,85 +1,37 @@
 import assert from 'node:assert/strict';
 import {Game,UNIT_DEFS} from '../../core.js';
-
-const types=['gilded_crossbow','tollhouse_crossbow','sharpshooter'];
+import {RELOAD_STAGES} from '../../equipment.js';
+const types=['gilded_crossbow','tollhouse_crossbow','sharpshooter','vale_sentinel'];
 let checks=0;
 const test=(name,fn)=>{fn();checks++;console.log('PASS '+name);};
-function fixture(){
-  const g=new Game({landscape:'open',enemies:1,house:1,seed:44277});
-  g.units=[];g.buildings=[];g.byId.clear();g.projectiles=[];g.effects=[];
-  for(const t of g.tiles){t.terrain='grass';t.feature=null;t.owner=0;t.height=0;}
-  for(const s of g.teams){s.count=0;s.alive=true;s.upgrades.weapons=0;s.upgrades.armor=0;}
-  g.navigation.invalidate();return g;
+function fixture(type='gilded_crossbow'){
+ const g=new Game({landscape:'open',enemies:1,house:1,seed:44277});g.units=[];g.buildings=[];g.byId.clear();g.projectiles=[];g.effects=[];
+ for(const t of g.tiles){t.terrain='grass';t.feature=null;t.owner=0;t.height=0;}
+ for(const s of g.teams){s.count=0;s.alive=true;s.upgrades.weapons=0;s.upgrades.armor=0;}
+ const u=g.addUnit(0,type,30,30),v=g.addUnit(1,'archer',34,30);v.hp=v.maxHp=10000;v.cooldown=1e9;g.hold([u.id,v.id]);u.facingX=1;u.facingY=0;u.cooldown=0;g.navigation.invalidate();g.hash.rebuild(g.units);return {g,u,v};
 }
-function step(g,seconds){for(let i=0;i<Math.ceil(seconds/.025);i++){g.time+=.025;g.hash.rebuild(g.units);g.updateUnits(.025);g.updateProjectiles(.025);}}
-function pair(type,targetType='infantry',distance=4.8){
-  const g=fixture(),u=g.addUnit(0,type,30,30),v=g.addUnit(1,targetType,30+distance,30);
-  v.hp=v.maxHp=10000;v.cooldown=1e9;g.hold([u.id,v.id]);u.cooldown=0;g.hash.rebuild(g.units);return {g,u,v};
-}
+function step(g,seconds){for(let left=seconds;left>1e-8;){const dt=Math.min(.025,left);g.time+=dt;g.hash.rebuild(g.units);g.updateUnits(dt);g.updateProjectiles(dt);left-=dt;}}
+function fire(g,u,v){g.attack(u,v);assert.ok(u.pendingShot);assert.equal(g.projectiles.length,0);step(g,.3);assert.ok(u.reload);}
 
-test('Every crossbow fires real bolts beyond its former range, with higher impact and a cavalry bonus',()=>{
-  for(const [type,oldRange,oldDamage]of [['gilded_crossbow',4.05,23],['tollhouse_crossbow',4.25,28],['sharpshooter',6.25,42]]){
-    const {g,u,v}=pair(type,'cavalry',oldRange+.35),d=UNIT_DEFS[type];
-    assert.ok(d.range>oldRange);assert.ok(d.damage>oldDamage);step(g,.025);
-    assert.equal(g.projectiles.length,1);assert.equal(g.projectiles[0].type,'bolt');
-    assert.equal(v.hp,v.maxHp,'Damage belongs to projectile contact, not release.');
-    g.updateProjectiles(2);assert.ok(Math.abs(v.maxHp-v.hp-d.damage*d.cavalryBonus)<1e-6);
-    assert.ok(u.reload&&u.reloading);
-  }
+test('All four crossbows aim, release one real bolt, and apply damage at projectile contact',()=>{
+ for(const type of types){const {g,u,v}=fixture(type),before=v.hp;fire(g,u,v);assert.equal(g.projectiles.length,1);assert.equal(g.projectiles[0].type,'bolt');assert.equal(v.hp,before);assert.ok(g.projectiles[0].sx>u.x,'Bolt originates at the authored release point.');g.updateProjectiles(2);assert.equal(before-v.hp,UNIT_DEFS[type].damage);assert.equal(g.stats.battles,1);}
 });
-
-test('All three classes stay planted and cannot fire again before completing the stationary reload',()=>{
-  for(const type of types){
-    const {g,u,v}=pair(type),start={x:u.x,y:u.y};g.attack(u,v);const duration=u.reload.duration;
-    v.x=50;g.attackNearest([u.id]);step(g,duration*.5);
-    assert.equal(u.x,start.x);assert.equal(u.y,start.y);assert.ok(u.reload.progress>0);
-    const count=g.stats.battles;g.attack(u,v);assert.equal(g.stats.battles,count,'Direct attacks cannot bypass an unloaded crossbow.');
-    step(g,duration*.55);assert.equal(u.reload,null);assert.equal(u.reloading,false);
-    assert.equal(g.stats.battles,count,'No shot at an out-of-range enemy on completion.');
-    step(g,.1);assert.ok(u.x>start.x,'Automatic pursuit resumes after the weapon is loaded.');
-  }
+test('Every loading stage completes in sequence and an unloaded weapon cannot fire',()=>{
+ for(const type of types){const {g,u,v}=fixture(type);fire(g,u,v);v.x=60;u.target=null;const seen=new Set([u.reload.stage]),count=g.stats.battles;for(let i=0;i<UNIT_DEFS[type].rate/.025+5;i++){g.attack(u,v);if(u.reload)seen.add(u.reload.stage);step(g,.025);if(!u.reload)break;}assert.deepEqual([...seen],RELOAD_STAGES.map(s=>s.name));assert.equal(u.reload,null);assert.equal(u.loadingState,'Loaded');assert.equal(g.stats.battles,count);}
 });
-
-test('A move command interrupts reload immediately, leaves the weapon unloaded, and reloads after arrival',()=>{
-  for(const type of types){
-    const {g,u,v}=pair(type);g.attack(u,v);step(g,.35);assert.ok(u.reload.progress>0);
-    v.hp=0;g.command([u.id],27,30,'move','spread');step(g,.4);
-    assert.ok(u.x<29.8);assert.equal(u.reloading,false);assert.equal(u.reload.progress,0);
-    const count=g.stats.battles;step(g,.5);assert.equal(u.reload.progress,0);assert.equal(g.stats.battles,count);
-    step(g,3);assert.ok(Math.abs(u.x-27)<.25);assert.ok(u.reloading||!u.reload,'Arrival starts a real stationary reload.');
-    step(g,UNIT_DEFS[type].rate+.2);assert.equal(u.reload,null);assert.equal(u.cooldown<=0,true);
-  }
+test('Move interrupts the current physical stage and preserves completed stages',()=>{
+ for(const type of types){const {g,u,v}=fixture(type);fire(g,u,v);step(g,UNIT_DEFS[type].rate*.67);assert.ok(u.reload.stageIndex>=2);const completed=u.reload.completed,index=u.reload.stageIndex;v.hp=0;g.command([u.id],25,30,'move','spread');assert.equal(u.reload.progress,completed);assert.equal(u.reload.stageProgress,0);step(g,.5);assert.ok(u.x<29.8);assert.equal(u.reloading,false);assert.equal(u.reload.stageIndex,index);assert.equal(u.reload.progress,completed);g.hold([u.id]);step(g,UNIT_DEFS[type].rate*.5);assert.equal(u.reload,null);}
 });
-
-test('An attack command while withdrawing stops the crossbowman to reload before any new shot',()=>{
-  const {g,u,v}=pair('sharpshooter');g.attack(u,v);g.command([u.id],20,30,'move','spread');step(g,.5);
-  assert.equal(u.reload.progress,0);const before=u.x,count=g.stats.battles;
-  g.attackNearest([u.id]);step(g,.5);assert.ok(Math.abs(u.x-before)<.001);assert.ok(u.reloading);assert.ok(u.reload.progress>.4);
-  assert.equal(g.stats.battles,count);step(g,3.1);assert.ok(g.stats.battles>count);
+test('Loaded weapons remain loaded during deliberate movement and aim cancels immediately',()=>{
+ const {g,u,v}=fixture();g.attack(u,v);assert.ok(u.pendingShot);g.command([u.id],25,30,'move');assert.equal(u.pendingShot,null);step(g,.5);assert.equal(u.reload,undefined);assert.equal(g.projectiles.length,0);assert.equal(u.loadingState,'Loaded');assert.ok(u.x<30);
 });
-
-test('Knockback interrupts a partially completed reload and cannot silently reload a moving weapon',()=>{
-  const {g,u,v}=pair('gilded_crossbow');g.attack(u,v);step(g,.4);assert.ok(u.reload.progress>.3);
-  u.knockT=u.knockDuration=.3;u.knockVX=-2;u.knockVY=0;step(g,.1);
-  assert.equal(u.reload.progress,0);assert.equal(u.reloading,false);
-  step(g,.5);assert.ok(u.reloading);assert.ok(u.reload.progress>0&&u.reload.progress<u.reload.duration);
+test('Substantial knockback discards only the interrupted stage and pauses loading',()=>{
+ const {g,u,v}=fixture();fire(g,u,v);step(g,2);const completed=u.reload.completed,index=u.reload.stageIndex;u.knockT=u.knockDuration=.3;u.knockVX=-2;u.knockVY=0;step(g,.1);assert.equal(u.reload.progress,completed);assert.equal(u.reload.stageIndex,index);assert.equal(u.reloading,false);step(g,.5);assert.ok(u.reloading);assert.ok(u.reload.progress>completed);
 });
-
-test('An ally pushing in the final collision pass interrupts even the last fraction of a reload',()=>{
-  const {g,u,v}=pair('gilded_crossbow','infantry',4);
-  g.attack(u,v);u.reload.progress=u.reload.duration-.02;
-  const ally=g.addUnit(0,'cavalry',30.41,30);g.command([ally.id],25,30,'move','spread');ally.motionVX=-2.25;ally.motionVY=0;
-  g.time+=.06;g.hash.rebuild(g.units);g.updateUnits(.06);
-  assert.ok(Math.abs(u.x-30)>.003,'The ally must actually displace the crossbowman.');
-  assert.ok(u.reload,'Collision prevents completion before the final position is known.');assert.equal(u.reload.progress,0);assert.equal(u.reloading,false);
-  const count=g.stats.battles;step(g,.025);assert.equal(g.stats.battles,count,'A displaced weapon cannot fire on the next frame.');
+test('Minor collision shuffles preserve loading work',()=>{
+ const {g,u,v}=fixture();fire(g,u,v);const before=u.reload.progress;u.x+=.005;u.vx=.04;g.updateCrossbowReload(u,.1);assert.ok(u.reload.progress>before);assert.equal(u.reloading,true);
 });
-
-test('Moving a prepared Tollhouse crew loses its fast reload until readiness is earned again',()=>{
-  const {g,u,v}=pair('tollhouse_crossbow');u.stationaryTime=2;g.attack(u,v);
-  assert.equal(u.reload.duration,UNIT_DEFS[u.type].rate/1.25);
-  g.command([u.id],25,30,'move','spread');step(g,.2);
-  assert.equal(u.reload.progress,0);assert.equal(u.reload.duration,UNIT_DEFS[u.type].rate);assert.ok(u.stationaryTime<2);
+test('Attack while travelling stops to complete the unloaded weapon before a new aim',()=>{
+ const {g,u,v}=fixture('sharpshooter');fire(g,u,v);g.command([u.id],25,30,'move');step(g,.3);const before=u.x,count=g.stats.battles;g.attackNearest([u.id]);step(g,.5);assert.ok(Math.abs(u.x-before)<.01);assert.ok(u.reload);assert.equal(g.stats.battles,count);step(g,5.3);assert.ok(g.stats.battles>count);
 });
-
-console.log(`${checks} crossbow combat and reload checks passed.`);
+console.log(`${checks} staged crossbow checks passed.`);

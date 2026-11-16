@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {UNIT_DEFS} from '../../core.js';
+import {buildTroopArtCoverage,ANIMATION_PHASE_TARGETS} from '../audit-troop-art.mjs';
+const empty=buildTroopArtCoverage();assert.equal(empty.summary.unitTypes,Object.keys(UNIT_DEFS).length);
+for(const type of Object.keys(UNIT_DEFS))assert.ok(empty.targets.some(t=>t.type===type),type+' must stay in the roster-wide animation plan.');
+for(const id of ['shield_bearer:lion','shield_bearer:dragon','lance_champion:bear','lance_champion:sun','lance_champion:falcon','hero:king'])assert.ok(empty.targets.some(t=>t.id===id));
+for(const type of ['winter_pikeman','thornwall_pikeman','bridge_warden','dread_pike','crannog_spearhand','hornhill_halberdier'])assert.equal(empty.targets.find(t=>t.type===type).targetDirections,16);
+assert.equal(ANIMATION_PHASE_TARGETS.march.minimum,4);assert.equal(ANIMATION_PHASE_TARGETS.march.preferred,8);assert.equal(ANIMATION_PHASE_TARGETS.hit.minimum,2);assert.equal(ANIMATION_PHASE_TARGETS.death.minimum,4);
+const directions=count=>Array.from({length:8},(_,d)=>Array.from({length:count},(_,phase)=>({sheet:'painted',cell:d*8+phase}))),draft={version:1,troops:{river_ranger:{house:'fish',directions:8,clips:{ready:directions(1),march:directions(2),hit:directions(1),death:directions(2)},qa:{verifiedDirectionsByAction:{ready:8,march:8,hit:8,death:8},verifiedPhasesByAction:{ready:1,march:2,hit:1,death:2},alphaVerified:true}}}};
+let report=buildTroopArtCoverage(draft),ranger=report.targets.find(t=>t.type==='river_ranger');assert.equal(ranger.verifiedComplete,false);for(const action of ['march','hit','death'])assert.ok(ranger.remainingActions.includes(action),'One static pose per heading cannot pass '+action+' animation coverage.');
+draft.troops.river_ranger.clips.march=directions(8);draft.troops.river_ranger.qa.verifiedPhasesByAction.march=8;report=buildTroopArtCoverage(draft);assert.equal(report.summary.verifiedWalkAnimationTargets,1);assert.equal(report.targets.find(t=>t.type==='river_ranger').verifiedComplete,false,'A completed walk cycle does not finish attack, support, hit and death.');
+draft.troops.river_ranger.clips.march=Array.from({length:8},(_,d)=>Array.from({length:8},()=>({sheet:'painted',cell:d})));assert.equal(buildTroopArtCoverage(draft).summary.verifiedWalkAnimationTargets,0,'Repeating one source cell cannot fabricate eight walk phases.');
+draft.troops.river_ranger.referenceOnly=true;report=buildTroopArtCoverage(draft);ranger=report.targets.find(t=>t.type==='river_ranger');assert.equal(ranger.status,'reference-only');assert.equal(ranger.activeManifestKey,null);assert.equal(ranger.renderer,'original-painted-PNG');
+const notesOnly=buildTroopArtCoverage({}, {dune_skirmisher:{candidates:[{src:'direction-study.png',referenceOnly:true}]}}).targets.find(t=>t.type==='dune_skirmisher');assert.equal(notesOnly.referenceOnly,true);assert.equal(notesOnly.activeManifestKey,null);assert.equal(notesOnly.renderer,'original-painted-PNG');
+console.log('PASS all-roster targets, house/king variants, sixteen-direction polearms, real animation-phase minimums, duplicate-phase rejection and reference-only activation policy.');

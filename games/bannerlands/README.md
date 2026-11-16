@@ -2,14 +2,21 @@
 
 Command armies, conquer the grid, and unite the realm in an isometric real-time strategy game.
 
-Press W to advance and attack as one formation, turning toward an enemy force
-while keeping the ranks together. A breaks formation and charges independently.
-A plain right-click gives a faster direct withdrawal; right-drag preserves
-facing for a deliberate backward march. Formed infantry takes less frontal
-damage and resists displacement. All three crossbow classes have longer range,
-harder hits against cavalry and distinct mechanical reload animations. They
-reload while stationary; moving interrupts the cycle, which restarts after
-arrival or the next attack order. See `docs/Crossbows-and-Formation-Advance.txt`.
+The painted sprite update is a roster-wide work in progress. Every troop is
+targeted for eight authored directions, with sixteen for foot polearms. New
+image-generated PNG sheets keep each specialist's own design and complete
+equipment. The shape-drawn troop replacement has been removed; original painted
+art remains where a replacement is still under review. See
+`docs/Sprite-Production-Plan.md` for all units, batches and acceptance criteria.
+
+Press Z to place a formation with a center, width, one to four ranks and facing.
+Choose Line, Pike Block, Shield Wall, Wedge or Loose, then Enter to place or
+Escape to cancel. Right-click remains an immediate Move; right-drag sets a quick
+destination and facing. Shift+D faces in place, H holds/braces, W advances in
+formation, A breaks and charges, and V retreats. Facing and weapon readiness
+follow the visible troop pose. All four crossbow classes fire individual bolts
+and operate distinct loading mechanisms; movement preserves completed loading
+stages. See `docs/Troop-Identity-and-Formations.txt` for the coordinated update.
 
 Attacks on expanding troops now trigger local defense within aggro range while
 distant troops continue their orders. Defenders pursue only locally and resume
@@ -92,8 +99,9 @@ fire, woods give missile cover and hills extend archer range. Troop-type
 shortcuts, nine command groups and letter-based building shortcuts are listed
 in `docs/Combat-Update.txt`.
 
-Stark, Lannister, Targaryen and Tyrell can train Shield Bearers from distinct
-shield halls. Mormont, Martell and Arryn can train Lance Champions from their
+Stark and Tyrell train Winter Pikemen and Thornwall Pikemen from dedicated pike
+halls. Lannister and Targaryen retain Shield Bearers. Stark also keeps its
+shield-equipped Winter Guard. Mormont, Martell and Arryn train Lance Champions from their
 own mounted academies. Each of these seven houses has a separate troop sprite
 sheet with its own armor and colors, plus illustrated production buildings.
 The new facilities unlock paid companies and train automatically under normal
@@ -147,5 +155,6 @@ and right-drag orders remain available.
 - Optional native graphics checks: `npm run test:render` and `npm run benchmark:render`
   with `@napi-rs/canvas` installed or `LANDS_CANVAS_MODULE` pointing to it.
 - Build a standalone offline copy: `node source/build-standalone.mjs <output-directory>`.
+- Validate offline module integration: `npm run test:standalone`.
 
 Controls, house details, and update guides are in `docs/`. The game was originally imported from the supplied Bannerlands folder; historical `Original/` backups and preview images are excluded. The source and artwork beside the web entry are the maintained version.

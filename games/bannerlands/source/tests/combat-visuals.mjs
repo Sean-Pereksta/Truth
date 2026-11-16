@@ -36,19 +36,15 @@ test('Each crossbow class animates its own working mechanism from completed relo
   assert.deepEqual(styles,['belt','lever','windlass']);
 });
 
-test('Reloads draw animated weapons, limbs, strings and separate class mechanisms',()=>{
+test('Combat decoration cannot overpaint equipment, hands or replacement mechanisms',()=>{
   const calls=[],context=new Proxy({}, {get:(target,key)=>key in target?target[key]:(...args)=>calls.push([key,...args]),set:(target,key,value)=>{target[key]=value;return true;}});
-  const drawings=[];
-  for(const type of ['gilded_crossbow','tollhouse_crossbow','sharpshooter']){
-    const u=soldier(type);u.attackVisual=null;u.reloading=true;u.reload={progress:1,duration:3};u.facingX=1;u.facingY=0;
-    calls.length=0;const pose=combatPose(u,visualGame(),UNIT_DEFS[type]);drawCombatAccents(context,u,visualGame(),UNIT_DEFS[type],{x:0,y:0},pose);
-    assert.ok(calls.filter(c=>c[0]==='lineTo').length>=15,'Reload needs actual articulated weapon and arms, not a cooldown indicator.');
-    drawings.push(JSON.stringify(calls));
-    u.reload.progress=1.1;calls.length=0;drawCombatAccents(context,u,visualGame(),UNIT_DEFS[type],{x:0,y:0},combatPose(u,visualGame(),UNIT_DEFS[type]));
-    assert.notEqual(JSON.stringify(calls),drawings.at(-1),'The weapon mechanism must move continuously inside one painted frame.');
+  for(const type of ['gilded_crossbow','tollhouse_crossbow','sharpshooter','vale_sentinel']){
+    const u=soldier(type);u.reloading=true;u.reload={progress:1,duration:3};
+    drawCombatAccents(context,u,visualGame(),UNIT_DEFS[type],{x:0,y:0},combatPose(u,visualGame(),UNIT_DEFS[type]));
   }
-  assert.equal(new Set(drawings).size,3,'The three mechanisms cannot share the same animation.');
+  assert.deepEqual(calls,[],'All soldier, hand and weapon animation must be contained in complete cels.');
 });
+
 test('Hit reactions are cosmetic, distinguish blocked blows and expire on paused game time',()=>{
   const u=soldier();u.attackVisual=null;u.target=null;u.hitVisual={at:10,dx:1,dy:0,blocked:false};
   const before=JSON.stringify(u),normal=combatPose(u,visualGame(10.09),UNIT_DEFS.stormbreaker);assert.equal(JSON.stringify(u),before);assert.ok(normal.dx>0);

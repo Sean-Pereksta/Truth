@@ -1,0 +1,30 @@
+Use case: stylized-concept.
+Asset type: production medieval isometric RTS PNG animation sprite sheet.
+Create a NEW painted WINTER PIKEMAN character sheet. Reference image 1 is STYLE ONLY: match its polished, richly painted natural steel, fur, leather, cloth and human anatomy, like classic Age of Empires / Stronghold unit artwork. Do not copy its shield or axe. This must be detailed painted raster game art, never vector shapes, pictograms, flat icons, stick figures or outlines.
+
+CANVAS AND GRID ARE MANDATORY: 2048 pixels wide by 3840 pixels high, genuinely transparent RGBA background. Exactly EIGHT equal columns and SIXTEEN equal rows =128 isolated complete full-body sprites, one sprite inside every 256x240 pixel cell. No visible grid, labels, text, swatches, borders or checkerboard. No other images outside the cells. No large hero portrait. No empty cells. No overlap between cells.
+
+All 128 images depict the SAME human-sized Stark Winter Pikeman: weathered steel helmet and breastplate, rugged grey fur shoulders, dark blue-grey layered cloth, dark leather boots, both hands gripping one very long wooden pike with a small bright steel point. Strong low planted stance. NO SHIELD of any kind, no axe, no sword, no bow. The pike has complete shaft, butt and point in EVERY sprite, including fallen sprites. Hands visibly grip the same shaft in physically coherent positions. Human anatomy remains realistic, never shrunken or elongated to fit the weapon.
+Consistent sprite scale and anchors: standing soldier from boots to helmet approximately 60 pixels tall in every cell, feet centered horizontally at cell x128 and baseline cell y216. Pike total length approximately168 pixels, or2.8 standing human heights. When horizontal, distribute length across both sides of the soldier: about115 pixels ahead and53 behind the grip so the COMPLETE pike fits with transparent margins. Do not enlarge bodies in cells with foreshortened weapons. Keep at least6 transparent pixels between all artwork and cell edges. No ground slabs or environment.
+
+COLUMNS, left to right, are eight genuinely different isometric camera views of the soldier, body, hands and weapon together. The intended forward direction viewed on the screen is: (1) southeast/down-right, (2) south/down, (3) southwest/down-left, (4) west/left, (5) northwest/up-left, (6) north/up, (7) northeast/up-right, (8) east/right. Rear views must show the back of the helmet, fur and armor; front views show the breastplate. Do not repeat one side view across the grid or mirror all figures. The body and the weapon must point in the named direction.
+
+ROWS, top to bottom, are these sixteen clearly different complete body-and-pike poses, repeated in all eight directions:
+1 ready guard;
+2 marching left foot forward, pike deliberately carried upright;
+3 marching right foot forward, pike deliberately carried upright;
+4 backward step left, pike point still presented toward the named forward direction;
+5 backward step right, point still presented forward;
+6 turning step, body and hands carrying the whole pike together;
+7 start lowering the carried pike;
+8 halfway lowering the pike toward the front;
+9 fully braced, low planted feet, point lowered forward and supported shaft;
+10 thrust wind-up with full two-handed grip;
+11 thrust contact, torso and hands driving the whole pike forward;
+12 recovery back to guard;
+13 actual hit/disruption reaction, guard broken;
+14 beginning to fall with the whole pike still in the hands;
+15 mid-fall with the whole pike still attached to the hands;
+16 fallen/dead soldier beside the complete released pike.
+
+Keep the same armor, face, fur and palette throughout. Lighting soft from upper left, realistic painted shading, highly readable silhouettes and materials at small battlefield zoom. Every cell must contain the whole soldier plus the whole weapon and both hands, no crop, no dismemberment, no procedural-looking geometry. Transparent background must be actual alpha.

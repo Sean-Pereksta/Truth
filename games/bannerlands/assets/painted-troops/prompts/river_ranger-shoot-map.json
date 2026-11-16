@@ -1,0 +1,60 @@
+{
+  "columns": 4,
+  "rows": 2,
+  "phases": [
+    "nock-halfdraw",
+    "full-aim",
+    "release",
+    "recover"
+  ],
+  "frameRule": "row selects direction, column selects phase",
+  "alpha": "genuine RGBA verified corner alpha0",
+  "review": {
+    "wholeCharacterAnimationPhases": true,
+    "completeBodyWeaponHands": true,
+    "releaseArrowAbsent": true,
+    "noProgrammaticMirroring": true,
+    "remaining": [
+      "per-cell crop padding and consistent foot anchors",
+      "native animated preview for final projectile-source/contact alignment"
+    ]
+  },
+  "pages": [
+    {
+      "pair": "se-s",
+      "directions": [
+        0,
+        1
+      ],
+      "visualQA": "SE arrow clearly down-right; S body genuinely front-facing with foreshortened arrow, final contact/release-point projection review still required",
+      "file": "river_ranger-shoot-se-s.png"
+    },
+    {
+      "pair": "sw-w",
+      "directions": [
+        2,
+        3
+      ],
+      "visualQA": "SW arrow clearly down-left; W true left-facing body and arrow",
+      "file": "river_ranger-shoot-sw-w.png"
+    },
+    {
+      "pair": "nw-n",
+      "directions": [
+        4,
+        5
+      ],
+      "visualQA": "NW genuine back-quarter arrow up-left; N fully back body and arrow projects vertically upward",
+      "file": "river_ranger-shoot-nw-n.png"
+    },
+    {
+      "pair": "ne-e",
+      "directions": [
+        6,
+        7
+      ],
+      "visualQA": "NE genuine back-quarter arrow up-right; E right profile and horizontal arrow right",
+      "file": "river_ranger-shoot-ne-e.png"
+    }
+  ]
+}

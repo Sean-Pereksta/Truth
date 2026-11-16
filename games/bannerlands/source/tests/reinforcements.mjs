@@ -32,8 +32,8 @@ test('Every new facility automatically trains its own troops and respects supply
   }
 });
 test('Hammer strikes damage and physically displace enemies, with visible impact and mass/brace resistance',()=>{
-  function hit(type='infantry',brace=false,formation='spread'){const g=fixture(),u=g.addUnit(0,'stormbreaker',20,20),v=g.addUnit(1,type,20.75,20);g.hold([u.id,v.id]);v.order.formation=formation;u.facingX=1;u.facingY=0;v.facingX=-1;v.facingY=0;
-    if(brace){v.braceDir={x:-1,y:0};v.braceTime=1;}
+  function hit(type='infantry',brace=false,formation='spread'){const g=fixture();g.teams[1].sigil='lion';const u=g.addUnit(0,'stormbreaker',20,20),v=g.addUnit(1,type,20.75,20);g.hold([u.id,v.id]);v.order.formation=formation;u.facingX=1;u.facingY=0;v.facingX=-1;v.facingY=0;
+    if(brace){v.braceDir={x:-1,y:0};v.braceTime=1;v.readyState='Braced';}
     g.hash.rebuild(g.units);g.attack(u,v);assert.ok(v.hp<v.maxHp);assert.ok(g.effects.some(e=>e.type==='hammerImpact'));const kick=v.knockVX;
     const before=v.x;step(g,8);assert.ok(v.x>before+.02,'The shove must actually move the target.');return kick;
   }
@@ -46,23 +46,23 @@ test('Hammer knockback cannot move a fighter into an impassable mountain',()=>{
   for(let y=1;y<g.H-1;y++)g.tileAt(21.5,y+.5).terrain='mountain';g.navigation.invalidate();g.hold([u.id,v.id]);g.attack(u,v);step(g,20);
   assert.ok(g.isWalkable(v.x,v.y));assert.ok(v.x<21);
 });
-test('Reed spearhands receive their additional forest speed and retain light armor without a charge brace',()=>{
+test('Reed spearhands receive their additional forest speed and retain light armor and a lighter planted spear guard',()=>{
   const g=fixture('frog'),u=g.addUnit(0,'crannog_spearhand',20.5,20.5);g.tileAt(u.x,u.y).terrain='forest';
-  assert.equal(g.movementMultiplier(u),1.56);assert.ok(!UNIT_DEFS[u.type].spearBrace);assert.ok(u.hp<UNIT_DEFS.infantry.hp*1.2);
+  assert.equal(g.movementMultiplier(u),1.56);assert.ok(UNIT_DEFS[u.type].spearBrace);assert.ok(u.hp<UNIT_DEFS.infantry.hp*1.2);
   const v=g.addUnit(0,'infantry',20.5,20.5);assert.equal(g.movementMultiplier(v),1.2);
   g.tileAt(u.x,u.y).terrain='grass';assert.equal(g.movementMultiplier(u),1);
 });
 test('Tarly long halberds hit before swords can reach, using the actual combat loop',()=>{
   const g=fixture('huntsman'),u=g.addUnit(0,'hornhill_halberdier',20,20),v=g.addUnit(1,'infantry',21.45,20);g.hold([u.id,v.id]);u.cooldown=0;v.cooldown=0;
-  step(g);assert.equal(u.hp,u.maxHp);assert.ok(v.hp<v.maxHp);assert.equal(g.unitRange(u),1.6);assert.ok(g.unitRange(u)>g.unitRange(v));
+  u.facingX=1;u.facingY=0;u.braceDir={x:1,y:0};step(g,7);assert.equal(u.hp,u.maxHp);assert.ok(v.hp<v.maxHp);assert.equal(g.unitRange(u),1.7);assert.ok(g.unitRange(u)>g.unitRange(v));
 });
-test('Frey crossbows earn a stationary reload bonus and movement resets it',()=>{
+test('Frey crossbows operate the lever at the specified reload duration',()=>{
   const g=fixture('bridge'),u=g.addUnit(0,'tollhouse_crossbow',20,20);g.hold([u.id]);step(g,85);assert.ok(u.stationaryTime>=2);
-  const v=g.addUnit(1,'infantry',23,20);g.hash.rebuild(g.units);g.attack(u,v);assert.equal(u.cooldown,UNIT_DEFS[u.type].rate/1.25);
+  const v=g.addUnit(1,'infantry',23,20);g.hash.rebuild(g.units);u.facingX=1;u.facingY=0;g.attack(u,v);step(g,10);assert.equal(u.reload.duration,UNIT_DEFS[u.type].rate);
   g.command([u.id],16,20,'move','spread');step(g,20);assert.ok(u.stationaryTime<2);
 });
 test('Greyjoy throws real axe projectiles with short range and keeps its recovery weakness',()=>{
-  const g=fixture('kraken'),u=g.addUnit(0,'saltwind_axethrower',20,20),v=g.addUnit(1,'infantry',22,20);g.hash.rebuild(g.units);g.attack(u,v);
+  const g=fixture('kraken'),u=g.addUnit(0,'saltwind_axethrower',20,20),v=g.addUnit(1,'infantry',22,20);g.hash.rebuild(g.units);u.facingX=1;u.facingY=0;g.attack(u,v);g.updateWeaponActions(u,.21);
   assert.equal(g.projectiles[0].type,'axe');g.updateProjectiles(2);assert.ok(v.hp<v.maxHp);assert.ok(g.unitRange(u)<UNIT_DEFS.archer.range);
   assert.ok(HOUSES.find(h=>h.sigil==='kraken').weaknesses.some(w=>w.includes('50%')));
 });
@@ -76,7 +76,7 @@ test('Martell replaces catapults in the opening, paid recruitment, buildings, pr
 });
 test('Horse archers shoot arrows, use venom, skirmish and cannot charge',()=>{
   const g=fixture('sun'),u=g.addUnit(0,'sun_horse_archer',20,20),v=g.addUnit(1,'infantry',21.1,20);g.hash.rebuild(g.units);g.command([u.id],24,20,'attack','spread');
-  assert.equal(g.unitClass(u),'cavalry');assert.equal(g.isRanged(u),true);assert.equal(g.useHousePower([u.id]).ok,true);g.attack(u,v);
+  assert.equal(g.unitClass(u),'cavalry');assert.equal(g.isRanged(u),true);assert.equal(g.useHousePower([u.id]).ok,true);u.facingX=1;u.facingY=0;g.attack(u,v);g.updateWeaponActions(u,.21);
   assert.equal(g.projectiles[0].type,'arrow');assert.equal(g.projectiles[0].venom,true);g.updateProjectiles(1);assert.ok(v.hp<v.maxHp);
   g.beginCharge(u,v);assert.equal(u.charging,false);const before=u.x;step(g,20);assert.ok(u.x<before,'Mounted archers withdraw from close melee.');assert.equal(u.charging,false);
 });

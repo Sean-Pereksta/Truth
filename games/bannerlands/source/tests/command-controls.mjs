@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import {FORMATION_PRESETS,formationLayout,projectedFormation} from '../../formation-advance.js';
 import {Game,HOUSES,UNIT_DEFS,BUILD_DEFS} from '../../core.js';
 import {isPassableTile} from '../../lands.js';
 import {worldToScreen,screenToWorld} from '../../render.js';
@@ -41,11 +42,11 @@ function fixture({house=0,realMenu=false}={}){
   game.navigation.invalidate();
   const elements=new Map(),actions=new Map(),tabs=['army','build','council'].map(name=>{const tab=new Element();tab.dataset.tab=name;return tab;}),messages=[],effects=[],commands=[];
   const element=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id);};
-  const canvas=element('battleCanvas'),win=new Element('window'),ui={selected:new Set(),selectedBuildings:new Set(),formation:'line',buildMode:null,rallyMode:false,teamOrderMode:null,facingMode:false,facingPreview:null,drag:null,hover:null};
+  const canvas=element('battleCanvas'),win=new Element('window'),ui={selected:new Set(),selectedBuildings:new Set(),formation:'line',formationSettings:{preset:'line',ranks:2,lockFacing:true},formationPlacement:null,buildMode:null,rallyMode:false,teamOrderMode:null,facingMode:false,facingPreview:null,drag:null,hover:null};
   element('resultOverlay').hidden=true;
-  const context={console,Math,Map,Set,String,Array,HOUSES,UNIT_DEFS,BUILD_DEFS,isPassableTile,worldToScreen,screenToWorld,regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit,game,canvas,window:win,
+  const context={console,Math,Map,Set,String,Array,FORMATION_PRESETS,formationLayout,projectedFormation,HOUSES,UNIT_DEFS,BUILD_DEFS,isPassableTile,worldToScreen,screenToWorld,regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit,game,canvas,window:win,
     ui,view:{x:0,y:840,w:800,h:600,zoom:1},battleHud:{open(){},close(){},isOpen:false,touchSelect:false,syncSelection(){}},started:true,menuOpen:false,orderMode:'attack',tab:'army',allSelected:false,allBuildingsSelected:false,
-    pointers:new Map(),keys:new Set(),groups:new Map(),gesture:null,pinch:null,edgeMouse:null,
+    pointers:new Map(),keys:new Set(),groups:new Map(),groupSettings:new Map(),gesture:null,pinch:null,edgeMouse:null,
     $:element,document:{body:{classList:{add(){},remove(){}}},createElement:()=>new Element(),querySelector:selector=>{if(realMenu)return selector?.startsWith('#')?element(selector.slice(1)):actions.get(selector)||null;if(!actions.has(selector))actions.set(selector,new Element(selector));return actions.get(selector);},querySelectorAll:selector=>selector==='[data-tab]'?tabs:[]},
     updateHud(){},toast:message=>messages.push(message),tone(){},initAudio(){},minZoom:()=>.05,boundCamera(){},renderer:{campaignArtReady:true,getStructureFrame:()=>({drawWidth:60,drawHeight:70})},
     placeTeamOrder:()=>effects.push('teamOrder'),terrainDescription:()=>'',
@@ -58,7 +59,7 @@ function fixture({house=0,realMenu=false}={}){
     const line=source.split('\n').find(line=>line.startsWith(prefix));assert.ok(line,prefix);vm.runInContext(line,context);
   }
   const actionsStart=source.indexOf('const MENU_ACTIONS='),actionsEnd=source.indexOf('\n};',actionsStart);vm.runInContext(source.slice(actionsStart,actionsEnd+3),context);
-  for(const name of ['clearBuildingSelection','selectTroopType','commandGroup','cancelBuild','showTab','activateMenuAction','handleMenuHotkey','beginFacing','patrolBorder','issue','issueTarget','buildingAt','setSelectedRally','pointerPos','rememberMouse','finishPointer','bonusText','upgradeSummary','specialistTooltip','labelMenuHotkeys','buildActionLists'])vm.runInContext(extract(name),context);
+  for(const name of ['selectedCenter','selectedFacing','refreshForm','beginForm','rememberFormationSettings','confirmForm','formHandle','dragForm','toggleFacingLock','clearBuildingSelection','selectTroopType','commandGroup','cancelBuild','showTab','activateMenuAction','handleMenuHotkey','beginFacing','patrolBorder','issue','issueTarget','buildingAt','setSelectedRally','pointerPos','rememberMouse','finishPointer','bonusText','upgradeSummary','specialistTooltip','paintTroopPortrait','labelMenuHotkeys','buildActionLists'])vm.runInContext(extract(name),context);
   vm.runInContext(listener('canvas','pointerdown'),context);vm.runInContext(listener('canvas','pointermove'),context);vm.runInContext(listener('window','keydown'),context);
   const cancelLine=source.split('\n').find(line=>line.startsWith("canvas.addEventListener('pointerup'"));vm.runInContext(cancelLine,context);
   const blurLine=source.split('\n').find(line=>line.startsWith("window.addEventListener('keyup'"));vm.runInContext(blurLine,context);
@@ -253,8 +254,27 @@ test('Alt-type hotkeys and Ctrl command groups avoid menu and battle key conflic
   f.ui.selected.clear();f.win.dispatch('keydown',f.event({key:'9',code:'Digit9'}));assert.deepEqual(ids(f.ui.selected),ids([archer.id,horse.id,spear.id]));assert.equal(f.effects.length,0);assert.equal(f.commands.length,0);
 });
 
+test('Z previews a formation without orders, Enter places it, and Escape cancels changes',()=>{
+ const f=fixture(),troops=Array.from({length:24},(_,i)=>f.game.addUnit(0,'winter_pikeman',28.5,30.5+i*.1));f.ui.selected=new Set(troops.map(u=>u.id));
+ f.win.dispatch('keydown',f.event({key:'z',code:'KeyZ'}));assert.equal(f.commands.length,0);assert.equal(f.ui.orderPreview.slots.length,24);assert.equal(f.element('formationSettingsSheet').hidden,false);
+ f.ui.formationSettings={preset:'pike',ranks:4,lockFacing:true};f.context.refreshForm();assert.equal(f.ui.orderPreview.columns,6);assert.equal(f.ui.orderPreview.ranks,4);
+ f.win.dispatch('keydown',f.event({key:'Enter',code:'Enter'}));assert.equal(f.commands.length,1);assert.equal(f.ui.formationPlacement,null);assert.ok(troops.every(u=>u.order.preset==='pike'&&u.order.columns===6&&u.order.lockFacing));
+ f.win.dispatch('keydown',f.event({key:'z',code:'KeyZ'}));f.win.dispatch('keydown',f.event({key:'Escape',code:'Escape'}));assert.equal(f.commands.length,1);assert.equal(f.ui.formationPlacement,null);
+});
+test('Command groups recall their preferred formation, ranks, width and facing lock',()=>{
+ const f=fixture(),u=f.game.addUnit(0,'winter_pikeman',28.5,30.5);f.ui.selected.add(u.id);f.ui.formationSettings={preset:'pike',ranks:4,columns:9,width:3.44,lockFacing:true};
+ f.context.commandGroup('2',true);f.ui.formationSettings={preset:'loose',ranks:1,lockFacing:false};f.context.commandGroup('2');
+ assert.equal(f.ui.formationSettings.preset,'pike');assert.equal(f.ui.formationSettings.ranks,4);assert.equal(f.ui.formationSettings.width,3.44);assert.equal(f.ui.formationSettings.lockFacing,true);
+});
+
+test('Priority specialist portraits use the same complete troop artwork as the battlefield',()=>{
+ const f=fixture(),calls=[];f.context.renderer.drawTroopPortrait=(canvas,type,house)=>calls.push({canvas,type,house});
+ for(const type of ['river_ranger','hill_huntsman','vale_sentinel','sharpshooter','hornhill_halberdier','tollhouse_crossbow'])f.context.paintTroopPortrait(f.element('portrait-'+type),type,f.game.teams[0]);
+ assert.deepEqual(calls.map(c=>c.type),['river_ranger','hill_huntsman','vale_sentinel','sharpshooter','hornhill_halberdier','tollhouse_crossbow']);assert.ok(calls.every(c=>c.house===f.game.teams[0]));
+});
+
 test('All sixteen houses retain their original menus while eligible houses gain the sixth regiment and seventh building shortcuts',()=>{
-  const expectedRegiments={wolf:'shield_bearer',lion:'shield_bearer',dragon:'shield_bearer',rose:'shield_bearer',bear:'lance_champion',sun:'lance_champion',falcon:'lance_champion',flayed:'trebuchet',beacon:'trebuchet',bone:'giant',fish:'sharpshooter',stag:'stormbreaker',kraken:'saltwind_axethrower',bridge:'tollhouse_crossbow',frog:'crannog_spearhand',huntsman:'hornhill_halberdier'};
+  const expectedRegiments={wolf:'winter_pikeman',lion:'shield_bearer',dragon:'shield_bearer',rose:'thornwall_pikeman',bear:'lance_champion',sun:'lance_champion',falcon:'lance_champion',flayed:'trebuchet',beacon:'trebuchet',bone:'giant',fish:'sharpshooter',stag:'stormbreaker',kraken:'saltwind_axethrower',bridge:'tollhouse_crossbow',frog:'crannog_spearhand',huntsman:'hornhill_halberdier'};
   for(let house=0;house<HOUSES.length;house++){
     const f=fixture({house,realMenu:true}),sigil=HOUSES[house].sigil,regiment=expectedRegiments[sigil]||null,building=regimentBuildingForHouse(sigil),original=f.game.houseContent(0);
     assert.equal(regimentForHouse(sigil),regiment);f.context.buildActionLists();const rows=f.refreshMenu();
@@ -279,13 +299,13 @@ test('All sixteen houses retain their original menus while eligible houses gain 
 });
 
 await testAsync('Boot waits for regiment and conquest art, and failed new art keeps Start disabled',async()=>{
-  for(const failed of [null,'loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt']){
+  for(const failed of [null,'loadPaintedTroops','loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt']){
     const f=fixture({realMenu:true}),loads=[],errors=[],effects=[];
     f.context.console={warn(){},error:(...args)=>errors.push(args)};f.context.renderer={};
-    for(const method of ['loadTroops','loadStructures','loadCampaignArt','loadTerrain','loadHouseArt','loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt','loadLandsArt','loadLandsGround'])f.context.renderer[method]=(...args)=>{loads.push({method,args});return method===failed?Promise.reject(new Error('Missing test artwork')):Promise.resolve();};
+    for(const method of ['loadPaintedTroops','loadTroops','loadStructures','loadCampaignArt','loadTerrain','loadHouseArt','loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt','loadLandsArt','loadLandsGround'])f.context.renderer[method]=(...args)=>{loads.push({method,args});return method===failed?Promise.reject(new Error('Missing test artwork')):Promise.resolve();};
     for(const name of ['paintBuildingIcons','paintHousePreview','paintTownHall','fitMap','updateHud'])f.context[name]=()=>effects.push(name);
     f.context.frame=()=>{};f.context.requestAnimationFrame=()=>effects.push('frame');
-    for(const prefix of ['const HOUSE_ART_SOURCES=','const REGIMENT_ART_SOURCES=','const CONQUEST_ART_SOURCES=','const REINFORCEMENT_ART_SOURCES=']){const line=source.split('\n').find(line=>line.startsWith(prefix));assert.ok(line);vm.runInContext(line,f.context);}
+    for(const prefix of ['const PAINTED_TROOP_MANIFEST=','const HOUSE_ART_SOURCES=','const REGIMENT_ART_SOURCES=','const CONQUEST_ART_SOURCES=','const REINFORCEMENT_ART_SOURCES=']){const line=source.split('\n').find(line=>line.startsWith(prefix));assert.ok(line);vm.runInContext(line,f.context);}
     vm.runInContext(extract('boot'),f.context);const boot=f.context.boot();assert.equal(f.element('startButton').disabled,true);assert.ok(f.element('startButton').innerHTML.includes('PREPARING'));
     await boot;
     const sheets=loads.find(load=>load.method==='loadRegimentArt')?.args[0];assert.ok(sheets);assert.deepEqual(Object.keys(sheets).sort(),['bear','dragon','falcon','lion','rose','sun','wolf']);assert.equal(new Set(Object.values(sheets)).size,7);

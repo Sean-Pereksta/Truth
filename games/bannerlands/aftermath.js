@@ -14,6 +14,7 @@ export class BattleAftermath{
     if(!unit||unit.hp>0||!Number.isFinite(unit.x)||!Number.isFinite(unit.y)||!Number.isFinite(time)||this.ids.has(unit.id))return null;
     const seed=Math.imul((unit.id||0)^Math.imul((unit.team||0)+1,2654435761),1597334677)>>>0;
     const variant=(seed>>>4)%3,body={id:unit.id,team:unit.team,type:unit.type,kind,x:unit.x,y:unit.y,bornAt:time,pose:seed%4,variant,isKing:!!unit.isKing,
+      facingX:unit.facingX??1,facingY:unit.facingY||0,readyState:unit.readyState||'Disrupted',
       color:shade(team?.color,[.76,.94,1.1][variant]),dark:shade(team?.dark,.9),trim:team?.teamColor||team?.color||'#a5a696',sigil:team?.sigil||'',skin:['#b59b7a','#c9af8c','#9b8065'][variant],armor:['#757d79','#92948a','#686f71'][variant]};
     if(this.bodies.length>=MAX_CORPSES){const removed=this.bodies.shift();this.ids.delete(removed.id);}
     this.bodies.push(body);this.ids.add(body.id);this.time=Math.max(this.time,time);return body;
