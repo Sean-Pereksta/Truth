@@ -1,0 +1,522 @@
+{
+  "module": "<workspace>\\work\\performance\\baseline\\core.js",
+  "seed": 44277,
+  "dt": 0.03333333333333333,
+  "fogOfWar": false,
+  "results": [
+    {
+      "scale": "epic",
+      "scenario": "idle",
+      "frames": 80,
+      "warmup": 20,
+      "units": 1120,
+      "meanMs": 6.977740000000004,
+      "p50Ms": 6.733600000000024,
+      "p95Ms": 10.463100000000054,
+      "maxMs": 12.646600000000035,
+      "warmupMs": 273.39289999999994,
+      "warmupMaxMs": 38.43560000000002,
+      "methods": {
+        "updateBuildings": {
+          "calls": 100,
+          "ms": 4.348300000000563,
+          "maxMs": 0.7522000000000162
+        },
+        "updateExpansionOrders": {
+          "calls": 100,
+          "ms": 0.835399999999197,
+          "maxMs": 0.30689999999998463
+        },
+        "updateSpecialists": {
+          "calls": 100,
+          "ms": 5.313399999999206,
+          "maxMs": 0.30059999999997444
+        },
+        "updateUnits": {
+          "calls": 100,
+          "ms": 740.7130999999998,
+          "maxMs": 30.090100000000007
+        },
+        "updateHouseEffects": {
+          "calls": 100,
+          "ms": 0.8676000000000954,
+          "maxMs": 0.08549999999996771
+        },
+        "updateObjectives": {
+          "calls": 100,
+          "ms": 1.8893999999991706,
+          "maxMs": 0.16979999999995243
+        },
+        "capture": {
+          "calls": 14,
+          "ms": 57.12789999999961,
+          "maxMs": 24.77329999999995
+        },
+        "recount": {
+          "calls": 3,
+          "ms": 2.0184999999999036,
+          "maxMs": 0.890700000000038
+        }
+      },
+      "navigation": {
+        "fieldBuilds": 0,
+        "routeSearches": 0,
+        "fieldHits": 0,
+        "fieldSteps": 0,
+        "fieldBudgetStops": 0
+      },
+      "digest": "e5c94bb2"
+    },
+    {
+      "scale": "epic",
+      "scenario": "march",
+      "frames": 80,
+      "warmup": 20,
+      "units": 1120,
+      "meanMs": 13.217580000000007,
+      "p50Ms": 12.664699999999812,
+      "p95Ms": 18.98239999999987,
+      "maxMs": 23.36920000000009,
+      "warmupMs": 345.3841999999995,
+      "warmupMaxMs": 30.711499999999887,
+      "methods": {
+        "updateBuildings": {
+          "calls": 100,
+          "ms": 4.248800000000074,
+          "maxMs": 0.2801999999999225
+        },
+        "updateExpansionOrders": {
+          "calls": 100,
+          "ms": 0.6477000000018052,
+          "maxMs": 0.12409999999999854
+        },
+        "updateSpecialists": {
+          "calls": 100,
+          "ms": 5.976300000001629,
+          "maxMs": 0.24479999999994106
+        },
+        "updateUnits": {
+          "calls": 100,
+          "ms": 1323.3911000000014,
+          "maxMs": 29.079099999999926
+        },
+        "updateHouseEffects": {
+          "calls": 100,
+          "ms": 0.7415999999982432,
+          "maxMs": 0.018099999999776628
+        },
+        "updateObjectives": {
+          "calls": 100,
+          "ms": 2.5869000000013784,
+          "maxMs": 0.2622000000001208
+        },
+        "capture": {
+          "calls": 14,
+          "ms": 36.149700000000166,
+          "maxMs": 5.269999999999982
+        },
+        "recount": {
+          "calls": 3,
+          "ms": 1.7349000000003798,
+          "maxMs": 0.6224000000001979
+        }
+      },
+      "navigation": {
+        "fieldBuilds": 47,
+        "routeSearches": 0,
+        "fieldHits": 60310,
+        "fieldSteps": 719967,
+        "fieldBudgetStops": 53877
+      },
+      "digest": "ab1e35e5"
+    },
+    {
+      "scale": "epic",
+      "scenario": "battle",
+      "frames": 80,
+      "warmup": 20,
+      "units": 966,
+      "meanMs": 13.319142500000055,
+      "p50Ms": 13.080300000000534,
+      "p95Ms": 25.239399999999478,
+      "maxMs": 29.274700000000394,
+      "warmupMs": 445.6963000000005,
+      "warmupMaxMs": 82.97200000000021,
+      "methods": {
+        "updateBuildings": {
+          "calls": 100,
+          "ms": 3.2768999999943844,
+          "maxMs": 0.17600000000038563
+        },
+        "updateExpansionOrders": {
+          "calls": 100,
+          "ms": 0.8695999999999913,
+          "maxMs": 0.27690000000029613
+        },
+        "updateSpecialists": {
+          "calls": 100,
+          "ms": 8.302299999996194,
+          "maxMs": 2.3502999999991516
+        },
+        "updateUnits": {
+          "calls": 100,
+          "ms": 1428.261200000005,
+          "maxMs": 80.96119999999974
+        },
+        "updateHouseEffects": {
+          "calls": 100,
+          "ms": 1.8649999999984175,
+          "maxMs": 0.1698999999998705
+        },
+        "updateObjectives": {
+          "calls": 100,
+          "ms": 3.241099999999733,
+          "maxMs": 0.1576999999997497
+        },
+        "capture": {
+          "calls": 14,
+          "ms": 30.156300000001465,
+          "maxMs": 3.119999999999891
+        },
+        "recount": {
+          "calls": 3,
+          "ms": 1.2361000000000786,
+          "maxMs": 0.5559000000002925
+        }
+      },
+      "navigation": {
+        "fieldBuilds": 5,
+        "routeSearches": 0,
+        "fieldHits": 39,
+        "fieldSteps": 17,
+        "fieldBudgetStops": 0
+      },
+      "digest": "ccf840e0"
+    },
+    {
+      "scale": "epic",
+      "scenario": "campaign",
+      "frames": 80,
+      "warmup": 20,
+      "units": 1204,
+      "meanMs": 16.343226249999965,
+      "p50Ms": 14.588699999999335,
+      "p95Ms": 23.511999999999716,
+      "maxMs": 45.337899999999536,
+      "warmupMs": 620.0783999999994,
+      "warmupMaxMs": 59.58300000000054,
+      "methods": {
+        "updateBuildings": {
+          "calls": 100,
+          "ms": 5.911400000005415,
+          "maxMs": 0.2106999999996333
+        },
+        "updateExpansionOrders": {
+          "calls": 115,
+          "ms": 99.27249999999822,
+          "maxMs": 12.184799999999996
+        },
+        "updateSpecialists": {
+          "calls": 100,
+          "ms": 7.530700000010256,
+          "maxMs": 0.2677000000003318
+        },
+        "updateUnits": {
+          "calls": 100,
+          "ms": 1585.151600000002,
+          "maxMs": 32.04670000000078
+        },
+        "updateHouseEffects": {
+          "calls": 100,
+          "ms": 0.7100999999993292,
+          "maxMs": 0.037000000000261934
+        },
+        "updateObjectives": {
+          "calls": 100,
+          "ms": 1.9733000000005632,
+          "maxMs": 0.03830000000016298
+        },
+        "ai": {
+          "calls": 55,
+          "ms": 239.67689999999766,
+          "maxMs": 31.17279999999937
+        },
+        "capture": {
+          "calls": 14,
+          "ms": 51.59680000000117,
+          "maxMs": 9.671800000000076
+        },
+        "recount": {
+          "calls": 3,
+          "ms": 2.049599999999373,
+          "maxMs": 0.9871000000002823
+        }
+      },
+      "navigation": {
+        "fieldBuilds": 10,
+        "routeSearches": 90,
+        "fieldHits": 54431,
+        "fieldSteps": 109938,
+        "fieldBudgetStops": 419
+      },
+      "digest": "7fd59aa3"
+    },
+    {
+      "scale": "continent",
+      "scenario": "idle",
+      "frames": 80,
+      "warmup": 20,
+      "units": 1120,
+      "meanMs": 8.97621875000009,
+      "p50Ms": 8.516100000000733,
+      "p95Ms": 12.9346000000005,
+      "maxMs": 19.07220000000052,
+      "warmupMs": 209.74889999999414,
+      "warmupMaxMs": 13.838699999999335,
+      "methods": {
+        "updateBuildings": {
+          "calls": 100,
+          "ms": 3.2889000000104716,
+          "maxMs": 0.06499999999959982
+        },
+        "updateExpansionOrders": {
+          "calls": 100,
+          "ms": 0.37659999998595595,
+          "maxMs": 0.09090000000014697
+        },
+        "updateSpecialists": {
+          "calls": 100,
+          "ms": 4.2224999999907595,
+          "maxMs": 0.20640000000003056
+        },
+        "updateUnits": {
+          "calls": 100,
+          "ms": 867.7371999999996,
+          "maxMs": 16.458800000000338
+        },
+        "updateHouseEffects": {
+          "calls": 100,
+          "ms": 0.6165000000073633,
+          "maxMs": 0.016799999999420834
+        },
+        "updateObjectives": {
+          "calls": 100,
+          "ms": 1.8841999999949621,
+          "maxMs": 0.05079999999907159
+        },
+        "capture": {
+          "calls": 14,
+          "ms": 28.45190000000548,
+          "maxMs": 2.8765999999995984
+        },
+        "recount": {
+          "calls": 3,
+          "ms": 4.4561999999987165,
+          "maxMs": 2.1337000000003172
+        }
+      },
+      "navigation": {
+        "fieldBuilds": 0,
+        "routeSearches": 0,
+        "fieldHits": 0,
+        "fieldSteps": 0,
+        "fieldBudgetStops": 0
+      },
+      "digest": "f042a042"
+    },
+    {
+      "scale": "continent",
+      "scenario": "march",
+      "frames": 80,
+      "warmup": 20,
+      "units": 1120,
+      "meanMs": 12.783501249999905,
+      "p50Ms": 12.706199999998717,
+      "p95Ms": 15.725999999998749,
+      "maxMs": 18.72860000000037,
+      "warmupMs": 253.0496000000021,
+      "warmupMaxMs": 20.664600000000064,
+      "methods": {
+        "updateBuildings": {
+          "calls": 100,
+          "ms": 3.3788000000004104,
+          "maxMs": 0.14249999999992724
+        },
+        "updateExpansionOrders": {
+          "calls": 100,
+          "ms": 0.4268000000211032,
+          "maxMs": 0.08539999999993597
+        },
+        "updateSpecialists": {
+          "calls": 100,
+          "ms": 4.680500000002212,
+          "maxMs": 0.1368000000002212
+        },
+        "updateUnits": {
+          "calls": 100,
+          "ms": 1205.6665999999968,
+          "maxMs": 20.224299999999857
+        },
+        "updateHouseEffects": {
+          "calls": 100,
+          "ms": 0.7110000000084256,
+          "maxMs": 0.0183999999990192
+        },
+        "updateObjectives": {
+          "calls": 100,
+          "ms": 2.0723999999954685,
+          "maxMs": 0.10170000000107393
+        },
+        "capture": {
+          "calls": 14,
+          "ms": 33.27809999999954,
+          "maxMs": 3.762399999999616
+        },
+        "recount": {
+          "calls": 3,
+          "ms": 3.949899999999616,
+          "maxMs": 1.711699999999837
+        }
+      },
+      "navigation": {
+        "fieldBuilds": 32,
+        "routeSearches": 0,
+        "fieldHits": 39520,
+        "fieldSteps": 800000,
+        "fieldBudgetStops": 74873
+      },
+      "digest": "17b5268c"
+    },
+    {
+      "scale": "continent",
+      "scenario": "battle",
+      "frames": 80,
+      "warmup": 20,
+      "units": 974,
+      "meanMs": 8.993135000000075,
+      "p50Ms": 8.494999999998981,
+      "p95Ms": 13.268400000000838,
+      "maxMs": 16.359699999999066,
+      "warmupMs": 230.7798999999959,
+      "warmupMaxMs": 39.149099999998725,
+      "methods": {
+        "updateBuildings": {
+          "calls": 100,
+          "ms": 2.5948000000007596,
+          "maxMs": 0.06780000000071595
+        },
+        "updateExpansionOrders": {
+          "calls": 100,
+          "ms": 0.35750000000189175,
+          "maxMs": 0.13700000000062573
+        },
+        "updateSpecialists": {
+          "calls": 100,
+          "ms": 3.9535999999916385,
+          "maxMs": 0.06909999999879801
+        },
+        "updateUnits": {
+          "calls": 100,
+          "ms": 881.6599000000097,
+          "maxMs": 38.54600000000028
+        },
+        "updateHouseEffects": {
+          "calls": 100,
+          "ms": 1.3885999999856722,
+          "maxMs": 0.0820000000003347
+        },
+        "updateObjectives": {
+          "calls": 100,
+          "ms": 2.338499999992564,
+          "maxMs": 0.09109999999964202
+        },
+        "capture": {
+          "calls": 14,
+          "ms": 34.64639999999963,
+          "maxMs": 3.319999999999709
+        },
+        "recount": {
+          "calls": 3,
+          "ms": 2.666900000000169,
+          "maxMs": 1.0689000000002125
+        }
+      },
+      "navigation": {
+        "fieldBuilds": 0,
+        "routeSearches": 0,
+        "fieldHits": 0,
+        "fieldSteps": 0,
+        "fieldBudgetStops": 0
+      },
+      "digest": "16d0dc82"
+    },
+    {
+      "scale": "continent",
+      "scenario": "campaign",
+      "frames": 80,
+      "warmup": 20,
+      "units": 1204,
+      "meanMs": 12.24379874999986,
+      "p50Ms": 11.048800000000483,
+      "p95Ms": 24.521899999999732,
+      "maxMs": 35.56919999999991,
+      "warmupMs": 481.3358999999964,
+      "warmupMaxMs": 42.90780000000086,
+      "methods": {
+        "updateBuildings": {
+          "calls": 100,
+          "ms": 3.299300000000585,
+          "maxMs": 0.11120000000119035
+        },
+        "updateExpansionOrders": {
+          "calls": 115,
+          "ms": 137.35429999998996,
+          "maxMs": 13.175099999998565
+        },
+        "updateSpecialists": {
+          "calls": 100,
+          "ms": 5.3744000000097,
+          "maxMs": 0.19800000000032014
+        },
+        "updateUnits": {
+          "calls": 100,
+          "ms": 1084.8785000000044,
+          "maxMs": 24.55279999999948
+        },
+        "updateHouseEffects": {
+          "calls": 100,
+          "ms": 0.768499999994674,
+          "maxMs": 0.05439999999907741
+        },
+        "updateObjectives": {
+          "calls": 100,
+          "ms": 1.3670000000074651,
+          "maxMs": 0.061400000000503496
+        },
+        "ai": {
+          "calls": 55,
+          "ms": 314.83370000000286,
+          "maxMs": 32.855100000000675
+        },
+        "capture": {
+          "calls": 14,
+          "ms": 28.402400000000853,
+          "maxMs": 2.5692999999992026
+        },
+        "recount": {
+          "calls": 3,
+          "ms": 2.2440999999998894,
+          "maxMs": 0.8968999999997322
+        }
+      },
+      "navigation": {
+        "fieldBuilds": 12,
+        "routeSearches": 105,
+        "fieldHits": 54209,
+        "fieldSteps": 137988,
+        "fieldBudgetStops": 865
+      },
+      "digest": "fa9ff531"
+    }
+  ]
+}

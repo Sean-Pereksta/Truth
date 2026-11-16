@@ -26,7 +26,8 @@ for(const [name,Class]of classes){
  const r=await setup(Class);
  for(const scene of scenes){
   const v={x:(scene.x-scene.y)*28,y:(scene.x+scene.y)*14,zoom:scene.zoom,w:1400,h:900,dpr:1};
-  r.draw(g,v,ui);r.draw(g,v,ui);
+  // Both versions receive the same warmup, including static-surface preparation.
+  for(let i=0;i<6;i++)r.draw(g,v,ui);
   const cameraX=v.x,cameraY=v.y;
   if(scene.pan)for(const offset of [-140,0,140]){v.x=cameraX+offset;v.y=cameraY+offset*.2;r.draw(g,v,ui);}
   if(name==='current'){

@@ -1,0 +1,170 @@
+{
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0",
+  "notes": [
+    "Same actual app renderer and decoded full art, Game paused, manual RAF draws; app draw suppressed to avoid duplicate work.",
+    "Static 1120soldiers continent15rivals high quality1400x900dpr1 .55zoom, same Game identity and camera across alternating variants.",
+    "Adaptive includes final measured-cost gate; two cold/warm24frames excluded."
+  ],
+  "rows": [
+    {
+      "seed": 44277,
+      "variant": "direct",
+      "draw": {
+        "medianMs": 5.899999976158142,
+        "p95Ms": 9.400000035762787,
+        "meanMs": 6.3133333365122475,
+        "maxMs": 10.199999988079071
+      },
+      "frame": {
+        "medianMs": 16.69999999999891,
+        "p95Ms": 16.799999999999272,
+        "meanMs": 16.664444444444435,
+        "maxMs": 17.600000000000364
+      },
+      "paints": 90,
+      "paintMs": 219.29999995231628,
+      "composite": false,
+      "bytes": 0
+    },
+    {
+      "seed": 44277,
+      "variant": "adaptive",
+      "draw": {
+        "medianMs": 5.900000035762787,
+        "p95Ms": 7.800000011920929,
+        "meanMs": 5.8488888912730745,
+        "maxMs": 8.599999964237213
+      },
+      "frame": {
+        "medianMs": 16.69999999999891,
+        "p95Ms": 16.80000000000109,
+        "meanMs": 16.662222222222226,
+        "maxMs": 17.5
+      },
+      "paints": 90,
+      "paintMs": 211.1999997496605,
+      "composite": false,
+      "bytes": 0
+    },
+    {
+      "seed": 44277,
+      "variant": "adaptive",
+      "draw": {
+        "medianMs": 4.300000011920929,
+        "p95Ms": 5.199999988079071,
+        "meanMs": 4.352222222752041,
+        "maxMs": 7.199999988079071
+      },
+      "frame": {
+        "medianMs": 16.69999999999891,
+        "p95Ms": 16.80000000000109,
+        "meanMs": 16.667777777777783,
+        "maxMs": 17.5
+      },
+      "paints": 90,
+      "paintMs": 166.19999998807907,
+      "composite": false,
+      "bytes": 0
+    },
+    {
+      "seed": 44277,
+      "variant": "direct",
+      "draw": {
+        "medianMs": 4.199999988079071,
+        "p95Ms": 5.399999976158142,
+        "meanMs": 4.2288888911406195,
+        "maxMs": 5.600000023841858
+      },
+      "frame": {
+        "medianMs": 16.700000000000728,
+        "p95Ms": 17,
+        "meanMs": 16.666666666666668,
+        "maxMs": 17.599999999998545
+      },
+      "paints": 90,
+      "paintMs": 160.90000015497208,
+      "composite": false,
+      "bytes": 0
+    },
+    {
+      "seed": 628410,
+      "variant": "direct",
+      "draw": {
+        "medianMs": 4.100000023841858,
+        "p95Ms": 5.200000047683716,
+        "meanMs": 4.158888891670439,
+        "maxMs": 5.5
+      },
+      "frame": {
+        "medianMs": 16.700000000000728,
+        "p95Ms": 17.200000000000728,
+        "meanMs": 16.67222222222222,
+        "maxMs": 17.5
+      },
+      "paints": 90,
+      "paintMs": 167.599999666214,
+      "composite": false,
+      "bytes": 0
+    },
+    {
+      "seed": 628410,
+      "variant": "adaptive",
+      "draw": {
+        "medianMs": 4.199999988079071,
+        "p95Ms": 5.300000011920929,
+        "meanMs": 4.249999998675452,
+        "maxMs": 5.5
+      },
+      "frame": {
+        "medianMs": 16.700000000000728,
+        "p95Ms": 16.799999999999272,
+        "meanMs": 16.666666666666668,
+        "maxMs": 17.200000000000728
+      },
+      "paints": 90,
+      "paintMs": 166.0000001192093,
+      "composite": false,
+      "bytes": 0
+    },
+    {
+      "seed": 628410,
+      "variant": "adaptive",
+      "draw": {
+        "medianMs": 3.899999976158142,
+        "p95Ms": 5,
+        "meanMs": 3.9544444415304394,
+        "maxMs": 5.199999988079071
+      },
+      "frame": {
+        "medianMs": 16.700000000000728,
+        "p95Ms": 16.799999999999272,
+        "meanMs": 16.66777777777776,
+        "maxMs": 17.799999999999272
+      },
+      "paints": 90,
+      "paintMs": 158.90000021457672,
+      "composite": false,
+      "bytes": 0
+    },
+    {
+      "seed": 628410,
+      "variant": "direct",
+      "draw": {
+        "medianMs": 5,
+        "p95Ms": 6.399999976158142,
+        "meanMs": 5.1555555568801035,
+        "maxMs": 7.100000023841858
+      },
+      "frame": {
+        "medianMs": 16.69999999999709,
+        "p95Ms": 16.80000000000291,
+        "meanMs": 16.666666666666668,
+        "maxMs": 17.600000000002183
+      },
+      "paints": 90,
+      "paintMs": 197.09999972581863,
+      "composite": false,
+      "bytes": 0
+    }
+  ]
+}

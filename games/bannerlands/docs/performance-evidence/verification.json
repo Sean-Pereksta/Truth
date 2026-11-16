@@ -1,0 +1,11 @@
+{
+  "skips": 0,
+  "browserControls": 12,
+  "gameplay": 504,
+  "syntax": "passed",
+  "browserOffline": 1,
+  "browserHeroes": 5,
+  "baseline": "9a43126837d1b1bd4abbee7c90ec5ef250ab9eed",
+  "browserMinimap": 15,
+  "nativeRendering": 90
+}

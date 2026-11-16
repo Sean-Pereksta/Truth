@@ -169,3 +169,9 @@ and right-drag orders remain available.
 - Build a standalone offline copy: `node source/build-standalone.mjs <output-directory>`.
 
 Controls, house details, and update guides are in `docs/`. The game was originally imported from the supplied Bannerlands folder; historical `Original/` backups and preview images are excluded. The source and artwork beside the web entry are the maintained version.
+
+Rival commanders now separate strategic threat, invasion opportunity, immediate
+danger and campaign risk. Their current role adapts to objectives, visible danger,
+scouting and losses, with commitment periods for workable orders. Hard and Warlord
+make better use of the same information and resources. See
+`docs/Living-Rivals-and-Performance.md` for behavior, validation and measurements.

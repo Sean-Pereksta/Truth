@@ -7,6 +7,7 @@ import {generateLands,isPassableTile,tileTravelCost} from './lands.js';
 import {LandsNavigation} from './navigation.js';
 import {CombatTerrain} from './cover.js';
 import {WarVision} from './vision.js';
+import {evaluateRivals,observedStrength,campaignRoute} from './rival-intelligence.js';
 import {BattleAftermath} from './aftermath.js';
 import {startFormationAdvance,updateFormationAdvances} from './formation-advance.js';
 import {registerRegiments,regimentForHouse,regimentAllowed,regimentRequiredBuilding,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,houseCanRecruit,houseCanBuild,shieldFacingMultiplier,migrateLegacyRegiments} from './regiments.js';
@@ -175,10 +176,10 @@ function terrainNoise(x,y,seed){
 }
 // Difficulty changes strategic pressure; economy, health and damage stay shared.
 const AI_DIFFICULTIES={
-  relaxed:{decision:4.6,opening:12,firstAssault:65,assaultEvery:40,force:.48,minArmy:72,squad:10,danger:1.15,frontiers:50},
-  standard:{decision:2.5,opening:7,firstAssault:38,assaultEvery:24,force:.62,minArmy:60,squad:12,danger:.7,frontiers:80},
-  veteran:{decision:1.4,opening:4.5,firstAssault:30,assaultEvery:20,force:.7,minArmy:52,squad:14,danger:.5,frontiers:100},
-  warlord:{decision:.9,opening:2.5,firstAssault:22,assaultEvery:15,force:.78,minArmy:48,squad:16,danger:.4,frontiers:120}
+  relaxed:{decision:4.6,opening:12,firstAssault:65,assaultEvery:40,force:.48,minArmy:72,squad:10,danger:1.15,frontiers:50,review:12,commitment:38,threatThreshold:65,opportunityThreshold:76,fronts:1,recovery:32},
+  standard:{decision:2.5,opening:7,firstAssault:38,assaultEvery:24,force:.62,minArmy:60,squad:12,danger:.7,frontiers:80,review:8,commitment:30,threatThreshold:57,opportunityThreshold:65,fronts:1,recovery:24},
+  veteran:{decision:1.4,opening:4.5,firstAssault:30,assaultEvery:20,force:.7,minArmy:52,squad:14,danger:.5,frontiers:100,review:5,commitment:26,threatThreshold:49,opportunityThreshold:57,fronts:1,recovery:18},
+  warlord:{decision:.9,opening:2.5,firstAssault:22,assaultEvery:15,force:.78,minArmy:48,squad:16,danger:.4,frontiers:120,review:3.5,commitment:24,threatThreshold:43,opportunityThreshold:53,fronts:2,recovery:14}
 };
 
 class SpatialHash {
@@ -1459,7 +1460,11 @@ export class Game {
   }
 
   aiPlanFor(s){
-    if(s.aiPlan)return s.aiPlan;
+    if(s.aiPlan){
+      // Older campaign plans acquire the new optional state lazily.
+      const p=s.aiPlan;p.baseStyle??=p.style;p.baseFraction??=p.fraction;p.baseReserve??=p.reserve;p.baseExpansion??=p.expansion;p.role??=({mass:'invader',raider:'raider',siege:'siege',defensive:'defender',objective:'objective'})[p.style]||'invader';p.secondary??=null;
+      return p;
+    }
     const styles={wolf:'defensive',lion:'mass',dragon:'siege',stag:'raider',rose:'objective',sun:'raider',kraken:'raider',falcon:'defensive',flayed:'mass',bridge:'mass',bear:'defensive',fish:'objective',frog:'raider',beacon:'siege',huntsman:'siege',bone:'mass'};
     const plans={
       mass:{label:'Grand host',fraction:.76,reserve:.18,min:38,rest:34,opening:1,expansion:.14},
@@ -1473,6 +1478,127 @@ export class Game {
     s.aiPlan={...plans[style],rest:plans[style].rest*this.aiRules.assaultEvery/24,fraction:clamp(plans[style].fraction+(this.aiRules.force-.62)*.2,.35,.86),style,phase:'muster',cohort:[],nextAttackAt:this.aiRules.firstAssault*plans[style].opening+s.id*1.1,startedAt:this.time,economyAt:0,frontierAt:0,coordinationId:null};
     return s.aiPlan;
   }
+  aiCampaignAssessment(s,plan=this.aiPlanFor(s),force=false){
+    this.rivalAssessments??=new Map();const previous=this.rivalAssessments.get(s.id);
+    if(!force&&previous&&this.time<previous.nextAt)return previous.report;
+    const report=evaluateRivals(this,s,plan);this.rivalAssessments.set(s.id,{nextAt:this.time+this.aiRules.review,report});return report;
+  }
+  aiReviewCampaign(s){
+    if(!s.alive)return;const plan=this.aiPlanFor(s),army=this.group(s.id),report=this.aiCampaignAssessment(s,plan),rules=this.aiRules;
+    plan.baseStyle??=plan.style;plan.baseFraction??=plan.fraction;plan.baseReserve??=plan.reserve;plan.baseExpansion??=plan.expansion;
+    const previousSize=plan.lastArmySize??army.length,healthy=army.filter(u=>u.hp>=u.maxHp*.6&&!u.isKing).length;
+    plan.peakArmySize=Math.max(plan.peakArmySize||army.length,army.length);plan.lastArmySize=army.length;
+    const loss=previousSize>24&&army.length<previousSize*.68,exhausted=healthy<Math.max(16,plan.min*.6)&&army.length<plan.peakArmySize*.65;
+    if(loss||exhausted&&this.time>=(plan.rebuildUntil||0))plan.rebuildUntil=this.time+rules.recovery;
+    const immediate=report.immediateTarget,leader=report.strategicTarget,opening=report.invasionTarget;
+    const immediateDanger=immediate?.immediateDanger??immediate?.danger??0;
+    const active=['advance','objective','coordinate'].includes(plan.phase);
+    // A living company keeps its mission. Survival, observed losses and a
+    // completed/failed mission are the triggers for an early reassessment.
+    if(active&&!loss&&immediateDanger<35){plan.reviewAt=this.time+rules.review;return;}
+    if(!loss&&immediateDanger<35&&this.time<(plan.roleUntil||0))return;
+    let role=({mass:'invader',raider:'raider',siege:'siege',defensive:'defender',objective:'objective'})[plan.baseStyle]||'invader',reason='house tendency',targetTeam=null;
+    const rivals=report.rivals||[],otherThreats=rivals.filter(r=>r!==leader).map(r=>r.strategicThreat).sort((a,b)=>a-b),comparison=otherThreats[Math.floor(otherThreats.length/2)]||0;
+    const urgentMode=!!(this.mode.flagPriority||this.mode.objectiveGoal||this.mode.controlGoal||this.mode.kingSurvival);
+    if(immediateDanger>=35){role='defender';reason='visible immediate danger';targetTeam=immediate.team;}
+    else if(this.time<(plan.rebuildUntil||0)){role='rebuild';reason='recovering after observed own losses';}
+    else if(urgentMode&&(this.objectives.some(o=>!o.consumed)||this.mode.kingSurvival)){role='objective';reason='current victory condition';targetTeam=leader?.team??null;}
+    else if(leader&&leader.strategicThreat>=rules.threatThreshold&&leader.strategicThreat>=comparison+8){role='counterweight';reason='developing campaign leader';targetTeam=leader.team;}
+    else if(opening?.feasible&&opening.invasionOpportunity>=rules.opportunityThreshold){role=plan.baseStyle==='raider'?'raider':'invader';reason='reachable exposed rival';targetTeam=opening.target?.team??null;}
+    else if(!opening||!opening.feasible){role='expansionist';reason='secure ground while investigating resistance';}
+    plan.role=role;plan.roleReason=reason;plan.intentTeam=targetTeam;plan.roleAt=this.time;plan.roleUntil=this.time+rules.commitment;
+    plan.reviewAt=this.time+rules.review;plan.strategicLeader=leader?.team??null;plan.strategicThreat=leader?.strategicThreat||0;
+    plan.fraction=clamp(plan.baseFraction+(role==='counterweight'?.06:role==='rebuild'?-.12:0),.35,.86);
+    plan.reserve=Math.max(plan.baseReserve,role==='rebuild'?.34:role==='defender'?.3:plan.baseReserve);
+    plan.expansion=role==='expansionist'?Math.max(plan.baseExpansion,.28):role==='rebuild'?.08:plan.baseExpansion;
+    plan.uncertainTarget=opening&&opening.confidence<.75?{x:opening.target.x,y:opening.target.y,id:opening.target.id}:null;
+  }
+  aiStrategicBias(s,plan,target){
+    // Geography and resistance still decide whether confronting a leader is
+    // practical. This bounded preference cannot erase a costly distant march.
+    const report=this.aiCampaignAssessment(s,plan),rival=report.rivals.find(r=>r.team===target.team);
+    if(!rival)return 0;
+    if(plan.role==='counterweight')return -Math.min(24,rival.strategicThreat*.3)+(target.team===plan.intentTeam?-5:0);
+    if(plan.role==='invader'||plan.role==='raider')return -Math.min(10,rival.invasionOpportunity*.1);
+    return 0;
+  }
+  aiGuardCastles(s,plan,army,committed){
+    const keeps=this.buildings.filter(b=>b.hp>0&&b.team===s.id&&b.type==='keep'&&ds(b,s.home)>64),budget=Math.max(0,Math.floor(army.length*.16));let used=0;
+    for(const keep of keeps){
+      const count=Math.min(6,budget-used);if(count<3)break;
+      const guards=army.filter(u=>!committed.has(u.id)&&u.hp>=u.maxHp*.55&&!['assault','raid','objective','team','scout','frontier','pressure','retreat'].includes(this.aiTaskOf(u))).sort((a,b)=>ds(a,keep)-ds(b,keep)).slice(0,count);
+      for(const u of guards){committed.add(u.id);if(u.order?.aiCastle!==keep.id||ds(u.order,keep)>25)this.aiIssue([u],keep,'move','castleGuard',{aiCastle:keep.id});}used+=guards.length;
+    }
+  }
+  aiPressureFront(s,plan,army,committed,garrison,emergency=false){
+    const existing=plan.secondary;
+    if(!existing&&(emergency||this.aiRules.fronts<2||plan.phase!=='advance'||army.length<90||this.time<(plan.pressureAt||0)||this.time<(plan.rebuildUntil||0)))return;
+    const known=this.knownBuildings(s.id),enemies=this.knownUnits(s.id).filter(u=>this.hostile(s.id,u.team));
+    if(existing){
+      const force=existing.cohort.map(id=>this.byId.get(id)).filter(u=>u?.hp>0&&this.aiTaskOf(u)==='pressure'),target=known.find(b=>b.id===existing.targetId),near=force[0]&&enemies.filter(u=>ds(u,force[0])<81).length;
+      if(emergency||this.time<(plan.rebuildUntil||0)||!target||target.hp<=0||!this.hostile(s.id,target.team)||force.length<existing.initial*.55||near>force.length*1.5||this.time>existing.until){this.aiIssue(force,s.home,'move','muster');plan.secondary=null;plan.pressureAt=this.time+plan.rest;}
+      for(const u of force)committed.add(u.id);
+    }
+    if(plan.secondary||emergency||this.aiRules.fronts<2||plan.phase!=='advance'||army.length<90||this.time<(plan.pressureAt||0)||this.time<(plan.rebuildUntil||0))return;
+    const report=this.aiCampaignAssessment(s,plan),options=report.rivals.flatMap(r=>r.targets||[]).filter(t=>t.target.id!==plan.targetId&&t.feasible&&t.invasionOpportunity>=55&&t.target.type!=='keep'&&t.confidence>=.6).sort((a,b)=>b.invasionOpportunity-a.invasionOpportunity||a.target.id-b.target.id),choice=options[0];if(!choice)return;
+    const force=army.filter(u=>!committed.has(u.id)&&!garrison.includes(u)&&u.hp>=u.maxHp*.8&&['cavalry','infantry','archer'].includes(this.unitClass(u))&&ds(u,s.home)<225).sort((a,b)=>(this.unitClass(a)==='cavalry'?0:1)-(this.unitClass(b)==='cavalry'?0:1)||a.id-b.id).slice(0,Math.min(18,Math.floor(army.length*.14)));
+    if(force.length<12||force.reduce((n,u)=>n+observedStrength(this,u),0)<choice.expectedResistance*.9)return;this.aiIssue(force,choice.target,'attack','pressure',{aiTarget:choice.target.id});for(const u of force)committed.add(u.id);plan.secondary={targetId:choice.target.id,cohort:force.map(u=>u.id),initial:force.length,until:this.time+Math.min(100,30+choice.route.cost*2)};plan.pressureAt=this.time+35;
+  }
+  aiReconsiderAttack(s,plan,target,force){
+    if(!target||!force.length||this.time<(plan.reconsiderAt||0)||this.time-plan.startedAt<12)return false;plan.reconsiderAt=this.time+5;
+    // Only current sight can invalidate a military estimate; a stale memory
+    // leads to reconnaissance, never knowledge of hidden reinforcements.
+    if(!this.isVisibleTo(s.id,target))return false;
+    const visible=this.knownUnits(s.id).filter(u=>this.hostile(s.id,u.team)),center=force.reduce((p,u)=>({x:p.x+u.x/force.length,y:p.y+u.y/force.length}),{x:0,y:0}),close=visible.filter(u=>ds(u,center)<100),guards=visible.filter(u=>this.allied(u.team,target.team)&&ds(u,target)<100);
+    const siege=force.filter(u=>this.unitClass(u)==='siege'),health=force.reduce((n,u)=>n+u.hp/u.maxHp,0)/force.length;
+    const trapped=plan.style==='raider'&&close.length>force.length*1.45,unsupported=plan.style==='siege'&&siege.length===0&&guards.length>force.length*.9,untenable=health<.5&&guards.length>force.length;
+    if(!(trapped||unsupported||untenable))return false;
+    this.aiIssue(force,s.home,'move','retreat');Object.assign(plan,{phase:'regroup',cohort:[],startedAt:this.time,nextAttackAt:this.time+plan.rest,role:'rebuild',roleReason:'observed attack became untenable',roleUntil:this.time+this.aiRules.recovery,rebuildUntil:this.time+this.aiRules.recovery});return true;
+  }
+  aiAttackReady(s,plan,target,pool=null){
+    if(!target||target.hp<=0||!this.hostile(s.id,target.team)||this.time<(plan.rebuildUntil||0))return false;
+    // A cached hostile observation cannot override a later legitimate sighting
+    // of its destruction or an ally taking this site. Hidden changes still
+    // resolve to the same last-seen record through knownBuildings.
+    const known=this.knownBuildings(s.id).find(b=>b.id===target.id);
+    if(!known||known.hp<=0||!this.hostile(s.id,known.team))return false;
+    if(this.config.fogOfWar&&target.remembered&&this.time-(target.lastSeen||0)>45){plan.uncertainTarget={x:target.x,y:target.y,id:target.id};return false;}
+    let report=this.aiCampaignAssessment(s,plan),entry=report.rivals.flatMap(r=>r.targets).find(t=>t.target.id===target.id);
+    if(!entry){report=this.aiCampaignAssessment(s,plan,true);entry=report.rivals.flatMap(r=>r.targets).find(t=>t.target.id===target.id);}
+    if(!entry)return false;
+    if(entry){
+      const strength=pool?pool.reduce((n,u)=>n+observedStrength(this,u),0):report.availableStrength;
+      if(!entry.feasible||strength<entry.expectedResistance*.9){plan.preparationReason='Assemble enough healthy troops while retaining defenses.';if(this.config.fogOfWar)plan.uncertainTarget={x:target.x,y:target.y,id:target.id};return false;}
+      if(plan.style==='siege'&&target.type==='keep'&&entry.towers>0&&pool&&!pool.some(u=>this.unitClass(u)==='siege')){plan.preparationReason='Wait for siege support against observed fortifications.';return false;}
+    }
+    plan.preparationReason=null;
+    return true;
+  }
+  aiPreparedTarget(s,plan,preferred,pool){
+    if(this.aiAttackReady(s,plan,preferred,pool))return preferred;
+    const report=this.aiCampaignAssessment(s,plan),options=report.rivals.flatMap(r=>r.targets).filter(t=>t.target.id!==preferred?.id&&t.feasible).sort((a,b)=>((plan.role==='counterweight'&&b.team===plan.intentTeam?18:0)+b.invasionOpportunity)-((plan.role==='counterweight'&&a.team===plan.intentTeam?18:0)+a.invasionOpportunity)||a.target.id-b.target.id);
+    for(const candidate of options)if(this.aiAttackReady(s,plan,candidate.target,pool)){plan.targetRoute={distance:candidate.route.distance,cost:candidate.route.cost,crossings:candidate.route.crossings};return candidate.target;}
+    return null;
+  }
+  aiWaveSize(s,plan,pool,target){
+    const entry=this.aiCampaignAssessment(s,plan).rivals.flatMap(r=>r.targets).find(t=>t.target.id===target.id),average=pool.reduce((n,u)=>n+observedStrength(this,u),0)/Math.max(1,pool.length),prepared=entry?Math.ceil(entry.expectedResistance*.95/Math.max(.5,average)):0;
+    return Math.min(pool.length,Math.max(plan.min,Math.floor(pool.length*plan.fraction),prepared));
+  }
+  aiObjectiveDefense(s,plan,army,committed){
+    if(!(this.mode.flagPriority||this.mode.objectiveGoal))return;
+    const visible=this.knownUnits(s.id).filter(u=>this.hostile(s.id,u.team));
+    for(const objective of this.objectives){
+      if(!this.isVisibleTo(s.id,objective)||objective.controller!==s.alliance)continue;
+      const enemies=visible.filter(u=>ds(u,objective)<121);if(enemies.length<5)continue;
+      const defenders=army.filter(u=>!committed.has(u.id)&&u.hp>=u.maxHp*.5&&ds(u,objective)<900&&!['assault','raid','team','retreat','pressure'].includes(this.aiTaskOf(u))).sort((a,b)=>ds(a,objective)-ds(b,objective)).slice(0,Math.min(22,Math.ceil(enemies.length*1.5)+6));
+      for(const u of defenders){committed.add(u.id);if(u.order?.aiObjectiveDefend!==objective.id)this.aiIssue([u],objective,'attack','objectiveDefense',{aiObjectiveDefend:objective.id});}
+    }
+  }
+  aiEscortSiege(s,plan,force){
+    if(this.aiRules.review>5||plan.style!=='siege'||this.time<(plan.escortAt||0))return;plan.escortAt=this.time+6;
+    const guns=force.filter(u=>this.unitClass(u)==='siege'),enemies=this.knownUnits(s.id).filter(u=>this.hostile(s.id,u.team));
+    for(const gun of guns){const threat=enemies.filter(u=>ds(u,gun)<36).sort((a,b)=>ds(a,gun)-ds(b,gun))[0];if(!threat)continue;const escort=force.filter(u=>this.unitClass(u)==='infantry'&&ds(u,gun)<100).sort((a,b)=>ds(a,gun)-ds(b,gun)).slice(0,5);for(const u of escort)if(!u.target)this.aiIssue([u],threat,'attack','assault',{aiTarget:plan.targetId});}
+  }
   aiIssue(troops,point,mode,task,extra={}){
     troops=troops.filter(u=>!u.standardAction||task==='retreat');
     if(!troops.length)return;
@@ -1485,9 +1611,9 @@ export class Game {
     const candidates=buildings.filter(b=>b.hp>0&&this.hostile(s.id,b.team)&&(b.type==='keep'||plan.style==='raider'&&BUILD_DEFS[b.type]?.unit));
     let best=null,score=Infinity;
     for(const b of candidates){
-      const route=this.navigation.route(s.home,b,plan.style==='raider'?'cavalry':plan.style==='siege'?'siege':'infantry');if(!route.reachable)continue;
+      const route=campaignRoute(this,s.home,b,plan.style==='raider'?'cavalry':plan.style==='siege'?'siege':'infantry');if(!route.reachable)continue;
       const guards=enemies.filter(u=>this.allied(u.team,b.team)&&ds(u,b)<100).reduce((n,u)=>n+(this.unitClass(u)==='siege'?2:this.unitClass(u)==='hero'?3:1),0),forts=buildings.filter(f=>f.hp>0&&this.hostile(s.id,f.team)&&f.type==='tower'&&ds(f,b)<81).length;
-      const value=route.cost+guards*(plan.style==='siege'?.65:1.5)+forts*(plan.style==='siege'?3:9)+(b.hp/Math.max(1,b.maxHp))*14+(b.remembered?4:0)+(plan.style==='raider'?(b.type==='keep'?22:-18):0);
+      const value=route.cost+guards*(plan.style==='siege'?.65:1.5)+forts*(plan.style==='siege'?3:9)+(b.hp/Math.max(1,b.maxHp))*14+(b.remembered?4:0)+(plan.style==='raider'?(b.type==='keep'?22:-18):0)+this.aiStrategicBias(s,plan,b);
       if(value<score-1e-7||Math.abs(value-score)<1e-7&&b.id<best?.id){best=b;score=value;plan.targetRoute={distance:route.distance,cost:route.cost,crossings:route.crossings};}
     }
     return best;
@@ -1495,7 +1621,7 @@ export class Game {
   aiFogCastleTarget(s){
     const enemies=this.knownUnits(s.id).filter(u=>u.hp>0&&this.hostile(s.id,u.team));let best=null,score=Infinity;
     for(const site of this.knownCastleSites(s.id)){
-      if(!site.ruined)continue;const route=this.navigation.route(s.home,site);if(!route.reachable)continue;
+      if(!site.ruined)continue;const route=campaignRoute(this,s.home,site);if(!route.reachable)continue;
       const danger=enemies.filter(u=>ds(u,site)<81).length,value=route.cost+danger*1.7-(site.progress?.[s.alliance]||0)*.8;
       if(value<score){best=site;score=value;}
     }return best;
@@ -1524,11 +1650,12 @@ export class Game {
   aiFogScoutGoal(s,plan,scout,index=0){
     const explored=this.vision?.exploredFor(s.id),visible=this.vision?.gridFor(s.id),visits=plan.scoutVisits||{},style=plan.scoutStyle,candidates=[];let best=null;
     const points=[];for(let y=5;y<this.H-4;y+=8)for(let x=5;x<this.W-4;x+=8)points.push({x:x+.5,y:y+.5});
+    if(plan.uncertainTarget)points.push({...plan.uncertainTarget,investigate:true});
     if(style==='crossing survey')for(const l of this.landmarks||[])if(['bridge','ford','pass'].includes(l.kind))points.push({x:l.x,y:l.y,landmark:true});
     for(const p of points){
       if(!this.isWalkable(p.x,p.y)||ds(p,scout)<16)continue;const tile=this.tileAt(p.x,p.y),i=tile.y*this.W+tile.x;if(visible?.[i])continue;
       const distance=Math.sqrt(ds(p,scout)),homeDistance=Math.sqrt(ds(p,s.home)),angle=Math.atan2(p.y-s.home.y,p.x-s.home.x),sector=Math.cos(angle-(s.id+index)*2.399963),last=visits[i]??-1e6;
-      const value=(explored?.[i]?0:35)+Math.min(18,(this.time-last)*.05)+(style==='deep probes'?homeDistance*.16:style==='crossing survey'&&p.landmark?25:sector*12)-distance*(style==='deep probes'?.3:style==='cautious survey'?1:.65);
+      const value=(explored?.[i]?0:35)+(p.investigate?60:0)+Math.min(18,(this.time-last)*.05)+(style==='deep probes'?homeDistance*.16:style==='crossing survey'&&p.landmark?25:sector*12)-distance*(style==='deep probes'?.3:style==='cautious survey'?1:.65);
       candidates.push({point:p,score:value});
     }
     // Rank public geography cheaply, then route only a bounded shortlist.
@@ -1542,14 +1669,14 @@ export class Game {
     const styles={defensive:'border screen',raider:'deep probes',objective:'crossing survey',siege:'cautious survey',mass:'fan sweep'};plan.scoutStyle=this.mode.kingSurvival?'royal reconnaissance':styles[plan.style]||'fan sweep';
     let scouts=army.filter(u=>this.aiTaskOf(u)==='scout');for(const u of scouts)committed.add(u.id);
     if(danger)return;
-    const desired=plan.style==='defensive'?2:plan.style==='raider'?4:3;
+    const desired=(plan.style==='defensive'?2:plan.style==='raider'?4:3)+(this.aiRules.fronts>1?1:0);
     if(scouts.length<desired&&this.time>=(plan.scoutAt||0)){
-      const candidates=army.filter(u=>!committed.has(u.id)&&u.hp>u.maxHp*.65&&['cavalry','infantry'].includes(this.unitClass(u))&&!['assault','raid','objective','team','retreat'].includes(this.aiTaskOf(u))).sort((a,b)=>(this.unitClass(a)==='cavalry'?0:1)-(this.unitClass(b)==='cavalry'?0:1)||a.id-b.id).slice(0,desired-scouts.length);
+      const candidates=army.filter(u=>!committed.has(u.id)&&u.hp>u.maxHp*.65&&['cavalry','infantry'].includes(this.unitClass(u))&&!['assault','raid','objective','team','pressure','retreat'].includes(this.aiTaskOf(u))).sort((a,b)=>(this.unitClass(a)==='cavalry'?0:1)-(this.unitClass(b)==='cavalry'?0:1)||a.id-b.id).slice(0,desired-scouts.length);
       for(const u of candidates){
-        if(plan.style==='defensive'&&!this.mode.kingSurvival&&this.patrol&&this.unitClass(u)==='cavalry'){const result=this.patrol([u.id],s.id);if(result?.ok&&u.order)u.order.aiTask='scout';else continue;}
+        if(plan.style==='defensive'&&!this.mode.kingSurvival&&this.patrol&&this.unitClass(u)==='cavalry'&&!(plan.uncertainTarget&&scouts.length===0)){const result=this.patrol([u.id],s.id);if(result?.ok&&u.order)u.order.aiTask='scout';else continue;}
         else{const point=this.aiFogScoutGoal(s,plan,u,scouts.length);if(!point)continue;this.aiIssue([u],point,'move','scout');}
         committed.add(u.id);scouts.push(u);
-      }plan.scoutAt=this.time+12;
+      }plan.scoutAt=this.time+Math.max(8,this.aiRules.review*1.5);
     }
     const enemies=this.knownUnits(s.id).filter(u=>u.hp>0&&this.hostile(s.id,u.team));
     for(let i=0;i<scouts.length;i++){
@@ -1563,7 +1690,7 @@ export class Game {
     if(this.config.fogOfWar)return this.aiFogCastleTarget(s);
     let best=null,score=Infinity;
     for(const site of this.castles){
-      if(!site.ruined)continue;const route=this.navigation.route(s.home,site);if(!route.reachable)continue;
+      if(!site.ruined)continue;const route=campaignRoute(this,s.home,site);if(!route.reachable)continue;
       let enemies=0,allies=0;this.hash.visit(site.x,site.y,9,u=>{if(u.hp<=0||ds(u,site)>81)return;if(this.hostile(s.id,u.team))enemies++;else if(u.team!==s.id&&this.allied(s.id,u.team))allies++;});
       // Existing progress makes staying with a siege worthwhile; avoid sending
       // another allied army to an uncontested ruin already being restored.
@@ -1600,7 +1727,7 @@ export class Game {
     const forts=this.buildings.filter(b=>b.hp>0&&this.teams[b.team]?.alive&&this.hostile(s.id,b.team)&&['keep','tower'].includes(b.type));
     let target=null,best=Infinity,bestTie=Infinity;
     for(const b of candidates){
-      const route=this.navigation.route(s.home,b,plan.style==='raider'?'cavalry':plan.style==='siege'?'siege':'infantry');if(!route.reachable)continue;
+      const route=campaignRoute(this,s.home,b,plan.style==='raider'?'cavalry':plan.style==='siege'?'siege':'infantry');if(!route.reachable)continue;
       let guards=0,retaliation=0;this.hash.visit(b.x,b.y,10,u=>{if(u.hp>0&&this.allied(u.team,b.team)&&ds(u,b)<100)guards+=this.unitClass(u)==='siege'?2:this.unitClass(u)==='hero'?3:1;});
       this.hash.visit(s.home.x,s.home.y,13,u=>{if(u.hp>0&&u.team===b.team&&ds(u,s.home)<169)retaliation++;});
       const towers=this.buildings.filter(p=>p.hp>0&&this.allied(p.team,b.team)&&p.type==='tower'&&ds(p,b)<81).length;
@@ -1616,7 +1743,7 @@ export class Game {
         if(route.points.some(point=>ds(fort,point)<(range+1)**2))routeForts+=fort.type==='keep'?8:5;
       }
       const geography=route.cost+frontierDistance*.3-Math.min(10,Math.sqrt(borders.get(alliance)||0)*2)+crossings/samples*20+Math.min(24,routeForts)+Math.min(24,exposed.size*(plan.style==='siege'?.4:1));
-      let score=geography+guards*(plan.style==='siege'?.65:1.5)+towers*(plan.style==='siege'?3:9)+vulnerability*22-Math.min(12,retaliation*1.5)-(this.teams[b.team].tiles||0)/leader*12+Math.min(16,(pressure.get(alliance)||0)*8);
+      let score=geography+guards*(plan.style==='siege'?.65:1.5)+towers*(plan.style==='siege'?3:9)+vulnerability*22-Math.min(12,retaliation*1.5)-(this.teams[b.team].tiles||0)/leader*12+Math.min(16,(pressure.get(alliance)||0)*8)+this.aiStrategicBias(s,plan,b);
       if(plan.style==='raider'){score+=b.type==='keep'?22:-18;score+=guards*.5;}
       if(b.type==='keep')score-=this.teams[b.team].keeps<=1?12:8;
       // Stable seeded ties neither favor the first-created (player) building nor change on every decision.
@@ -1731,6 +1858,7 @@ export class Game {
     const committed=new Set(army.filter(u=>u.championRegroup).map(u=>u.id));
     const wounded=army.filter(u=>u.hp<u.maxHp*.25&&this.aiTaskOf(u)!=='retreat');this.aiIssue(wounded,home,'move','retreat');
     for(const u of army){if(this.aiTaskOf(u)==='retreat'&&u.hp<u.maxHp*.6)committed.add(u.id);else if(this.aiTaskOf(u)==='retreat')this.idle([u.id]);}
+    this.aiGuardCastles(s,plan,army,committed);
     let threatenedKeep=null,threats=[],severity=0;
     for(const keep of this.buildings){
       if(keep.hp<=0||keep.type!=='keep'||!this.allied(s.id,keep.team))continue;
@@ -1739,17 +1867,17 @@ export class Game {
     }
     const emergency=!!threatenedKeep&&(threatenedKeep.team===s.id||threatenedKeep.hp<threatenedKeep.maxHp*.55);
     this.aiFogScouts(s,plan,army,committed,!!threatenedKeep);
-    const reserveCount=Math.max(10,Math.ceil(army.length*plan.reserve)),garrison=army.filter(u=>!committed.has(u.id)&&!['assault','raid','objective','team','frontier','scout'].includes(this.aiTaskOf(u))).sort((a,b)=>(this.unitClass(a)==='hero'?-25:0)+ds(a,home)-(this.unitClass(b)==='hero'?-25:0)-ds(b,home)).slice(0,reserveCount);
+    const reserveCount=Math.max(10,Math.ceil(army.length*plan.reserve)),garrison=army.filter(u=>!committed.has(u.id)&&!['assault','raid','objective','team','frontier','scout','castleGuard','pressure'].includes(this.aiTaskOf(u))).sort((a,b)=>(this.unitClass(a)==='hero'?-25:0)+ds(a,home)-(this.unitClass(b)==='hero'?-25:0)-ds(b,home)).slice(0,reserveCount);
     for(const u of garrison)committed.add(u.id);
     if(threatenedKeep){
       const defenders=army.filter(u=>u.hp>=u.maxHp*.3&&this.aiTaskOf(u)!=='retreat'&&(emergency||!committed.has(u.id)&&!['assault','raid','objective','team'].includes(this.aiTaskOf(u)))).sort((a,b)=>ds(a,threatenedKeep)-ds(b,threatenedKeep)).slice(0,Math.min(army.length,Math.ceil(threats.length*1.7)+14));
       const focus=threats.reduce((p,u)=>({x:p.x+u.x/threats.length,y:p.y+u.y/threats.length}),{x:0,y:0});
       if(!plan.defensePoint||ds(plan.defensePoint,focus)>9||this.time>(plan.defenseAt||0)){this.aiIssue(defenders,focus,'attack','defend',{aiDefend:threatenedKeep.id});plan.defensePoint=focus;plan.defenseAt=this.time+5;}
-      for(const u of defenders)committed.add(u.id);s.lastThreat=this.time;
+      for(const u of defenders)committed.add(u.id);s.lastThreat=this.time;plan.counterattackTeam=threats[0]?.team;
       if(this.mode.teams&&this.time>=(s.defenseCallAt||0)){this.callTeamOrder('defend',threatenedKeep.x,threatenedKeep.y,s.id);s.defenseCallAt=this.time+28;}
-      if(emergency){const recalled=army.filter(u=>['assault','raid','objective','team','scout'].includes(this.aiTaskOf(u))&&!defenders.includes(u));this.aiIssue(recalled,home,'move','muster');for(const u of recalled)committed.add(u.id);Object.assign(plan,{phase:'defend',cohort:[],teamCohort:[],coordinationId:null,teamLaunched:false,nextAttackAt:Math.max(plan.nextAttackAt,this.time+16)});}
+      if(emergency){plan.role='defender';plan.roleReason='visible capital emergency';const recalled=army.filter(u=>['assault','raid','objective','team','scout'].includes(this.aiTaskOf(u))&&!defenders.includes(u));this.aiIssue(recalled,home,'move','muster');for(const u of recalled)committed.add(u.id);Object.assign(plan,{phase:'defend',cohort:[],teamCohort:[],coordinationId:null,teamLaunched:false,nextAttackAt:Math.max(plan.nextAttackAt,this.time+16)});}
     }else{
-      for(const u of army)if(this.aiTaskOf(u)==='defend')this.aiIssue([u],home,'move','muster');plan.defensePoint=null;if(plan.phase==='defend')Object.assign(plan,{phase:'regroup',cohort:[],startedAt:this.time});
+      for(const u of army)if(this.aiTaskOf(u)==='defend')this.aiIssue([u],home,'move','muster');plan.defensePoint=null;if(plan.phase==='defend')Object.assign(plan,{phase:'regroup',cohort:[],startedAt:this.time,role:'counterweight',roleReason:'limited counterattack after defending',intentTeam:plan.counterattackTeam,nextAttackAt:Math.min(plan.nextAttackAt,this.time+10)});
     }
     const activeOrder=this.teamOrders.filter(o=>o.alliance===s.alliance&&o.expiresAt>this.time).sort((a,b)=>(b.kind==='defend')-(a.kind==='defend')||b.id-a.id)[0],coordinated=activeOrder&&!emergency;
     if(coordinated){
@@ -1770,6 +1898,7 @@ export class Game {
       if(ruin&&force.length>=Math.max(7,plan.initialSize*.4)){this.aiIssue(force,ruin,'attack','objective');Object.assign(plan,{phase:'objective',objectiveKind:'castle',objectiveId:ruin.id,startedAt:this.time});}
       else if(!target||target.hp<=0||!this.hostile(s.id,target.team)||force.length<Math.max(7,plan.initialSize*.4)||this.time-plan.startedAt>plan.timeout){this.aiIssue(force,home,'move','muster');Object.assign(plan,{phase:'regroup',startedAt:this.time,nextAttackAt:this.time+plan.rest,cohort:[]});}
       else if(plan.stage==='flank'&&(force.filter(u=>ds(u,plan.waypoint)<49).length>=force.length*.5||this.time-plan.stageAt>plan.flankTimeout)){this.aiIssue(force,target,'attack','raid',{aiTarget:target.id});plan.stage='strike';}
+      if(plan.phase==='advance'&&!this.aiReconsiderAttack(s,plan,target,force))this.aiEscortSiege(s,plan,force);
       for(const u of force)committed.add(u.id);
     }
     if(!coordinated&&plan.phase==='objective'){
@@ -1778,22 +1907,24 @@ export class Game {
       if(!objective||castle&&!objective.ruined||observing&&objective.cooldownUntil>this.time||force.length<Math.max(7,plan.initialSize*.35)||this.time-plan.startedAt>(castle?300:180)){this.aiIssue(force,home,'move','muster');Object.assign(plan,{phase:'regroup',startedAt:this.time,nextAttackAt:this.time+plan.rest,cohort:[]});}
       else for(const u of force)if(ds(u,objective)<(objective.radius*.8)**2&&u.order?.mode!=='idle'&&u.order?.aiTask!=='spearBrace'){this.idle([u.id]);u.order.aiTask='objective';}for(const u of force)committed.add(u.id);
     }
+    this.aiPressureFront(s,plan,army,committed,garrison,!!threatenedKeep);
+    this.aiObjectiveDefense(s,plan,army,committed);
     if(plan.phase==='regroup'&&this.time>=plan.nextAttackAt)plan.phase='muster';
     const expansion=army.filter(u=>this.aiTaskOf(u)==='frontier'&&u.order?.mode==='expand');for(const u of expansion)committed.add(u.id);
     if(!coordinated&&!threatenedKeep&&this.time>=plan.frontierAt&&expansion.length<Math.floor(army.length*plan.expansion)){
-      plan.frontierAt=this.time+15;const scouts=army.filter(u=>!committed.has(u.id)&&u.hp>=u.maxHp*.6&&!['assault','raid','objective','team','scout'].includes(this.aiTaskOf(u))).slice(0,Math.min(6,Math.floor(army.length*plan.expansion)-expansion.length));
+      plan.frontierAt=this.time+15;const scouts=army.filter(u=>!committed.has(u.id)&&u.hp>=u.maxHp*.6&&!['assault','raid','objective','team','scout','pressure','castleGuard'].includes(this.aiTaskOf(u))).slice(0,Math.min(6,Math.floor(army.length*plan.expansion)-expansion.length));
       if(scouts.length){this.expand(scouts.map(u=>u.id));for(const u of scouts){u.order.aiTask='frontier';committed.add(u.id);}}
     }
     const available=army.filter(u=>!committed.has(u.id)&&u.hp>=u.maxHp*.6&&!u.target),pool=available.filter(u=>ds(u,home)<225);
-    if(!coordinated&&!threatenedKeep&&plan.phase==='muster'&&this.time>=plan.nextAttackAt&&pool.length>=Math.max(plan.min,this.aiRules.minArmy*.55)){
-      const castle=this.aiFogCastleTarget(s),target=this.aiFogTarget(s,plan),explored=this.vision?.exploredFor(s.id),flags=this.objectives.filter(o=>explored?.[Math.floor(o.y)*this.W+Math.floor(o.x)]&&(!this.isVisibleTo(s.id,o)||!(o.cooldownUntil>this.time)));
+    if(!coordinated&&!threatenedKeep&&plan.phase==='muster'&&this.time>=plan.nextAttackAt&&this.time>=(plan.rebuildUntil||0)&&pool.length>=Math.max(plan.min,this.aiRules.minArmy*.55)){
+      const castle=this.aiFogCastleTarget(s),target=this.aiPreparedTarget(s,plan,this.aiFogTarget(s,plan),pool),explored=this.vision?.exploredFor(s.id),flags=this.objectives.filter(o=>explored?.[Math.floor(o.y)*this.W+Math.floor(o.x)]&&(!this.isVisibleTo(s.id,o)||!(o.cooldownUntil>this.time)));
       if(castle&&!this.mode.flagPriority){const force=pool.slice(0,Math.max(plan.min,Math.floor(pool.length*.82)));this.aiIssue(force,castle,'attack','objective');Object.assign(plan,{phase:'objective',objectiveKind:'castle',objectiveId:castle.id,cohort:force.map(u=>u.id),initialSize:force.length,startedAt:this.time});}
-      else if(flags.length&&(this.mode.flagPriority||plan.style==='objective'||this.mode.objectiveGoal)){
-        const flag=[...flags].sort((a,b)=>this.navigation.route(home,a).cost-this.navigation.route(home,b).cost)[0],force=pool.slice(0,Math.max(plan.min,Math.floor(pool.length*.82)));this.aiIssue(force,flag,'attack','objective');Object.assign(plan,{phase:'objective',objectiveKind:'flag',objectiveId:flag.id,cohort:force.map(u=>u.id),initialSize:force.length,startedAt:this.time});
-      }else if(target){
-        const force=[...pool].sort((a,b)=>plan.style==='raider'?(this.unitClass(a)==='cavalry'?0:1)-(this.unitClass(b)==='cavalry'?0:1)||ds(a,home)-ds(b,home):ds(a,home)-ds(b,home)).slice(0,Math.max(plan.min,Math.floor(pool.length*plan.fraction))),distance=Math.sqrt(ds(home,target));
-        Object.assign(plan,{phase:'advance',targetId:target.id,targetCastleId:target.castleId??null,targetTeam:target.team,cohort:force.map(u=>u.id),initialSize:force.length,startedAt:this.time,timeout:70+(plan.targetRoute?.cost||distance)*2.5,stage:'strike'});
-        if(plan.style==='raider'){const dx=(target.x-home.x)/(distance||1),dy=(target.y-home.y)/(distance||1),side=s.id%2?1:-1,bend=Math.min(14,distance*.2),waypoint=this.navigation.nearestPassable(this.bound({x:home.x+(target.x-home.x)*.58-dy*bend*side,y:home.y+(target.y-home.y)*.58+dx*bend*side})),route=this.navigation.route(home,waypoint,'cavalry');Object.assign(plan,{waypoint,stage:'flank',stageAt:this.time,flankTimeout:15+route.cost*2.2});this.aiIssue(force,waypoint,'attack','raid',{aiTarget:target.id});}
+      else if(flags.length&&(this.mode.flagPriority||plan.style==='objective'||plan.role==='objective'||this.mode.objectiveGoal)){
+        const flag=[...flags].sort((a,b)=>campaignRoute(this,home,a).cost-campaignRoute(this,home,b).cost)[0],force=pool.slice(0,Math.max(plan.min,Math.floor(pool.length*.82)));this.aiIssue(force,flag,'attack','objective');Object.assign(plan,{phase:'objective',objectiveKind:'flag',objectiveId:flag.id,cohort:force.map(u=>u.id),initialSize:force.length,startedAt:this.time});
+      }else if(this.aiAttackReady(s,plan,target)){
+        const force=[...pool].sort((a,b)=>plan.style==='raider'?(this.unitClass(a)==='cavalry'?0:1)-(this.unitClass(b)==='cavalry'?0:1)||ds(a,home)-ds(b,home):ds(a,home)-ds(b,home)).slice(0,this.aiWaveSize(s,plan,pool,target)),distance=Math.sqrt(ds(home,target));
+        Object.assign(plan,{phase:'advance',targetId:target.id,targetCastleId:target.castleId??null,targetTeam:target.team,role:plan.role==='counterweight'?'counterweight':target.type!=='keep'?'raider':plan.style==='siege'?'siege':'invader',roleUntil:this.time+this.aiRules.commitment,attackKind:target.type!=='keep'?'raid':'assault',cohort:force.map(u=>u.id),initialSize:force.length,startedAt:this.time,timeout:70+(plan.targetRoute?.cost||distance)*2.5,stage:'strike'});
+        if(plan.style==='raider'||plan.attackKind==='raid'){const dx=(target.x-home.x)/(distance||1),dy=(target.y-home.y)/(distance||1),side=s.id%2?1:-1,bend=Math.min(14,distance*.2),waypoint=this.navigation.nearestPassable(this.bound({x:home.x+(target.x-home.x)*.58-dy*bend*side,y:home.y+(target.y-home.y)*.58+dx*bend*side})),route=this.navigation.route(home,waypoint,'cavalry');if(route.reachable&&this.navigation.route(waypoint,target,'cavalry').reachable){Object.assign(plan,{waypoint,stage:'flank',stageAt:this.time,flankTimeout:15+route.cost*2.2});this.aiIssue(force,waypoint,'attack','raid',{aiTarget:target.id});}else this.aiIssue(force,target,'attack','raid',{aiTarget:target.id});}
         else this.aiIssue(force,target,'attack','assault',{aiTarget:target.id});s.assault=this.time;
       }
     }else if(!coordinated&&!threatenedKeep&&['muster','regroup'].includes(plan.phase)){const strays=available.filter(u=>ds(u,home)>64&&this.aiTaskOf(u)!=='muster');this.aiIssue(strays,home,'move','muster');}
@@ -1831,6 +1962,7 @@ export class Game {
   }
   ai(s){
     BattleStandards.aiStandards(this,s);
+    this.aiReviewCampaign(s);
     if(this.mode.kingSurvival)return this.aiKing(s);
     if(this.config.fogOfWar)return this.aiFog(s);
     if(!s.alive)return;
@@ -1843,9 +1975,10 @@ export class Game {
     const wounded=army.filter(u=>u.hp<u.maxHp*.25&&this.aiTaskOf(u)!=='retreat');
     this.aiIssue(wounded,home,'move','retreat');
     for(const u of army){if(this.aiTaskOf(u)==='retreat'&&u.hp<u.maxHp*.6)committed.add(u.id);else if(this.aiTaskOf(u)==='retreat')this.idle([u.id]);}
+    this.aiGuardCastles(s,plan,army,committed);
     // Keep an actual home guard. Heroes and ranged troops anchor the capital while waves deploy.
     const reserveCount=Math.max(10,Math.ceil(army.length*plan.reserve));
-    const garrison=army.filter(u=>!committed.has(u.id)&&!['assault','raid','objective','team','frontier'].includes(this.aiTaskOf(u))).sort((a,b)=>(this.unitClass(a)==='hero'?-25:0)+ds(a,home)-(this.unitClass(b)==='hero'?-25:0)-ds(b,home)).slice(0,reserveCount);
+    const garrison=army.filter(u=>!committed.has(u.id)&&!['assault','raid','objective','team','frontier','scout','castleGuard','pressure'].includes(this.aiTaskOf(u))).sort((a,b)=>(this.unitClass(a)==='hero'?-25:0)+ds(a,home)-(this.unitClass(b)==='hero'?-25:0)-ds(b,home)).slice(0,reserveCount);
     for(const u of garrison)committed.add(u.id);
     let threatenedKeep=null,threats=[],danger=0;
     for(const keep of this.buildings){
@@ -1861,11 +1994,12 @@ export class Game {
       if(!plan.defensePoint||ds(plan.defensePoint,focus)>9||this.time>(plan.defenseAt||0)){
         this.aiIssue(defenders,focus,'attack','defend',{aiDefend:threatenedKeep.id});plan.defensePoint=focus;plan.defenseAt=this.time+5;
       }
-      for(const u of defenders)committed.add(u.id);s.lastThreat=this.time;
+      for(const u of defenders)committed.add(u.id);s.lastThreat=this.time;plan.counterattackTeam=threats[0]?.team;
       if(this.mode?.teams&&this.time>=(s.defenseCallAt||0)){
         this.callTeamOrder('defend',threatenedKeep.x,threatenedKeep.y,s.id);s.defenseCallAt=this.time+28;
       }
       if(emergency){
+        plan.role='defender';plan.roleReason='visible capital emergency';
         const recalled=army.filter(u=>['assault','raid','objective','team'].includes(this.aiTaskOf(u))&&!defenders.includes(u));
         this.aiIssue(recalled,home,'move','muster');for(const u of recalled)committed.add(u.id);
         plan.phase='defend';plan.cohort=[];plan.teamCohort=[];plan.coordinationId=null;plan.teamLaunched=false;
@@ -1873,7 +2007,7 @@ export class Game {
       }
     }else{
       for(const u of army)if(this.aiTaskOf(u)==='defend')this.aiIssue([u],home,'move','muster');
-      plan.defensePoint=null;if(plan.phase==='defend'){plan.phase='regroup';plan.cohort=[];plan.startedAt=this.time;}
+      plan.defensePoint=null;if(plan.phase==='defend'){plan.phase='regroup';plan.cohort=[];plan.startedAt=this.time;plan.role='counterweight';plan.roleReason='limited counterattack after defending';plan.intentTeam=plan.counterattackTeam;plan.nextAttackAt=Math.min(plan.nextAttackAt,this.time+10);}
     }
     const emergencyDefense=threatenedKeep&&(threatenedKeep.team===s.id||threatenedKeep.hp<threatenedKeep.maxHp*.55);
     const activeOrder=(this.teamOrders||[]).filter(o=>o.alliance===s.alliance&&o.expiresAt>this.time).sort((a,b)=>(b.kind==='defend')-(a.kind==='defend')||b.id-a.id)[0];
@@ -1909,6 +2043,7 @@ export class Game {
         const arrived=force.filter(u=>ds(u,plan.waypoint)<49).length>=force.length*.5;
         if(arrived||this.time-plan.stageAt>plan.flankTimeout){this.aiIssue(force,target,'attack','raid',{aiTarget:target.id});plan.stage='strike';}
       }
+      if(plan.phase==='advance'&&!this.aiReconsiderAttack(s,plan,target,force))this.aiEscortSiege(s,plan,force);
       for(const u of force)committed.add(u.id);
     }
     if(!coordinated&&plan.phase==='objective'){
@@ -1921,6 +2056,8 @@ export class Game {
       }
       for(const u of force)committed.add(u.id);
     }
+    this.aiPressureFront(s,plan,army,committed,garrison,!!threatenedKeep);
+    this.aiObjectiveDefense(s,plan,army,committed);
     if(plan.phase==='regroup'&&this.time>=plan.nextAttackAt)plan.phase='muster';
     // Only a small, persistent scouting company expands. The main army waits for its planned wave.
     const expansion=army.filter(u=>this.aiTaskOf(u)==='frontier'&&u.order?.mode==='expand');for(const u of expansion)committed.add(u.id);
@@ -1928,32 +2065,32 @@ export class Game {
       plan.frontierAt=this.time+15;
       const candidates=this.tiles.filter(tile=>tile.owner===-1&&isPassableTile(tile)&&this.canCapture(tile,s.id));
       if(candidates.length){
-        const scouts=army.filter(u=>!committed.has(u.id)&&u.hp>=u.maxHp*.6&&!['assault','raid','objective','team'].includes(this.aiTaskOf(u))).slice(0,Math.min(8,Math.floor(army.length*plan.expansion)-expansion.length));
+        const scouts=army.filter(u=>!committed.has(u.id)&&u.hp>=u.maxHp*.6&&!['assault','raid','objective','team','scout','pressure','castleGuard'].includes(this.aiTaskOf(u))).slice(0,Math.min(8,Math.floor(army.length*plan.expansion)-expansion.length));
         if(scouts.length){this.expand(scouts.map(u=>u.id));for(const u of scouts){u.order.aiTask='frontier';committed.add(u.id);}}
       }
     }
     const available=army.filter(u=>!committed.has(u.id)&&u.hp>=u.maxHp*.6&&!u.target),pool=available.filter(u=>ds(u,home)<225);
-    if(!coordinated&&!threatenedKeep&&plan.phase==='muster'&&this.time>=plan.nextAttackAt&&pool.length>=Math.max(plan.min,this.aiRules.minArmy*.55)){
+    if(!coordinated&&!threatenedKeep&&plan.phase==='muster'&&this.time>=plan.nextAttackAt&&this.time>=(plan.rebuildUntil||0)&&pool.length>=Math.max(plan.min,this.aiRules.minArmy*.55)){
       const objectives=(this.objectives||[]).filter(o=>!(o.cooldownUntil>this.time)),castle=this.aiCastleTarget(s);
       const seekCastle=!this.mode.flagPriority&&castle&&(!this.mode?.objectiveGoal||plan.style!=='objective'||s.cap-s.count<40||this.random()<.6);
-      const seekObjective=objectives.length&&(this.mode.flagPriority||plan.style==='objective'||this.mode?.objectiveGoal||this.random()<.3);
+      const seekObjective=objectives.length&&(this.mode.flagPriority||plan.style==='objective'||plan.role==='objective'||this.mode?.objectiveGoal||this.random()<.3);
       if(seekCastle){
         const force=pool.slice(0,Math.max(plan.min,Math.floor(pool.length*.82)));
         this.aiIssue(force,castle,'attack','objective');Object.assign(plan,{phase:'objective',objectiveKind:'castle',objectiveId:castle.id,cohort:force.map(u=>u.id),initialSize:force.length,startedAt:this.time});
         this.event(`${s.name} marches to restore ${castle.name} and secure another realm.`,s.id);
       }else if(seekObjective){
-        const objective=[...objectives].sort((a,b)=>this.navigation.route(home,a).cost-this.navigation.route(home,b).cost-(a.progress?.[s.alliance]||0)*.8+(b.progress?.[s.alliance]||0)*.8)[0];
+        const objective=[...objectives].sort((a,b)=>campaignRoute(this,home,a).cost-campaignRoute(this,home,b).cost-(a.progress?.[s.alliance]||0)*.8+(b.progress?.[s.alliance]||0)*.8)[0];
         const force=pool.slice(0,Math.max(plan.min,Math.floor(pool.length*.82)));
         this.aiIssue(force,objective,'attack','objective');Object.assign(plan,{phase:'objective',objectiveKind:'flag',objectiveId:objective.id,cohort:force.map(u=>u.id),initialSize:force.length,startedAt:this.time});
       }else{
-        const target=this.aiTarget(s,plan);
+        const target=this.aiPreparedTarget(s,plan,this.aiTarget(s,plan),pool);
         if(target){
-          const force=[...pool].sort((a,b)=>plan.style==='raider'?(this.unitClass(a)==='cavalry'?0:1)-(this.unitClass(b)==='cavalry'?0:1)||ds(a,home)-ds(b,home):ds(a,home)-ds(b,home)).slice(0,Math.max(plan.min,Math.floor(pool.length*plan.fraction)));
-          const distance=Math.sqrt(ds(home,target));Object.assign(plan,{phase:'advance',targetId:target.id,targetCastleId:target.castleId??null,targetTeam:target.team,cohort:force.map(u=>u.id),initialSize:force.length,startedAt:this.time,timeout:70+(plan.targetRoute?.cost||distance)*2.5,stage:'strike'});
-          if(plan.style==='raider'){
+          const force=[...pool].sort((a,b)=>plan.style==='raider'?(this.unitClass(a)==='cavalry'?0:1)-(this.unitClass(b)==='cavalry'?0:1)||ds(a,home)-ds(b,home):ds(a,home)-ds(b,home)).slice(0,this.aiWaveSize(s,plan,pool,target));
+          const distance=Math.sqrt(ds(home,target));Object.assign(plan,{phase:'advance',targetId:target.id,targetCastleId:target.castleId??null,targetTeam:target.team,role:plan.role==='counterweight'?'counterweight':target.type!=='keep'?'raider':plan.style==='siege'?'siege':'invader',roleUntil:this.time+this.aiRules.commitment,attackKind:target.type!=='keep'?'raid':'assault',cohort:force.map(u=>u.id),initialSize:force.length,startedAt:this.time,timeout:70+(plan.targetRoute?.cost||distance)*2.5,stage:'strike'});
+          if(plan.style==='raider'||plan.attackKind==='raid'){
             const dx=(target.x-home.x)/(distance||1),dy=(target.y-home.y)/(distance||1),side=(s.id%2?1:-1),bend=Math.min(14,distance*.2);
             const waypoint=this.navigation.nearestPassable(this.bound({x:home.x+(target.x-home.x)*.58-dy*bend*side,y:home.y+(target.y-home.y)*.58+dx*bend*side})),approach=this.navigation.route(home,waypoint,'cavalry');
-            Object.assign(plan,{waypoint,stage:'flank',stageAt:this.time,flankTimeout:15+approach.cost*2.2});this.aiIssue(force,waypoint,'attack','raid',{aiTarget:target.id});
+            if(approach.reachable&&this.navigation.route(waypoint,target,'cavalry').reachable){Object.assign(plan,{waypoint,stage:'flank',stageAt:this.time,flankTimeout:15+approach.cost*2.2});this.aiIssue(force,waypoint,'attack','raid',{aiTarget:target.id});}else this.aiIssue(force,target,'attack','raid',{aiTarget:target.id});
           }else this.aiIssue(force,target,'attack','assault',{aiTarget:target.id});
           s.assault=this.time;this.event(`${s.name}: ${plan.label.toLowerCase()} advances on ${this.teams[target.team].name}.`,s.id);
           if(this.mode?.teams&&this.time>=(s.assaultCallAt||0)&&this.teams.some(t=>t.alive&&t.id!==s.id&&this.allied(t.id,s.id))){this.callTeamOrder('assault',target.x,target.y,s.id);s.assaultCallAt=this.time+90;}

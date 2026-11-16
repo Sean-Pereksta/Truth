@@ -5,13 +5,21 @@ let cases=0;
 const test=(name,fn)=>{fn();cases++;console.log(`PASS ${name}`);};
 // These wave/flag checks isolate their original targets; castle missions have
 // their own regression suite, including priority over an ordinary invasion.
-const game=(config={})=>{const g=new Game({landscape:'open',house:0,enemies:3,scale:'standard',seed:44277,...config});g.castles=g.castles.filter(c=>!c.ruined);return g;};
+const game=(config={})=>{
+  const g=new Game({landscape:'open',house:0,enemies:3,scale:'standard',seed:44277,...config});g.castles=g.castles.filter(c=>!c.ruined);
+  g.hash.rebuild(g.units);return g;
+};
 const prepare=(g,team=1,style='mass')=>{
   const s=g.teams[team];s.strategy=style;s.gold=0;s.powerReadyAt=1e9;
   const p=g.aiPlanFor(s);p.economyAt=1e9;p.frontierAt=1e9;
   return {s,p};
 };
-const launch=(g,s,p,time=90)=>{g.time=time;p.nextAttackAt=0;g.objectives=[];g.hash.rebuild(g.units);g.ai(s);};
+const launch=(g,s,p,time=90)=>{
+  // Execution checks need a genuine opening. Enemy armies are deployed in the
+  // field, retaining the exact same soldiers and resources.
+  for(const u of g.units)if(g.hostile(s.id,u.team)){u.x=g.W*.5+(u.id%5)*.4;u.y=g.H*.5+Math.floor(u.id%25/5)*.4;}
+  g.time=time;p.nextAttackAt=0;g.objectives=[];g.hash.rebuild(g.units);g.ai(s);
+};
 const fillSupply=(g,s)=>{while(g.group(s.id).length<s.cap)g.addUnit(s.id,'infantry',s.home.x+3,s.home.y+3);};
 
 test('A fresh bot musters recruits at its capital instead of streaming toward an enemy',()=>{

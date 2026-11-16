@@ -1,0 +1,75 @@
+{
+  "seed": 44277,
+  "dt": 0.03333333333333333,
+  "frames": 80,
+  "warmup": 20,
+  "digestParity": [
+    {
+      "scale": "epic",
+      "scenario": "idle",
+      "baseline": "e5c94bb2",
+      "optimized": "e5c94bb2",
+      "equal": true
+    },
+    {
+      "scale": "epic",
+      "scenario": "march",
+      "baseline": "ab1e35e5",
+      "optimized": "ab1e35e5",
+      "equal": true
+    },
+    {
+      "scale": "epic",
+      "scenario": "battle",
+      "baseline": "ccf840e0",
+      "optimized": "ccf840e0",
+      "equal": true
+    },
+    {
+      "scale": "epic",
+      "scenario": "campaign",
+      "baseline": "7fd59aa3",
+      "optimized": "7fd59aa3",
+      "equal": true
+    },
+    {
+      "scale": "continent",
+      "scenario": "idle",
+      "baseline": "f042a042",
+      "optimized": "f042a042",
+      "equal": true
+    },
+    {
+      "scale": "continent",
+      "scenario": "march",
+      "baseline": "17b5268c",
+      "optimized": "17b5268c",
+      "equal": true
+    },
+    {
+      "scale": "continent",
+      "scenario": "battle",
+      "baseline": "16d0dc82",
+      "optimized": "16d0dc82",
+      "equal": true
+    },
+    {
+      "scale": "continent",
+      "scenario": "campaign",
+      "baseline": "fa9ff531",
+      "optimized": "fa9ff531",
+      "equal": true
+    }
+  ],
+  "helper": {
+    "baselineMedianMs": 53.79065000000003,
+    "optimizedMedianMs": 15.660900000000026,
+    "allReturnDigestsEqual": true,
+    "callsPerIteration": 672000
+  },
+  "notes": [
+    "Whole simulation uses captured baseline AI and vision in both versions; only aura helper edits changed.",
+    "Per-helper benchmark alternates order six times on one identical stable Game; not a claim of equivalent whole-game speedup.",
+    "Simulation timings are omitted here because uncontrolled concurrent tests caused high variance; outputs are compared for correctness."
+  ]
+}
