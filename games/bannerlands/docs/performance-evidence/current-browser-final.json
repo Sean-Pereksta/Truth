@@ -1,0 +1,670 @@
+{
+  "seed": 44277,
+  "root": "<workspace>\\work\\Truth\\games\\bannerlands",
+  "samples": 90,
+  "viewport": {
+    "width": 1400,
+    "height": 900,
+    "dpr": 1
+  },
+  "quality": "high",
+  "notes": [
+    "Full app RAF, HUD, minimap and controls remain active.",
+    "Synthetic late/movement/invasion/objective fixtures; game-time offsets do not represent a natural full campaign.",
+    "Input is a trusted Playwright H key; timing covers its browser handler to the next RAF, not physical device latency.",
+    "Headless browser timings depend on local graphics/host scheduling."
+  ],
+  "rows": [
+    {
+      "scenario": "early",
+      "unitsAtStart": 1120,
+      "livingAtEnd": 1120,
+      "simulation": {
+        "samples": 45,
+        "medianMs": 5.4,
+        "p95Ms": 9.6,
+        "maxMs": 17.6,
+        "meanMs": 6.04
+      },
+      "render": {
+        "samples": 90,
+        "medianMs": 3.8,
+        "p95Ms": 5.6,
+        "maxMs": 7,
+        "meanMs": 3.96
+      },
+      "frame": {
+        "samples": 90,
+        "medianMs": 16.7,
+        "p95Ms": 16.8,
+        "maxMs": 33.4,
+        "meanMs": 16.68
+      },
+      "inputToNextFrame": {
+        "samples": 3,
+        "medianMs": 19.5,
+        "p95Ms": 28.9,
+        "maxMs": 28.9,
+        "meanMs": 21.83
+      },
+      "framesOver50Ms": 0,
+      "framesOver100Ms": 0,
+      "holdApplied": true,
+      "gameTime": 2.033333333333336,
+      "quality": "high",
+      "plans": [
+        {
+          "id": 1
+        },
+        {
+          "id": 2
+        },
+        {
+          "id": 3
+        },
+        {
+          "id": 4
+        },
+        {
+          "id": 5
+        },
+        {
+          "id": 6
+        },
+        {
+          "id": 7
+        },
+        {
+          "id": 8
+        },
+        {
+          "id": 9
+        },
+        {
+          "id": 10
+        },
+        {
+          "id": 11
+        },
+        {
+          "id": 12
+        },
+        {
+          "id": 13
+        },
+        {
+          "id": 14
+        },
+        {
+          "id": 15
+        }
+      ],
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0"
+    },
+    {
+      "scenario": "late-march",
+      "unitsAtStart": 4480,
+      "livingAtEnd": 4480,
+      "simulation": {
+        "samples": 90,
+        "medianMs": 38.1,
+        "p95Ms": 56,
+        "maxMs": 103.8,
+        "meanMs": 40.24
+      },
+      "render": {
+        "samples": 90,
+        "medianMs": 5.8,
+        "p95Ms": 10.2,
+        "maxMs": 13.7,
+        "meanMs": 6.38
+      },
+      "frame": {
+        "samples": 90,
+        "medianMs": 50,
+        "p95Ms": 83.3,
+        "maxMs": 133.3,
+        "meanMs": 51.91
+      },
+      "inputToNextFrame": {
+        "samples": 3,
+        "medianMs": 64.8,
+        "p95Ms": 67.5,
+        "maxMs": 67.5,
+        "meanMs": 57.87
+      },
+      "framesOver50Ms": 33,
+      "framesOver100Ms": 1,
+      "holdApplied": true,
+      "gameTime": 483.8333333333364,
+      "quality": "high",
+      "plans": [
+        {
+          "id": 1
+        },
+        {
+          "id": 2
+        },
+        {
+          "id": 3
+        },
+        {
+          "id": 4
+        },
+        {
+          "id": 5
+        },
+        {
+          "id": 6
+        },
+        {
+          "id": 7
+        },
+        {
+          "id": 8
+        },
+        {
+          "id": 9
+        },
+        {
+          "id": 10
+        },
+        {
+          "id": 11
+        },
+        {
+          "id": 12
+        },
+        {
+          "id": 13
+        },
+        {
+          "id": 14
+        },
+        {
+          "id": 15
+        }
+      ],
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0"
+    },
+    {
+      "scenario": "late-campaign",
+      "unitsAtStart": 4480,
+      "livingAtEnd": 4480,
+      "simulation": {
+        "samples": 90,
+        "medianMs": 46.7,
+        "p95Ms": 90.4,
+        "maxMs": 107.8,
+        "meanMs": 49.73
+      },
+      "render": {
+        "samples": 90,
+        "medianMs": 4.9,
+        "p95Ms": 7.3,
+        "maxMs": 11,
+        "meanMs": 5.25
+      },
+      "frame": {
+        "samples": 90,
+        "medianMs": 50.1,
+        "p95Ms": 83.4,
+        "maxMs": 116.6,
+        "meanMs": 59.34
+      },
+      "inputToNextFrame": {
+        "samples": 3,
+        "medianMs": 61.7,
+        "p95Ms": 80.3,
+        "maxMs": 80.3,
+        "meanMs": 64.23
+      },
+      "framesOver50Ms": 54,
+      "framesOver100Ms": 3,
+      "holdApplied": true,
+      "gameTime": 483.8333333333364,
+      "quality": "high",
+      "plans": [
+        {
+          "id": 1,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 181
+        },
+        {
+          "id": 2,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 172
+        },
+        {
+          "id": 3,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 177
+        },
+        {
+          "id": 4,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 177
+        },
+        {
+          "id": 5,
+          "phase": "objective",
+          "intent": "counterweight",
+          "cohort": 177
+        },
+        {
+          "id": 6,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 177
+        },
+        {
+          "id": 7,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 154
+        },
+        {
+          "id": 8,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 181
+        },
+        {
+          "id": 9,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 181
+        },
+        {
+          "id": 10,
+          "phase": "objective",
+          "intent": "counterweight",
+          "cohort": 154
+        },
+        {
+          "id": 11,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 177
+        },
+        {
+          "id": 12,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 177
+        },
+        {
+          "id": 13,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 172
+        },
+        {
+          "id": 14,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 172
+        },
+        {
+          "id": 15,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 181
+        }
+      ],
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0"
+    },
+    {
+      "scenario": "invasions",
+      "unitsAtStart": 1120,
+      "livingAtEnd": 1219,
+      "simulation": {
+        "samples": 59,
+        "medianMs": 13.9,
+        "p95Ms": 32.7,
+        "maxMs": 88.9,
+        "meanMs": 17.53
+      },
+      "render": {
+        "samples": 90,
+        "medianMs": 5,
+        "p95Ms": 7.5,
+        "maxMs": 11,
+        "meanMs": 5.15
+      },
+      "frame": {
+        "samples": 90,
+        "medianMs": 16.7,
+        "p95Ms": 33.4,
+        "maxMs": 100,
+        "meanMs": 22.25
+      },
+      "inputToNextFrame": {
+        "samples": 3,
+        "medianMs": 18,
+        "p95Ms": 39.9,
+        "maxMs": 39.9,
+        "meanMs": 21.43
+      },
+      "framesOver50Ms": 3,
+      "framesOver100Ms": 0,
+      "holdApplied": true,
+      "gameTime": 92.79999999999984,
+      "quality": "high",
+      "plans": [
+        {
+          "id": 1,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 42
+        },
+        {
+          "id": 2,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 42
+        },
+        {
+          "id": 3,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 42
+        },
+        {
+          "id": 4,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 44
+        },
+        {
+          "id": 5,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 42
+        },
+        {
+          "id": 6,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 42
+        },
+        {
+          "id": 7,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 35
+        },
+        {
+          "id": 8,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 44
+        },
+        {
+          "id": 9,
+          "phase": "objective",
+          "intent": "counterweight",
+          "cohort": 43
+        },
+        {
+          "id": 10,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 37
+        },
+        {
+          "id": 11,
+          "phase": "objective",
+          "intent": "counterweight",
+          "cohort": 41
+        },
+        {
+          "id": 12,
+          "phase": "objective",
+          "intent": "expansionist",
+          "cohort": 42
+        },
+        {
+          "id": 13,
+          "phase": "objective",
+          "intent": "counterweight",
+          "cohort": 37
+        },
+        {
+          "id": 14,
+          "phase": "objective",
+          "intent": "counterweight",
+          "cohort": 40
+        },
+        {
+          "id": 15,
+          "phase": "objective",
+          "intent": "counterweight",
+          "cohort": 46
+        }
+      ],
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0"
+    },
+    {
+      "scenario": "objectives",
+      "unitsAtStart": 1120,
+      "livingAtEnd": 1095,
+      "simulation": {
+        "samples": 90,
+        "medianMs": 18.9,
+        "p95Ms": 45,
+        "maxMs": 87.7,
+        "meanMs": 22.59
+      },
+      "render": {
+        "samples": 90,
+        "medianMs": 25.4,
+        "p95Ms": 37.2,
+        "maxMs": 39.8,
+        "meanMs": 25.62
+      },
+      "frame": {
+        "samples": 90,
+        "medianMs": 50,
+        "p95Ms": 83.2,
+        "maxMs": 133.5,
+        "meanMs": 50.94
+      },
+      "inputToNextFrame": {
+        "samples": 3,
+        "medianMs": 56,
+        "p95Ms": 70.2,
+        "maxMs": 70.2,
+        "meanMs": 54.8
+      },
+      "framesOver50Ms": 27,
+      "framesOver100Ms": 2,
+      "holdApplied": true,
+      "gameTime": 153.86666666666645,
+      "quality": "high",
+      "plans": [
+        {
+          "id": 1,
+          "phase": "muster",
+          "intent": "defender",
+          "cohort": 0
+        },
+        {
+          "id": 2,
+          "phase": "muster",
+          "intent": "defender",
+          "cohort": 0
+        },
+        {
+          "id": 3,
+          "phase": "muster",
+          "intent": "defender",
+          "cohort": 0
+        },
+        {
+          "id": 4,
+          "phase": "muster",
+          "intent": "defender",
+          "cohort": 0
+        },
+        {
+          "id": 5,
+          "phase": "muster",
+          "intent": "defender",
+          "cohort": 0
+        },
+        {
+          "id": 6,
+          "phase": "muster",
+          "intent": "defender",
+          "cohort": 0
+        },
+        {
+          "id": 7,
+          "phase": "muster",
+          "intent": "defender",
+          "cohort": 0
+        },
+        {
+          "id": 8,
+          "phase": "muster",
+          "intent": "defender",
+          "cohort": 0
+        },
+        {
+          "id": 9,
+          "phase": "muster",
+          "intent": "defender",
+          "cohort": 0
+        },
+        {
+          "id": 10,
+          "phase": "muster",
+          "intent": "defender",
+          "cohort": 0
+        },
+        {
+          "id": 11,
+          "phase": "muster",
+          "intent": "defender",
+          "cohort": 0
+        },
+        {
+          "id": 12,
+          "phase": "muster",
+          "intent": "defender",
+          "cohort": 0
+        },
+        {
+          "id": 13,
+          "phase": "muster",
+          "intent": "defender",
+          "cohort": 0
+        },
+        {
+          "id": 14,
+          "phase": "muster",
+          "intent": "defender",
+          "cohort": 0
+        },
+        {
+          "id": 15,
+          "phase": "muster",
+          "intent": "defender",
+          "cohort": 0
+        }
+      ],
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0"
+    },
+    {
+      "scenario": "woodland",
+      "unitsAtStart": 1120,
+      "livingAtEnd": 1120,
+      "simulation": {
+        "samples": 48,
+        "medianMs": 6.5,
+        "p95Ms": 14.7,
+        "maxMs": 20,
+        "meanMs": 7.45
+      },
+      "render": {
+        "samples": 90,
+        "medianMs": 9.7,
+        "p95Ms": 12.6,
+        "maxMs": 12.9,
+        "meanMs": 9.82
+      },
+      "frame": {
+        "samples": 90,
+        "medianMs": 16.7,
+        "p95Ms": 33.2,
+        "maxMs": 33.5,
+        "meanMs": 17.63
+      },
+      "inputToNextFrame": {
+        "samples": 3,
+        "medianMs": 16.9,
+        "p95Ms": 17.4,
+        "maxMs": 17.4,
+        "meanMs": 15.03
+      },
+      "framesOver50Ms": 0,
+      "framesOver100Ms": 0,
+      "holdApplied": true,
+      "gameTime": 2.333333333333335,
+      "quality": "high",
+      "plans": [
+        {
+          "id": 1
+        },
+        {
+          "id": 2
+        },
+        {
+          "id": 3
+        },
+        {
+          "id": 4
+        },
+        {
+          "id": 5
+        },
+        {
+          "id": 6
+        },
+        {
+          "id": 7
+        },
+        {
+          "id": 8
+        },
+        {
+          "id": 9
+        },
+        {
+          "id": 10
+        },
+        {
+          "id": 11
+        },
+        {
+          "id": 12
+        },
+        {
+          "id": 13
+        },
+        {
+          "id": 14
+        },
+        {
+          "id": 15
+        }
+      ],
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0"
+    }
+  ]
+}

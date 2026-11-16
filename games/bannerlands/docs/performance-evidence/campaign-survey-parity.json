@@ -1,0 +1,236 @@
+{
+  "seed": 44277,
+  "dt": 0.03333333333333333,
+  "frames": 80,
+  "warmup": 20,
+  "enemies": 15,
+  "rows": [
+    {
+      "scale": "epic",
+      "scenario": "idle",
+      "before": {
+        "meanMs": 5.437482500000006,
+        "p95Ms": 7.911699999999996,
+        "maxMs": 10.888699999999972,
+        "warmupMs": 230.9194000000001,
+        "warmupMaxMs": 32.4353000000001,
+        "routeSearches": 0,
+        "fieldSteps": 0,
+        "digest": "e5c94bb2"
+      },
+      "after": {
+        "meanMs": 6.536537499999997,
+        "p95Ms": 9.062599999999975,
+        "maxMs": 11.185299999999984,
+        "warmupMs": 256.86310000000026,
+        "warmupMaxMs": 33.02649999999994,
+        "routeSearches": 0,
+        "fieldSteps": 0,
+        "digest": "e5c94bb2"
+      },
+      "digestEqual": true
+    },
+    {
+      "scale": "epic",
+      "scenario": "march",
+      "before": {
+        "meanMs": 9.813611249999994,
+        "p95Ms": 13.119599999999991,
+        "maxMs": 16.66470000000004,
+        "warmupMs": 262.4406999999992,
+        "warmupMaxMs": 23.911999999999807,
+        "routeSearches": 0,
+        "fieldSteps": 719967,
+        "digest": "ab1e35e5"
+      },
+      "after": {
+        "meanMs": 10.634710000000016,
+        "p95Ms": 14.527599999999893,
+        "maxMs": 15.49519999999984,
+        "warmupMs": 287.4300000000005,
+        "warmupMaxMs": 27.09810000000016,
+        "routeSearches": 0,
+        "fieldSteps": 719967,
+        "digest": "ab1e35e5"
+      },
+      "digestEqual": true
+    },
+    {
+      "scale": "epic",
+      "scenario": "battle",
+      "before": {
+        "meanMs": 12.262026249999973,
+        "p95Ms": 21.495899999999892,
+        "maxMs": 31.046600000000126,
+        "warmupMs": 368.2038999999986,
+        "warmupMaxMs": 79.17799999999988,
+        "routeSearches": 0,
+        "fieldSteps": 17,
+        "digest": "ccf840e0"
+      },
+      "after": {
+        "meanMs": 12.720361249999963,
+        "p95Ms": 22.804000000000087,
+        "maxMs": 27.945999999999913,
+        "warmupMs": 373.19250000000056,
+        "warmupMaxMs": 75.39110000000028,
+        "routeSearches": 0,
+        "fieldSteps": 17,
+        "digest": "ccf840e0"
+      },
+      "digestEqual": true
+    },
+    {
+      "scale": "epic",
+      "scenario": "campaign",
+      "before": {
+        "meanMs": 17.81240624999998,
+        "p95Ms": 21.921900000000278,
+        "maxMs": 144.40470000000005,
+        "warmupMs": 1840.2148000000007,
+        "warmupMaxMs": 160.78330000000005,
+        "ai": {
+          "calls": 55,
+          "ms": 1701.9355000000023,
+          "maxMs": 142.5560999999998
+        },
+        "routeSearches": 870,
+        "fieldSteps": 109938,
+        "digest": "7fd59aa3"
+      },
+      "after": {
+        "meanMs": 14.835006250000015,
+        "p95Ms": 25.124800000000505,
+        "maxMs": 52.45479999999952,
+        "warmupMs": 674.7838999999985,
+        "warmupMaxMs": 70.30699999999979,
+        "ai": {
+          "calls": 55,
+          "ms": 364.7060999999994,
+          "maxMs": 40.3773999999994
+        },
+        "routeSearches": 15,
+        "fieldSteps": 644437,
+        "digest": "7fd59aa3"
+      },
+      "digestEqual": true
+    },
+    {
+      "scale": "continent",
+      "scenario": "idle",
+      "before": {
+        "meanMs": 8.083842499999879,
+        "p95Ms": 11.592499999998836,
+        "maxMs": 14.878099999999904,
+        "warmupMs": 177.8848999999991,
+        "warmupMaxMs": 14.34059999999954,
+        "routeSearches": 0,
+        "fieldSteps": 0,
+        "digest": "f042a042"
+      },
+      "after": {
+        "meanMs": 8.047075000000007,
+        "p95Ms": 10.946700000000419,
+        "maxMs": 13.420399999999972,
+        "warmupMs": 188.2623999999978,
+        "warmupMaxMs": 14.613999999999578,
+        "routeSearches": 0,
+        "fieldSteps": 0,
+        "digest": "f042a042"
+      },
+      "digestEqual": true
+    },
+    {
+      "scale": "continent",
+      "scenario": "march",
+      "before": {
+        "meanMs": 9.458416249999777,
+        "p95Ms": 11.486400000001595,
+        "maxMs": 14.721999999999753,
+        "warmupMs": 208.48559999999998,
+        "warmupMaxMs": 16.58519999999953,
+        "routeSearches": 0,
+        "fieldSteps": 800000,
+        "digest": "17b5268c"
+      },
+      "after": {
+        "meanMs": 9.938668749999897,
+        "p95Ms": 12.595799999999144,
+        "maxMs": 13.325199999999313,
+        "warmupMs": 220.38209999999708,
+        "warmupMaxMs": 19.479699999999866,
+        "routeSearches": 0,
+        "fieldSteps": 800000,
+        "digest": "17b5268c"
+      },
+      "digestEqual": true
+    },
+    {
+      "scale": "continent",
+      "scenario": "battle",
+      "before": {
+        "meanMs": 8.87927750000008,
+        "p95Ms": 13.665899999999965,
+        "maxMs": 15.736100000000079,
+        "warmupMs": 201.16859999999724,
+        "warmupMaxMs": 40.4955000000009,
+        "routeSearches": 0,
+        "fieldSteps": 0,
+        "digest": "16d0dc82"
+      },
+      "after": {
+        "meanMs": 8.460318749999896,
+        "p95Ms": 13.868100000001505,
+        "maxMs": 17.469199999999546,
+        "warmupMs": 202.45440000000417,
+        "warmupMaxMs": 37.72680000000037,
+        "routeSearches": 0,
+        "fieldSteps": 0,
+        "digest": "16d0dc82"
+      },
+      "digestEqual": true
+    },
+    {
+      "scale": "continent",
+      "scenario": "campaign",
+      "before": {
+        "meanMs": 15.925526250000212,
+        "p95Ms": 25.89389999999912,
+        "maxMs": 168.32980000000134,
+        "warmupMs": 2352.646700000003,
+        "warmupMaxMs": 226.05040000000008,
+        "ai": {
+          "calls": 55,
+          "ms": 2396.8414999999895,
+          "maxMs": 214.2528999999995
+        },
+        "routeSearches": 885,
+        "fieldSteps": 137988,
+        "digest": "fa9ff531"
+      },
+      "after": {
+        "meanMs": 12.21950750000001,
+        "p95Ms": 23.415800000000672,
+        "maxMs": 49.552300000001196,
+        "warmupMs": 582.5037999999968,
+        "warmupMaxMs": 51.140699999999924,
+        "ai": {
+          "calls": 55,
+          "ms": 446.2799999999952,
+          "maxMs": 37.236800000000585
+        },
+        "routeSearches": 15,
+        "fieldSteps": 1201846,
+        "digest": "fa9ff531"
+      },
+      "digestEqual": true
+    }
+  ],
+  "notes": [
+    "Both versions include living-rival strategic behavior and aura optimizations. Before-survey graph replacescampaignRoute with the previous individual A* and retains previous strength/crossing loops.",
+    "All15rivals and everyknownkeep/productioncandidate remain assessed; no candidate throttling or weakAI shortcut.",
+    "Single-source surveys use existing publicstaticterrainfields; same weighted shortest costs withinFloat32rounding, legalroutes/crossings tested.",
+    "Exactequalcostpathties maytakeanotherlegalroute onotherseeds; digestparity here appliesonlyto listedrepeatablefixtures.",
+    "Timings are consecutiveexclusiveprocesses on the samehost andsettings; shorttests areaffectedbyJIT,warmup andhostheat."
+  ]
+}

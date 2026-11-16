@@ -1,0 +1,139 @@
+{
+  "module": "<workspace>\\work\\Truth\\games\\bannerlands\\core.js",
+  "seed": 44277,
+  "dt": 0.03333333333333333,
+  "fogOfWar": true,
+  "results": [
+    {
+      "scale": "continent",
+      "scenario": "idle",
+      "frames": 80,
+      "warmup": 20,
+      "units": 1120,
+      "meanMs": 8.164728749999995,
+      "p50Ms": 6.582999999999856,
+      "p95Ms": 16.34159999999997,
+      "maxMs": 21.87779999999998,
+      "warmupMs": 343.9267,
+      "warmupMaxMs": 70.13589999999999,
+      "methods": {
+        "updateBuildings": {
+          "calls": 100,
+          "ms": 3.996900000000437,
+          "maxMs": 0.5988999999999578
+        },
+        "updateExpansionOrders": {
+          "calls": 100,
+          "ms": 1.0137999999994918,
+          "maxMs": 0.38580000000001746
+        },
+        "updateSpecialists": {
+          "calls": 100,
+          "ms": 5.545999999999481,
+          "maxMs": 0.5303999999998723
+        },
+        "updateUnits": {
+          "calls": 100,
+          "ms": 705.2216999999997,
+          "maxMs": 30.877199999999903
+        },
+        "updateHouseEffects": {
+          "calls": 100,
+          "ms": 0.9875000000017735,
+          "maxMs": 0.13079999999990832
+        },
+        "updateObjectives": {
+          "calls": 100,
+          "ms": 2.646800000000326,
+          "maxMs": 0.3202000000001135
+        },
+        "capture": {
+          "calls": 14,
+          "ms": 45.379799999999705,
+          "maxMs": 11.623399999999947
+        },
+        "recount": {
+          "calls": 3,
+          "ms": 3.3759000000000015,
+          "maxMs": 1.6458000000000084
+        }
+      },
+      "navigation": {
+        "fieldBuilds": 0,
+        "routeSearches": 0,
+        "fieldHits": 0,
+        "fieldSteps": 0,
+        "fieldBudgetStops": 0
+      },
+      "digest": "f042a042"
+    },
+    {
+      "scale": "continent",
+      "scenario": "campaign",
+      "frames": 80,
+      "warmup": 20,
+      "units": 1204,
+      "meanMs": 16.525502499999995,
+      "p50Ms": 13.015400000000227,
+      "p95Ms": 35.54840000000058,
+      "maxMs": 59.54300000000012,
+      "warmupMs": 813.8693000000017,
+      "warmupMaxMs": 101.76580000000013,
+      "methods": {
+        "updateBuildings": {
+          "calls": 100,
+          "ms": 5.304500000002918,
+          "maxMs": 0.4054000000000997
+        },
+        "updateExpansionOrders": {
+          "calls": 115,
+          "ms": 205.89069999999947,
+          "maxMs": 18.387499999999818
+        },
+        "updateSpecialists": {
+          "calls": 100,
+          "ms": 5.31689999999935,
+          "maxMs": 0.42410000000018044
+        },
+        "updateUnits": {
+          "calls": 100,
+          "ms": 1337.5907000000047,
+          "maxMs": 30.662599999999657
+        },
+        "updateHouseEffects": {
+          "calls": 100,
+          "ms": 0.67779999999766,
+          "maxMs": 0.04220000000032087
+        },
+        "updateObjectives": {
+          "calls": 100,
+          "ms": 1.930899999997564,
+          "maxMs": 0.05690000000004147
+        },
+        "ai": {
+          "calls": 55,
+          "ms": 402.81350000000157,
+          "maxMs": 46.02800000000025
+        },
+        "capture": {
+          "calls": 14,
+          "ms": 58.03519999999935,
+          "maxMs": 9.616499999999633
+        },
+        "recount": {
+          "calls": 3,
+          "ms": 4.281199999998989,
+          "maxMs": 1.5041999999998552
+        }
+      },
+      "navigation": {
+        "fieldBuilds": 55,
+        "routeSearches": 71,
+        "fieldHits": 3815,
+        "fieldSteps": 38788,
+        "fieldBudgetStops": 0
+      },
+      "digest": "80033f53"
+    }
+  ]
+}

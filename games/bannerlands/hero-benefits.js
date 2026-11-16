@@ -24,6 +24,7 @@ export function activeHeroBenefit(g,team,point){
 }
 
 export function heroMovementMultiplier(g,u){
+  if(!['dragon','stag','sun','kraken','bridge','bear','huntsman','bone'].includes(g.teams[u?.team]?.sigil))return 1;
   if(!troop(g,u))return 1;
   const a=activeHeroBenefit(g,u.team,u);if(a?.mode!=='carried')return 1;
   const k=kind(g,u),mode=u.order?.mode,tile=g.tileAt(u.x,u.y);
@@ -48,6 +49,10 @@ export function heroMovementMultiplier(g,u){
 
 // A rate changes remaining physical work, never grants a completed action.
 export function heroActionRate(g,u,action){
+  // Most houses have no benefit for this physical action. Reject those pairs
+  // before looking up the standard, hero, radius and profile for every soldier.
+  const house=g.teams[u?.team]?.sigil;
+  if(!(action==='turn'&&house==='falcon'||action==='setup'&&house==='beacon'||action==='charge-recovery'&&house==='stag'||action==='aim'&&house==='falcon'||action==='reload'&&(house==='beacon'||house==='huntsman')||action==='recovery'&&house==='bear'))return 1;
   if(!troop(g,u))return 1;
   const a=activeHeroBenefit(g,u.team,u);if(!a)return 1;
   const sigil=a.profile.sigil,k=kind(g,u);
@@ -65,20 +70,24 @@ export function heroActionRate(g,u,action){
 }
 
 export function heroSettleDuration(g,u,seconds){
+  if(g.teams[u?.team]?.sigil!=='wolf')return seconds;
   const a=troop(g,u)?activeHeroBenefit(g,u.team,u):null;
   return a?.profile.sigil==='wolf'&&a.mode==='carried'&&kind(g,u)==='infantry'?Math.max(.35,seconds*.9):seconds;
 }
 export function heroKnockbackMultiplier(g,u,frontal){
+  if(g.teams[u?.team]?.sigil!=='wolf')return 1;
   const a=troop(g,u)?activeHeroBenefit(g,u.team,u):null;
   return a?.profile.sigil==='wolf'&&a.mode==='planted'&&kind(g,u)==='infantry'&&frontal&&u.spearState==='braced'? .85:1;
 }
 export function heroCaptureMultiplier(g,u){
+  if(g.teams[u?.team]?.sigil!=='rose')return 1;
   const a=troop(g,u)?activeHeroBenefit(g,u.team,u):null;
   return a?.profile.sigil==='rose'&&a.mode==='carried'?1.08:1;
 }
 
 // Call for projectile damage at release; melee and brace damage at their actual hit.
 export function heroWeaponMultiplier(g,u,target,{projectile=false,brace=false}={}){
+  if(!['flayed','kraken','rose','frog','bone'].includes(g.teams[u?.team]?.sigil))return 1;
   if(!troop(g,u))return 1;
   const a=activeHeroBenefit(g,u.team,u);if(!a)return 1;
   const sigil=a.profile.sigil,k=kind(g,u),melee=!projectile&&!ranged(g,u)&&k!=='siege';
@@ -91,10 +100,12 @@ export function heroWeaponMultiplier(g,u,target,{projectile=false,brace=false}={
   return 1;
 }
 export function heroRangeBonus(g,u){
+  if(g.teams[u?.team]?.sigil!=='sun')return 0;
   const a=troop(g,u)?activeHeroBenefit(g,u.team,u):null;
   return a?.profile.sigil==='sun'&&a.mode==='planted'&&bowOrJavelin(g,u) ? .35 : 0;
 }
 export function heroDamageTakenMultiplier(g,target,source){
+  if(g.teams[target?.team]?.sigil!=='fish')return 1;
   if(!target||!source||source.secondary)return 1;
   const a=activeHeroBenefit(g,target.team,target);if(!a)return 1;
   if(a.profile.sigil!=='fish')return 1;
@@ -103,10 +114,12 @@ export function heroDamageTakenMultiplier(g,target,source){
   return 1;
 }
 export function heroBurnMultiplier(g,team,point){
+  if(g.teams[team]?.sigil!=='dragon')return 1;
   const a=activeHeroBenefit(g,team,point);
   return a?.profile.sigil==='dragon'&&a.mode==='planted'?1.1:1;
 }
 export function heroTrainingMultiplier(g,building,buildDefinitions){
+  if(g.teams[building?.team]?.sigil!=='bridge')return 1;
   const a=activeHeroBenefit(g,building.team,building);
   if(a?.profile.sigil!=='bridge'||a.mode!=='planted')return 1;
   let cache=trainingCache.get(g);
@@ -117,16 +130,19 @@ export function heroTrainingMultiplier(g,building,buildDefinitions){
   return nearest.includes(building)?1.1:1;
 }
 export function heroRecruitmentMultiplier(g,team,origin){
+  if(g.teams[team]?.sigil!=='lion')return 1;
   const a=origin&&activeHeroBenefit(g,team,origin);
   return a?.profile.sigil==='lion'&&a.mode==='planted'? .92:1;
 }
 export function heroKillReward(g,target,source){
   const killer=g.sourceUnit(source);
+  if(g.teams[killer?.team]?.sigil!=='lion')return 0;
   if(!killer||!troop(g,killer)||!g.hostile(killer.team,target.team)||target.type==='hero'||!['infantry','archer','cavalry','siege'].includes(kind(g,target)))return 0;
   const a=activeHeroBenefit(g,killer.team,killer);
   return a?.profile.sigil==='lion'&&a.mode==='carried'?1:0;
 }
 export function heroSightMultiplier(g,u){
+  if(g.teams[u?.team]?.sigil!=='frog')return 1;
   const a=troop(g,u)?activeHeroBenefit(g,u.team,u):null;
   return a?.profile.sigil==='frog'&&a.mode==='carried'?1.1:1;
 }

@@ -1,0 +1,112 @@
+{
+  "seed": 628410,
+  "scale": "continent",
+  "enemies": 15,
+  "viewport": {
+    "width": 1400,
+    "height": 900,
+    "dpr": 1
+  },
+  "backend": "native @napi-rs/canvas",
+  "quality": "high",
+  "warmup": 6,
+  "samples": 12,
+  "gate": "three consecutive warm static scenery paints >=4ms, first cold frame excluded",
+  "results": [
+    {
+      "version": "optimized",
+      "scene": "overview",
+      "medianMs": 32.7,
+      "p95Ms": 39.72,
+      "stages": {
+        "updateTerritory": 0.32,
+        "drawBridgeArchitecture": 0.11,
+        "drawGround": 12.35,
+        "unit": 5.22
+      }
+    },
+    {
+      "version": "optimized",
+      "scene": "woodland",
+      "medianMs": 5.9,
+      "p95Ms": 7.02,
+      "stages": {
+        "drawBridgeArchitecture": 0.05,
+        "drawGround": 3.35,
+        "unit": 0.9
+      }
+    },
+    {
+      "version": "optimized",
+      "scene": "woodland-pan",
+      "medianMs": 30.22,
+      "p95Ms": 35.14,
+      "stages": {
+        "drawBridgeArchitecture": 0.06,
+        "drawGround": 29.02,
+        "unit": 0.72
+      }
+    },
+    {
+      "version": "optimized",
+      "scene": "capital",
+      "medianMs": 4.01,
+      "p95Ms": 4.82,
+      "stages": {
+        "drawBridgeArchitecture": 0.02,
+        "drawGround": 0.71,
+        "unit": 0.38
+      }
+    },
+    {
+      "version": "baseline",
+      "scene": "overview",
+      "medianMs": 37.23,
+      "p95Ms": 51.88,
+      "stages": {
+        "updateTerritory": 0.35,
+        "drawBridgeArchitecture": 0.11,
+        "drawGround": 14.44,
+        "unit": 6.08
+      }
+    },
+    {
+      "version": "baseline",
+      "scene": "woodland",
+      "medianMs": 32.38,
+      "p95Ms": 38.49,
+      "stages": {
+        "drawBridgeArchitecture": 0.09,
+        "drawGround": 28.45,
+        "unit": 0.78
+      }
+    },
+    {
+      "version": "baseline",
+      "scene": "woodland-pan",
+      "medianMs": 30.83,
+      "p95Ms": 33.35,
+      "stages": {
+        "drawBridgeArchitecture": 0.05,
+        "drawGround": 28.08,
+        "unit": 0.72
+      }
+    },
+    {
+      "version": "baseline",
+      "scene": "capital",
+      "medianMs": 3.35,
+      "p95Ms": 5.02,
+      "stages": {
+        "drawBridgeArchitecture": 0.02,
+        "drawGround": 0.84,
+        "unit": 0.38
+      }
+    }
+  ],
+  "notes": [
+    "Same captured baseline Game in both versions isolates rendering.",
+    "Only expensive settled views use the32MiB screen-pixel cache; moving and cheap views retain nativechunks.",
+    "The headless Edge counterpart deliberately kept its cheap GPU path; no browser rendering or FPS gain is claimed."
+  ]
+}

@@ -510,7 +510,7 @@ export class Renderer{
   prepare(g){
     this.cachedGame=g;this.left=-g.H*HW-80;this.top=-90;this.mapW=(g.W+g.H)*HW+160;this.mapH=(g.W+g.H)*HH+210;
     this.bridgeArchitectureCache=new Map();this.bridgeArchitectureGame=g;this.bridgeArchitectureBytes=0;
-    this.sceneryChunkCache=new Map();this.sceneryChunkBytes=0;
+    this.sceneryChunkCache=new Map();this.sceneryChunkBytes=0;this.strategicSceneryComposite=null;this.strategicSceneryView=null;this.strategicSceneryProbe=null;
     this.terrainChunkCache.clear();this.decor=[];this.decorChunks=new Map();this.miniBase=null;this.miniTerrainPixels=makeCanvas(g.W,g.H);const miniCtx=this.miniTerrainPixels.getContext('2d'),miniData=miniCtx.createImageData(g.W,g.H);
     for(const t of g.tiles){const r=hash(t.x,t.y),i=(t.y*g.W+t.x)*4,color=t.feature==='bridge'?[218,197,142]:t.feature==='ford'?[131,174,169]:t.feature==='road'?[180,159,108]:t.feature==='pass'?[177,168,136]:t.terrain==='mountain'?[102,105,101]:t.terrain==='water'?[35,100,116]:t.terrain==='forest'?[48,71,37]:t.terrain==='hill'?[114,105,75]:[91,115,52];miniData.data.set([...color,255],i);if(t.feature||t.terrain==='water')continue;
       if(t.terrain==='mountain'){
@@ -551,7 +551,7 @@ export class Renderer{
     this.decor=this.decor.filter(z=>!scene.buildings.some(b=>b.hp>0&&(z.x-b.x)**2+(z.y-b.y)**2<(b.type==='keep'?5:1.25))&&!(g.objectives||[]).some(o=>(z.x-o.x)**2+(z.y-o.y)**2<1.7)&&!scene.castles.some(o=>(z.x-o.x)**2+(z.y-o.y)**2<5));
     this.lastBuildingCount=g.buildings.length;this.lastBuildingId=g.buildings.at(-1)?.id||0;
     this.decorChunks=new Map();for(const z of this.decor){const key=Math.floor(z.x/16)+','+Math.floor(z.y/16);if(!this.decorChunks.has(key))this.decorChunks.set(key,[]);this.decorChunks.get(key).push(z);}
-    this.sceneryChunkCache?.clear();this.sceneryChunkBytes=0;
+    this.sceneryChunkCache?.clear();this.sceneryChunkBytes=0;this.strategicSceneryComposite=null;this.strategicSceneryView=null;this.strategicSceneryProbe=null;
     this.decorOverviewDirty=true;
   }
   buildOverview(g){
@@ -573,6 +573,21 @@ export class Renderer{
   }
   visibleWorldRange(g,bounds){const points=[[bounds.left,bounds.top],[bounds.right,bounds.top],[bounds.right,bounds.bottom],[bounds.left,bounds.bottom]].map(([x,y])=>({x:(x/HW+y/HH)/2,y:(y/HH-x/HW)/2}));return{x0:clamp(Math.floor(Math.min(...points.map(p=>p.x)))-1,0,g.W-1),x1:clamp(Math.ceil(Math.max(...points.map(p=>p.x)))+1,0,g.W-1),y0:clamp(Math.floor(Math.min(...points.map(p=>p.y)))-1,0,g.H-1),y1:clamp(Math.ceil(Math.max(...points.map(p=>p.y)))+1,0,g.H-1)};}
   drawStrategicScenery(c,range,bounds){
+    // Static scenery can be reused at the exact device-pixel transform once
+    // the camera settles. This retains the original samples, scale and detail;
+    // moving cameras still draw the existing native chunks directly. Accelerated
+    // backends that already draw these chunks cheaply keep that original path.
+    const transform=c.getTransform?.(),width=this.canvas.width,height=this.canvas.height;
+    if(!transform||!Number.isFinite(transform.a)||width*height*4>32*1024*1024){this.paintStrategicScenery(c,range,bounds);return;}
+    const key=[width,height,transform.a,transform.b,transform.c,transform.d,transform.e,transform.f,c.imageSmoothingEnabled,c.imageSmoothingQuality].join('|'),cached=this.strategicSceneryComposite;
+    if(cached?.key===key){c.save();c.setTransform(1,0,0,1,0,0);c.drawImage(cached.image,0,0);c.restore();return;}
+    if(this.strategicSceneryView!==key){this.strategicSceneryView=key;this.strategicSceneryComposite=null;this.strategicSceneryProbe={expensive:0};this.paintStrategicScenery(c,range,bounds);return;}
+    const probe=this.strategicSceneryProbe??={expensive:0};
+    if(probe.expensive<3){const at=performance.now();this.paintStrategicScenery(c,range,bounds);probe.expensive=performance.now()-at>=(this.strategicSceneryCacheThresholdMs??4)?probe.expensive+1:0;return;}
+    const image=makeCanvas(width,height),ctx=image.getContext('2d');ctx.setTransform(transform.a,transform.b,transform.c,transform.d,transform.e,transform.f);ctx.imageSmoothingEnabled=c.imageSmoothingEnabled;ctx.imageSmoothingQuality=c.imageSmoothingQuality;this.paintStrategicScenery(ctx,range,bounds);
+    this.strategicSceneryComposite={key,image,bytes:width*height*4};c.save();c.setTransform(1,0,0,1,0,0);c.drawImage(image,0,0);c.restore();
+  }
+  paintStrategicScenery(c,range,bounds){
     // Strategic views keep the same illustrated trees and rocks, but composite
     // their static chunks once. Armies remain a live layer above the scenery.
     for(let cy=Math.floor(range.y0/16);cy<=Math.floor(range.y1/16);cy++)for(let cx=Math.floor(range.x0/16);cx<=Math.floor(range.x1/16);cx++){
@@ -955,7 +970,7 @@ export class Renderer{
     }
     if(attack&&!UNIT_DEFS[u.type].ranged&&unitClass!=='archer'&&unitClass!=='siege'&&u.attackAnim>.64){const a=(1-u.attackAnim)*5;c.beginPath();c.arc(p.x+facing*9,p.y-12,12,-1.7+a,-.4+a);c.strokeStyle=`rgba(248,226,156,${u.attackAnim*.7})`;c.lineWidth=1.4;c.stroke();}
     if(u.type!=='hero'&&(selected||u.hp<u.maxHp*.7)&&zoom>.57){const w=12;c.fillStyle='#15302f';c.fillRect(p.x-w/2,p.y-29-(unitClass==='cavalry'?9:0),w,2);c.fillStyle=(g.allied?.(u.team,0)??u.team===0)?'#b9d9a1':'#d4a18a';c.fillRect(p.x-w/2,p.y-29-(unitClass==='cavalry'?9:0),w*clamp(u.hp/u.maxHp,0,1),2);}
-    if(u.isKing){c.save();c.lineWidth=1.6;c.strokeStyle='#f0d78b';c.beginPath();c.ellipse(p.x,p.y+1,14,6,0,0,TAU);c.stroke();
+    if(u.isKing){c.save();if(zoom>.57){c.fillStyle='#15302f';c.fillRect(p.x-8,p.y-29,16,3);c.fillStyle='#f3d77d';c.fillRect(p.x-8,p.y-29,16*clamp(u.hp/u.maxHp,0,1),3);}c.lineWidth=1.6;c.strokeStyle='#f0d78b';c.beginPath();c.ellipse(p.x,p.y+1,14,6,0,0,TAU);c.stroke();
       polygon(c,[[p.x-6,p.y-42],[p.x-7,p.y-49],[p.x-3,p.y-46],[p.x,p.y-51],[p.x+3,p.y-46],[p.x+7,p.y-49],[p.x+6,p.y-42]],'#f3d77d','#6a5633');
       if(zoom>.5){c.font='bold 8px Segoe UI';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#11241f';c.strokeText('KING',p.x,p.y-56);c.fillStyle='#f3dda0';c.fillText('KING',p.x,p.y-56);}c.restore();}
   }

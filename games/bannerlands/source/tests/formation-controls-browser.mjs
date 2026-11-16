@@ -68,17 +68,20 @@ try{
   for(const type of ['gilded_crossbow','tollhouse_crossbow','sharpshooter']){
     await page.evaluate(type=>{
       const g=window.__prepare(),u=g.addUnit(0,type,30,40),v=g.addUnit(1,'infantry',34.8,40);
-      v.hp=v.maxHp=10000;v.cooldown=1e9;g.hold([u.id,v.id]);u.cooldown=0;g.hash.rebuild(g.units);g.attack(u,v);window.__step(.3);
-      window.__crossbow=u.id;window.__firedAt=u.attackVisual.at;window.__bannerlands.ui.selected.add(u.id);
+      v.hp=v.maxHp=10000;v.cooldown=1e9;g.hold([u.id,v.id]);u.cooldown=0;u.facingX=1;u.facingY=0;g.hash.rebuild(g.units);g.attack(u,v);
+      // A crossbow first completes its authored aim, then starts reload work.
+      // Keep this reload/control fixture beyond that existing aiming stage.
+      window.__step(.45);
+      window.__crossbow=u.id;window.__shotsAt=g.stats.battles;window.__bannerlands.ui.selected.add(u.id);
     },type);
     assert.ok(await page.evaluate(()=>window.__bannerlands.game.byId.get(window.__crossbow).reload.progress>.2));
     const destination=await page.evaluate(()=>window.__point(28,40));await page.mouse.click(destination.x,destination.y,{button:'right'});
     const moving=await page.evaluate(()=>{window.__step(.3);const u=window.__bannerlands.game.byId.get(window.__crossbow);return {x:u.x,reloading:u.reloading,progress:u.reload.progress};});
     assert.ok(moving.x<29.8);assert.equal(moving.reloading,false);assert.equal(moving.progress,0);
     await page.keyboard.press('a');
-    const stopped=await page.evaluate(()=>{const u=window.__bannerlands.game.byId.get(window.__crossbow),before=u.x;window.__step(.3);return {travel:Math.abs(u.x-before),progress:u.reload.progress,reloading:u.reloading,shot:u.attackVisual.at,original:window.__firedAt,duration:u.reload.duration};});
-    assert.ok(stopped.travel<.001);assert.equal(stopped.reloading,true);assert.ok(stopped.progress>.2);assert.equal(stopped.shot,stopped.original);
-    assert.equal(await page.evaluate(seconds=>{window.__step(seconds);return window.__bannerlands.game.byId.get(window.__crossbow).attackVisual.at>window.__firedAt;},stopped.duration+.3),true);
+    const stopped=await page.evaluate(()=>{const g=window.__bannerlands.game,u=g.byId.get(window.__crossbow),before=u.x;window.__step(.3);return {travel:Math.abs(u.x-before),progress:u.reload.progress,reloading:u.reloading,shots:g.stats.battles,original:window.__shotsAt,duration:u.reload.duration};});
+    assert.ok(stopped.travel<.001);assert.equal(stopped.reloading,true);assert.ok(stopped.progress>.2);assert.equal(stopped.shots,stopped.original);
+    assert.equal(await page.evaluate(seconds=>{window.__step(seconds);return window.__bannerlands.game.stats.battles>window.__shotsAt;},stopped.duration+.3),true);
     console.log('PASS '+type+' real move interrupts reload; A stops and reloads before the next shot.');
   }
   await page.locator('[data-drawer="orders"]').click();

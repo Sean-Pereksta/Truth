@@ -7,7 +7,7 @@ export class WarVision {
   alliance(team){return this.game.teams[team]?.alliance??team;}
   dataFor(team){
     const alliance=this.alliance(team);let data=this.alliances.get(alliance);
-    if(!data){data={current:new Uint8Array(this.game.W*this.game.H),explored:new Uint8Array(this.game.W*this.game.H),owners:new Int16Array(this.game.W*this.game.H).fill(-1),buildings:new Map(),castles:new Map()};this.alliances.set(alliance,data);}
+    if(!data){data={current:new Uint8Array(this.game.W*this.game.H),explored:new Uint8Array(this.game.W*this.game.H),owners:new Int16Array(this.game.W*this.game.H).fill(-1),territoryCounts:new Int32Array(this.game.teams.length),units:new Map(),buildings:new Map(),castles:new Map(),castleOwners:new Map(),campaignEvents:[]};this.alliances.set(alliance,data);}
     return data;
   }
   gridFor(team){if(!this.enabled)return null;this.update();return this.dataFor(team).current;}
@@ -29,24 +29,56 @@ export class WarVision {
     for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++)if((x+.5-entity.x)**2+(y+.5-entity.y)**2<=rr){const index=y*g.W+x;data.current[index]=1;data.explored[index]=1;}
   }
   buildingSnapshot(b){return Object.freeze({id:b.id,type:b.type,team:b.team,x:b.x,y:b.y,hp:b.hp,maxHp:b.maxHp,level:b.level,radius:b.radius,castleId:b.castleId,restoredCastle:b.restoredCastle,remembered:true,lastSeen:this.game.time});}
+  unitSnapshot(u){return Object.freeze({id:u.id,type:u.type,team:u.team,x:u.x,y:u.y,hp:u.hp,maxHp:u.maxHp,isKing:!!u.isKing,remembered:true,lastSeen:this.game.time});}
   castleSnapshot(site){return Object.freeze({...site,progress:Object.freeze([...(site.progress||[])]),remembered:true,lastSeen:this.game.time});}
   update(force=false){
     if(!this.enabled)return;const g=this.game;if(!force&&g.time<this.nextUpdate)return;this.nextUpdate=g.time+.2;
     for(const s of g.teams)this.dataFor(s.id);
     for(const data of this.alliances.values())data.current.fill(0);
     for(const entity of [...g.units,...g.buildings])if(entity.hp>0&&g.teams[entity.team]?.alive)this.mark(this.dataFor(entity.team),entity);
-    const buildings=new Map(g.buildings.filter(b=>b.hp>0).map(b=>[b.id,b])),castles=new Map((g.castles||[]).map(site=>[site.id,site]));
+    const units=new Map(g.units.filter(u=>u.hp>0).map(u=>[u.id,u])),buildings=new Map(g.buildings.filter(b=>b.hp>0).map(b=>[b.id,b])),castles=new Map((g.castles||[]).map(site=>[site.id,site]));
     for(const [alliance,data]of this.alliances){
-      for(let i=0;i<g.tiles.length;i++){const owner=g.tiles[i].owner;if(data.current[i]||owner>=0&&g.teams[owner]?.alliance===alliance)data.owners[i]=owner;}
+      for(let i=0;i<g.tiles.length;i++){
+        const owner=g.tiles[i].owner;if(!data.current[i]&&!(owner>=0&&g.teams[owner]?.alliance===alliance))continue;
+        const previous=data.owners[i];if(previous===owner)continue;
+        if(previous>=0)data.territoryCounts[previous]--;if(owner>=0)data.territoryCounts[owner]++;
+        // Only a confirmed change to previously owned ground is evidence of
+        // expansion. First discovery must not masquerade as recent conquest.
+        if(data.current[i]&&previous>=0&&owner>=0)data.campaignEvents.push({kind:'expansion',team:owner,time:g.time,amount:1});
+        data.owners[i]=owner;
+      }
       const visible=point=>{const x=Math.floor(point.x),y=Math.floor(point.y);return x>=0&&y>=0&&x<g.W&&y<g.H&&!!data.current[y*g.W+x];};
+      for(const [id,memory]of data.units){
+        const current=units.get(id);
+        // Seeing the old position empty disproves that position; a hidden
+        // death or movement elsewhere cannot update the observation.
+        if(g.time-memory.lastSeen>120||visible(memory)&&(!current||!visible(current)||g.teams[current.team]?.alliance===alliance))data.units.delete(id);
+      }
+      for(const u of units.values())if(g.teams[u.team]?.alliance!==alliance&&visible(u))data.units.set(u.id,this.unitSnapshot(u));
       for(const [id,memory]of data.buildings)if(visible(memory)&&(!buildings.has(id)||g.teams[buildings.get(id).team]?.alliance===alliance))data.buildings.delete(id);
       for(const b of buildings.values())if(g.teams[b.team]?.alliance!==alliance&&visible(b))data.buildings.set(b.id,this.buildingSnapshot(b));
       for(const [id,memory]of data.castles)if(visible(memory)&&!castles.has(id))data.castles.delete(id);
-      for(const site of castles.values())if(visible(site))data.castles.set(site.id,this.castleSnapshot(site));
+      for(const site of castles.values())if(visible(site)){
+        const previous=data.castleOwners.get(site.id);
+        // Castle sites survive destruction. Keep the last observed holder
+        // through a neutral ruin and replacement keep with a different ID.
+        if(site.team>=0){if(previous!==undefined&&previous!==site.team)data.campaignEvents.push({kind:'victory',team:site.team,time:g.time,amount:1});data.castleOwners.set(site.id,site.team);}
+        data.castles.set(site.id,this.castleSnapshot(site));
+      }
+      data.campaignEvents=data.campaignEvents.filter(event=>g.time-event.time<=120).slice(-256);
     }
     this.revision++;
   }
   knownUnits(team){this.update();return this.game.units.filter(u=>u.hp>0&&(this.game.allied(team,u.team)||this.isVisible(team,u.x,u.y)));}
+  // Campaign estimates may use stale reports. Combat acquisition deliberately
+  // continues to use knownUnits(), which includes current sight only.
+  campaignUnits(team){
+    if(!this.enabled)return this.game.units.filter(u=>u.hp>0);
+    const current=this.knownUnits(team),ids=new Set(current.map(u=>u.id));
+    return [...current,...[...this.dataFor(team).units.values()].filter(memory=>!ids.has(memory.id))];
+  }
+  campaignTerritory(team){this.update();return this.dataFor(team).territoryCounts;}
+  campaignEvents(team){this.update();return this.dataFor(team).campaignEvents;}
   knownBuildings(team){
     this.update();const current=this.game.buildings.filter(b=>b.hp>0&&(this.game.allied(team,b.team)||this.isVisible(team,b.x,b.y))),ids=new Set(current.map(b=>b.id));
     return [...current,...[...this.dataFor(team).buildings.values()].filter(memory=>!ids.has(memory.id))];

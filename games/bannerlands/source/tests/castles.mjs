@@ -63,7 +63,11 @@ test('Bots prioritize a reachable ruin, keep a fixed capture company and idle in
   g.updateCastles(60);g.time+=3;g.ai(s);assert.equal(site.team,s.id);assert.equal(p.phase,'regroup');
 });
 test('A successful siege converts its surviving army straight into a castle capture company',()=>{
-  const g=make(),s=g.teams[1];s.gold=0;s.powerReadyAt=1e9;const p=g.aiPlanFor(s);p.economyAt=1e9;p.frontierAt=1e9;p.nextAttackAt=0;for(const c of g.castles)if(c.ruined)c.ruined=false;g.objectives=[];g.time=90;g.hash.rebuild(g.units);g.ai(s);assert.equal(p.phase,'advance');
+  const g=make(),s=g.teams[1];s.gold=0;s.powerReadyAt=1e9;const p=g.aiPlanFor(s);p.economyAt=1e9;p.frontierAt=1e9;p.nextAttackAt=0;for(const c of g.castles)if(c.ruined)c.ruined=false;
+  // Isolate the post-siege transition with an exposed keep. A new planner
+  // correctly waits rather than launching a small army into a full garrison.
+  for(const u of g.units)if(g.hostile(s.id,u.team)){u.x=g.W*.5+(u.id%5)*.3;u.y=g.H*.5+Math.floor(u.id%25/5)*.3;}
+  g.objectives=[];g.time=90;g.hash.rebuild(g.units);g.ai(s);assert.equal(p.phase,'advance');
   const target=g.byId.get(p.targetId);assert.equal(target.type,'keep');g.damage(target,1e6,{team:s.id});g.time+=3;g.hash.rebuild(g.units);g.ai(s);assert.equal(p.phase,'objective');assert.equal(p.objectiveKind,'castle');assert.equal(p.objectiveId,target.castleId);assert.ok(p.cohort.every(id=>g.byId.get(id).order.aiTask==='objective'));
 });
 console.log(`${passed} castle checks passed.`);

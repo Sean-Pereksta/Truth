@@ -1,3 +1,27 @@
+LIVING RIVALS
+Rival commanders evaluate growing strategic threats, reachable invasion openings,
+immediate visible danger and the cost of a campaign separately. A distant powerful
+house may deserve containment while a weaker neighbor offers a better opening.
+The same assessment applies to player and computer houses. Rivals do not receive
+free gold, troops, supply or secret vision on any difficulty.
+
+Their house tendency still shapes massed hosts, raids, siege columns, bastions and
+banner guards. Their current role can change to opportunistic invader, counterweight,
+expansionist, raider, siege commander, defender, objective commander or rebuilder.
+They keep committed armies on viable missions, retain guards, retreat after losses,
+and scout uncertain targets. Warlord may open a secondary front when its spare force
+and home defenses support one. A capital emergency takes priority over ambition.
+
+With Fog of War on, allies share sight. Enemy military observations fade with age;
+last-seen buildings remain estimates until scouted again. Hidden movement, damage,
+recruitment and construction do not become new intelligence. Scores already public
+in the selected victory mode can influence priorities. Enemy plans remain hidden
+from the roster under fog; friendly and otherwise known plans show their current role.
+
+Easy allows more preparation and less coordination. Normal exploits clear openings.
+Hard reassesses sooner and prepares stronger responses. Warlord sustains pressure
+and coordinates additional fronts when feasible, using the same economy and rules.
+
 CASTLE-BASED TROOP CAPACITY
 Every house starts with one castle and 280 troop capacity. Each additional held
 castle adds 60 capacity: two castles allow 340 troops, three allow 400. Land,
@@ -141,7 +165,7 @@ sides retain their saved time. Bannerfall counts captures toward a five-flag win
 In Conquest and Dominion, captures provide reinforcements without ending the game.
 
 STRATEGIC RIVALS
-Five distinct plans appear in the house roster:
+Five house tendencies underpin the adaptive roles shown in the house roster:
 Grand host: gather a large force and invade as one army.
 Flanking raiders: fast, smaller waves take side routes toward exposed production.
 Siege column: gather artillery and escorts to break defended capitals.

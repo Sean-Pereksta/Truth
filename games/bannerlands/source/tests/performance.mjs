@@ -10,6 +10,7 @@ const modulePath=path.resolve(option('module',fileURLToPath(new URL('../../core.
 const {Game}=await import(pathToFileURL(modulePath));
 const frames=Math.max(20,Number(option('frames',80))),warmup=Math.max(0,Number(option('warmup',20)));
 const scales=option('scales','epic,continent').split(','),scenarios=option('scenarios','idle,march,battle').split(',');
+const fogOfWar=option('fog','false')==='true';
 const percentile=(values,p)=>values[Math.min(values.length-1,Math.floor(values.length*p))];
 const summary=values=>{const sorted=[...values].sort((a,b)=>a-b);return {meanMs:values.reduce((a,b)=>a+b,0)/values.length,p50Ms:percentile(sorted,.5),p95Ms:percentile(sorted,.95),maxMs:sorted.at(-1)};};
 const digest=g=>{
@@ -21,7 +22,7 @@ const digest=g=>{
   return hash.toString(16).padStart(8,'0');
 };
 function setup(scale,scenario){
-  const g=new Game({scale,enemies:15,seed:44277,landscape:'riverlands',difficulty:'warlord'});
+  const g=new Game({scale,enemies:15,seed:44277,landscape:'riverlands',difficulty:'warlord',fogOfWar});
   for(const s of g.teams){s.aiClock=scenario==='campaign'?s.id*.05:1e9;s.powerReadyAt=1e9;}
   for(const b of g.buildings){b.spawnTimer=-1e9;b.cooldown=1e9;}
   if(scenario==='march'){
@@ -46,6 +47,6 @@ for(const scale of scales)for(const scenario of scenarios){
   for(const u of g.units)assert.ok(Number.isFinite(u.x)&&Number.isFinite(u.y)&&Number.isFinite(u.hp)&&g.isWalkable(u.x,u.y),'Simulation must retain finite soldiers on legal terrain.');
   results.push({scale,scenario,frames,warmup,units:g.units.filter(u=>u.hp>0).length,...summary(times),warmupMs:cold.reduce((a,b)=>a+b,0),warmupMaxMs:cold.length?Math.max(...cold):0,methods,navigation:{...g.navigation.stats},digest:digest(g)});
 }
-const result={module:modulePath,seed:44277,dt:1/30,results};
+const result={module:modulePath,seed:44277,dt:1/30,fogOfWar,results};
 const out=option('output',null);if(out){fs.mkdirSync(path.dirname(path.resolve(out)),{recursive:true});fs.writeFileSync(out,JSON.stringify(result,null,2));}
 console.log(JSON.stringify(result,null,2));

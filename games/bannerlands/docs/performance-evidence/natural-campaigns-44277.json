@@ -1,0 +1,1786 @@
+{
+  "description": "Natural seeded campaigns with an idle player and no injected advantages. Pressure metrics describe activity; they do not establish win rate or full late-campaign strength.",
+  "results": [
+    {
+      "seed": 44277,
+      "mode": "conquest",
+      "difficulty": "standard",
+      "scale": "continent",
+      "landscape": "riverlands",
+      "fogOfWar": false,
+      "rivals": 15,
+      "requestedSeconds": 120,
+      "actualSeconds": 120,
+      "dt": 0.03333333333333333,
+      "wallSeconds": 172.15,
+      "winner": null,
+      "victoryReason": "",
+      "launches": 16,
+      "launchingHouses": 15,
+      "peakOffensiveTroops": 655,
+      "meanOffensiveTroops": 304.87,
+      "meanObjectiveTroops": 304.87,
+      "meanHomeDefenders": 1171.45,
+      "meanScoutTroops": 0,
+      "undefendedHouseSeconds": 0,
+      "roles": [
+        "counterweight",
+        "defender",
+        "expansionist",
+        "invader",
+        "objective",
+        "raider",
+        "siege"
+      ],
+      "phases": [
+        "defend",
+        "muster",
+        "objective",
+        "regroup"
+      ],
+      "kills": 395,
+      "objectiveScores": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "controlScores": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "snapshots": [
+        {
+          "at": 1,
+          "livingHouses": 16,
+          "livingTroops": 1120,
+          "offensiveTroops": 0,
+          "objectiveTroops": 0,
+          "homeDefenders": 1050,
+          "scouts": 0,
+          "objectiveScores": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "castles": 16
+        },
+        {
+          "at": 30,
+          "livingHouses": 16,
+          "livingTroops": 1437,
+          "offensiveTroops": 0,
+          "objectiveTroops": 0,
+          "homeDefenders": 1356,
+          "scouts": 0,
+          "objectiveScores": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "castles": 16
+        },
+        {
+          "at": 61,
+          "livingHouses": 16,
+          "livingTroops": 1784,
+          "offensiveTroops": 536,
+          "objectiveTroops": 536,
+          "homeDefenders": 1038,
+          "scouts": 0,
+          "objectiveScores": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "castles": 16
+        },
+        {
+          "at": 91,
+          "livingHouses": 16,
+          "livingTroops": 2010,
+          "offensiveTroops": 497,
+          "objectiveTroops": 497,
+          "homeDefenders": 1072,
+          "scouts": 0,
+          "objectiveScores": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "castles": 16
+        }
+      ],
+      "launchEvents": [
+        {
+          "at": 37.87,
+          "team": 3,
+          "phase": "objective",
+          "role": "expansionist",
+          "targetTeam": null,
+          "target": 1188,
+          "troops": 39
+        },
+        {
+          "at": 38.43,
+          "team": 5,
+          "phase": "objective",
+          "role": "expansionist",
+          "targetTeam": null,
+          "target": 1185,
+          "troops": 41
+        },
+        {
+          "at": 39.8,
+          "team": 1,
+          "phase": "objective",
+          "role": "invader",
+          "targetTeam": null,
+          "target": 1186,
+          "troops": 51
+        },
+        {
+          "at": 41.2,
+          "team": 6,
+          "phase": "objective",
+          "role": "raider",
+          "targetTeam": null,
+          "target": 1186,
+          "troops": 44
+        },
+        {
+          "at": 45.63,
+          "team": 4,
+          "phase": "objective",
+          "role": "objective",
+          "targetTeam": null,
+          "target": 1187,
+          "troops": 54
+        },
+        {
+          "at": 47.87,
+          "team": 12,
+          "phase": "objective",
+          "role": "raider",
+          "targetTeam": null,
+          "target": 1185,
+          "troops": 44
+        },
+        {
+          "at": 49.27,
+          "team": 8,
+          "phase": "objective",
+          "role": "expansionist",
+          "targetTeam": null,
+          "target": 1188,
+          "troops": 54
+        },
+        {
+          "at": 49.53,
+          "team": 9,
+          "phase": "objective",
+          "role": "invader",
+          "targetTeam": null,
+          "target": 1189,
+          "troops": 64
+        },
+        {
+          "at": 52.57,
+          "team": 2,
+          "phase": "objective",
+          "role": "expansionist",
+          "targetTeam": null,
+          "target": 1187,
+          "troops": 44
+        },
+        {
+          "at": 52.6,
+          "team": 11,
+          "phase": "objective",
+          "role": "expansionist",
+          "targetTeam": null,
+          "target": 1189,
+          "troops": 43
+        },
+        {
+          "at": 56.23,
+          "team": 15,
+          "phase": "objective",
+          "role": "invader",
+          "targetTeam": null,
+          "target": 1190,
+          "troops": 72
+        },
+        {
+          "at": 65.67,
+          "team": 13,
+          "phase": "objective",
+          "role": "siege",
+          "targetTeam": null,
+          "target": 1190,
+          "troops": 54
+        },
+        {
+          "at": 65.93,
+          "team": 14,
+          "phase": "objective",
+          "role": "siege",
+          "targetTeam": null,
+          "target": 1185,
+          "troops": 54
+        },
+        {
+          "at": 71.47,
+          "team": 7,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1190,
+          "troops": 39
+        },
+        {
+          "at": 94.83,
+          "team": 10,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1186,
+          "troops": 50
+        },
+        {
+          "at": 114.8,
+          "team": 1,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1190,
+          "troops": 60
+        }
+      ],
+      "roleChanges": [
+        {
+          "at": 7.3,
+          "team": 1,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 7.57,
+          "team": 2,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 7.87,
+          "team": 3,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 8.13,
+          "team": 4,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 8.43,
+          "team": 5,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 8.7,
+          "team": 6,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 8.97,
+          "team": 7,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 9.27,
+          "team": 8,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 9.53,
+          "team": 9,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 9.83,
+          "team": 10,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 10.1,
+          "team": 11,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 10.37,
+          "team": 12,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 10.67,
+          "team": 13,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 10.93,
+          "team": 14,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 11.23,
+          "team": 15,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 37.3,
+          "team": 1,
+          "role": "invader",
+          "reason": "house tendency"
+        },
+        {
+          "at": 38.13,
+          "team": 4,
+          "role": "objective",
+          "reason": "house tendency"
+        },
+        {
+          "at": 38.7,
+          "team": 6,
+          "role": "raider",
+          "reason": "house tendency"
+        },
+        {
+          "at": 39.53,
+          "team": 9,
+          "role": "invader",
+          "reason": "house tendency"
+        },
+        {
+          "at": 40.37,
+          "team": 12,
+          "role": "raider",
+          "reason": "house tendency"
+        },
+        {
+          "at": 40.67,
+          "team": 13,
+          "role": "siege",
+          "reason": "house tendency"
+        },
+        {
+          "at": 40.93,
+          "team": 14,
+          "role": "siege",
+          "reason": "house tendency"
+        },
+        {
+          "at": 41.23,
+          "team": 15,
+          "role": "invader",
+          "reason": "house tendency"
+        },
+        {
+          "at": 54.83,
+          "team": 10,
+          "role": "defender",
+          "reason": "visible capital emergency"
+        },
+        {
+          "at": 57.33,
+          "team": 10,
+          "role": "counterweight",
+          "reason": "limited counterattack after defending"
+        },
+        {
+          "at": 64.83,
+          "team": 10,
+          "role": "defender",
+          "reason": "visible capital emergency"
+        },
+        {
+          "at": 71.47,
+          "team": 7,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 72.33,
+          "team": 10,
+          "role": "counterweight",
+          "reason": "limited counterattack after defending"
+        },
+        {
+          "at": 74.83,
+          "team": 10,
+          "role": "defender",
+          "reason": "visible capital emergency"
+        },
+        {
+          "at": 82.3,
+          "team": 1,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 82.33,
+          "team": 10,
+          "role": "counterweight",
+          "reason": "limited counterattack after defending"
+        },
+        {
+          "at": 95.07,
+          "team": 2,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 95.37,
+          "team": 3,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 95.67,
+          "team": 13,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 106.23,
+          "team": 15,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 113.43,
+          "team": 5,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 115.1,
+          "team": 11,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 118.73,
+          "team": 15,
+          "role": "defender",
+          "reason": "visible capital emergency"
+        }
+      ]
+    },
+    {
+      "seed": 44277,
+      "mode": "conquest",
+      "difficulty": "veteran",
+      "scale": "continent",
+      "landscape": "riverlands",
+      "fogOfWar": false,
+      "rivals": 15,
+      "requestedSeconds": 120,
+      "actualSeconds": 120,
+      "dt": 0.03333333333333333,
+      "wallSeconds": 173.52,
+      "winner": null,
+      "victoryReason": "",
+      "launches": 20,
+      "launchingHouses": 15,
+      "peakOffensiveTroops": 651,
+      "meanOffensiveTroops": 323.12,
+      "meanObjectiveTroops": 323.12,
+      "meanHomeDefenders": 1143.88,
+      "meanScoutTroops": 0,
+      "undefendedHouseSeconds": 0,
+      "roles": [
+        "counterweight",
+        "defender",
+        "expansionist",
+        "invader",
+        "objective"
+      ],
+      "phases": [
+        "defend",
+        "muster",
+        "objective",
+        "regroup"
+      ],
+      "kills": 372,
+      "objectiveScores": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "controlScores": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "snapshots": [
+        {
+          "at": 1,
+          "livingHouses": 16,
+          "livingTroops": 1120,
+          "offensiveTroops": 0,
+          "objectiveTroops": 0,
+          "homeDefenders": 1050,
+          "scouts": 0,
+          "objectiveScores": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "castles": 16
+        },
+        {
+          "at": 30,
+          "livingHouses": 16,
+          "livingTroops": 1443,
+          "offensiveTroops": 43,
+          "objectiveTroops": 43,
+          "homeDefenders": 1356,
+          "scouts": 0,
+          "objectiveScores": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "castles": 16
+        },
+        {
+          "at": 61,
+          "livingHouses": 16,
+          "livingTroops": 1778,
+          "offensiveTroops": 639,
+          "objectiveTroops": 639,
+          "homeDefenders": 903,
+          "scouts": 0,
+          "objectiveScores": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "castles": 16
+        },
+        {
+          "at": 91,
+          "livingHouses": 16,
+          "livingTroops": 1947,
+          "offensiveTroops": 335,
+          "objectiveTroops": 335,
+          "homeDefenders": 1086,
+          "scouts": 0,
+          "objectiveScores": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "castles": 16
+        }
+      ],
+      "launchEvents": [
+        {
+          "at": 29.17,
+          "team": 3,
+          "phase": "objective",
+          "role": "expansionist",
+          "targetTeam": null,
+          "target": 1188,
+          "troops": 43
+        },
+        {
+          "at": 31.13,
+          "team": 5,
+          "phase": "objective",
+          "role": "expansionist",
+          "targetTeam": null,
+          "target": 1185,
+          "troops": 43
+        },
+        {
+          "at": 31.4,
+          "team": 1,
+          "phase": "objective",
+          "role": "expansionist",
+          "targetTeam": null,
+          "target": 1186,
+          "troops": 43
+        },
+        {
+          "at": 32.8,
+          "team": 6,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1186,
+          "troops": 43
+        },
+        {
+          "at": 36.43,
+          "team": 4,
+          "phase": "objective",
+          "role": "objective",
+          "targetTeam": null,
+          "target": 1187,
+          "troops": 54
+        },
+        {
+          "at": 38.97,
+          "team": 8,
+          "phase": "objective",
+          "role": "expansionist",
+          "targetTeam": null,
+          "target": 1188,
+          "troops": 43
+        },
+        {
+          "at": 40.07,
+          "team": 12,
+          "phase": "objective",
+          "role": "expansionist",
+          "targetTeam": null,
+          "target": 1185,
+          "troops": 43
+        },
+        {
+          "at": 40.63,
+          "team": 9,
+          "phase": "objective",
+          "role": "invader",
+          "targetTeam": null,
+          "target": 1189,
+          "troops": 60
+        },
+        {
+          "at": 41.47,
+          "team": 2,
+          "phase": "objective",
+          "role": "expansionist",
+          "targetTeam": null,
+          "target": 1187,
+          "troops": 41
+        },
+        {
+          "at": 44,
+          "team": 11,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1189,
+          "troops": 45
+        },
+        {
+          "at": 46.53,
+          "team": 15,
+          "phase": "objective",
+          "role": "invader",
+          "targetTeam": null,
+          "target": 1190,
+          "troops": 65
+        },
+        {
+          "at": 54.37,
+          "team": 13,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1190,
+          "troops": 54
+        },
+        {
+          "at": 54.63,
+          "team": 14,
+          "phase": "objective",
+          "role": "expansionist",
+          "targetTeam": null,
+          "target": 1185,
+          "troops": 41
+        },
+        {
+          "at": 58.27,
+          "team": 7,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1189,
+          "troops": 50
+        },
+        {
+          "at": 74.53,
+          "team": 10,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1186,
+          "troops": 50
+        },
+        {
+          "at": 93,
+          "team": 1,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1186,
+          "troops": 57
+        },
+        {
+          "at": 110.93,
+          "team": 5,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1185,
+          "troops": 35
+        },
+        {
+          "at": 111.77,
+          "team": 8,
+          "phase": "objective",
+          "role": "invader",
+          "targetTeam": null,
+          "target": 1188,
+          "troops": 63
+        },
+        {
+          "at": 117.37,
+          "team": 13,
+          "phase": "objective",
+          "role": "invader",
+          "targetTeam": null,
+          "target": 1189,
+          "troops": 67
+        },
+        {
+          "at": 118.47,
+          "team": 2,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1189,
+          "troops": 47
+        }
+      ],
+      "roleChanges": [
+        {
+          "at": 4.8,
+          "team": 1,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 5.07,
+          "team": 2,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 5.37,
+          "team": 3,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 5.63,
+          "team": 4,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 5.93,
+          "team": 5,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 6.2,
+          "team": 6,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 6.47,
+          "team": 7,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 6.77,
+          "team": 8,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 7.03,
+          "team": 9,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 7.33,
+          "team": 10,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 7.6,
+          "team": 11,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 7.87,
+          "team": 12,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 8.17,
+          "team": 13,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 8.43,
+          "team": 14,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 8.73,
+          "team": 15,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 32.23,
+          "team": 4,
+          "role": "objective",
+          "reason": "house tendency"
+        },
+        {
+          "at": 32.8,
+          "team": 6,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 33.07,
+          "team": 7,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 33.63,
+          "team": 9,
+          "role": "invader",
+          "reason": "house tendency"
+        },
+        {
+          "at": 34.2,
+          "team": 11,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 34.77,
+          "team": 13,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 35.33,
+          "team": 15,
+          "role": "invader",
+          "reason": "house tendency"
+        },
+        {
+          "at": 46.53,
+          "team": 10,
+          "role": "defender",
+          "reason": "visible capital emergency"
+        },
+        {
+          "at": 47.93,
+          "team": 10,
+          "role": "counterweight",
+          "reason": "limited counterattack after defending"
+        },
+        {
+          "at": 54.93,
+          "team": 10,
+          "role": "defender",
+          "reason": "visible capital emergency"
+        },
+        {
+          "at": 63.33,
+          "team": 10,
+          "role": "counterweight",
+          "reason": "limited counterattack after defending"
+        },
+        {
+          "at": 65,
+          "team": 1,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 82.37,
+          "team": 13,
+          "role": "invader",
+          "reason": "reachable exposed rival"
+        },
+        {
+          "at": 83.47,
+          "team": 2,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 83.77,
+          "team": 8,
+          "role": "invader",
+          "reason": "reachable exposed rival"
+        },
+        {
+          "at": 91.33,
+          "team": 5,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 103.63,
+          "team": 9,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 114.57,
+          "team": 3,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 119.03,
+          "team": 9,
+          "role": "defender",
+          "reason": "visible capital emergency"
+        },
+        {
+          "at": 119.33,
+          "team": 10,
+          "role": "defender",
+          "reason": "visible capital emergency"
+        },
+        {
+          "at": 119.33,
+          "team": 15,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        }
+      ]
+    },
+    {
+      "seed": 44277,
+      "mode": "conquest",
+      "difficulty": "warlord",
+      "scale": "continent",
+      "landscape": "riverlands",
+      "fogOfWar": false,
+      "rivals": 15,
+      "requestedSeconds": 120,
+      "actualSeconds": 120,
+      "dt": 0.03333333333333333,
+      "wallSeconds": 198.03,
+      "winner": null,
+      "victoryReason": "",
+      "launches": 22,
+      "launchingHouses": 15,
+      "peakOffensiveTroops": 636,
+      "meanOffensiveTroops": 346.82,
+      "meanObjectiveTroops": 346.82,
+      "meanHomeDefenders": 1107.2,
+      "meanScoutTroops": 0,
+      "undefendedHouseSeconds": 0,
+      "roles": [
+        "counterweight",
+        "defender",
+        "expansionist",
+        "invader",
+        "objective"
+      ],
+      "phases": [
+        "defend",
+        "muster",
+        "objective",
+        "regroup"
+      ],
+      "kills": 420,
+      "objectiveScores": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "controlScores": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "snapshots": [
+        {
+          "at": 1,
+          "livingHouses": 16,
+          "livingTroops": 1120,
+          "offensiveTroops": 0,
+          "objectiveTroops": 0,
+          "homeDefenders": 1050,
+          "scouts": 0,
+          "objectiveScores": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "castles": 16
+        },
+        {
+          "at": 30,
+          "livingHouses": 16,
+          "livingTroops": 1419,
+          "offensiveTroops": 215,
+          "objectiveTroops": 215,
+          "homeDefenders": 1268,
+          "scouts": 0,
+          "objectiveScores": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "castles": 16
+        },
+        {
+          "at": 61,
+          "livingHouses": 16,
+          "livingTroops": 1739,
+          "offensiveTroops": 576,
+          "objectiveTroops": 576,
+          "homeDefenders": 861,
+          "scouts": 0,
+          "objectiveScores": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "castles": 16
+        },
+        {
+          "at": 91,
+          "livingHouses": 16,
+          "livingTroops": 1959,
+          "offensiveTroops": 362,
+          "objectiveTroops": 362,
+          "homeDefenders": 1173,
+          "scouts": 0,
+          "objectiveScores": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0
+          ],
+          "castles": 16
+        }
+      ],
+      "launchEvents": [
+        {
+          "at": 22.03,
+          "team": 3,
+          "phase": "objective",
+          "role": "expansionist",
+          "targetTeam": null,
+          "target": 1188,
+          "troops": 41
+        },
+        {
+          "at": 23.33,
+          "team": 1,
+          "phase": "objective",
+          "role": "expansionist",
+          "targetTeam": null,
+          "target": 1186,
+          "troops": 41
+        },
+        {
+          "at": 24.47,
+          "team": 5,
+          "phase": "objective",
+          "role": "expansionist",
+          "targetTeam": null,
+          "target": 1185,
+          "troops": 43
+        },
+        {
+          "at": 25.67,
+          "team": 6,
+          "phase": "objective",
+          "role": "expansionist",
+          "targetTeam": null,
+          "target": 1186,
+          "troops": 43
+        },
+        {
+          "at": 27.9,
+          "team": 4,
+          "phase": "objective",
+          "role": "objective",
+          "targetTeam": null,
+          "target": 1187,
+          "troops": 47
+        },
+        {
+          "at": 30.9,
+          "team": 8,
+          "phase": "objective",
+          "role": "invader",
+          "targetTeam": null,
+          "target": 1188,
+          "troops": 45
+        },
+        {
+          "at": 31.07,
+          "team": 2,
+          "phase": "objective",
+          "role": "expansionist",
+          "targetTeam": null,
+          "target": 1187,
+          "troops": 43
+        },
+        {
+          "at": 32,
+          "team": 12,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1185,
+          "troops": 43
+        },
+        {
+          "at": 32.1,
+          "team": 9,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1189,
+          "troops": 54
+        },
+        {
+          "at": 35.47,
+          "team": 11,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1189,
+          "troops": 43
+        },
+        {
+          "at": 39.4,
+          "team": 15,
+          "phase": "objective",
+          "role": "invader",
+          "targetTeam": null,
+          "target": 1190,
+          "troops": 65
+        },
+        {
+          "at": 43.5,
+          "team": 13,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1190,
+          "troops": 48
+        },
+        {
+          "at": 44.6,
+          "team": 7,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1190,
+          "troops": 40
+        },
+        {
+          "at": 44.7,
+          "team": 14,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1185,
+          "troops": 49
+        },
+        {
+          "at": 76.27,
+          "team": 10,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1186,
+          "troops": 54
+        },
+        {
+          "at": 84.93,
+          "team": 1,
+          "phase": "objective",
+          "role": "invader",
+          "targetTeam": null,
+          "target": 1186,
+          "troops": 50
+        },
+        {
+          "at": 91.67,
+          "team": 15,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1190,
+          "troops": 54
+        },
+        {
+          "at": 92.03,
+          "team": 3,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1188,
+          "troops": 36
+        },
+        {
+          "at": 100.13,
+          "team": 2,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1187,
+          "troops": 45
+        },
+        {
+          "at": 102.87,
+          "team": 5,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1185,
+          "troops": 30
+        },
+        {
+          "at": 106.03,
+          "team": 13,
+          "phase": "objective",
+          "role": "invader",
+          "targetTeam": null,
+          "target": 1190,
+          "troops": 56
+        },
+        {
+          "at": 115.73,
+          "team": 11,
+          "phase": "objective",
+          "role": "counterweight",
+          "targetTeam": null,
+          "target": 1187,
+          "troops": 49
+        }
+      ],
+      "roleChanges": [
+        {
+          "at": 2.8,
+          "team": 1,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 3.07,
+          "team": 2,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 3.37,
+          "team": 3,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 3.63,
+          "team": 4,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 3.93,
+          "team": 5,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 4.2,
+          "team": 6,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 4.47,
+          "team": 7,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 4.77,
+          "team": 8,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 5.03,
+          "team": 9,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 5.33,
+          "team": 10,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 5.6,
+          "team": 11,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 5.87,
+          "team": 12,
+          "role": "expansionist",
+          "reason": "secure ground while investigating resistance"
+        },
+        {
+          "at": 6.17,
+          "team": 13,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 6.43,
+          "team": 14,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 6.73,
+          "team": 15,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 27.9,
+          "team": 4,
+          "role": "objective",
+          "reason": "house tendency"
+        },
+        {
+          "at": 28.73,
+          "team": 7,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 29.03,
+          "team": 8,
+          "role": "invader",
+          "reason": "house tendency"
+        },
+        {
+          "at": 29.6,
+          "team": 10,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 30.13,
+          "team": 12,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 31,
+          "team": 15,
+          "role": "invader",
+          "reason": "reachable exposed rival"
+        },
+        {
+          "at": 38.93,
+          "team": 10,
+          "role": "defender",
+          "reason": "visible capital emergency"
+        },
+        {
+          "at": 40.8,
+          "team": 10,
+          "role": "counterweight",
+          "reason": "limited counterattack after defending"
+        },
+        {
+          "at": 47.33,
+          "team": 10,
+          "role": "defender",
+          "reason": "visible capital emergency"
+        },
+        {
+          "at": 55.73,
+          "team": 10,
+          "role": "counterweight",
+          "reason": "limited counterattack after defending"
+        },
+        {
+          "at": 60.4,
+          "team": 10,
+          "role": "defender",
+          "reason": "visible capital emergency"
+        },
+        {
+          "at": 64.4,
+          "team": 1,
+          "role": "invader",
+          "reason": "reachable exposed rival"
+        },
+        {
+          "at": 66,
+          "team": 10,
+          "role": "counterweight",
+          "reason": "limited counterattack after defending"
+        },
+        {
+          "at": 71.13,
+          "team": 15,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 74,
+          "team": 2,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 77.1,
+          "team": 3,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 79.9,
+          "team": 13,
+          "role": "invader",
+          "reason": "reachable exposed rival"
+        },
+        {
+          "at": 87.93,
+          "team": 5,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 108.93,
+          "team": 10,
+          "role": "defender",
+          "reason": "visible capital emergency"
+        },
+        {
+          "at": 112.1,
+          "team": 8,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 115.73,
+          "team": 1,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 116.2,
+          "team": 6,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 118.27,
+          "team": 10,
+          "role": "counterweight",
+          "reason": "limited counterattack after defending"
+        },
+        {
+          "at": 118.43,
+          "team": 4,
+          "role": "counterweight",
+          "reason": "developing campaign leader"
+        },
+        {
+          "at": 119.2,
+          "team": 10,
+          "role": "defender",
+          "reason": "visible immediate danger"
+        }
+      ]
+    }
+  ]
+}
