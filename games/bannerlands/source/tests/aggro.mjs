@@ -156,6 +156,9 @@ test('A tower projectile triggers local retaliation without cancelling distant e
   const g=fixture(),victim=idle(g,0,30,40),far=idle(g,0,75,40),tower=g.addBuilding(1,'tower',34,40);
   expansionFrontier(g);g.expand([victim.id,far.id]);const order=far.order,saved=structuredClone(order);tower.cooldown=0;
   g.hash.rebuild(g.units);g.updateBuildings(.1);assert.ok(g.projectiles.some(p=>p.target===victim.id));
+  // Resolve a genuine contact before marching resumes; a moving soldier can now
+  // evade the original aim point rather than taking damage by target ID alone.
+  g.updateProjectiles(1);
   step(g,1);assert.ok(victim.hp<victim.maxHp);assert.equal(victim.target,tower);assert.equal(far.target,null);assert.equal(far.order,order);assert.deepEqual(order,saved);
   step(g,4);assert.ok(tower.hp<tower.maxHp,'A defensive response must be able to retaliate against the attacking structure.');
 });

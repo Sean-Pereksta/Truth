@@ -55,8 +55,8 @@ test('A locked formation can strike only across its actual front and front shiel
   const g=fixture(),u=g.addUnit(0,'bridge_warden',50,40),rear=g.addUnit(1,'cavalry',49.4,40),front=g.addUnit(1,'cavalry',50.6,40);face(u,1,0);
   g.command([u.id],50,40,'attack','line',{x:1,y:0});
   const rearHp=rear.hp;g.attack(u,rear);assert.equal(rear.hp,rearHp,'A locked spear line cannot attack behind itself without turning.');
-  const frontHp=front.hp;g.attack(u,front);assert.ok(front.hp<frontHp);
-  const hit=(x,y,projectileType)=>{const target=g.addUnit(0,'bridge_warden',60,40);face(target,1,0);target.order={x:60,y:40,mode:'hold',formation:'line'};const hp=target.hp;g.damage(target,20,{team:1,type:projectileType?'archer':'infantry',impactKind:'weapon',projectileType,originX:x,originY:y});return hp-target.hp;};
+  const frontHp=front.hp;g.attack(u,front);g.updateWeaponActions(u,.13);assert.ok(front.hp<frontHp);
+  const hit=(x,y,projectileType)=>{g.teams[0].sigil='lion';const target=g.addUnit(0,'shield_bearer',60,40);face(target,1,0);target.order={x:60,y:40,mode:'hold',formation:'line'};const hp=target.hp;g.damage(target,20,{team:1,type:projectileType?'archer':'infantry',impactKind:'weapon',projectileType,originX:x,originY:y});return hp-target.hp;};
   assert.ok(hit(61,40)<hit(60,41));assert.ok(hit(60,41)<hit(59,40));assert.ok(hit(61,40,'arrow')<hit(59,40,'arrow'));
 });
 

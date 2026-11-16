@@ -41,7 +41,7 @@ r.setTroopAtlas(await raster.loadImage(path.join(root,'assets/troops-atlas.png')
 test('A living king has an unmistakable crown, label and full-health gold bar',()=>{
   const g={teams:HOUSES,time:0,unitClass:()=> 'hero',allied:(a,b)=>a===b},u={id:1,type:'hero',team:0,x:0,y:0,hp:800,maxHp:800,facingX:1,facingY:0,phase:0},ui={selected:new Set()},draw=isKing=>{const c=canvas(100,110),ctx=c.getContext('2d');ctx.translate(50,82);const labels=[],text=ctx.fillText.bind(ctx);ctx.fillText=(value,...args)=>{labels.push(value);text(value,...args);};r.unit(ctx,{...u,isKing},g,ui,1);return {c,labels};};
   const ordinary=draw(false),king=draw(true);assert.notEqual(digest(ordinary.c),digest(king.c));assert.ok(king.labels.includes('KING'));assert.equal(ordinary.labels.includes('KING'),false);
-  const p=king.c.getContext('2d').getImageData(50,53,1,1).data;assert.ok(p[0]>200&&p[1]>150&&p[2]<150,'The king keeps a gold health bar even at full health.');
+  const p=king.c.getContext('2d').getImageData(50,89,1,1).data;assert.ok(p[0]>200&&p[1]>150&&p[2]<150,'The king keeps a gold health bar even at full health.');
 });
 
 const preview=canvas(1120,680),c=preview.getContext('2d');c.fillStyle='#142a2a';c.fillRect(0,0,preview.width,preview.height);c.fillStyle='#ead5a0';c.font='bold 26px Georgia';c.fillText('Bannerlands · Faction aftermath',24,35);c.fillStyle='#b8c5b0';c.font='13px Segoe UI';c.fillText('Faction cloaks, varied fallen poses, mounts and siege wreckage · Cosmetic only · Fade over 120 seconds',24,59);

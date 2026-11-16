@@ -3,15 +3,16 @@ import {Renderer,worldToScreen,screenToWorld} from './render.js';
 import {LAND_MAPS,isPassableTile,tileTravelCost} from './lands.js';
 import {regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit} from './regiments.js';
 import {createBattleHud} from './hud.js';
+import {FORMATION_PRESETS,projectedFormation} from './formation-advance.js';
 
 const $=id=>document.getElementById(id),canvas=$('battleCanvas'),field=$('battlefield');
 const hudMarkup=new WeakMap();
 function setHudHTML(element,markup){if(hudMarkup.get(element)!==markup){element.innerHTML=markup;hudMarkup.set(element,markup);}}
 const renderer=new Renderer(canvas),view={x:0,y:0,zoom:1,w:800,h:600,dpr:Math.min(window.devicePixelRatio||1,2)};
-const ui={selected:new Set(),selectedBuildings:new Set(),rallyMode:false,teamOrderMode:null,facingMode:false,facingPreview:null,hover:null,drag:null,buildMode:null,orderMarker:null,showGrid:true,quality:'auto',formation:'line'};
+const ui={selected:new Set(),selectedBuildings:new Set(),rallyMode:false,teamOrderMode:null,facingMode:false,facingPreview:null,hover:null,drag:null,buildMode:null,orderMarker:null,showGrid:true,quality:'auto',formation:'line',formationSettings:{preset:'line',ranks:2,lockFacing:true},formationPlacement:null,orderPreview:null};
 let game=new Game({enemies:3,scale:'epic',seed:628410}),started=false,menuOpen=true,chosenHouse=0,orderMode='attack',speed=1;
 let toastUntil=0,lastEvent=0,lastHud=0,lastMini=0,lastNow=performance.now(),accumulator=0,fps=60,frameMs=16.7,lastResult=null,wasPaused=false;
-const keys=new Set(),groups=new Map(),pointers=new Map();let gesture=null,pinch=null,edgeMouse=null,allSelected=false,allBuildingsSelected=false;
+const keys=new Set(),groups=new Map(),groupSettings=new Map(),pointers=new Map();let gesture=null,pinch=null,edgeMouse=null,allSelected=false,allBuildingsSelected=false;
 let audio=null,sound=true,lastSfx=0,lastBattle=0,tab='army';
 const icons={infantry:'shield',archer:'bow',cavalry:'horse',siege:'siege',barracks:'shield',range:'bow',stables:'horse',tower:'castle',workshop:'siege',weapons:'swords',armor:'shield',economy:'coin'};
 const HOUSE_ART_SOURCES={troops:Object.fromEntries(HOUSES.map(h=>[h.sigil,`assets/houses/${h.sigil}-troops.png`])),castles:'assets/house-castles.png',production:'assets/house-production.png'};
@@ -154,7 +155,7 @@ function paintStructurePortrait(canvas,type,house){
   ctx.drawImage(sprite,(70-frame.drawWidth/2)*2,(146-frame.drawHeight)*2,frame.drawWidth*2,frame.drawHeight*2,(96-w)/2,(96-h)/2,w,h);
 }
 function paintTroopPortrait(canvas,type,house){
- if(UNIT_DEFS[type]?.regiment){renderer.drawTroopPortrait(canvas,type,house);return;}
+ if(typeof renderer.drawTroopPortrait==='function'){renderer.drawTroopPortrait(canvas,type,house);return;}
  const row=renderer.getTroopFrame(type,house.sigil),frame=row?.frames[0];if(!frame)return;
  const ctx=canvas.getContext('2d'),scale=Math.min(88/frame.width,88/frame.height),w=frame.width*scale,h=frame.height*scale;
  ctx.clearRect(0,0,96,96);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(frame.image,frame.left,frame.top,frame.width,frame.height,(96-w)/2,(96-h)/2,w,h);
@@ -192,7 +193,7 @@ document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>showTab(b.datas
 $('recruitList').addEventListener('click',e=>{const b=e.target.closest('[data-recruit]');if(!b||b.disabled||!started||menuOpen)return;const r=game.recruit(b.dataset.recruit);toast(r.message,!r.ok);if(r.ok)tone(360);updateHud();});
 $('buildList').addEventListener('click',e=>{const b=e.target.closest('[data-build]');if(!b||b.disabled||!started||menuOpen)return;cancelBuild();ui.buildMode=b.dataset.build;$('buildBanner').firstChild.textContent=`Place ${BUILD_DEFS[ui.buildMode].label} on your land `;$('repeatBuild').checked=false;$('repeatBuildLabel').hidden=false;battleHud.close();$('buildBanner').hidden=false;document.body.classList.add('placing');toast(`Place ${BUILD_DEFS[ui.buildMode].label.toLowerCase()} on your land.`);});
 $('upgradeList').addEventListener('click',e=>{const b=e.target.closest('[data-upgrade]');if(!b||b.disabled||!started||menuOpen)return;const r=game.upgrade(b.dataset.upgrade);toast(r.message,!r.ok);if(r.ok)tone(480);updateHud();});
-function cancelBuild(){ui.buildMode=null;ui.rallyMode=false;ui.teamOrderMode=null;ui.facingMode=false;ui.facingPreview=null;$('buildBanner').hidden=true;$('buildBanner').firstChild.textContent='Choose a clear tile in your territory ';document.body.classList.remove('placing');$('repeatBuildLabel').hidden=true;}
+function cancelBuild(){ui.formationPlacement=null;ui.orderPreview=null;$('formationPlacementBar').hidden=true;$('formationSettingsSheet').hidden=true;ui.buildMode=null;ui.rallyMode=false;ui.teamOrderMode=null;ui.facingMode=false;ui.facingPreview=null;$('buildBanner').hidden=true;$('buildBanner').firstChild.textContent='Choose a clear tile in your territory ';document.body.classList.remove('placing');$('repeatBuildLabel').hidden=true;}
 $('cancelBuild').onclick=()=>{cancelBuild();updateHud();};
 function beginTeamOrder(kind){
  if(!started||menuOpen||game.winner!==null||!game.teams[0].alive)return;
@@ -209,19 +210,57 @@ $('objectiveList').addEventListener('click',e=>{const button=e.target.closest('[
 $('castleList').addEventListener('click',e=>{const button=e.target.closest('[data-castle]');if(!button)return;const site=(game.castles||[]).find(o=>String(o.id)===button.dataset.castle);if(site){focusPoint(site.x,site.y,Math.max(view.zoom,.9));battleHud.close();}});
 function setMode(mode){orderMode=mode;document.querySelectorAll('[data-order]').forEach(b=>b.classList.toggle('active',b.dataset.order===mode));}
 document.querySelectorAll('[data-order]').forEach(b=>b.onclick=()=>{setMode(b.dataset.order);battleHud.close();toast(orderMode==='attack'?'Conquer: fight and capture along your route.':'Move: march directly to your destination.');});
-document.querySelectorAll('[data-formation]').forEach(b=>b.onclick=()=>{ui.formation=b.dataset.formation;document.querySelectorAll('[data-formation]').forEach(z=>z.classList.toggle('active',z===b));if(ui.selected.size)toast(`${b.dataset.formation[0].toUpperCase()+b.dataset.formation.slice(1)} formation on your next order.`);});
+document.querySelectorAll('[data-formation]').forEach(b=>b.onclick=()=>beginForm(false,b.dataset.formation));
 function clearBuildingSelection(){ui.selectedBuildings.clear();allBuildingsSelected=false;}
 function selectArmy(){cancelBuild();clearBuildingSelection();ui.selected=new Set(game.units.filter(u=>u.team===0&&u.hp>0).map(u=>u.id));allSelected=true;battleHud.close();tone(400);updateHud();}
 function selectTroopType(type,add=false){
- const matches=game.units.filter(u=>u.team===0&&u.hp>0&&(type==='spears'?(UNIT_DEFS[u.type].spearBrace||UNIT_DEFS[u.type].spearWeapon):['shield_bearer','lance_champion'].includes(type)?u.type===type:game.unitClass(u)===type));
+ const matches=game.units.filter(u=>u.team===0&&u.hp>0&&(type==='spears'?(game.unitClass(u)!=='cavalry'&&(UNIT_DEFS[u.type].spearBrace||UNIT_DEFS[u.type].spearWeapon)):['shield_bearer','lance_champion'].includes(type)?u.type===type:game.unitClass(u)===type));
  cancelBuild();clearBuildingSelection();if(!add)ui.selected.clear();for(const u of matches)ui.selected.add(u.id);allSelected=false;
  battleHud.close();toast(matches.length?`${matches.length} ${type==='spears'?'spearmen and pikemen':type==='hero'?'commanders':UNIT_DEFS[type]?.label.toLowerCase()||type} selected.`:'No living troops of that type.');updateHud();
 }
 function commandGroup(number,assign=false,add=false){
  const key=String(number);if(!/^[1-9]$/.test(key))return;
- if(assign){const ids=add?new Set(groups.get(key)||[]):new Set();for(const u of selected())ids.add(u.id);const living=[...ids].filter(id=>{const u=game.byId.get(id);return u?.team===0&&u.hp>0&&UNIT_DEFS[u.type];});if(living.length)groups.set(key,living);else groups.delete(key);toast(living.length?`Group ${key} saved · ${living.length} soldiers.`:`Group ${key} cleared.`);}
- else{const ids=groups.get(key);if(!ids?.length){toast(`Select troops, then Ctrl+${key} to save this group.`);return;}cancelBuild();clearBuildingSelection();if(!add)ui.selected.clear();for(const id of ids){const u=game.byId.get(id);if(u?.team===0&&u.hp>0&&UNIT_DEFS[u.type])ui.selected.add(id);}allSelected=false;}
+ if(assign){const ids=add?new Set(groups.get(key)||[]):new Set();for(const u of selected())ids.add(u.id);const living=[...ids].filter(id=>{const u=game.byId.get(id);return u?.team===0&&u.hp>0&&UNIT_DEFS[u.type];});if(living.length){groups.set(key,living);groupSettings.set(key,{...ui.formationSettings});}else{groups.delete(key);groupSettings.delete(key);}toast(living.length?`Group ${key} saved · ${living.length} soldiers.`:`Group ${key} cleared.`);}
+ else{const ids=groups.get(key);if(!ids?.length){toast(`Select troops, then Ctrl+${key} to save this group.`);return;}cancelBuild();clearBuildingSelection();if(!add)ui.selected.clear();for(const id of ids){const u=game.byId.get(id);if(u?.team===0&&u.hp>0&&UNIT_DEFS[u.type])ui.selected.add(id);}allSelected=false;if(groupSettings.has(key)){ui.formationSettings={...groupSettings.get(key)};ui.formation=ui.formationSettings.preset==='loose'?'spread':ui.formationSettings.preset==='wedge'?'wedge':'line';}}
  updateHud();
+}
+function selectedCenter(){const troops=selected();return troops.reduce((p,u)=>({x:p.x+u.x/troops.length,y:p.y+u.y/troops.length}),{x:0,y:0});}
+function selectedFacing(){const troops=selected(),x=troops.reduce((n,u)=>n+(u.order?.facingX??u.facingX??1),0),y=troops.reduce((n,u)=>n+(u.order?.facingY??u.facingY??0),0),length=Math.hypot(x,y);return length>.001?{x:x/length,y:y/length}:{x:1,y:0};}
+function refreshForm(){
+ const p=ui.formationPlacement;if(!p)return;const settings={...ui.formationSettings,relativeSlots:p.relativeSlots,facing:{x:p.faceX,y:p.faceY}};
+ ui.formationPlacement={...projectedFormation(game,selected(),p.x,p.y,settings,UNIT_DEFS),faceOnly:p.faceOnly,relativeSlots:p.relativeSlots};ui.orderPreview=ui.formationPlacement;
+ $('formationPreset').value=ui.formationSettings.preset;$('formationRanks').value=String(ui.orderPreview.ranks);
+ const blocked=ui.orderPreview.slots.filter(s=>s.blocked).length;
+ $('formationPlacementStatus').textContent=blocked?'Forming: blocked ground · '+blocked+' slots':ui.orderPreview.columns+' wide · '+ui.orderPreview.ranks+' ranks · drag center, sides or front';
+ $('formationPlace').disabled=blocked>0;$('placementLockFacing').setAttribute('aria-pressed',String(ui.formationSettings.lockFacing));
+}
+function beginForm(faceOnly=false,preset=null){
+ if(!started||menuOpen||!selected().length)return toast('Select soldiers before placing a formation.');
+ const center=selectedCenter(),facing=selectedFacing();cancelBuild();clearBuildingSelection();battleHud.close();
+ if(preset){ui.formationSettings={preset:preset==='spread'?'loose':preset,ranks:FORMATION_PRESETS[preset==='spread'?'loose':preset]?.ranks||2,lockFacing:ui.formationSettings.lockFacing};}
+ const troops=selected(),shared=faceOnly&&troops.every(u=>u.order?.formationId&&u.order.formationId===troops[0].order.formationId),relativeSlots=shared?troops.map(u=>({id:u.id,side:u.order.slotSide,back:u.order.slotBack})):undefined;
+ ui.formationPlacement={...center,faceX:facing.x,faceY:facing.y,faceOnly,relativeSlots};refreshForm();
+ $('formationPlacementBar').hidden=false;$('formationSettingsSheet').hidden=false;
+ document.body.classList.add('placing');canvas.focus();toast(faceOnly?'Turn the front arrow, then Place. The center stays fixed.':'Drag the center, sides and front arrow. Enter places; Escape cancels.');updateHud();
+}
+function rememberFormationSettings(){const troops=selected(),ids=new Set(troops.map(u=>u.id));for(const [key,stored]of groups){const living=stored.filter(id=>{const u=game.byId.get(id);return u?.hp>0&&u.team===0;});if(living.length===ids.size&&living.every(id=>ids.has(id)))groupSettings.set(key,{...ui.formationSettings});}}
+function confirmForm(){
+ const p=ui.formationPlacement;if(!p)return;const options={...ui.formationSettings,columns:p.columns,facing:{x:p.faceX,y:p.faceY}};
+ const result=p.faceOnly?game.faceInPlace([...ui.selected],options.facing,options):game.formUp([...ui.selected],p.x,p.y,options);
+ toast(result.message,!result.ok);if(result.ok){ui.formationSettings={...ui.formationSettings,columns:p.columns,ranks:p.ranks,width:p.width,dimensionMode:p.dimensionMode};rememberFormationSettings();cancelBuild();tone(340);}updateHud();
+}
+function toggleFacingLock(){
+ ui.formationSettings.lockFacing=!ui.formationSettings.lockFacing;
+ if(ui.formationPlacement)refreshForm();else for(const u of selected()){u.order??={x:u.x,y:u.y,mode:'hold',formation:'line'};u.order.lockFacing=ui.formationSettings.lockFacing;if(u.formationPreferences)u.formationPreferences.lockFacing=ui.formationSettings.lockFacing;const cohort=game.formationAdvances?.get(u.order.advanceId);if(cohort)cohort.lockFacing=ui.formationSettings.lockFacing;if(ui.formationSettings.lockFacing){u.order.facingX=u.facingX;u.order.facingY=u.facingY;}else{delete u.order.facingX;delete u.order.facingY;}}
+ if(!ui.formationPlacement)rememberFormationSettings();updateHud();
+}
+function formHandle(point){const p=ui.formationPlacement;let nearest='center',best=22;for(const [key,pos]of Object.entries(p.handles)){if(p.faceOnly&&key!=='facing')continue;const s=worldToScreen(pos.x,pos.y,view),d=Math.hypot(s.x-point.x,s.y-point.y);if(d<best){nearest=key;best=d;}}return p.faceOnly?'facing':nearest;}
+function dragForm(handle,world){
+ const p=ui.formationPlacement;if(!p)return;
+ if(handle==='facing'){const dx=world.x-p.x,dy=world.y-p.y,length=Math.hypot(dx,dy);if(length>.05){p.faceX=dx/length;p.faceY=dy/length;}}
+ else if(handle==='left'||handle==='right'){const side=Math.abs(-(world.x-p.x)*p.faceY+(world.y-p.y)*p.faceX);ui.formationSettings={...ui.formationSettings,dimensionMode:'width',width:Math.max(0,2*(side-.25))};}
+ else if(!p.faceOnly){p.x=clamp(world.x,1.4,game.W-1.4);p.y=clamp(world.y,1.4,game.H-1.4);}
+ refreshForm();
 }
 function beginFacing(){
  if(!started||menuOpen)return;const wasFacing=ui.facingMode;cancelBuild();if(wasFacing){updateHud();return;}
@@ -233,7 +272,7 @@ function beginRally(){if(!selectedBuildings().length)return;cancelBuild();ui.ral
 function setSelectedRally(x,y){const buildings=selectedBuildings();if(!buildings.length){cancelBuild();return;}const r=game.setRally(x,y,0,allBuildingsSelected?null:buildings.map(b=>b.id));toast(r.message,!r.ok);if(r.ok){ui.orderMarker={x,y,time:game.time,mode:'rally'};cancelBuild();tone(380);}updateHud();}
 function clearSelectedRally(){const r=game.clearRally(0,allBuildingsSelected?null:ui.selectedBuildings);toast(r.message,!r.ok);cancelBuild();updateHud();}
 function findHero(){const u=game.mode?.kingSurvival?game.kingFor?.(0):game.units.find(u=>u.team===0&&u.type==='hero'&&u.hp>0);if(!u){toast(game.mode?.kingSurvival?'Your king has fallen. Kings have one life.':'Your commander will return while a keep remains.');return;}cancelBuild();clearBuildingSelection();ui.selected=new Set([u.id]);allSelected=false;battleHud.close();focusPoint(u.x,u.y,1.7);updateHud();}
-function issue(x,y,mode=orderMode,facing=null){if(!selected().length){toast('Select soldiers first. Drag a box or press Q.');return false;}const t=game.tileAt(x,y);if(!isPassableTile(t)){toast('Choose reachable ground, a bridge, a ford or a pass.',true);return false;}game.command(ui.selected,x,y,mode,ui.formation,facing);ui.orderMarker={x,y,time:game.time,mode};tone(mode==='attack'?240:340);return true;}
+function issue(x,y,mode=orderMode,facing=null){if(!selected().length){toast('Select soldiers first. Drag a box or press Q.');return false;}const t=game.tileAt(x,y);if(!isPassableTile(t)){toast('Choose reachable ground, a bridge, a ford or a pass.',true);return false;}if(facing){const r=game.formUp([...ui.selected],x,y,{...ui.formationSettings,facing});if(!r.ok){toast(r.message,true);return false;}}else game.command(ui.selected,x,y,mode,ui.formation,null);ui.orderMarker={x,y,time:game.time,mode};tone(mode==='attack'?240:340);return true;}
 function issueTarget(target){
  const result=game.attackTarget([...ui.selected],target.id,ui.formation);if(!result.ok){toast(result.message,true);return false;}
  ui.orderMarker={x:target.x,y:target.y,time:game.time,mode:'attack'};tone(240);return true;
@@ -272,6 +311,14 @@ function retreat(){if(!ui.selected.size)return toast('Select troops to retreat.'
 $('allButton').onclick=selectArmy;$('heroButton').onclick=findHero;$('attackNearestButton').onclick=attackNearest;$('expandButton').onclick=expandNearby;$('holdButton').onclick=hold;$('retreatButton').onclick=retreat;
 $('advanceButton').onclick=advanceAttack;
 $('faceOrderButton').onclick=beginFacing;
+$('formUpButton').onclick=()=>beginForm();$('faceInPlaceButton').onclick=()=>beginForm(true);
+$('quickForm').onclick=()=>beginForm();$('quickHold').onclick=hold;$('quickAdvance').onclick=advanceAttack;$('quickRetreat').onclick=retreat;
+$('formationPlace').onclick=confirmForm;$('formationCancel').onclick=()=>{cancelBuild();updateHud();};
+$('formationAdjust').onclick=()=>{$('formationSettingsSheet').hidden=false;};
+$('formationSettingsDone').onclick=()=>{$('formationSettingsSheet').hidden=true;$('formationPlacementBar').hidden=false;canvas.focus();};
+$('formationPreset').onchange=()=>{const preset=$('formationPreset').value;ui.formationSettings={preset,ranks:FORMATION_PRESETS[preset].ranks,lockFacing:ui.formationSettings.lockFacing};refreshForm();};
+$('formationRanks').onchange=()=>{ui.formationSettings={preset:ui.formationSettings.preset,ranks:Number($('formationRanks').value),lockFacing:ui.formationSettings.lockFacing};refreshForm();};
+$('lockFacingButton').onclick=toggleFacingLock;$('placementLockFacing').onclick=toggleFacingLock;
 $('patrolButton').onclick=patrolBorder;
 $('troopTypeButtons').addEventListener('click',e=>{const button=e.target.closest('[data-select-type]');if(button)selectTroopType(button.dataset.selectType,e.shiftKey);});
 $('commandGroups').innerHTML=Array.from({length:9},(_,i)=>`<button type="button" data-command-group="${i+1}" aria-label="Group ${i+1}: empty. Ctrl-click to assign." title="Group ${i+1} · click recalls · Ctrl-click saves · Ctrl+Shift-click adds">${i+1}<small>—</small></button>`).join('');
@@ -323,7 +370,7 @@ function updateKingHud(){
 function start(){
  edgeMouse=null;
  game=new Game({house:chosenHouse,landscape:$('landscapeSelect').value,mode:$('modeSelect').value,enemies:+$('enemySelect').value,difficulty:$('difficultySelect').value,scale:$('scaleSelect').value,fogOfWar:$('fogSelect').value==='on',seed:Math.floor(Math.random()*1e9)});
- ui.quality=$('qualitySelect').value;ui.selected.clear();clearBuildingSelection();ui.drag=null;ui.orderMarker=null;ui.hover=null;allSelected=false;groups.clear();keys.clear();started=true;menuOpen=false;speed=1;lastResult=null;lastEvent=game.eventId;lastBattle=0;accumulator=0;cancelBuild();
+ ui.quality=$('qualitySelect').value;ui.selected.clear();clearBuildingSelection();ui.drag=null;ui.orderMarker=null;ui.hover=null;allSelected=false;groups.clear();groupSettings.clear();keys.clear();started=true;menuOpen=false;speed=1;lastResult=null;lastEvent=game.eventId;lastBattle=0;accumulator=0;cancelBuild();
  $('menuOverlay').hidden=true;$('resultOverlay').hidden=true;$('speedButton').textContent='1×';$('mapTitle').textContent=game.landscape?.label||'The Shattered Realm';$('campaignLabel').textContent=game.mode.label.toUpperCase();$('landsStatus').textContent=(game.landmarks||[]).filter(l=>['bridge','ford','pass'].includes(l.kind)).length+' crossings & passes';$('objective').textContent=campaignObjectiveText();
  document.documentElement.style.setProperty('--house',game.teams[0].teamColor||game.teams[0].color);$('houseName').textContent=game.teams[0].name;$('houseTrait').textContent=houseData(0).playstyle||game.teams[0].trait;$('houseCardButton').title='Bonuses: '+houseAdvantages(houseData(0)).join(' ')+'\nWeaknesses: '+houseWeaknesses(houseData(0)).join(' ')+'\nOpen Council for your house power.';
  document.querySelector('.house-card .crest use').setAttribute('href','#i-'+game.teams[0].sigil);
@@ -335,7 +382,7 @@ $('playAgain').onclick=()=>{$('resultOverlay').hidden=true;openMenu();};$('inspe
 function pointerPos(e){const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
 function rememberMouse(e){edgeMouse=e.pointerType==='mouse'?{clientX:e.clientX,clientY:e.clientY}:null;}
 function mousePan(){
- if(!edgeMouse||!started||menuOpen||gesture||pinch||pointers.size||miniDragging||document.hidden||!document.hasFocus()||$('helpDialog').open||$('housesDialog').open||!$('resultOverlay').hidden)return{x:0,y:0};
+ if(!edgeMouse||!started||menuOpen||ui.formationPlacement||gesture||pinch||pointers.size||miniDragging||document.hidden||!document.hasFocus()||$('helpDialog').open||$('housesDialog').open||!$('resultOverlay').hidden)return{x:0,y:0};
  const r=canvas.getBoundingClientRect(),x=edgeMouse.clientX-r.left,y=edgeMouse.clientY-r.top;
  if(x<0||y<0||x>r.width||y>r.height||document.elementFromPoint(edgeMouse.clientX,edgeMouse.clientY)!==canvas)return{x:0,y:0};
  const band=Math.min(32,r.width*.12,r.height*.12);if(band<=0)return{x:0,y:0};
@@ -348,6 +395,7 @@ canvas.addEventListener('wheel',e=>{e.preventDefault();const p=pointerPos(e);zoo
 canvas.addEventListener('pointerdown',e=>{
  rememberMouse(e);if(menuOpen||!started)return;e.preventDefault();initAudio();canvas.focus();canvas.setPointerCapture(e.pointerId);const p=pointerPos(e);pointers.set(e.pointerId,p);
  if(pointers.size===2){const [a,b]=[...pointers.values()];pinch={dist:Math.hypot(a.x-b.x,a.y-b.y),zoom:view.zoom,anchor:screenToWorld((a.x+b.x)/2,(a.y+b.y)/2,view)};gesture=null;ui.drag=null;ui.facingPreview=null;return;}
+ if(ui.formationPlacement){gesture={id:e.pointerId,formHandle:formHandle(p)};dragForm(gesture.formHandle,screenToWorld(p.x,p.y,view));return;}
  const dismissOnly=battleHud.isOpen;battleHud.close();
  const touch=e.pointerType==='touch',facing=e.button===2||touch&&ui.facingMode;
  gesture={id:e.pointerId,button:e.button,x0:p.x,y0:p.y,x:p.x,y:p.y,anchor:screenToWorld(p.x,p.y,view),facing,camX:view.x,camY:view.y,shift:e.shiftKey,moved:false,touch,pan:touch&&(!battleHud.touchSelect||ui.buildMode||ui.rallyMode||ui.teamOrderMode)&&!facing,dismissOnly};
@@ -356,8 +404,8 @@ canvas.addEventListener('pointerdown',e=>{
 canvas.addEventListener('pointermove',e=>{
  rememberMouse(e);const p=pointerPos(e);ui.hover=screenToWorld(p.x,p.y,view);if(pointers.has(e.pointerId))pointers.set(e.pointerId,p);
  if(pinch&&pointers.size>=2){const[a,b]=[...pointers.values()],sx=(a.x+b.x)/2,sy=(a.y+b.y)/2;view.zoom=clamp(pinch.zoom*Math.hypot(a.x-b.x,a.y-b.y)/Math.max(10,pinch.dist),minZoom(),2.6);const q=iso(pinch.anchor);view.x=q.x-(sx-view.w/2)/view.zoom;view.y=q.y-(sy-view.h/2)/view.zoom;boundCamera();return;}
- if(!gesture||gesture.id!==e.pointerId)return;gesture.x=p.x;gesture.y=p.y;if(Math.hypot(p.x-gesture.x0,p.y-gesture.y0)>6)gesture.moved=true;
- if(gesture.facing){if(gesture.moved){const end=screenToWorld(p.x,p.y,view),dx=end.x-gesture.anchor.x,dy=end.y-gesture.anchor.y,length=Math.hypot(dx,dy);if(length>.001)ui.facingPreview={...gesture.anchor,faceX:dx/length,faceY:dy/length,formation:ui.formation,count:selected().length};}}
+ if(!gesture||gesture.id!==e.pointerId)return;if(gesture.formHandle){dragForm(gesture.formHandle,screenToWorld(p.x,p.y,view));return;}gesture.x=p.x;gesture.y=p.y;if(Math.hypot(p.x-gesture.x0,p.y-gesture.y0)>6)gesture.moved=true;
+ if(gesture.facing){if(gesture.moved){const end=screenToWorld(p.x,p.y,view),dx=end.x-gesture.anchor.x,dy=end.y-gesture.anchor.y,length=Math.hypot(dx,dy);if(length>.001)ui.facingPreview=projectedFormation(game,selected(),gesture.anchor.x,gesture.anchor.y,{...ui.formationSettings,facing:{x:dx/length,y:dy/length}},UNIT_DEFS);}}
  else if(gesture.button===1||gesture.pan){if(gesture.moved){view.x=gesture.camX-(p.x-gesture.x0)/view.zoom;view.y=gesture.camY-(p.y-gesture.y0)/view.zoom;boundCamera();}}else if(gesture.moved){ui.drag={x0:gesture.x0,y0:gesture.y0,x1:p.x,y1:p.y};}
 });
 function buildingAt(p,enemy=false){
@@ -370,6 +418,7 @@ function buildingAt(p,enemy=false){
 function finishPointer(e,cancel=false){
  pointers.delete(e.pointerId);if(pinch){if(pointers.size<2)pinch=null;gesture=null;ui.drag=null;ui.facingPreview=null;return;}
  if(!gesture||gesture.id!==e.pointerId)return;const z=gesture;gesture=null;ui.drag=null;ui.facingPreview=null;if(cancel||menuOpen||!started)return;const p=pointerPos(e),w=screenToWorld(p.x,p.y,view);
+ if(z.formHandle){if(!cancel)refreshForm();return;}
  if(z.facing&&z.moved){const dx=w.x-z.anchor.x,dy=w.y-z.anchor.y,length=Math.hypot(dx,dy),facing=length>.001?{x:dx/length,y:dy/length}:null;if(issue(z.anchor.x,z.anchor.y,'move',facing)){cancelBuild();if(facing)toast('March to the line and keep this facing. Backward movement is slower.');updateHud();}return;}
  if(z.button===1||z.pan&&z.moved||z.dismissOnly&&!z.moved&&z.button===0&&!z.facing)return;if(z.button===2){if(!z.moved){if(ui.buildMode||ui.rallyMode||ui.teamOrderMode){cancelBuild();updateHud();}else if(ui.selectedBuildings.size)setSelectedRally(w.x,w.y);else{const target=buildingAt(p,true);if(target)issueTarget(target);else issue(w.x,w.y,'move');}}return;}
  if(ui.teamOrderMode&&!z.moved){placeTeamOrder(w.x,w.y);return;}
@@ -383,22 +432,23 @@ function finishPointer(e,cancel=false){
  else{clearBuildingSelection();updateHud();const t=game.tileAt(w.x,w.y);if(t)toast(terrainDescription(t)+(knownOwner(t)>=0?' · '+game.teams[knownOwner(t)].name:''));}
 }
 canvas.addEventListener('pointerup',e=>finishPointer(e));canvas.addEventListener('pointercancel',e=>{edgeMouse=null;finishPointer(e,true);});canvas.addEventListener('pointerleave',()=>{edgeMouse=null;ui.hover=null;});
-canvas.addEventListener('dblclick',e=>{if(!started||menuOpen||ui.buildMode||ui.rallyMode||ui.teamOrderMode||ui.facingMode)return;const p=pointerPos(e);if(buildingAt(p))return;let target=null,best=28;for(const u of game.units){if(u.team!==0||u.hp<=0)continue;const s=worldToScreen(u.x,u.y,view),d=Math.hypot(s.x-p.x,s.y-10*view.zoom-p.y);if(d<best){target=u;best=d;}}if(target){clearBuildingSelection();allSelected=false;ui.selected=new Set(game.units.filter(u=>u.team===0&&u.hp>0&&u.type===target.type).map(u=>u.id));updateHud();}});
+canvas.addEventListener('dblclick',e=>{if(!started||menuOpen||ui.buildMode||ui.rallyMode||ui.teamOrderMode||ui.facingMode||ui.formationPlacement)return;const p=pointerPos(e);if(buildingAt(p))return;let target=null,best=28;for(const u of game.units){if(u.team!==0||u.hp<=0)continue;const s=worldToScreen(u.x,u.y,view),d=Math.hypot(s.x-p.x,s.y-10*view.zoom-p.y);if(d<best){target=u;best=d;}}if(target){clearBuildingSelection();allSelected=false;ui.selected=new Set(game.units.filter(u=>u.team===0&&u.hp>0&&u.type===target.type).map(u=>u.id));updateHud();}});
 
 let miniDragging=false;function navigateMini(e){const m=renderer.minimapTransform;if(!m)return;const r=$('minimap').getBoundingClientRect();view.x=((e.clientX-r.left)-m.ox)/m.scale;view.y=((e.clientY-r.top)-m.oy)/m.scale;boundCamera();}
 $('minimap').addEventListener('pointerdown',e=>{e.preventDefault();miniDragging=true;$('minimap').setPointerCapture(e.pointerId);navigateMini(e);});$('minimap').addEventListener('pointermove',e=>{if(miniDragging)navigateMini(e);});$('minimap').addEventListener('pointerup',()=>{miniDragging=false;});$('minimap').addEventListener('pointercancel',()=>miniDragging=false);
 window.addEventListener('keydown',e=>{
  if(e.defaultPrevented||e.isComposing||/INPUT|SELECT|TEXTAREA/.test(e.target?.tagName||'')||e.target?.isContentEditable||e.target?.closest?.('[contenteditable="true"],[contenteditable=""],[role="textbox"]')||$('helpDialog').open||$('housesDialog').open)return;
- if(e.key==='Escape'){if(battleHud.isOpen){e.preventDefault();battleHud.close(true);return;}if(ui.buildMode||ui.rallyMode||ui.teamOrderMode||ui.facingMode||gesture?.facing){cancelBuild();gesture=null;updateHud();return;}if(started){if(menuOpen)resume();else{ui.selected.clear();clearBuildingSelection();allSelected=false;updateHud();}}return;}
+ if(e.key==='Escape'){if(ui.formationPlacement){e.preventDefault();cancelBuild();gesture=null;updateHud();return;}if(battleHud.isOpen){e.preventDefault();battleHud.close(true);return;}if(ui.buildMode||ui.rallyMode||ui.teamOrderMode||ui.facingMode||gesture?.facing){cancelBuild();gesture=null;updateHud();return;}if(started){if(menuOpen)resume();else{ui.selected.clear();clearBuildingSelection();allSelected=false;updateHud();}}return;}
  if(!started||menuOpen||game.winner!==null||!$('resultOverlay').hidden)return;const k=e.key.toLowerCase(),digit=/^(?:Digit|Numpad)([1-9])$/.exec(e.code)?.[1]||(/^[1-9]$/.test(k)?k:null);
  if(e.altKey&&!e.ctrlKey&&!e.metaKey&&TYPE_HOTKEYS[k]){e.preventDefault();if(!e.repeat)selectTroopType(TYPE_HOTKEYS[k],e.shiftKey);return;}
  if(e.metaKey||e.altKey||e.ctrlKey&&!digit)return;
  if(digit&&e.ctrlKey){e.preventDefault();if(!e.repeat)commandGroup(digit,true,e.shiftKey);return;}
  if([' ','tab','arrowup','arrowdown','arrowleft','arrowright','home','+','-','='].includes(k)||digit)e.preventDefault();
+ if(ui.formationPlacement&&k==='enter'){e.preventDefault();confirmForm();return;}
  if(e.repeat){keys.add(k);return;}
  if(handleMenuHotkey(e))return;
  keys.add(k);
- if(k===' '||k==='p')togglePause();else if(k==='w'){e.preventDefault();advanceAttack();}else if(k==='a'&&!e.ctrlKey&&!e.metaKey){e.preventDefault();attackNearest();}else if(k==='t'){e.preventDefault();expandNearby();}else if(k==='n'){e.preventDefault();patrolBorder();}else if(k==='e'&&!e.ctrlKey&&!e.metaKey){e.preventDefault();useHousePower();}else if(k==='q')selectArmy();else if(k==='f')findHero();else if(k==='h')hold();else if(k==='d'){e.preventDefault();beginFacing();}else if(k==='r'){e.preventDefault();selectAllBuildings();}else if(k==='v')retreat();else if(k==='g')toggleGrid();else if(k==='tab')fitMap();else if(k==='home')home();else if(k==='+'||k==='=')zoomAt(1.2);else if(k==='-')zoomAt(1/1.2);else if(k==='x')setMode(orderMode==='attack'?'move':'attack');
+ if(k===' '||k==='p')togglePause();else if(k==='w'){e.preventDefault();advanceAttack();}else if(k==='a'&&!e.ctrlKey&&!e.metaKey){e.preventDefault();attackNearest();}else if(k==='t'){e.preventDefault();expandNearby();}else if(k==='n'){e.preventDefault();patrolBorder();}else if(k==='e'&&!e.ctrlKey&&!e.metaKey){e.preventDefault();useHousePower();}else if(k==='q')selectArmy();else if(k==='f')findHero();else if(k==='h')hold();else if(k==='z'){e.preventDefault();beginForm();}else if(k==='d'){e.preventDefault();if(e.shiftKey)beginForm(true);else beginFacing();}else if(k==='r'){e.preventDefault();selectAllBuildings();}else if(k==='v')retreat();else if(k==='g')toggleGrid();else if(k==='tab')fitMap();else if(k==='home')home();else if(k==='+'||k==='=')zoomAt(1.2);else if(k==='-')zoomAt(1/1.2);else if(k==='x')setMode(orderMode==='attack'?'move':'attack');
  else if(digit&&!e.shiftKey)commandGroup(digit);
 });
 window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>{edgeMouse=null;keys.clear();gesture=null;ui.drag=null;ui.facingPreview=null;pointers.clear();pinch=null;});
@@ -465,11 +515,17 @@ function updateHud(){
  const rallyKeys=new Set(buildings.map(b=>b.rally?`${b.rally.x.toFixed(1)}, ${b.rally.y.toFixed(1)}`:'none'));
  const rallyKey=[...rallyKeys][0];$('buildingRallyStatus').textContent=ui.rallyMode?'Click land · Esc cancels':rallyKeys.size>1?'Individual rally points':rallyKey==='none'?'No rally · Troops defend their building':rallyKey?`Rally: ${rallyKey}`:'';
  $('clearRallyButton').disabled=!buildings.some(b=>b.rally)&&!(allBuildingsSelected&&s.rally);$('setRallyButton').disabled=!buildings.length;
- const troops=selected(),counts={};for(const u of troops)counts[u.type]=(counts[u.type]||0)+1;$('selectedCount').textContent=`${troops.length} SELECTED`;
+ const troops=selected(),counts={};if(ui.formationPlacement&&ui.formationPlacement.count!==troops.length)refreshForm();for(const u of troops)counts[u.type]=(counts[u.type]||0)+1;$('selectedCount').textContent=`${troops.length} SELECTED`;
  $('faceOrderButton').disabled=!started||menuOpen||!s.alive||!troops.length;$('faceOrderButton').classList.toggle('active',ui.facingMode);$('faceOrderButton').setAttribute('aria-pressed',String(ui.facingMode));
  for(const button of $('commandGroups').querySelectorAll('[data-command-group]')){const key=button.dataset.commandGroup,ids=(groups.get(key)||[]).filter(id=>{const u=game.byId.get(id);return u?.team===0&&u.hp>0&&UNIT_DEFS[u.type];});const active=ids.length>0&&ids.length===troops.length&&ids.every(id=>ui.selected.has(id));button.classList.toggle('populated',ids.length>0);button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));button.setAttribute('aria-label',`Group ${key}: ${ids.length} soldiers. Click recalls, Ctrl-click saves.`);button.querySelector('small').textContent=ids.length||'—';}
  const patrolling=troops.filter(u=>u.order?.mode==='patrol').length;
  $('patrolButton').disabled=!started||menuOpen||game.winner!==null||!s.alive||!troops.some(u=>game.unitClass(u)==='cavalry');$('patrolButton').classList.toggle('active',patrolling>0);$('patrolButton').setAttribute('aria-pressed',String(patrolling>0));$('patrolLabel').textContent=patrolling?'Patrolling border · '+patrolling:'Patrol border';
+ $('formationQuickRow').hidden=!troops.length||!!ui.formationPlacement;
+ $('formUpButton').disabled=!troops.length;$('faceInPlaceButton').disabled=!troops.length;$('lockFacingButton').disabled=!troops.length;
+ $('lockFacingButton').setAttribute('aria-pressed',String(ui.formationSettings.lockFacing));
+ const polearms=troops.filter(u=>UNIT_DEFS[u.type].spearBrace||UNIT_DEFS[u.type].spearWeapon),braced=polearms.filter(u=>u.readyState==='Braced'||u.readyState==='braced'||u.braceTime>=.5).length,turning=troops.some(u=>u.readyState==='Turning'||u.readyState==='turning'),loading=[...new Set(troops.filter(u=>UNIT_DEFS[u.type].crossbow).map(u=>u.loadingState||(!u.reload?'Loaded':u.reload.stage==='span'?'Spanning':'Loading Bolt')))];
+ const formationState=ui.formationPlacement?$('formationPlacementStatus').textContent:turning?'Turning':troops.some(u=>u.order?.compressed)?'Forming: narrow passage':polearms.length?'Braced: '+braced+'/'+polearms.length:'';
+ $('formationState').textContent=[formationState,...loading].filter(Boolean).join(' · ');
  const advancing=troops.filter(u=>u.order?.mode==='advance').length;
  $('advanceButton').disabled=!started||menuOpen||game.winner!==null||!s.alive||!troops.length;$('advanceButton').classList.toggle('active',advancing>0);$('advanceButton').setAttribute('aria-pressed',String(advancing>0));$('advanceLabel').textContent=advancing?'Advancing together · '+advancing:'Advance in formation';
  const expanding=troops.filter(u=>u.order?.mode==='expand').length;
@@ -477,7 +533,7 @@ function updateHud(){
  $('expandButton').classList.toggle('active',expanding>0);$('expandButton').setAttribute('aria-pressed',String(expanding>0));
  $('expandLabel').textContent=expanding?`Expanding nearby · ${expanding}`:'Expand nearby';
  $('selectionTitle').textContent=buildings.length?buildings.length===1?BUILD_DEFS[buildings[0].type].label:`${buildings.length} buildings selected`:troops.length?`${troops.length} ${troops.length===1?'soldier':'soldiers'} under your command`:'Your army awaits';
- $('selectionDetail').textContent=buildings.length?'Rally points & upgrades in Commands':troops.length?Object.entries(counts).map(([t,n])=>`${n} ${t==='hero'?'commander':UNIT_DEFS[t].label.toLowerCase()}`).join(' · '):'Tap a soldier or open Orders';
+ $('selectionDetail').textContent=buildings.length?'Rally points & upgrades in Commands':troops.length?Object.entries(counts).map(([t,n])=>`${n} ${t==='hero'?'commander':UNIT_DEFS[t].label.toLowerCase()}`).join(' · ')+($('formationState').textContent?' · '+$('formationState').textContent:''):'Tap a soldier or open Orders';
  document.querySelectorAll('[data-recruit]').forEach(b=>{const type=b.dataset.recruit,d=game.recruitDetails(type,0);$('recruitBatch-'+type).textContent=` ×${d.batch}`;$('recruitCost-'+type).innerHTML=`${d.cost}<small>GOLD</small>`;b.disabled=s.gold<d.cost||s.count+d.batch>s.cap||!s.alive||!d.unlocked||d.remaining>0;if(d.requiredBuilding)b.querySelector('.action-copy>small').textContent=!d.unlocked?`Build ${BUILD_DEFS[d.requiredBuilding].label} to unlock`:d.remaining>0?`Musters in ${Math.ceil(d.remaining)}s`:d.role.split(' · ').pop();});
  const structures=game.buildingStatus(0),atStructureLimit=structures.count>=structures.cap;
  const nextStructureSlot=`Capture ${structures.nextTiles} more land ${structures.nextTiles===1?'tile':'tiles'} to unlock another structure slot.`;
@@ -553,5 +609,5 @@ async function boot(){
  }catch(error){$('startButton').innerHTML='ARTWORK COULD NOT LOAD';$('chosenTrait').textContent='Open the complete game file or keep the assets folder beside index.html.';console.error('Sprite artwork failed to load',error);}
 }
 // Exposed for deterministic diagnostics and recovery without changing game rules.
-window.__bannerlands={get game(){return game;},view,ui,renderer,start,fitMap,home,selectArmy,get fps(){return fps;}};
+window.__bannerlands={beginForm,confirmForm,get groups(){return groups;},get groupSettings(){return groupSettings;},get game(){return game;},view,ui,renderer,start,fitMap,home,selectArmy,get fps(){return fps;}};
 boot();
