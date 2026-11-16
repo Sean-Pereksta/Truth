@@ -5,6 +5,7 @@ import {Game,HOUSES,UNIT_DEFS,BUILD_DEFS} from '../../core.js';
 import {isPassableTile} from '../../lands.js';
 import {worldToScreen,screenToWorld} from '../../render.js';
 import {regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit} from '../../regiments.js';
+import {formationPreview,formationRole,placeFormation} from '../../formation-placement.js';
 
 const source=fs.readFileSync(new URL('../../app.js',import.meta.url),'utf8');
 let cases=0;
@@ -41,9 +42,9 @@ function fixture({house=0,realMenu=false}={}){
   game.navigation.invalidate();
   const elements=new Map(),actions=new Map(),tabs=['army','build','council'].map(name=>{const tab=new Element();tab.dataset.tab=name;return tab;}),messages=[],effects=[],commands=[];
   const element=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id);};
-  const canvas=element('battleCanvas'),win=new Element('window'),ui={selected:new Set(),selectedBuildings:new Set(),formation:'line',buildMode:null,rallyMode:false,teamOrderMode:null,facingMode:false,facingPreview:null,drag:null,hover:null};
+  const canvas=element('battleCanvas'),win=new Element('window'),ui={selected:new Set(),selectedBuildings:new Set(),formation:'line',formationOptions:{ranks:2,width:null,lockFacing:false},formMode:false,formPreview:null,buildMode:null,rallyMode:false,teamOrderMode:null,facingMode:false,facingPreview:null,drag:null,hover:null};
   element('resultOverlay').hidden=true;
-  const context={console,Math,Map,Set,String,Array,HOUSES,UNIT_DEFS,BUILD_DEFS,isPassableTile,worldToScreen,screenToWorld,regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit,game,canvas,window:win,
+  const context={console,Math,Map,Set,String,Array,HOUSES,UNIT_DEFS,BUILD_DEFS,isPassableTile,worldToScreen,screenToWorld,regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit,formationPreview,formationRole,placeFormation,game,canvas,window:win,
     ui,view:{x:0,y:840,w:800,h:600,zoom:1},battleHud:{open(){},close(){},isOpen:false,touchSelect:false,syncSelection(){}},started:true,menuOpen:false,orderMode:'attack',tab:'army',allSelected:false,allBuildingsSelected:false,
     pointers:new Map(),keys:new Set(),groups:new Map(),gesture:null,pinch:null,edgeMouse:null,
     $:element,document:{body:{classList:{add(){},remove(){}}},createElement:()=>new Element(),querySelector:selector=>{if(realMenu)return selector?.startsWith('#')?element(selector.slice(1)):actions.get(selector)||null;if(!actions.has(selector))actions.set(selector,new Element(selector));return actions.get(selector);},querySelectorAll:selector=>selector==='[data-tab]'?tabs:[]},
@@ -58,7 +59,7 @@ function fixture({house=0,realMenu=false}={}){
     const line=source.split('\n').find(line=>line.startsWith(prefix));assert.ok(line,prefix);vm.runInContext(line,context);
   }
   const actionsStart=source.indexOf('const MENU_ACTIONS='),actionsEnd=source.indexOf('\n};',actionsStart);vm.runInContext(source.slice(actionsStart,actionsEnd+3),context);
-  for(const name of ['clearBuildingSelection','selectTroopType','commandGroup','cancelBuild','showTab','activateMenuAction','handleMenuHotkey','beginFacing','patrolBorder','issue','issueTarget','buildingAt','setSelectedRally','pointerPos','rememberMouse','finishPointer','bonusText','upgradeSummary','specialistTooltip','labelMenuHotkeys','buildActionLists'])vm.runInContext(extract(name),context);
+  for(const name of ['clearBuildingSelection','selectTroopType','commandGroup','cancelBuild','showTab','activateMenuAction','handleMenuHotkey','beginFacing','beginForm','refreshFormationPreview','confirmFormation','formPointer','patrolBorder','issue','issueTarget','buildingAt','setSelectedRally','pointerPos','rememberMouse','finishPointer','bonusText','upgradeSummary','specialistTooltip','labelMenuHotkeys','buildActionLists'])vm.runInContext(extract(name),context);
   vm.runInContext(listener('canvas','pointerdown'),context);vm.runInContext(listener('canvas','pointermove'),context);vm.runInContext(listener('window','keydown'),context);
   const cancelLine=source.split('\n').find(line=>line.startsWith("canvas.addEventListener('pointerup'"));vm.runInContext(cancelLine,context);
   const blurLine=source.split('\n').find(line=>line.startsWith("window.addEventListener('keyup'"));vm.runInContext(blurLine,context);
@@ -254,7 +255,7 @@ test('Alt-type hotkeys and Ctrl command groups avoid menu and battle key conflic
 });
 
 test('All sixteen houses retain their original menus while eligible houses gain the sixth regiment and seventh building shortcuts',()=>{
-  const expectedRegiments={wolf:'shield_bearer',lion:'shield_bearer',dragon:'shield_bearer',rose:'shield_bearer',bear:'lance_champion',sun:'lance_champion',falcon:'lance_champion',flayed:'trebuchet',beacon:'trebuchet',bone:'giant',fish:'sharpshooter',stag:'stormbreaker',kraken:'saltwind_axethrower',bridge:'tollhouse_crossbow',frog:'crannog_spearhand',huntsman:'hornhill_halberdier'};
+  const expectedRegiments={wolf:'winter_pikeman',lion:'shield_bearer',dragon:'shield_bearer',rose:'thornwall_pikeman',bear:'lance_champion',sun:'lance_champion',falcon:'lance_champion',flayed:'trebuchet',beacon:'trebuchet',bone:'giant',fish:'sharpshooter',stag:'stormbreaker',kraken:'saltwind_axethrower',bridge:'tollhouse_crossbow',frog:'crannog_spearhand',huntsman:'hornhill_halberdier'};
   for(let house=0;house<HOUSES.length;house++){
     const f=fixture({house,realMenu:true}),sigil=HOUSES[house].sigil,regiment=expectedRegiments[sigil]||null,building=regimentBuildingForHouse(sigil),original=f.game.houseContent(0);
     assert.equal(regimentForHouse(sigil),regiment);f.context.buildActionLists();const rows=f.refreshMenu();
@@ -279,13 +280,13 @@ test('All sixteen houses retain their original menus while eligible houses gain 
 });
 
 await testAsync('Boot waits for regiment and conquest art, and failed new art keeps Start disabled',async()=>{
-  for(const failed of [null,'loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt']){
+  for(const failed of [null,'loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt','loadPaintedTroops','loadPikeBuildings']){
     const f=fixture({realMenu:true}),loads=[],errors=[],effects=[];
     f.context.console={warn(){},error:(...args)=>errors.push(args)};f.context.renderer={};
-    for(const method of ['loadTroops','loadStructures','loadCampaignArt','loadTerrain','loadHouseArt','loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt','loadLandsArt','loadLandsGround'])f.context.renderer[method]=(...args)=>{loads.push({method,args});return method===failed?Promise.reject(new Error('Missing test artwork')):Promise.resolve();};
+    for(const method of ['loadTroops','loadStructures','loadCampaignArt','loadTerrain','loadHouseArt','loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt','loadPaintedTroops','loadPikeBuildings','loadLandsArt','loadLandsGround'])f.context.renderer[method]=(...args)=>{loads.push({method,args});return method===failed?Promise.reject(new Error('Missing test artwork')):Promise.resolve();};
     for(const name of ['paintBuildingIcons','paintHousePreview','paintTownHall','fitMap','updateHud'])f.context[name]=()=>effects.push(name);
     f.context.frame=()=>{};f.context.requestAnimationFrame=()=>effects.push('frame');
-    for(const prefix of ['const HOUSE_ART_SOURCES=','const REGIMENT_ART_SOURCES=','const CONQUEST_ART_SOURCES=','const REINFORCEMENT_ART_SOURCES=']){const line=source.split('\n').find(line=>line.startsWith(prefix));assert.ok(line);vm.runInContext(line,f.context);}
+    for(const prefix of ['const HOUSE_ART_SOURCES=','const REGIMENT_ART_SOURCES=','const CONQUEST_ART_SOURCES=','const REINFORCEMENT_ART_SOURCES=','const PAINTED_TROOP_SOURCES=']){const line=source.split('\n').find(line=>line.startsWith(prefix));assert.ok(line);vm.runInContext(line,f.context);}
     vm.runInContext(extract('boot'),f.context);const boot=f.context.boot();assert.equal(f.element('startButton').disabled,true);assert.ok(f.element('startButton').innerHTML.includes('PREPARING'));
     await boot;
     const sheets=loads.find(load=>load.method==='loadRegimentArt')?.args[0];assert.ok(sheets);assert.deepEqual(Object.keys(sheets).sort(),['bear','dragon','falcon','lion','rose','sun','wolf']);assert.equal(new Set(Object.values(sheets)).size,7);
@@ -348,6 +349,32 @@ test('Pinch navigation preserves targeting and releasing either finger cannot pl
   f.canvas.dispatch('pointerup',f.event({button:0,pointerType:'touch',pointerId:1,clientX:330,clientY:300}));
   f.canvas.dispatch('pointerup',f.event({button:0,pointerType:'touch',pointerId:2,clientX:510,clientY:300}));
   assert.equal(f.ui.buildMode,'barracks');assert.equal(f.game.buildings.length,0);assert.equal(f.commands.length,0);assert.deepEqual(ids(f.ui.selected),[unit.id]);
+});
+
+test('Z and Shift+D preview without ordering, Enter confirms from a focused control, and Escape cancels',()=>{
+  const f=fixture(),troops=Array.from({length:12},(_,i)=>f.game.addUnit(0,i<8?'winter_pikeman':'river_ranger',30,30+i*.1));f.ui.selected=new Set(troops.map(u=>u.id));
+  f.win.dispatch('keydown',f.event({key:'z',code:'KeyZ'}));assert.equal(f.ui.formMode,true);assert.equal(f.element('formationSheet').hidden,false);assert.equal(f.ui.formPreview.slots.length,12);assert.equal(f.commands.length,0);
+  f.win.dispatch('keydown',f.event({key:'3',code:'Digit3'}));assert.equal(f.ui.formPreview.ranks,3);
+  f.win.dispatch('keydown',f.event({key:'Enter',code:'Enter',target:{tagName:'SELECT'}}));assert.equal(f.ui.formMode,false);assert.equal(f.commands.length,1);assert.ok(troops.every(u=>u.order.placementId));
+  const orders=troops.map(u=>u.order);f.win.dispatch('keydown',f.event({key:'D',code:'KeyD',shiftKey:true}));assert.equal(f.ui.formMode,true);assert.equal(f.ui.faceInPlace,true);
+  f.win.dispatch('keydown',f.event({key:'Escape',code:'Escape',target:{tagName:'INPUT'}}));assert.equal(f.ui.formMode,false);assert.equal(f.commands.length,1);troops.forEach((u,i)=>assert.equal(u.order,orders[i]));
+});
+
+test('Formation touch placement and pinch do not pan or issue an accidental order',()=>{
+  const f=fixture(),u=f.game.addUnit(0,'winter_pikeman',30,30);f.ui.selected.add(u.id);f.context.beginForm();
+  const initial={x:f.ui.formPreview.x,y:f.ui.formPreview.y};
+  f.canvas.dispatch('pointerdown',f.event({button:0,pointerType:'touch',pointerId:1,clientX:500,clientY:300}));
+  f.canvas.dispatch('pointerdown',f.event({button:0,pointerType:'touch',pointerId:2,clientX:600,clientY:300}));assert.deepEqual({x:f.ui.formPreview.x,y:f.ui.formPreview.y},initial,'Beginning a pinch leaves the chosen formation center alone.');
+  f.canvas.dispatch('pointerup',f.event({button:0,pointerType:'touch',pointerId:1}));f.canvas.dispatch('pointerup',f.event({button:0,pointerType:'touch',pointerId:2}));assert.equal(f.commands.length,0);
+  const camera={x:f.context.view.x,y:f.context.view.y};
+  f.canvas.dispatch('pointerdown',f.event({button:0,pointerType:'touch',clientX:550,clientY:350}));f.canvas.dispatch('pointerup',f.event({button:0,pointerType:'touch',clientX:550,clientY:350}));
+  assert.deepEqual({x:f.context.view.x,y:f.context.view.y},camera);assert.notDeepEqual({x:f.ui.formPreview.x,y:f.ui.formPreview.y},initial);assert.equal(f.commands.length,0);
+});
+
+test('Command group recall restores preset, dimensions and facing-lock preference without issuing orders',()=>{
+  const f=fixture(),u=f.game.addUnit(0,'winter_pikeman',30,30);f.ui.selected.add(u.id);f.ui.formation='pike';f.ui.formationOptions={ranks:4,width:3.36,lockFacing:true};f.context.commandGroup(2,true);
+  f.ui.formation='loose';f.ui.formationOptions={ranks:1,width:8,lockFacing:false};f.context.commandGroup(2);
+  assert.equal(f.ui.formation,'pike');assert.equal(f.ui.formationOptions.ranks,4);assert.equal(f.ui.formationOptions.width,3.36);assert.equal(f.ui.formationOptions.lockFacing,true);assert.equal(f.commands.length,0);
 });
 
 console.log(`${cases} command control checks passed.`);

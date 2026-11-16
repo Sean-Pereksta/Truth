@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {Game,HOUSES,UNIT_DEFS,BUILD_DEFS} from '../../core.js';
-import {REGIMENT_UNITS,REGIMENT_BUILDINGS,CONQUEST_BUILDINGS,FRONTIER_BUILDINGS,SHIELD_HOUSES,CHAMPION_HOUSES,CHAMPION_TRAINING_SECONDS,registerRegiments,regimentForHouse,regimentAllowed,regimentBuildingForHouse,regimentRequiredBuilding} from '../../regiments.js';
+import {REGIMENT_UNITS,REGIMENT_BUILDINGS,CONQUEST_BUILDINGS,FRONTIER_BUILDINGS,SHIELD_HOUSES,PIKE_HOUSES,CHAMPION_HOUSES,CHAMPION_TRAINING_SECONDS,registerRegiments,regimentForHouse,regimentAllowed,regimentBuildingForHouse,regimentRequiredBuilding} from '../../regiments.js';
 
 let cases=0;
 const test=(name,fn)=>{fn();cases++;console.log('PASS '+name);};
@@ -16,11 +16,11 @@ const post=(g,type,team=0,x=20,y=20)=>g.addBuilding(team,type,x,y);
 const members=(g,type)=>g.units.filter(u=>u.type===type&&u.hp>0);
 
 test('Only the requested houses gain shield or lance regiments and existing spears stay exclusive',()=>{
-  assert.deepEqual(SHIELD_HOUSES,['wolf','lion','dragon','rose']);assert.deepEqual(CHAMPION_HOUSES,['bear','sun','falcon']);
+  assert.deepEqual(SHIELD_HOUSES,['lion','dragon']);assert.deepEqual(PIKE_HOUSES,['wolf','rose']);assert.deepEqual(CHAMPION_HOUSES,['bear','sun','falcon']);
   assert.equal(UNIT_DEFS.shield_bearer.class,'infantry');assert.equal(UNIT_DEFS.lance_champion.class,'cavalry');
-  assert.deepEqual(Object.keys(UNIT_DEFS).filter(type=>UNIT_DEFS[type].spearBrace).sort(),['bridge_warden','dread_pike']);
+  assert.deepEqual(Object.keys(UNIT_DEFS).filter(type=>UNIT_DEFS[type].spearBrace).sort(),['bridge_warden','crannog_spearhand','dread_pike','hornhill_halberdier','thornwall_pikeman','winter_pikeman']);
   for(const house of HOUSES){
-    const expected=SHIELD_HOUSES.includes(house.sigil)?'shield_bearer':CHAMPION_HOUSES.includes(house.sigil)?'lance_champion':CONQUEST_BUILDINGS[house.sigil]?.unit||FRONTIER_BUILDINGS[house.sigil]?.unit||null;
+    const expected=PIKE_HOUSES.includes(house.sigil)?(house.sigil==='wolf'?'winter_pikeman':'thornwall_pikeman'):SHIELD_HOUSES.includes(house.sigil)?'shield_bearer':CHAMPION_HOUSES.includes(house.sigil)?'lance_champion':CONQUEST_BUILDINGS[house.sigil]?.unit||FRONTIER_BUILDINGS[house.sigil]?.unit||null;
     assert.equal(regimentForHouse(house.sigil),expected);
     const g=fixture(house.sigil);post(g,'barracks',0,10,20);post(g,'stables',0,10,25);
     for(const type of Object.keys(REGIMENT_UNITS))assert.equal(g.recruitDetails(type).unlocked,false,'Ordinary facilities must not unlock '+type);
@@ -79,11 +79,11 @@ test('Seven dedicated buildings train the matching shield or lance troops with s
 });
 
 test('Shield bearers strongly resist frontal missiles, melee and charges while leaving the rear exposed',()=>{
-  const g=fixture('wolf'),shield=g.addUnit(0,'shield_bearer',40,40);g.hold([shield.id]);shield.facingX=1;shield.facingY=0;
+  const g=fixture('lion'),shield=g.addUnit(0,'shield_bearer',40,40);g.hold([shield.id]);shield.facingX=1;shield.facingY=0;shield.shieldGuard='guard';
   const loss=(originX,originY,impactKind='weapon',projectileType=null)=>{shield.hp=shield.maxHp;const before=shield.hp;g.damage(shield,100,{team:1,type:projectileType?'archer':'infantry',impactKind,projectileType,originX,originY});return before-shield.hp;};
   assert.equal(loss(45,40,'weapon','arrow'),25);assert.equal(loss(45,40,'bolt','bolt'),25);
   assert.equal(loss(45,40),35);assert.equal(loss(45,40,'charge'),45);
-  assert.equal(loss(35,40,'weapon','arrow'),100);assert.ok(loss(35,40)>loss(45,40)*3);
+  assert.equal(loss(35,40,'weapon','arrow'),150);assert.ok(loss(35,40)>loss(45,40)*3);
   assert.ok(loss(40,45)>loss(45,40));assert.equal(loss(45,40,'weapon','rock'),100,'Arcing stones do not receive direct-fire shield protection.');
   shield.hp=shield.maxHp;g.damage(shield,20,{team:1,type:'siege',impactKind:'fire',secondary:true,originX:45,originY:40});assert.equal(shield.maxHp-shield.hp,20);
 });
@@ -104,7 +104,7 @@ function chargeTrial({enemy='infantry',distance=7,rear=true,rows=2}={}){
 
 test('Champions are tougher and hit harder while their real first charge remains decisive',()=>{
   assert.equal(UNIT_DEFS.lance_champion.hp,400);assert.equal(UNIT_DEFS.lance_champion.damage,18);
-  assert.ok(UNIT_DEFS.lance_champion.range>UNIT_DEFS.dread_pike.range);
+  assert.ok(UNIT_DEFS.dread_pike.weaponReach>UNIT_DEFS.lance_champion.range);
   assert.ok(UNIT_DEFS.lance_champion.rate>UNIT_DEFS.cavalry.rate);
   const f=chargeTrial();assert.ok(f.charging,'The rider must actually build and enter a charge.');
   assert.equal(f.hits.length,2,'The test must include first and subsequent charge impacts.');

@@ -57,7 +57,7 @@ test('A breaks formation into independent charges, and a move command cancels W 
 });
 
 test('Formed fronts resist direct hits and displacement while flanks remain exposed',()=>{
-  const g=fixture(),u=g.addUnit(0,'bridge_warden',30,40);u.facingX=1;u.facingY=0;g.hold([u.id]);
+  const g=fixture(),u=g.addUnit(0,'shield_bearer',30,40);u.facingX=1;u.facingY=0;g.hold([u.id]);step(g,.6);
   const hit=x=>{const hp=u.hp;g.damage(u,20,{team:1,type:'infantry',impactKind:'weapon',originX:x,originY:40});return hp-u.hp;};
   const front=hit(31),rear=hit(29);assert.ok(front<rear*.65);assert.ok(g.knockbackFactor(u)<1);
   g.attackNearest([u.id]); // No troops are needed for a structure-directed charge.

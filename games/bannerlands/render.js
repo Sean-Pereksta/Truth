@@ -1,6 +1,7 @@
 import {BUILD_DEFS,UNIT_DEFS} from './core.js';
 import {corpseOpacity} from './aftermath.js';
 import {combatPose,drawCombatAccents} from './combat-visuals.js';
+import {PAINTED_TROOPS,paintedTroopDefinition,selectPaintedFrame} from './painted-troops.js';
 import {paintTerrainPolish} from './terrain-polish.js';
 import {FormationBannerLayer} from './formation-banners.js';
 import {BridgeArtwork} from './bridge-art.js';
@@ -263,6 +264,7 @@ export class Renderer{
     return {troops:6,troopFrames:48,buildings:6};
   }
   getStructureFrame(type,houseSigil=null,level=1){
+    if(this.pikeBuildingFrames?.[type])return this.pikeBuildingFrames[type];
     if(REINFORCEMENT_BUILDINGS.includes(type))return this.reinforcementArtReady&&BUILD_DEFS[type]?.house===houseSigil?this.reinforcementBuildingFrames[type]:null;
     if(CONQUEST_ART_BUILDINGS.includes(type))return this.conquestArtReady&&BUILD_DEFS[type]?.house===houseSigil?this.conquestBuildingFrames[type]:null;
     if(type==='restored_castle')return this.conquestArtReady?this.castleStateFrames[1]:null;
@@ -273,10 +275,78 @@ export class Renderer{
     return this.structureFrames[type]||null;
   }
   getTroopFrame(type,houseSigil=null){
+    const painted=this.getPaintedTroop(type,houseSigil);if(painted)return painted;
     if(REINFORCEMENT_HOUSES[type])return this.reinforcementArtReady&&REINFORCEMENT_HOUSES[type]===houseSigil?this.reinforcementTroopFrames[type]:null;
     if(CONQUEST_ART_HOUSES[type])return this.conquestArtReady&&CONQUEST_ART_HOUSES[type].includes(houseSigil)?this.conquestTroopFrames[type]:null;
     if(REGIMENT_ART_TYPES.includes(type))return this.regimentArtReady?this.regimentTroopFrames[type]?.[houseSigil]||null:null;
     return this.troopFrames[type]||(houseSigil&&this.houseArtReady?this.houseTroopFrames[houseSigil]:null)||null;
+  }
+  getPaintedTroop(type,house=null){
+    const d=paintedTroopDefinition(type,house);return d?this.paintedRows?.get(d.id)||null:null;
+  }
+  async loadPaintedTroops(sources=null,ids=null){
+    const rows=new Map();
+    await Promise.all(Object.values(PAINTED_TROOPS).filter(d=>!ids||ids.includes(d.id)).map(async d=>{
+      const src=sources?.[d.id]||d.file,image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('Missing painted troop artwork: '+d.id));im.src=src;});
+      const width=image.naturalWidth||image.width,height=image.naturalHeight||image.height,frames=[];
+      for(let row=0;row<d.rows;row++){
+        const columns=d.rowColumns?.[row]||d.columns,cellTop=Math.round((d.rowCuts?.[row]??row/d.rows)*height),cellBottom=Math.round((d.rowCuts?.[row+1]??(row+1)/d.rows)*height);
+        for(let col=0;col<columns;col++){
+          const cellLeft=Math.round((d.columnCuts?.[row]?.[col]??col/columns)*width),cellRight=Math.round((d.columnCuts?.[row]?.[col+1]??(col+1)/columns)*width),w=cellRight-cellLeft,h=cellBottom-cellTop;
+          const scan=makeCanvas(w,h),ctx=scan.getContext('2d',{willReadFrequently:true});ctx.drawImage(image,cellLeft,cellTop,w,h,0,0,w,h);
+          const imageData=ctx.getImageData(0,0,w,h),pixels=imageData.data;let left=w,top=h,right=-1,bottom=-1;
+          // Normalize transparent padding during extraction, as the original
+          // atlas loader does. Never paint replacement equipment or anatomy.
+          for(let i=3;i<pixels.length;i+=4)if(pixels[i]<=16)pixels[i]=0;
+          ctx.putImageData(imageData,0,0);
+          const rowCounts=new Uint32Array(h);
+          for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(pixels[(y*w+x)*4+3]>48){left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);rowCounts[y]++;}
+          if(right<left)throw new Error('Empty painted action: '+d.id+' '+frames.length);
+          let feet=0,weight=0;for(let y=Math.max(top,bottom-Math.ceil((bottom-top)*.09));y<=bottom;y++)for(let x=left;x<=right;x++){const a=pixels[(y*w+x)*4+3];if(a>96){feet+=x;weight++;}}
+          const anchor=weight?feet/weight:(left+right)/2;
+          // Thin raised shafts do not count as a soldier's body-height reference.
+          let bodyTop=top;while(bodyTop<bottom&&rowCounts[bodyTop]<Math.max(5,w*.025))bodyTop++;
+          frames.push({image:scan,left,top,width:right-left+1,height:bottom-top+1,anchorX:anchor-left,anchorY:bottom-top+1,bodyPixels:bottom-bodyTop+1});
+        }
+      }
+      const bodyPixels=frames.slice(0,4).map(f=>f.bodyPixels).sort((a,b)=>a-b)[1],scale=d.bodyHeight/bodyPixels;
+      const compact=frames.map(f=>{
+        // Cache small RGBA frames once. Large weapons keep their full bounds.
+        const factor=Math.min(1,scale*3),w=Math.ceil(f.width*factor),h=Math.ceil(f.height*factor),im=makeCanvas(w,h),c=im.getContext('2d');c.imageSmoothingEnabled=true;c.imageSmoothingQuality='high';c.drawImage(f.image,f.left,f.top,f.width,f.height,0,0,w,h);
+        return {...f,image:im,left:0,top:0,width:w,height:h,anchorX:f.anchorX*factor,anchorY:f.anchorY*factor,scale:scale/factor};
+      });
+      rows.set(d.id,{...d,frames:compact,scale:1,width:Math.max(...compact.map(f=>f.width*f.scale)),height:Math.max(...compact.map(f=>f.height*f.scale)),painted:true,source:src});
+    }));
+    this.paintedRows=rows;this.paintedArtReady=true;this.paintedPalettes?.clear();this.paintedSpriteCache?.clear();this.sprites.clear();return {troops:rows.size,facings:2,sourceFacing:'screen-right',otherFacing:'horizontal-mirror'};
+  }
+  drawPaintedTroop(c,row,index,facing,x,y,color=null){
+    const f=row.frames[index]||row.frames[row.actions.ready]||row.frames[0],w=f.width*f.scale,h=f.height*f.scale;
+    let source=f.image;
+    if(!row.house&&/^#[0-9a-f]{6}$/i.test(color||'')){
+      this.paintedPalettes??=new Map();const key=row.id+'|'+index+'|'+color;
+      source=this.paintedPalettes.get(key);
+      if(!source){source=makeCanvas(f.width,f.height);const ctx=source.getContext('2d',{willReadFrequently:true});ctx.drawImage(f.image,0,0);const data=ctx.getImageData(0,0,source.width,source.height),target=[1,3,5].map(i=>parseInt(color.slice(i,i+2),16));
+        for(let i=0;i<data.data.length;i+=4){const p=data.data,r=p[i],g=p[i+1],b=p[i+2],blue=b-Math.max(r,g);if(p[i+3]>16&&blue>9&&b>r*1.1&&b>g*1.04){const shade=clamp(b/148,.14,1.18),mix=clamp(blue/38,.3,1);for(let k=0;k<3;k++)p[i+k]=p[i+k]*(1-mix)+Math.min(255,target[k]*shade)*mix;}}
+        ctx.putImageData(data,0,0);this.paintedPalettes.set(key,source);
+      }
+    }
+    let anchorX=f.anchorX;
+    if(facing<0){
+      this.paintedMirrors??=new WeakMap();let mirrored=this.paintedMirrors.get(source);
+      if(!mirrored){mirrored=makeCanvas(f.width,f.height);const ctx=mirrored.getContext('2d');ctx.translate(f.width,0);ctx.scale(-1,1);ctx.drawImage(source,0,0);this.paintedMirrors.set(source,mirrored);}
+      source=mirrored;anchorX=f.width-f.anchorX;
+    }
+    // Mirroring is cached, retaining the existing two facings without a
+    // transform/save/restore for every soldier in a large battle.
+    c.drawImage(source,x-anchorX*f.scale,y-f.anchorY*f.scale,w,h);
+  }
+  paintedSprite(row,index,facing=1){
+    this.paintedSpriteCache??=new Map();const key=row.id+'|'+index+'|'+facing;if(this.paintedSpriteCache.has(key))return this.paintedSpriteCache.get(key);
+    const f=row.frames[index]||row.frames[0],a=makeCanvas(f.width,f.height),c=a.getContext('2d');c.translate(facing<0?a.width:0,0);c.scale(facing,1);c.drawImage(f.image,0,0);a.anchorX=facing<0?a.width-f.anchorX:f.anchorX;a.anchorY=f.anchorY;a.worldScale=f.scale;this.paintedSpriteCache.set(key,a);return a;
+  }
+  async loadPikeBuildings(src='./assets/overhaul/pike-buildings.png'){
+    const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('Missing painted pike production artwork.'));im.src=src;});
+    this.pikeBuildingFrames={};['winter_pike_hall','thornwall_pavilion'].forEach((type,col)=>{const f=atlasCell(image,col,0,2,1,type),scale=Math.min(95/f.width,100/f.height);this.pikeBuildingFrames[type]={...f,scale,drawWidth:f.width*scale,drawHeight:f.height*scale,house:col?'rose':'wolf'};});this.structureSprites.clear();this.cachedGame=null;
   }
   structureSprite(type,color,houseSigil=null,level=1){
     const f=this.getStructureFrame(type,houseSigil,level);if(!f)return null;
@@ -567,6 +637,12 @@ export class Renderer{
     return this.terrainPropSprite(kind==='rock'?'rock':kind==='bush'?'oak':variant%3===0?'oak':'pine',variant);
   }
   soldierSprite(type,color,dark,dir,frame,attack=false,specialHouse=null){
+    const painted=this.getPaintedTroop(type,specialHouse);
+    if(painted){
+      const index=attack?[painted.actions.aim??painted.actions.lower??painted.actions.ready,painted.actions.fire??painted.actions.thrust??painted.actions.ready,painted.actions.recovery??painted.actions.ready,painted.actions.ready][clamp(Math.floor(frame),0,3)]:painted.actions.walk[clamp(Math.floor(frame),0,3)];
+      // Legacy callers (portraits) keep their existing 128x144 convention.
+      const a=makeCanvas(128,144),c=a.getContext('2d');c.scale(2,2);c.translate(32,64);this.drawPaintedTroop(c,painted,index,dir,0,0);return a;
+    }
     if(!this.rasterSpritesReady&&!this.houseArtReady&&!this.regimentArtReady&&!this.conquestArtReady&&!this.reinforcementArtReady)return null;
     const row=this.getTroopFrame(type,specialHouse)||((REGIMENT_ART_TYPES.includes(type)||CONQUEST_ART_HOUSES[type]||REINFORCEMENT_HOUSES[type])?null:this.troopFrames[HOUSE_UNIT_CLASSES[specialHouse]]||this.troopFrames.infantry);if(!row)return null;const index=(attack?4:0)+clamp(Math.floor(frame),0,3);
     const key=[type,row.house?'house:'+row.house:color,dir,index].join('|');if(this.sprites.has(key))return this.sprites.get(key);
@@ -585,6 +661,8 @@ export class Renderer{
     c.putImageData(pixels,0,0);this.sprites.set(key,a);return a;
   }
   drawTroopPortrait(canvas,type,house){
+    const painted=this.getPaintedTroop(type,house.sigil);
+    if(painted){const c=canvas.getContext('2d'),f=painted.frames[painted.actions.ready],scale=Math.min((canvas.height-8)/painted.bodyHeight,(canvas.width-8)/(Math.min(painted.width,painted.bodyHeight*1.2)));c.clearRect(0,0,canvas.width,canvas.height);c.save();c.translate(canvas.width/2,canvas.height-4);c.scale(scale,scale);this.drawPaintedTroop(c,painted,painted.actions.ready,1,0,0);c.restore();return;}
     const row=this.getTroopFrame(type,house.sigil);if(!row)return;
     const sprite=this.soldierSprite(type,house.color,house.dark,1,0,false,house.sigil);if(!sprite)return;
     const c=canvas.getContext('2d'),scale=Math.min((canvas.width-8)/(row.width*2),(canvas.height-8)/(row.height*2)),w=row.width*2*scale,h=row.height*2*scale;
@@ -758,13 +836,15 @@ export class Renderer{
     const time=aftermath.time??g.time;c.save();
     for(const body of aftermath.bodies){
       const alpha=corpseOpacity(body,time);if(alpha<=0||g.config?.fogOfWar&&!g.vision?.isVisible(0,body.x,body.y))continue;
-      const p=iso(body.x,body.y);if(p.x<bounds.left-40||p.x>bounds.right+40||p.y<bounds.top-24||p.y>bounds.bottom+24)continue;
-      c.globalAlpha=alpha*.92;c.drawImage(this.corpseSprite(body),p.x-40,p.y-22,80,44);
+      const p=iso(body.x,body.y);if(p.x<bounds.left-140||p.x>bounds.right+140||p.y<bounds.top-70||p.y>bounds.bottom+70)continue;
+      const painted=this.getPaintedTroop(body.type,body.sigil);c.globalAlpha=alpha*.92;
+      if(painted){const index=selectPaintedFrame({...body,hp:0},g,painted),direction=iso(body.facingX??1,body.facingY??0);this.drawPaintedTroop(c,painted,index,direction.x<-.03?-1:1,p.x,p.y,body.color);}
+      else c.drawImage(this.corpseSprite(body),p.x-40,p.y-22,80,44);
     }
     c.restore();
   }
   unit(c,u,g,ui,zoom){
-    if(!this.rasterSpritesReady&&!this.houseArtReady&&!this.regimentArtReady&&!this.conquestArtReady&&!this.reinforcementArtReady)return;
+    if(!this.paintedArtReady&&!this.rasterSpritesReady&&!this.houseArtReady&&!this.regimentArtReady&&!this.conquestArtReady&&!this.reinforcementArtReady)return;
     const p=iso(u.x,u.y),team=g.teams[u.team];if(!team)return;const specialHouse=REGIMENT_ART_TYPES.includes(u.type)||CONQUEST_ART_HOUSES[u.type]||REINFORCEMENT_HOUSES[u.type]||g.houseContent?.(u.team)?.unit===u.type?team.sigil:null,unitClass=g.unitClass?.(u)||HOUSE_UNIT_CLASSES[specialHouse]||u.type,vx=Number.isFinite(u.motionVX)?u.motionVX:(u.vx||0),vy=Number.isFinite(u.motionVY)?u.motionVY:(u.vy||0),selected=ui.selected?.has(u.id),moving=Math.hypot(vx,vy)>.07;
     if(g.mode?.teams&&zoom>.32){const color=team.teamColor||team.color;c.save();c.globalAlpha=.55;ellipse(c,p.x,p.y+2,unitClass==='cavalry'?8:5,unitClass==='cavalry'?3.3:2.2,color);c.globalAlpha=.95;polygon(c,[[p.x-2,p.y+2],[p.x,p.y+4],[p.x+2,p.y+2],[p.x,p.y]],team.color);c.restore();}
     if(u.elite){c.save();c.beginPath();c.ellipse(p.x,p.y+1,unitClass==='cavalry'?11:8,unitClass==='cavalry'?5:3.8,0,0,TAU);c.strokeStyle='#f4d785';c.lineWidth=1.4;c.stroke();if(zoom>.45){polygon(c,[[p.x,p.y-37],[p.x+2,p.y-33],[p.x+6,p.y-32],[p.x+2,p.y-30],[p.x,p.y-26],[p.x-2,p.y-30],[p.x-6,p.y-32],[p.x-2,p.y-33]],'#ffe7a0','#7f6b3f');}c.restore();}
@@ -775,21 +855,13 @@ export class Renderer{
     if(selected){ellipse(c,p.x,p.y+1,unitClass==='cavalry'?11:8,unitClass==='cavalry'?5:3.8,'rgba(224,215,144,.19)');c.beginPath();c.ellipse(p.x,p.y+1,unitClass==='cavalry'?11:8,unitClass==='cavalry'?5:3.8,0,0,TAU);c.strokeStyle='#f6d986';c.lineWidth=1;c.stroke();}
     if(u.type==='hero'){c.beginPath();c.ellipse(p.x,p.y+1,11,5,0,0,TAU);c.strokeStyle='#e5cb74';c.lineWidth=1.5;c.stroke();}
     const direction=u.braceDir||(Number.isFinite(u.facingX)&&Number.isFinite(u.facingY)?{x:u.facingX,y:u.facingY}:{x:vx,y:vy}),screenFacing=iso(direction.x,direction.y),faceLength=Math.hypot(screenFacing.x,screenFacing.y)||1;
-    const pose=zoom>=.5?combatPose(u,g,UNIT_DEFS[u.type],moving):null,facing=screenFacing.x<-.03?-1:1,attack=pose?.attack||(u.attackAnim||0)>.05;
+    const painted=this.getPaintedTroop(u.type,team.sigil),pose=zoom>=.5?combatPose(u,g,UNIT_DEFS[u.type],moving):null,facing=screenFacing.x<-.03?-1:1,attack=pose?.attack||(u.attackAnim||0)>.05;
     const phase=Number.isFinite(u.phase)?u.phase:0;let frame=attack?Math.min(3,Math.floor((1-clamp(u.attackAnim,0,1))*4)):moving?Math.floor(phase/TAU*4):0;frame=((frame%4)+4)%4;
     if(u.backpedaling&&moving&&!attack)frame=3-frame;
     if(pose?.attack)frame=pose.frame;
     const braced=zoom>.6&&u.braceDir&&(u.braceTime||0)>=.45&&!(u.knockT>0);
-    const sprite=this.soldierSprite(u.type,team.color,team.dark,facing,frame,attack||u.type==='trebuchet'&&(u.setupProgress||0)>=UNIT_DEFS.trebuchet.setupSeconds,specialHouse);if(sprite){
-      if(pose?.reload){
-        // Feet stay planted while the painted torso bends at the waist. The
-        // working hands and crossbow mechanism are articulated above this art.
-        c.drawImage(sprite,0,98,128,46,p.x-32,p.y-15,64,23);
-        c.save();c.translate(p.x,p.y-15+(pose.bodyDrop||0));c.rotate((pose.bodyTilt||0)*facing);
-        c.drawImage(sprite,0,0,128,98,-32,-49,64,49);c.restore();
-      }else if(pose&&(!this.lowDetail||selected)&&(pose.dx||pose.dy||pose.tilt)){c.save();c.translate(p.x+(pose.dx||0),p.y+(pose.dy||0));c.rotate((pose.tilt||0)*facing);c.drawImage(sprite,-32,-64,64,72);c.restore();}else c.drawImage(sprite,p.x-32,p.y-64,64,72);
-    }
-    if(!this.lowDetail||selected||pose?.reload)drawCombatAccents(c,u,g,UNIT_DEFS[u.type],p,pose,zoom);
+    if(painted){this.drawPaintedTroop(c,painted,selectPaintedFrame(u,g,painted,moving),facing,p.x,p.y,team.color);}
+    else{const sprite=this.soldierSprite(u.type,team.color,team.dark,facing,frame,attack||u.type==='trebuchet'&&(u.setupProgress||0)>=UNIT_DEFS.trebuchet.setupSeconds,specialHouse);if(sprite)c.drawImage(sprite,p.x-32,p.y-64,64,72);}
     if(u.type==='trebuchet'&&zoom>.5){const setup=UNIT_DEFS.trebuchet.setupSeconds,progress=clamp((u.setupProgress||0)/setup,0,1);c.fillStyle='#142c2c';c.fillRect(p.x-20,p.y-61,40,4);c.fillStyle=progress>=1?'#b8d4a0':'#d6b773';c.fillRect(p.x-20,p.y-61,40*progress,4);if(selected){c.font='bold 8px Segoe UI';c.textAlign='center';c.fillStyle='#f2deac';c.fillText(progress>=1?'DEPLOYED':'SETUP '+Math.ceil(setup-(u.setupProgress||0))+'s',p.x,p.y-65);}}
     if(selected&&zoom>.55&&Math.hypot(direction.x,direction.y)>.01){
       const dx=screenFacing.x/faceLength,dy=screenFacing.y/faceLength,color=u.backpedaling?'#a8ddd1':'#e7cc89';
@@ -797,9 +869,9 @@ export class Renderer{
       line(c,p.x+dx*17,p.y+1+dy*17,p.x+dx*13-dy*2.5,p.y+1+dy*13+dx*2.5,color,1.2);line(c,p.x+dx*17,p.y+1+dy*17,p.x+dx*13+dy*2.5,p.y+1+dy*13-dx*2.5,color,1.2);c.restore();
     }
     if(braced){
-      // Visible levelled spear and ground line make the narrow frontal counter readable.
+      // A ground front marker communicates the precise simulated angle. The
+      // complete painted soldier already includes its weapon and both hands.
       const point=iso(u.braceDir.x,u.braceDir.y),length=Math.hypot(point.x,point.y)||1,dx=point.x/length,dy=point.y/length,reach=u.type==='dread_pike'?27:22;
-      line(c,p.x-dx*4,p.y-12-dy*4,p.x+dx*reach,p.y-12+dy*reach,'#d5c6a2',1.8);polygon(c,[[p.x+dx*(reach+4),p.y-12+dy*(reach+4)],[p.x+dx*(reach-1)-dy*2,p.y-12+dy*(reach-1)+dx*2],[p.x+dx*(reach-1)+dy*2,p.y-12+dy*(reach-1)-dx*2]],'#e1ecdc');
       line(c,p.x+dx*13-dy*7,p.y+dy*13+dx*7,p.x+dx*13+dy*7,p.y+dy*13-dx*7,'#b7d6d1',1.4);
     }
     if(selected&&zoom>.8&&(u.charging||u.chargeBlockedUntil>g.time)){c.save();c.font='bold 7px Segoe UI';c.textAlign='center';c.strokeStyle='#122423';c.lineWidth=3;c.strokeText(u.charging?'CHARGE':'CHARGE BROKEN',p.x,p.y-44);c.fillStyle=u.charging?'#f2d391':'#edab8f';c.fillText(u.charging?'CHARGE':'CHARGE BROKEN',p.x,p.y-44);c.restore();}
@@ -837,7 +909,8 @@ export class Renderer{
   }
   projectiles(c,g){
     for(const b of g.projectiles||[]){if(g.config?.fogOfWar&&!g.isVisibleTo(0,{x:b.x,y:b.y}))continue;const progress=clamp((b.t||0)/(b.duration||1),0,1),p=iso(b.x,b.y),piercing=b.sourceType==='beacon_engineer',firepot=b.sourceType==='dragonfire_acolyte',javelin=b.sourceType==='dune_skirmisher',lift=Math.sin(progress*Math.PI)*(piercing?7:firepot?42:b.type==='rock'?70:32);ellipse(c,p.x,p.y,3,1.2,'rgba(8,22,22,.2)');
-      const v=iso((b.tx??b.x)-(b.sx??b.x),(b.ty??b.y)-(b.sy??b.y));let a=Math.atan2(v.y,v.x);c.save();c.translate(p.x,p.y-lift-10);c.rotate(a);
+      const art=this.getPaintedTroop(b.sourceType,g.teams[b.team]?.sigil),release=art?.projectileRelease?.point,releaseHeight=release?art.bodyHeight*(1-release[1]):10;
+      const v=iso((b.tx??b.x)-(b.sx??b.x),(b.ty??b.y)-(b.sy??b.y));let a=Math.atan2(v.y,v.x);c.save();c.translate(p.x,p.y-lift-releaseHeight);c.rotate(a);
       if(piercing){line(c,-15,0,7,0,'#d4c7a6',2);polygon(c,[[8,0],[2,-3],[2,3]],'#eef1d5');line(c,-15,0,-19,-3,'#99b8bc',1.5);}
       else if(firepot){ellipse(c,0,0,4,3.5,'#bd653a');ellipse(c,1,-2,2.5,3,'#ffce67');line(c,-8,0,-2,0,'#ed9c50',2);}
       else if(javelin){line(c,-12,0,5,0,'#bc9669',1.5);polygon(c,[[7,0],[2,-2],[2,2]],'#eee6c6');}
@@ -911,7 +984,7 @@ export class Renderer{
     this.frame++;const c=this.ctx,d=this.dpr;c.setTransform(d,0,0,d,0,0);c.fillStyle='#10272e';c.fillRect(0,0,v.w,v.h);
     const glow=c.createRadialGradient(v.w*.52,v.h*.42,10,v.w*.5,v.h*.5,v.w*.7);glow.addColorStop(0,'#25404a');glow.addColorStop(1,'#0d222a');c.fillStyle=glow;c.fillRect(0,0,v.w,v.h);
     c.save();c.translate(v.w/2-v.x*v.zoom,v.h/2-v.y*v.zoom);c.scale(v.zoom,v.zoom);
-    const bounds={left:v.x-v.w/v.zoom/2-90,right:v.x+v.w/v.zoom/2+90,top:v.y-v.h/v.zoom/2-110,bottom:v.y+v.h/v.zoom/2+80};
+    const bounds={left:v.x-v.w/v.zoom/2-140,right:v.x+v.w/v.zoom/2+140,top:v.y-v.h/v.zoom/2-110,bottom:v.y+v.h/v.zoom/2+80};
     const range=this.visibleWorldRange(g,bounds);this.lastVisibleRange=range;
     for(let i=0;i<(lowDetail?22:44);i++){const x=this.left+hash(i,4)*(this.mapW),y=-60+hash(i,8)*this.mapH;if(x<bounds.left||x>bounds.right||y<bounds.top||y>bounds.bottom)continue;const wave=Math.sin(g.time*.8+i)*3;line(c,x+wave,y,x+8+wave,y,'rgba(106,152,159,.16)',.8);if(!lowDetail)line(c,x+4+wave,y+3,x+15+wave,y+3,'rgba(106,152,159,.10)',.7);}
     this.drawGround(c,g,v,bounds,range);

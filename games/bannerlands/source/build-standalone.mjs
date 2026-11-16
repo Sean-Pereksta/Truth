@@ -1,42 +1,89 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import {fileURLToPath} from 'node:url';
+import {fileURLToPath,pathToFileURL} from 'node:url';
+
 const root=path.dirname(fileURLToPath(import.meta.url));
 const dist=path.resolve(root,'..');
 const out=process.argv[2]?path.resolve(process.argv[2]):path.join(root,'outputs');
 fs.mkdirSync(out,{recursive:true});
 const read=name=>fs.readFileSync(path.join(dist,name),'utf8');
-const emblemAtlas='data:image/png;base64,'+fs.readFileSync(path.join(dist,'assets/house-emblems.png')).toString('base64');
-const css=[read('style.css'),read('hud.css')].join('\n').replaceAll('assets/house-emblems.png',emblemAtlas);
-const moduleCode=name=>read(name).replace(/^import .*?;\r?\n/gm,'').replaceAll('export const ','const ').replaceAll('export class ','class ').replaceAll('export function ','function ');
-const lands=moduleCode('lands.js'),navigation=moduleCode('navigation.js'),cover=moduleCode('cover.js');
-const vision=moduleCode('vision.js'),aftermath=moduleCode('aftermath.js');
-const core=moduleCode('core.js');
-const render=moduleCode('render.js'),hud=moduleCode('hud.js');
-const regiments=moduleCode('regiments.js'),regimentExports=[...read('regiments.js').matchAll(/export (?:const|class|function) (\w+)/g)].map(match=>match[1]).join(',');
-const atlas=fs.readFileSync(path.join(dist,'assets/troops-atlas.png')).toString('base64');
-const structures=fs.readFileSync(path.join(dist,'assets/structures-atlas.png')).toString('base64');
-const campaign=fs.readFileSync(path.join(dist,'assets/campaign-structures.png')).toString('base64');
-const ground=fs.readFileSync(path.join(dist,'assets/ground-textures.png')).toString('base64');
-const props=fs.readFileSync(path.join(dist,'assets/terrain-props.png')).toString('base64');
-const landsAtlas=fs.readFileSync(path.join(dist,'assets/lands-atlas.png')).toString('base64');
-const landsGround=fs.readFileSync(path.join(dist,'assets/lands-ground.png')).toString('base64');
-const {HOUSES}=await import('../core.js');
-const png=name=>'data:image/png;base64,'+fs.readFileSync(path.join(dist,name)).toString('base64');
-const houseArt={troops:Object.fromEntries(HOUSES.map(h=>[h.sigil,png(`assets/houses/${h.sigil}-troops.png`)])),castles:png('assets/house-castles.png'),production:png('assets/house-production.png')};
-const regimentArt=Object.fromEntries(['wolf','lion','dragon','rose','bear','sun','falcon'].map(sigil=>[sigil,png(`assets/regiments/${sigil}-${['wolf','lion','dragon','rose'].includes(sigil)?'shield-bearer':'lance-champion'}.png`)]));
-const reinforcementArt={"stormbreaker": "assets/reinforcements/stormbreaker.png", "saltwind_axethrower": "assets/reinforcements/saltwind_axethrower.png", "tollhouse_crossbow": "assets/reinforcements/tollhouse_crossbow.png", "crannog_spearhand": "assets/reinforcements/crannog_spearhand.png", "hornhill_halberdier": "assets/reinforcements/hornhill_halberdier.png", "sun_horse_archer": "assets/reinforcements/sun_horse_archer.png", "buildings": "assets/reinforcements/buildings.png"};for(const key of Object.keys(reinforcementArt))reinforcementArt[key]=png(reinforcementArt[key]);
-const conquestArt=Object.fromEntries(Object.entries({castles:'castles',trebuchet:'trebuchet',giant:'giant',sharpshooter:'sharpshooter',buildings:'buildings'}).map(([key,name])=>[key,png(`assets/conquest/${name}.png`)]));
-const app=read('app.js').replace(/^import .*?;\r?\n/gm,'').replace(/^const HOUSE_ART_SOURCES=.*?;\r?\n/m,'const HOUSE_ART_SOURCES='+JSON.stringify(houseArt)+';\n').replace("'assets/troops-atlas.png'",JSON.stringify('data:image/png;base64,'+atlas)).replace("'assets/structures-atlas.png'",JSON.stringify('data:image/png;base64,'+structures)).replace("'assets/campaign-structures.png'",JSON.stringify('data:image/png;base64,'+campaign)).replace("'assets/ground-textures.png'",JSON.stringify('data:image/png;base64,'+ground)).replace("'assets/terrain-props.png'",JSON.stringify('data:image/png;base64,'+props));
-const embeddedApp=app.replaceAll("'assets/bridges/stone-edges.png'",JSON.stringify(png('assets/bridges/stone-edges.png'))).replaceAll("'assets/house-emblems.png'",JSON.stringify(emblemAtlas)).replace(/^const REINFORCEMENT_ART_SOURCES=.*?;\r?\n/m,'const REINFORCEMENT_ART_SOURCES='+JSON.stringify(reinforcementArt)+';\n').replace(/^const REGIMENT_ART_SOURCES=.*?;\r?\n/m,'const REGIMENT_ART_SOURCES='+JSON.stringify(regimentArt)+';\n').replace(/^const CONQUEST_ART_SOURCES=.*?;\r?\n/m,'const CONQUEST_ART_SOURCES='+JSON.stringify(conquestArt)+';\n').replace("'assets/regiments/production-buildings.png'",JSON.stringify(png('assets/regiments/production-buildings.png'))).replace("'assets/lands-atlas.png'",JSON.stringify('data:image/png;base64,'+landsAtlas)).replace("'assets/lands-ground.png'",JSON.stringify('data:image/png;base64,'+landsGround));
-const visualModules=['formation-advance.js','combat-visuals.js','terrain-polish.js','formation-banners.js','bridge-art.js'].map((name,index)=>{const exports=[...read(name).matchAll(/export (?:const|class|function) (\w+)/g)].map(match=>match[1]).join(',');return `const __visual${index}=(()=>{${moduleCode(name)}\nreturn {${exports}};})();\nconst {${exports}}=__visual${index};`;}).join('\n');
-const script=`${visualModules}\nconst __lands=(()=>{${lands}\nreturn {LAND_MAPS,generateLands,isPassableTile,tileTravelCost};})();\nconst {LAND_MAPS,generateLands,isPassableTile,tileTravelCost}=__lands;\nconst __navigation=(()=>{${navigation}\nreturn {LandsNavigation};})();\nconst {LandsNavigation}=__navigation;\nconst __cover=(()=>{${cover}\nreturn {CombatTerrain};})();\nconst {CombatTerrain}=__cover;\nconst __regiments=(()=>{${regiments}\nreturn {${regimentExports}};})();\nconst {${regimentExports}}=__regiments;\nconst __vision=(()=>{${vision}\nreturn {WarVision};})();\nconst {WarVision}=__vision;\nconst __aftermath=(()=>{${aftermath}\nreturn {BattleAftermath,corpseOpacity};})();\nconst {BattleAftermath,corpseOpacity}=__aftermath;\nconst __core=(()=>{${core}\nreturn {Game,HOUSES,UNIT_DEFS,BUILD_DEFS,HOUSE_CONTENT};})();\nconst {Game,HOUSES,UNIT_DEFS,BUILD_DEFS,HOUSE_CONTENT}=__core;\nconst __render=(()=>{${render}\nreturn {Renderer,worldToScreen,screenToWorld};})();\nconst {Renderer,worldToScreen,screenToWorld}=__render;\n(async()=>{${embeddedApp}\n})();`;
-const html=read('index.html').replace('<link rel="stylesheet" href="style.css">',`<style>${css}</style>`).replace('<link rel="stylesheet" href="hud.css">','').replace('<script type="module" src="app.js"></script>',`<script type="module">${hud}\n${script.replaceAll('</script','<\\/script')}</script>`);
-fs.writeFileSync(path.join(out,'Bannerlands.html'),html);
+const embeddedFiles=new Set();
+function imageData(name){
+  const relative=name.replace(/^\.\//,'');
+  const absolute=path.resolve(dist,relative);
+  if(!absolute.startsWith(dist+path.sep))throw new Error('Asset outside game: '+name);
+  embeddedFiles.add(relative);
+  const mime=relative.endsWith('.webp')?'image/webp':relative.endsWith('.svg')?'image/svg+xml':'image/png';
+  return 'data:'+mime+';base64,'+fs.readFileSync(absolute).toString('base64');
+}
+function embedImageLiterals(code){
+  return code.replace(/(['"])(\.?\/?assets\/[A-Za-z0-9_./-]+\.(?:png|webp|svg))\1/g,(_,quote,name)=>JSON.stringify(imageData(name)));
+}
 
-fs.copyFileSync(path.join(dist,'assets/troops-atlas.png'),path.join(out,'Troops-sprite-sheet.png'));
-fs.copyFileSync(path.join(dist,'assets/structures-atlas.png'),path.join(out,'Structures-sprite-sheet.png'));
-fs.copyFileSync(path.join(dist,'assets/campaign-structures.png'),path.join(out,'Campaign-structures-sprite-sheet.png'));
-fs.copyFileSync(path.join(dist,'assets/ground-textures.png'),path.join(out,'Ground-textures.png'));
-fs.copyFileSync(path.join(dist,'assets/terrain-props.png'),path.join(out,'Terrain-sprite-sheet.png'));
-console.log('Built self-contained Bannerlands.html with capturable castles, trebuchets, giants, sharpshooters and all artwork embedded.');
+// Follow the actual local import graph, so a new combat or artwork module
+// cannot silently disappear from the downloadable game.
+const modules=new Map(),visiting=new Set();
+const importPattern=/^import\s+([\s\S]*?)\s+from\s+['"]([^'"]+)['"];?\s*$/gm;
+function collect(name){
+  name=path.posix.normalize(name);
+  if(modules.has(name))return;
+  if(visiting.has(name))throw new Error('Standalone module cycle: '+name);
+  visiting.add(name);
+  const code=read(name),imports=[];
+  for(const match of code.matchAll(importPattern)){
+    const specifier=match[2];
+    if(!specifier.startsWith('.'))throw new Error('Non-local standalone import: '+specifier);
+    const dependency=path.posix.normalize(path.posix.join(path.posix.dirname(name),specifier));
+    imports.push({clause:match[1].trim(),dependency});collect(dependency);
+  }
+  const exports=[...code.matchAll(/^export\s+(?:async\s+)?(?:const|let|class|function)\s+(\w+)/gm)].map(match=>match[1]);
+  modules.set(name,{code,imports,exports});visiting.delete(name);
+}
+collect('app.js');
+
+const {HOUSES}=await import('../core.js');
+const replacements={HOUSE_ART_SOURCES:{troops:Object.fromEntries(HOUSES.map(h=>[h.sigil,imageData(`assets/houses/${h.sigil}-troops.png`)])),castles:imageData('assets/house-castles.png'),production:imageData('assets/house-production.png')}};
+const paintedModule=path.join(dist,'painted-troops.js');
+if(fs.existsSync(paintedModule)){
+  const {PAINTED_TROOPS}=await import(pathToFileURL(paintedModule));
+  replacements.PAINTED_TROOP_SOURCES=Object.fromEntries(Object.entries(PAINTED_TROOPS).map(([id,definition])=>[id,imageData(definition.file)]));
+}
+const ids=new Map([...modules.keys()].map((name,index)=>[name,'m'+index]));
+function importBinding({clause,dependency}){
+  const reference='__modules.'+ids.get(dependency);
+  if(clause.startsWith('{')){
+    const fields=clause.slice(1,-1).split(',').map(field=>field.trim().replace(/\s+as\s+/,':')).filter(Boolean).join(',');
+    return `const {${fields}}=${reference};`;
+  }
+  if(clause.startsWith('* as '))return `const ${clause.slice(5).trim()}=${reference};`;
+  throw new Error('Unsupported standalone import binding: '+clause);
+}
+const compiled=[];
+for(const [name,module]of modules){
+  let code=module.code.replace(importPattern,'').replace(/^export\s+(?=(?:async\s+)?(?:const|let|class|function)\s)/gm,'');
+  if(name==='app.js')for(const [constant,value]of Object.entries(replacements)){
+    const pattern=new RegExp('^const '+constant+'=.*?;\\r?\\n','m');
+    if(!pattern.test(code))throw new Error('Missing standalone asset constant: '+constant);
+    code=code.replace(pattern,'const '+constant+'='+JSON.stringify(value)+';\n');
+  }
+  // The app passes embedded sources to all loaders. Keep module defaults and
+  // provenance filenames readable instead of duplicating every large atlas.
+  if(name==='app.js')code=embedImageLiterals(code);
+  if(/^\s*(?:import|export)\s/m.test(code))throw new Error('Unsupported module syntax in '+name);
+  const imports=module.imports.map(importBinding).join('\n');
+  const asyncEntry=name==='app.js';
+  compiled.push(`// ${name}\n__modules.${ids.get(name)}=${asyncEntry?'await (async':'('}()=>{\n${imports}\n${code}\nreturn {${module.exports.join(',')}};\n})();`);
+}
+
+const emblemAtlas=imageData('assets/house-emblems.png');
+const css=[read('style.css'),read('hud.css')].join('\n').replaceAll('assets/house-emblems.png',emblemAtlas);
+const script=('const __modules=Object.create(null);\n'+compiled.join('\n')).replaceAll('</script','<\\/script');
+const html=read('index.html')
+  .replace('<link rel="stylesheet" href="style.css">',()=>`<style>${css}</style>`)
+  .replace('<link rel="stylesheet" href="hud.css">','')
+  .replace('<script type="module" src="app.js"></script>',()=>`<script type="module">\n${script}\n</script>`);
+if(html.includes('<script type="module" src="app.js">'))throw new Error('Standalone entry was not replaced.');
+fs.writeFileSync(path.join(out,'Bannerlands.html'),html);
+fs.writeFileSync(path.join(out,'standalone-build.json'),JSON.stringify({modules:[...modules.keys()],embeddedImages:[...embeddedFiles].sort(),bytes:Buffer.byteLength(html)},null,2));
+for(const [source,target]of [['assets/troops-atlas.png','Troops-sprite-sheet.png'],['assets/structures-atlas.png','Structures-sprite-sheet.png'],['assets/campaign-structures.png','Campaign-structures-sprite-sheet.png'],['assets/ground-textures.png','Ground-textures.png'],['assets/terrain-props.png','Terrain-sprite-sheet.png']])fs.copyFileSync(path.join(dist,source),path.join(out,target));
+console.log(`Built self-contained Bannerlands.html: ${modules.size} modules and ${embeddedFiles.size} embedded images.`);

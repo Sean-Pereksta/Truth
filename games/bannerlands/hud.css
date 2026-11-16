@@ -488,3 +488,40 @@ body.placing #selectionDock { display: none; }
 @media (max-width: 700px) and (orientation: landscape) {
   #gameplayDock { width: calc(100% - 128px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)); }
 }
+
+/* Temporary formation tools share the compact dock; normal camera gestures
+   remain on the full battlefield whenever placement is closed. */
+#formationSheet {
+  position:absolute;z-index:38;left:12px;bottom:144px;width:min(310px,calc(100vw - 24px));
+  padding:12px;border:1px solid #8a8561;border-radius:10px;background:#10292bf5;color:#e8e4ca;
+  box-shadow:0 5px 24px #0007;pointer-events:auto;font:12px/1.35 'Segoe UI',sans-serif;
+}
+#formationSheet[hidden],#quickFormationOrders[hidden]{display:none!important}
+#formationSheet header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#formationSheet header>b{font-size:16px;color:#f2ddb0}
+#formationSheet p{margin:7px 0;color:#b7c7bb;font-size:11px}
+#formationSheet button{min-height:40px;padding:5px 10px}
+#formationSheet header button{min-width:44px;background:none}
+.form-settings{display:grid;grid-template-columns:2fr 1fr;gap:10px}
+.form-settings label,.form-width{display:flex;flex-direction:column;gap:4px;color:#b9c8b9}
+.form-settings select{width:100%;height:38px;border:1px solid #657360;border-radius:5px;background:#183737;color:#f0e7cd;padding:0 7px}
+.form-width{margin:8px 0}.form-width output{color:#f0deb1}.form-width input{width:100%;height:28px;accent-color:#d7c18d;touch-action:pan-x}
+.form-facing{display:flex;align-items:center;justify-content:space-between;gap:6px}.form-facing label{display:flex;align-items:center;gap:5px;white-space:nowrap}.form-facing input{accent-color:#d7c18d}
+#formPreviewStatus{display:block;min-height:19px;margin:6px 0;color:#c8d3bd}#formConfirmButton{width:100%}
+.formation-placement-actions{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.formation-placement-actions>button{flex:1;min-height:44px;font-size:11px}
+#quickFormationOrders{position:absolute;z-index:21;left:12px;bottom:80px;display:flex;gap:4px;padding:4px;border:1px solid #68765c;border-radius:8px;background:#10292be8;pointer-events:auto}
+#quickFormationOrders button{min-height:40px;padding:5px 10px;font-size:11px;white-space:nowrap}#quickFormationOrders kbd{font-size:9px;margin-left:3px}
+#formationStatus{color:#d4d49f;font-size:10px;line-height:13px}.forming #selectionDock,.forming .map-hint,.forming #touchControls{display:none!important}
+.formations{flex-wrap:wrap}.formations button{flex:1 1 28%;min-height:38px}
+@media (orientation:portrait){
+ #formationSheet{bottom:calc(76px + env(safe-area-inset-bottom,0px));left:8px;width:min(310px,calc(100vw - 16px))}
+ #quickFormationOrders{left:8px;bottom:calc(76px + env(safe-area-inset-bottom,0px));width:calc(100vw - var(--mini-width) - 24px);display:grid;grid-template-columns:1fr 1fr;gap:3px}
+ #quickFormationOrders button{padding:5px 4px;font-size:10px;min-height:44px}#quickFormationOrders kbd{display:none}
+ body.drawer-open #quickFormationOrders{display:none}
+}
+@media (max-height:480px) and (orientation:landscape){
+ #formationSheet{top:8px;bottom:auto;max-height:calc(100dvh - 84px);overflow:auto;left:8px;width:290px}
+ #formationSheet p{display:none}#formationSheet button{min-height:34px}
+ #quickFormationOrders{bottom:74px;left:8px}#quickFormationOrders button{padding:4px 7px;min-height:36px}
+ body[data-has-selection="true"]:not(.forming) #selectionDock{bottom:124px}
+}

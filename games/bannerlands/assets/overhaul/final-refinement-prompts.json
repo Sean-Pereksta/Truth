@@ -1,0 +1,25 @@
+{
+  "generator": "built-in image_gen",
+  "refinements": [
+    {
+      "id": "cavalry_clean",
+      "prompt": "Remove the entire gray white cloudy background from the complete16 frame sprite sheet. Preserve only the painted horses, riders, shields and lances, with clean TRUE transparent alpha around them and through gaps among legs, arms and weapons. Keep ALL sixteen horse/rider poses, original colors, identity, complete equipment, same4x4 positions and same cell layout and image dimensions. NO opaque or semitransparent cloud/mist/aura/checkerboard, NO ground shadows. Do not alter the characters, shields, lances, framing, or pose sequence. Production transparent sprite sheet clean cutouts.",
+      "source": "C:\\Users\\seanp\\.codex\\generated_images\\01a1e5c5-30ae-7822-a62b-0c116799cebb\\exec-f72963f6-522c-4620-83e0-17316efc97a1.png"
+    },
+    {
+      "id": "storm_rider_padded",
+      "prompt": "Re-layout this complete painted Baratheon Storm Rider16 pose animation sheet for clean production use. Keep the same black horse, yellow/black stag heraldry, antler crested rider, shield, long complete lance, painterly quality, action sequence and ONLY screen-right three-quarter view. EXACT4 columns x4 rows. Add LARGE transparent gutters between EVERY cell, with AT LEAST25% of EACH CELL HEIGHT transparent above and15% below its whole character, and10% width blank each side. Expand total canvas height as needed rather than clipping antlers or horse legs. Every crest/horn, boot, hoof, shield, and lance tip must remain fully within its own cell, never touching another row. All bodies retain consistent scale across16poses. Row1four gait poses, row2ready/back/lower/couched charge, row3thrust/recovery/shieldguard/block, row4hit/startfall/collapse/fallen. Repaint only to recover cropped antler tips at top. Pure clean transparent alpha, no background haze/cloud/ground scenery/text/grid.",
+      "source": "C:\\Users\\seanp\\.codex\\generated_images\\01a1e5c5-30ae-7822-a62b-0c116799cebb\\exec-ce24da77-cbbe-4431-bb96-ca7498336b01.png"
+    },
+    {
+      "id": "hill_huntsman_padded",
+      "prompt": "Repack this painted Tarly Hill Huntsman16pose sprite sheet into a WIDE LANDSCAPE 4column4row transparent atlas with much more room between complete individual sprites. Keep EXACT SAME character, peaked hunting cap, face, green/red leather equipment, longbow and quiver, painted illustration style, same screen-right single facing, and same sixteen action poses. All4rows and4columns must have GENEROUS truly empty gutters. Entire bow of the kneeling/falling poses in bottom row must remain inside THEIR OWN cell, with no overlap of adjacent fallen soldier. Expand canvas width, don't shrink soldier. Leave at least15% of cellwidth clear on each side of widest pose and12%cellheight empty above/below, no clipped bow strings/heads/hats/boots. Row1four stalking walk poses; row2ready/draw/aim/fire; row3recovery/crouch/kneelingaim/backstep; row4hit/fall/collapse/lyingdead. ONE FULL character per cell. Exact same body scale between cells. Pure transparent alpha only, no clouds/aura/shadows/scenery/text/grid.",
+      "source": "C:\\Users\\seanp\\.codex\\generated_images\\01a1e5c5-30ae-7822-a62b-0c116799cebb\\exec-6ce7aac0-d25b-4466-8369-199e746b27b0.png"
+    },
+    {
+      "id": "sun_lance_champion_padded",
+      "prompt": "Repack complete16posed painted Martell Sun Lance Champion mounted animation sheet for Bannerlands into4columns x4rows with LARGE truly empty transparent gutters, at least20%cellheight above and15%below each complete horse/rider and10%cellwidth side margins. Expand overall canvas height/width to accommodate margins rather than shrinking/clipping characters. Keep exact same copper/gold/orange sun heraldry, desert rider helmet/scarf, sandy dun horse, roundsunshield, long lance, natural proportions, detailed painted style, allSCREEN RIGHT threequarter profile only. Same16actions sequence row1four gait; row2ready/back/lower/couchedcharge; row3thrust/recovery/shieldguard/block; row4hit/falling/collapse/fallendead. Recover any cropped helmet tips; full lances and hooves complete. Keep body scale consistent between cells. Remove ALL background colored mist/cloud/haze/aura; pure clear alpha only, no checkerboard/grid/text/scenery. One entire sprite percell, zero overlap between neighboring rows.",
+      "source": "C:\\Users\\seanp\\.codex\\generated_images\\01a1e5c5-30ae-7822-a62b-0c116799cebb\\exec-acfb3dd9-0a48-4dc2-ba17-84b0633b8d47.png"
+    }
+  ]
+}
