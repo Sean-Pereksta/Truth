@@ -53,6 +53,35 @@
     c.drawImage(img,id%4*sw,Math.floor(id/4)*sh,sw,sh,x-w/2,y-h/2,w,h);
     c.globalAlpha=previous;
   }
+  // Every chevron in a locked lane has the same opacity curve. Rasterize its
+  // painted interior once, leaving the exact hit boundary and timer live.
+  function laneBrush(r,s,step,alpha) {
+    const image=r.images.reconThreats;
+    if(!image)return;
+    if(typeof OffscreenCanvas==='undefined'){
+      for(let n=step/2;n<s.length;n+=step)stamp(r,1,n,0,44,s.halfWidth*1.7,alpha);
+      return;
+    }
+    const cache=r.laneBrushes||(r.laneBrushes=new Map());
+    const scale=Math.max(1,Math.ceil(r.dpr*(r.game.camera?.zoom||1)));
+    const key=[s.length,s.halfWidth,step,scale,s.roundCaps].join('|');
+    let brush=cache.get(key);
+    if(!brush) {
+      const pad=s.roundCaps?s.halfWidth:0;
+      const width=Math.ceil(s.length+2*pad),height=Math.ceil(s.halfWidth*2);
+      if(!width||!height)return;
+      const tile=new OffscreenCanvas(width*scale,height*scale),c=tile.getContext('2d');
+      c.scale(scale,scale);c.translate(pad,s.halfWidth);c.imageSmoothingQuality='high';
+      path(c,s);c.clip();
+      const sw=image.width/4,sh=image.height/2,h=s.halfWidth*1.7;
+      for(let n=step/2;n<s.length;n+=step)c.drawImage(image,sw,0,sw,sh,n-22,-h/2,44,h);
+      brush={image:tile.transferToImageBitmap(),width,height,pad};
+      if(cache.size>=12){const first=cache.keys().next().value;cache.get(first).image.close();cache.delete(first);}
+      cache.set(key,brush);
+    }
+    const c=r.ctx;c.save();c.globalAlpha*=alpha;
+    c.drawImage(brush.image,-brush.pad,-s.halfWidth,brush.width,brush.height);c.restore();
+  }
   function mark(r,s,ratio,second) {
     const lane=s.kind==='lane',dx=lane?s.length*Math.cos(s.angle)/2:0,dy=lane?s.length*Math.sin(s.angle)/2:0;
     if(r.visible && !r.visible(s.x+dx,s.y+dy,lane?s.length/2+s.halfWidth:s.radius+8))return;
@@ -61,10 +90,11 @@
     c.save();c.translate(s.x,s.y);c.rotate(s.angle);
     path(c,s);
     c.fillStyle=hi?'rgba(20,13,10,.40)':s.stamp===6?'rgba(23,98,104,.31)':'rgba(143,41,29,.21)';
-    c.fill();c.save();c.clip();
+    c.fill();c.save();
+    if(!lane||typeof OffscreenCanvas==='undefined')c.clip();
     if(lane){
       const step=Math.max(66,s.length/(r.game.settings?.quality==='low'?4:9));
-      for(let n=step/2;n<s.length;n+=step)stamp(r,1,n,0,44,s.halfWidth*1.7,.42+ratio*.39);
+      laneBrush(r,s,step,.42+ratio*.39);
     }else if(s.inner){
       // Keep a wide relay sweep translucent and its open gap empty. Stamp
       // brush marks at actor scale along the outer rim of the live sector.

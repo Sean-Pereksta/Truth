@@ -19,7 +19,7 @@
       scale=stable?Math.min(w/texture.reference.w,h/texture.reference.h):Math.min(w/crop[2],h/crop[3]);dw=crop[2]*scale;dh=crop[3]*scale;dx=-dw*px;dy=-dh*py;
       if(stable){if(px===.5)dx=(crop[0]-frame.anchor[0])*scale;if(py===1)dy=(crop[1]-frame.anchor[1])*scale;}
     }
-    c.save();c.translate(x,y);if(options.angle)c.rotate(options.angle);if(options.flip)c.scale(-1,1);if(options.alpha!==undefined)c.globalAlpha*=Math.max(0,Math.min(1,options.alpha));if(options.glow){c.shadowColor=options.glow;c.shadowBlur=12;}
+    c.save();c.translate(x,y);if(options.angle)c.rotate(options.angle);if(options.flip)c.scale(-1,1);if(options.alpha!==undefined)c.globalAlpha*=Math.max(0,Math.min(1,options.alpha));if(options.glow){c.shadowColor=options.glow;c.shadowBlur=options.glowRadius??12;}
     c.drawImage(image,crop[0],crop[1],crop[2],crop[3],dx,dy,dw,dh);
     if(!options.fullCell)for(const piece of frame.pieces||[]){const p=piece.crop;c.drawImage(image,p[0],p[1],p[2],p[3],dx+(p[0]-crop[0])*scale,dy+(p[1]-crop[1])*scale,p[2]*scale,p[3]*scale);}
     c.restore();return true;

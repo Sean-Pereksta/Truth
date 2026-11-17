@@ -35,7 +35,8 @@ try{
       campaignStartMs:median(rs.map(r=>r.journeys[0].campaignStartMs)),surfaceReturnMs:median(rs.flatMap(r=>r.surfaceReturns)),
       coldYardExitMs:rs[0].journeys[0].exitMs===null?null:median(rs.map(r=>r.journeys[0].exitMs)),
       warmYardExitMs:rs[0].journeys[0].exitMs===null?null:median(rs.flatMap(r=>r.journeys.slice(1).map(j=>j.exitMs))),
-      heapMiB:[0,1,2,3].map(i=>median(rs.map(r=>r.heapMiB[i])))};
+      heapMiB:[0,1,2,3].map(i=>median(rs.map(r=>r.heapMiB[i]))),
+      privateMiB:[0,1,2,3].map(i=>rs[0].privateMiB[i]===null?null:median(rs.map(r=>r.privateMiB[i])))};
     const combat=group.combat.map(r=>r.sample);
     summary.combat={p95:median(combat.map(s=>s.elapsedFrameMs.p95)),p99:median(combat.map(s=>s.elapsedFrameMs.p99)),over33:median(combat.map(s=>s.over33ms)),cpuP95:median(combat.map(s=>s.submissionMs.p95))};
     for(const scene of rs[0].scenes.map(s=>s.scene)){

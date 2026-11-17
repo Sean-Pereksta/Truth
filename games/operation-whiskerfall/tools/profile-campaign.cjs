@@ -3,6 +3,7 @@
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const {execFileSync}=require('node:child_process');
 const {pathToFileURL} = require('node:url');
 const {chromium} = require('playwright');
 const root = path.resolve(process.argv[2] || path.join(__dirname, '..'));
@@ -12,6 +13,16 @@ const stress = process.argv.includes('--stress');
 const viewport = {width:1280, height:720};
 const settings = {quality:'high', resolution:'1280', minimap:true, highContrastWarnings:true,
   damageNumbers:true, screenShake:false};
+async function privateMemoryMiB(session){
+  if(process.platform!=='win32')return null;
+  const {processInfo}=await session.send('SystemInfo.getProcessInfo');
+  const ids=processInfo.map(p=>p.id).filter(n=>Number.isSafeInteger(n)&&n>0);
+  if(!ids.length)throw Error('Chrome process list was empty');
+  const command='(Get-Process -Id '+ids.join(',')+' -ErrorAction SilentlyContinue | Measure-Object -Property PrivateMemorySize64 -Sum).Sum';
+  const bytes=Number(execFileSync('powershell.exe',['-NoProfile','-NonInteractive','-Command',command],{encoding:'utf8'}).trim());
+  if(!(bytes>0))throw Error('Chrome process memory measurement failed');
+  return +(bytes/1048576).toFixed(1);
+}
 function install({settings}) {
   localStorage.setItem('whiskerfall.settings',JSON.stringify(settings));
   window.probePads = [0,1].map(index => ({id:'Fixture pad '+index, mapping:'standard', connected:true, index,
@@ -163,13 +174,14 @@ async function measure() {
     try{
       const page=await browser.newPage({viewport,deviceScaleFactor:1});
       const cdp=await page.context().newCDPSession(page);
+      const browserSession=await browser.newBrowserCDPSession();
       const errors=[];page.on('pageerror',e=>errors.push(e.message));
       await page.addInitScript(install,{settings});
       await page.goto(pathToFileURL(path.join(root,'index.html')).href,{waitUntil:'domcontentloaded'});
       await page.waitForFunction(()=>window.cold?.readyMs&&cold.coverMs);
       const cold=await page.evaluate(()=>window.cold);
-      const journeys=[],scenes=[],heapMiB=[],surfaceReturns=[];
-      for(const scene of ['town','coop',...(stress?['stress']:[])]){
+      const journeys=[],scenes=[],heapMiB=[],privateMiB=[],surfaceReturns=[];
+      for(const scene of ['town','coop']){
         journeys.push(await page.evaluate(setupCampaign,{coop:scene!=='town'}));
         const roles=['gallows_bell','seam_ripper'];
         scenes.push(await page.evaluate(fixture,{scene,frames:180,warmup:45,stressRoles:roles}));
@@ -190,9 +202,14 @@ async function measure() {
         }));
         await cdp.send('HeapProfiler.collectGarbage');
         heapMiB.push(+((await cdp.send('Runtime.getHeapUsage')).usedSize/1048576).toFixed(2));
+        privateMiB.push(await privateMemoryMiB(browserSession));
+      }
+      if(stress){
+        await page.evaluate(setupCampaign,{coop:true});
+        scenes.push(await page.evaluate(fixture,{scene:'stress',frames:180,warmup:45,stressRoles:['gallows_bell','seam_ripper']}));
       }
       if(errors.length)throw Error(errors.join('\n'));
-      records.push({run:run+1,browser:browser.version(),cold,journeys,scenes,heapMiB,surfaceReturns});
+      records.push({run:run+1,browser:browser.version(),cold,journeys,scenes,heapMiB,privateMiB,surfaceReturns});
       const result={device:os.cpus()[0].model,platform:os.platform()+' '+os.release(),viewport,settings,records};
       if(destination) fs.writeFileSync(destination,JSON.stringify(result,null,2)+'\n');
       console.log(JSON.stringify(records.at(-1)));

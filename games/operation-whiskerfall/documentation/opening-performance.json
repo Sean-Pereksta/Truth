@@ -1,0 +1,1570 @@
+{
+  "base": {
+    "runs": [
+      {
+        "run": 1,
+        "browser": "157.0.8103.52",
+        "cold": {
+          "coverMs": 3040.1999999284744,
+          "readyMs": 4131.5
+        },
+        "journeys": [
+          {
+            "campaignStartMs": 1895.1999999284744,
+            "exitMs": null
+          },
+          {
+            "campaignStartMs": 1356.1000000238419,
+            "exitMs": null
+          },
+          {
+            "campaignStartMs": 1471.6999999284744,
+            "exitMs": null
+          },
+          {
+            "campaignStartMs": 1261.5,
+            "exitMs": null
+          },
+          {
+            "campaignStartMs": 1321.2999999523163,
+            "exitMs": null
+          },
+          {
+            "campaignStartMs": 1304.0999999046326,
+            "exitMs": null
+          }
+        ],
+        "scenes": [
+          {
+            "scene": "town",
+            "frames": 180,
+            "p95Ms": 33.8,
+            "p99Ms": 50,
+            "over33": 80,
+            "over50": 0,
+            "peakEnemies": 2,
+            "framesInside": 155,
+            "maxProjectiles": 2,
+            "attackFrames": 0,
+            "attackStates": [],
+            "end": [
+              {
+                "x": 2018,
+                "y": 1430,
+                "hp": 9954,
+                "shots": 5000
+              }
+            ],
+            "roles": [
+              "rifleman",
+              "rifleman"
+            ],
+            "costPerFrameMs": {
+              "update": 2.627,
+              "updateEnemies": 0.337,
+              "updateLocations": 0.269,
+              "updateMissions": 0.393,
+              "updateProjectiles": 0.049,
+              "updatePlayer": 0.636,
+              "updateEffects": 0.08,
+              "draw": 7.82,
+              "drawTerrain": 0.609,
+              "drawObject": 4.611,
+              "drawActor": 0.883,
+              "drawEffect": 0.046,
+              "atmosphere": 0.093,
+              "drawLocationLabels": 0.836,
+              "updateActive": 0.1,
+              "reveal": 0.229,
+              "hud": 0.93,
+              "drawMinimap": 0.076
+            }
+          },
+          {
+            "scene": "coop",
+            "frames": 180,
+            "p95Ms": 100.2,
+            "p99Ms": 250,
+            "over33": 165,
+            "over50": 65,
+            "peakEnemies": 6,
+            "framesInside": 0,
+            "maxProjectiles": 3,
+            "attackFrames": 159,
+            "attackStates": [
+              "strike",
+              "recovery",
+              "windup",
+              "rolling"
+            ],
+            "end": [
+              {
+                "x": 16512,
+                "y": 11192,
+                "hp": 9588,
+                "shots": 4994
+              },
+              {
+                "x": 16500,
+                "y": 11243,
+                "hp": 9672,
+                "shots": 4995
+              }
+            ],
+            "roles": [
+              "fencer",
+              "blinkstalker",
+              "cindermortar",
+              "prismsentry",
+              "roller",
+              "fencer"
+            ],
+            "costPerFrameMs": {
+              "update": 4.431,
+              "updateEnemies": 0.809,
+              "updateLocations": 0.246,
+              "updateMissions": 0.532,
+              "updateProjectiles": 0.129,
+              "updatePlayer": 1.236,
+              "updateEffects": 0.286,
+              "draw": 9.423,
+              "drawTerrain": 0.858,
+              "drawObject": 0.745,
+              "drawActor": 5.015,
+              "drawEffect": 1.339,
+              "atmosphere": 0.089,
+              "drawLocationLabels": 0.566,
+              "updateActive": 0.122,
+              "reveal": 0.321,
+              "hud": 2.679,
+              "drawMinimap": 0.126
+            }
+          }
+        ],
+        "heapMiB": [
+          9.18,
+          9.67,
+          10.04,
+          10.15
+        ],
+        "privateMiB": [
+          938,
+          904.7,
+          1027.6,
+          832.2
+        ],
+        "surfaceReturns": [
+          164.2,
+          59.7,
+          36.1,
+          35.9
+        ]
+      },
+      {
+        "run": 1,
+        "browser": "157.0.8103.52",
+        "cold": {
+          "coverMs": 2309.2999999523163,
+          "readyMs": 3337.5
+        },
+        "journeys": [
+          {
+            "campaignStartMs": 1715.6000000238419,
+            "exitMs": null
+          },
+          {
+            "campaignStartMs": 1068.3000000715256,
+            "exitMs": null
+          },
+          {
+            "campaignStartMs": 980.3999999761581,
+            "exitMs": null
+          },
+          {
+            "campaignStartMs": 1038,
+            "exitMs": null
+          },
+          {
+            "campaignStartMs": 1240.5,
+            "exitMs": null
+          },
+          {
+            "campaignStartMs": 1013,
+            "exitMs": null
+          }
+        ],
+        "scenes": [
+          {
+            "scene": "town",
+            "frames": 180,
+            "p95Ms": 33.5,
+            "p99Ms": 49.9,
+            "over33": 57,
+            "over50": 1,
+            "peakEnemies": 2,
+            "framesInside": 155,
+            "maxProjectiles": 2,
+            "attackFrames": 0,
+            "attackStates": [],
+            "end": [
+              {
+                "x": 2018,
+                "y": 1430,
+                "hp": 9954,
+                "shots": 5000
+              }
+            ],
+            "roles": [
+              "rifleman",
+              "rifleman"
+            ],
+            "costPerFrameMs": {
+              "update": 2.084,
+              "updateEnemies": 0.242,
+              "updateLocations": 0.227,
+              "updateMissions": 0.361,
+              "updateProjectiles": 0.029,
+              "updatePlayer": 0.532,
+              "updateEffects": 0.092,
+              "draw": 5.852,
+              "drawTerrain": 0.505,
+              "drawObject": 3.311,
+              "drawActor": 0.657,
+              "drawEffect": 0.027,
+              "atmosphere": 0.077,
+              "drawLocationLabels": 0.709,
+              "updateActive": 0.074,
+              "reveal": 0.206,
+              "hud": 0.842,
+              "drawMinimap": 0.054
+            }
+          },
+          {
+            "scene": "coop",
+            "frames": 180,
+            "p95Ms": 50.4,
+            "p99Ms": 99.9,
+            "over33": 118,
+            "over50": 14,
+            "peakEnemies": 6,
+            "framesInside": 0,
+            "maxProjectiles": 3,
+            "attackFrames": 159,
+            "attackStates": [
+              "strike",
+              "recovery",
+              "windup",
+              "rolling"
+            ],
+            "end": [
+              {
+                "x": 16512,
+                "y": 11192,
+                "hp": 9588,
+                "shots": 4994
+              },
+              {
+                "x": 16500,
+                "y": 11243,
+                "hp": 9672,
+                "shots": 4995
+              }
+            ],
+            "roles": [
+              "fencer",
+              "blinkstalker",
+              "cindermortar",
+              "prismsentry",
+              "roller",
+              "fencer"
+            ],
+            "costPerFrameMs": {
+              "update": 3.043,
+              "updateEnemies": 0.494,
+              "updateLocations": 0.178,
+              "updateMissions": 0.321,
+              "updateProjectiles": 0.091,
+              "updatePlayer": 1.066,
+              "updateEffects": 0.187,
+              "draw": 6.084,
+              "drawTerrain": 0.682,
+              "drawObject": 0.541,
+              "drawActor": 2.848,
+              "drawEffect": 0.933,
+              "atmosphere": 0.077,
+              "drawLocationLabels": 0.429,
+              "updateActive": 0.098,
+              "reveal": 0.315,
+              "hud": 1.242,
+              "drawMinimap": 0.057
+            }
+          }
+        ],
+        "heapMiB": [
+          9.28,
+          9.54,
+          9.74,
+          10.11
+        ],
+        "privateMiB": [
+          1002.5,
+          1044.9,
+          1061.7,
+          1055
+        ],
+        "surfaceReturns": [
+          72.9,
+          36.4,
+          45.3,
+          31.2
+        ]
+      },
+      {
+        "run": 1,
+        "browser": "157.0.8103.52",
+        "cold": {
+          "coverMs": 1990.1000000238419,
+          "readyMs": 2929.7999999523163
+        },
+        "journeys": [
+          {
+            "campaignStartMs": 1582.2999999523163,
+            "exitMs": null
+          },
+          {
+            "campaignStartMs": 1071.6999999284744,
+            "exitMs": null
+          },
+          {
+            "campaignStartMs": 1292.8999999761581,
+            "exitMs": null
+          },
+          {
+            "campaignStartMs": 1325.3999999761581,
+            "exitMs": null
+          },
+          {
+            "campaignStartMs": 1242.2999999523163,
+            "exitMs": null
+          },
+          {
+            "campaignStartMs": 1279.5,
+            "exitMs": null
+          }
+        ],
+        "scenes": [
+          {
+            "scene": "town",
+            "frames": 180,
+            "p95Ms": 33.5,
+            "p99Ms": 50.2,
+            "over33": 61,
+            "over50": 2,
+            "peakEnemies": 2,
+            "framesInside": 155,
+            "maxProjectiles": 2,
+            "attackFrames": 0,
+            "attackStates": [],
+            "end": [
+              {
+                "x": 2018,
+                "y": 1430,
+                "hp": 9954,
+                "shots": 5000
+              }
+            ],
+            "roles": [
+              "rifleman",
+              "rifleman"
+            ],
+            "costPerFrameMs": {
+              "update": 2.085,
+              "updateEnemies": 0.256,
+              "updateLocations": 0.23,
+              "updateMissions": 0.346,
+              "updateProjectiles": 0.034,
+              "updatePlayer": 0.546,
+              "updateEffects": 0.078,
+              "draw": 5.844,
+              "drawTerrain": 0.492,
+              "drawObject": 3.297,
+              "drawActor": 0.691,
+              "drawEffect": 0.034,
+              "atmosphere": 0.077,
+              "drawLocationLabels": 0.703,
+              "updateActive": 0.066,
+              "reveal": 0.209,
+              "hud": 0.711,
+              "drawMinimap": 0.049
+            }
+          },
+          {
+            "scene": "coop",
+            "frames": 180,
+            "p95Ms": 83.3,
+            "p99Ms": 116.7,
+            "over33": 155,
+            "over50": 36,
+            "peakEnemies": 6,
+            "framesInside": 0,
+            "maxProjectiles": 4,
+            "attackFrames": 160,
+            "attackStates": [
+              "strike",
+              "recovery",
+              "windup",
+              "rolling"
+            ],
+            "end": [
+              {
+                "x": 16512,
+                "y": 11186,
+                "hp": 9588,
+                "shots": 4995
+              },
+              {
+                "x": 16500,
+                "y": 11243,
+                "hp": 9672,
+                "shots": 4995
+              }
+            ],
+            "roles": [
+              "fencer",
+              "blinkstalker",
+              "cindermortar",
+              "prismsentry",
+              "roller",
+              "fencer"
+            ],
+            "costPerFrameMs": {
+              "update": 4.273,
+              "updateEnemies": 0.704,
+              "updateLocations": 0.262,
+              "updateMissions": 0.497,
+              "updateProjectiles": 0.098,
+              "updatePlayer": 1.37,
+              "updateEffects": 0.256,
+              "draw": 7.563,
+              "drawTerrain": 0.861,
+              "drawObject": 0.686,
+              "drawActor": 3.522,
+              "drawEffect": 1.092,
+              "atmosphere": 0.083,
+              "drawLocationLabels": 0.547,
+              "updateActive": 0.198,
+              "reveal": 0.365,
+              "hud": 1.932,
+              "drawMinimap": 0.101
+            }
+          }
+        ],
+        "heapMiB": [
+          9.29,
+          9.51,
+          9.79,
+          9.98
+        ],
+        "privateMiB": [
+          1152.7,
+          1149.3,
+          1065.5,
+          1103.2
+        ],
+        "surfaceReturns": [
+          90.7,
+          43.6,
+          40.1,
+          53.7
+        ]
+      }
+    ],
+    "combat": [
+      {
+        "browser": "157.0.8103.52",
+        "sample": {
+          "width": 1280,
+          "height": 720,
+          "mode": "fixed",
+          "initialBacking": [
+            1280,
+            720
+          ],
+          "finalBacking": [
+            1280,
+            720
+          ],
+          "warmup": 45,
+          "frames": 180,
+          "point": {
+            "x": 16500,
+            "y": 11180
+          },
+          "roles": [
+            "fencer",
+            "blinkstalker",
+            "cindermortar",
+            "prismsentry",
+            "roller",
+            "fencer"
+          ],
+          "living": 6,
+          "elapsedFrameMs": {
+            "median": 33.3,
+            "p95": 50.1,
+            "p99": 51,
+            "max": 100.1
+          },
+          "submissionMs": {
+            "median": 9.4,
+            "p95": 17.8,
+            "p99": 21.6,
+            "max": 31.5
+          },
+          "objects": {
+            "median": 8,
+            "p95": 14,
+            "p99": 16,
+            "max": 16
+          },
+          "over33ms": 150,
+          "over34ms": 43
+        }
+      },
+      {
+        "browser": "157.0.8103.52",
+        "sample": {
+          "width": 1280,
+          "height": 720,
+          "mode": "fixed",
+          "initialBacking": [
+            1280,
+            720
+          ],
+          "finalBacking": [
+            1280,
+            720
+          ],
+          "warmup": 45,
+          "frames": 180,
+          "point": {
+            "x": 16500,
+            "y": 11180
+          },
+          "roles": [
+            "fencer",
+            "blinkstalker",
+            "cindermortar",
+            "prismsentry",
+            "roller",
+            "fencer"
+          ],
+          "living": 6,
+          "elapsedFrameMs": {
+            "median": 33.2,
+            "p95": 33.7,
+            "p99": 50.1,
+            "max": 100.4
+          },
+          "submissionMs": {
+            "median": 7.6,
+            "p95": 13.9,
+            "p99": 15.4,
+            "max": 18.2
+          },
+          "objects": {
+            "median": 8,
+            "p95": 14,
+            "p99": 16,
+            "max": 16
+          },
+          "over33ms": 99,
+          "over34ms": 8
+        }
+      },
+      {
+        "browser": "157.0.8103.52",
+        "sample": {
+          "width": 1280,
+          "height": 720,
+          "mode": "fixed",
+          "initialBacking": [
+            1280,
+            720
+          ],
+          "finalBacking": [
+            1280,
+            720
+          ],
+          "warmup": 45,
+          "frames": 180,
+          "point": {
+            "x": 16500,
+            "y": 11180
+          },
+          "roles": [
+            "fencer",
+            "blinkstalker",
+            "cindermortar",
+            "prismsentry",
+            "roller",
+            "fencer"
+          ],
+          "living": 6,
+          "elapsedFrameMs": {
+            "median": 33.2,
+            "p95": 50.1,
+            "p99": 66.9,
+            "max": 116.8
+          },
+          "submissionMs": {
+            "median": 7.7,
+            "p95": 15,
+            "p99": 16.7,
+            "max": 19
+          },
+          "objects": {
+            "median": 8,
+            "p95": 14,
+            "p99": 16,
+            "max": 16
+          },
+          "over33ms": 116,
+          "over34ms": 25
+        }
+      }
+    ]
+  },
+  "candidate": {
+    "runs": [
+      {
+        "run": 1,
+        "browser": "157.0.8103.52",
+        "cold": {
+          "coverMs": 642.9000000953674,
+          "readyMs": 1629.5
+        },
+        "journeys": [
+          {
+            "campaignStartMs": 1377.1000000238419,
+            "exitMs": 319
+          },
+          {
+            "campaignStartMs": 525.2999999523163,
+            "exitMs": 62.199999928474426
+          },
+          {
+            "campaignStartMs": 451.40000009536743,
+            "exitMs": 64.20000004768372
+          },
+          {
+            "campaignStartMs": 449.90000009536743,
+            "exitMs": 76.90000009536743
+          },
+          {
+            "campaignStartMs": 426.2999999523163,
+            "exitMs": 64
+          },
+          {
+            "campaignStartMs": 433.09999990463257,
+            "exitMs": 61.300000071525574
+          }
+        ],
+        "scenes": [
+          {
+            "scene": "town",
+            "frames": 180,
+            "p95Ms": 33.8,
+            "p99Ms": 50.2,
+            "over33": 30,
+            "over50": 4,
+            "peakEnemies": 2,
+            "framesInside": 158,
+            "maxProjectiles": 2,
+            "attackFrames": 0,
+            "attackStates": [],
+            "end": [
+              {
+                "x": 2030,
+                "y": 1433,
+                "hp": 9931,
+                "shots": 5000
+              }
+            ],
+            "roles": [
+              "rifleman",
+              "rifleman"
+            ],
+            "costPerFrameMs": {
+              "update": 1.962,
+              "updateEnemies": 0.296,
+              "updateLocations": 0.208,
+              "updateMissions": 0.361,
+              "updateProjectiles": 0.046,
+              "updatePlayer": 0.409,
+              "updateEffects": 0.098,
+              "draw": 5.684,
+              "drawTerrain": 0.305,
+              "drawObject": 3.024,
+              "drawActor": 0.917,
+              "drawEffect": 0.085,
+              "atmosphere": 0.101,
+              "drawLocationLabels": 0.669,
+              "updateActive": 0.066,
+              "reveal": 0.037,
+              "hud": 0.707,
+              "drawMinimap": 0.042
+            }
+          },
+          {
+            "scene": "coop",
+            "frames": 180,
+            "p95Ms": 66.6,
+            "p99Ms": 100.1,
+            "over33": 75,
+            "over50": 15,
+            "peakEnemies": 6,
+            "framesInside": 0,
+            "maxProjectiles": 3,
+            "attackFrames": 172,
+            "attackStates": [
+              "strike",
+              "recovery",
+              "windup",
+              "rolling"
+            ],
+            "end": [
+              {
+                "x": 16500,
+                "y": 11178,
+                "hp": 9645,
+                "shots": 4994
+              },
+              {
+                "x": 16506,
+                "y": 11245,
+                "hp": 9615,
+                "shots": 4995
+              }
+            ],
+            "roles": [
+              "fencer",
+              "blinkstalker",
+              "cindermortar",
+              "prismsentry",
+              "roller",
+              "fencer"
+            ],
+            "costPerFrameMs": {
+              "update": 3.184,
+              "updateEnemies": 0.579,
+              "updateLocations": 0.213,
+              "updateMissions": 0.417,
+              "updateProjectiles": 0.129,
+              "updatePlayer": 0.917,
+              "updateEffects": 0.214,
+              "draw": 7.295,
+              "drawTerrain": 0.465,
+              "drawObject": 1.049,
+              "drawActor": 2.571,
+              "drawEffect": 1.407,
+              "atmosphere": 0.093,
+              "drawLocationLabels": 0.527,
+              "updateActive": 0.096,
+              "reveal": 0.04,
+              "hud": 1.238,
+              "drawMinimap": 0.061
+            }
+          },
+          {
+            "scene": "stress",
+            "frames": 180,
+            "p95Ms": 50.1,
+            "p99Ms": 150.1,
+            "over33": 58,
+            "over50": 10,
+            "peakEnemies": 8,
+            "framesInside": 0,
+            "maxProjectiles": 3,
+            "attackFrames": 171,
+            "attackStates": [
+              "strike",
+              "recovery",
+              "windup",
+              "rolling"
+            ],
+            "end": [
+              {
+                "x": 16494,
+                "y": 11165,
+                "hp": 9266,
+                "shots": 4995
+              },
+              {
+                "x": 16502,
+                "y": 11259,
+                "hp": 9672,
+                "shots": 4995
+              }
+            ],
+            "roles": [
+              "fencer",
+              "blinkstalker",
+              "cindermortar",
+              "prismsentry",
+              "roller",
+              "fencer",
+              "gallows_bell",
+              "seam_ripper"
+            ],
+            "costPerFrameMs": {
+              "update": 2.607,
+              "updateEnemies": 0.561,
+              "updateLocations": 0.163,
+              "updateMissions": 0.328,
+              "updateProjectiles": 0.065,
+              "updatePlayer": 0.703,
+              "updateEffects": 0.158,
+              "draw": 6.804,
+              "drawTerrain": 0.386,
+              "drawObject": 0.898,
+              "drawActor": 2.931,
+              "drawEffect": 1.091,
+              "atmosphere": 0.075,
+              "drawLocationLabels": 0.459,
+              "updateActive": 0.107,
+              "reveal": 0.038,
+              "hud": 1.037,
+              "drawMinimap": 0.05
+            }
+          }
+        ],
+        "heapMiB": [
+          9.65,
+          9.89,
+          10.21,
+          10.11
+        ],
+        "privateMiB": [
+          1314.9,
+          1555,
+          1288.8,
+          1204.8
+        ],
+        "surfaceReturns": [
+          106.8,
+          47.9,
+          72.9,
+          59.8
+        ]
+      },
+      {
+        "run": 1,
+        "browser": "157.0.8103.52",
+        "cold": {
+          "coverMs": 654.0999999046326,
+          "readyMs": 1530
+        },
+        "journeys": [
+          {
+            "campaignStartMs": 1123.8999999761581,
+            "exitMs": 266.39999997615814
+          },
+          {
+            "campaignStartMs": 397,
+            "exitMs": 54.10000002384186
+          },
+          {
+            "campaignStartMs": 513,
+            "exitMs": 73.60000002384186
+          },
+          {
+            "campaignStartMs": 387.1999999284744,
+            "exitMs": 55.699999928474426
+          },
+          {
+            "campaignStartMs": 367.89999997615814,
+            "exitMs": 57.89999997615814
+          },
+          {
+            "campaignStartMs": 415.6999999284744,
+            "exitMs": 59
+          }
+        ],
+        "scenes": [
+          {
+            "scene": "town",
+            "frames": 180,
+            "p95Ms": 18,
+            "p99Ms": 50.1,
+            "over33": 8,
+            "over50": 2,
+            "peakEnemies": 2,
+            "framesInside": 158,
+            "maxProjectiles": 2,
+            "attackFrames": 0,
+            "attackStates": [],
+            "end": [
+              {
+                "x": 2030,
+                "y": 1433,
+                "hp": 9931,
+                "shots": 5000
+              }
+            ],
+            "roles": [
+              "rifleman",
+              "rifleman"
+            ],
+            "costPerFrameMs": {
+              "update": 1.796,
+              "updateEnemies": 0.325,
+              "updateLocations": 0.189,
+              "updateMissions": 0.309,
+              "updateProjectiles": 0.044,
+              "updatePlayer": 0.369,
+              "updateEffects": 0.067,
+              "draw": 4.406,
+              "drawTerrain": 0.192,
+              "drawObject": 2.397,
+              "drawActor": 0.725,
+              "drawEffect": 0.068,
+              "atmosphere": 0.065,
+              "drawLocationLabels": 0.495,
+              "updateActive": 0.063,
+              "reveal": 0.03,
+              "hud": 0.484,
+              "drawMinimap": 0.03
+            }
+          },
+          {
+            "scene": "coop",
+            "frames": 180,
+            "p95Ms": 49.8,
+            "p99Ms": 100.2,
+            "over33": 61,
+            "over50": 8,
+            "peakEnemies": 6,
+            "framesInside": 0,
+            "maxProjectiles": 3,
+            "attackFrames": 172,
+            "attackStates": [
+              "strike",
+              "recovery",
+              "windup",
+              "rolling"
+            ],
+            "end": [
+              {
+                "x": 16500,
+                "y": 11178,
+                "hp": 9645,
+                "shots": 4994
+              },
+              {
+                "x": 16506,
+                "y": 11245,
+                "hp": 9615,
+                "shots": 4995
+              }
+            ],
+            "roles": [
+              "fencer",
+              "blinkstalker",
+              "cindermortar",
+              "prismsentry",
+              "roller",
+              "fencer"
+            ],
+            "costPerFrameMs": {
+              "update": 3.251,
+              "updateEnemies": 0.572,
+              "updateLocations": 0.21,
+              "updateMissions": 0.388,
+              "updateProjectiles": 0.138,
+              "updatePlayer": 0.929,
+              "updateEffects": 0.206,
+              "draw": 6.724,
+              "drawTerrain": 0.426,
+              "drawObject": 0.979,
+              "drawActor": 2.359,
+              "drawEffect": 1.263,
+              "atmosphere": 0.079,
+              "drawLocationLabels": 0.491,
+              "updateActive": 0.086,
+              "reveal": 0.053,
+              "hud": 1.181,
+              "drawMinimap": 0.047
+            }
+          },
+          {
+            "scene": "stress",
+            "frames": 180,
+            "p95Ms": 65.4,
+            "p99Ms": 217.1,
+            "over33": 65,
+            "over50": 15,
+            "peakEnemies": 8,
+            "framesInside": 0,
+            "maxProjectiles": 3,
+            "attackFrames": 171,
+            "attackStates": [
+              "strike",
+              "recovery",
+              "windup",
+              "rolling"
+            ],
+            "end": [
+              {
+                "x": 16494,
+                "y": 11165,
+                "hp": 9266,
+                "shots": 4995
+              },
+              {
+                "x": 16502,
+                "y": 11259,
+                "hp": 9672,
+                "shots": 4995
+              }
+            ],
+            "roles": [
+              "fencer",
+              "blinkstalker",
+              "cindermortar",
+              "prismsentry",
+              "roller",
+              "fencer",
+              "gallows_bell",
+              "seam_ripper"
+            ],
+            "costPerFrameMs": {
+              "update": 2.828,
+              "updateEnemies": 0.597,
+              "updateLocations": 0.184,
+              "updateMissions": 0.354,
+              "updateProjectiles": 0.074,
+              "updatePlayer": 0.708,
+              "updateEffects": 0.178,
+              "draw": 7.384,
+              "drawTerrain": 0.419,
+              "drawObject": 0.934,
+              "drawActor": 3.183,
+              "drawEffect": 1.161,
+              "atmosphere": 0.079,
+              "drawLocationLabels": 0.474,
+              "updateActive": 0.117,
+              "reveal": 0.037,
+              "hud": 1.17,
+              "drawMinimap": 0.051
+            }
+          }
+        ],
+        "heapMiB": [
+          9.73,
+          9.81,
+          10.23,
+          10.3
+        ],
+        "privateMiB": [
+          1299.5,
+          1383.7,
+          1233,
+          1302.8
+        ],
+        "surfaceReturns": [
+          94.3,
+          100,
+          70.7,
+          51.4
+        ]
+      },
+      {
+        "run": 1,
+        "browser": "157.0.8103.52",
+        "cold": {
+          "coverMs": 528.6000000238419,
+          "readyMs": 1397.2000000476837
+        },
+        "journeys": [
+          {
+            "campaignStartMs": 1173.0999999046326,
+            "exitMs": 278.8000000715256
+          },
+          {
+            "campaignStartMs": 474.10000002384186,
+            "exitMs": 70
+          },
+          {
+            "campaignStartMs": 522.6000000238419,
+            "exitMs": 70.19999992847443
+          },
+          {
+            "campaignStartMs": 398.59999990463257,
+            "exitMs": 57.299999952316284
+          },
+          {
+            "campaignStartMs": 357,
+            "exitMs": 57
+          },
+          {
+            "campaignStartMs": 443.09999990463257,
+            "exitMs": 56.90000009536743
+          }
+        ],
+        "scenes": [
+          {
+            "scene": "town",
+            "frames": 180,
+            "p95Ms": 33.4,
+            "p99Ms": 50.9,
+            "over33": 20,
+            "over50": 2,
+            "peakEnemies": 2,
+            "framesInside": 158,
+            "maxProjectiles": 2,
+            "attackFrames": 0,
+            "attackStates": [],
+            "end": [
+              {
+                "x": 2030,
+                "y": 1433,
+                "hp": 9931,
+                "shots": 5000
+              }
+            ],
+            "roles": [
+              "rifleman",
+              "rifleman"
+            ],
+            "costPerFrameMs": {
+              "update": 2.011,
+              "updateEnemies": 0.359,
+              "updateLocations": 0.229,
+              "updateMissions": 0.332,
+              "updateProjectiles": 0.054,
+              "updatePlayer": 0.403,
+              "updateEffects": 0.097,
+              "draw": 5.149,
+              "drawTerrain": 0.209,
+              "drawObject": 2.817,
+              "drawActor": 0.796,
+              "drawEffect": 0.077,
+              "atmosphere": 0.077,
+              "drawLocationLabels": 0.619,
+              "updateActive": 0.082,
+              "reveal": 0.029,
+              "hud": 0.58,
+              "drawMinimap": 0.033
+            }
+          },
+          {
+            "scene": "coop",
+            "frames": 180,
+            "p95Ms": 50.1,
+            "p99Ms": 83.5,
+            "over33": 70,
+            "over50": 11,
+            "peakEnemies": 6,
+            "framesInside": 0,
+            "maxProjectiles": 3,
+            "attackFrames": 172,
+            "attackStates": [
+              "strike",
+              "recovery",
+              "windup",
+              "rolling"
+            ],
+            "end": [
+              {
+                "x": 16500,
+                "y": 11178,
+                "hp": 9645,
+                "shots": 4994
+              },
+              {
+                "x": 16506,
+                "y": 11245,
+                "hp": 9615,
+                "shots": 4995
+              }
+            ],
+            "roles": [
+              "fencer",
+              "blinkstalker",
+              "cindermortar",
+              "prismsentry",
+              "roller",
+              "fencer"
+            ],
+            "costPerFrameMs": {
+              "update": 3.287,
+              "updateEnemies": 0.564,
+              "updateLocations": 0.227,
+              "updateMissions": 0.376,
+              "updateProjectiles": 0.109,
+              "updatePlayer": 0.999,
+              "updateEffects": 0.212,
+              "draw": 7.041,
+              "drawTerrain": 0.573,
+              "drawObject": 0.981,
+              "drawActor": 2.394,
+              "drawEffect": 1.231,
+              "atmosphere": 0.087,
+              "drawLocationLabels": 0.522,
+              "updateActive": 0.101,
+              "reveal": 0.049,
+              "hud": 1.208,
+              "drawMinimap": 0.046
+            }
+          },
+          {
+            "scene": "stress",
+            "frames": 180,
+            "p95Ms": 50,
+            "p99Ms": 183.3,
+            "over33": 65,
+            "over50": 9,
+            "peakEnemies": 8,
+            "framesInside": 0,
+            "maxProjectiles": 3,
+            "attackFrames": 171,
+            "attackStates": [
+              "strike",
+              "recovery",
+              "windup",
+              "rolling"
+            ],
+            "end": [
+              {
+                "x": 16494,
+                "y": 11165,
+                "hp": 9266,
+                "shots": 4995
+              },
+              {
+                "x": 16502,
+                "y": 11259,
+                "hp": 9672,
+                "shots": 4995
+              }
+            ],
+            "roles": [
+              "fencer",
+              "blinkstalker",
+              "cindermortar",
+              "prismsentry",
+              "roller",
+              "fencer",
+              "gallows_bell",
+              "seam_ripper"
+            ],
+            "costPerFrameMs": {
+              "update": 2.684,
+              "updateEnemies": 0.597,
+              "updateLocations": 0.181,
+              "updateMissions": 0.329,
+              "updateProjectiles": 0.069,
+              "updatePlayer": 0.692,
+              "updateEffects": 0.182,
+              "draw": 7.067,
+              "drawTerrain": 0.406,
+              "drawObject": 0.937,
+              "drawActor": 2.966,
+              "drawEffect": 1.192,
+              "atmosphere": 0.072,
+              "drawLocationLabels": 0.468,
+              "updateActive": 0.104,
+              "reveal": 0.052,
+              "hud": 1.037,
+              "drawMinimap": 0.047
+            }
+          }
+        ],
+        "heapMiB": [
+          9.72,
+          10.08,
+          10.21,
+          10.33
+        ],
+        "privateMiB": [
+          1166.5,
+          1674,
+          1493.5,
+          1260.5
+        ],
+        "surfaceReturns": [
+          131.1,
+          39.4,
+          97,
+          101.4
+        ]
+      }
+    ],
+    "combat": [
+      {
+        "browser": "157.0.8103.52",
+        "sample": {
+          "width": 1280,
+          "height": 720,
+          "mode": "fixed",
+          "initialBacking": [
+            1280,
+            720
+          ],
+          "finalBacking": [
+            1280,
+            720
+          ],
+          "warmup": 45,
+          "frames": 180,
+          "point": {
+            "x": 16500,
+            "y": 11180
+          },
+          "roles": [
+            "fencer",
+            "blinkstalker",
+            "cindermortar",
+            "prismsentry",
+            "roller",
+            "fencer"
+          ],
+          "living": 6,
+          "elapsedFrameMs": {
+            "median": 16.8,
+            "p95": 49.8,
+            "p99": 66.9,
+            "max": 100.1
+          },
+          "submissionMs": {
+            "median": 9.1,
+            "p95": 21.3,
+            "p99": 29.6,
+            "max": 34.8
+          },
+          "objects": {
+            "median": 8,
+            "p95": 14,
+            "p99": 16,
+            "max": 16
+          },
+          "over33ms": 61,
+          "over34ms": 10
+        }
+      },
+      {
+        "browser": "157.0.8103.52",
+        "sample": {
+          "width": 1280,
+          "height": 720,
+          "mode": "fixed",
+          "initialBacking": [
+            1280,
+            720
+          ],
+          "finalBacking": [
+            1280,
+            720
+          ],
+          "warmup": 45,
+          "frames": 180,
+          "point": {
+            "x": 16500,
+            "y": 11180
+          },
+          "roles": [
+            "fencer",
+            "blinkstalker",
+            "cindermortar",
+            "prismsentry",
+            "roller",
+            "fencer"
+          ],
+          "living": 6,
+          "elapsedFrameMs": {
+            "median": 16.8,
+            "p95": 49.9,
+            "p99": 82.6,
+            "max": 100.4
+          },
+          "submissionMs": {
+            "median": 7.5,
+            "p95": 15.5,
+            "p99": 17.9,
+            "max": 19.3
+          },
+          "objects": {
+            "median": 8,
+            "p95": 14,
+            "p99": 16,
+            "max": 16
+          },
+          "over33ms": 46,
+          "over34ms": 14
+        }
+      },
+      {
+        "browser": "157.0.8103.52",
+        "sample": {
+          "width": 1280,
+          "height": 720,
+          "mode": "fixed",
+          "initialBacking": [
+            1280,
+            720
+          ],
+          "finalBacking": [
+            1280,
+            720
+          ],
+          "warmup": 45,
+          "frames": 180,
+          "point": {
+            "x": 16500,
+            "y": 11180
+          },
+          "roles": [
+            "fencer",
+            "blinkstalker",
+            "cindermortar",
+            "prismsentry",
+            "roller",
+            "fencer"
+          ],
+          "living": 6,
+          "elapsedFrameMs": {
+            "median": 16.7,
+            "p95": 50,
+            "p99": 66.7,
+            "max": 83.5
+          },
+          "submissionMs": {
+            "median": 8.2,
+            "p95": 16.4,
+            "p99": 19.4,
+            "max": 19.9
+          },
+          "objects": {
+            "median": 8,
+            "p95": 14,
+            "p99": 16,
+            "max": 16
+          },
+          "over33ms": 56,
+          "over34ms": 16
+        }
+      }
+    ]
+  },
+  "device": "AMD Ryzen 7 5825U with Radeon Graphics         ",
+  "platform": "win32 10.0.26200",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "settings": {
+    "quality": "high",
+    "resolution": "1280",
+    "minimap": true,
+    "highContrastWarnings": true,
+    "damageNumbers": true,
+    "screenShake": false
+  },
+  "summary": {
+    "base": {
+      "browser": "157.0.8103.52",
+      "readyMs": 3337.5,
+      "coverMs": 2309.2999999523163,
+      "campaignStartMs": 1715.6000000238419,
+      "surfaceReturnMs": 44.45,
+      "coldYardExitMs": null,
+      "warmYardExitMs": null,
+      "heapMiB": [
+        9.28,
+        9.54,
+        9.79,
+        10.11
+      ],
+      "privateMiB": [
+        1002.5,
+        1044.9,
+        1061.7,
+        1055
+      ],
+      "combat": {
+        "p95": 50.1,
+        "p99": 51,
+        "over33": 116,
+        "cpuP95": 15
+      },
+      "town": {
+        "p95": 33.5,
+        "p99": 50,
+        "over33": 61,
+        "peak": 2
+      },
+      "coop": {
+        "p95": 83.3,
+        "p99": 116.7,
+        "over33": 155,
+        "peak": 6
+      }
+    },
+    "candidate": {
+      "browser": "157.0.8103.52",
+      "readyMs": 1530,
+      "coverMs": 642.9000000953674,
+      "campaignStartMs": 1173.0999999046326,
+      "surfaceReturnMs": 83.6,
+      "coldYardExitMs": 278.8000000715256,
+      "warmYardExitMs": 61.300000071525574,
+      "heapMiB": [
+        9.72,
+        9.89,
+        10.21,
+        10.3
+      ],
+      "privateMiB": [
+        1299.5,
+        1555,
+        1288.8,
+        1260.5
+      ],
+      "combat": {
+        "p95": 49.9,
+        "p99": 66.9,
+        "over33": 56,
+        "cpuP95": 16.4
+      },
+      "town": {
+        "p95": 33.4,
+        "p99": 50.2,
+        "over33": 20,
+        "peak": 2
+      },
+      "coop": {
+        "p95": 50.1,
+        "p99": 100.1,
+        "over33": 70,
+        "peak": 6
+      },
+      "stress": {
+        "p95": 50.1,
+        "p99": 183.3,
+        "over33": 65,
+        "peak": 8
+      }
+    },
+    "checks": {
+      "sameBrowser": true,
+      "matchingCoop": true,
+      "fewerBusyHitches": true,
+      "busyTail": true,
+      "startup": true,
+      "stress": true,
+      "boundedRetainedHeap": true
+    },
+    "passed": true
+  }
+}

@@ -116,7 +116,10 @@
           image.onload=async()=>{
             try{await image.decode?.();}catch(_){}
             this.loadedAssets.set(path,image);
-            if(key==='coastalTerrain')this.chunks.clear();
+            if(key==='coastalTerrain'){
+              this.terrainArtRevision=(this.terrainArtRevision||0)+1;
+              this.chunks.clear();
+            }
             resolve(image);
           };
           image.onerror=()=>{this.loadedAssets.set(path,null);resolve(null);};
@@ -480,7 +483,27 @@
       const w=rolling?rollSize:frame.w,h=rolling?rollSize:frame.h;
       const y=e.y+3-jumpHeight-(rolling?rollSize*.5:0);
       const rotation=rolling?this.clock*16*(Math.cos(e.rollAngle??e.chargeAngle??angle)<0?-1:1):e.combatState==='recovery'?Math.sin(this.clock*13)*.045:0;
-      return OW.Art.draw(this,frame.key,frame.col,frame.row,e.x,y,w,h,{py:rolling?.5:1,flip:rolling?false:flip,angle:rotation,alpha,glow:e.hit>0?'#fff0c3':undefined,...options});
+      const pose={py:rolling?.5:1,flip:rolling?false:flip,angle:rotation,alpha,glow:e.hit>0?'#fff0c3':undefined,...options};
+      if(pose.glow && typeof OffscreenCanvas!=='undefined'){
+        const cache=this.hitPaintings||(this.hitPaintings=new Map());
+        const scale=Math.max(1,Math.ceil(this.dpr||1)),pad=30;
+        const width=Math.ceil(w*2+pad*2),height=Math.ceil(h*2+pad*2);
+        const key=[frame.key,frame.col,frame.row,w,h,pose.py,pose.glow,scale].join('|');
+        let bitmap=cache.get(key);
+        if(!bitmap){
+          const tile=new OffscreenCanvas(width*scale,height*scale),ctx=tile.getContext('2d');
+          ctx.scale(scale,scale);ctx.imageSmoothingQuality='high';
+          // Paint a received-hit silhouette once. Rotation, position, blinking,
+          // the exact foot anchor and the duration of the hit stay on the actor.
+          if(!OW.Art.draw({ctx,images:this.images},frame.key,frame.col,frame.row,width/2,height/2,w,h,{py:pose.py,glow:pose.glow,glowRadius:12*scale}))return false;
+          bitmap=tile.transferToImageBitmap();
+          if(cache.size>=24){const first=cache.keys().next().value;cache.get(first).close();cache.delete(first);}
+          cache.set(key,bitmap);
+        }
+        const c=this.ctx;c.save();c.translate(e.x,y);c.rotate(pose.angle||0);if(pose.flip)c.scale(-1,1);c.globalAlpha*=pose.alpha;
+        c.drawImage(bitmap,-width/2,-height/2,width,height);c.restore();return true;
+      }
+      return OW.Art.draw(this,frame.key,frame.col,frame.row,e.x,y,w,h,pose);
     }
     actorFrame(e,isPlayer,legacyOnly=false) {
       const moving=Math.hypot(e.velocityX||0,e.velocityY||0)>8||e.anim==='run'||e.anim==='walk'||e.state==='patrol'||e.state==='chase'||e.state==='flank';
