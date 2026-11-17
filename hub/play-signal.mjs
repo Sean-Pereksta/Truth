@@ -6,6 +6,13 @@ const isOfficial=[site,'https://catnmice.com'].includes(location.origin);
 const isTruth=location.origin===truth&&location.pathname.startsWith('/Truth/games/');
 const trustedParent=(()=>{try{const ref=new URL(document.referrer);return [site,'https://catnmice.com'].includes(ref.origin)?ref.origin:null;}catch{return null;}})();
 const surfaces='canvas,[data-gameplay-surface],#board,#gameBoard,#game-board,#battlefield,#hand,#playerHand,#player-hand,#playArea,.game-board,.chessboard,.game-grid,.game-cell,.hand-card,.battle-grid,.board-cell,.tile-grid';
+const controls={
+  biblegame:'#wordSubmitBtn,#referenceSubmitBtn,#bookOptions button',bibleroguelike:'#wordSubmitBtn,#referenceSubmitBtn,#bookOptions button',
+  crowncouncil:'.cardRow button,.cardRow [data-pick]',catmobile:'#moveJoy,#buildJoy,#grid',grass:'#rollBtn,#acceptRollBtn,#rerollBtn,#endTurnBtn,#quickEndTurnBtn,#shopEndTurnBtn',
+  knightwarfare:'#submitAnswer,#mapStage #gridLayer',quipclash:'[data-submit-answers],[data-action="vote"]',rock:'#map',
+  roguecards:'#grid,#benchBoard',rogueduel:'#grid,#draftChoices,#relicChoices',warrealms:'#endTurnBtn,#handRow,#attackTargetsBoard',
+  trumprev:'#boardGrid,#battleGrid',microwars2:'#mapView',spelltower:'#endTurnBtn',cardrealms:'#attackAuthorityBtn,#endTurnBtn',cardrealmsmulti:'#attackAuthorityBtn,#endTurnBtn'
+};
 let recorded=false;
 function key(){
   if(assigned==='biblegame'&&(new URLSearchParams(location.search).get('mode')==='roguelike'||localStorage.getItem('gh.lastGameType')==='bibleroguelike'&&new URLSearchParams(location.search).has('lobby')))return 'bibleroguelike';
@@ -28,7 +35,7 @@ if(explicit){
 }else{
   window.addEventListener('pointerdown',event=>{
     if(!event.isTrusted||event.button!==0||event.target.closest('a,dialog,input,textarea,select,nav,[role="dialog"]'))return;
-    const surface=event.target.closest(surfaces);
+    const surface=event.target.closest(controls[assigned]?surfaces+','+controls[assigned]:surfaces);
     if(surface&&!/preview|avatar|portrait|thumbnail|icon|logo/i.test(surface.id+' '+surface.className))void played();
   },{capture:true,passive:true});
   window.addEventListener('keydown',event=>{
