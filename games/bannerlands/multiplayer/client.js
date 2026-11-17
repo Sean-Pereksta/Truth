@@ -69,18 +69,19 @@ export class MultiplayerClient{
  }
  remember(){try{this.storage?.setItem('bannerlands-session:'+this.origin,JSON.stringify(this.session));}catch{}}
  forget(){try{this.storage?.removeItem('bannerlands-session:'+this.origin);}catch{}this.session=null;}
- async join({name='Guest',invite,hostToken}={}){
+ async join({name='Guest',invite,hostToken,expectedRoomId}={}){
   this.close();const generation=this.generation;this.session=null;this.game=null;this.lobby=null;this.snapshot=null;this.etag=null;this.sequence=0;
   this.onStatus('connecting','Reserving your house…');
-  const data=await this.request(hostToken?'/api/host/session':'/api/join',{method:'POST',hostToken,body:{v:PROTOCOL_VERSION,gameVersion:GAME_VERSION,assetVersion:ASSET_VERSION,name,invite}});
+  const data=await this.request(hostToken?'/api/host/session':'/api/join',{method:'POST',hostToken,body:{v:PROTOCOL_VERSION,gameVersion:GAME_VERSION,assetVersion:ASSET_VERSION,name,invite,expectedRoomId}});
   if(generation!==this.generation)throw new ConnectionError('This join request was cancelled.');
-  this.session={token:data.token,team:data.team,sessionId:data.sessionId,host:!!hostToken};this.sequence=data.lastSeq||0;this.lobby=data.lobby;this.remember();this.running=true;
+  if(expectedRoomId&&data.lobby?.id!==expectedRoomId)throw new ConnectionError('That room is no longer available. Choose another room from Live Lobbies.',410);
+  this.session={token:data.token,team:data.team,sessionId:data.sessionId,lobbyId:data.lobby?.id,host:!!hostToken};this.sequence=data.lastSeq||0;this.lobby=data.lobby;this.remember();this.running=true;
   await this.poll();return data;
  }
- async restore(){
+ async restore({expectedRoomId}={}){
   this.close();const generation=this.generation;
   let saved;try{saved=JSON.parse(this.storage?.getItem('bannerlands-session:'+this.origin)||'null');}catch{return false;}
-  if(!saved?.token)return false;this.session=saved;this.running=true;
+  if(!saved?.token||expectedRoomId&&saved.lobbyId!==expectedRoomId)return false;this.session=saved;this.running=true;
   try{await this.poll(true);return generation===this.generation&&!!this.session;}catch(error){if(generation!==this.generation)return false;this.running=false;this.forget();if(error.status!==401&&error.status!==410)throw error;return false;}
  }
  attachCommands(game){
@@ -135,6 +136,7 @@ export class MultiplayerClient{
    const data=await this.request('/api/state'+(!this.snapshot?'?initial=1':'?since='+this.snapshot.sequence),{etag:this.etag});if(!this.running||generation!==this.generation)return;this.lastGood=this.now();
    if(!data.unchanged){
     const nextLobby=data.lobby||this.lobby;
+    if(this.session?.lobbyId&&data.lobby?.id!==this.session.lobbyId)throw new ConnectionError('That room is no longer available. Choose another room from Live Lobbies.',410);
     if(this.lobby?.matchId!==nextLobby?.matchId){this.game=null;this.snapshot=null;this.etag=null;this.presentation=new PresentationBuffer();this.queue.length=0;this.sequence=0;this.commandEpoch++;this.sending=false;for(const controller of this.commandControllers)controller.abort();}
     this.lobby=nextLobby;if(data.session){Object.assign(this.session,data.session);this.sequence=Math.max(this.sequence,data.session.lastSeq||0);this.remember();}
     if(data.delta){

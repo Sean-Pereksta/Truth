@@ -4,6 +4,22 @@ import {mountLobbyUI} from './lobby-ui.js';
 import {createFirebaseDirectory,parseGuestInvite,safeHostOrigin} from './directory.js';
 import {GAME_VERSION,ASSET_VERSION,PROTOCOL_VERSION} from './protocol.js';
 
+const ARCADE_URL='https://www.catnmice.com/lobby/lobby.html#live-lobbies';
+const ROOM_ID=/^[a-f0-9]{24}$/;
+function arcadeUrl(value){
+ try{
+  const url=new URL(value);
+  if(url.username||url.password)return ARCADE_URL;
+  const main=url.origin==='https://www.catnmice.com'&&url.pathname==='/lobby/lobby.html';
+  const pages=url.origin==='https://sean-pereksta.github.io'&&url.pathname==='/Magic/lobby/lobby.html';
+  const local=/^http:\/\/127\.0\.0\.1:\d+$/.test(location.origin)&&/^http:\/\/127\.0\.0\.1:\d+$/.test(url.origin)&&url.pathname==='/lobby/lobby.html';
+  if(!main&&!pages&&!local)return ARCADE_URL;
+  const directory=local&&url.searchParams.get('catDirectory');url.search='';
+  if(directory)url.searchParams.set('catDirectory',directory);
+  url.hash='live-lobbies';return url.href;
+ }catch{return ARCADE_URL;}
+}
+
 export function setupMultiplayer({getConfig,onGame,onMessage,onOrderResult,onLeave,getAssetsReady=()=>false}={}){
  initializeDesktopBridge();
  const downloaded=!!window.bannerlandsHost||document.body.dataset.standalone==='true';
@@ -55,13 +71,14 @@ export function setupMultiplayer({getConfig,onGame,onMessage,onOrderResult,onLea
    onMessage?.(result.ok?'Host accepted your order.':result.message||'The host rejected this order.',!result.ok);
   }});client=next;return client;
  }
- async function join({origin=location.origin,invite,name='Guest',lobby}={}){
+ async function join({origin=location.origin,invite,name='Guest',expectedRoomId}={}){
   selectionEpoch++;
   stopWatch();
+  arcadeReturn.hidden=true;
   origin=safeHostOrigin(origin,{allowLocalOrigins:local});
-  if(client?.session&&client.origin===origin&&(!lobby||lobby.id===client.lobby?.id)){ui.show('session');return;}
+  if(client?.session&&client.origin===origin&&(!expectedRoomId||expectedRoomId===client.lobby?.id)){ui.show('session');return;}
   if(client?.session)await leave({showHome:false});
-  const next=makeClient({origin}),epoch=selectionEpoch;await next.join({invite,name});if(client===next&&epoch===selectionEpoch)rememberHost(origin);
+  const next=makeClient({origin}),epoch=selectionEpoch;await next.join({invite,name,expectedRoomId});if(client===next&&epoch===selectionEpoch)rememberHost(origin);
  }
  async function host(config,metadata){
   selectionEpoch++;
@@ -84,22 +101,41 @@ export function setupMultiplayer({getConfig,onGame,onMessage,onOrderResult,onLea
   client=null;wasBattle=false;activeGame=null;inviteUrl=null;lastLobbyProblem=null;clearHost();if(showHome)ui.show('home');onLeave?.();
  }
  const ui=mountLobbyUI({getConfig,...compatibility,version:GAME_VERSION,downloadUrl:'download.html',allowLocalOrigins:local,canHost:!!window.bannerlandsHost,showDownload:!downloaded,
-  onHost:host,onJoin:join,onBrowse:async()=>{
+  onHost:host,onJoin:params=>join({...params,expectedRoomId:params.lobby?.id}),onBrowse:async()=>{
    stopWatch();stopBrowsing=directory.watch(records=>ui.renderLobbies(records),{...compatibility,onError:error=>ui.setStatus('Lobby discovery is unavailable. You can still join by invitation.',{error:true})});return directory.list(compatibility);
   },onLeave:leave,onReady:async({ready,revision,assetsReady})=>client.ready(ready,revision,assetsReady),onChooseHouse:async team=>client.chooseHouse(team),onStart:async({revision})=>client.start(revision),
   onEnd:()=>client.request('/api/end',{method:'POST',body:{}}),onVisibility:({public:listed})=>client.request('/api/visibility',{method:'POST',body:{public:listed}}),onConfigure:(config,metadata)=>client.request('/api/config',{method:'POST',body:{config,...metadata}}),onClose:stopWatch});
  for(const [id,view]of [['hostLobbyButton','host'],['browseLobbiesButton','browse'],['joinInviteButton','invite']])document.getElementById(id)?.addEventListener('click',()=>ui.show(client?.session?'session':view));
  const leaveButton=document.getElementById('leaveOnlineButton');leaveButton?.addEventListener('click',()=>ui.show('session'));
  window.addEventListener('pagehide',()=>{client?.close();stopWatch();});
+ const fragment=new URLSearchParams(location.hash.slice(1)),expectedRoomId=fragment.get('room');
+ const arcadeReturn=document.createElement('a');arcadeReturn.className='multiplayer-download';arcadeReturn.textContent='Return to Live Lobbies';
+ arcadeReturn.href=arcadeUrl(fragment.get('returnUrl'));arcadeReturn.hidden=true;
+ ui.element.querySelector('.multiplayer-status').after(arcadeReturn);
  async function recover(){
   const epoch=selectionEpoch;
-  const fragment=new URLSearchParams(location.hash.slice(1)),invite=fragment.get('invite'),auto=fragment.has('join')||!!invite;
+  const invite=fragment.get('invite'),auto=fragment.has('join')||!!invite||expectedRoomId!==null;
+  let origin;
+  if(expectedRoomId!==null){
+   if(!ROOM_ID.test(expectedRoomId))throw new Error('The selected campaign has an invalid room address.');
+   origin=safeHostOrigin(fragment.get('host'),{allowLocalOrigins:local});
+  }else if(auto){
+   ({origin}=parseGuestInvite(location.href,{allowLocalOrigins:local}));
+  }else{
+   origin=selectedHost();
+  }
   if(fragment.get('view')==='browse'){history.replaceState(null,'',location.pathname+location.search);ui.show('browse');}
-  if(auto){parseGuestInvite(location.href,{allowLocalOrigins:local});history.replaceState(null,'',location.pathname+location.search);ui.show('session');}
-  const c=makeClient({origin:auto?location.origin:selectedHost()});
-  const restored=await c.restore();if(epoch!==selectionEpoch||client!==c)return;if(restored)return;
-  c.close();if(auto)await join({origin:location.origin,invite});else clearHost();
+  if(auto){history.replaceState(null,'',location.pathname+location.search);ui.show('session');ui.setStatus('Reserving your house with the host…',{loading:true});}
+  const c=makeClient({origin});
+  const restored=await c.restore({expectedRoomId});if(epoch!==selectionEpoch||client!==c)return;
+  if(restored){rememberHost(origin);return;}
+  c.close();if(auto)await join({origin,invite,expectedRoomId:expectedRoomId??undefined});else clearHost();
  }
- void recover().catch(error=>{ui.show('invite');ui.setStatus(error.message,{error:true});});
+ const recoveryEpoch=selectionEpoch;
+ void recover().catch(error=>{
+  if(selectionEpoch>recoveryEpoch+1)return;
+  ui.show('invite');arcadeReturn.hidden=expectedRoomId===null;
+  ui.setStatus(error instanceof TypeError?'The host could not be reached. The room may have closed.':error.message,{error:true});
+ });
  return {get client(){return client;},ui,directory,leave,assetsReady(){ui.setAssetsReady(getAssetsReady());},show(){ui.show(client?.session?'session':'home');}};
 }

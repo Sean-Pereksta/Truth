@@ -30,5 +30,5 @@
     "benchmark:multiplayer": "node source/tests/multiplayer-performance.mjs",
     "test:multiplayer-latency": "node source/tests/multiplayer-latency.mjs"
   },
-  "version": "0.2.0-multiplayer-preview.1"
+  "version": "0.2.0-multiplayer-preview.2"
 }
