@@ -3,7 +3,7 @@ window.OW = window.OW || {};
 OW.config = {
   assetBaseURL: '',
   title: 'MeowQuest the Purr’d Reich',
-  version: '2.0.0-preview',
+  version: '2.1.0-preview',
   seed: 763219,
   maxEnemies: 160,
   maxProjectiles: 420,

@@ -480,7 +480,7 @@
     "xp": 46,
     "role": "fencer",
     "color": "#d99c96",
-    "hint": "The red line locks before the lunge. Dodge sideways, then attack during recovery."
+    "hint": "The amber lane locks before the lunge. Sidestep or interrupt it with a blade. The green recovery ring gives a 35% damage bonus."
   },
   {
     "id": "burrowrat",

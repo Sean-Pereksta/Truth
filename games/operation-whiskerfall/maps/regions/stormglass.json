@@ -24,13 +24,14 @@
       "y": 2990,
       "radius": 300,
       "npc": "Keeper Nacre",
-      "description": "A cliffside haven for lighthouse keepers and shipwreck survivors.",
+      "description": "Brinewatch light stands on Lighthouse walk. Local supplies, a checkpoint and the resistance forge.",
       "cleared": false,
       "enemyIds": [],
       "index": 101,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-12"
     },
     {
       "id": "town_stormglass_lantern",
@@ -41,13 +42,14 @@
       "y": 5980,
       "radius": 280,
       "npc": "Tinker Pip",
-      "description": "Salvagers keep the coastal lamps burning from this sheltered quay.",
+      "description": "The crescent beacon stands on Beacon quay. Local supplies, a checkpoint and the resistance forge.",
       "cleared": false,
       "enemyIds": [],
       "index": 102,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-13"
     },
     {
       "id": "base_stormglass_0",
@@ -1530,7 +1532,9 @@
       "solid": true,
       "variant": 0,
       "locationId": "town_8",
-      "region": 8
+      "region": 8,
+      "townId": "town_8",
+      "townPainting": "outpost-12"
     },
     {
       "id": "town_8_building_1",
@@ -1542,7 +1546,8 @@
       "solid": true,
       "variant": 1,
       "locationId": "town_8",
-      "region": 8
+      "region": 8,
+      "townId": "town_8"
     },
     {
       "id": "town_8_building_2",
@@ -1554,7 +1559,8 @@
       "solid": true,
       "variant": 2,
       "locationId": "town_8",
-      "region": 8
+      "region": 8,
+      "townId": "town_8"
     },
     {
       "id": "town_8_building_3",
@@ -1566,7 +1572,8 @@
       "solid": true,
       "variant": 3,
       "locationId": "town_8",
-      "region": 8
+      "region": 8,
+      "townId": "town_8"
     },
     {
       "id": "town_8_well",
@@ -1733,7 +1740,9 @@
       "solid": true,
       "variant": 0,
       "locationId": "town_stormglass_lantern",
-      "region": 8
+      "region": 8,
+      "townId": "town_stormglass_lantern",
+      "townPainting": "outpost-13"
     },
     {
       "id": "town_stormglass_lantern_building_1",
@@ -1745,7 +1754,8 @@
       "solid": true,
       "variant": 1,
       "locationId": "town_stormglass_lantern",
-      "region": 8
+      "region": 8,
+      "townId": "town_stormglass_lantern"
     },
     {
       "id": "town_stormglass_lantern_building_2",
@@ -1757,7 +1767,8 @@
       "solid": true,
       "variant": 2,
       "locationId": "town_stormglass_lantern",
-      "region": 8
+      "region": 8,
+      "townId": "town_stormglass_lantern"
     },
     {
       "id": "town_stormglass_lantern_building_3",
@@ -1769,7 +1780,8 @@
       "solid": true,
       "variant": 3,
       "locationId": "town_stormglass_lantern",
-      "region": 8
+      "region": 8,
+      "townId": "town_stormglass_lantern"
     },
     {
       "id": "town_stormglass_lantern_well",

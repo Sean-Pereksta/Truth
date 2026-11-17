@@ -30,7 +30,7 @@
       this.activeEnemies=[];this.chunks=new Map();this.discovered=new Set();this.liberated=new Set();this.dead=new Set();this.opened=new Set();
       this._objectChunks=new Map();this._spawnChunks=new Map();this._enemyGrid=new Map();this._waterChunks=new Map();this._roadChunks=new Map();this._safeZoneChunks=new Map();this.safeZones=[];this._riverSegments=[];this._spawns=new Map();this._dormant=new Map();this._active=new Map();this._locationMap=new Map();
       this._streamTimer=0;this._lastPlayerCells='';this.maxActiveEnemies=160;this.activeRadius=1450;
-      this._generating=true;this._buildLocations();this._buildSafeZoneIndex();this._buildGeography();this._buildStructures();this._buildScenery();this._buildEnemies();OW.Content.reconCampaign?.extendWorld(this,SCALE);this._generating=false;
+      this._generating=true;this._buildLocations();this._buildSafeZoneIndex();this._buildGeography();this._buildStructures();this._buildScenery();this._buildEnemies();OW.Content.reconCampaign?.extendWorld(this,SCALE);OW.Content.installTownStreets?.(this);OW.Content.installActivityVenues?.(this);OW.Content.installTavern?.(this);OW.Content.installOccupiedCities?.(this);this._generating=false;
       this.reveal(this.start.x,this.start.y);
     }
     _key(x,y) { return Math.floor(x/CHUNK)+','+Math.floor(y/CHUNK); }
@@ -39,10 +39,13 @@
       o.id=o.id||'object_'+this.objects.length;o.w=o.w||64;o.h=o.h||64;o.variant=o.variant||0;
       o.region=o.region==null?this.regionAt(o.x,o.y).index:o.region;o.solid=!!o.solid;
       this.objects.push(o);
+      this._indexObject(o);
+      return o;
+    }
+    _indexObject(o) {
       // Index an object in every chunk touched by its bounds. Queries deduplicate overlaps.
       const x0=Math.floor((o.x-o.w/2)/CHUNK),x1=Math.floor((o.x+o.w/2)/CHUNK),y0=Math.floor((o.y-o.h/2)/CHUNK),y1=Math.floor((o.y+o.h/2)/CHUNK);
       for(let cy=y0;cy<=y1;cy++)for(let cx=x0;cx<=x1;cx++){const k=cx+','+cy;if(!this._objectChunks.has(k))this._objectChunks.set(k,[]);this._objectChunks.get(k).push(o);}
-      return o;
     }
     _addLocation(o) { o.cleared=false;o.enemyIds=[];o.radius=o.radius||260;o.index=this.locations.length;this.locations.push(o);this._locationMap.set(o.id,o);return o; }
     _buildLocations() {
@@ -371,9 +374,15 @@
     majorBossesDefeated() {return 8-this.remainingMajorBosses().length;}
     berlinUnlocked() {if(this.opened.has('recon_network_active')&&!this.opened.has('recon_berlin_clearance'))return false;for(let i=0;i<8;i++)if(!this.liberated.has('boss_'+i)&&!this.dead.has('boss_'+i+'_commander'))return false;return true;}
     isFinalArena(x,y,margin=0) {const s=this.berlinSector;return !!s&&x>=s.x-margin&&x<=s.x+s.w+margin&&y>=s.y-margin&&y<=s.y+s.h+margin;}
-    gateAt(x,y,margin=0) {return !this.berlinUnlocked()&&this.isFinalArena(x,y,margin)?this.berlinSector:null;}
+    gateAt(x,y,margin=0) {
+      const city=y>=this.cityOldHeight-margin&&this.cityZones?.find(c=>x>=c.left-margin&&x<=c.right+margin);
+      if(city?.key==='ironveil'&&!this.opened.has('ironveil_rail_pass'))return city;
+      if((city?.key==='blackglass'||this.isFinalArena(x,y,margin))&&!this.berlinUnlocked())return this.berlinSector;
+      return null;
+    }
     isLocationLocked(location) {const l=typeof location==='string'?this.getLocation(location):location;return !!l&&!!this.gateAt(l.x,l.y);}
     regionAt(x,y) {
+      if(y>=this.cityOldHeight){const city=this.cityZones?.find(c=>x>=c.left&&x<=c.right);if(city)return this.regions[city.region];}
       const px=Math.max(0,Math.min(this.width-.001,Number.isFinite(x)?x:0)),py=Math.max(0,Math.min(this.height-.001,Number.isFinite(y)?y:0));
       return this.regions.find(r=>px>=r.x&&px<r.x+r.w&&py>=r.y&&py<r.y+r.h)||this.regions[0];
     }
@@ -402,13 +411,31 @@
       return {type:road?'road':wet?'water':r.biome,region:r.index,height:r.biome==='mountain'?.75+.2*Math.sin(x/900)*Math.cos(y/700):.25+.15*Math.sin(x/600+y/700),moisture:['marsh','isles'].includes(r.biome)?.9:r.biome==='coast'?.7:r.biome==='desert'?.05:.5,biome:r.biome};
     }
     isBlocked(x,y,radius=16) {
+      if(y>this.cityOldHeight-24-radius&&!this.cityZones?.some(c=>x>c.left+radius&&x<c.right-radius&&y<c.bottom-radius))return true;
+      const localWater=this.streetWater;
+      if(localWater){
+        for(const s of localWater){
+          const dx=x-s.tx-s.x,dy=y-s.ty-s.y;
+          if(Math.abs(dx)>s.rx+radius||Math.abs(dy)>s.ry+radius)continue;
+          if(Math.abs(x-s.tx-s.deck)<=s.width/2-radius*.27)continue;
+          if(dx*dx/((s.rx+radius*.35)**2)+dy*dy/((s.ry+radius*.35)**2)<1)return true;
+        }
+      }
       if(x<radius+24||y<radius+24||x>this.width-radius-24||y>this.height-radius-24)return true;
       if(!this._generating&&this.gateAt(x,y,radius))return true;
+      if(y>=this.cityOldHeight){
+        const city=this.cityZones?.find(c=>x>=c.left&&x<=c.right);
+        for(const canal of city?.canals||[]){
+          if(x+radius*.4<=canal.x||x-radius*.4>=canal.x+canal.w||y+radius*.4<=canal.y||y-radius*.4>=canal.y+canal.h)continue;
+          if(!canal.bridges.some(b=>x>=b.x&&x<=b.x+b.w&&y>=b.y+radius*.55&&y<=b.y+b.h-radius*.55))return true;
+        }
+      }
       // River banks are solid except where the road network makes bridge crossings.
       if(this._inWater(x,y,radius*.35)&&!this.isOnRoad(x,y,18))return true;
       const x0=Math.floor((x-radius)/CHUNK),x1=Math.floor((x+radius)/CHUNK),y0=Math.floor((y-radius)/CHUNK),y1=Math.floor((y+radius)/CHUNK),seen=new Set();
       for(let yy=y0;yy<=y1;yy++)for(let xx=x0;xx<=x1;xx++)for(const o of this._objectChunks.get(xx+','+yy)||[]){
         if(!o.solid||seen.has(o.id))continue;seen.add(o.id);
+        if(o.cityFootprint){const b=o.cityFootprint;if(x+radius>b.x&&x-radius<b.x+b.w&&y+radius>b.y&&y-radius<b.y+b.h)return true;continue;}
         // Sprite tops may overhang: collision uses the footprint at the base of the artwork.
         const hw=o.w*(o.type==='tree'||o.type==='pine'||o.type==='palm'?.17:.43),hh=o.h*(o.type==='tree'||o.type==='pine'||o.type==='palm'?.1:.29),oy=o.y+o.h*.17;
         if(Math.abs(x-o.x)<hw+radius&&Math.abs(y-oy)<hh+radius)return true;

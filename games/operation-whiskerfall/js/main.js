@@ -181,6 +181,8 @@
       if((p.fireTimer>0&&!fromBurst)||p.reloading>0||p.overheat>0||(p.meleeCommit||0)>0||p.downed)return;
       if(p.ammo<=0){this.reload(p);return;}
       const gun=this.weapon(p),mechanic=gun.mechanic||'';p.ammo--;
+      this.cityGunshot?.(p,gun);
+      const origin=W.FieldMotionArt?.muzzle(this.renderer,p);W.FieldMotionArt?.record(p,this.time);
       const tuning=p.weaponTunes?.[p.weapon]?.active;
       if(!fromBurst)p.fireTimer=1/(gun.fireRate||3)/(1+(p.skills.firearms||0)*.055)/(mechanic==='spinup'?.35+.65*(p.spin||0):1)/(tuning==='rapid'?1.25:1);
       if(mechanic==='heat'||mechanic==='spinup'&&gun.heatPerShot){p.heat+=gun.heatPerShot||.085;if(p.heat>=1){p.overheat=gun.overheatTime||1.25;p.heat=.5;this.ui.toast('Weapon cooling · switch firearm or close in with your blade.');}}
@@ -193,17 +195,17 @@
       if(mechanic==='beam'){
         const range=gun.range||850,targets=this.grid.query(p.x,p.y,range).filter(e=>alive(e)&&Math.abs(W.wrapAngle(Math.atan2(e.y-p.y,e.x-p.x)-p.angle))<.06&&this.lineOfSight(p,e)).sort((a,b)=>dist(p,a)-dist(p,b));
         for(const e of targets.slice(0,4))this.damageEnemy(e,(gun.damage||20)*(1+p.level*.08+(p.skills.firearms||0)*.12+(p.damageBonus||0))*(1+(p.upgrade||0)*.12),p);
-        const end=targets[3]||targets[targets.length-1]||{x:p.x+Math.cos(p.angle)*range,y:p.y+Math.sin(p.angle)*range};this.effect('beam',p.x,p.y,0,.16,{tx:end.x,ty:end.y,color:'#9df4ff',height:30,owner:p.id});this.setAnim(p,'shoot');this.audio.play('plasma');this.alertEnemies(p.x,p.y,750);if(p.ammo===0)this.reload(p);return;
+        const end=targets[3]||targets[targets.length-1]||{x:p.x+Math.cos(p.angle)*range,y:p.y+Math.sin(p.angle)*range};this.effect('beam',origin?.x??p.x,origin?.y??p.y,0,.16,{tx:end.x,ty:end.y,color:'#9df4ff',height:origin?.visualHeight??30,owner:p.id});this.setAnim(p,'shoot');this.audio.play('plasma');this.alertEnemies(p.x,p.y,750);if(p.ammo===0)this.reload(p);return;
       }
       for(let i=0;i<pellets;i++){
         const pelletOffset=pellets>1?(i-(pellets-1)/2)*(gun.spread||.23)/Math.max(1,pellets-1):0;
         const a=p.angle+pelletOffset+(Math.random()-.5)*(gun.spread||.045)*(pellets>1?.18:bloom)*(tuning==='power'?1.3:1);const speed=gun.speed||920;
         const critical=Math.random()<(p.perks?.crit||p.perks?.critical?.15:0);
-        this.bulletPool.take({x:p.x+Math.cos(a)*30,y:p.y+Math.sin(a)*30,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,
+        this.bulletPool.take({x:origin?.x??p.x+Math.cos(a)*30,y:origin?.y??p.y+Math.sin(a)*30,visualHeight:origin?.visualHeight??30,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,
           life:(gun.range||700)/speed,damage:(gun.damage||15)*(1+p.level*.07+(p.skills.firearms||0)*.1+(p.damageBonus||0))*(1+(p.upgrade||0)*.12)*(p.rageTime>0?1.4:1)*(critical?1.6:1)*(steady?1.16:1)*(mechanic==='charge'?1+clamp(charge/(gun.chargeTime||.85),0,1):1)*(tuning==='power'?1.2:1),
           owner:p.id,kind:rocket?'rocket':flame?'flame':electric?'plasma':'bullet',radius:rocket?11:flame?18:5,pierce:Math.max(gun.penetration||0,mechanic==='rail'?4:electric?2:p.perks?.pierce?1:0),bounces:mechanic==='ricochet'||p.perks?.ricochet?(gun.bounces||3):0,enemyBounces:gun.enemyBounces||0,homing:mechanic==='homing'||!!p.perks?.homing,turnRate:gun.homingStrength||4,knockback:gun.knockback||(pellets>1?12:0),explosive:!!(gun.explosive||p.perks?.explosive),blastRadius:gun.blastRadius||(rocket?135:65),burn:!!(gun.burn||p.perks?.burn),poison:!!gun.poison,freeze:!!gun.freeze,shatter:!!gun.shatter,chain:!!(gun.chain||p.perks?.chain),shock:!!(gun.shock||p.perks?.shock),critical,color:gun.color||(gun.poison?'#b5e77a':electric?'#8bf5ff':'#ffdf8a'),guardBreak:!!gun.guardBreak,hitIds:[],travel:0,falloff:pellets>1?gun.range*.35:0,maxRange:gun.range||700});
       }
-      this.setAnim(p,'shoot');this.effect('muzzle',p.x+Math.cos(p.angle)*39,p.y+Math.sin(p.angle)*39,22,.08,{angle:p.angle,height:30,owner:p.id});
+      this.setAnim(p,'shoot');this.effect('muzzle',origin?.x??p.x+Math.cos(p.angle)*39,origin?.y??p.y+Math.sin(p.angle)*39,22,.08,{angle:p.angle,height:origin?.visualHeight??30,owner:p.id});
       this.audio.play(rocket?'rocket':pellets>1?'shotgun':gun.kind||'shoot');this.alertEnemies(p.x,p.y,700);
       if(p.ammo===0)this.reload(p);
     }
@@ -470,6 +472,7 @@
         e.chillTime=Math.max(0,(e.chillTime||0)-dt);e.freezeResist=Math.max(0,(e.freezeResist||0)-dt);if(e.chillTime<=0)e.frostHits=0;
         if(e.freeze>0){e.freeze=Math.max(0,e.freeze-dt);e.anim='hurt';continue;}
         if(e.stun>0){e.anim='hurt';continue;}
+        if(e.cityWatch&&this.updateCityWatch){this.updateCityWatch(e,spec,dt);continue;}
         const role=String(spec.role||spec.id||spec.name||'').toLowerCase().replace(/[ _-]/g,'');
         const safe=this.safeZoneAt(e.x,e.y);
         if(safe){const a=Math.atan2(e.y-safe.y,e.x-safe.x);e.x=safe.x+Math.cos(a)*((safe.safeRadius||500)+45);e.y=safe.y+Math.sin(a)*((safe.safeRadius||500)+45);e.alert=0;e.specialMove=null;e.jumpHeight=0;}
@@ -663,6 +666,40 @@
       }
     }
     safeZoneAt(x,y){return this.world.safeZoneAt(x,y);}
+    planRoll(e,angle,length,radius){
+      const blocked=(x,y)=>this.world.isBlocked(x,y,radius)||this.safeZoneAt(x,y)||this.pointLocked(x,y);
+      const steps=Math.max(1,Math.ceil(length/8)),stride=length/steps,segments=[];
+      let x=e.x,y=e.y,dx=Math.cos(angle),dy=Math.sin(angle),start={x,y},breaks=0;
+      function closeSegment(){const size=Math.hypot(x-start.x,y-start.y);if(size>.001)segments.push({x:start.x,y:start.y,tx:x,ty:y,length:size,angle:Math.atan2(y-start.y,x-start.x)});start={x,y};}
+      for(let i=0;i<steps;i++){
+        let nx=x+dx*stride,ny=y+dy*stride;
+        if(blocked(nx,ny)){
+          closeSegment();if(++breaks>6)break;
+          const wallX=blocked(nx,y),wallY=blocked(x,ny);
+          if(wallX||!wallY)dx=-dx;if(wallY||!wallX)dy=-dy;
+          nx=x+dx*stride;ny=y+dy*stride;if(blocked(nx,ny))break;
+        }
+        x=nx;y=ny;
+      }
+      closeSegment();return segments;
+    }
+    advanceRoll(e,a,step){
+      const touched=new Set();
+      while(step>0&&a.leg<a.course.length){
+        const seg=a.course[a.leg],amount=Math.min(step,seg.length-a.traversed),ox=e.x,oy=e.y;
+        const t=(a.traversed+amount)/seg.length,nx=seg.x+(seg.tx-seg.x)*t,ny=seg.y+(seg.ty-seg.y)*t;
+        if(this.world.isBlocked(nx,ny,23)||this.safeZoneAt(nx,ny)||this.pointLocked(nx,ny)){a.leg=a.course.length;break;}
+        e.x=nx;e.y=ny;e.angle=e.rollAngle=seg.angle;
+        for(const p of this.players){
+          if(p.downed||touched.has(p))continue;
+          const dx=nx-ox,dy=ny-oy,k=clamp(((p.x-ox)*dx+(p.y-oy)*dy)/(dx*dx+dy*dy||1),0,1);
+          if(Math.hypot(p.x-ox-k*dx,p.y-oy-k*dy)<a.hitRadius){touched.add(p);this.damagePlayer(p,a.damage,e);}
+        }
+        step-=amount;a.traversed+=amount;
+        if(a.traversed>=seg.length-.000001){a.leg++;a.traversed=0;if(a.leg<a.course.length){a.bounces=(a.bounces||0)+1;this.effect('impact',nx,ny,35,.2,{color:'#ffe1a1'});}}
+      }
+      return a.leg<a.course.length;
+    }
     moveRicochet(e,angle,length,radius,damage,hitRadius,bounds=null){
       // Sweep in short segments: a fast roll must neither tunnel through a wall
       // nor miss a player between frames. Resolve each axis to preserve reflection.
@@ -696,8 +733,11 @@
         if(action.kind==='roll'){
           if(action.phase==='windup'&&action.timer<=0){action.phase='rolling';action.timer=action.length/900;e.combatState='rolling';e.rollAngle=action.angle;this.setAnim(e,'run');}
           else if(action.phase==='rolling'){
-            const motion=this.moveRicochet(e,action.angle,900*Math.max(0,Math.min(dt,action.timer+dt)),23,action.damage,45);action.angle=motion.angle;action.bounces=(action.bounces||0)+motion.bounces;e.moveTime=(e.moveTime||0)+dt;
-            if(action.timer<=0||motion.travelled<1){action.phase='recovery';action.timer=.7;e.combatState='recovery';this.setAnim(e,'land');this.text('DIZZY',e.x,e.y-48,'#ffe3a0');}
+            const remaining=900*Math.max(0,Math.min(dt,action.timer+dt));let rolling;
+            if(action.course)rolling=this.advanceRoll(e,action,remaining);
+            else{const motion=this.moveRicochet(e,action.angle,remaining,23,action.damage,45);action.angle=motion.angle;action.bounces=(action.bounces||0)+motion.bounces;rolling=motion.travelled>=1;}
+            e.moveTime=(e.moveTime||0)+dt;
+            if(action.timer<=0||!rolling){action.phase='recovery';action.timer=.7;e.combatState='recovery';this.setAnim(e,'land');this.text('DIZZY',e.x,e.y-48,'#ffe3a0');}
           }else if(action.phase==='recovery'){
             // A brief punish window follows the entire ricochet run.
             e.angle=action.angle+Math.sin(this.time*10)*.6;this.move(e,Math.cos(e.angle)*22*dt,Math.sin(e.angle)*22*dt,20);
@@ -712,15 +752,19 @@
             this.effect('enemySlash',e.x,e.y,action.radius,.3,{angle:e.angle});for(const p of this.players)if(!p.downed&&dist(e,p)<action.radius)this.damagePlayer(p,action.damage,e);
             action.phase='recovery';action.timer=.45;e.combatState='recovery';this.setAnim(e,'melee');
           }else if(action.phase==='recovery'&&action.timer<=0){
-            if(action.second){const next=this.players.filter(p=>!p.downed&&!this.safeZoneAt(p.x,p.y)).sort((a,b)=>dist(e,a)-dist(e,b))[0];action.second=false;if(next&&dist(e,next)<650){action.phase='mark';action.timer=.65;action.tx=next.x;action.ty=next.y;e.combatState='windup';this.effect('telegraph',action.tx,action.ty,action.radius,1.01,{movement:true,color:'#cc99ff'});return true;}}
+            if(action.second){const next=this.players.filter(p=>!p.downed&&!this.safeZoneAt(p.x,p.y)).sort((a,b)=>dist(e,a)-dist(e,b))[0];action.second=false;if(next&&dist(e,next)<650){action.phase='mark';action.windup=action.timer=this.settings?.longWarnings?.975:.65;action.tx=next.x;action.ty=next.y;e.combatState='windup';return true;}}
             e.combatAction=null;e.combatState=null;e.fireTimer=.75;
           }return true;
         }
       }
       if(!target||e.fireTimer>0||e.specialMove)return false;
       const d=dist(e,target),damage=this.enemyDamage(e,spec);
-      if(role==='roller'&&d<780){const angle=Math.atan2(target.y-e.y,target.x-e.x),length=clamp(d*2.2,1450,1850),warning=Math.min(length,700);e.combatState='windup';e.rollAngle=angle;e.combatAction={kind:'roll',phase:'windup',timer:.52,angle,length,damage};this.effect('chargeLane',e.x,e.y,45,.52,{tx:e.x+Math.cos(angle)*warning,ty:e.y+Math.sin(angle)*warning});this.setAnim(e,'windup');return true;}
-      if((role==='blinkstalker'||role==='voidknight'||role==='burrowrat')&&d<610){const radius=role==='burrowrat'?73:94;e.combatAction={kind:'blink',phase:'mark',timer:role==='burrowrat'?.8:.65,tx:target.x,ty:target.y,radius,damage,second:role==='voidknight'};e.combatState='windup';this.effect('telegraph',target.x,target.y,radius,1.01,{movement:true,color:role==='burrowrat'?'#c8ad87':'#cc99ff'});this.setAnim(e,'windup');return true;}
+      if(role==='roller'&&d<780){const angle=Math.atan2(target.y-e.y,target.x-e.x),course=this.planRoll(e,angle,clamp(d*2.2,1450,1850),23);
+        if(!course.length){e.fireTimer=.28;return false;}
+        const length=course.reduce((sum,seg)=>sum+seg.length,0),windup=this.settings?.longWarnings?.78:.52;
+        e.combatState='windup';e.rollAngle=angle;e.combatAction={kind:'roll',phase:'windup',timer:windup,windup,angle,length,damage,course,leg:0,traversed:0,hitRadius:45};this.setAnim(e,'windup');return true;}
+      if((role==='blinkstalker'||role==='voidknight'||role==='burrowrat')&&d<610){const radius=role==='burrowrat'?73:94,windup=(role==='burrowrat'?.8:.65)*(this.settings?.longWarnings?1.5:1);
+        e.combatAction={kind:'blink',phase:'mark',timer:windup,windup,tx:target.x,ty:target.y,radius,damage,second:role==='voidknight'};e.combatState='windup';this.setAnim(e,'windup');return true;}
       if(role==='fencer'&&d<590){const a=Math.atan2(target.y-e.y,target.x-e.x),length=Math.min(560,d+70);this.beginMove(e,{x:e.x+Math.cos(a)*length,y:e.y+Math.sin(a)*length},'charge',.45,.25,damage*1.15,36);if(e.specialMove)e.specialMove.fencing=true;e.fireTimer=1.65;return true;}
       if(role==='cinderbeast'&&d<570){this.beginMove(e,target,'charge',.9,.58,damage*1.3,78);if(e.specialMove)e.specialMove.fireTrail=true;e.fireTimer=4.6;return true;}
       if(role==='venomrat'&&d<590){this.fan(e,7,damage*.7,310,'venom',1.15);this.markStrike(target.x+(target.velocityX||0)*.5,target.y+(target.velocityY||0)*.5,75,1.25,damage*.4,{spawnHazard:true,poison:true,hazardLife:3,color:'#b6d177'});e.fireTimer=2.8;this.setAnim(e,'shoot');return true;}
@@ -1068,7 +1112,7 @@
     setMarker(x,y){this.marker={x:clamp(x,0,this.world.width),y:clamp(y,0,this.world.height)};this.audio.play('ui');}
     fastTravel(id){const l=this.world.locations.find(l=>l.id===id);if(!l||!(l.type==='town'||this.world.liberated.has(l.id)))return false;
       if(!this.players.every(p=>this.safeZoneAt(p.x,p.y))&&this.world.activeEnemies.some(e=>alive(e)&&this.players.some(p=>dist(p,e)<500&&e.state!=='patrol'))){this.ui.toast('Escape combat before travelling.');return false;}
-      const r=this.world.regionAt(l.x,l.y);if(!this.questStats.explored.has(r.id)){this.ui.toast('Discover this region on foot first.');return false;}
+      const r=this.world.regionAt(l.x,l.y);if(!this.questStats.explored.has(r.id)&&this.venueCoachDestination!==id){this.ui.toast('Discover this region on foot first.');return false;}
       this.players.forEach((p,i)=>{p.x=l.x+i*55;p.y=l.y+100;p.hp=p.maxHp;p.downed=false;p.invuln=2;});this.camera.x=l.x;this.camera.y=l.y;this.ui.hideMenu();this.ui.toast('Travelled to '+l.name);this.save(false);return true;}
     dynamicEvent(){
       const p=this.players[0],r=this.world.regionAt(p.x,p.y);if(this.nearTown(p)||this.world.activeEnemies.length>120)return;

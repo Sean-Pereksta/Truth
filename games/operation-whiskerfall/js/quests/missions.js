@@ -166,7 +166,7 @@
         if(run.holdInside&&!inside)this.ui.toast('HOLD PAUSED · return inside the marked circle. Your earned seconds are safe.','event');
         if(run.holdInside===false&&inside&&run.elapsed>0)this.ui.toast('Hold resumed · '+Math.ceil(Math.max(0,run.duration-run.elapsed))+' seconds remaining.','quest');
         run.holdInside=inside;
-        if(inside){run.elapsed=Math.min(run.duration,run.elapsed+dt);if(run.elapsed>run.wave*14&&run.wave<(q.waveCount||3)){this.missionWave(run,q,3+run.wave);run.wave++;}}
+        if(inside){run.elapsed=Math.min(run.duration,this.fieldHoldLimit?.(q,run)??run.duration,run.elapsed+dt);if(run.elapsed>run.wave*14&&run.wave<(q.waveCount||3)){this.missionWave(run,q,3+run.wave);run.wave++;}}
         if(run.elapsed>=run.duration){run.state='complete';this.missionCompleted.add(id);this.ui.toast('Supply point defended. The resistance thanks you.','quest');this.checkQuests();this.save(false);}
       }
     }

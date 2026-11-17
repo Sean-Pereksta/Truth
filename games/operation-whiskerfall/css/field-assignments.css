@@ -1,0 +1,25 @@
+.field-file { display:flex; align-items:flex-start; gap:14px; margin:12px 0; padding:12px 14px; background:#e6d4ae; color:#342c22; border-left:4px solid #a67442; border-radius:3px; }
+.field-file img { width:clamp(64px,8vw,112px); aspect-ratio:1.3; object-fit:cover; border:1px solid #8d765a; }
+.field-file small { color:#684e34; font-weight:800; letter-spacing:.09em; }
+.field-file p { color:#342c22; margin:5px 0; font-size:clamp(14px,1.25vw,18px); line-height:1.4; }
+.field-lead-actions { display:flex; gap:6px; flex-wrap:wrap; }
+.field-lead-actions button { min-height:36px; }
+.assignment-cover { display:block; float:right; width:min(36%,clamp(114px,24vh,224px)); height:auto; aspect-ratio:1; object-fit:contain; border:1px solid #877455; border-radius:4px; margin:0 0 10px 14px; background:#3e3930; }
+.dialogue-offer::after { content:''; display:block; clear:both; }
+.field-file { clear:both; }
+.field-file .field-evidence-zoom { display:flex; align-items:center; gap:12px; margin:10px 0 0; }
+.field-file .field-evidence-zoom img { width:min(45%,200px); max-height:150px; object-fit:contain; aspect-ratio:auto; }
+.field-evidence-zoom figcaption { font-size:15px; line-height:1.4; }
+.case-medal { overflow:hidden; }
+.case-medal>svg { display:none; }
+.case-medal img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+.city-dispatches,.city-file article { margin:12px 0; padding:14px; border:1px solid #736852; border-radius:5px; }
+.city-dispatches button,.city-file button { margin:4px 5px 4px 0; }
+.city-file header { position:relative; display:flex; align-items:flex-end; min-height:150px; overflow:hidden; border-radius:5px; background:#222b30; }
+.city-file header img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.city-file header div { position:relative; width:100%; padding:32px 18px 10px; background:linear-gradient(transparent,rgba(17,26,29,.95)); color:#fff0c5; }
+.city-file header h3,.city-file header p { margin:3px 0; color:inherit; }
+.city-file li { margin:8px 0; }
+.city-file li small { display:block; margin-top:3px; }
+.city-file blockquote { margin:10px 0; padding:12px 16px; border-left:3px solid #d9b27c; font-size:1.1em; }
+@media(max-width:640px) { .field-file {gap:8px;padding:8px;} .field-file img {width:60px;} }

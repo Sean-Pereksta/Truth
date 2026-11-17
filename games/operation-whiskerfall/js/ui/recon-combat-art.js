@@ -98,6 +98,21 @@
   }
   R.drawReconWarnings=function(world){
     for(const e of world.activeEnemies||[]){
+      const action=e.combatAction;
+      if(!action||e.hp<=0||e.dead)continue;
+      if(action.kind==='roll'&&action.course&&action.phase!=='recovery'){
+        for(let i=action.leg||0;i<action.course.length;i++){
+          const seg=action.course[i],skip=i===action.leg?action.traversed||0:0;
+          mark(this,{kind:'lane',x:seg.x+Math.cos(seg.angle)*skip,y:seg.y+Math.sin(seg.angle)*skip,
+            angle:seg.angle,length:seg.length-skip,halfWidth:action.hitRadius,roundCaps:true,stamp:1},action.phase==='windup'?1-action.timer/action.windup:.99,i>0);
+        }
+      }else if(action.kind==='blink'&&action.phase!=='recovery'){
+        const remaining=action.timer+(action.phase==='mark'?.36:0),span=(action.windup||.65)+.36;
+        mark(this,{kind:'disc',x:action.tx,y:action.ty,angle:0,radius:action.radius,stamp:4},W.clamp(1-remaining/span,0,.999),false);
+      }
+    }
+
+    for(const e of world.activeEnemies||[]){
       const state=W.ReconCombat.record(e),a=state?.action;
       if(!a || state.world!==world || e.dead || e.hp<=0)continue;
       for(const ally of a.links||[])if(ally.hp>0&&!ally.dead)link(this,e,ally);
@@ -159,7 +174,7 @@
   R.drawActor=function(e,player,...rest){
     const result=drawActor.call(this,e,player,...rest);
     if(!player && e.hp>0 && (e.reconRelay || ((e.bossIndex===8 || W.Content.enemies[e.type]?.reconRole) && e.combatState==='recovery'))){
-      this.worldLabel(e.reconRelay?'COMMAND RELAY':'EXPOSED',e.x,e.y+20,e.reconRelay?'#fbd875':'#b6f2c9',10);
+      this.worldLabel(e.reconRelay?'BREAK RELAY · CANCEL SWEEP':'EXPOSED',e.x,e.y+20,e.reconRelay?'#fbd875':'#b6f2c9',10);
     }
     return result;
   };
@@ -204,12 +219,52 @@
     }
     return drawEffect.call(this,e,front);
   };
+  // Project hostile rounds against each moving hero. Only an off-screen
+  // trajectory that crosses the hero's safety margin receives a border mark.
+  function approachTime(round,hero){
+    const vx=round.vx-(hero.velocityX||0),vy=round.vy-(hero.velocityY||0),speed=vx*vx+vy*vy;
+    if(speed<1)return null;
+    const dx=hero.x-round.x,dy=hero.y-round.y,eta=(dx*vx+dy*vy)/speed;
+    return eta>0 && eta<Math.min(.92,round.life||0) && Math.hypot(dx-vx*eta,dy-vy*eta)<(round.radius||5)+30?eta:null;
+  }
+  function drawBorders(r){
+    const g=r.game;if(g.state!=='playing'||g.paused||!g.camera)return;
+    const zoom=g.camera.zoom||1,halfW=r.width/2,halfH=r.height/2,alerts=new Map();
+    function candidate(source,hero,eta,index){
+      const dx=(source.x-g.camera.x)*zoom,dy=(source.y-g.camera.y)*zoom;
+      if(Math.abs(dx)<halfW-4&&Math.abs(dy)<halfH-4)return;
+      const heading=Math.atan2(dy,dx),bucket=Math.round(heading/(Math.PI/4)),key=index+'-'+bucket,
+        scale=Math.min((halfW-34)/Math.max(1,Math.abs(dx)),(halfH-40)/Math.max(1,Math.abs(dy)));
+      if(!alerts.has(key)||alerts.get(key).eta>eta)alerts.set(key,{x:halfW+dx*scale,y:halfH+dy*scale,heading,index,eta});
+    }
+    for(const shot of g.projectiles||[]){
+      if(!shot.alive||shot.owner!==-1)continue;
+      if(Math.abs(shot.x-g.camera.x)*zoom<halfW&&Math.abs(shot.y-g.camera.y)*zoom<halfH)continue;
+      g.players.forEach((p,i)=>{if(p.downed)return;const eta=approachTime(shot,p);if(eta!==null)candidate(shot,p,eta,i);});
+    }
+    for(const e of g.world.activeEnemies||[]){
+      if(e.hp<=0||e.dead)continue;
+      const a=W.ReconCombat.record(e)?.action;
+      if(!a)continue;
+      for(const b of a.beats){if(b.spent)continue;g.players.forEach((p,i)=>{if(!p.downed&&W.ReconCombat.inside(b.shape,p))candidate(b.source||e,p,b.at-a.elapsed,i);});}
+    }
+    if(!alerts.size)return;
+    const c=r.ctx;c.save();c.setTransform(r.dpr,0,0,r.dpr,0,0);
+    for(const {x,y,heading,index} of alerts.values()){
+      c.save();c.translate(x,y);c.rotate(heading);c.beginPath();c.moveTo(11,0);c.lineTo(-8,-8);c.lineTo(-5,0);c.lineTo(-8,8);c.closePath();
+      c.fillStyle=g.settings?.highContrastWarnings?'#ffed55':'#ffbe83';c.fill();c.strokeStyle='#382d25';c.lineWidth=2;c.stroke();c.restore();
+      if(g.players.length>1){c.font='bold 12px system-ui';c.textAlign='center';c.fillStyle='#fff4d9';c.fillText('P'+(index+1),x,y+21);}
+    }
+    c.restore();
+  }
+  W.ReconCombat.approachTime=approachTime;
+  const draw=R.draw;R.draw=function(...args){const result=draw.apply(this,args);drawBorders(this);return result;};
   const menu=W.UI.prototype.settingsMenu;
   W.UI.prototype.settingsMenu=function(){
     const settings=this.game.settings;
     const controls=[
       ['highContrastWarnings','High-contrast attack warnings',!!settings.highContrastWarnings],
-      ['longWarnings','Longer reconnaissance windups (+50%)',!!settings.longWarnings],
+      ['longWarnings','Longer committed attack warnings (+50%)',!!settings.longWarnings],
       ['reducedFlash','Reduce impact flashes',!!settings.reducedFlash],
       ['screenShake','Camera shake',settings.screenShake!==false]
     ].map(([key,label,checked])=>'<label class="setting"><span>'+label+'</span><input type="checkbox" data-setting="'+key+'" '+(checked?'checked':'')+'></label>').join('');

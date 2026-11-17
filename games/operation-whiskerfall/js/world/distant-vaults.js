@@ -5,7 +5,66 @@
   const specs=C.distantVaults,keys=C.distantVaultKeys,copy=v=>JSON.parse(JSON.stringify(v)),live=e=>e&&e.hp>0&&!e.dead,dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),specFor=id=>specs.find(s=>s.id===id),surface=g=>g.world.isDungeon?g.overworld:g.world;
   const guardianName=w=>w.vaultSpec?.kraken?'Nacremaw, the Great Kraken':W.DungeonGuardians[w.config.guardian].name;
   const inside=(p,r)=>p.x>=r.x&&p.y>=r.y&&p.x<=r.x+r.w&&p.y<=r.y+r.h;
-  function floors(w){return w.vaultSpec.bridge&&w.state.solved?[...w.rooms,w.vaultSpec.bridge]:w.rooms;}
+  const westCross={x:322,y:495,w:516,h:82},eastCross={x:322,y:957,w:516,h:82};
+  const piers=[{x:250,y:638,w:100,h:515},{x:300,y:320,w:110,h:330},{x:625,y:940,w:270,h:90}];
+  const ferrySlip={x:335,y:1010,w:212,h:80};
+  const bellLabels=['Reed ↑','Feather →','Cloud ↗'];
+  const tideOrder=[1,0,2];
+  function raisedFloors(w){
+    const s=w.state,id=w.entry.id;
+    if(s.chamberRevision!==2)return w.vaultSpec.bridge&&s.solved?[w.vaultSpec.bridge]:[];
+    if(id==='cave_rimeglass')return [s.pressureEast?westCross:eastCross];
+    if(id==='cave_cindercoil')return s.solved||w.ventTime>0?[w.vaultSpec.bridge]:[];
+    if(id==='cave_kraken')return piers.filter((_,i)=>s.vaultNodes[i]).concat(s.ferryMastered?[ferrySlip]:[]);
+    return [];
+  }
+  function floors(w){return w.rooms.concat(raisedFloors(w));}
+  function notes(w){
+    const s=w.state,on=s.vaultNodes,id=w.entry.id,n=w.vaultSpec.nodes;
+    if(s.solved)return ['The seal is open. Cross to the guardian, then open the reliquary.'];
+    if(s.chamberRevision!==2)return ['The expedition retains the mechanism positions in your previous field notes.',
+      'Inspect the marker on each inactive mechanism.','Completed mechanisms remain latched.',
+      'Visit '+(n.find((v,i)=>!on[i]&&!(v.requires||[]).some(j=>!on[j]))?.name||'the guardian gate')+'.'];
+    if(id==='cave_rimeglass')return [w.vaultSpec.instruction,'The regulator pointer shows which pump has pressure. The other lake recedes, revealing a gangway.',
+      'Prime each pump while pressure points toward it. Both primed gauges keep their readings.',
+      on[0]&&on[1]?'Turn the central regulator to lock both gauges.':!on[0]&&!s.pressureEast?'Prime the west pump.':!on[1]&&s.pressureEast?'Prime the east pump.':'Turn the regulator on the permanent central crossing.'];
+    if(id==='cave_cindercoil')return [w.vaultSpec.instruction,'Steam stripes mark the temporary crossing. The first valve releases a nine-second vent.',
+      'The upper catwalk connects both wings without a timer. Opening both valves cools the entire bridge.',
+      'Open the '+(!on[0]?'west':'east')+' cooling valve, using the north catwalk if needed.'];
+    if(id==='cave_zephyr')return [w.vaultSpec.instruction,'A reed bends straight up, the feather streams east, the cloud rises diagonally.',
+      'The carvings run from roots toward the sky. Match their silhouettes to the three bell reliefs.',
+      on.slice(0,3).every(Boolean)?'Touch the wind sanctuary in the middle loop.':'Ring the '+n[on.slice(0,3).findIndex(v=>!v)].name+' · '+bellLabels[on.slice(0,3).findIndex(v=>!v)]+'.'];
+    return [w.vaultSpec.instruction,'Each anchor raises a different stretch of tide-worn timber. The central pier is always safe.',
+      'The ferryman cut his marks from north to west to east. Follow that order to raise his extra return slip.',
+      'Use the '+n[tideOrder.find(i=>!on[i])].name+'.'];
+  }
+  function valveInput(g,w,i){
+    const s=w.state,id=w.entry.id,active=s.vaultNodes;
+    if(s.chamberRevision!==2)return null;
+    if(id==='cave_rimeglass'){
+      if(i===2&&!active.slice(0,2).every(Boolean)){
+        const closing=s.pressureEast?westCross:eastCross;
+        if(g.players.some(p=>inside(p,closing)&&!w.rooms.some(room=>inside(p,room)))){
+          g.ui.toast('Move both heroes onto the permanent stone before flooding that gangway.');return false;
+        }
+        s.pressureEast=!s.pressureEast;g.audio.play('ui');g.ui.toast('Pressure flows '+(s.pressureEast?'east. West lake gangway exposed.':'west. East lake gangway exposed.'));
+        g.save(false);return true;
+      }
+      if(i<2&&Number(!!s.pressureEast)!==i&&!active[i]){g.ui.toast('The '+(i?'east':'west')+' gauge is empty. Divert pressure at the central regulator.');return false;}
+    }else if(id==='cave_cindercoil'){
+      if(active[i]){w.ventTime=9;g.ui.toast('Vent reopened for nine seconds. Both catwalks remain safe.');return true;}
+      if(!active.some(Boolean))w.ventTime=9;
+    }else if(id==='cave_zephyr'&&i<3&&!active[i]&&i!==active.slice(0,3).findIndex(v=>!v)){
+      g.ui.toast('A hollow note. Earlier bells still ring. Read the reed, feather and cloud reliefs.');return false;
+    }else if(id==='cave_kraken'&&!active[i]){
+      const count=active.filter(Boolean).length;
+      if(i!==tideOrder[count])s.tideMissed=true;
+      if(count===2&&!s.tideMissed){s.ferryMastered=true;g.ui.toast('Ferryman’s order restored. The return slip rises.','quest');}
+    }
+    return null;
+  }
+  W.VaultRoutes={raisedFloors,floors,notes};
+
   function blocked(x,y,r=16){
     const floor=floors(this),valid=(x,y)=>floor.some(a=>inside({x,y},a));
     if(![[0,0],[r,0],[-r,0],[0,r],[0,-r],[r*.707,r*.707],[-r*.707,r*.707],[r*.707,-r*.707],[-r*.707,-r*.707]].every(([dx,dy])=>valid(x+dx,y+dy)))return true;
@@ -37,6 +96,7 @@
   };
   G.activateDistantVaultNode=function(index,p=this.players[0]){
     const w=this.world,s=w.vaultSpec,n=s?.nodes[index];if(!s||!n||p.downed||dist(p,n)>105||w.state.solved)return false;
+    const changed=valveInput(this,w,index);if(changed!==null)return changed;
     if(n.requires?.some(i=>!w.state.vaultNodes[i])){this.ui.toast('First activate '+n.requires.filter(i=>!w.state.vaultNodes[i]).map(i=>s.nodes[i].name).join(' and ')+'.');return false;}
     if(w.state.vaultNodes[index]){this.ui.toast(n.name+' is already active.');return false;}
     w.state.vaultNodes[index]=true;this.effect('shockwave',n.x,n.y,70,.6,{color:s.color});this.audio.play('ui');
@@ -76,17 +136,28 @@
       w.state.claimed=true;this.questStats.caches.add(w.entry.id);this.overworld.opened.add(w.entry.id);this.overworld.discovered.add(w.entry.id);this.ui.toast('Expedition seal recovered · return to '+s.npcName+'. '+s.rewardStatement,'quest');this.checkQuests();this.save(false);return true;
     }
     const index=s.nodes.findIndex(n=>dist(n,p)<105);if(index>=0)return this.activateDistantVaultNode(index,p);
-    if(dist(p,w.locations[2])<120){this.ui.toast(s.instruction,'quest');return true;}
+    if(dist(p,w.locations[2])<120)return this.ui.openChamberNotes(p);
     if(dist(p,w.locations[0])<125||dist(p,{x:820,y:1460})<105)return interact.apply(this,arguments);
     this.ui.toast(w.state.solved?'Cross the open bridge, defeat the guardian and recover the expedition seal.':s.instruction);return false;
   };
-  const missions=G.updateMissions;G.updateMissions=function(dt){const result=missions.apply(this,arguments);if(this.paused||this.world.isDungeon)return result;syncKeyRuns(this,true);
+  const missions=G.updateMissions;G.updateMissions=function(dt){const result=missions.apply(this,arguments);
+    const w=this.world;
+    if(!this.paused&&w.vaultSpec?.id==='cave_cindercoil'&&w.ventTime>0&&!w.state.solved){
+      const occupied=this.players.some(p=>inside(p,w.vaultSpec.bridge));
+      w.ventTime=Math.max(occupied?.12:0,w.ventTime-dt);
+    }
+    if(this.paused||w.isDungeon)return result;syncKeyRuns(this,true);
     for(const s of specs){const npc=this.world.getLocation(s.npcId);if(npc&&!this.questCounters['discovered:'+s.questId]&&this.players.some(p=>!p.downed&&dist(p,npc)<260)){this.questCounters['discovered:'+s.questId]=1;this.ui.toast('Hidden expedition discovered · '+s.title+' · speak with '+s.npcName+'.','quest');this.save(false);}}
     return result;
   };
   const progress=G.questProgress;G.questProgress=function(id){const q=typeof id==='object'?id:C.quests.find(q=>q.id===id),v=progress.apply(this,arguments);if(q?.distantVault&&!v.accepted&&!v.complete&&!this.questCounters?.['discovered:'+q.id])v.available=false;return v;};
   const target=G.questTarget;G.questTarget=function(id){const q=typeof id==='object'?id:C.quests.find(q=>q.id===id),s=specs.find(s=>s.questId===q?.id);if(!s||!this.acceptedQuests.has(q.id)||this.questProgress(q).readyForTurnIn)return target.apply(this,arguments);
-    if(this.world.vaultSpec?.id===s.id&&!this.world.state.solved){const i=s.nodes.findIndex((n,i)=>!this.world.state.vaultNodes[i]&&!n.requires?.some(j=>!this.world.state.vaultNodes[j]));return{...s.nodes[Math.max(0,i)],label:'Activate '+s.nodes[Math.max(0,i)].name};}
+    if(this.world.vaultSpec?.id===s.id&&!this.world.state.solved){
+      if(this.world.state.chamberRevision===2&&s.id==='cave_rimeglass'){
+        const state=this.world.state,n=state.pressureEast?1:0,i=state.vaultNodes[n]?2:n;
+        return {...s.nodes[i],label:notes(this.world)[3]};
+      }
+      const i=s.nodes.findIndex((n,i)=>!this.world.state.vaultNodes[i]&&!n.requires?.some(j=>!this.world.state.vaultNodes[j]));return{...s.nodes[Math.max(0,i)],label:'Activate '+s.nodes[Math.max(0,i)].name};}
     if(this.world.vaultSpec?.id===s.id&&!this.world.state.bossDead)return{x:1470,y:650,label:guardianName(this.world)};
     if(!this.world.isDungeon&&s.keyId&&!this.hasDistantVaultKey(s.keyId)){const k=keys.find(k=>k.id===s.keyId);return{...this.world.getLocation(k.site),label:'Recover '+k.name};}return target.apply(this,arguments);
   };
@@ -100,8 +171,23 @@
     for(const h of s.holes){c.fillStyle=s.region===6?'#5b281e':'#163c52';c.fillRect(h.x,h.y,h.w,h.h);c.strokeStyle=s.color;c.globalAlpha=.25;for(let y=h.y+20;y<h.y+h.h;y+=35){c.beginPath();c.moveTo(h.x+12,y);c.lineTo(h.x+h.w-12,y+Math.sin(clock+y)*5);c.stroke();}c.globalAlpha=1;}
     for(const r of floors(w)){c.fillStyle='#586266';c.fillRect(r.x-9,r.y-9,r.w+18,r.h+18);c.fillStyle='#293f48';c.fillRect(r.x,r.y,r.w,r.h);}
     c.save();c.beginPath();for(const r of floors(w))c.rect(r.x,r.y,r.w,r.h);c.clip();for(let y=192;y<1664;y+=128)for(let x=128;x<1792;x+=128){if(!W.Art?.draw(this,'dungeonFloors',s.region%4,Math.floor(s.region/4),x,y,128,128,{fullCell:true,px:0,py:0})){c.strokeStyle='#40515a';c.strokeRect(x,y,128,128);}}c.restore();}
-    if(s.bridge){if(!illustrated){c.fillStyle=w.state.solved?'#83aaa1':'#8d4127';c.fillRect(s.bridge.x,s.bridge.y,s.bridge.w,s.bridge.h);}label(c,w.state.solved?'COOLED CROSSING':'FURNACE · BOTH VALVES REQUIRED',580,665,11);}
-    for(const [i,n]of s.nodes.entries()){const active=w.state.vaultNodes[i];c.fillStyle=active?'#8ddab8':'#24333c';c.strokeStyle=s.color;c.lineWidth=4;c.beginPath();c.arc(n.x,n.y,30,0,Math.PI*2);c.fill();c.stroke();if(!W.DistantVaultScenery?.drawDevice(this,w,n,i))label(c,active?'ON':String(i+1),n.x,n.y+6,20,active?'#173d39':s.color);label(c,(active?'ACTIVE · ':'')+n.name,n.x,n.y+53,13,active?'#b5f1ca':'#e1e8da');if(!active)label(c,'E / B · ACTIVATE',n.x,n.y+71,11,s.color);}
+    if(w.state.chamberRevision===2){
+      for(const r of raisedFloors(w)){
+        if(s.bridge)continue;
+        c.save();c.fillStyle='#596663';c.fillRect(r.x,r.y,r.w,r.h);
+        c.strokeStyle='#b3b69b';c.lineWidth=3;c.beginPath();
+        const across=r.w>r.h;
+        for(let v=8;v<(across?r.w:r.h);v+=18){c.moveTo(r.x+(across?v:0),r.y+(across?0:v));c.lineTo(r.x+(across?v:r.w),r.y+(across?r.h:v));}
+        c.stroke();c.restore();
+      }
+    }
+    if(s.bridge){if(!illustrated){c.fillStyle=w.state.solved?'#83aaa1':'#8d4127';c.fillRect(s.bridge.x,s.bridge.y,s.bridge.w,s.bridge.h);}label(c,w.state.solved?'COOLED CROSSING':w.ventTime>0?'VENT OPEN · '+Math.ceil(w.ventTime)+' s':w.state.vaultNodes.some(Boolean)?'FIRST STAGE COOLED · REOPEN VENT':'FURNACE · BOTH VALVES REQUIRED',580,665,11);}
+    for(const [i,n]of s.nodes.entries()){const active=w.state.vaultNodes[i];c.fillStyle=active?'#8ddab8':'#24333c';c.strokeStyle=s.color;c.lineWidth=4;c.beginPath();c.arc(n.x,n.y,30,0,Math.PI*2);c.fill();c.stroke();if(!W.DistantVaultScenery?.drawDevice(this,w,n,i))label(c,active?'ON':String(i+1),n.x,n.y+6,20,active?'#173d39':s.color);label(c,(active?'ACTIVE · ':'')+n.name,n.x,n.y+53,13,active?'#b5f1ca':'#e1e8da');if(!active)label(c,(w.game.input?.actionLabel?.(0,'interact')||'Interact')+' · ACTIVATE',n.x,n.y+71,11,s.color);
+      if(w.state.chamberRevision===2){
+        if(s.id==='cave_zephyr'&&i<3)label(c,bellLabels[i],n.x,n.y-47,15,'#f5dfb1');
+        if(s.id==='cave_rimeglass')label(c,i===2?(w.state.pressureEast?'EAST →':'← WEST'):(active?'PRIMED':Number(!!w.state.pressureEast)===i?'PRESSURIZED':'EMPTY'),n.x,n.y-46,13,'#c9efea');
+        if(s.id==='cave_kraken')label(c,['II','I','III'][i],n.x,n.y-43,17,'#ffd997');
+      }}
     for(const gate of [{x:1020,y:540,w:95,h:160,open:w.state.solved},{x:1420,y:1080,w:140,h:90,open:w.state.bossDead}]){if(!W.DistantVaultScenery?.drawGate(this,w,gate)){c.fillStyle=gate.open?'#608e81':'#bd8956';c.globalAlpha=gate.open?.3:.85;c.fillRect(gate.x,gate.y,gate.w,gate.h);c.globalAlpha=1;}label(c,gate.open?'OPEN':'SEALED',gate.x+gate.w/2,gate.y-14,12);}
     const exit=w.locations[0],treasure=w.locations[1];W.Art?.draw(this,'dungeonProps',3,0,exit.x,exit.y,135,130);label(c,'E / B · SURFACE',exit.x,exit.y+80);W.Art?.draw(this,'dungeonProps',2,2,820,1460,80,76);label(c,'E / B · AMMUNITION',820,1510,12);W.Art?.draw(this,'dungeonProps',w.state.claimed?1:0,2,treasure.x,treasure.y,115,105);label(c,w.state.claimed?'EXPEDITION SEAL RECOVERED':w.state.bossDead?'E / B · EXPEDITION SEAL':'GUARDIAN’S RELIQUARY',treasure.x,treasure.y+62,12);label(c,s.name,580,1210,23,s.color);label(c,'E / B · READ EXPEDITION NOTES',580,1340,12);if(s.layout==='figure-eight')label(c,'SAFE STONE CROSSING',580,850,11,s.color);
   };

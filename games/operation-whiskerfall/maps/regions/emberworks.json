@@ -23,7 +23,7 @@
       "region": 6,
       "radius": 300,
       "npc": "Engineer Cinder",
-      "description": "Friendly resistance settlement: merchant, healing, upgrades, and mission board.",
+      "description": "Foundry signal box overlooks Boiler street. Follow the whistle pipe to the spur. A sheared cotter pin has wedged the workshop bell.",
       "x": 6110,
       "y": 8710,
       "cleared": false,
@@ -31,7 +31,8 @@
       "index": 70,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "ashford"
     },
     {
       "id": "base_6_0",
@@ -252,13 +253,14 @@
       "region": 6,
       "radius": 250,
       "npc": "Resistance Wayfinder",
-      "description": "A peaceful refuge with a friendly quest scout and an upgrade forge.",
+      "description": "Ember Rest kiln stands on Kiln street. Local supplies, a checkpoint and the resistance forge.",
       "cleared": false,
       "enemyIds": [],
       "index": 99,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-10"
     },
     {
       "id": "forge_town_6",
@@ -1350,7 +1352,7 @@
         ],
         "dialogue": [
           "Follow the silent furnace chimneys east of Ember Rest to Foreman Brindle.",
-          "Turn one valve in each side wing to cool the furnace bridge. Either wing can be visited first; the bridge stays open. Entrance requires the Cindercoil Foundry Key. Search the Smuggler’s Tool Chest east of Reedlight Refuge in Reedwater. Defeat its three guards, then recover the foundry key. Defeat the guardian, recover its expedition seal, then return to Foreman Brindle. REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark."
+          "Turn the cooling valves in both wings. The first valve vents a temporary crossing. The north and south routes stay cool. Entrance requires the Cindercoil Foundry Key. Search the Smuggler’s Tool Chest east of Reedlight Refuge in Reedwater. Defeat its three guards, then recover the foundry key. Defeat the guardian, recover its expedition seal, then return to Foreman Brindle. REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark."
         ],
         "topics": {
           "advice": [
@@ -1371,7 +1373,7 @@
         ],
         "dialogue": [
           "Follow the silent furnace chimneys east of Ember Rest to Foreman Brindle.",
-          "Turn one valve in each side wing to cool the furnace bridge. Either wing can be visited first; the bridge stays open. Entrance requires the Cindercoil Foundry Key. Search the Smuggler’s Tool Chest east of Reedlight Refuge in Reedwater. Defeat its three guards, then recover the foundry key. Defeat the guardian, recover its expedition seal, then return to Foreman Brindle. REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark."
+          "Turn the cooling valves in both wings. The first valve vents a temporary crossing. The north and south routes stay cool. Entrance requires the Cindercoil Foundry Key. Search the Smuggler’s Tool Chest east of Reedlight Refuge in Reedwater. Defeat its three guards, then recover the foundry key. Defeat the guardian, recover its expedition seal, then return to Foreman Brindle. REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark."
         ],
         "topics": {
           "advice": [
@@ -1386,7 +1388,7 @@
       ],
       "dialogue": [
         "Follow the silent furnace chimneys east of Ember Rest to Foreman Brindle.",
-        "Turn one valve in each side wing to cool the furnace bridge. Either wing can be visited first; the bridge stays open. Entrance requires the Cindercoil Foundry Key. Search the Smuggler’s Tool Chest east of Reedlight Refuge in Reedwater. Defeat its three guards, then recover the foundry key. Defeat the guardian, recover its expedition seal, then return to Foreman Brindle. REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark."
+        "Turn the cooling valves in both wings. The first valve vents a temporary crossing. The north and south routes stay cool. Entrance requires the Cindercoil Foundry Key. Search the Smuggler’s Tool Chest east of Reedlight Refuge in Reedwater. Defeat its three guards, then recover the foundry key. Defeat the guardian, recover its expedition seal, then return to Foreman Brindle. REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark."
       ],
       "role": "engineer",
       "portrait": 0,
@@ -1408,6 +1410,150 @@
       "enemyIds": [],
       "index": 320,
       "dungeonId": "recon_depot"
+    },
+    {
+      "id": "work_town_6",
+      "type": "townWork",
+      "name": "Boiler street",
+      "region": 6,
+      "townId": "town_6",
+      "radius": 45,
+      "x": 6225,
+      "y": 8915,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 342
+    },
+    {
+      "x": 5972,
+      "y": 8804,
+      "id": "activity_yard",
+      "type": "activity",
+      "name": "Switchyard Dispatch",
+      "description": "Copper rail spur · Deliver leaf, wheel and star cargo to their matching platforms. Set switches and releases, read the next-beat preview, then dispatch. One rewind per shift.",
+      "radius": 66,
+      "region": 6,
+      "activity": "yard",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 351
+    },
+    {
+      "id": "city_ironveil",
+      "type": "occupiedCity",
+      "name": "Ironveil City",
+      "description": "Union station shelter · Union Market",
+      "x": 6010,
+      "y": 14755,
+      "radius": 68,
+      "region": 6,
+      "city": "ironveil",
+      "sector": null,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 354
+    },
+    {
+      "id": "city_ironveil_witness",
+      "type": "cityLead",
+      "name": "Printer’s soup window",
+      "description": "Printer’s soup window · Founders’ Arcade",
+      "x": 5545,
+      "y": 16095,
+      "radius": 68,
+      "region": 6,
+      "city": "ironveil",
+      "sector": null,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 355
+    },
+    {
+      "id": "city_ironveil_archive",
+      "type": "cityLead",
+      "name": "Bonded freight archive",
+      "description": "Bonded freight archive · The Packing Yards",
+      "x": 7905,
+      "y": 15565,
+      "radius": 68,
+      "region": 6,
+      "city": "ironveil",
+      "sector": null,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 356
+    },
+    {
+      "id": "city_ironveil_roof",
+      "type": "cityLead",
+      "name": "Kiln roof lookout",
+      "description": "Kiln roof lookout · Founders’ Arcade",
+      "x": 6010,
+      "y": 16980,
+      "radius": 68,
+      "region": 6,
+      "city": "ironveil",
+      "sector": null,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 357
+    },
+    {
+      "id": "city_ironveil_relay",
+      "type": "cityLead",
+      "name": "Freight dispatch relay",
+      "description": "Freight dispatch relay · West Chimneys",
+      "x": 8390,
+      "y": 16980,
+      "radius": 68,
+      "region": 6,
+      "city": "ironveil",
+      "sector": null,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 358
+    },
+    {
+      "id": "city_ironveil_exit",
+      "type": "cityLead",
+      "name": "Canal evacuation steps",
+      "description": "Canal evacuation steps · Union Market",
+      "x": 5115,
+      "y": 15215,
+      "radius": 68,
+      "region": 6,
+      "city": "ironveil",
+      "sector": null,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 359
+    },
+    {
+      "id": "city_ironveil_tram",
+      "name": "Ashford freight tram",
+      "type": "cityTram",
+      "x": 6435.614674589207,
+      "y": 8668.910362600904,
+      "region": 6,
+      "radius": 60,
+      "city": "ironveil",
+      "townId": "town_6",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 360
+    },
+    {
+      "id": "city_ironveil_return",
+      "name": "Return tram to Ashford Refuge",
+      "type": "cityTram",
+      "x": 6160,
+      "y": 14755,
+      "region": 6,
+      "radius": 62,
+      "city": "ironveil",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 361
     }
   ],
   "enemySpawns": [
@@ -2447,6 +2593,414 @@
       "boss": false,
       "patrol": 6.283185307179586,
       "deepEnemy": true
+    },
+    {
+      "id": "city_ironveil_watch_0",
+      "type": 1,
+      "name": "Night watch corporal",
+      "x": 5545,
+      "y": 15565,
+      "homeX": 5545,
+      "homeY": 15565,
+      "region": 6,
+      "level": 16,
+      "boss": false,
+      "patrol": 0,
+      "cityWatch": "ironveil",
+      "watchRoute": "y",
+      "watchPhase": 0,
+      "watchPath": [
+        {
+          "x": 5545,
+          "y": 15565
+        },
+        {
+          "x": 6010,
+          "y": 15565
+        },
+        {
+          "x": 6010,
+          "y": 16095
+        },
+        {
+          "x": 5545,
+          "y": 16095
+        }
+      ]
+    },
+    {
+      "id": "city_ironveil_watch_1",
+      "type": 0,
+      "name": "Lamplight patrol",
+      "x": 6010,
+      "y": 15565,
+      "homeX": 6010,
+      "homeY": 15565,
+      "region": 6,
+      "level": 16,
+      "boss": false,
+      "patrol": 0.7,
+      "cityWatch": "ironveil",
+      "watchRoute": "x",
+      "watchPhase": 0.7,
+      "watchPath": [
+        {
+          "x": 6010,
+          "y": 15565
+        },
+        {
+          "x": 5545,
+          "y": 15565
+        },
+        {
+          "x": 5545,
+          "y": 15215
+        },
+        {
+          "x": 6010,
+          "y": 15215
+        }
+      ]
+    },
+    {
+      "id": "city_ironveil_watch_2",
+      "type": 0,
+      "name": "Lamplight patrol",
+      "x": 6450,
+      "y": 16475,
+      "homeX": 6450,
+      "homeY": 16475,
+      "region": 6,
+      "level": 16,
+      "boss": false,
+      "patrol": 1.4,
+      "cityWatch": "ironveil",
+      "watchRoute": "x",
+      "watchPhase": 1.4,
+      "watchPath": [
+        {
+          "x": 6450,
+          "y": 16475
+        },
+        {
+          "x": 7005,
+          "y": 16475
+        },
+        {
+          "x": 7005,
+          "y": 16095
+        },
+        {
+          "x": 6450,
+          "y": 16095
+        }
+      ]
+    },
+    {
+      "id": "city_ironveil_watch_3",
+      "type": 0,
+      "name": "Lamplight patrol",
+      "x": 7005,
+      "y": 15215,
+      "homeX": 7005,
+      "homeY": 15215,
+      "region": 6,
+      "level": 16,
+      "boss": false,
+      "patrol": 2.0999999999999996,
+      "cityWatch": "ironveil",
+      "watchRoute": "y",
+      "watchPhase": 2.0999999999999996,
+      "watchPath": [
+        {
+          "x": 7005,
+          "y": 15215
+        },
+        {
+          "x": 6450,
+          "y": 15215
+        },
+        {
+          "x": 6450,
+          "y": 15565
+        },
+        {
+          "x": 7005,
+          "y": 15565
+        }
+      ]
+    },
+    {
+      "id": "city_ironveil_watch_4",
+      "type": 1,
+      "name": "Night watch corporal",
+      "x": 7445,
+      "y": 16095,
+      "homeX": 7445,
+      "homeY": 16095,
+      "region": 6,
+      "level": 16,
+      "boss": false,
+      "patrol": 2.8,
+      "cityWatch": "ironveil",
+      "watchRoute": "x",
+      "watchPhase": 2.8,
+      "watchPath": [
+        {
+          "x": 7445,
+          "y": 16095
+        },
+        {
+          "x": 7905,
+          "y": 16095
+        },
+        {
+          "x": 7905,
+          "y": 15565
+        },
+        {
+          "x": 7445,
+          "y": 15565
+        }
+      ]
+    },
+    {
+      "id": "city_ironveil_watch_5",
+      "type": 0,
+      "name": "Lamplight patrol",
+      "x": 7905,
+      "y": 16095,
+      "homeX": 7905,
+      "homeY": 16095,
+      "region": 6,
+      "level": 16,
+      "boss": false,
+      "patrol": 3.5,
+      "cityWatch": "ironveil",
+      "watchRoute": "x",
+      "watchPhase": 3.5,
+      "watchPath": [
+        {
+          "x": 7905,
+          "y": 16095
+        },
+        {
+          "x": 7445,
+          "y": 16095
+        },
+        {
+          "x": 7445,
+          "y": 15565
+        },
+        {
+          "x": 7905,
+          "y": 15565
+        }
+      ]
+    },
+    {
+      "id": "city_ironveil_watch_6",
+      "type": 0,
+      "name": "Lamplight patrol",
+      "x": 7905,
+      "y": 16980,
+      "homeX": 7905,
+      "homeY": 16980,
+      "region": 6,
+      "level": 16,
+      "boss": false,
+      "patrol": 4.199999999999999,
+      "cityWatch": "ironveil",
+      "watchRoute": "y",
+      "watchPhase": 4.199999999999999,
+      "watchPath": [
+        {
+          "x": 7905,
+          "y": 16980
+        },
+        {
+          "x": 8390,
+          "y": 16980
+        },
+        {
+          "x": 8390,
+          "y": 17380
+        },
+        {
+          "x": 7905,
+          "y": 17380
+        }
+      ]
+    },
+    {
+      "id": "city_ironveil_watch_7",
+      "type": 0,
+      "name": "Lamplight patrol",
+      "x": 8390,
+      "y": 16475,
+      "homeX": 8390,
+      "homeY": 16475,
+      "region": 6,
+      "level": 16,
+      "boss": false,
+      "patrol": 4.8999999999999995,
+      "cityWatch": "ironveil",
+      "watchRoute": "x",
+      "watchPhase": 4.8999999999999995,
+      "watchPath": [
+        {
+          "x": 8390,
+          "y": 16475
+        },
+        {
+          "x": 7905,
+          "y": 16475
+        },
+        {
+          "x": 7905,
+          "y": 16095
+        },
+        {
+          "x": 8390,
+          "y": 16095
+        }
+      ]
+    },
+    {
+      "id": "city_ironveil_watch_8",
+      "type": 1,
+      "name": "Night watch corporal",
+      "x": 5545,
+      "y": 16980,
+      "homeX": 5545,
+      "homeY": 16980,
+      "region": 6,
+      "level": 16,
+      "boss": false,
+      "patrol": 5.6,
+      "cityWatch": "ironveil",
+      "watchRoute": "x",
+      "watchPhase": 5.6,
+      "watchPath": [
+        {
+          "x": 5545,
+          "y": 16980
+        },
+        {
+          "x": 6010,
+          "y": 16980
+        },
+        {
+          "x": 6010,
+          "y": 16475
+        },
+        {
+          "x": 5545,
+          "y": 16475
+        }
+      ]
+    },
+    {
+      "id": "city_ironveil_watch_9",
+      "type": 0,
+      "name": "Lamplight patrol",
+      "x": 6450,
+      "y": 16095,
+      "homeX": 6450,
+      "homeY": 16095,
+      "region": 6,
+      "level": 16,
+      "boss": false,
+      "patrol": 6.3,
+      "cityWatch": "ironveil",
+      "watchRoute": "y",
+      "watchPhase": 6.3,
+      "watchPath": [
+        {
+          "x": 6450,
+          "y": 16095
+        },
+        {
+          "x": 6010,
+          "y": 16095
+        },
+        {
+          "x": 6010,
+          "y": 16475
+        },
+        {
+          "x": 6450,
+          "y": 16475
+        }
+      ]
+    },
+    {
+      "id": "city_ironveil_watch_10",
+      "type": 0,
+      "name": "Lamplight patrol",
+      "x": 7005,
+      "y": 16980,
+      "homeX": 7005,
+      "homeY": 16980,
+      "region": 6,
+      "level": 16,
+      "boss": false,
+      "patrol": 7,
+      "cityWatch": "ironveil",
+      "watchRoute": "x",
+      "watchPhase": 7,
+      "watchPath": [
+        {
+          "x": 7005,
+          "y": 16980
+        },
+        {
+          "x": 7445,
+          "y": 16980
+        },
+        {
+          "x": 7445,
+          "y": 16475
+        },
+        {
+          "x": 7005,
+          "y": 16475
+        }
+      ]
+    },
+    {
+      "id": "city_ironveil_watch_11",
+      "type": 0,
+      "name": "Lamplight patrol",
+      "x": 8390,
+      "y": 15215,
+      "homeX": 8390,
+      "homeY": 15215,
+      "region": 6,
+      "level": 16,
+      "boss": false,
+      "patrol": 7.699999999999999,
+      "cityWatch": "ironveil",
+      "watchRoute": "x",
+      "watchPhase": 7.699999999999999,
+      "watchPath": [
+        {
+          "x": 8390,
+          "y": 15215
+        },
+        {
+          "x": 7905,
+          "y": 15215
+        },
+        {
+          "x": 7905,
+          "y": 14755
+        },
+        {
+          "x": 8390,
+          "y": 14755
+        }
+      ]
     }
   ],
   "objects": [
@@ -2477,14 +3031,16 @@
     {
       "id": "town_6_building_0",
       "type": "building",
-      "x": 5885,
-      "y": 8560,
+      "x": 6150,
+      "y": 8490,
       "w": 155,
       "h": 130,
       "solid": true,
       "variant": 2,
       "locationId": "town_6",
-      "region": 6
+      "region": 6,
+      "townId": "town_6",
+      "townPainting": "landmark-ashford"
     },
     {
       "id": "town_6_building_1",
@@ -2496,19 +3052,21 @@
       "solid": true,
       "variant": 3,
       "locationId": "town_6",
-      "region": 6
+      "region": 6,
+      "townId": "town_6"
     },
     {
       "id": "town_6_building_2",
       "type": "building",
-      "x": 6110,
-      "y": 8405,
+      "x": 6410,
+      "y": 8570,
       "w": 160,
       "h": 135,
       "solid": true,
       "variant": 0,
       "locationId": "town_6",
-      "region": 6
+      "region": 6,
+      "townId": "town_6"
     },
     {
       "id": "town_6_building_3",
@@ -2520,7 +3078,8 @@
       "solid": true,
       "variant": 1,
       "locationId": "town_6",
-      "region": 6
+      "region": 6,
+      "townId": "town_6"
     },
     {
       "id": "town_6_well",
@@ -3821,7 +4380,9 @@
       "solid": true,
       "variant": 2,
       "locationId": "town_way_6",
-      "region": 6
+      "region": 6,
+      "townId": "town_way_6",
+      "townPainting": "outpost-10"
     },
     {
       "id": "town_way_6_building_1",
@@ -3833,7 +4394,8 @@
       "solid": true,
       "variant": 3,
       "locationId": "town_way_6",
-      "region": 6
+      "region": 6,
+      "townId": "town_way_6"
     },
     {
       "id": "town_way_6_building_2",
@@ -3845,7 +4407,8 @@
       "solid": true,
       "variant": 0,
       "locationId": "town_way_6",
-      "region": 6
+      "region": 6,
+      "townId": "town_way_6"
     },
     {
       "id": "town_way_6_building_3",
@@ -3857,7 +4420,8 @@
       "solid": true,
       "variant": 1,
       "locationId": "town_way_6",
-      "region": 6
+      "region": 6,
+      "townId": "town_way_6"
     },
     {
       "id": "town_way_6_well",
@@ -8644,6 +9208,4123 @@
       "solid": false,
       "locationId": "recon_depot",
       "region": 6,
+      "variant": 0
+    },
+    {
+      "id": "work_town_6_lamp",
+      "type": "townWork",
+      "townId": "town_6",
+      "locationId": "work_town_6",
+      "x": 6225,
+      "y": 8915,
+      "w": 52,
+      "h": 67,
+      "solid": false,
+      "variant": 0,
+      "region": 6
+    },
+    {
+      "id": "town_6_homecoming",
+      "type": "townAftermath",
+      "townId": "town_6",
+      "x": 5985,
+      "y": 8794,
+      "w": 130,
+      "h": 108,
+      "solid": false,
+      "variant": 0,
+      "region": 6
+    },
+    {
+      "id": "city_ironveil_court_west_0",
+      "type": "cityBuilding",
+      "x": 5221.83,
+      "y": 15156,
+      "w": 123.65999999999985,
+      "h": 236,
+      "visualWidth": 123.65999999999985,
+      "frontY": 15164,
+      "cityFootprint": {
+        "x": 5167.4196,
+        "y": 15046,
+        "w": 108.82079999999988,
+        "h": 118
+      },
+      "cityArt": "facade-0",
+      "flip": true,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_court_east_0",
+      "type": "cityBuilding",
+      "x": 5416.83,
+      "y": 15148,
+      "w": 164.34000000000015,
+      "h": 240,
+      "visualWidth": 164.34000000000015,
+      "frontY": 15156,
+      "cityFootprint": {
+        "x": 5344.520399999999,
+        "y": 15036,
+        "w": 144.61920000000012,
+        "h": 120
+      },
+      "cityArt": "iron-front-9",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_rear_0",
+      "type": "cityBuilding",
+      "x": 5329.5,
+      "y": 14905.53,
+      "w": 308.49,
+      "h": 162,
+      "visualWidth": 308.49,
+      "frontY": 14913.53,
+      "cityFootprint": {
+        "x": 5193.7644,
+        "y": 14832.53,
+        "w": 271.4712,
+        "h": 81
+      },
+      "cityArt": "iron-front-9",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_0",
+      "type": "streetFixture",
+      "painting": "civic-2",
+      "x": 5477,
+      "y": 15179,
+      "w": 68,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_arcade_0",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 5175,
+      "y": 15176,
+      "w": 42,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_1",
+      "type": "cityBuilding",
+      "x": 5777,
+      "y": 15156,
+      "w": 347.82,
+      "h": 224,
+      "visualWidth": 347.82,
+      "frontY": 15164,
+      "cityFootprint": {
+        "x": 5623.9592,
+        "y": 15052,
+        "w": 306.0816,
+        "h": 112
+      },
+      "cityArt": "iron-front-5",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_1",
+      "type": "cityBuilding",
+      "x": 5701.078,
+      "y": 14916.42,
+      "w": 201.96,
+      "h": 156,
+      "visualWidth": 201.96,
+      "frontY": 14924.42,
+      "cityFootprint": {
+        "x": 5612.2156,
+        "y": 14846.42,
+        "w": 177.72480000000002,
+        "h": 78
+      },
+      "cityArt": "iron-front-7",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_1",
+      "type": "streetFixture",
+      "painting": "civic-9",
+      "x": 5942,
+      "y": 15179,
+      "w": 82,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_square_2",
+      "type": "cityBuilding",
+      "x": 6229.5,
+      "y": 14949.09,
+      "w": 272.22,
+      "h": 174.23999999999998,
+      "visualWidth": 272.22,
+      "frontY": 14957.09,
+      "cityFootprint": {
+        "x": 6109.7232,
+        "y": 14869.97,
+        "w": 239.55360000000002,
+        "h": 87.11999999999999
+      },
+      "cityArt": "urban-landmark-0",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_square_clock_2",
+      "type": "streetFixture",
+      "painting": "civic-1",
+      "x": 6073,
+      "y": 15159,
+      "w": 48,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_works_3",
+      "type": "cityBuilding",
+      "x": 6740.92,
+      "y": 15148,
+      "w": 399.04,
+      "h": 260,
+      "visualWidth": 399.04,
+      "frontY": 15156,
+      "cityFootprint": {
+        "x": 6565.3424,
+        "y": 15026,
+        "w": 351.15520000000004,
+        "h": 130
+      },
+      "cityArt": "urban-landmark-2",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_siding_3",
+      "type": "streetFixture",
+      "painting": "civic-10",
+      "x": 6520,
+      "y": 14846,
+      "w": 95,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_4",
+      "type": "cityBuilding",
+      "x": 7224.5,
+      "y": 15156,
+      "w": 338.53,
+      "h": 224,
+      "visualWidth": 338.53,
+      "frontY": 15164,
+      "cityFootprint": {
+        "x": 7075.5468,
+        "y": 15052,
+        "w": 297.90639999999996,
+        "h": 112
+      },
+      "cityArt": "iron-front-15",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_4",
+      "type": "cityBuilding",
+      "x": 7224.5,
+      "y": 14916.42,
+      "w": 226,
+      "h": 156,
+      "visualWidth": 226,
+      "frontY": 14924.42,
+      "cityFootprint": {
+        "x": 7125.06,
+        "y": 14846.42,
+        "w": 198.88,
+        "h": 78
+      },
+      "cityArt": "iron-front-9",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_4",
+      "type": "streetFixture",
+      "painting": "civic-0",
+      "x": 7377,
+      "y": 15179,
+      "w": 82,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_arcade_4",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 7065,
+      "y": 15176,
+      "w": 42,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_5",
+      "type": "cityBuilding",
+      "x": 7674.5,
+      "y": 15156,
+      "w": 343.17,
+      "h": 224,
+      "visualWidth": 343.17,
+      "frontY": 15164,
+      "cityFootprint": {
+        "x": 7523.5052,
+        "y": 15052,
+        "w": 301.9896,
+        "h": 112
+      },
+      "cityArt": "iron-front-14",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_5",
+      "type": "cityBuilding",
+      "x": 7599.593,
+      "y": 14916.42,
+      "w": 199.26000000000002,
+      "h": 156,
+      "visualWidth": 199.26000000000002,
+      "frontY": 14924.42,
+      "cityFootprint": {
+        "x": 7511.9186,
+        "y": 14846.42,
+        "w": 175.3488,
+        "h": 78
+      },
+      "cityArt": "iron-front-7",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_5",
+      "type": "streetFixture",
+      "painting": "civic-8",
+      "x": 7837,
+      "y": 15179,
+      "w": 64,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_court_west_6",
+      "type": "cityBuilding",
+      "x": 8047.57,
+      "y": 15156,
+      "w": 195.14000000000033,
+      "h": 236,
+      "visualWidth": 195.14000000000033,
+      "frontY": 15164,
+      "cityFootprint": {
+        "x": 7961.7083999999995,
+        "y": 15046,
+        "w": 171.72320000000028,
+        "h": 118
+      },
+      "cityArt": "iron-front-11",
+      "flip": true,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_court_east_6",
+      "type": "cityBuilding",
+      "x": 8270.07,
+      "y": 15148,
+      "w": 147.85999999999967,
+      "h": 240,
+      "visualWidth": 147.85999999999967,
+      "frontY": 15156,
+      "cityFootprint": {
+        "x": 8205.0116,
+        "y": 15036,
+        "w": 130.1167999999997,
+        "h": 120
+      },
+      "cityArt": "facade-1",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_rear_6",
+      "type": "cityBuilding",
+      "x": 8147,
+      "y": 14905.53,
+      "w": 358.54,
+      "h": 162,
+      "visualWidth": 358.54,
+      "frontY": 14913.53,
+      "cityFootprint": {
+        "x": 7989.2424,
+        "y": 14832.53,
+        "w": 315.5152,
+        "h": 81
+      },
+      "cityArt": "iron-front-3",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_6",
+      "type": "streetFixture",
+      "painting": "civic-2",
+      "x": 8322,
+      "y": 15179,
+      "w": 68,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_arcade_6",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 7965,
+      "y": 15176,
+      "w": 42,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_court_west_7",
+      "type": "cityBuilding",
+      "x": 8499.029999999999,
+      "y": 15156,
+      "w": 128.0599999999995,
+      "h": 236,
+      "visualWidth": 128.0599999999995,
+      "frontY": 15164,
+      "cityFootprint": {
+        "x": 8442.683599999998,
+        "y": 15046,
+        "w": 112.69279999999955,
+        "h": 118
+      },
+      "cityArt": "facade-7",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_court_east_7",
+      "type": "cityBuilding",
+      "x": 8699.029999999999,
+      "y": 15148,
+      "w": 169.9400000000005,
+      "h": 240,
+      "visualWidth": 169.9400000000005,
+      "frontY": 15156,
+      "cityFootprint": {
+        "x": 8624.256399999998,
+        "y": 15036,
+        "w": 149.54720000000046,
+        "h": 120
+      },
+      "cityArt": "iron-front-10",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_rear_7",
+      "type": "cityBuilding",
+      "x": 8609.5,
+      "y": 14905.53,
+      "w": 317.59000000000003,
+      "h": 162,
+      "visualWidth": 317.59000000000003,
+      "frontY": 14913.53,
+      "cityFootprint": {
+        "x": 8469.7604,
+        "y": 14832.53,
+        "w": 279.47920000000005,
+        "h": 81
+      },
+      "cityArt": "iron-front-10",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_7",
+      "type": "streetFixture",
+      "painting": "civic-9",
+      "x": 8762,
+      "y": 15179,
+      "w": 82,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_court_west_8",
+      "type": "cityBuilding",
+      "x": 5242.17,
+      "y": 15506,
+      "w": 164.34000000000015,
+      "h": 172.04000000000002,
+      "visualWidth": 164.34000000000015,
+      "frontY": 15514,
+      "cityFootprint": {
+        "x": 5169.8604,
+        "y": 15427.98,
+        "w": 144.61920000000012,
+        "h": 86.02000000000001
+      },
+      "cityArt": "iron-front-13",
+      "flip": true,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_court_east_8",
+      "type": "cityBuilding",
+      "x": 5437.17,
+      "y": 15498,
+      "w": 123.65999999999985,
+      "h": 172.04000000000002,
+      "visualWidth": 123.65999999999985,
+      "frontY": 15506,
+      "cityFootprint": {
+        "x": 5382.7596,
+        "y": 15419.98,
+        "w": 108.82079999999988,
+        "h": 86.02000000000001
+      },
+      "cityArt": "facade-6",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_rear_8",
+      "type": "cityBuilding",
+      "x": 5329.5,
+      "y": 15331.43,
+      "w": 308.49,
+      "h": 116.38000000000001,
+      "visualWidth": 308.49,
+      "frontY": 15339.43,
+      "cityFootprint": {
+        "x": 5193.7644,
+        "y": 15281.24,
+        "w": 271.4712,
+        "h": 58.190000000000005
+      },
+      "cityArt": "iron-front-12",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_8",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 5477,
+      "y": 15529,
+      "w": 64,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_arcade_8",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 5175,
+      "y": 15526,
+      "w": 42,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_9",
+      "type": "cityBuilding",
+      "x": 5777,
+      "y": 15506,
+      "w": 347.82,
+      "h": 182.16,
+      "visualWidth": 347.82,
+      "frontY": 15514,
+      "cityFootprint": {
+        "x": 5623.9592,
+        "y": 15422.92,
+        "w": 306.0816,
+        "h": 91.08
+      },
+      "cityArt": "iron-front-6",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_9",
+      "type": "cityBuilding",
+      "x": 5701.078,
+      "y": 15339.02,
+      "w": 201.96,
+      "h": 126.5,
+      "visualWidth": 201.96,
+      "frontY": 15347.02,
+      "cityFootprint": {
+        "x": 5612.2156,
+        "y": 15283.77,
+        "w": 177.72480000000002,
+        "h": 63.25
+      },
+      "cityArt": "urban-landmark-4",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_9",
+      "type": "streetFixture",
+      "painting": "civic-0",
+      "x": 5942,
+      "y": 15529,
+      "w": 68,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_court_west_10",
+      "type": "cityBuilding",
+      "x": 6119.030000000001,
+      "y": 15506,
+      "w": 128.0600000000004,
+      "h": 172.04000000000002,
+      "visualWidth": 128.0600000000004,
+      "frontY": 15514,
+      "cityFootprint": {
+        "x": 6062.6836,
+        "y": 15427.98,
+        "w": 112.69280000000035,
+        "h": 86.02000000000001
+      },
+      "cityArt": "facade-5",
+      "flip": true,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_court_east_10",
+      "type": "cityBuilding",
+      "x": 6319.030000000001,
+      "y": 15498,
+      "w": 169.9399999999996,
+      "h": 172.04000000000002,
+      "visualWidth": 169.9399999999996,
+      "frontY": 15506,
+      "cityFootprint": {
+        "x": 6244.256400000001,
+        "y": 15419.98,
+        "w": 149.54719999999966,
+        "h": 86.02000000000001
+      },
+      "cityArt": "iron-front-11",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_rear_10",
+      "type": "cityBuilding",
+      "x": 6229.5,
+      "y": 15331.43,
+      "w": 317.59000000000003,
+      "h": 116.38000000000001,
+      "visualWidth": 317.59000000000003,
+      "frontY": 15339.43,
+      "cityFootprint": {
+        "x": 6089.7604,
+        "y": 15281.24,
+        "w": 279.47920000000005,
+        "h": 58.190000000000005
+      },
+      "cityArt": "iron-front-11",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_10",
+      "type": "streetFixture",
+      "painting": "civic-8",
+      "x": 6382,
+      "y": 15529,
+      "w": 82,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_arcade_10",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 6070,
+      "y": 15526,
+      "w": 42,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_court_west_11",
+      "type": "cityBuilding",
+      "x": 6748.91,
+      "y": 15506,
+      "w": 85.81999999999971,
+      "h": 172.04000000000002,
+      "visualWidth": 85.81999999999971,
+      "frontY": 15514,
+      "cityFootprint": {
+        "x": 6711.1492,
+        "y": 15427.98,
+        "w": 75.52159999999975,
+        "h": 86.02000000000001
+      },
+      "cityArt": "facade-6",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_court_east_11",
+      "type": "cityBuilding",
+      "x": 6900.91,
+      "y": 15498,
+      "w": 116.18000000000029,
+      "h": 172.04000000000002,
+      "visualWidth": 116.18000000000029,
+      "frontY": 15506,
+      "cityFootprint": {
+        "x": 6849.7908,
+        "y": 15419.98,
+        "w": 102.23840000000025,
+        "h": 86.02000000000001
+      },
+      "cityArt": "facade-1",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_rear_11",
+      "type": "cityBuilding",
+      "x": 6832.5,
+      "y": 15331.43,
+      "w": 230.23000000000002,
+      "h": 116.38000000000001,
+      "visualWidth": 230.23000000000002,
+      "frontY": 15339.43,
+      "cityFootprint": {
+        "x": 6731.1988,
+        "y": 15281.24,
+        "w": 202.60240000000002,
+        "h": 58.190000000000005
+      },
+      "cityArt": "iron-front-6",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_11",
+      "type": "streetFixture",
+      "painting": "civic-2",
+      "x": 6937,
+      "y": 15529,
+      "w": 64,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_12",
+      "type": "cityBuilding",
+      "x": 7224.5,
+      "y": 15506,
+      "w": 324.57,
+      "h": 182.16,
+      "visualWidth": 324.57,
+      "frontY": 15514,
+      "cityFootprint": {
+        "x": 7081.6892,
+        "y": 15422.92,
+        "w": 285.6216,
+        "h": 91.08
+      },
+      "cityArt": "iron-front-1",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_12",
+      "type": "cityBuilding",
+      "x": 7153.653,
+      "y": 15339.02,
+      "w": 188.46,
+      "h": 126.5,
+      "visualWidth": 188.46,
+      "frontY": 15347.02,
+      "cityFootprint": {
+        "x": 7070.7306,
+        "y": 15283.77,
+        "w": 165.84480000000002,
+        "h": 63.25
+      },
+      "cityArt": "iron-front-12",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_12",
+      "type": "streetFixture",
+      "painting": "civic-9",
+      "x": 7377,
+      "y": 15529,
+      "w": 68,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_arcade_12",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 7065,
+      "y": 15526,
+      "w": 42,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_13",
+      "type": "cityBuilding",
+      "x": 7674.5,
+      "y": 15506,
+      "w": 343.17,
+      "h": 182.16,
+      "visualWidth": 343.17,
+      "frontY": 15514,
+      "cityFootprint": {
+        "x": 7523.5052,
+        "y": 15422.92,
+        "w": 301.9896,
+        "h": 91.08
+      },
+      "cityArt": "iron-front-12",
+      "flip": true,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_13",
+      "type": "cityBuilding",
+      "x": 7599.593,
+      "y": 15339.02,
+      "w": 199.26000000000002,
+      "h": 126.5,
+      "visualWidth": 199.26000000000002,
+      "frontY": 15347.02,
+      "cityFootprint": {
+        "x": 7511.9186,
+        "y": 15283.77,
+        "w": 175.3488,
+        "h": 63.25
+      },
+      "cityArt": "iron-front-0",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_13",
+      "type": "streetFixture",
+      "painting": "civic-7",
+      "x": 7837,
+      "y": 15529,
+      "w": 82,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_14",
+      "type": "cityBuilding",
+      "x": 8147,
+      "y": 15506,
+      "w": 382.18,
+      "h": 182.16,
+      "visualWidth": 382.18,
+      "frontY": 15514,
+      "cityFootprint": {
+        "x": 7978.8408,
+        "y": 15422.92,
+        "w": 336.3184,
+        "h": 91.08
+      },
+      "cityArt": "iron-front-7",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_14",
+      "type": "cityBuilding",
+      "x": 8147,
+      "y": 15339.02,
+      "w": 226,
+      "h": 126.5,
+      "visualWidth": 226,
+      "frontY": 15347.02,
+      "cityFootprint": {
+        "x": 8047.56,
+        "y": 15283.77,
+        "w": 198.88,
+        "h": 63.25
+      },
+      "cityArt": "iron-front-11",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_14",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 8322,
+      "y": 15529,
+      "w": 64,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_arcade_14",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 7965,
+      "y": 15526,
+      "w": 42,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_works_15",
+      "type": "cityBuilding",
+      "x": 8619.97,
+      "y": 15498,
+      "w": 300.14,
+      "h": 222.64000000000001,
+      "visualWidth": 300.14,
+      "frontY": 15506,
+      "cityFootprint": {
+        "x": 8487.9084,
+        "y": 15394.68,
+        "w": 264.1232,
+        "h": 111.32000000000001
+      },
+      "cityArt": "urban-landmark-4",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_siding_15",
+      "type": "streetFixture",
+      "painting": "civic-10",
+      "x": 8460,
+      "y": 15306,
+      "w": 95,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_court_west_16",
+      "type": "cityBuilding",
+      "x": 5221.83,
+      "y": 16036,
+      "w": 123.65999999999985,
+      "h": 236,
+      "visualWidth": 123.65999999999985,
+      "frontY": 16044,
+      "cityFootprint": {
+        "x": 5167.4196,
+        "y": 15926,
+        "w": 108.82079999999988,
+        "h": 118
+      },
+      "cityArt": "facade-6",
+      "flip": true,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_court_east_16",
+      "type": "cityBuilding",
+      "x": 5416.83,
+      "y": 16028,
+      "w": 164.34000000000015,
+      "h": 240,
+      "visualWidth": 164.34000000000015,
+      "frontY": 16036,
+      "cityFootprint": {
+        "x": 5344.520399999999,
+        "y": 15916,
+        "w": 144.61920000000012,
+        "h": 120
+      },
+      "cityArt": "iron-front-5",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_rear_16",
+      "type": "cityBuilding",
+      "x": 5329.5,
+      "y": 15737.23,
+      "w": 308.49,
+      "h": 162,
+      "visualWidth": 308.49,
+      "frontY": 15745.23,
+      "cityFootprint": {
+        "x": 5193.7644,
+        "y": 15664.23,
+        "w": 271.4712,
+        "h": 81
+      },
+      "cityArt": "iron-front-5",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_16",
+      "type": "streetFixture",
+      "painting": "civic-2",
+      "x": 5477,
+      "y": 16059,
+      "w": 82,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_arcade_16",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 5175,
+      "y": 16056,
+      "w": 42,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_17",
+      "type": "cityBuilding",
+      "x": 5777,
+      "y": 16036,
+      "w": 362.78,
+      "h": 224,
+      "visualWidth": 362.78,
+      "frontY": 16044,
+      "cityFootprint": {
+        "x": 5617.3768,
+        "y": 15932,
+        "w": 319.2464,
+        "h": 112
+      },
+      "cityArt": "iron-front-3",
+      "flip": true,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_17",
+      "type": "cityBuilding",
+      "x": 5777,
+      "y": 15750.22,
+      "w": 226,
+      "h": 156,
+      "visualWidth": 226,
+      "frontY": 15758.22,
+      "cityFootprint": {
+        "x": 5677.56,
+        "y": 15680.22,
+        "w": 198.88,
+        "h": 78
+      },
+      "cityArt": "iron-front-14",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_17",
+      "type": "streetFixture",
+      "painting": "civic-9",
+      "x": 5942,
+      "y": 16059,
+      "w": 64,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_works_18",
+      "type": "cityBuilding",
+      "x": 6239.97,
+      "y": 16028,
+      "w": 300.14,
+      "h": 260,
+      "visualWidth": 300.14,
+      "frontY": 16036,
+      "cityFootprint": {
+        "x": 6107.9084,
+        "y": 15906,
+        "w": 264.1232,
+        "h": 130
+      },
+      "cityArt": "urban-landmark-5",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_siding_18",
+      "type": "streetFixture",
+      "painting": "civic-10",
+      "x": 6080,
+      "y": 15656,
+      "w": 95,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_19",
+      "type": "cityBuilding",
+      "x": 6832.5,
+      "y": 16036,
+      "w": 235.29000000000002,
+      "h": 224,
+      "visualWidth": 235.29000000000002,
+      "frontY": 16044,
+      "cityFootprint": {
+        "x": 6728.9724,
+        "y": 15932,
+        "w": 207.0552,
+        "h": 112
+      },
+      "cityArt": "iron-front-14",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_19",
+      "type": "cityBuilding",
+      "x": 6781.141,
+      "y": 15750.22,
+      "w": 136.62,
+      "h": 156,
+      "visualWidth": 136.62,
+      "frontY": 15758.22,
+      "cityFootprint": {
+        "x": 6721.0282,
+        "y": 15680.22,
+        "w": 120.2256,
+        "h": 78
+      },
+      "cityArt": "iron-front-1",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 0,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_19",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 6937,
+      "y": 16059,
+      "w": 82,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_20",
+      "type": "cityBuilding",
+      "x": 7224.5,
+      "y": 16036,
+      "w": 324.57,
+      "h": 224,
+      "visualWidth": 324.57,
+      "frontY": 16044,
+      "cityFootprint": {
+        "x": 7081.6892,
+        "y": 15932,
+        "w": 285.6216,
+        "h": 112
+      },
+      "cityArt": "iron-front-11",
+      "flip": true,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_20",
+      "type": "cityBuilding",
+      "x": 7153.653,
+      "y": 15750.22,
+      "w": 188.46,
+      "h": 156,
+      "visualWidth": 188.46,
+      "frontY": 15758.22,
+      "cityFootprint": {
+        "x": 7070.7306,
+        "y": 15680.22,
+        "w": 165.84480000000002,
+        "h": 78
+      },
+      "cityArt": "iron-front-5",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_20",
+      "type": "streetFixture",
+      "painting": "civic-0",
+      "x": 7377,
+      "y": 16059,
+      "w": 64,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_arcade_20",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 7065,
+      "y": 16056,
+      "w": 42,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_square_21",
+      "type": "cityBuilding",
+      "x": 7674.5,
+      "y": 15789.19,
+      "w": 285,
+      "h": 207.84,
+      "visualWidth": 285,
+      "frontY": 15797.19,
+      "cityFootprint": {
+        "x": 7549.1,
+        "y": 15693.27,
+        "w": 250.8,
+        "h": 103.92
+      },
+      "cityArt": "urban-landmark-1",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_square_clock_21",
+      "type": "streetFixture",
+      "painting": "civic-1",
+      "x": 7508,
+      "y": 16039,
+      "w": 48,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_market_stall_21",
+      "type": "streetFixture",
+      "painting": "civic-0",
+      "x": 7824,
+      "y": 16019,
+      "w": 97,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_22",
+      "type": "cityBuilding",
+      "x": 8147,
+      "y": 16036,
+      "w": 366.42,
+      "h": 224,
+      "visualWidth": 366.42,
+      "frontY": 16044,
+      "cityFootprint": {
+        "x": 7985.7752,
+        "y": 15932,
+        "w": 322.44960000000003,
+        "h": 112
+      },
+      "cityArt": "iron-front-2",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_22",
+      "type": "cityBuilding",
+      "x": 8067.018,
+      "y": 15750.22,
+      "w": 212.76000000000002,
+      "h": 156,
+      "visualWidth": 212.76000000000002,
+      "frontY": 15758.22,
+      "cityFootprint": {
+        "x": 7973.4036,
+        "y": 15680.22,
+        "w": 187.2288,
+        "h": 78
+      },
+      "cityArt": "urban-landmark-2",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_22",
+      "type": "streetFixture",
+      "painting": "civic-2",
+      "x": 8322,
+      "y": 16059,
+      "w": 82,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_arcade_22",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 7965,
+      "y": 16056,
+      "w": 42,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_court_west_23",
+      "type": "cityBuilding",
+      "x": 8519.970000000001,
+      "y": 16036,
+      "w": 169.9400000000005,
+      "h": 236,
+      "visualWidth": 169.9400000000005,
+      "frontY": 16044,
+      "cityFootprint": {
+        "x": 8445.1964,
+        "y": 15926,
+        "w": 149.54720000000046,
+        "h": 118
+      },
+      "cityArt": "iron-front-13",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_court_east_23",
+      "type": "cityBuilding",
+      "x": 8719.970000000001,
+      "y": 16028,
+      "w": 128.0599999999995,
+      "h": 240,
+      "visualWidth": 128.0599999999995,
+      "frontY": 16036,
+      "cityFootprint": {
+        "x": 8663.6236,
+        "y": 15916,
+        "w": 112.69279999999955,
+        "h": 120
+      },
+      "cityArt": "facade-0",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_rear_23",
+      "type": "cityBuilding",
+      "x": 8609.5,
+      "y": 15737.23,
+      "w": 317.59000000000003,
+      "h": 162,
+      "visualWidth": 317.59000000000003,
+      "frontY": 15745.23,
+      "cityFootprint": {
+        "x": 8469.7604,
+        "y": 15664.23,
+        "w": 279.47920000000005,
+        "h": 81
+      },
+      "cityArt": "iron-front-1",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 1,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_23",
+      "type": "streetFixture",
+      "painting": "civic-9",
+      "x": 8762,
+      "y": 16059,
+      "w": 64,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_24",
+      "type": "cityBuilding",
+      "x": 5329.5,
+      "y": 16416,
+      "w": 315.27000000000004,
+      "h": 203.76,
+      "visualWidth": 315.27000000000004,
+      "frontY": 16424,
+      "cityFootprint": {
+        "x": 5190.7812,
+        "y": 16322.12,
+        "w": 277.43760000000003,
+        "h": 101.88
+      },
+      "cityArt": "iron-front-9",
+      "flip": true,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_24",
+      "type": "cityBuilding",
+      "x": 5260.683,
+      "y": 16229.22,
+      "w": 183.06,
+      "h": 141.5,
+      "visualWidth": 183.06,
+      "frontY": 16237.22,
+      "cityFootprint": {
+        "x": 5180.1366,
+        "y": 16166.47,
+        "w": 161.0928,
+        "h": 70.75
+      },
+      "cityArt": "iron-front-15",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_24",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 5477,
+      "y": 16439,
+      "w": 68,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_arcade_24",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 5175,
+      "y": 16436,
+      "w": 42,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_25",
+      "type": "cityBuilding",
+      "x": 5777,
+      "y": 16416,
+      "w": 347.82,
+      "h": 203.76,
+      "visualWidth": 347.82,
+      "frontY": 16424,
+      "cityFootprint": {
+        "x": 5623.9592,
+        "y": 16322.12,
+        "w": 306.0816,
+        "h": 101.88
+      },
+      "cityArt": "iron-front-4",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_25",
+      "type": "cityBuilding",
+      "x": 5701.078,
+      "y": 16229.22,
+      "w": 201.96,
+      "h": 141.5,
+      "visualWidth": 201.96,
+      "frontY": 16237.22,
+      "cityFootprint": {
+        "x": 5612.2156,
+        "y": 16166.47,
+        "w": 177.72480000000002,
+        "h": 70.75
+      },
+      "cityArt": "urban-landmark-4",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_25",
+      "type": "streetFixture",
+      "painting": "civic-0",
+      "x": 5942,
+      "y": 16439,
+      "w": 82,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_works_26",
+      "type": "cityBuilding",
+      "x": 6239.97,
+      "y": 16408,
+      "w": 300.14,
+      "h": 249.04,
+      "visualWidth": 300.14,
+      "frontY": 16416,
+      "cityFootprint": {
+        "x": 6107.9084,
+        "y": 16291.48,
+        "w": 264.1232,
+        "h": 124.52
+      },
+      "cityArt": "urban-landmark-2",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_siding_26",
+      "type": "streetFixture",
+      "painting": "civic-10",
+      "x": 6080,
+      "y": 16186,
+      "w": 95,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_27",
+      "type": "cityBuilding",
+      "x": 6832.5,
+      "y": 16416,
+      "w": 235.29000000000002,
+      "h": 203.76,
+      "visualWidth": 235.29000000000002,
+      "frontY": 16424,
+      "cityFootprint": {
+        "x": 6728.9724,
+        "y": 16322.12,
+        "w": 207.0552,
+        "h": 101.88
+      },
+      "cityArt": "iron-front-12",
+      "flip": true,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_27",
+      "type": "cityBuilding",
+      "x": 6781.141,
+      "y": 16229.22,
+      "w": 136.62,
+      "h": 141.5,
+      "visualWidth": 136.62,
+      "frontY": 16237.22,
+      "cityFootprint": {
+        "x": 6721.0282,
+        "y": 16166.47,
+        "w": 120.2256,
+        "h": 70.75
+      },
+      "cityArt": "iron-front-8",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_27",
+      "type": "streetFixture",
+      "painting": "civic-2",
+      "x": 6937,
+      "y": 16439,
+      "w": 68,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_28",
+      "type": "cityBuilding",
+      "x": 7224.5,
+      "y": 16416,
+      "w": 324.57,
+      "h": 203.76,
+      "visualWidth": 324.57,
+      "frontY": 16424,
+      "cityFootprint": {
+        "x": 7081.6892,
+        "y": 16322.12,
+        "w": 285.6216,
+        "h": 101.88
+      },
+      "cityArt": "iron-front-7",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_28",
+      "type": "cityBuilding",
+      "x": 7153.653,
+      "y": 16229.22,
+      "w": 188.46,
+      "h": 141.5,
+      "visualWidth": 188.46,
+      "frontY": 16237.22,
+      "cityFootprint": {
+        "x": 7070.7306,
+        "y": 16166.47,
+        "w": 165.84480000000002,
+        "h": 70.75
+      },
+      "cityArt": "urban-landmark-2",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_28",
+      "type": "streetFixture",
+      "painting": "civic-9",
+      "x": 7377,
+      "y": 16439,
+      "w": 82,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_arcade_28",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 7065,
+      "y": 16436,
+      "w": 42,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_court_west_29",
+      "type": "cityBuilding",
+      "x": 7558.43,
+      "y": 16416,
+      "w": 136.85999999999967,
+      "h": 192.44000000000003,
+      "visualWidth": 136.85999999999967,
+      "frontY": 16424,
+      "cityFootprint": {
+        "x": 7498.2116000000005,
+        "y": 16327.78,
+        "w": 120.4367999999997,
+        "h": 96.22000000000001
+      },
+      "cityArt": "facade-6",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_court_east_29",
+      "type": "cityBuilding",
+      "x": 7768.43,
+      "y": 16408,
+      "w": 181.14000000000033,
+      "h": 192.44000000000003,
+      "visualWidth": 181.14000000000033,
+      "frontY": 16416,
+      "cityFootprint": {
+        "x": 7688.7284,
+        "y": 16319.78,
+        "w": 159.40320000000028,
+        "h": 96.22000000000001
+      },
+      "cityArt": "iron-front-2",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_rear_29",
+      "type": "cityBuilding",
+      "x": 7674.5,
+      "y": 16220.73,
+      "w": 335.79,
+      "h": 130.18,
+      "visualWidth": 335.79,
+      "frontY": 16228.73,
+      "cityFootprint": {
+        "x": 7526.7524,
+        "y": 16163.64,
+        "w": 295.4952,
+        "h": 65.09
+      },
+      "cityArt": "iron-front-2",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_29",
+      "type": "streetFixture",
+      "painting": "civic-7",
+      "x": 7837,
+      "y": 16439,
+      "w": 64,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_30",
+      "type": "cityBuilding",
+      "x": 8147,
+      "y": 16416,
+      "w": 366.42,
+      "h": 203.76,
+      "visualWidth": 366.42,
+      "frontY": 16424,
+      "cityFootprint": {
+        "x": 7985.7752,
+        "y": 16322.12,
+        "w": 322.44960000000003,
+        "h": 101.88
+      },
+      "cityArt": "iron-front-5",
+      "flip": true,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_30",
+      "type": "cityBuilding",
+      "x": 8067.018,
+      "y": 16229.22,
+      "w": 212.76000000000002,
+      "h": 141.5,
+      "visualWidth": 212.76000000000002,
+      "frontY": 16237.22,
+      "cityFootprint": {
+        "x": 7973.4036,
+        "y": 16166.47,
+        "w": 187.2288,
+        "h": 70.75
+      },
+      "cityArt": "iron-front-4",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_30",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 8322,
+      "y": 16439,
+      "w": 68,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_arcade_30",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 7965,
+      "y": 16436,
+      "w": 42,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_court_west_31",
+      "type": "cityBuilding",
+      "x": 8519.970000000001,
+      "y": 16416,
+      "w": 169.9400000000005,
+      "h": 192.44000000000003,
+      "visualWidth": 169.9400000000005,
+      "frontY": 16424,
+      "cityFootprint": {
+        "x": 8445.1964,
+        "y": 16327.78,
+        "w": 149.54720000000046,
+        "h": 96.22000000000001
+      },
+      "cityArt": "iron-front-0",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_court_east_31",
+      "type": "cityBuilding",
+      "x": 8719.970000000001,
+      "y": 16408,
+      "w": 128.0599999999995,
+      "h": 192.44000000000003,
+      "visualWidth": 128.0599999999995,
+      "frontY": 16416,
+      "cityFootprint": {
+        "x": 8663.6236,
+        "y": 16319.78,
+        "w": 112.69279999999955,
+        "h": 96.22000000000001
+      },
+      "cityArt": "facade-3",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_rear_31",
+      "type": "cityBuilding",
+      "x": 8609.5,
+      "y": 16220.73,
+      "w": 317.59000000000003,
+      "h": 130.18,
+      "visualWidth": 317.59000000000003,
+      "frontY": 16228.73,
+      "cityFootprint": {
+        "x": 8469.7604,
+        "y": 16163.64,
+        "w": 279.47920000000005,
+        "h": 65.09
+      },
+      "cityArt": "iron-front-8",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_31",
+      "type": "streetFixture",
+      "painting": "civic-0",
+      "x": 8762,
+      "y": 16439,
+      "w": 82,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_court_west_32",
+      "type": "cityBuilding",
+      "x": 5242.17,
+      "y": 16921,
+      "w": 164.34000000000015,
+      "h": 236,
+      "visualWidth": 164.34000000000015,
+      "frontY": 16929,
+      "cityFootprint": {
+        "x": 5169.8604,
+        "y": 16811,
+        "w": 144.61920000000012,
+        "h": 118
+      },
+      "cityArt": "iron-front-15",
+      "flip": true,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_court_east_32",
+      "type": "cityBuilding",
+      "x": 5437.17,
+      "y": 16913,
+      "w": 123.65999999999985,
+      "h": 240,
+      "visualWidth": 123.65999999999985,
+      "frontY": 16921,
+      "cityFootprint": {
+        "x": 5382.7596,
+        "y": 16801,
+        "w": 108.82079999999988,
+        "h": 120
+      },
+      "cityArt": "facade-7",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_rear_32",
+      "type": "cityBuilding",
+      "x": 5329.5,
+      "y": 16639.48,
+      "w": 308.49,
+      "h": 162,
+      "visualWidth": 308.49,
+      "frontY": 16647.48,
+      "cityFootprint": {
+        "x": 5193.7644,
+        "y": 16566.48,
+        "w": 271.4712,
+        "h": 81
+      },
+      "cityArt": "iron-front-10",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_32",
+      "type": "streetFixture",
+      "painting": "civic-2",
+      "x": 5477,
+      "y": 16944,
+      "w": 64,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_arcade_32",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 5175,
+      "y": 16941,
+      "w": 42,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_court_west_33",
+      "type": "cityBuilding",
+      "x": 5659.530000000001,
+      "y": 16921,
+      "w": 139.0600000000004,
+      "h": 236,
+      "visualWidth": 139.0600000000004,
+      "frontY": 16929,
+      "cityFootprint": {
+        "x": 5598.3436,
+        "y": 16811,
+        "w": 122.37280000000035,
+        "h": 118
+      },
+      "cityArt": "facade-5",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_court_east_33",
+      "type": "cityBuilding",
+      "x": 5872.030000000001,
+      "y": 16913,
+      "w": 183.9399999999996,
+      "h": 240,
+      "visualWidth": 183.9399999999996,
+      "frontY": 16921,
+      "cityFootprint": {
+        "x": 5791.096400000001,
+        "y": 16801,
+        "w": 161.86719999999966,
+        "h": 120
+      },
+      "cityArt": "iron-front-9",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_rear_33",
+      "type": "cityBuilding",
+      "x": 5777,
+      "y": 16639.48,
+      "w": 340.34000000000003,
+      "h": 162,
+      "visualWidth": 340.34000000000003,
+      "frontY": 16647.48,
+      "cityFootprint": {
+        "x": 5627.2504,
+        "y": 16566.48,
+        "w": 299.49920000000003,
+        "h": 81
+      },
+      "cityArt": "iron-front-9",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_33",
+      "type": "streetFixture",
+      "painting": "civic-9",
+      "x": 5942,
+      "y": 16944,
+      "w": 68,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_square_34",
+      "type": "cityBuilding",
+      "x": 6229.5,
+      "y": 16688.44,
+      "w": 272.22,
+      "h": 195.84,
+      "visualWidth": 272.22,
+      "frontY": 16696.44,
+      "cityFootprint": {
+        "x": 6109.7232,
+        "y": 16598.52,
+        "w": 239.55360000000002,
+        "h": 97.92
+      },
+      "cityArt": "urban-landmark-1",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_square_clock_34",
+      "type": "streetFixture",
+      "painting": "civic-1",
+      "x": 6073,
+      "y": 16924,
+      "w": 48,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_market_stall_34",
+      "type": "streetFixture",
+      "painting": "civic-0",
+      "x": 6369,
+      "y": 16904,
+      "w": 97,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_35",
+      "type": "cityBuilding",
+      "x": 6832.5,
+      "y": 16921,
+      "w": 235.29000000000002,
+      "h": 224,
+      "visualWidth": 235.29000000000002,
+      "frontY": 16929,
+      "cityFootprint": {
+        "x": 6728.9724,
+        "y": 16817,
+        "w": 207.0552,
+        "h": 112
+      },
+      "cityArt": "iron-front-10",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_35",
+      "type": "cityBuilding",
+      "x": 6781.141,
+      "y": 16651.72,
+      "w": 136.62,
+      "h": 156,
+      "visualWidth": 136.62,
+      "frontY": 16659.72,
+      "cityFootprint": {
+        "x": 6721.0282,
+        "y": 16581.72,
+        "w": 120.2256,
+        "h": 78
+      },
+      "cityArt": "iron-front-3",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_35",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 6937,
+      "y": 16944,
+      "w": 64,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_36",
+      "type": "cityBuilding",
+      "x": 7224.5,
+      "y": 16921,
+      "w": 338.53,
+      "h": 224,
+      "visualWidth": 338.53,
+      "frontY": 16929,
+      "cityFootprint": {
+        "x": 7075.5468,
+        "y": 16817,
+        "w": 297.90639999999996,
+        "h": 112
+      },
+      "cityArt": "iron-front-2",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_36",
+      "type": "cityBuilding",
+      "x": 7224.5,
+      "y": 16651.72,
+      "w": 226,
+      "h": 156,
+      "visualWidth": 226,
+      "frontY": 16659.72,
+      "cityFootprint": {
+        "x": 7125.06,
+        "y": 16581.72,
+        "w": 198.88,
+        "h": 78
+      },
+      "cityArt": "iron-front-10",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_36",
+      "type": "streetFixture",
+      "painting": "civic-0",
+      "x": 7377,
+      "y": 16944,
+      "w": 68,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_arcade_36",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 7065,
+      "y": 16941,
+      "w": 42,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_37",
+      "type": "cityBuilding",
+      "x": 7674.5,
+      "y": 16921,
+      "w": 343.17,
+      "h": 224,
+      "visualWidth": 343.17,
+      "frontY": 16929,
+      "cityFootprint": {
+        "x": 7523.5052,
+        "y": 16817,
+        "w": 301.9896,
+        "h": 112
+      },
+      "cityArt": "iron-front-13",
+      "flip": true,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_37",
+      "type": "cityBuilding",
+      "x": 7599.593,
+      "y": 16651.72,
+      "w": 199.26000000000002,
+      "h": 156,
+      "visualWidth": 199.26000000000002,
+      "frontY": 16659.72,
+      "cityFootprint": {
+        "x": 7511.9186,
+        "y": 16581.72,
+        "w": 175.3488,
+        "h": 78
+      },
+      "cityArt": "urban-landmark-4",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_37",
+      "type": "streetFixture",
+      "painting": "civic-8",
+      "x": 7837,
+      "y": 16944,
+      "w": 82,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_works_38",
+      "type": "cityBuilding",
+      "x": 8158.82,
+      "y": 16913,
+      "w": 338.84,
+      "h": 260,
+      "visualWidth": 338.84,
+      "frontY": 16921,
+      "cityFootprint": {
+        "x": 8009.7303999999995,
+        "y": 16791,
+        "w": 298.1792,
+        "h": 130
+      },
+      "cityArt": "urban-landmark-4",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_siding_38",
+      "type": "streetFixture",
+      "painting": "civic-10",
+      "x": 7975,
+      "y": 16566,
+      "w": 95,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_39",
+      "type": "cityBuilding",
+      "x": 8609.5,
+      "y": 16921,
+      "w": 324.57,
+      "h": 224,
+      "visualWidth": 324.57,
+      "frontY": 16929,
+      "cityFootprint": {
+        "x": 8466.6892,
+        "y": 16817,
+        "w": 285.6216,
+        "h": 112
+      },
+      "cityArt": "iron-front-9",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_39",
+      "type": "cityBuilding",
+      "x": 8538.653,
+      "y": 16651.72,
+      "w": 188.46,
+      "h": 156,
+      "visualWidth": 188.46,
+      "frontY": 16659.72,
+      "cityFootprint": {
+        "x": 8455.7306,
+        "y": 16581.72,
+        "w": 165.84480000000002,
+        "h": 78
+      },
+      "cityArt": "iron-front-3",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_39",
+      "type": "streetFixture",
+      "painting": "civic-9",
+      "x": 8762,
+      "y": 16944,
+      "w": 68,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_40",
+      "type": "cityBuilding",
+      "x": 5329.5,
+      "y": 17321,
+      "w": 315.27000000000004,
+      "h": 218.16,
+      "visualWidth": 315.27000000000004,
+      "frontY": 17329,
+      "cityFootprint": {
+        "x": 5190.7812,
+        "y": 17219.92,
+        "w": 277.43760000000003,
+        "h": 109.08
+      },
+      "cityArt": "iron-front-1",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_40",
+      "type": "cityBuilding",
+      "x": 5260.683,
+      "y": 17121.02,
+      "w": 183.06,
+      "h": 151.5,
+      "visualWidth": 183.06,
+      "frontY": 17129.02,
+      "cityFootprint": {
+        "x": 5180.1366,
+        "y": 17053.27,
+        "w": 161.0928,
+        "h": 75.75
+      },
+      "cityArt": "urban-landmark-2",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_40",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 5477,
+      "y": 17344,
+      "w": 82,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_arcade_40",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 5175,
+      "y": 17341,
+      "w": 42,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_court_west_41",
+      "type": "cityBuilding",
+      "x": 5659.530000000001,
+      "y": 17321,
+      "w": 139.0600000000004,
+      "h": 206.04000000000002,
+      "visualWidth": 139.0600000000004,
+      "frontY": 17329,
+      "cityFootprint": {
+        "x": 5598.3436,
+        "y": 17225.98,
+        "w": 122.37280000000035,
+        "h": 103.02000000000001
+      },
+      "cityArt": "facade-0",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_court_east_41",
+      "type": "cityBuilding",
+      "x": 5872.030000000001,
+      "y": 17313,
+      "w": 183.9399999999996,
+      "h": 206.04000000000002,
+      "visualWidth": 183.9399999999996,
+      "frontY": 17321,
+      "cityFootprint": {
+        "x": 5791.096400000001,
+        "y": 17217.98,
+        "w": 161.86719999999966,
+        "h": 103.02000000000001
+      },
+      "cityArt": "iron-front-12",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_rear_41",
+      "type": "cityBuilding",
+      "x": 5777,
+      "y": 17111.93,
+      "w": 340.34000000000003,
+      "h": 139.38,
+      "visualWidth": 340.34000000000003,
+      "frontY": 17119.93,
+      "cityFootprint": {
+        "x": 5627.2504,
+        "y": 17050.24,
+        "w": 299.49920000000003,
+        "h": 69.69
+      },
+      "cityArt": "iron-front-12",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_41",
+      "type": "streetFixture",
+      "painting": "civic-0",
+      "x": 5942,
+      "y": 17344,
+      "w": 64,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_42",
+      "type": "cityBuilding",
+      "x": 6229.5,
+      "y": 17321,
+      "w": 324.57,
+      "h": 218.16,
+      "visualWidth": 324.57,
+      "frontY": 17329,
+      "cityFootprint": {
+        "x": 6086.6892,
+        "y": 17219.92,
+        "w": 285.6216,
+        "h": 109.08
+      },
+      "cityArt": "iron-front-7",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_42",
+      "type": "cityBuilding",
+      "x": 6158.653,
+      "y": 17121.02,
+      "w": 188.46,
+      "h": 151.5,
+      "visualWidth": 188.46,
+      "frontY": 17129.02,
+      "cityFootprint": {
+        "x": 6075.7306,
+        "y": 17053.27,
+        "w": 165.84480000000002,
+        "h": 75.75
+      },
+      "cityArt": "iron-front-0",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_42",
+      "type": "streetFixture",
+      "painting": "civic-8",
+      "x": 6382,
+      "y": 17344,
+      "w": 68,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_arcade_42",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 6070,
+      "y": 17341,
+      "w": 42,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_court_west_43",
+      "type": "cityBuilding",
+      "x": 6612.17,
+      "y": 17321,
+      "w": 234.34000000000015,
+      "h": 206.04000000000002,
+      "visualWidth": 234.34000000000015,
+      "frontY": 17329,
+      "cityFootprint": {
+        "x": 6509.0604,
+        "y": 17225.98,
+        "w": 206.21920000000014,
+        "h": 103.02000000000001
+      },
+      "cityArt": "iron-front-8",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_court_east_43",
+      "type": "cityBuilding",
+      "x": 6869.67,
+      "y": 17313,
+      "w": 178.65999999999985,
+      "h": 206.04000000000002,
+      "visualWidth": 178.65999999999985,
+      "frontY": 17321,
+      "cityFootprint": {
+        "x": 6791.0596000000005,
+        "y": 17217.98,
+        "w": 157.22079999999988,
+        "h": 103.02000000000001
+      },
+      "cityArt": "iron-front-11",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_rear_43",
+      "type": "cityBuilding",
+      "x": 6727,
+      "y": 17111.93,
+      "w": 422.24,
+      "h": 139.38,
+      "visualWidth": 422.24,
+      "frontY": 17119.93,
+      "cityFootprint": {
+        "x": 6541.2144,
+        "y": 17050.24,
+        "w": 371.57120000000003,
+        "h": 69.69
+      },
+      "cityArt": "iron-front-11",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 2,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_43",
+      "type": "streetFixture",
+      "painting": "civic-2",
+      "x": 6937,
+      "y": 17344,
+      "w": 82,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_works_44",
+      "type": "cityBuilding",
+      "x": 7234.97,
+      "y": 17313,
+      "w": 300.14,
+      "h": 260,
+      "visualWidth": 300.14,
+      "frontY": 17321,
+      "cityFootprint": {
+        "x": 7102.9084,
+        "y": 17191,
+        "w": 264.1232,
+        "h": 130
+      },
+      "cityArt": "urban-landmark-5",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_siding_44",
+      "type": "streetFixture",
+      "painting": "civic-10",
+      "x": 7075,
+      "y": 17071,
+      "w": 95,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_45",
+      "type": "cityBuilding",
+      "x": 7674.5,
+      "y": 17321,
+      "w": 343.17,
+      "h": 218.16,
+      "visualWidth": 343.17,
+      "frontY": 17329,
+      "cityFootprint": {
+        "x": 7523.5052,
+        "y": 17219.92,
+        "w": 301.9896,
+        "h": 109.08
+      },
+      "cityArt": "iron-front-0",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_45",
+      "type": "cityBuilding",
+      "x": 7599.593,
+      "y": 17121.02,
+      "w": 199.26000000000002,
+      "h": 151.5,
+      "visualWidth": 199.26000000000002,
+      "frontY": 17129.02,
+      "cityFootprint": {
+        "x": 7511.9186,
+        "y": 17053.27,
+        "w": 175.3488,
+        "h": 75.75
+      },
+      "cityArt": "urban-landmark-4",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_45",
+      "type": "streetFixture",
+      "painting": "civic-7",
+      "x": 7837,
+      "y": 17344,
+      "w": 68,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_frontage_46",
+      "type": "cityBuilding",
+      "x": 8147,
+      "y": 17321,
+      "w": 382.18,
+      "h": 218.16,
+      "visualWidth": 382.18,
+      "frontY": 17329,
+      "cityFootprint": {
+        "x": 7978.8408,
+        "y": 17219.92,
+        "w": 336.3184,
+        "h": 109.08
+      },
+      "cityArt": "iron-front-3",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_upper_46",
+      "type": "cityBuilding",
+      "x": 8147,
+      "y": 17121.02,
+      "w": 226,
+      "h": 151.5,
+      "visualWidth": 226,
+      "frontY": 17129.02,
+      "cityFootprint": {
+        "x": 8047.56,
+        "y": 17053.27,
+        "w": 198.88,
+        "h": 75.75
+      },
+      "cityArt": "iron-front-0",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_46",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 8322,
+      "y": 17344,
+      "w": 82,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_arcade_46",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 7965,
+      "y": 17341,
+      "w": 42,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_court_west_47",
+      "type": "cityBuilding",
+      "x": 8499.029999999999,
+      "y": 17321,
+      "w": 128.0599999999995,
+      "h": 206.04000000000002,
+      "visualWidth": 128.0599999999995,
+      "frontY": 17329,
+      "cityFootprint": {
+        "x": 8442.683599999998,
+        "y": 17225.98,
+        "w": 112.69279999999955,
+        "h": 103.02000000000001
+      },
+      "cityArt": "facade-6",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_court_east_47",
+      "type": "cityBuilding",
+      "x": 8699.029999999999,
+      "y": 17313,
+      "w": 169.9400000000005,
+      "h": 206.04000000000002,
+      "visualWidth": 169.9400000000005,
+      "frontY": 17321,
+      "cityFootprint": {
+        "x": 8624.256399999998,
+        "y": 17217.98,
+        "w": 149.54720000000046,
+        "h": 103.02000000000001
+      },
+      "cityArt": "iron-front-11",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_rear_47",
+      "type": "cityBuilding",
+      "x": 8609.5,
+      "y": 17111.93,
+      "w": 317.59000000000003,
+      "h": 139.38,
+      "visualWidth": 317.59000000000003,
+      "frontY": 17119.93,
+      "cityFootprint": {
+        "x": 8469.7604,
+        "y": 17050.24,
+        "w": 279.47920000000005,
+        "h": 69.69
+      },
+      "cityArt": "iron-front-11",
+      "flip": false,
+      "cityKey": "ironveil",
+      "district": 3,
+      "region": 6,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_ironveil_stoop_47",
+      "type": "streetFixture",
+      "painting": "civic-0",
+      "x": 8762,
+      "y": 17344,
+      "w": 64,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_lead_0",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 5958,
+      "y": 14729,
+      "w": 71,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_lead_1",
+      "type": "streetFixture",
+      "painting": "civic-7",
+      "x": 5493,
+      "y": 16069,
+      "w": 71,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_lead_2",
+      "type": "streetFixture",
+      "painting": "civic-1",
+      "x": 7853,
+      "y": 15539,
+      "w": 71,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_lead_3",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 5958,
+      "y": 16954,
+      "w": 71,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_lead_4",
+      "type": "streetFixture",
+      "painting": "civic-9",
+      "x": 8338,
+      "y": 16954,
+      "w": 71,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_lead_5",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 5063,
+      "y": 15189,
+      "w": 71,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_light_0",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 5602,
+      "y": 14805,
+      "w": 43,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_resident_0",
+      "type": "friendlyCat",
+      "x": 5545,
+      "y": 14755,
+      "homeX": 5545,
+      "homeY": 14755,
+      "w": 108,
+      "h": 72,
+      "role": 0,
+      "skin": 0,
+      "phase": 0,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          74,
+          0
+        ],
+        [
+          112,
+          0
+        ]
+      ],
+      "friendly": true,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_light_1",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 6507,
+      "y": 16145,
+      "w": 43,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_resident_1",
+      "type": "friendlyCat",
+      "x": 6450,
+      "y": 16095,
+      "homeX": 6450,
+      "homeY": 16095,
+      "w": 108,
+      "h": 72,
+      "role": 1,
+      "skin": 1,
+      "phase": 0.7,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          74,
+          0
+        ],
+        [
+          112,
+          0
+        ]
+      ],
+      "friendly": true,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_light_2",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 7062,
+      "y": 15615,
+      "w": 43,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_resident_2",
+      "type": "friendlyCat",
+      "x": 7005,
+      "y": 15565,
+      "homeX": 7005,
+      "homeY": 15565,
+      "w": 108,
+      "h": 72,
+      "role": 2,
+      "skin": 2,
+      "phase": 1.4,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          74,
+          0
+        ],
+        [
+          112,
+          0
+        ]
+      ],
+      "friendly": true,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_light_3",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 7962,
+      "y": 16525,
+      "w": 43,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_resident_3",
+      "type": "friendlyCat",
+      "x": 7905,
+      "y": 16475,
+      "homeX": 7905,
+      "homeY": 16475,
+      "w": 108,
+      "h": 72,
+      "role": 3,
+      "skin": 3,
+      "phase": 2.0999999999999996,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          74,
+          0
+        ],
+        [
+          112,
+          0
+        ]
+      ],
+      "friendly": true,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_light_4",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 5172,
+      "y": 16525,
+      "w": 43,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_resident_4",
+      "type": "friendlyCat",
+      "x": 5115,
+      "y": 16475,
+      "homeX": 5115,
+      "homeY": 16475,
+      "w": 108,
+      "h": 72,
+      "role": 4,
+      "skin": 0,
+      "phase": 2.8,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          74,
+          0
+        ],
+        [
+          112,
+          0
+        ]
+      ],
+      "friendly": true,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_light_5",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 7502,
+      "y": 17430,
+      "w": 43,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_resident_5",
+      "type": "friendlyCat",
+      "x": 7445,
+      "y": 17380,
+      "homeX": 7445,
+      "homeY": 17380,
+      "w": 108,
+      "h": 72,
+      "role": 5,
+      "skin": 1,
+      "phase": 3.5,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          74,
+          0
+        ],
+        [
+          112,
+          0
+        ]
+      ],
+      "friendly": true,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_light_6",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 8887,
+      "y": 15265,
+      "w": 43,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_resident_6",
+      "type": "friendlyCat",
+      "x": 8830,
+      "y": 15215,
+      "homeX": 8830,
+      "homeY": 15215,
+      "w": 108,
+      "h": 72,
+      "role": 0,
+      "skin": 2,
+      "phase": 4.199999999999999,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          74,
+          0
+        ],
+        [
+          112,
+          0
+        ]
+      ],
+      "friendly": true,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_light_7",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 6067,
+      "y": 17030,
+      "w": 43,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_resident_7",
+      "type": "friendlyCat",
+      "x": 6010,
+      "y": 16980,
+      "homeX": 6010,
+      "homeY": 16980,
+      "w": 108,
+      "h": 72,
+      "role": 1,
+      "skin": 3,
+      "phase": 4.8999999999999995,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          74,
+          0
+        ],
+        [
+          112,
+          0
+        ]
+      ],
+      "friendly": true,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_light_8",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 6507,
+      "y": 15265,
+      "w": 43,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_resident_8",
+      "type": "friendlyCat",
+      "x": 6450,
+      "y": 15215,
+      "homeX": 6450,
+      "homeY": 15215,
+      "w": 108,
+      "h": 72,
+      "role": 2,
+      "skin": 0,
+      "phase": 5.6,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          74,
+          0
+        ],
+        [
+          112,
+          0
+        ]
+      ],
+      "friendly": true,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_light_9",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 8447,
+      "y": 16145,
+      "w": 43,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_resident_9",
+      "type": "friendlyCat",
+      "x": 8390,
+      "y": 16095,
+      "homeX": 8390,
+      "homeY": 16095,
+      "w": 108,
+      "h": 72,
+      "role": 3,
+      "skin": 1,
+      "phase": 6.3,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          74,
+          0
+        ],
+        [
+          112,
+          0
+        ]
+      ],
+      "friendly": true,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_tram_stop",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 6435.614674589207,
+      "y": 8668.910362600904,
+      "w": 105,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_ironveil_streetcar",
+      "type": "streetFixture",
+      "painting": "civic-10",
+      "x": 6160,
+      "y": 14730,
+      "w": 120,
+      "h": 85,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_6_street_regular_0",
+      "type": "friendlyCat",
+      "x": 6110,
+      "y": 8680,
+      "homeX": 6110,
+      "homeY": 8680,
+      "w": 100,
+      "h": 72,
+      "role": 5,
+      "skin": 0,
+      "phase": 0,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 6,
+      "friendly": true,
+      "locationId": "town_6",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_6_street_regular_1",
+      "type": "friendlyCat",
+      "x": 6210,
+      "y": 8680,
+      "homeX": 6210,
+      "homeY": 8680,
+      "w": 100,
+      "h": 72,
+      "role": 0,
+      "skin": 1,
+      "phase": 1.7,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 6,
+      "friendly": true,
+      "locationId": "town_6",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_6_street_regular_2",
+      "type": "friendlyCat",
+      "x": 6265,
+      "y": 8730,
+      "homeX": 6265,
+      "homeY": 8730,
+      "w": 100,
+      "h": 72,
+      "role": 1,
+      "skin": 2,
+      "phase": 3.4,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 6,
+      "friendly": true,
+      "locationId": "town_6",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_6_street_regular_3",
+      "type": "friendlyCat",
+      "x": 6245,
+      "y": 8795,
+      "homeX": 6245,
+      "homeY": 8795,
+      "w": 100,
+      "h": 72,
+      "role": 2,
+      "skin": 3,
+      "phase": 5.1,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 6,
+      "friendly": true,
+      "locationId": "town_6",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_6_street_regular_4",
+      "type": "friendlyCat",
+      "x": 6335,
+      "y": 8800,
+      "homeX": 6335,
+      "homeY": 8800,
+      "w": 100,
+      "h": 72,
+      "role": 3,
+      "skin": 0,
+      "phase": 6.8,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 6,
+      "friendly": true,
+      "locationId": "town_6",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_6_street_regular_5",
+      "type": "friendlyCat",
+      "x": 6405,
+      "y": 8830,
+      "homeX": 6405,
+      "homeY": 8830,
+      "w": 100,
+      "h": 72,
+      "role": 4,
+      "skin": 1,
+      "phase": 8.5,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          -65,
+          0
+        ]
+      ],
+      "region": 6,
+      "friendly": true,
+      "locationId": "town_6",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_6_street_regular_7",
+      "type": "friendlyCat",
+      "x": 6035,
+      "y": 8835,
+      "homeX": 6035,
+      "homeY": 8835,
+      "w": 100,
+      "h": 72,
+      "role": 0,
+      "skin": 3,
+      "phase": 11.9,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 6,
+      "friendly": true,
+      "locationId": "town_6",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_6_street_regular_8",
+      "type": "friendlyCat",
+      "x": 6000,
+      "y": 8805,
+      "homeX": 6000,
+      "homeY": 8805,
+      "w": 100,
+      "h": 72,
+      "role": 1,
+      "skin": 0,
+      "phase": 13.6,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 6,
+      "friendly": true,
+      "locationId": "town_6",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_6_street_regular_9",
+      "type": "friendlyCat",
+      "x": 5960,
+      "y": 8755,
+      "homeX": 5960,
+      "homeY": 8755,
+      "w": 100,
+      "h": 72,
+      "role": 2,
+      "skin": 1,
+      "phase": 15.299999999999999,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 6,
+      "friendly": true,
+      "locationId": "town_6",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_6_street_regular_10",
+      "type": "friendlyCat",
+      "x": 6110,
+      "y": 8680,
+      "homeX": 6110,
+      "homeY": 8680,
+      "w": 100,
+      "h": 72,
+      "role": 3,
+      "skin": 2,
+      "phase": 17,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 6,
+      "friendly": true,
+      "locationId": "town_6",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_6_city_trade_0",
+      "type": "streetFixture",
+      "painting": "civic-9",
+      "x": 5722,
+      "y": 8815,
+      "w": 115,
+      "h": 100,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_6_city_trade_1",
+      "type": "streetFixture",
+      "painting": "civic-10",
+      "x": 6450,
+      "y": 9015,
+      "w": 140,
+      "h": 100,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_6_city_trade_2",
+      "type": "streetFixture",
+      "painting": "civic-1",
+      "x": 6255,
+      "y": 8638,
+      "w": 65,
+      "h": 100,
+      "region": 6,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_6_rowhouses_0",
+      "type": "streetFixture",
+      "painting": "homes-5",
+      "x": 5695,
+      "y": 8560,
+      "w": 165,
+      "h": 120,
+      "region": 6,
+      "solid": false,
+      "variant": 0
+    },
+    {
+      "id": "town_6_rowhouses_1",
+      "type": "streetFixture",
+      "painting": "homes-5",
+      "x": 6525,
+      "y": 8560,
+      "w": 165,
+      "h": 120,
+      "region": 6,
+      "solid": false,
+      "variant": 0
+    },
+    {
+      "id": "town_6_rowhouses_2",
+      "type": "streetFixture",
+      "painting": "homes-5",
+      "x": 5570,
+      "y": 8842,
+      "w": 165,
+      "h": 120,
+      "region": 6,
+      "solid": false,
+      "variant": 0
+    },
+    {
+      "id": "town_6_rowhouses_3",
+      "type": "streetFixture",
+      "painting": "homes-5",
+      "x": 6650,
+      "y": 8842,
+      "w": 165,
+      "h": 120,
+      "region": 6,
+      "solid": false,
       "variant": 0
     }
   ]

@@ -18,7 +18,7 @@ Distances use existing world units. Damage still receives existing hero-level an
 
 ## Fencer counterplay
 
-The Fencer now commits to a fixed amber lunge lane for 0.75 seconds before a 0.32-second charge. Sidestep the lane or land a blade hit during windup to interrupt. A 1.05-second stationary recovery, marked by a small green ring, takes 20% extra damage. Ordinary shots preserve the tell; a blade interrupt cancels the attack and its warnings. Stun/freeze extends the visible tell with the paused actor. Walls and campaign seals still constrain its movement. A Fencer defeat message identifies the lunge and its counterplay.
+The Fencer now commits to a fixed amber lunge lane for 0.58 seconds before a 0.28-second charge. Sidestep the lane or land a blade hit during windup to interrupt. A 0.82-second stationary recovery, marked by a small green ring, takes 35% extra damage. Ordinary shots preserve the tell; a blade interrupt cancels the attack and its warnings. Stun/freeze extends the visible tell with the paused actor. Walls and campaign seals still constrain its movement. A Fencer defeat message identifies the lunge and its counterplay.
 
 ## Integration and validation
 

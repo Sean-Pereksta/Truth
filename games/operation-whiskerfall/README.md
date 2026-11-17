@@ -1,5 +1,14 @@
 # MeowQuest the Purr’d Reich
 
+## Play the fieldwork expansion
+
+Open **index.html**. Both local players can use controllers. From a safe town, open **Camp → Town activities & coach routes** for the five venues or the Copper Minnow in Crownrest. At the bay, race the fisherman or a friend by catch count. At Mossbell, take a seat at the lantern board. The Copper Minnow has a walkable taproom, five-card draw at three stakes, darts and local conversations. Mastery awards give the wearer equipment with an actual field effect. [Activities](documentation/town-activities.md) · [Tavern](documentation/copper-minnow.md) · [Equipment and chambers](documentation/chambers-and-mastery.md)
+
+Two later city cases branch off the dossier. File **Last Car on the Siding** to use the Ashford freight tram to Ironveil. Once the courtyard and all eight commanders are credited, board the Dawnbridge night tram to Blackglass. Speak with the contact at each arrival shelter. Side streets and covered passageways lead around patrols. A flashlight sighting or a gunshot can start a search. [City cases](documentation/city-investigations.md) · [Ironveil street walk](documentation/media/ironveil-street-walk.webm)
+
+Every original quest keeps its contact and has its own painted case file. The Journal shows the next lead and its location. Open a field file to inspect the evidence or return to its contact to report the result. [Quest ledger](documentation/field-assignment-checklist.md) · [Art library](art-gallery.html)
+
+
 An illustrated reconnaissance action RPG for one or two local players. Investigate missing couriers in Greenfields Reach, follow twelve leads through thirteen territories, defeat the eight commanders and reach Adolph Whisker in the Berlin Sector.
 
 Open `index.html` with the entire game folder together. Choose a slot at the painted courier camp. During play, open the Journal to compare observation and recovery routes, mark evidence on the map and send debriefs. Each debrief opens a lead or a forge opportunity. After the epilogue and credits, return to Willow for unfinished assignments, regional exercises or a Whisker rematch.

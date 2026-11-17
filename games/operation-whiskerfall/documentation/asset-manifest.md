@@ -1,5 +1,21 @@
 # Graphics and audio manifest
 
+## Fieldwork, city blocks and the Copper Minnow
+
+The offline [Art Library](../art-gallery.html) opens on the two cities. Its seven fieldwork collections include 383 illustrations and animation sheets. All files resolve relative to the game folder.
+
+| Inventory | Live placement and measurements |
+|---|---|
+| [Town and venue exports](../assets/fieldwork/atlas.json) | 110 paintings of arrival plates, local work, landmarks, evidence, venue interiors, game objects, chamber reliefs and wearable rewards. Each record identifies the crop, export dimensions and anchor. |
+| [Street and tavern exports](../assets/fieldwork/street-atlas.json) | 55 exports covering facades, street furniture, regional homes, the taproom, its patrons and individual playable tables. |
+| [District architecture](../assets/fieldwork/district-atlas.json) | 32 connected architectural frontages, 12 urban landmarks and six paving, curb and canal materials. Frontages are anchored by their masonry footprint and fade for either hero. Street surfaces use world-aligned cached chunks. |
+| [Individual assignment art](../assets/cases/atlas.json) | A separate painting for each of the 159 stable quest IDs. The giver, field evidence, journal and reward receipt reference the case artwork. |
+| [Field movement](../assets/fieldwork/motion-atlas.json) and [street movement](../assets/fieldwork/street-motion.json) | 140 measured transparent frames for swimming fish, anglers, board destruction, cat movement, armed actions, tavern faces, walking and talking. |
+| [Venue miniatures](../assets/activities/venue-pieces.webp) | Sixteen carved pieces, characters and game objects. The two board seats use separate heraldry. |
+
+The [initial painting briefs](../assets/fieldwork/provenance.json), [street and tavern briefs](../assets/fieldwork/street-provenance.json) and [district and case briefs](../assets/fieldwork/district-and-case-provenance.json) record the generated sources. Animation manifests include their prompts, source IDs, per-pose crops and visible bounds. [Measured frame and gameplay examples](chambers-and-mastery.md)
+
+
 All raster graphics were created for this project with the built-in OpenAI ImageGen tool. Original generation briefs are in `assets/art-prompts.json`, `assets/ASSET_PROVENANCE.md`, and the forge/specialist prompt files. No Cat Quest assets, emoji characters, or third-party game sprite packs are used.
 
 ## Hidden expeditions · 1.9

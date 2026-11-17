@@ -1,0 +1,17 @@
+.chamber-notes {display:grid;grid-template-columns:minmax(210px,.75fr) minmax(310px,1.35fr);gap:clamp(18px,3vw,42px);align-items:start;max-width:1010px;margin:auto}
+.chamber-notes figure{margin:0;background:#192b2e;border:1px solid #746954}
+.chamber-notes img{width:100%;display:block;aspect-ratio:4/3;object-fit:cover}
+.chamber-notes figcaption{padding:10px 13px;color:#e4d1a3}
+.chamber-notes h3{font:600 clamp(23px,3vw,35px) Georgia,serif;margin:.25em 0}
+.chamber-notes p{line-height:1.42;margin:.55em 0}
+.chamber-notes small,.chamber-status{color:#f1d093}
+.chamber-nodes,.chamber-actions,.chamber-hints{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0}
+.chamber-nodes button,.chamber-actions button,.chamber-hints button{padding:7px 11px;min-height:35px}
+.chamber-nodes button[aria-pressed=true]{border-color:#f0d486;background:#454536}
+.chamber-notes .chamber-detail,.chamber-hints p{color:#b9d5d0}
+@media(max-width:780px){.chamber-notes{grid-template-columns:1fr}.chamber-notes img{height:125px}.chamber-notes figcaption{display:none}}
+
+.mural-fragments{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:#202d2c;padding:5px}
+.mural-fragments span{background:#dcc9a5;color:#3e392a;text-align:center;font-family:Georgia,serif;font-size:1.25rem;padding:2px 6px}
+.mural-fragments small{display:block;color:#49402c;font-size:.75rem}
+body:has(.menu-chamber) .toast-region .field-notice{display:none}

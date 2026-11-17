@@ -85,10 +85,13 @@
       ['glasswind_sharpshot','rivet_guard'],['lantern_stalker','hookclaw_skirmisher'],
       ['signal_sergeant','rivet_guard'],['glasswind_sharpshot','hookclaw_skirmisher']
     ];
-    const mix=mixes[op.site?(sites.findIndex(s=>s.id===op.site)+1)%mixes.length:ops.indexOf(op)%mixes.length];
+    const deployment=g.reconDossier.run?g.reconDossier.runSerial:0;
+    const homeMix=op.site?sites.findIndex(s=>s.id===op.site)+1:ops.indexOf(op);
+    const mix=mixes[(homeMix+deployment)%mixes.length];
     for(const [i,id] of keys.entries()){
       if(w.dead.has(id)||w._active.has(id)||w._dormant.has(id))continue;
-      const point=safePoint(w,{x:p.x+(i===0?110:i===1?-100:0),y:p.y+(i===2?-125:48)});
+      const angle=(i/keys.length)*Math.PI*2+deployment*1.7;
+      const point=safePoint(w,deployment?{x:p.x+Math.cos(angle)*125,y:p.y+Math.sin(angle)*110}:{x:p.x+(i===0?110:i===1?-100:0),y:p.y+(i===2?-125:48)});
       if(!point)continue;
       const type=types[mix[i%2]]??[24,36][i%2],spec=C.enemies[type],level=Math.max(1,(op.site?siteById(op.site).level:surface(g).regions[op.region].level)||1);
       const e={...point,id,type,homeX:point.x,homeY:point.y,region:op.region,level,regionScaleApplied:true,speed:spec.speed,damage:spec.damage*(1+level*.04),range:spec.range,fireRate:spec.fireRate,name:spec.name,angle:0,state:'investigate',investigateX:p.x,investigateY:p.y,alert:5,anim:'idle',animTime:0,fireTimer:1.2,attackTimer:1.2,specialTimer:1.3};
@@ -127,6 +130,7 @@
   G.fileReconDebrief=function(){
     const d=this.reconDossier,op=next(this);if(!op||!d.evidence[op.id]||d.filed.includes(op.id)||optional(this))return false;
     d.filed.push(op.id);d.pinned=true;d.route='observed';
+    if(op.id==='cinder_manifest')surface(this).opened.add('ironveil_rail_pass');
     for(const p of [...this.players,this.reservePlayer].filter(Boolean)){p.gold+=160;p.materials=(p.materials||0)+12;p.cores=(p.cores||0)+1;}
     this.ui.toast(op.contact+' · '+op.result,'quest');this.audio.play('quest');this.pinRecon();this.save(false);return true;
   };
@@ -136,7 +140,7 @@
       if(w.reconSite?.id==='recon_vault')return {...cell(w.reconSite,'K'),label:'Take the courtyard hatch'};
       if(w.isDungeon)return {...w.locations[0],label:'Return to the surface'};
       if(!w.opened.has('recon_berlin_clearance'))return {...w.getLocation('recon_vault'),label:'Reach the shared courtyard hatch'};
-      return {...w.getLocation(this.campaignWon?'town_0':'boss_berlin'),label:this.campaignWon?'Return to Willow':'Confront Adolph Whisker'};
+      return {...w.getLocation(this.campaignWon?'town_7':'boss_berlin'),label:this.campaignWon?'Dawnbridge operations relay':'Confront Adolph Whisker'};
     }
     const gate=commanders(this,op)[0];
     if(!run&&gate&&!w.isDungeon)return {...gate,label:'Liberate '+gate.name};
@@ -153,6 +157,10 @@
       if(target==='K')return {...cell(w.reconSite,'K'),label:w.reconSite.shortcut};
     }
     const route=target==='R'?'recovered':'observed',p=points(this,op)[route];
+    if(p&&!run&&this.reconDossier.searchArea===op.id){
+      const radius=w.isDungeon?105:240;
+      return {x:Math.round(p.x/radius)*radius,y:Math.round(p.y/radius)*radius,radius,label:'Search area · '+sourceName(op,route)};
+    }
     return p?{...p,label:(route==='observed'?'Observe · ':'Recover · ')+sourceName(op,route)}:null;
   };
   G.pinRecon=function(route){if(!this.reconDossier)return null;this.reconDossier.pinned=true;if(route)this.reconDossier.route=route;
@@ -328,6 +336,7 @@
   G.berlinUnlocked=function(){return this.world?.isDungeon?surface(this).berlinUnlocked():normalBerlin.call(this)&&this.world.berlinUnlocked();};
   function persistFlags(g){
     const w=surface(g);w.opened.add('recon_network_active');
+    if(g.reconDossier.filed.includes('cinder_manifest'))w.opened.add('ironveil_rail_pass');
     if(g.reconDossier.evidence.command_vault?.route==='archive'){w.opened.add('recon_berlin_clearance');w.liberated.add('recon_courtyard');}
   }
   function migrate(data){

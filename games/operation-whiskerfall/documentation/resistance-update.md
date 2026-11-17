@@ -61,7 +61,7 @@ The bundled **art-gallery.html** opens on the new weapons and armor collection, 
 
 ### Skill-based combat and ability mastery
 
-The Fencer commits to a 0.75-second amber warning lane, then a 0.32-second lunge. Sidestep or interrupt with a blade; its 1.05-second green recovery takes 20% extra damage. Warnings remain visible during stun/freeze. A lunge defeat names its cause and counterplay.
+The Fencer commits to a 0.58-second amber warning lane, then a 0.28-second lunge. Sidestep or interrupt with a blade; its 0.82-second green recovery takes 35% extra damage. Warnings remain visible during stun/freeze. A lunge defeat names its cause and counterplay.
 
 Airstrike, Medic Drop, Shockwave, Dashstep and Aegis Field each have three ranks. Rank 2 costs one skill point; rank 3 costs two more. Skills shows exact current and next effects, unlock requirements and cost. A free reset refunds only spent upgrade points, retaining learned powers, passive training, equipped slots and live cooldowns. Each hero owns separate ranks. See `documentation/ability-mastery.md` for the complete values.
 

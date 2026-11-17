@@ -166,7 +166,16 @@
       g.spawnReinforcement(e,1,W.Content.reconEnemyTypes.hookclaw_skirmisher);
     }
     if(fast && r.cycle%3===2)return dash();
-    const landing=beat(fast?.91:.75,disc(to,100),1.12,{move:to});
+    // Phase three alternates an actual withdrawal and an attack on the
+    // other flank. Both destinations are marked before Whisker leaves cover.
+    let destination=to;
+    if(r.phase===3){
+      const back=r.cycle%2===1;
+      const aim=back?a+Math.PI+(r.cycle%4===1?.4:-.4):angleTo(e,g.players.find(h=>h!==p&&validTarget(g,h,e))||p);
+      const candidate=travelPoint(g,e,aim,back?185:Math.min(420,d),34);
+      if(!g.world.isFinalArena||g.world.isFinalArena(candidate.x,candidate.y))destination=candidate;
+    }
+    const landing=beat(fast?.91:.75,disc(destination,100),1.12,{move:destination});
     return {name:fast?'Last stand · volley / landing':'False retreat · marked landing',beats:fast?[beat(.53,lane(g,e,a,680,20),.65),landing]:[landing],rest:fast?.72:.92};
   }
   function expose(e,r,duration){

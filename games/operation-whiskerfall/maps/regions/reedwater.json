@@ -23,7 +23,7 @@
       "region": 5,
       "radius": 300,
       "npc": "Harbormaster Reed",
-      "description": "Friendly resistance settlement: merchant, healing, upgrades, and mission board.",
+      "description": "The otter ferry stands on Oarsmen’s lane. Local supplies, a checkpoint and the resistance forge.",
       "x": 10790,
       "y": 8710,
       "cleared": false,
@@ -31,7 +31,8 @@
       "index": 59,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-14"
     },
     {
       "id": "base_5_0",
@@ -250,13 +251,14 @@
       "region": 5,
       "radius": 250,
       "npc": "Resistance Wayfinder",
-      "description": "A peaceful refuge with a friendly quest scout and an upgrade forge.",
+      "description": "Reedlight net shed stands on Netters’ quay. Local supplies, a checkpoint and the resistance forge.",
       "cleared": false,
       "enemyIds": [],
       "index": 98,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-9"
     },
     {
       "id": "forge_town_5",
@@ -1270,7 +1272,7 @@
         ],
         "dialogue": [
           "Follow the wind bells northeast of Reedlight Refuge to Pilgrim Sora.",
-          "Ring the three terrace bells in any order, then awaken the sanctuary in the middle of the loop. Defeat the guardian, recover its expedition seal, then return to Pilgrim Sora. REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary."
+          "Read the worn weather vane at the lower terrace. Follow the rising gust from a reed to a feather to a cloud. Ring these bells, then awaken the sanctuary. Defeat the guardian, recover its expedition seal, then return to Pilgrim Sora. REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary."
         ],
         "topics": {
           "advice": [
@@ -1290,7 +1292,7 @@
         ],
         "dialogue": [
           "Follow the wind bells northeast of Reedlight Refuge to Pilgrim Sora.",
-          "Ring the three terrace bells in any order, then awaken the sanctuary in the middle of the loop. Defeat the guardian, recover its expedition seal, then return to Pilgrim Sora. REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary."
+          "Read the worn weather vane at the lower terrace. Follow the rising gust from a reed to a feather to a cloud. Ring these bells, then awaken the sanctuary. Defeat the guardian, recover its expedition seal, then return to Pilgrim Sora. REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary."
         ],
         "topics": {
           "advice": [
@@ -1304,7 +1306,7 @@
       ],
       "dialogue": [
         "Follow the wind bells northeast of Reedlight Refuge to Pilgrim Sora.",
-        "Ring the three terrace bells in any order, then awaken the sanctuary in the middle of the loop. Defeat the guardian, recover its expedition seal, then return to Pilgrim Sora. REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary."
+        "Read the worn weather vane at the lower terrace. Follow the rising gust from a reed to a feather to a cloud. Ring these bells, then awaken the sanctuary. Defeat the guardian, recover its expedition seal, then return to Pilgrim Sora. REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary."
       ],
       "role": "medic",
       "portrait": 5,
@@ -2454,7 +2456,9 @@
       "solid": true,
       "variant": 1,
       "locationId": "town_5",
-      "region": 5
+      "region": 5,
+      "townId": "town_5",
+      "townPainting": "outpost-14"
     },
     {
       "id": "town_5_building_1",
@@ -2466,7 +2470,8 @@
       "solid": true,
       "variant": 2,
       "locationId": "town_5",
-      "region": 5
+      "region": 5,
+      "townId": "town_5"
     },
     {
       "id": "town_5_building_2",
@@ -2478,7 +2483,8 @@
       "solid": true,
       "variant": 3,
       "locationId": "town_5",
-      "region": 5
+      "region": 5,
+      "townId": "town_5"
     },
     {
       "id": "town_5_building_3",
@@ -2490,7 +2496,8 @@
       "solid": true,
       "variant": 0,
       "locationId": "town_5",
-      "region": 5
+      "region": 5,
+      "townId": "town_5"
     },
     {
       "id": "town_5_well",
@@ -3791,7 +3798,9 @@
       "solid": true,
       "variant": 1,
       "locationId": "town_way_5",
-      "region": 5
+      "region": 5,
+      "townId": "town_way_5",
+      "townPainting": "outpost-9"
     },
     {
       "id": "town_way_5_building_1",
@@ -3803,7 +3812,8 @@
       "solid": true,
       "variant": 2,
       "locationId": "town_way_5",
-      "region": 5
+      "region": 5,
+      "townId": "town_way_5"
     },
     {
       "id": "town_way_5_building_2",
@@ -3815,7 +3825,8 @@
       "solid": true,
       "variant": 3,
       "locationId": "town_way_5",
-      "region": 5
+      "region": 5,
+      "townId": "town_way_5"
     },
     {
       "id": "town_way_5_building_3",
@@ -3827,7 +3838,8 @@
       "solid": true,
       "variant": 0,
       "locationId": "town_way_5",
-      "region": 5
+      "region": 5,
+      "townId": "town_way_5"
     },
     {
       "id": "town_way_5_well",

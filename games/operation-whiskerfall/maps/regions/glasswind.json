@@ -18,8 +18,8 @@
   "locations": [
     {
       "id": "town_11",
-      "name": "Leeward Inn",
-      "description": "The bell above the slate switchbacks rings before each gust.",
+      "name": "Kitehook Station",
+      "description": "Leeward cable station overlooks Cliff switchback. Anwen’s pennants hang slack on one side of the lift. Secure the lee-side cable before launch.",
       "type": "town",
       "region": 11,
       "x": 24440,
@@ -31,11 +31,12 @@
       "index": 313,
       "friendly": true,
       "safe": true,
-      "safeRadius": 465
+      "safeRadius": 465,
+      "streetKey": "kitehook"
     },
     {
       "id": "forge_town_11",
-      "name": "Leeward Inn Forge",
+      "name": "Kitehook Station Forge",
       "type": "forge",
       "region": 11,
       "x": 24720,
@@ -59,6 +60,33 @@
       "enemyIds": [],
       "index": 318,
       "dungeonId": "recon_spire"
+    },
+    {
+      "id": "work_town_11",
+      "type": "townWork",
+      "name": "Cliff switchback",
+      "region": 11,
+      "townId": "town_11",
+      "radius": 45,
+      "x": 24545,
+      "y": 6210,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 346
+    },
+    {
+      "x": 24595.049282429674,
+      "y": 6101.4333236487355,
+      "id": "activity_wind",
+      "type": "activity",
+      "name": "Windpost Trial",
+      "description": "Sheltered launch · Steer through six numbered rings. Hold the line through gusts and ease it before tension peaks. Cliff strikes restart at your last ring and add five seconds.",
+      "radius": 66,
+      "region": 11,
+      "activity": "wind",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 352
     }
   ],
   "enemySpawns": [
@@ -340,35 +368,39 @@
     {
       "id": "town_11_house_0",
       "type": "house",
-      "x": 24270,
-      "y": 5925,
+      "x": 24370,
+      "y": 5835,
       "w": 152,
       "h": 125,
       "solid": true,
       "region": 11,
-      "variant": 0
+      "variant": 0,
+      "townId": "town_11",
+      "townPainting": "landmark-kitehook"
     },
     {
       "id": "town_11_house_1",
       "type": "house",
-      "x": 24615,
-      "y": 5910,
+      "x": 24670,
+      "y": 5927,
       "w": 152,
       "h": 125,
       "solid": true,
       "region": 11,
-      "variant": 1
+      "variant": 1,
+      "townId": "town_11"
     },
     {
       "id": "town_11_house_2",
       "type": "house",
-      "x": 24230,
-      "y": 6215,
+      "x": 24205,
+      "y": 6235,
       "w": 152,
       "h": 125,
       "solid": true,
       "region": 11,
-      "variant": 2
+      "variant": 2,
+      "townId": "town_11"
     },
     {
       "id": "forge_town_11_workshop",
@@ -406,7 +438,7 @@
       "w": 32,
       "h": 60,
       "solid": false,
-      "label": "Leeward Inn",
+      "label": "Kitehook Station",
       "variant": 0,
       "region": 11
     },
@@ -2676,6 +2708,159 @@
       "variant": 0,
       "solid": true,
       "region": 11
+    },
+    {
+      "id": "work_town_11_lamp",
+      "type": "townWork",
+      "townId": "town_11",
+      "locationId": "work_town_11",
+      "x": 24545,
+      "y": 6210,
+      "w": 52,
+      "h": 67,
+      "solid": false,
+      "variant": 0,
+      "region": 11
+    },
+    {
+      "id": "town_11_homecoming",
+      "type": "townAftermath",
+      "townId": "town_11",
+      "x": 24315,
+      "y": 6129,
+      "w": 130,
+      "h": 108,
+      "solid": false,
+      "variant": 0,
+      "region": 11
+    },
+    {
+      "id": "town_11_street_regular_0",
+      "type": "friendlyCat",
+      "x": 24440,
+      "y": 6015,
+      "homeX": 24440,
+      "homeY": 6015,
+      "w": 100,
+      "h": 72,
+      "role": 3,
+      "skin": 0,
+      "phase": 0,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 11,
+      "friendly": true,
+      "locationId": "town_11",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_11_street_regular_1",
+      "type": "friendlyCat",
+      "x": 24540,
+      "y": 6015,
+      "homeX": 24540,
+      "homeY": 6015,
+      "w": 100,
+      "h": 72,
+      "role": 4,
+      "skin": 1,
+      "phase": 1.7,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 11,
+      "friendly": true,
+      "locationId": "town_11",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_11_street_regular_2",
+      "type": "friendlyCat",
+      "x": 24595,
+      "y": 6065,
+      "homeX": 24595,
+      "homeY": 6065,
+      "w": 100,
+      "h": 72,
+      "role": 5,
+      "skin": 2,
+      "phase": 3.4,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          -65,
+          0
+        ]
+      ],
+      "region": 11,
+      "friendly": true,
+      "locationId": "town_11",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_11_street_regular_3",
+      "type": "friendlyCat",
+      "x": 24575,
+      "y": 6130,
+      "homeX": 24575,
+      "homeY": 6130,
+      "w": 100,
+      "h": 72,
+      "role": 0,
+      "skin": 3,
+      "phase": 5.1,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          70,
+          40
+        ],
+        [
+          -65,
+          0
+        ]
+      ],
+      "region": 11,
+      "friendly": true,
+      "locationId": "town_11",
+      "variant": 0,
+      "solid": false
     }
   ]
 }

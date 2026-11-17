@@ -18,8 +18,8 @@
   "locations": [
     {
       "id": "town_12",
-      "name": "Lamplighter Refuge",
-      "description": "Rope bridges hang between the roots of an ancient lantern tree.",
+      "name": "Boughhall",
+      "description": "The hollow lantern tree overlooks Upper root walk. Rue’s couriers tie amber thread to the sheltered root. Trace it to the empty bridge lantern.",
       "type": "town",
       "region": 12,
       "x": 24440,
@@ -31,11 +31,12 @@
       "index": 315,
       "friendly": true,
       "safe": true,
-      "safeRadius": 465
+      "safeRadius": 465,
+      "streetKey": "boughhall"
     },
     {
       "id": "forge_town_12",
-      "name": "Lamplighter Refuge Forge",
+      "name": "Boughhall Forge",
       "type": "forge",
       "region": 12,
       "x": 24720,
@@ -59,6 +60,19 @@
       "enemyIds": [],
       "index": 319,
       "dungeonId": "recon_court"
+    },
+    {
+      "id": "work_town_12",
+      "type": "townWork",
+      "name": "Upper root walk",
+      "region": 12,
+      "townId": "town_12",
+      "radius": 45,
+      "x": 24540,
+      "y": 11015,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 347
     }
   ],
   "enemySpawns": [
@@ -340,35 +354,39 @@
     {
       "id": "town_12_house_0",
       "type": "house",
-      "x": 24270,
-      "y": 10735,
+      "x": 24385,
+      "y": 10667,
       "w": 152,
       "h": 125,
       "solid": true,
       "region": 12,
-      "variant": 0
+      "variant": 0,
+      "townId": "town_12",
+      "townPainting": "landmark-boughhall"
     },
     {
       "id": "town_12_house_1",
       "type": "house",
-      "x": 24615,
-      "y": 10720,
+      "x": 24650,
+      "y": 10725,
       "w": 152,
       "h": 125,
       "solid": true,
       "region": 12,
-      "variant": 1
+      "variant": 1,
+      "townId": "town_12"
     },
     {
       "id": "town_12_house_2",
       "type": "house",
-      "x": 24230,
-      "y": 11025,
+      "x": 24170,
+      "y": 11000,
       "w": 152,
       "h": 125,
       "solid": true,
       "region": 12,
-      "variant": 2
+      "variant": 2,
+      "townId": "town_12"
     },
     {
       "id": "forge_town_12_workshop",
@@ -406,7 +424,7 @@
       "w": 32,
       "h": 60,
       "solid": false,
-      "label": "Lamplighter Refuge",
+      "label": "Boughhall",
       "variant": 0,
       "region": 12
     },
@@ -3171,6 +3189,155 @@
       "variant": 3,
       "solid": true,
       "region": 12
+    },
+    {
+      "id": "work_town_12_lamp",
+      "type": "townWork",
+      "townId": "town_12",
+      "locationId": "work_town_12",
+      "x": 24540,
+      "y": 11015,
+      "w": 52,
+      "h": 67,
+      "solid": false,
+      "variant": 0,
+      "region": 12
+    },
+    {
+      "id": "town_12_homecoming",
+      "type": "townAftermath",
+      "townId": "town_12",
+      "x": 24315,
+      "y": 10939,
+      "w": 130,
+      "h": 108,
+      "solid": false,
+      "variant": 0,
+      "region": 12
+    },
+    {
+      "id": "town_12_street_regular_0",
+      "type": "friendlyCat",
+      "x": 24440,
+      "y": 10825,
+      "homeX": 24440,
+      "homeY": 10825,
+      "w": 100,
+      "h": 72,
+      "role": 4,
+      "skin": 0,
+      "phase": 0,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          -50
+        ]
+      ],
+      "region": 12,
+      "friendly": true,
+      "locationId": "town_12",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_12_street_regular_1",
+      "type": "friendlyCat",
+      "x": 24540,
+      "y": 10825,
+      "homeX": 24540,
+      "homeY": 10825,
+      "w": 100,
+      "h": 72,
+      "role": 5,
+      "skin": 1,
+      "phase": 1.7,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 12,
+      "friendly": true,
+      "locationId": "town_12",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_12_street_regular_2",
+      "type": "friendlyCat",
+      "x": 24595,
+      "y": 10875,
+      "homeX": 24595,
+      "homeY": 10875,
+      "w": 100,
+      "h": 72,
+      "role": 0,
+      "skin": 2,
+      "phase": 3.4,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          -65,
+          0
+        ]
+      ],
+      "region": 12,
+      "friendly": true,
+      "locationId": "town_12",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_12_street_regular_3",
+      "type": "friendlyCat",
+      "x": 24575,
+      "y": 10940,
+      "homeX": 24575,
+      "homeY": 10940,
+      "w": 100,
+      "h": 72,
+      "role": 1,
+      "skin": 3,
+      "phase": 5.1,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          70,
+          40
+        ],
+        [
+          -65,
+          0
+        ]
+      ],
+      "region": 12,
+      "friendly": true,
+      "locationId": "town_12",
+      "variant": 0,
+      "solid": false
     }
   ]
 }

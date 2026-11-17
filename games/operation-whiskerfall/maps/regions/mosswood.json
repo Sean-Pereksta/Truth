@@ -23,7 +23,7 @@
       "region": 1,
       "radius": 300,
       "npc": "Scout Juniper",
-      "description": "Friendly resistance settlement: merchant, healing, upgrades, and mission board.",
+      "description": "Bellkeeper’s Tea Room overlooks Bell path. Follow the lowest bell rope over the footbridge. Its knot is a carved Scout.",
       "x": 6110,
       "y": 1430,
       "cleared": false,
@@ -31,7 +31,8 @@
       "index": 12,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "mossbell"
     },
     {
       "id": "town_extra_1",
@@ -40,7 +41,7 @@
       "region": 1,
       "radius": 270,
       "npc": "Quartermaster Fern",
-      "description": "A quiet village supporting the resistance.",
+      "description": "Fern Hollow herb loft stands on Herbalist’s walk. Local supplies, a checkpoint and the resistance forge.",
       "x": 7410,
       "y": 4160,
       "cleared": false,
@@ -48,7 +49,8 @@
       "index": 13,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-1"
     },
     {
       "id": "base_1_0",
@@ -239,13 +241,14 @@
       "region": 1,
       "radius": 250,
       "npc": "Resistance Wayfinder",
-      "description": "A peaceful refuge with a friendly quest scout and an upgrade forge.",
+      "description": "Fernlight lantern bridge stands on Lantern walk. Local supplies, a checkpoint and the resistance forge.",
       "cleared": false,
       "enemyIds": [],
       "index": 94,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-5"
     },
     {
       "id": "forge_town_1",
@@ -1624,6 +1627,33 @@
       "cleared": false,
       "enemyIds": [],
       "index": 330
+    },
+    {
+      "id": "work_town_1",
+      "type": "townWork",
+      "name": "Bell path",
+      "region": 1,
+      "townId": "town_1",
+      "radius": 45,
+      "x": 6230,
+      "y": 1635,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 338
+    },
+    {
+      "x": 6081.348050684956,
+      "y": 1592.4932792470142,
+      "id": "activity_lantern",
+      "type": "activity",
+      "name": "Lantern Lines",
+      "description": "Bellkeeper’s Tea Room · Hold two of the three lanterns at the start of your turn to score. First to four Signals, or highest after twelve rounds, wins after equal turns.",
+      "radius": 66,
+      "region": 1,
+      "activity": "lantern",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 348
     }
   ],
   "enemySpawns": [
@@ -2167,26 +2197,29 @@
     {
       "id": "town_1_building_0",
       "type": "building",
-      "x": 5885,
-      "y": 1280,
+      "x": 5995,
+      "y": 1240,
       "w": 155,
       "h": 130,
       "solid": true,
       "variant": 1,
       "locationId": "town_1",
-      "region": 1
+      "region": 1,
+      "townId": "town_1",
+      "townPainting": "landmark-mossbell"
     },
     {
       "id": "town_1_building_1",
       "type": "building",
-      "x": 6335,
-      "y": 1280,
+      "x": 6350,
+      "y": 1180,
       "w": 155,
       "h": 130,
       "solid": true,
       "variant": 2,
       "locationId": "town_1",
-      "region": 1
+      "region": 1,
+      "townId": "town_1"
     },
     {
       "id": "town_1_building_2",
@@ -2198,19 +2231,21 @@
       "solid": true,
       "variant": 3,
       "locationId": "town_1",
-      "region": 1
+      "region": 1,
+      "townId": "town_1"
     },
     {
       "id": "town_1_building_3",
       "type": "building",
-      "x": 5890,
-      "y": 1665,
+      "x": 5905,
+      "y": 1645,
       "w": 125,
       "h": 105,
       "solid": true,
       "variant": 0,
       "locationId": "town_1",
-      "region": 1
+      "region": 1,
+      "townId": "town_1"
     },
     {
       "id": "town_1_well",
@@ -2377,7 +2412,9 @@
       "solid": true,
       "variant": 1,
       "locationId": "town_extra_1",
-      "region": 1
+      "region": 1,
+      "townId": "town_extra_1",
+      "townPainting": "outpost-1"
     },
     {
       "id": "town_extra_1_building_1",
@@ -2389,7 +2426,8 @@
       "solid": true,
       "variant": 2,
       "locationId": "town_extra_1",
-      "region": 1
+      "region": 1,
+      "townId": "town_extra_1"
     },
     {
       "id": "town_extra_1_building_2",
@@ -2401,7 +2439,8 @@
       "solid": true,
       "variant": 3,
       "locationId": "town_extra_1",
-      "region": 1
+      "region": 1,
+      "townId": "town_extra_1"
     },
     {
       "id": "town_extra_1_building_3",
@@ -2413,7 +2452,8 @@
       "solid": true,
       "variant": 0,
       "locationId": "town_extra_1",
-      "region": 1
+      "region": 1,
+      "townId": "town_extra_1"
     },
     {
       "id": "town_extra_1_well",
@@ -3666,7 +3706,9 @@
       "solid": true,
       "variant": 1,
       "locationId": "town_way_1",
-      "region": 1
+      "region": 1,
+      "townId": "town_way_1",
+      "townPainting": "outpost-5"
     },
     {
       "id": "town_way_1_building_1",
@@ -3678,7 +3720,8 @@
       "solid": true,
       "variant": 2,
       "locationId": "town_way_1",
-      "region": 1
+      "region": 1,
+      "townId": "town_way_1"
     },
     {
       "id": "town_way_1_building_2",
@@ -3690,7 +3733,8 @@
       "solid": true,
       "variant": 3,
       "locationId": "town_way_1",
-      "region": 1
+      "region": 1,
+      "townId": "town_way_1"
     },
     {
       "id": "town_way_1_building_3",
@@ -3702,7 +3746,8 @@
       "solid": true,
       "variant": 0,
       "locationId": "town_way_1",
-      "region": 1
+      "region": 1,
+      "townId": "town_way_1"
     },
     {
       "id": "town_way_1_well",
@@ -15926,6 +15971,403 @@
       "label": "Stonecrest Highlands · LV 7",
       "variant": 0,
       "region": 1
+    },
+    {
+      "id": "work_town_1_lamp",
+      "type": "townWork",
+      "townId": "town_1",
+      "locationId": "work_town_1",
+      "x": 6230,
+      "y": 1635,
+      "w": 52,
+      "h": 67,
+      "solid": false,
+      "variant": 0,
+      "region": 1
+    },
+    {
+      "id": "town_1_homecoming",
+      "type": "townAftermath",
+      "townId": "town_1",
+      "x": 5985,
+      "y": 1514,
+      "w": 130,
+      "h": 108,
+      "solid": false,
+      "variant": 0,
+      "region": 1
+    },
+    {
+      "id": "town_1_street_regular_0",
+      "type": "friendlyCat",
+      "x": 6110,
+      "y": 1400,
+      "homeX": 6110,
+      "homeY": 1400,
+      "w": 100,
+      "h": 72,
+      "role": 1,
+      "skin": 0,
+      "phase": 0,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 1,
+      "friendly": true,
+      "locationId": "town_1",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_1_street_regular_1",
+      "type": "friendlyCat",
+      "x": 6210,
+      "y": 1400,
+      "homeX": 6210,
+      "homeY": 1400,
+      "w": 100,
+      "h": 72,
+      "role": 2,
+      "skin": 1,
+      "phase": 1.7,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 1,
+      "friendly": true,
+      "locationId": "town_1",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_1_street_regular_2",
+      "type": "friendlyCat",
+      "x": 6265,
+      "y": 1450,
+      "homeX": 6265,
+      "homeY": 1450,
+      "w": 100,
+      "h": 72,
+      "role": 3,
+      "skin": 2,
+      "phase": 3.4,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 1,
+      "friendly": true,
+      "locationId": "town_1",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_1_street_regular_3",
+      "type": "friendlyCat",
+      "x": 6245,
+      "y": 1515,
+      "homeX": 6245,
+      "homeY": 1515,
+      "w": 100,
+      "h": 72,
+      "role": 4,
+      "skin": 3,
+      "phase": 5.1,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 1,
+      "friendly": true,
+      "locationId": "town_1",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_1_street_regular_4",
+      "type": "friendlyCat",
+      "x": 6335,
+      "y": 1520,
+      "homeX": 6335,
+      "homeY": 1520,
+      "w": 100,
+      "h": 72,
+      "role": 5,
+      "skin": 0,
+      "phase": 6.8,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 1,
+      "friendly": true,
+      "locationId": "town_1",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_1_street_regular_5",
+      "type": "friendlyCat",
+      "x": 6405,
+      "y": 1550,
+      "homeX": 6405,
+      "homeY": 1550,
+      "w": 100,
+      "h": 72,
+      "role": 0,
+      "skin": 1,
+      "phase": 8.5,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          -65,
+          0
+        ]
+      ],
+      "region": 1,
+      "friendly": true,
+      "locationId": "town_1",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_1_street_regular_8",
+      "type": "friendlyCat",
+      "x": 6000,
+      "y": 1525,
+      "homeX": 6000,
+      "homeY": 1525,
+      "w": 100,
+      "h": 72,
+      "role": 3,
+      "skin": 0,
+      "phase": 13.6,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          -65,
+          0
+        ]
+      ],
+      "region": 1,
+      "friendly": true,
+      "locationId": "town_1",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_1_street_regular_9",
+      "type": "friendlyCat",
+      "x": 5960,
+      "y": 1475,
+      "homeX": 5960,
+      "homeY": 1475,
+      "w": 100,
+      "h": 72,
+      "role": 4,
+      "skin": 1,
+      "phase": 15.299999999999999,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 1,
+      "friendly": true,
+      "locationId": "town_1",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_1_street_regular_10",
+      "type": "friendlyCat",
+      "x": 6110,
+      "y": 1400,
+      "homeX": 6110,
+      "homeY": 1400,
+      "w": 100,
+      "h": 72,
+      "role": 5,
+      "skin": 2,
+      "phase": 17,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 1,
+      "friendly": true,
+      "locationId": "town_1",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_1_city_trade_0",
+      "type": "streetFixture",
+      "painting": "civic-2",
+      "x": 5722,
+      "y": 1535,
+      "w": 115,
+      "h": 100,
+      "region": 1,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_1_city_trade_1",
+      "type": "streetFixture",
+      "painting": "civic-8",
+      "x": 6450,
+      "y": 1735,
+      "w": 140,
+      "h": 100,
+      "region": 1,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_1_city_trade_2",
+      "type": "streetFixture",
+      "painting": "civic-1",
+      "x": 6255,
+      "y": 1358,
+      "w": 65,
+      "h": 100,
+      "region": 1,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_1_rowhouses_0",
+      "type": "streetFixture",
+      "painting": "homes-1",
+      "x": 5695,
+      "y": 1280,
+      "w": 165,
+      "h": 120,
+      "region": 1,
+      "solid": false,
+      "variant": 0
+    },
+    {
+      "id": "town_1_rowhouses_1",
+      "type": "streetFixture",
+      "painting": "homes-1",
+      "x": 6525,
+      "y": 1280,
+      "w": 165,
+      "h": 120,
+      "region": 1,
+      "solid": false,
+      "variant": 0
+    },
+    {
+      "id": "town_1_rowhouses_2",
+      "type": "streetFixture",
+      "painting": "homes-1",
+      "x": 5570,
+      "y": 1562,
+      "w": 165,
+      "h": 120,
+      "region": 1,
+      "solid": false,
+      "variant": 0
+    },
+    {
+      "id": "town_1_rowhouses_3",
+      "type": "streetFixture",
+      "painting": "homes-1",
+      "x": 6650,
+      "y": 1562,
+      "w": 165,
+      "h": 120,
+      "region": 1,
+      "solid": false,
+      "variant": 0
     }
   ]
 }

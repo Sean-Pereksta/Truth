@@ -1,0 +1,13 @@
+.tavern-layer{background:#0d211fbb;}
+.tavern-panel{box-sizing:border-box;width:min(96vw,1080px);max-height:96dvh;overflow:auto;padding:12px 22px;background:#252e29;color:#f8ecd4;border:1px solid #bc9461;border-radius:9px;}
+.tavern-panel header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #94846880;padding-bottom:6px;margin-bottom:8px;}
+.tavern-panel h2{font:600 clamp(24px,3.8vh,38px)/1 Georgia,serif;color:#f9dba9;margin:4px 0;}
+.tavern-panel small{font:600 .8rem system-ui;letter-spacing:.08em;color:#e5bd87;}
+.tavern-panel button{border:1px solid #9e9279;border-radius:5px;background:#35473c;color:#fff0d2;padding:7px 13px;font:600 .94rem system-ui;cursor:pointer;}
+.tavern-panel button:focus-visible,.tavern-panel .is-current{outline:2px solid #f7cf89;outline-offset:2px;background:#665b41;}
+.tavern-canvas{display:block;height:auto;width:min(100%,calc(63dvh * 900 / 480));margin:auto;background:#1e302b;border:1px solid #ab906166;border-radius:4px;touch-action:manipulation;}
+.tavern-options{display:flex;gap:8px;flex-wrap:wrap;padding:7px 0;}
+.tavern-panel p,.tavern-panel footer{font:normal .96rem/1.38 system-ui;margin:7px 0;color:#e4e0ca;}
+.tavern-panel footer{border-top:1px solid #93896e77;padding-top:6px;font-size:.86rem;}
+body:has(.venue-layer,.tavern-layer) #hud,body:has(.venue-layer,.tavern-layer) #toast-region,body:has(.venue-layer,.tavern-layer) .quest-indicator{display:none!important;}
+@media(max-width:600px){.tavern-panel{padding:8px;}.tavern-panel button{font-size:.84rem;}}

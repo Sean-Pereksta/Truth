@@ -4454,8 +4454,8 @@
     "rewardGold": 285,
     "rewardXp": 420,
     "rewardStatement": "REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold.",
-    "description": "Wake both lake pumps, then turn the central regulator. The stone crossing between the two lakes is always safe. Entrance requires the Rimeglass Valve Key. Search the Frozen Courier Cache east of Badger’s Lantern in Stonecrest. Defeat its three sentries, then recover the valve key. Defeat the guardian, recover its expedition seal, then return to Keeper Thistle. REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold.",
-    "offer": "Wake both lake pumps, then turn the central regulator. The stone crossing between the two lakes is always safe. Entrance requires the Rimeglass Valve Key. Search the Frozen Courier Cache east of Badger’s Lantern in Stonecrest. Defeat its three sentries, then recover the valve key. Defeat the guardian, recover its expedition seal, then return to Keeper Thistle. REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold.",
+    "description": "Prime the west pump, send pressure east with the central regulator, then prime the east pump. Lock both gauges at the regulator. The central crossing stays dry. Entrance requires the Rimeglass Valve Key. Search the Frozen Courier Cache east of Badger’s Lantern in Stonecrest. Defeat its three sentries, then recover the valve key. Defeat the guardian, recover its expedition seal, then return to Keeper Thistle. REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold.",
+    "offer": "Prime the west pump, send pressure east with the central regulator, then prime the east pump. Lock both gauges at the regulator. The central crossing stays dry. Entrance requires the Rimeglass Valve Key. Search the Frozen Courier Cache east of Badger’s Lantern in Stonecrest. Defeat its three sentries, then recover the valve key. Defeat the guardian, recover its expedition seal, then return to Keeper Thistle. REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold.",
     "completion": "The expedition seal is safe. REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold.",
     "discoveryClue": "Follow the frost-blue pipes northeast from Warmhearth to Keeper Thistle."
   },
@@ -4476,8 +4476,8 @@
     "rewardGold": 420,
     "rewardXp": 600,
     "rewardStatement": "REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark.",
-    "description": "Turn one valve in each side wing to cool the furnace bridge. Either wing can be visited first; the bridge stays open. Entrance requires the Cindercoil Foundry Key. Search the Smuggler’s Tool Chest east of Reedlight Refuge in Reedwater. Defeat its three guards, then recover the foundry key. Defeat the guardian, recover its expedition seal, then return to Foreman Brindle. REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark.",
-    "offer": "Turn one valve in each side wing to cool the furnace bridge. Either wing can be visited first; the bridge stays open. Entrance requires the Cindercoil Foundry Key. Search the Smuggler’s Tool Chest east of Reedlight Refuge in Reedwater. Defeat its three guards, then recover the foundry key. Defeat the guardian, recover its expedition seal, then return to Foreman Brindle. REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark.",
+    "description": "Turn the cooling valves in both wings. The first valve vents a temporary crossing. The north and south routes stay cool. Entrance requires the Cindercoil Foundry Key. Search the Smuggler’s Tool Chest east of Reedlight Refuge in Reedwater. Defeat its three guards, then recover the foundry key. Defeat the guardian, recover its expedition seal, then return to Foreman Brindle. REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark.",
+    "offer": "Turn the cooling valves in both wings. The first valve vents a temporary crossing. The north and south routes stay cool. Entrance requires the Cindercoil Foundry Key. Search the Smuggler’s Tool Chest east of Reedlight Refuge in Reedwater. Defeat its three guards, then recover the foundry key. Defeat the guardian, recover its expedition seal, then return to Foreman Brindle. REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark.",
     "completion": "The expedition seal is safe. REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark.",
     "discoveryClue": "Follow the silent furnace chimneys east of Ember Rest to Foreman Brindle."
   },
@@ -4498,8 +4498,8 @@
     "rewardGold": 375,
     "rewardXp": 540,
     "rewardStatement": "REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary.",
-    "description": "Ring the three terrace bells in any order, then awaken the sanctuary in the middle of the loop. Defeat the guardian, recover its expedition seal, then return to Pilgrim Sora. REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary.",
-    "offer": "Ring the three terrace bells in any order, then awaken the sanctuary in the middle of the loop. Defeat the guardian, recover its expedition seal, then return to Pilgrim Sora. REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary.",
+    "description": "Read the worn weather vane at the lower terrace. Follow the rising gust from a reed to a feather to a cloud. Ring these bells, then awaken the sanctuary. Defeat the guardian, recover its expedition seal, then return to Pilgrim Sora. REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary.",
+    "offer": "Read the worn weather vane at the lower terrace. Follow the rising gust from a reed to a feather to a cloud. Ring these bells, then awaken the sanctuary. Defeat the guardian, recover its expedition seal, then return to Pilgrim Sora. REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary.",
     "completion": "The expedition seal is safe. REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary.",
     "discoveryClue": "Follow the wind bells northeast of Reedlight Refuge to Pilgrim Sora."
   },
@@ -4520,8 +4520,8 @@
     "rewardGold": 555,
     "rewardXp": 780,
     "rewardStatement": "REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge.",
-    "description": "Release the three tide anchors along the flooded piers. Beyond the gate waits Nacremaw, the Great Kraken: an optional level 26 challenge with no time limit. Defeat Nacremaw, the Great Kraken, recover its expedition seal, then return to Diver Pearl. REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge.",
-    "offer": "Release the three tide anchors along the flooded piers. Beyond the gate waits Nacremaw, the Great Kraken: an optional level 26 challenge with no time limit. Defeat Nacremaw, the Great Kraken, recover its expedition seal, then return to Diver Pearl. REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge.",
+    "description": "Release three tide anchors to raise the piers. The ferryman’s tide marks show a short return route. Nacremaw awaits beyond the tide gate. Defeat Nacremaw, the Great Kraken, recover its expedition seal, then return to Diver Pearl. REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge.",
+    "offer": "Release three tide anchors to raise the piers. The ferryman’s tide marks show a short return route. Nacremaw awaits beyond the tide gate. Defeat Nacremaw, the Great Kraken, recover its expedition seal, then return to Diver Pearl. REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge.",
     "completion": "The expedition seal is safe. REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge.",
     "discoveryClue": "Follow the shell markers east of Crownrest Haven to Diver Pearl at the Drowned Maw seaside cave."
   }
