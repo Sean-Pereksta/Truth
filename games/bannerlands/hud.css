@@ -559,6 +559,22 @@ body:has(#quickStandardOrders:not([hidden])) #selectionDock{bottom:190px}
 }
 /* On touch screens the field stays clear until the player asks for a tool. */
 #mobileTroopControls,#mobileMapToggle,#mobilePause { display:none; }
+#compactTroopSelection { display:none; }
+/* Desktop army selection stays in one small corner; commands remain in Orders. */
+@media (pointer: fine) {
+ body[data-has-selection="true"][data-selection-kind="army"] #selectionDock,
+ body[data-troop-filter-group="true"] #selectionDock,
+ #quickFormationOrders, #quickStandardOrders { display:none !important; }
+ body[data-has-selection="true"][data-selection-kind="army"]:not(.placing):not(.forming) #compactTroopSelection,
+ body[data-troop-filter-group="true"]:not(.placing):not(.forming) #compactTroopSelection {
+  position:absolute; z-index:21; left:12px; bottom:76px; display:flex; align-items:center; gap:2px;
+  padding:3px; border:1px solid var(--hud-border); border-radius:5px; background:var(--hud-surface); box-shadow:0 3px 12px #0004;
+ }
+ #compactSelectionCount { min-width:22px; padding:0 3px; color:#e9ca8d; text-align:center; font:600 11px/1 'Segoe UI',Arial,sans-serif; font-variant-numeric:tabular-nums; }
+ #compactTroopSelection button { position:relative; display:grid; place-items:center; width:25px; height:25px; padding:2px 5px 5px 2px; border-color:#43514f; }
+ #compactTroopSelection button svg { width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+ #compactTroopSelection button small { position:absolute; right:2px; bottom:0; font:8px/1 'Segoe UI',Arial,sans-serif; color:#e9ca8d; }
+}
 @media (pointer: coarse) {
  #topbar { height:30px; padding:2px 8px; gap:6px; }
  #topbar .top-stats { gap:10px; }

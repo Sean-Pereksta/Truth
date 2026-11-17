@@ -7,6 +7,7 @@ import {worldToScreen,screenToWorld} from '../../render.js';
 import {regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit} from '../../regiments.js';
 import {formationPreview,formationRole,placeFormation} from '../../formation-placement.js';
 import {HERO_PROFILES,heroProfile} from '../../heroes.js';
+import {createTroopSelectionFilter,troopFilterShortcut} from '../../troop-selection.js';
 
 const source=fs.readFileSync(new URL('../../app.js',import.meta.url),'utf8');
 let cases=0;
@@ -47,6 +48,7 @@ function fixture({house=0,realMenu=false}={}){
   element('resultOverlay').hidden=true;
   element('mobileOptionsMenu').hidden=true;
   const context={console,Math,Map,Set,String,Array,HOUSES,HERO_PROFILES,heroProfile,UNIT_DEFS,BUILD_DEFS,isPassableTile,worldToScreen,screenToWorld,regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit,formationPreview,formationRole,placeFormation,game,canvas,window:win,performance:{now:()=>100},standardTapBlock:null,
+    troopFilter:createTroopSelectionFilter(),troopFilterShortcut,isLivingSelectedUnit:id=>{const u=game.byId.get(id);return !!(u&&u.team===(game.playerTeam??0)&&u.hp>0&&UNIT_DEFS[u.type]);},
     ui,view:{x:0,y:840,w:800,h:600,zoom:1},battleHud:{open(){},close(){},isOpen:false,touchSelect:false,syncSelection(){}},started:true,menuOpen:false,orderMode:'attack',tab:'army',allSelected:false,allBuildingsSelected:false,
     pointers:new Map(),keys:new Set(),groups:new Map(),gesture:null,pinch:null,edgeMouse:null,
     $:element,document:{body:{classList:{add(){},remove(){}}},createElement:()=>new Element(),querySelector:selector=>{if(realMenu)return selector?.startsWith('#')?element(selector.slice(1)):actions.get(selector)||null;if(!actions.has(selector))actions.set(selector,new Element(selector));return actions.get(selector);},querySelectorAll:selector=>selector==='[data-tab]'?tabs:[]},
@@ -61,7 +63,7 @@ function fixture({house=0,realMenu=false}={}){
     const line=source.split('\n').find(line=>line.startsWith(prefix));assert.ok(line,prefix);vm.runInContext(line,context);
   }
   const actionsStart=source.indexOf('const MENU_ACTIONS='),actionsEnd=source.indexOf('\n};',actionsStart);vm.runInContext(source.slice(actionsStart,actionsEnd+3),context);
-  for(const name of ['clearBuildingSelection','selectTroopType','commandGroup','cancelBuild','showTab','activateMenuAction','handleMenuHotkey','beginFacing','beginForm','refreshFormationPreview','confirmFormation','formPointer','patrolBorder','issue','issueTarget','buildingAt','standardAt','selectedHero','standardCommand','performStandardAction','placeStandard','cancelStandardInteraction','beginFormAtStandard','setSelectedRally','pointerPos','rememberMouse','finishPointer','bonusText','upgradeSummary','specialistTooltip','labelMenuHotkeys','buildActionLists'])vm.runInContext(extract(name),context);
+  for(const name of ['filterTroops','clearBuildingSelection','selectTroopType','commandGroup','cancelBuild','showTab','activateMenuAction','handleMenuHotkey','beginFacing','beginForm','refreshFormationPreview','confirmFormation','formPointer','patrolBorder','issue','issueTarget','buildingAt','standardAt','selectedHero','standardCommand','performStandardAction','placeStandard','cancelStandardInteraction','beginFormAtStandard','setSelectedRally','pointerPos','rememberMouse','finishPointer','bonusText','upgradeSummary','specialistTooltip','labelMenuHotkeys','buildActionLists'])vm.runInContext(extract(name),context);
   vm.runInContext(listener('canvas','pointerdown'),context);vm.runInContext(listener('canvas','pointermove'),context);vm.runInContext(listener('window','keydown'),context);
   const cancelLine=source.split('\n').find(line=>line.startsWith("canvas.addEventListener('pointerup'"));vm.runInContext(cancelLine,context);
   const blurLine=source.split('\n').find(line=>line.startsWith("window.addEventListener('keyup'"));vm.runInContext(blurLine,context);
@@ -87,6 +89,18 @@ function fixture({house=0,realMenu=false}={}){
   return {game,ui,context,canvas,win,element,actions,messages,effects,commands,event,refreshMenu};
 }
 const ids=value=>[...value].sort((a,b)=>a-b);
+
+test('Shift troop filters preserve and restore the selected group, and open menus keep recruitment shortcuts',()=>{
+  const f=fixture(),infantry=f.game.addUnit(0,'infantry',20,20),archer=f.game.addUnit(0,'archer',21,20),other=f.game.addUnit(0,'hero',22,20);
+  f.ui.selected=new Set([infantry.id,archer.id,other.id]);
+  const key=(digit,character)=>f.win.dispatch('keydown',f.event({key:character,code:'Digit'+digit,shiftKey:true}));
+  key(2,'@');assert.deepEqual(ids(f.ui.selected),[archer.id]);
+  key(3,'#');assert.deepEqual(ids(f.ui.selected),[]);
+  key(4,'$');assert.deepEqual(ids(f.ui.selected),ids([infantry.id,archer.id,other.id]));
+  key(1,'!');assert.deepEqual(ids(f.ui.selected),[infantry.id]);
+  f.context.battleHud.isOpen=true;f.element('commandPanel').dataset.pane='army';key(2,'@');
+  assert.deepEqual(ids(f.ui.selected),[infantry.id]);assert.equal(f.actions.get('[data-recruit="archer"]').clicks,1);
+});
 
 test('W advances once and A charges, while Shift+W remains the siege-works shortcut',()=>{
   const f=fixture();
