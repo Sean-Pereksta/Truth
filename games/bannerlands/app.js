@@ -352,6 +352,7 @@ function updateHeroHud(troops){
  $('heroBenefitName').textContent=benefit?`${benefit.name} · ${carrying?3:5}-tile radius`:'Standard benefit inactive';
  $('heroBenefitDescription').textContent=benefit?benefit.description:standard?.dormant?'Retrieve and plant this standard again to restore its benefit.':destroyed?'Reforge at an owned keep. Your hero can still fight with their signature weapon.':action?'Handling suspends the standard benefit and hero attacks.':'Pick up the fallen standard to restore its carried benefit.';
  const label=destroyed?'Reforge Standard':carrying?'Plant Standard':'Retrieve Standard',disabled=!started||menuOpen||game.winner!==null||!!action;
+ $('mobileStandard').textContent=destroyed?'Reforge Flag':carrying?'Plant Flag':'Retrieve Flag';$('mobileStandard').disabled=disabled;
  for(const id of ['standardButton','quickStandardButton']){const button=$(id);setHudHTML(button,`${label} <kbd>J</kbd>`);button.disabled=disabled;button.title=destroyed?'Travel to an owned keep and reforge for 8 seconds':carrying?'Choose ground, travel there and plant for 3 seconds':'Travel to this exact standard and retrieve for 2 seconds';}
  for(const id of ['refitStandardButton','quickRefitButton']){$(id).hidden=!carrying||!(standard.hp<standard.maxHp);$(id).disabled=disabled;}
  $('reforgeStandardButton').hidden=!destroyed;$('reforgeStandardButton').disabled=disabled;
@@ -404,6 +405,11 @@ function useHousePower(){
 function hold(){if(!ui.selected.size)return toast('Select troops to hold the line.');cancelBuild();battleHud.close();game.hold(ui.selected);toast('Hold the line. Your troops will defend their facing.');tone(260);}
 function retreat(){if(!ui.selected.size)return toast('Select troops to retreat.');const champions=selected().some(u=>UNIT_DEFS[u.type].lanceChampion);cancelBuild();battleHud.close();game.retreat(ui.selected);toast(champions?'Champions are disengaging to their rally; other troops fall back to the keep.':'Fall back! Regroup at your keep. Right-drag for a facing retreat.');tone(190);}
 $('allButton').onclick=selectArmy;$('heroButton').onclick=findHero;$('attackNearestButton').onclick=attackNearest;$('expandButton').onclick=expandNearby;$('holdButton').onclick=hold;$('retreatButton').onclick=retreat;
+$('mobileAttack').onclick=()=>{ $('mobileOptionsMenu').hidden=true;attackNearest(); };
+$('mobileOptions').onclick=()=>{const menu=$('mobileOptionsMenu');menu.hidden=!menu.hidden;$('mobileOptions').setAttribute('aria-expanded',String(!menu.hidden));};
+for(const [id,action] of [['mobileExpand',expandNearby],['mobilePatrol',patrolBorder],['mobileStandard',standardCommand],['mobileMoreOrders',()=>battleHud.open('orders')],['mobileClear',()=>{$('clearSelection').click();}]])$(id).onclick=()=>{$('mobileOptionsMenu').hidden=true;$('mobileOptions').setAttribute('aria-expanded','false');action();};
+document.addEventListener('pointerdown',e=>{if(!$('mobileTroopControls').contains(e.target)){$('mobileOptionsMenu').hidden=true;$('mobileOptions').setAttribute('aria-expanded','false');}});
+$('mobileMapToggle').onclick=()=>{const open=document.body.classList.toggle('mobile-map-open');$('mobileMapToggle').setAttribute('aria-expanded',String(open));if(open)renderer.drawMinimap(game,$('minimap'),view);};
 $('advanceButton').onclick=advanceAttack;
 $('faceOrderButton').onclick=beginFacing;
 $('patrolButton').onclick=patrolBorder;
@@ -421,6 +427,7 @@ function toggleGrid(){ui.showGrid=!ui.showGrid;$('gridButton').classList.toggle(
 function togglePause(){if(game.remote)return toast('Online battles continue while menus are open. The host controls the match.');if(!started||menuOpen||game.winner!==null)return;game.paused=!game.paused;updatePause();toast(game.paused?'The war is paused. Plan your next move.':'The war continues.');}
 function updatePause(){document.body.classList.toggle('paused',game.paused);$('pauseButton').textContent=game.paused?'▶':'Ⅱ';$('pauseButton').setAttribute('aria-label',game.paused?'Resume game':'Pause game');}
 $('pauseButton').onclick=togglePause;$('speedButton').onclick=()=>{if(game.remote)return;speed=speed===1?1.5:speed===1.5?2:1;$('speedButton').textContent=speed+'×';};
+$('mobilePause').onclick=togglePause;
 $('soundButton').onclick=()=>{sound=!sound;if(sound)initAudio();$('soundButton').textContent=sound?'♫':'♪';$('soundButton').style.opacity=sound?'1':'.4';};
 $('fullscreenButton').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{toast('Use your browser’s fullscreen control.');}};
 function openMenu(){if(!started)return;cancelBuild();battleHud.close();edgeMouse=null;wasPaused=game.paused;if(!game.remote)game.paused=true;menuOpen=true;$('menuOverlay').hidden=false;$('resumeButton').hidden=false;$('startButton').innerHTML='START A NEW CONQUEST <span>→</span>';updatePause();}
@@ -499,16 +506,16 @@ canvas.addEventListener('wheel',e=>{e.preventDefault();const p=pointerPos(e);zoo
 canvas.addEventListener('pointerdown',e=>{
  rememberMouse(e);if(menuOpen||!started)return;e.preventDefault();initAudio();canvas.focus();canvas.setPointerCapture(e.pointerId);const p=pointerPos(e);pointers.set(e.pointerId,p);
  if(pointers.size===2){const [a,b]=[...pointers.values()];pinch={dist:Math.hypot(a.x-b.x,a.y-b.y),zoom:view.zoom,anchor:screenToWorld((a.x+b.x)/2,(a.y+b.y)/2,view)};gesture=null;ui.drag=null;ui.facingPreview=null;return;}
- const dismissOnly=battleHud.isOpen;battleHud.close();
+ const dismissOnly=battleHud.isOpen||!$('mobileOptionsMenu').hidden;battleHud.close();$('mobileOptionsMenu').hidden=true;$('mobileOptions').setAttribute('aria-expanded','false');
  if(ui.formMode&&e.button!==1){gesture={id:e.pointerId,button:e.button,x0:p.x,y0:p.y,x:p.x,y:p.y,form:true,moved:false};if(e.button!==2)formPointer(p,true);return;}
  const touch=e.pointerType==='touch',facing=e.button===2||touch&&ui.facingMode;
- gesture={id:e.pointerId,button:e.button,x0:p.x,y0:p.y,x:p.x,y:p.y,anchor:screenToWorld(p.x,p.y,view),facing,camX:view.x,camY:view.y,shift:e.shiftKey,moved:false,touch,pan:touch&&(!battleHud.touchSelect||ui.buildMode||ui.rallyMode||ui.teamOrderMode)&&!facing&&!ui.standardMode,dismissOnly};
+ gesture={id:e.pointerId,button:e.button,x0:p.x,y0:p.y,x:p.x,y:p.y,anchor:screenToWorld(p.x,p.y,view),facing,camX:view.x,camY:view.y,shift:e.shiftKey,moved:false,touch,downAt:performance.now(),pan:touch&&!facing,dismissOnly};
  ui.hover=screenToWorld(p.x,p.y,view);
 });
 canvas.addEventListener('pointermove',e=>{
  rememberMouse(e);const p=pointerPos(e);ui.hover=screenToWorld(p.x,p.y,view);if(pointers.has(e.pointerId))pointers.set(e.pointerId,p);
  if(pinch&&pointers.size>=2){const[a,b]=[...pointers.values()],sx=(a.x+b.x)/2,sy=(a.y+b.y)/2;view.zoom=clamp(pinch.zoom*Math.hypot(a.x-b.x,a.y-b.y)/Math.max(10,pinch.dist),minZoom(),2.6);const q=iso(pinch.anchor);view.x=q.x-(sx-view.w/2)/view.zoom;view.y=q.y-(sy-view.h/2)/view.zoom;boundCamera();return;}
- if(!gesture||gesture.id!==e.pointerId)return;gesture.x=p.x;gesture.y=p.y;if(Math.hypot(p.x-gesture.x0,p.y-gesture.y0)>6)gesture.moved=true;
+ if(!gesture||gesture.id!==e.pointerId)return;gesture.x=p.x;gesture.y=p.y;if(Math.hypot(p.x-gesture.x0,p.y-gesture.y0)>6){if(!gesture.moved&&gesture.touch&&!gesture.facing&&!ui.buildMode&&!ui.rallyMode&&!ui.teamOrderMode&&!ui.standardMode&&!gesture.dismissOnly&&performance.now()-gesture.downAt>=350)gesture.pan=false;gesture.moved=true;}
  if(gesture.form){if(gesture.button!==2)formPointer(p);return;}
  if(gesture.facing){if(gesture.moved){const end=screenToWorld(p.x,p.y,view),dx=end.x-gesture.anchor.x,dy=end.y-gesture.anchor.y,length=Math.hypot(dx,dy);if(length>.001)ui.facingPreview={...gesture.anchor,faceX:dx/length,faceY:dy/length,formation:ui.formation,count:selected().length};}}
  else if(gesture.button===1||gesture.pan){if(gesture.moved){view.x=gesture.camX-(p.x-gesture.x0)/view.zoom;view.y=gesture.camY-(p.y-gesture.y0)/view.zoom;boundCamera();}}else if(gesture.moved){ui.drag={x0:gesture.x0,y0:gesture.y0,x1:p.x,y1:p.y};}
@@ -542,8 +549,8 @@ function finishPointer(e,cancel=false){
  if(z.moved){cancelBuild();clearBuildingSelection();if(!z.shift)ui.selected.clear();const x0=Math.min(z.x0,p.x),x1=Math.max(z.x0,p.x),y0=Math.min(z.y0,p.y),y1=Math.max(z.y0,p.y);for(const u of game.units){if(u.team!==(game.playerTeam??0)||u.hp<=0)continue;const s=worldToScreen(u.x,u.y,view);if(s.x>=x0&&s.x<=x1&&s.y>=y0&&s.y<=y1)ui.selected.add(u.id);}allSelected=false;tone(420);updateHud();return;}
  const building=buildingAt(p);if(building){ui.selected.clear();allSelected=false;allBuildingsSelected=false;if(!z.shift)ui.selectedBuildings.clear();if(z.shift&&ui.selectedBuildings.has(building.id))ui.selectedBuildings.delete(building.id);else ui.selectedBuildings.add(building.id);tone(430);updateHud();return;}
  let closest=null,best=22;for(const u of game.units){if(u.team!==(game.playerTeam??0)||u.hp<=0)continue;const s=worldToScreen(u.x,u.y,view),d=Math.hypot(s.x-p.x,s.y-9*view.zoom-p.y);if(d<best){closest=u;best=d;}}
- if(closest){clearBuildingSelection();if(!z.shift)ui.selected.clear();if(z.shift&&ui.selected.has(closest.id))ui.selected.delete(closest.id);else ui.selected.add(closest.id);allSelected=false;tone(430);updateHud();}
- else if(ui.selected.size)issue(w.x,w.y);
+ if(closest){clearBuildingSelection();if(!z.shift)ui.selected.clear();if(z.shift&&ui.selected.has(closest.id))ui.selected.delete(closest.id);else ui.selected.add(closest.id);if(z.touch){const previous=ui.lastTouchTap,now=performance.now();if(previous&&previous.type===closest.type&&now-previous.time<450&&Math.hypot(p.x-previous.x,p.y-previous.y)<35){ui.selected=new Set(game.units.filter(u=>u.team===(game.playerTeam??0)&&u.hp>0&&u.type===closest.type).map(u=>u.id));ui.lastTouchTap=null;}else ui.lastTouchTap={type:closest.type,time:now,x:p.x,y:p.y};}allSelected=false;tone(430);updateHud();}
+ else if(ui.selected.size){let enemy=null,bestEnemy=22;if(z.touch){for(const u of game.units){if(u.hp<=0||!game.hostile((game.playerTeam??0),u.team)||!game.isVisibleTo((game.playerTeam??0),u))continue;const s=worldToScreen(u.x,u.y,view),d=Math.hypot(s.x-p.x,s.y-9*view.zoom-p.y);if(d<bestEnemy){enemy=u;bestEnemy=d;}}enemy=enemy||buildingAt(p,true);}if(enemy)issueTarget(enemy);else issue(w.x,w.y,z.touch?'move':orderMode);}
  else{clearBuildingSelection();updateHud();const t=game.tileAt(w.x,w.y);if(t)toast(terrainDescription(t)+(knownOwner(t)>=0?' · '+game.teams[knownOwner(t)].name:''));}
 }
 canvas.addEventListener('pointerup',e=>finishPointer(e));canvas.addEventListener('pointercancel',e=>{edgeMouse=null;finishPointer(e,true);});canvas.addEventListener('pointerleave',()=>{edgeMouse=null;ui.hover=null;});
@@ -634,6 +641,7 @@ function updateHud(){
  const rallyKey=[...rallyKeys][0];$('buildingRallyStatus').textContent=ui.rallyMode?'Click land · Esc cancels':rallyKeys.size>1?'Individual rally points':rallyKey==='none'?'No rally · Troops defend their building':rallyKey?`Rally: ${rallyKey}`:'';
  $('clearRallyButton').disabled=!buildings.some(b=>b.rally)&&!(allBuildingsSelected&&s.rally);$('setRallyButton').disabled=!buildings.length;
  const troops=selected(),counts={};for(const u of troops)counts[u.type]=(counts[u.type]||0)+1;$('selectedCount').textContent=`${troops.length} SELECTED`;
+ $('mobileStandard').hidden=!troops.some(u=>u.type==='hero');$('mobilePatrol').disabled=!troops.some(u=>game.unitClass(u)==='cavalry');if(!troops.length){$('mobileOptionsMenu').hidden=true;$('mobileOptions').setAttribute('aria-expanded','false');}
  if(ui.formMode)refreshFormationPreview();document.querySelectorAll('[data-formation]').forEach(button=>button.classList.toggle('active',button.dataset.formation===ui.formation));
  $('formationStatus').textContent=formationStatus(troops,UNIT_DEFS);$('quickFormationOrders').hidden=!troops.length||ui.formMode||buildings.length>0;
  $('lockFacingButton').setAttribute('aria-pressed',String(!!ui.formationOptions?.lockFacing));$('lockFacingButton').classList.toggle('active',!!ui.formationOptions?.lockFacing);

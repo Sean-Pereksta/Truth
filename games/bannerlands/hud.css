@@ -557,3 +557,34 @@ body:has(#quickStandardOrders:not([hidden])) #selectionDock{bottom:190px}
  #quickStandardOrders button{min-height:36px;padding:4px 7px}
  body:has(#quickStandardOrders:not([hidden])) #selectionDock{bottom:174px}
 }
+/* On touch screens the field stays clear until the player asks for a tool. */
+#mobileTroopControls,#mobileMapToggle,#mobilePause { display:none; }
+@media (pointer: coarse) {
+ #topbar { height:30px; padding:2px 8px; gap:6px; }
+ #topbar .top-stats { gap:10px; }
+ #topbar .resource svg { width:14px; height:14px; }
+ #topbar .resource b { font-size:13px; }
+ #topbar .resource.gold small,#topbar .top-actions,#heroHudButton,#touchControls,
+ #selectionDock,body[data-has-selection="true"] #selectionDock,
+ #quickFormationOrders,#quickStandardOrders { display:none !important; }
+ #gameplayDock { left:50%; right:auto; transform:translateX(-50%); width:min(240px,calc(100% - 128px)); grid-template-columns:repeat(3,minmax(0,1fr)); }
+ #gameplayDock [data-drawer="orders"],#gameplayDock [data-drawer="map"] { display:none; }
+ #gameplayDock button { min-width:40px; min-height:44px; }
+ #gameplayDock button span { font-size:0; }
+ #gameplayDock button span::after { font-size:10px; }
+ #gameplayDock [data-drawer="build"] span::after { content:'Build'; }
+ #gameplayDock [data-drawer="army"] span::after { content:'Muster'; }
+ #gameplayDock [data-drawer="council"] span::after { content:'More'; }
+ #mobileMapToggle { display:block; position:absolute; z-index:26; right:calc(8px + env(safe-area-inset-right,0px)); bottom:var(--hud-bottom); min-width:48px; min-height:48px; padding:6px; font-size:11px; }
+ #minimapDock { display:none; }
+ body.mobile-map-open #minimapDock { display:block; bottom:calc(68px + env(safe-area-inset-bottom,0px)); }
+ #mobileTroopControls { position:absolute; z-index:26; left:calc(8px + env(safe-area-inset-left,0px)); bottom:calc(70px + env(safe-area-inset-bottom,0px)); gap:4px; }
+ body[data-has-selection="true"][data-selection-kind="army"] #mobileTroopControls { display:flex; }
+ body.drawer-open #mobileTroopControls,body.placing #mobileTroopControls,body.forming #mobileTroopControls { display:none !important; }
+ #mobileTroopControls > button { min-width:54px; min-height:44px; padding:5px 7px; font-size:11px; background:var(--hud-surface); }
+ #mobileOptionsMenu { position:absolute; left:0; bottom:48px; display:grid; gap:3px; width:140px; padding:5px; border:1px solid var(--hud-border); border-radius:8px; background:var(--hud-surface); }
+ #mobileOptionsMenu[hidden],#mobileOptionsMenu [hidden] { display:none !important; }
+ #mobileOptionsMenu button { min-height:44px; padding:6px 8px; text-align:left; font-size:12px; }
+ #commandPanel { bottom:calc(70px + env(safe-area-inset-bottom,0px)); }
+ #mobilePause { display:block; }
+}

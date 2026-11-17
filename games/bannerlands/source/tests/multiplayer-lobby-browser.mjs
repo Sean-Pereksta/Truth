@@ -17,6 +17,11 @@ try{
     window.__qaCalls=[];window.__lobbyQA=mountLobbyUI({canHost:true,getConfig:()=>({house:12,enemies:15,mode:'conquest',landscape:'four-rivers',scale:'continent',difficulty:'veteran',fogOfWar:true}),gameVersion:'qa-v1',assetVersion:'painted-qa',onHost:(...args)=>window.__qaCalls.push({type:'host',args}),onReady:value=>window.__qaCalls.push({type:'ready',value}),onChooseHouse:value=>window.__qaCalls.push({type:'house',value}),onStart:value=>window.__qaCalls.push({type:'start',value}),onEnd:()=>window.__qaCalls.push({type:'end'}),onVisibility:value=>window.__qaCalls.push({type:'visibility',value}),onConfigure:(...args)=>window.__qaCalls.push({type:'configure',args})});
     window.__lobbyQA.show('host');
   });
+  assert.equal(await page.locator('[data-download]:visible').count(),0,'Installed host has no download offer in the host view');
+  await page.evaluate(()=>window.__lobbyQA.show('home'));
+  assert.equal(await page.locator('[data-download]:visible').count(),0,'Installed host has no download offer on the overview');
+  assert.doesNotMatch(await page.locator('[data-pane="home"]').innerText(),/download Bannerlands to host/i);
+  await page.evaluate(()=>window.__lobbyQA.show('host'));
   assert.equal(await page.locator('[name="participatingHouse"]:checked').count(),16);
   assert.deepEqual(await page.locator('[name="maxHumans"] option').evaluateAll(elements=>elements.map(el=>Number(el.value))),[1,2,3,4]);
   await page.locator('[name="maxHumans"]').selectOption('4');
@@ -65,6 +70,13 @@ try{
     if(out)await page.screenshot({path:path.join(out,'bannerlands-download-'+size.width+'.png')});
     mainMenus.push({...size,menu,download});
   }
+  const installed=await browser.newPage({viewport:{width:1440,height:960}});
+  await installed.addInitScript(()=>{window.bannerlandsHost={status:async()=>({status:'ready'}),host:async()=>({}),stop:async()=>({})};});
+  await installed.goto(server.url);await installed.waitForFunction(()=>window.__bannerlands&&!document.getElementById('startButton').disabled,{timeout:120000});
+  assert.equal(await installed.locator('.online-download').isVisible(),false,'Installed game does not offer a download on the main menu');
+  await installed.locator('#hostLobbyButton').click();
+  assert.equal(await installed.locator('[data-download]:visible').count(),0,'Installed game does not offer a download in the hosting view');
+  await installed.close();
   assert.deepEqual(errors,[]);
   const report={cases:['four-player sixteen-house lobby','host-house roster ordering','human capacity capped at four','ready/start revision','synchronization progress and cancellation','modal keyboard isolation and Tab navigation','visibility changes','reconfiguration consent text','end match control','roster count validation','mobile bounds','original menu links and tabs','download page','no browser runtime errors'],desktop:{width:1440,height:960},mobile:{width:390,height:844,layout},mainMenus,errors};
   if(out)await fs.writeFile(path.join(out,'multiplayer-lobby-browser.json'),JSON.stringify(report,null,2));

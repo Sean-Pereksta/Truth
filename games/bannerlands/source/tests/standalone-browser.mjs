@@ -18,6 +18,7 @@ await page.route(/^https?:/,route=>{external.push(route.request().url());return 
 try{
   await page.goto(pathToFileURL(path.resolve(file)).href,{waitUntil:'load',timeout:120000});
   await page.waitForFunction(()=>document.getElementById('startButton')?.disabled===false,null,{timeout:120000});
+  assert.equal(await page.locator('.online-download').isVisible(),false,'Downloaded offline game does not ask to download again');
   const loaded=await page.evaluate(()=>{
     const {renderer}=window.__bannerlands;
     return {painted:renderer.paintedRows?.size,ready:renderer.paintedArtReady,heroes:renderer.heroRows?.size,heroReady:renderer.heroArtReady,pikeBuildings:Object.keys(renderer.pikeBuildingFrames||{}),moduleScript:document.querySelector('script[type="module"]').hasAttribute('src')};

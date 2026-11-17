@@ -6,6 +6,8 @@ import {GAME_VERSION,ASSET_VERSION,PROTOCOL_VERSION} from './protocol.js';
 
 export function setupMultiplayer({getConfig,onGame,onMessage,onOrderResult,onLeave,getAssetsReady=()=>false}={}){
  initializeDesktopBridge();
+ const downloaded=!!window.bannerlandsHost||document.body.dataset.standalone==='true';
+ const downloadLink=document.querySelector('.online-download');if(downloadLink)downloadLink.hidden=downloaded;
  let client=null,inviteUrl=null,stopBrowsing=null,directoryPublished=false,publishing=false,lastStatus='',wasBattle=false,activeGame=null,selectionEpoch=0,lastLobbyProblem=null;
  const directory=createFirebaseDirectory(),compatibility={gameVersion:GAME_VERSION,assetVersion:ASSET_VERSION,protocolVersion:PROTOCOL_VERSION};
  const local=/^http:\/\/127\.0\.0\.1:\d+$/.test(location.origin);
@@ -81,7 +83,7 @@ export function setupMultiplayer({getConfig,onGame,onMessage,onOrderResult,onLea
   await client?.leave().catch(()=>{});if(host&&window.bannerlandsHost)await window.bannerlandsHost.stop().catch(()=>{});
   client=null;wasBattle=false;activeGame=null;inviteUrl=null;lastLobbyProblem=null;clearHost();if(showHome)ui.show('home');onLeave?.();
  }
- const ui=mountLobbyUI({getConfig,...compatibility,version:GAME_VERSION,downloadUrl:'download.html',allowLocalOrigins:local,canHost:!!window.bannerlandsHost,
+ const ui=mountLobbyUI({getConfig,...compatibility,version:GAME_VERSION,downloadUrl:'download.html',allowLocalOrigins:local,canHost:!!window.bannerlandsHost,showDownload:!downloaded,
   onHost:host,onJoin:join,onBrowse:async()=>{
    stopWatch();stopBrowsing=directory.watch(records=>ui.renderLobbies(records),{...compatibility,onError:error=>ui.setStatus('Lobby discovery is unavailable. You can still join by invitation.',{error:true})});return directory.list(compatibility);
   },onLeave:leave,onReady:async({ready,revision,assetsReady})=>client.ready(ready,revision,assetsReady),onChooseHouse:async team=>client.chooseHouse(team),onStart:async({revision})=>client.start(revision),

@@ -382,7 +382,10 @@ Right-drag orders selected troops to move and face; middle-drag or arrow keys
 pan. Right-drag never pans, even with no troops selected. W advances together in formation. A breaks formation and charges each troop's nearest known enemy troop or building.
 Tab fits the whole map; Home returns to your keep.
 Click or drag the minimap to navigate. G toggles the grid.
-Touch: pinch to zoom, tap a soldier then a destination; drag to select.
+Touch: drag to pan, pinch to zoom, hold then drag to select, or double-tap a
+troop to select all of that type. Tap ground to move or a visible enemy to attack.
+The lower-left Attack and Options controls appear when troops are selected.
+Map opens and closes at lower right; More contains the full Orders panel.
 Space/P pauses. Pause still permits orders and construction for planning.
 The Menu button pauses the campaign and opens its settings. Return to the battlefield resumes your existing war; Start a new conquest starts over with the selected settings.
 

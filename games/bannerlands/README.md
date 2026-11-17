@@ -61,8 +61,8 @@ of repeatedly replacing them. Sparse collision-grid rebuilds and cached
 territory artwork reduce work on large maps. See
 `docs/Troop-Orders-and-Performance.txt` for details and validation.
 
-The minimap is always visible in the battlefield corner. Command panels open
-above it, and minimap navigation preserves the current panel. Buttons and
+On desktop the minimap is always visible in the battlefield corner; on touch
+screens it opens and closes using Map. Minimap navigation preserves the current panel. Buttons and
 selected panel titles show opening shortcuts: Build (B), Muster (U), Orders (O),
 Map (M), and More/Council (C). The map refreshes at a bounded six times per second.
 
@@ -159,22 +159,18 @@ clear On/Off choices and visible guidance.
 
 The playable web entry is `index.html`. The current editable JavaScript, CSS, and artwork are beside it. Serve this folder over HTTP; opening the split-module entry directly with `file://` is unsupported.
 
-The battlefield fills the screen. A compact resource strip and five controls
-open Construction, Muster, Orders, Map and More without reserving sidebar space.
-More contains Council, realm objectives and settings. Portrait screens use a
-scrollable bottom sheet; landscape screens use an on-demand side drawer.
-Tap the same dock button, the close button or empty battlefield to dismiss it.
-The first battlefield tap dismisses a panel without issuing an army order.
+The battlefield fills the screen. On touch screens, a narrow strip shows gold
+and supply, with Build, Muster and More below and an independently toggled
+minimap in the bottom-right corner. More includes Orders, Council, objectives,
+settings and pause. Panels close on an outside tap without issuing an order.
 
-On touch, drag to pan and pinch to zoom. Tap a soldier and then a destination;
-switch to **Drag: Select** for box selection. Construction and rally targeting
-always keep drag-to-pan available. Choosing a building closes the drawer; tap
-your land to place it, enable **Repeat** for multiple structures, or Cancel.
-Selected buildings expose rally points and tower upgrades through their small
-context strip. In Orders, **Assign selected troops** followed by a numbered slot
-saves a command group; tapping a saved slot recalls it. Move & face accepts a
-touch drag from the destination toward the intended front. Desktop shortcuts
-and right-drag orders remain available.
+Drag to pan, pinch to zoom, hold briefly and drag to box-select, or double-tap a
+troop to select all living troops of that exact type. With troops selected, tap
+ground to move or a visible enemy to target it. Small Attack and Options buttons
+appear at bottom left; Options includes nearby expansion, cavalry patrol and the
+selected hero's flag action. More orders retains formations, groups, rallies and
+all advanced controls. Construction and rally targeting keep drag-to-pan
+available. Desktop controls are unchanged.
 
 - Local preview: `npm start` (http://127.0.0.1:4173).
 - Syntax checks: `npm run check`.
