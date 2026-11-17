@@ -45,6 +45,7 @@ function fixture({house=0,realMenu=false}={}){
   const element=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id);};
   const canvas=element('battleCanvas'),win=new Element('window'),ui={selected:new Set(),selectedBuildings:new Set(),formation:'line',formationOptions:{ranks:2,width:null,lockFacing:false},formMode:false,formPreview:null,buildMode:null,rallyMode:false,teamOrderMode:null,facingMode:false,facingPreview:null,drag:null,hover:null};
   element('resultOverlay').hidden=true;
+  element('mobileOptionsMenu').hidden=true;
   const context={console,Math,Map,Set,String,Array,HOUSES,HERO_PROFILES,heroProfile,UNIT_DEFS,BUILD_DEFS,isPassableTile,worldToScreen,screenToWorld,regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit,formationPreview,formationRole,placeFormation,game,canvas,window:win,performance:{now:()=>100},standardTapBlock:null,
     ui,view:{x:0,y:840,w:800,h:600,zoom:1},battleHud:{open(){},close(){},isOpen:false,touchSelect:false,syncSelection(){}},started:true,menuOpen:false,orderMode:'attack',tab:'army',allSelected:false,allBuildingsSelected:false,
     pointers:new Map(),keys:new Set(),groups:new Map(),gesture:null,pinch:null,edgeMouse:null,
@@ -311,9 +312,10 @@ test('Default one-finger pan preserves construction, rally targeting and the cur
   }
 });
 
-test('Touch Select explicitly box-selects troops while touch facing issues a directional movement order',()=>{
-  const f=fixture(),unit=f.game.addUnit(0,'infantry',30,30);f.context.battleHud.touchSelect=true;
+test('A held touch box-selects troops while touch facing issues a directional movement order',()=>{
+  const f=fixture(),unit=f.game.addUnit(0,'infantry',30,30);let now=100;f.context.performance.now=()=>now;
   f.canvas.dispatch('pointerdown',f.event({button:0,pointerType:'touch',clientX:360,clientY:260}));
+  now+=400;
   f.canvas.dispatch('pointermove',f.event({button:0,pointerType:'touch',clientX:450,clientY:340}));
   assert.ok(f.ui.drag);f.canvas.dispatch('pointerup',f.event({button:0,pointerType:'touch',clientX:450,clientY:340}));
   assert.deepEqual(ids(f.ui.selected),[unit.id]);assert.equal(f.context.view.x,0);assert.equal(f.context.view.y,840);
@@ -322,6 +324,22 @@ test('Touch Select explicitly box-selects troops while touch facing issues a dir
   f.canvas.dispatch('pointermove',f.event({button:0,pointerType:'touch',clientX:484,clientY:342}));
   f.canvas.dispatch('pointerup',f.event({button:0,pointerType:'touch',clientX:484,clientY:342}));
   assert.equal(f.commands.length,1);assert.equal(f.commands[0][3],'move');assert.ok(f.commands[0][5]);assert.equal(f.ui.facingMode,false);
+});
+
+test('Touch double-tap selects the same exact troop type throughout the army',()=>{
+  const f=fixture(),a=f.game.addUnit(0,'infantry',30,30),b=f.game.addUnit(0,'infantry',31,30),other=f.game.addUnit(0,'archer',33,30);let now=100;f.context.performance.now=()=>now;
+  const p=worldToScreen(a.x,a.y,f.context.view),event=f.event({button:0,pointerType:'touch',clientX:p.x,clientY:p.y-9});
+  f.canvas.dispatch('pointerdown',event);f.canvas.dispatch('pointerup',event);assert.deepEqual(ids(f.ui.selected),[a.id]);
+  now+=200;f.canvas.dispatch('pointerdown',event);f.canvas.dispatch('pointerup',event);
+  assert.deepEqual(ids(f.ui.selected),ids([a.id,b.id]));assert.ok(!f.ui.selected.has(other.id));assert.equal(f.commands.length,0);
+});
+
+test('Touching a visible enemy targets it and touching ground gives a direct move',()=>{
+  const f=fixture(),a=f.game.addUnit(0,'infantry',25,25),enemy=f.game.addUnit(1,'infantry',30,30);f.ui.selected.add(a.id);
+  const p=worldToScreen(enemy.x,enemy.y,f.context.view),target=f.event({button:0,pointerType:'touch',clientX:p.x,clientY:p.y-9});
+  f.canvas.dispatch('pointerdown',target);f.canvas.dispatch('pointerup',target);assert.equal(a.order.targetId,enemy.id);
+  const ground=worldToScreen(35,35,f.context.view),move=f.event({button:0,pointerType:'touch',clientX:ground.x,clientY:ground.y});
+  f.canvas.dispatch('pointerdown',move);f.canvas.dispatch('pointerup',move);assert.equal(f.commands.at(-1)[3],'move');assert.equal(a.order.targetId,undefined);
 });
 
 test('Touch construction repeats only when requested and invalid placements keep targeting active',()=>{
@@ -339,6 +357,9 @@ test('Canceled touch navigation and a dismissed drawer do not issue unintended o
   f.ui.buildMode=null;f.context.battleHud.isOpen=true;
   f.canvas.dispatch('pointerdown',f.event({button:0,pointerType:'touch'}));f.canvas.dispatch('pointerup',f.event({button:0,pointerType:'touch'}));
   assert.equal(f.commands.length,0);assert.deepEqual(ids(f.ui.selected),[unit.id]);
+  f.context.battleHud.isOpen=false;f.element('mobileOptionsMenu').hidden=false;
+  f.canvas.dispatch('pointerdown',f.event({button:0,pointerType:'touch'}));f.canvas.dispatch('pointerup',f.event({button:0,pointerType:'touch'}));
+  assert.equal(f.element('mobileOptionsMenu').hidden,true);assert.equal(f.commands.length,0,'Dismissing Options must not issue an order.');
 });
 
 test('Pinch navigation preserves targeting and releasing either finger cannot place or command',()=>{

@@ -81,6 +81,7 @@ const emblemAtlas=imageData('assets/house-emblems.png');
 const css=[read('style.css'),read('hud.css'),read('multiplayer/lobby.css')].join('\n').replaceAll('assets/house-emblems.png',emblemAtlas);
 const script=('const __modules=Object.create(null);\n'+compiled.join('\n')).replaceAll('</script','<\\/script');
 const html=read('index.html')
+  .replace('<body>','<body data-standalone="true">')
   .replace('<link rel="stylesheet" href="style.css">',()=>`<style>${css}</style>`)
   .replace('<link rel="stylesheet" href="hud.css">','')
   .replace('<link rel="stylesheet" href="multiplayer/lobby.css">','')
