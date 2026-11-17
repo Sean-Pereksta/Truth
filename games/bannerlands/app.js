@@ -489,6 +489,7 @@ function updateKingHud(){
 function start(){
  if(typeof window!=='undefined'&&window.__bannerlands?.online?.client?.session){window.__bannerlands.online.leave().then(()=>{window.__bannerlands.online.ui.hide();start();});return;}
  edgeMouse=null;
+ document.documentElement.dataset.catnmicePlaying='true';window.dispatchEvent(new Event('catnmice-game-started'));
  game=new Game({house:chosenHouse,landscape:$('landscapeSelect').value,mode:$('modeSelect').value,enemies:+$('enemySelect').value,difficulty:$('difficultySelect').value,scale:$('scaleSelect').value,fogOfWar:$('fogSelect').value==='on',seed:Math.floor(Math.random()*1e9)});
  troopFilter.reset();ui.quality=$('qualitySelect').value;ui.selected.clear();clearBuildingSelection();ui.drag=null;ui.orderMarker=null;ui.hover=null;allSelected=false;groups.clear();keys.clear();started=true;menuOpen=false;speed=1;lastResult=null;lastEvent=game.eventId;lastBattle=0;accumulator=0;cancelBuild();$('battleAlert').hidden=true;
  $('menuOverlay').hidden=true;$('resultOverlay').hidden=true;$('speedButton').textContent='1×';$('mapTitle').textContent=game.landscape?.label||'The Shattered Realm';$('campaignLabel').textContent=game.mode.label.toUpperCase();$('landsStatus').textContent=(game.landmarks||[]).filter(l=>['bridge','ford','pass'].includes(l.kind)).length+' crossings & passes';$('objective').textContent=campaignObjectiveText();
@@ -502,6 +503,7 @@ function multiplayerConfig(){
  return {house:chosenHouse,landscape:$('landscapeSelect').value,mode:$('modeSelect').value,enemies:+$('enemySelect').value,difficulty:$('difficultySelect').value,scale:$('scaleSelect').value,fogOfWar:$('fogSelect').value==='on',seed:Math.floor(Math.random()*1e9)};
 }
 function enterOnlineCampaign(remote){
+ document.documentElement.dataset.catnmicePlaying='true';window.dispatchEvent(new Event('catnmice-game-started'));
  game=remote;started=true;menuOpen=false;speed=1;lastResult=null;lastEvent=0;lastBattle=0;accumulator=0;edgeMouse=null;
  troopFilter.reset();ui.quality=$('qualitySelect').value;ui.selected.clear();clearBuildingSelection();ui.drag=null;ui.orderMarker=null;ui.hover=null;groups.clear();keys.clear();cancelBuild();
  $('menuOverlay').hidden=true;$('resultOverlay').hidden=true;$('inspectButton').textContent='Watch the battle';$('leaveOnlineButton').hidden=false;$('pauseButton').disabled=true;$('speedButton').disabled=true;$('speedButton').textContent='Online';
