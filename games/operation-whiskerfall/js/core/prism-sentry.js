@@ -10,14 +10,18 @@
   G.clearPrismSentries=function(){for(const w of new Set([this.world,this.overworld].filter(Boolean)))for(const e of new Set([...(w.activeEnemies||[]),...(w._active?.values?.()||[]),...(w._dormant?.values?.()||[])]))this.cancelPrismSentry(e);for(const f of this.effects)if(f.prismOwner)f.alive=false;this._prismWorld=this.world;};
   G.beginPrismSentryAttack=function(e,p){
     if(!sentry(e)||!valid(this,e)||!p||!this.lineOfSight(e,p))return false;
-    const angle=Math.atan2(p.y-e.y,p.x-e.x),dx=Math.cos(angle),dy=Math.sin(angle),lanes=[];
+    // Alternate the center-safe corridor with an offset corridor. The same
+    // locked endpoints drive both warnings and damage in either formation.
+    const step=e.prismCycle||0,base=Math.atan2(p.y-e.y,p.x-e.x),d=Math.max(95,W.dist(e,p));
+    const angle=base+(step%3===1?1:step%3===2?-1:0)*Math.asin(Math.min(.75,tuning.laneOffset/d)),
+      dx=Math.cos(angle),dy=Math.sin(angle),lanes=[],windup=tuning.windup*(this.settings?.longWarnings?1.5:1);
     for(const side of [-1,1]){
       const start={x:e.x+dx*24-dy*tuning.laneOffset*side,y:e.y+dy*24+dx*tuning.laneOffset*side};if(this.world.isBlocked(start.x,start.y,6))return false;
       let end={...start};for(let n=8;n<=tuning.length;n+=8){const next={x:start.x+dx*n,y:start.y+dy*n};if(this.world.isBlocked(next.x,next.y,6)||this.pointLocked(next.x,next.y)||this.safeZoneAt(next.x,next.y))break;end=next;}if(W.dist(start,end)<80)return false;lanes.push({start,end});
     }
-    const marks=[];for(const lane of lanes){const mark=this.effect('prismLane',lane.start.x,lane.start.y,tuning.laneRadius,tuning.windup+.04,{prismOwner:e.id,tx:lane.end.x,ty:lane.end.y,warning:true,color:'#80e4f0'});if(mark)marks.push(mark);}
+    const marks=[];for(const lane of lanes){const mark=this.effect('prismLane',lane.start.x,lane.start.y,tuning.laneRadius,windup+.04,{prismOwner:e.id,tx:lane.end.x,ty:lane.end.y,warning:true,color:'#80e4f0'});if(mark)marks.push(mark);}
     if(marks.length!==2){for(const mark of marks)mark.alive=false;return false;}
-    e.angle=angle;e.prismAction={phase:'windup',timer:tuning.windup,lanes};e.combatState='windup';this.setAnim(e,'windup');e.velocityX=e.velocityY=0;return true;
+    e.prismCycle=step+1;e.angle=angle;e.prismAction={phase:'windup',timer:windup,lanes};e.combatState='windup';this.setAnim(e,'windup');e.velocityX=e.velocityY=0;return true;
   };
   const enemies=G.updateEnemies;G.updateEnemies=function(dt){if(this.paused||!(dt>0))return;if(this._prismWorld!==this.world)this.clearPrismSentries();for(const e of this.world.activeEnemies)if(sentry(e)&&!valid(this,e))this.cancelPrismSentry(e);for(const f of this.effects)if(f.alive&&f.prismOwner&&!this.world.activeEnemies.some(e=>e.id===f.prismOwner&&valid(this,e)))f.alive=false;return enemies.apply(this,arguments);};
   const advanced=G.updateAdvancedEnemy;G.updateAdvancedEnemy=function(e,ignored,spec,dt){

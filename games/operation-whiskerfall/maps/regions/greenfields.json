@@ -23,7 +23,7 @@
       "region": 0,
       "radius": 300,
       "npc": "Captain Saffron",
-      "description": "Friendly resistance settlement: merchant, healing, upgrades, and mission board.",
+      "description": "The dispatch willow overlooks Dispatch green. Compare the seal with the copy pinned behind Saffron’s map.",
       "x": 1430,
       "y": 1430,
       "cleared": false,
@@ -31,7 +31,8 @@
       "index": 0,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "willow"
     },
     {
       "id": "town_extra_0",
@@ -40,7 +41,7 @@
       "region": 0,
       "radius": 270,
       "npc": "Quartermaster Hazel",
-      "description": "A quiet village supporting the resistance.",
+      "description": "Applewick cider press stands on Cider lane. Local supplies, a checkpoint and the resistance forge.",
       "x": 2730,
       "y": 4160,
       "cleared": false,
@@ -48,7 +49,8 @@
       "index": 1,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-0"
     },
     {
       "id": "base_0_0",
@@ -233,13 +235,14 @@
       "region": 0,
       "radius": 250,
       "npc": "Resistance Wayfinder",
-      "description": "A peaceful refuge with a friendly quest scout and an upgrade forge.",
+      "description": "Clover creamery stands on Milking lane. Local supplies, a checkpoint and the resistance forge.",
       "cleared": false,
       "enemyIds": [],
       "index": 93,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-4"
     },
     {
       "id": "forge_town_0",
@@ -1440,6 +1443,19 @@
       "cleared": false,
       "enemyIds": [],
       "index": 328
+    },
+    {
+      "id": "work_town_0",
+      "type": "townWork",
+      "name": "Dispatch green",
+      "region": 0,
+      "townId": "town_0",
+      "radius": 45,
+      "x": 1325,
+      "y": 1617,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 337
     }
   ],
   "enemySpawns": [
@@ -1791,14 +1807,16 @@
     {
       "id": "town_0_building_0",
       "type": "building",
-      "x": 1205,
-      "y": 1280,
+      "x": 1430,
+      "y": 1225,
       "w": 155,
       "h": 130,
       "solid": true,
       "variant": 0,
       "locationId": "town_0",
-      "region": 0
+      "region": 0,
+      "townId": "town_0",
+      "townPainting": "landmark-willow"
     },
     {
       "id": "town_0_building_1",
@@ -1810,7 +1828,8 @@
       "solid": true,
       "variant": 1,
       "locationId": "town_0",
-      "region": 0
+      "region": 0,
+      "townId": "town_0"
     },
     {
       "id": "town_0_building_2",
@@ -1822,7 +1841,8 @@
       "solid": true,
       "variant": 2,
       "locationId": "town_0",
-      "region": 0
+      "region": 0,
+      "townId": "town_0"
     },
     {
       "id": "town_0_building_3",
@@ -1834,7 +1854,8 @@
       "solid": true,
       "variant": 3,
       "locationId": "town_0",
-      "region": 0
+      "region": 0,
+      "townId": "town_0"
     },
     {
       "id": "town_0_well",
@@ -2001,7 +2022,9 @@
       "solid": true,
       "variant": 0,
       "locationId": "town_extra_0",
-      "region": 0
+      "region": 0,
+      "townId": "town_extra_0",
+      "townPainting": "outpost-0"
     },
     {
       "id": "town_extra_0_building_1",
@@ -2013,7 +2036,8 @@
       "solid": true,
       "variant": 1,
       "locationId": "town_extra_0",
-      "region": 0
+      "region": 0,
+      "townId": "town_extra_0"
     },
     {
       "id": "town_extra_0_building_2",
@@ -2025,7 +2049,8 @@
       "solid": true,
       "variant": 2,
       "locationId": "town_extra_0",
-      "region": 0
+      "region": 0,
+      "townId": "town_extra_0"
     },
     {
       "id": "town_extra_0_building_3",
@@ -2037,7 +2062,8 @@
       "solid": true,
       "variant": 3,
       "locationId": "town_extra_0",
-      "region": 0
+      "region": 0,
+      "townId": "town_extra_0"
     },
     {
       "id": "town_extra_0_well",
@@ -3290,7 +3316,9 @@
       "solid": true,
       "variant": 0,
       "locationId": "town_way_0",
-      "region": 0
+      "region": 0,
+      "townId": "town_way_0",
+      "townPainting": "outpost-4"
     },
     {
       "id": "town_way_0_building_1",
@@ -3302,7 +3330,8 @@
       "solid": true,
       "variant": 1,
       "locationId": "town_way_0",
-      "region": 0
+      "region": 0,
+      "townId": "town_way_0"
     },
     {
       "id": "town_way_0_building_2",
@@ -3314,7 +3343,8 @@
       "solid": true,
       "variant": 2,
       "locationId": "town_way_0",
-      "region": 0
+      "region": 0,
+      "townId": "town_way_0"
     },
     {
       "id": "town_way_0_building_3",
@@ -3326,7 +3356,8 @@
       "solid": true,
       "variant": 3,
       "locationId": "town_way_0",
-      "region": 0
+      "region": 0,
+      "townId": "town_way_0"
     },
     {
       "id": "town_way_0_well",
@@ -8442,6 +8473,159 @@
       "label": "Mosswood Wilds · LV 4",
       "variant": 0,
       "region": 0
+    },
+    {
+      "id": "work_town_0_lamp",
+      "type": "townWork",
+      "townId": "town_0",
+      "locationId": "work_town_0",
+      "x": 1325,
+      "y": 1617,
+      "w": 52,
+      "h": 67,
+      "solid": false,
+      "variant": 0,
+      "region": 0
+    },
+    {
+      "id": "town_0_homecoming",
+      "type": "townAftermath",
+      "townId": "town_0",
+      "x": 1305,
+      "y": 1514,
+      "w": 130,
+      "h": 108,
+      "solid": false,
+      "variant": 0,
+      "region": 0
+    },
+    {
+      "id": "town_0_street_regular_0",
+      "type": "friendlyCat",
+      "x": 1430,
+      "y": 1400,
+      "homeX": 1430,
+      "homeY": 1400,
+      "w": 100,
+      "h": 72,
+      "role": 0,
+      "skin": 0,
+      "phase": 0,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 0,
+      "friendly": true,
+      "locationId": "town_0",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_0_street_regular_1",
+      "type": "friendlyCat",
+      "x": 1530,
+      "y": 1400,
+      "homeX": 1530,
+      "homeY": 1400,
+      "w": 100,
+      "h": 72,
+      "role": 1,
+      "skin": 1,
+      "phase": 1.7,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 0,
+      "friendly": true,
+      "locationId": "town_0",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_0_street_regular_2",
+      "type": "friendlyCat",
+      "x": 1585,
+      "y": 1450,
+      "homeX": 1585,
+      "homeY": 1450,
+      "w": 100,
+      "h": 72,
+      "role": 2,
+      "skin": 2,
+      "phase": 3.4,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 0,
+      "friendly": true,
+      "locationId": "town_0",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_0_street_regular_3",
+      "type": "friendlyCat",
+      "x": 1565,
+      "y": 1515,
+      "homeX": 1565,
+      "homeY": 1515,
+      "w": 100,
+      "h": 72,
+      "role": 3,
+      "skin": 3,
+      "phase": 5.1,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 0,
+      "friendly": true,
+      "locationId": "town_0",
+      "variant": 0,
+      "solid": false
     }
   ]
 }

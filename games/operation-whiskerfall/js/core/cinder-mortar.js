@@ -87,8 +87,8 @@
     const angle=Math.atan2(first.y-e.y,first.x-e.x),points=[first];
     for(let i=0;i<tuning.bounces;i++){const previous=points[points.length-1];points.push(clippedPoint(this,previous,{x:previous.x+Math.cos(angle)*tuning.bounceDistance,y:previous.y+Math.sin(angle)*tuning.bounceDistance}));}
     const damage=this.enemyDamage(e,spec)*((e.officerBuff||0)>this.time?1.18:1);
-    const volleyId=++serial;e.angle=angle;e.cinderAction={phase:'load',timer:tuning.load,points,damage,volleyId};e.combatState='windup';this.setAnim(e,'windup');
-    let deadline=tuning.load,marked=true;
+    const volleyId=++serial,load=tuning.load*(this.settings?.longWarnings?1.5:1);e.angle=angle;e.cinderAction={phase:'load',timer:load,points,damage,volleyId};e.combatState='windup';this.setAnim(e,'windup');
+    let deadline=load,marked=true;
     points.forEach((point,index)=>{deadline+=tuning.flightDurations[index];const next=points[index+1],labelOffsetY=points.slice(0,index).filter(other=>W.dist(other,point)<24).length*18,mark=effect(this,'cinderMark',point.x,point.y,index===tuning.bounces?tuning.burstRadius:tuning.firstRadius,deadline+.2,{cinderOwnerId:e.id,cinderVolleyId:volleyId,number:index+1,labelOffsetY,tx:next?.x,ty:next?.y});if(!mark)marked=false;});
     // All four landings must be visible before committing, even under effect-pool
     // pressure. A partial warning never turns into an unannounced attack.

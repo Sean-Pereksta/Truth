@@ -115,7 +115,46 @@ const {pathToFileURL}=require('node:url'),{chromium}=require('playwright');
     assert.deepEqual(await page.evaluate(()=>{
       const g=OW.game;return [g.players.length,g.reconEvidenceCount(),g.reconDossier.filed.length,g.weapon(g.players[0]).id,g.input.padProfile(1).assist];
     }),[2,1,1,'rushleaf',.65]);
+    await page.evaluate(()=>{
+      const g=OW.game,t=g.questContact('main_0_0');g.players.forEach((p,i)=>Object.assign(p,{x:t.x+i*36,y:t.y,invuln:3}));
+    });
+    await button(1);await pick('dialogue-work');
+    if(await page.locator('[data-action="dialogue-offer"][data-value="main_0_0"]').count())await pick('dialogue-offer','main_0_0');
+    await page.waitForFunction(()=>document.querySelector('img.assignment-cover')?.naturalWidth>0);
+    if(process.env.FIELD_CAPTURE){
+      require('node:fs').mkdirSync(process.env.FIELD_CAPTURE,{recursive:true});
+      await page.screenshot({path:path.join(process.env.FIELD_CAPTURE,'orchard-offer-720.png')});
+    }
+    await pick('field-examine','main_0_0');
+    assert.ok(await page.locator('.field-evidence-zoom img').isVisible(),'inspect painted evidence with a gamepad');
+    await button(1);await pick('accept-quest','main_0_0');await pick('dialogue-leave');
+    await page.evaluate(()=>{
+      const g=OW.game,t=g.assignmentSites('main_0_0').left;g.players.forEach((p,i)=>Object.assign(p,{x:t.x+i*36,y:t.y,invuln:3}));
+    });
+    await button(1);assert.equal(await page.evaluate(()=>OW.FieldAssignments.route(OW.game,OW.Content.quests[0])),1);
+    await button(9);await pick('save');await page.reload();await page.waitForFunction(()=>window.OW?.game?.ready);await pick('launch');
+    assert.equal(await page.evaluate(()=>OW.FieldAssignments.route(OW.game,OW.Content.quests[0])),1,'field route survives pad save and title Continue');
+    // Stage an earned Berlin clearance here. The separate campaign run earns it
+    // continuously through the 24 regional jobs and twelve filed operations.
+    await page.evaluate(()=>{
+      const g=OW.game,w=g.world;for(const b of g.majorBosses())w.liberated.add(b.id);
+      w.opened.add('recon_berlin_clearance');g.reconDossier=OW.Recon.migrate(g.snapshot());
+      const boss=w._createEnemy(w._spawns.get('boss_berlin_commander'));
+      g.players.forEach((p,i)=>Object.assign(p,{x:boss.x+i*40,y:boss.y+100,invuln:6}));
+      g.killEnemy(boss,g.players[0]);
+    });
+    await pick('recon-credits');await pick('recon-home');
+    assert.deepEqual(await page.evaluate(()=>[OW.game.campaignWon,OW.game.checkpoint.locationId]),[true,'town_7']);
+    await page.evaluate(()=>{const g=OW.game,t=g.world.getLocation('city_blackglass_tram');g.players.forEach((p,i)=>Object.assign(p,{x:t.x+i*35,y:t.y}));});
+    await button(1);assert.ok(await page.evaluate(()=>OW.game.players.every(p=>OW.CityWatch.zone(OW.game.world,p)?.key==='blackglass')));
+    await page.evaluate(()=>{const g=OW.game,t=g.world.getLocation('city_blackglass');g.players.forEach((p,i)=>Object.assign(p,{x:t.x+i*35,y:t.y}));});
+    await button(1);await pick('city-case-start');await pick('city-case-pin','a');await button(1);
+    assert.equal(await page.evaluate(()=>OW.CityInvestigations.step(OW.game,OW.CityInvestigations.cases[1])),1);
+    await page.evaluate(()=>{const g=OW.game,t=g.world.getLocation('city_blackglass_return');g.players.forEach((p,i)=>Object.assign(p,{x:t.x+i*35,y:t.y}));});
+    await button(1);
+    const returned=await page.evaluate(()=>{const g=OW.game,t=g.world.getLocation('city_blackglass_tram');return {distances:g.players.map(p=>Math.round(OW.dist(p,t))),inCity:g.players.some(p=>OW.CityWatch.zone(g.world,p)),notice:document.getElementById('toast-region').innerText};});
+    assert.ok(!returned.inCity&&returned.distances.every(d=>d<250)&&returned.notice.includes('Back at Dawnbridge'),'both heroes disembark at the Dawnbridge night tram '+JSON.stringify(returned));
     assert.deepEqual(errors,[]);
-    console.log('Passed virtual-pad title, P2 controls, return focus, keyboard/P2 movement, personal menus, reconnect, observed clue, debrief, forge, save and Continue on '+browser.version());
+    console.log('Passed virtual-pad title, P2 controls, return focus, mixed movement, personal menus, reconnect, debrief, forge, painted assignment, Continue, credits, Dawnbridge, borough case and return tram on '+browser.version());
   }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

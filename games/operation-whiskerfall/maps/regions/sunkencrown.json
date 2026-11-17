@@ -24,13 +24,14 @@
       "y": 11310,
       "radius": 300,
       "npc": "Captain Coral",
-      "description": "Fishing families and escaped prisoners share a safe island harbor.",
+      "description": "Shellbreak fish market overlooks Crescent quay. Fenn’s salvage net tangled in a bollard. Follow the cork floats down the old quay.",
       "cleared": false,
       "enemyIds": [],
       "index": 103,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "crownrest"
     },
     {
       "id": "base_sunkencrown_0",
@@ -604,7 +605,7 @@
         ],
         "dialogue": [
           "Follow the shell markers east of Crownrest Haven to Diver Pearl at the Drowned Maw seaside cave.",
-          "Release the three tide anchors along the flooded piers. Beyond the gate waits Nacremaw, the Great Kraken: an optional level 26 challenge with no time limit. Defeat Nacremaw, the Great Kraken, recover its expedition seal, then return to Diver Pearl. REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge."
+          "Release three tide anchors to raise the piers. The ferryman’s tide marks show a short return route. Nacremaw awaits beyond the tide gate. Defeat Nacremaw, the Great Kraken, recover its expedition seal, then return to Diver Pearl. REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge."
         ],
         "topics": {
           "advice": [
@@ -624,7 +625,7 @@
         ],
         "dialogue": [
           "Follow the shell markers east of Crownrest Haven to Diver Pearl at the Drowned Maw seaside cave.",
-          "Release the three tide anchors along the flooded piers. Beyond the gate waits Nacremaw, the Great Kraken: an optional level 26 challenge with no time limit. Defeat Nacremaw, the Great Kraken, recover its expedition seal, then return to Diver Pearl. REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge."
+          "Release three tide anchors to raise the piers. The ferryman’s tide marks show a short return route. Nacremaw awaits beyond the tide gate. Defeat Nacremaw, the Great Kraken, recover its expedition seal, then return to Diver Pearl. REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge."
         ],
         "topics": {
           "advice": [
@@ -638,7 +639,7 @@
       ],
       "dialogue": [
         "Follow the shell markers east of Crownrest Haven to Diver Pearl at the Drowned Maw seaside cave.",
-        "Release the three tide anchors along the flooded piers. Beyond the gate waits Nacremaw, the Great Kraken: an optional level 26 challenge with no time limit. Defeat Nacremaw, the Great Kraken, recover its expedition seal, then return to Diver Pearl. REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge."
+        "Release three tide anchors to raise the piers. The ferryman’s tide marks show a short return route. Nacremaw awaits beyond the tide gate. Defeat Nacremaw, the Great Kraken, recover its expedition seal, then return to Diver Pearl. REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge."
       ],
       "role": "scout",
       "portrait": 3,
@@ -646,6 +647,46 @@
       "cleared": false,
       "enemyIds": [],
       "index": 308
+    },
+    {
+      "id": "work_town_9",
+      "type": "townWork",
+      "name": "Crescent quay",
+      "region": 9,
+      "townId": "town_9",
+      "radius": 45,
+      "x": 20305,
+      "y": 11490,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 343
+    },
+    {
+      "x": 20538,
+      "y": 11416,
+      "id": "activity_bay",
+      "type": "activity",
+      "name": "Shellbreak Bay",
+      "description": "Shellbreak fishing pier · Aim along the water, cast, then hook when the float dives. Reel to bring fish in and ease off while they pull. Lark buys catches and posts a three-species commission.",
+      "radius": 66,
+      "region": 9,
+      "activity": "bay",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 350
+    },
+    {
+      "id": "tavern_copper_minnow",
+      "type": "tavern",
+      "region": 9,
+      "x": 20207.745751406263,
+      "y": 11163.053686926882,
+      "radius": 68,
+      "name": "The Copper Minnow",
+      "description": "Crownrest harborside tavern · conversations, five-card draw for coins and darts.",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 353
     }
   ],
   "enemySpawns": [
@@ -1509,14 +1550,16 @@
     {
       "id": "town_9_building_0",
       "type": "building",
-      "x": 20185,
-      "y": 11160,
+      "x": 20350,
+      "y": 11110,
       "w": 155,
       "h": 130,
       "solid": true,
       "variant": 1,
       "locationId": "town_9",
-      "region": 9
+      "region": 9,
+      "townId": "town_9",
+      "townPainting": "landmark-crownrest"
     },
     {
       "id": "town_9_building_1",
@@ -1528,19 +1571,21 @@
       "solid": true,
       "variant": 2,
       "locationId": "town_9",
-      "region": 9
+      "region": 9,
+      "townId": "town_9"
     },
     {
       "id": "town_9_building_2",
       "type": "building",
-      "x": 20510,
-      "y": 10875,
+      "x": 20615,
+      "y": 11155,
       "w": 160,
       "h": 135,
       "solid": true,
       "variant": 3,
       "locationId": "town_9",
-      "region": 9
+      "region": 9,
+      "townId": "town_9"
     },
     {
       "id": "town_9_building_3",
@@ -1552,7 +1597,8 @@
       "solid": true,
       "variant": 0,
       "locationId": "town_9",
-      "region": 9
+      "region": 9,
+      "townId": "town_9"
     },
     {
       "id": "town_9_well",
@@ -8626,6 +8672,447 @@
       "label": "Sunken Crown Isles · LV 16",
       "variant": 0,
       "region": 9
+    },
+    {
+      "id": "work_town_9_lamp",
+      "type": "townWork",
+      "townId": "town_9",
+      "locationId": "work_town_9",
+      "x": 20305,
+      "y": 11490,
+      "w": 52,
+      "h": 67,
+      "solid": false,
+      "variant": 0,
+      "region": 9
+    },
+    {
+      "id": "town_9_homecoming",
+      "type": "townAftermath",
+      "townId": "town_9",
+      "x": 20285,
+      "y": 11394,
+      "w": 130,
+      "h": 108,
+      "solid": false,
+      "variant": 0,
+      "region": 9
+    },
+    {
+      "id": "town_9_street_regular_0",
+      "type": "friendlyCat",
+      "x": 20410,
+      "y": 11280,
+      "homeX": 20410,
+      "homeY": 11280,
+      "w": 100,
+      "h": 72,
+      "role": 0,
+      "skin": 0,
+      "phase": 0,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 9,
+      "friendly": true,
+      "locationId": "town_9",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_9_street_regular_1",
+      "type": "friendlyCat",
+      "x": 20510,
+      "y": 11280,
+      "homeX": 20510,
+      "homeY": 11280,
+      "w": 100,
+      "h": 72,
+      "role": 1,
+      "skin": 1,
+      "phase": 1.7,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 9,
+      "friendly": true,
+      "locationId": "town_9",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_9_street_regular_2",
+      "type": "friendlyCat",
+      "x": 20565,
+      "y": 11330,
+      "homeX": 20565,
+      "homeY": 11330,
+      "w": 100,
+      "h": 72,
+      "role": 2,
+      "skin": 2,
+      "phase": 3.4,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 9,
+      "friendly": true,
+      "locationId": "town_9",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_9_street_regular_3",
+      "type": "friendlyCat",
+      "x": 20545,
+      "y": 11395,
+      "homeX": 20545,
+      "homeY": 11395,
+      "w": 100,
+      "h": 72,
+      "role": 3,
+      "skin": 3,
+      "phase": 5.1,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 9,
+      "friendly": true,
+      "locationId": "town_9",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_9_street_regular_4",
+      "type": "friendlyCat",
+      "x": 20635,
+      "y": 11400,
+      "homeX": 20635,
+      "homeY": 11400,
+      "w": 100,
+      "h": 72,
+      "role": 4,
+      "skin": 0,
+      "phase": 6.8,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 9,
+      "friendly": true,
+      "locationId": "town_9",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_9_street_regular_5",
+      "type": "friendlyCat",
+      "x": 20705,
+      "y": 11430,
+      "homeX": 20705,
+      "homeY": 11430,
+      "w": 100,
+      "h": 72,
+      "role": 5,
+      "skin": 1,
+      "phase": 8.5,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          -65,
+          0
+        ]
+      ],
+      "region": 9,
+      "friendly": true,
+      "locationId": "town_9",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_9_street_regular_7",
+      "type": "friendlyCat",
+      "x": 20335,
+      "y": 11435,
+      "homeX": 20335,
+      "homeY": 11435,
+      "w": 100,
+      "h": 72,
+      "role": 1,
+      "skin": 3,
+      "phase": 11.9,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 9,
+      "friendly": true,
+      "locationId": "town_9",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_9_street_regular_8",
+      "type": "friendlyCat",
+      "x": 20300,
+      "y": 11405,
+      "homeX": 20300,
+      "homeY": 11405,
+      "w": 100,
+      "h": 72,
+      "role": 2,
+      "skin": 0,
+      "phase": 13.6,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 9,
+      "friendly": true,
+      "locationId": "town_9",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_9_street_regular_9",
+      "type": "friendlyCat",
+      "x": 20260,
+      "y": 11355,
+      "homeX": 20260,
+      "homeY": 11355,
+      "w": 100,
+      "h": 72,
+      "role": 3,
+      "skin": 1,
+      "phase": 15.299999999999999,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 9,
+      "friendly": true,
+      "locationId": "town_9",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_9_street_regular_10",
+      "type": "friendlyCat",
+      "x": 20410,
+      "y": 11280,
+      "homeX": 20410,
+      "homeY": 11280,
+      "w": 100,
+      "h": 72,
+      "role": 4,
+      "skin": 2,
+      "phase": 17,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 9,
+      "friendly": true,
+      "locationId": "town_9",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_9_city_trade_0",
+      "type": "streetFixture",
+      "painting": "civic-4",
+      "x": 20022,
+      "y": 11415,
+      "w": 115,
+      "h": 100,
+      "region": 9,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_9_city_trade_1",
+      "type": "streetFixture",
+      "painting": "civic-11",
+      "x": 20750,
+      "y": 11615,
+      "w": 140,
+      "h": 100,
+      "region": 9,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_9_city_trade_2",
+      "type": "streetFixture",
+      "painting": "civic-1",
+      "x": 20555,
+      "y": 11238,
+      "w": 65,
+      "h": 100,
+      "region": 9,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_9_rowhouses_0",
+      "type": "streetFixture",
+      "painting": "homes-6",
+      "x": 19995,
+      "y": 11160,
+      "w": 165,
+      "h": 120,
+      "region": 9,
+      "solid": false,
+      "variant": 0
+    },
+    {
+      "id": "town_9_rowhouses_1",
+      "type": "streetFixture",
+      "painting": "homes-6",
+      "x": 20825,
+      "y": 11160,
+      "w": 165,
+      "h": 120,
+      "region": 9,
+      "solid": false,
+      "variant": 0
+    },
+    {
+      "id": "town_9_rowhouses_2",
+      "type": "streetFixture",
+      "painting": "homes-6",
+      "x": 19870,
+      "y": 11442,
+      "w": 165,
+      "h": 120,
+      "region": 9,
+      "solid": false,
+      "variant": 0
+    },
+    {
+      "id": "town_9_rowhouses_3",
+      "type": "streetFixture",
+      "painting": "homes-6",
+      "x": 20950,
+      "y": 11442,
+      "w": 165,
+      "h": 120,
+      "region": 9,
+      "solid": false,
+      "variant": 0
+    },
+    {
+      "id": "tavern_copper_minnow_door",
+      "type": "tavernDoor",
+      "locationId": "tavern_copper_minnow",
+      "x": 20207.745751406263,
+      "y": 11121.053686926882,
+      "w": 174,
+      "h": 130,
+      "region": 9,
+      "solid": false,
+      "variant": 0
     }
   ]
 }

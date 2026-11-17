@@ -1,5 +1,14 @@
 # MeowQuest the Purr’d Reich — field controls
 
+## Around town and after curfew
+
+Open **Camp → Town activities & coach routes** while the party is together at a safe settlement. Choose a destination with the D-pad and Confirm. Use the current field Interact binding at the painted sign or harbor door. In the Copper Minnow, walk up to the table, darts line or patron and press Confirm. Bumpers cycle between room destinations. Buy-ins use campaign coins. The source, stake and available actions appear before the hand begins. [Town games and their controls](town-activities.md) · [Copper Minnow and poker](copper-minnow.md)
+
+In the Journal, choose **Occupied-city investigations** and pin a tram. Ironveil opens after the Cinder Rail Depot manifest. Dawnbridge opens its night tram to Blackglass after the Berlin approach is cleared. Both heroes board together. Each hero can cast a separate shadow behind a wall. A patrol shares a sighting with nearby guards, and a shot can send them to the firing position from either side of a building. Move out of their light and away from the last reported position to let the search end. Walk close to a named resident and use Interact to speak. [Routes and objectives](city-investigations.md)
+
+At a chamber relief, Interact opens instructions and hints for the current device. Gates, receivers and bridges respond on the field. Either hero can take the next move. Use **Undo** or **Reset** from the notes where available. [Chamber guide and mastery awards](chambers-and-mastery.md)
+
+
 ## The courier investigation
 
 Start a campaign and follow the pinned orchard lead outside Willow. At the observation mark, tap Interact and stay in position while the ring fills. At the recovery mark, defeat the guards and interact with the evidence. Open the Journal and choose **Send field debrief**. The dossier records the clue's source, pays each hero once and shows the next destination. Its **Field assignments** control opens the original quest list. The Berlin approach tracks the twelve reports and eight commanders separately.

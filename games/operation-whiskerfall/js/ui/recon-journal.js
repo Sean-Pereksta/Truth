@@ -7,13 +7,18 @@
   function activePrompt(g){
     const d=g.reconDossier,op=operation(g),c=currentChallenge(g);
     if(c)return c.route[d.run.stage]==='K'?'Take the inside shortcut.':d.run.stage===c.route.length?'Extract with your partner.':c.brief;
-    if(!op)return g.campaignWon?'Return to Willow or choose a field exercise.':'Face Adolph Whisker in the Berlin Sector.';
+    if(!op)return g.campaignWon?'Depart Dawnbridge for a field exercise, or visit an unfinished assignment.':'Face Adolph Whisker in the Berlin Sector.';
     if(d.evidence[op.id])return 'Send the field debrief from your journal.';
     const gated=commanders(g,op);return gated.length?'Free the witness at '+gated[0].name+'.':op.lead;
   }
-  function archive(g){
+  function archive(g,selected){
     const d=g.reconDossier;
-    return '<ol class="recon-archive">'+book.ops.filter(o=>d.evidence[o.id]).slice().reverse().map(o=>'<li><strong>'+esc(o.title)+'</strong><span>'+esc(d.evidence[o.id].source)+'</span><p>'+esc(o.clue)+' '+esc(o.result)+'</p></li>').join('')+'</ol>';
+    const art=[1,3,0,3,11,0,13,6,3,10,12,1];
+    return '<ol class="recon-archive">'+book.ops.filter(o=>d.evidence[o.id]).slice().reverse().map(o=>{
+      const witness=d.evidence[o.id],place=book.sites.find(s=>s.id===o.site)?.name||Q.surface(g).regions[o.region]?.name||'Field archive';
+      const url=(W.config.assetBaseURL||'assets').replace(/\/$/,'')+'/fieldwork/evidence-'+art[book.ops.indexOf(o)]+'.webp';
+      return '<li>'+button('recon-inspect',o.title,o.id)+'<span>'+esc(witness.source)+'</span>'+(selected===o.id?'<aside class="field-file"><img src="'+esc(url)+'" alt=""><div><small>'+esc(place+' · '+o.contact)+'</small><p>'+esc(o.clue)+'</p><p>'+esc(o.result)+'</p></div></aside>':'')+'</li>';
+    }).join('')+'</ol>';
   }
   const journal=U.journalMenu;
   function assignments(ui){
@@ -37,6 +42,7 @@
     else if(ev)actions=button('recon-file','Send field debrief',op.id,true);
     else if(op)actions=button('recon-pin','Pin observation route','observed',d.route==='observed')+button('recon-pin','Pin recovery route','recovered',d.route==='recovered');
     if(target&&!ev)actions+=button('recon-map','View waypoint');
+    if(op&&!ev&&!c)actions+=button('recon-area','Search the area myself')+button('recon-precise','Request an exact pin');
     const exercise=g.campaignWon?'<section class="recon-drills"><h3>Field exercises</h3>'+book.challenges.map(v=>'<article><strong>'+esc(v.title)+'</strong><p>'+esc(v.brief)+'</p>'+button('recon-exercise',d.scores[v.id]?'Deploy again · '+d.scores[v.id]+' clears':'Deploy',v.id)+'</article>').join('')+button('recon-practice','Practice the Whisker encounter · '+(d.scores.whisker||0)+' clears')+'</section>':'';
     return '<div class="recon-journal"><header class="recon-chapter">'+(img?'<img src="'+esc(img)+'" alt="">':'')+'<div><span>ACT '+act+'</span><h3>'+esc(book.acts[act-1])+'</h3></div></header>'+
       assignments(this)+'<div class="recon-pages"><article><small>'+(c?'FIELD EXERCISE':'WHAT TO VERIFY')+'</small><h3>'+esc(c?.title||op?.title||'The Berlin relay')+'</h3>'+
@@ -44,7 +50,7 @@
       (site?'<p>'+esc(site.lesson)+'</p>':'')+(ev?'<p>'+esc(ev.source)+' · '+esc(op.clue)+'</p><p>'+esc(op.result)+'</p><p>Debrief supplies per hero · 160 gold, 12 scrap, 1 core</p>':'')+
       '<div class="recon-actions">'+actions+'</div></article><aside><small>WHERE TO GO NEXT</small><h4>'+esc(target?.label||'Willow Resistance Camp')+'</h4><p>'+esc(site?.name||w.regions[op?.region??7]?.name||'Berlin Sector')+' · '+(gap?gap.toLocaleString()+' m':'On site')+'</p><hr><small>BERLIN APPROACH</small><p>'+d.filed.length+' of 12 reports filed<br>'+(8-missing.length)+' of 8 commanders defeated</p><button data-action="recon-milestones" aria-expanded="'+!!this.reconShowMilestones+'">'+(this.reconShowMilestones?'Hide checklist':'See checklist')+'</button>'+(this.reconShowMilestones?'<p>'+esc(missing.join(' · ')||'All regional commanders defeated.')+'</p>':'')+'</aside></div>'+
       '<section class="recon-known"><small>WHAT WE KNOW</small><h3>'+esc(last?last.title:'The couriers are missing')+'</h3><p>'+esc(last?last.result:'Willow received signed receipts for dispatches that never arrived. Saffron marked the last handoff.')+'</p>'+
-      (g.reconEvidenceCount()?button('recon-evidence',this.reconShowEvidence?'Close evidence index':'Read evidence index · '+g.reconEvidenceCount()):'')+(this.reconShowEvidence?archive(g):'')+'</section>'+
+      (g.reconEvidenceCount()?button('recon-evidence',this.reconShowEvidence?'Close evidence index':'Read evidence index · '+g.reconEvidenceCount()):'')+(this.reconShowEvidence?archive(g,this.reconInspected):'')+'</section>'+
       exercise+'</div>';
   };
   const campaignStatus=U.campaignStatus;U.campaignStatus=function(){
@@ -61,7 +67,7 @@
   U.victory=function(){
     if(!this.game.reconDossier)return victory.call(this);
     const credits=this.reconCredits;
-    return '<div class="menu-layer"><section class="panel game-over recon-ending"><small>'+(credits?'FIELD JOURNAL · CREDITS':'EPILOGUE · WILLOW')+'</small><h2>'+(credits?'The resistance archive':'The last delivery')+'</h2><p>'+(credits?'MeowQuest the Purr’d Reich · Sean-Pereksta / Truth. Illustrated expedition environments, characters and equipment are bundled with the game. The field recordings use CC0 animal audio.':'At Willow, Saffron unfolds the last dispatch. Her sister’s signature is uneven this time. The missing couriers are coming home. By morning the relay carries their names across every liberated valley.')+'</p><div class="victory-actions">'+(credits?button('recon-home','Return to Willow', '',true):button('recon-credits','Read credits','',true))+button('export','Export adventure')+'</div></section></div>';
+    return '<div class="menu-layer"><section class="panel game-over recon-ending"><small>'+(credits?'FIELD JOURNAL · CREDITS':'EPILOGUE · DAWNBRIDGE')+'</small><h2>'+(credits?'The resistance archive':'The last delivery')+'</h2><p>'+(credits?'MeowQuest the Purr’d Reich · Sean-Pereksta / Truth. Illustrated expedition environments, characters and equipment are bundled with the game. The field recordings use CC0 animal audio.':'At the Dawnbridge relay, Saffron unfolds the last dispatch. Her sister’s signature is uneven this time. The missing couriers are coming home. By morning the relay carries their names across every liberated valley.')+'</p><div class="victory-actions">'+(credits?button('recon-home','Depart from Dawnbridge', '',true):button('recon-credits','Read credits','',true))+button('export','Export adventure')+'</div></section></div>';
   };
   const click=U.click;U.click=function(e){
     const b=e.target.closest?.('button[data-action]'),action=b?.dataset.action,g=this.game,d=g.reconDossier;
@@ -73,15 +79,18 @@
       case 'recon-assignment':this.reconArchiveOpen=true;this.journalFilter='accepted';this.questId=b.dataset.value;break;
       case 'recon-milestones':this.reconShowMilestones=!this.reconShowMilestones;break;
       case 'recon-evidence':this.reconShowEvidence=!this.reconShowEvidence;break;
+      case 'recon-inspect':this.reconInspected=this.reconInspected===b.dataset.value?null:b.dataset.value;break;
+      case 'recon-area':d.searchArea=operation(g)?.id;g.pinRecon();g.save(false);return this.showMenu('map',this.playerIndex);
+      case 'recon-precise':delete d.searchArea;g.pinRecon();g.save(false);this.toast('Exact lead · '+g.reconTarget().label);break;
       case 'recon-file':if(next(g)?.id===b.dataset.value)g.fileReconDebrief();break;
-      case 'recon-pin':g.pinRecon(b.dataset.value);g.save(false);this.toast('Pinned · '+g.reconTarget().label);break;
+      case 'recon-pin':delete d.searchArea;g.pinRecon(b.dataset.value);g.save(false);this.toast('Pinned · '+g.reconTarget().label);break;
       case 'recon-map':g.pinRecon();return this.showMenu('map',this.playerIndex);
       case 'recon-exercise':if(g.startReconExercise(b.dataset.value))return;break;
       case 'recon-practice':if(g.startReconPractice())return;break;
       case 'recon-abandon':if(d.run&&g.world.isDungeon)g.leaveDungeon(false);d.run=null;g.reconWatch=null;g.save(false);break;
       case 'recon-credits':this.reconCredits=true;break;
       case 'recon-home':{
-        const town=g.world.getLocation('town_0');for(const [i,p] of g.players.entries()){p.x=town.x+i*46;p.y=town.y+100;p.invuln=3;p.hp=p.maxHp;p.downed=false;g.restorePlayerPosition(p);}
+        const town=g.world.getLocation('town_7');for(const [i,p] of g.players.entries()){p.x=town.x+i*46;p.y=town.y+100;p.invuln=3;p.hp=p.maxHp;p.downed=false;g.restorePlayerPosition(p);}
         g.camera.x=town.x;g.camera.y=town.y;g.state='playing';this.reconCredits=false;d.pinned=false;g.activateCheckpoint(town,false);this.hideMenu();g.save(false);return;
       }
     }
@@ -193,7 +202,10 @@
     const g=this.game;if(g.world.reconSite)return;
     drawLabels.apply(this,arguments);
     const target=g.reconDossier?.pinned&&g.reconTarget();if(!target)return;
-    ctx.save();ctx.strokeStyle='#fff3b0';ctx.lineWidth=2;ctx.beginPath();ctx.arc(target.x*sx,target.y*sy,8,0,2*Math.PI);ctx.stroke();ctx.restore();
+    ctx.save();ctx.strokeStyle='#fff3b0';ctx.lineWidth=2;ctx.beginPath();
+    if(target.radius){ctx.setLineDash([4,3]);ctx.ellipse(target.x*sx,target.y*sy,Math.max(9,target.radius*sx),Math.max(9,target.radius*sy),0,0,2*Math.PI);}
+    else ctx.arc(target.x*sx,target.y*sy,8,0,2*Math.PI);
+    ctx.stroke();ctx.restore();
   };
   const map=R.drawMap;
   R.drawMap=function(c,width,height){

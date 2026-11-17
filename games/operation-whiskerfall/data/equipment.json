@@ -2491,5 +2491,70 @@
     "planContact": "Diver Pearl at the Drowned Maw",
     "exclusivePlan": true,
     "hubPlan": true
+  },
+  {
+    "id": "accessory_mastery_lantern",
+    "name": "Nettle’s Signal Brooch",
+    "slot": "accessory",
+    "level": 1,
+    "rarity": 3,
+    "activityMastery": "lantern",
+    "rewardOnly": true,
+    "rewardSource": "Bellkeeper’s Tea Room · Win a four-Signal match against the visiting mouse or a local opponent.",
+    "requirement": "Win a four-Signal match against the visiting mouse or a local opponent.",
+    "description": "Standing still tightens firearm spread by 35% and extends range by 12%.",
+    "art": "assets/activities/reward-lantern.webp"
+  },
+  {
+    "id": "accessory_mastery_quarry",
+    "name": "Quarry Laurel",
+    "slot": "accessory",
+    "level": 1,
+    "rarity": 4,
+    "activityMastery": "quarry",
+    "rewardOnly": true,
+    "rewardSource": "Quarry Ring · Defeat Champion Slate-Ear in the final ranked bout.",
+    "requirement": "Defeat Champion Slate-Ear in the final ranked bout.",
+    "description": "Heavy melee strikes deal 20% more damage. Light strikes keep their usual cadence.",
+    "art": "assets/activities/reward-quarry.webp"
+  },
+  {
+    "id": "accessory_mastery_bay",
+    "name": "Shellbreak Creel",
+    "slot": "accessory",
+    "level": 1,
+    "rarity": 3,
+    "activityMastery": "bay",
+    "rewardOnly": true,
+    "rewardSource": "Shellbreak Bay · Land eight fish in one timed catch race, or land three fish totaling at least 7 kg in one outing.",
+    "requirement": "Land eight fish in one timed catch race, or land three fish totaling at least 7 kg in one outing.",
+    "description": "A field dressing restores another 15% of your maximum health and heals a nearby partner for 8%.",
+    "art": "assets/activities/reward-bay.webp"
+  },
+  {
+    "id": "accessory_mastery_yard",
+    "name": "Brass Coupler",
+    "slot": "accessory",
+    "level": 1,
+    "rarity": 3,
+    "activityMastery": "yard",
+    "rewardOnly": true,
+    "rewardSource": "Switchyard Dispatch · Deliver all three carts on the expert yard with zero conflicts in twelve beats or fewer.",
+    "requirement": "Deliver all three carts on the expert yard with zero conflicts in twelve beats or fewer.",
+    "description": "An indexed cartridge belt reduces firearm reload time by 20%.",
+    "art": "assets/activities/reward-yard.webp"
+  },
+  {
+    "id": "accessory_mastery_wind",
+    "name": "Kitehook Spool",
+    "slot": "accessory",
+    "level": 1,
+    "rarity": 4,
+    "activityMastery": "wind",
+    "rewardOnly": true,
+    "rewardSource": "Windpost Trial · Finish all six rings in under 120 seconds with no collision or broken-line penalties.",
+    "requirement": "Finish all six rings in under 120 seconds with no collision or broken-line penalties.",
+    "description": "The quick-release line shortens dodge recovery by 18%.",
+    "art": "assets/activities/reward-wind.webp"
   }
 ]

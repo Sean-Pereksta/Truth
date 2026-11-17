@@ -11,7 +11,7 @@
   for(const t of Object.values(themes))for(const kind of ['floor','props'])W.Assets['vault_'+t.id+'_'+kind]='assets/expeditions/'+t.id+'-'+kind+'.png';
   W.Assets.vault_dungeon_walls='assets/expeditions/dungeon-walls.png';
   const ready=image=>!!image&&image.complete!==false&&(image.naturalWidth||image.width)>0;
-  const floors=w=>w.vaultSpec.bridge&&w.state.solved?[...w.rooms,w.vaultSpec.bridge]:w.rooms;
+  const floors=w=>W.VaultRoutes.floors(w);
   const contains=(rooms,x,y)=>rooms.some(r=>x>=r.x&&y>=r.y&&x<=r.x+r.w&&y<=r.y+r.h);
   const canvas=(width,height)=>{const c=document.createElement('canvas');c.width=width;c.height=height;return c;};
   function frame(theme,index,image){
@@ -61,7 +61,7 @@
   }
   function drawGround(renderer,w){
     const theme=themes[w.entry?.id],floor=theme&&renderer.images?.['vault_'+theme.id+'_floor'],props=theme&&renderer.images?.['vault_'+theme.id+'_props'],wallImage=renderer.images?.vault_dungeon_walls;if(!theme||!ready(floor))return false;
-    const cache=renderer._distantScenery||(renderer._distantScenery=new Map()),key=w.entry.id+':'+(w.vaultSpec.bridge&&w.state.solved?'cooled':'base'),metadata=W.DungeonSceneryArt?.[theme.id],wallMetadata=W.DungeonWallArt;let record=cache.get(key);
+    const cache=renderer._distantScenery||(renderer._distantScenery=new Map()),key=w.entry.id+':'+W.VaultRoutes.raisedFloors(w).map(r=>r.x+','+r.y).join('/'),metadata=W.DungeonSceneryArt?.[theme.id],wallMetadata=W.DungeonWallArt;let record=cache.get(key);
     if(!record||record.floor!==floor||record.props!==props||record.metadata!==metadata||record.wallImage!==wallImage||record.wallMetadata!==wallMetadata){record={floor,props,metadata,wallImage,wallMetadata,surface:build(renderer,w,theme,floor,props,wallImage)};cache.set(key,record);while(cache.size>2)cache.delete(cache.keys().next().value);}
     renderer.ctx.drawImage(record.surface,0,0);return true;
   }

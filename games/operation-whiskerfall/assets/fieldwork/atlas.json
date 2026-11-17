@@ -1,0 +1,2752 @@
+[
+  {
+    "key": "fieldwork/landmark-willow",
+    "path": "assets/fieldwork/landmark-willow.webp",
+    "source": "landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      7,
+      7,
+      350,
+      342
+    ],
+    "exportSize": [
+      349,
+      341
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Town street landmark"
+  },
+  {
+    "key": "fieldwork/landmark-mossbell",
+    "path": "assets/fieldwork/landmark-mossbell.webp",
+    "source": "landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      378,
+      3,
+      691,
+      341
+    ],
+    "exportSize": [
+      319,
+      344
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Town street landmark"
+  },
+  {
+    "key": "fieldwork/landmark-quarry",
+    "path": "assets/fieldwork/landmark-quarry.webp",
+    "source": "landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      722,
+      9,
+      1078,
+      336
+    ],
+    "exportSize": [
+      362,
+      333
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Town street landmark"
+  },
+  {
+    "key": "fieldwork/landmark-snowhaven",
+    "path": "assets/fieldwork/landmark-snowhaven.webp",
+    "source": "landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1100,
+      15,
+      1442,
+      338
+    ],
+    "exportSize": [
+      348,
+      329
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Town street landmark"
+  },
+  {
+    "key": "fieldwork/landmark-sundial",
+    "path": "assets/fieldwork/landmark-sundial.webp",
+    "source": "landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      6,
+      389,
+      354,
+      675
+    ],
+    "exportSize": [
+      354,
+      292
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Town street landmark"
+  },
+  {
+    "key": "fieldwork/landmark-ashford",
+    "path": "assets/fieldwork/landmark-ashford.webp",
+    "source": "landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      369,
+      349,
+      686,
+      689
+    ],
+    "exportSize": [
+      323,
+      346
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Town street landmark"
+  },
+  {
+    "key": "fieldwork/landmark-crownrest",
+    "path": "assets/fieldwork/landmark-crownrest.webp",
+    "source": "landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      717,
+      370,
+      1074,
+      691
+    ],
+    "exportSize": [
+      363,
+      327
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Town street landmark"
+  },
+  {
+    "key": "fieldwork/landmark-dawnbridge",
+    "path": "assets/fieldwork/landmark-dawnbridge.webp",
+    "source": "landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1095,
+      372,
+      1437,
+      690
+    ],
+    "exportSize": [
+      348,
+      324
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Town street landmark"
+  },
+  {
+    "key": "fieldwork/landmark-sluicecross",
+    "path": "assets/fieldwork/landmark-sluicecross.webp",
+    "source": "landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      3,
+      725,
+      352,
+      1071
+    ],
+    "exportSize": [
+      355,
+      352
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Town street landmark"
+  },
+  {
+    "key": "fieldwork/landmark-kitehook",
+    "path": "assets/fieldwork/landmark-kitehook.webp",
+    "source": "landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      362,
+      713,
+      714,
+      1078
+    ],
+    "exportSize": [
+      358,
+      371
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Town street landmark"
+  },
+  {
+    "key": "fieldwork/landmark-boughhall",
+    "path": "assets/fieldwork/landmark-boughhall.webp",
+    "source": "landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      724,
+      712,
+      1081,
+      1070
+    ],
+    "exportSize": [
+      363,
+      364
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Town street landmark"
+  },
+  {
+    "key": "fieldwork/arrival-willow",
+    "path": "assets/fieldwork/arrival-willow.webp",
+    "source": "towns",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      2,
+      2,
+      481,
+      270
+    ],
+    "exportSize": [
+      479,
+      268
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Settlement arrival and quartermaster"
+  },
+  {
+    "key": "fieldwork/arrival-mossbell",
+    "path": "assets/fieldwork/arrival-mossbell.webp",
+    "source": "towns",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      485,
+      2,
+      963,
+      270
+    ],
+    "exportSize": [
+      478,
+      268
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Settlement arrival and quartermaster"
+  },
+  {
+    "key": "fieldwork/arrival-quarry",
+    "path": "assets/fieldwork/arrival-quarry.webp",
+    "source": "towns",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      967,
+      2,
+      1446,
+      270
+    ],
+    "exportSize": [
+      479,
+      268
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Settlement arrival and quartermaster"
+  },
+  {
+    "key": "fieldwork/arrival-snowhaven",
+    "path": "assets/fieldwork/arrival-snowhaven.webp",
+    "source": "towns",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      2,
+      274,
+      481,
+      541
+    ],
+    "exportSize": [
+      479,
+      267
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Settlement arrival and quartermaster"
+  },
+  {
+    "key": "fieldwork/arrival-sundial",
+    "path": "assets/fieldwork/arrival-sundial.webp",
+    "source": "towns",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      485,
+      274,
+      963,
+      541
+    ],
+    "exportSize": [
+      478,
+      267
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Settlement arrival and quartermaster"
+  },
+  {
+    "key": "fieldwork/arrival-ashford",
+    "path": "assets/fieldwork/arrival-ashford.webp",
+    "source": "towns",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      967,
+      274,
+      1446,
+      541
+    ],
+    "exportSize": [
+      479,
+      267
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Settlement arrival and quartermaster"
+  },
+  {
+    "key": "fieldwork/arrival-crownrest",
+    "path": "assets/fieldwork/arrival-crownrest.webp",
+    "source": "towns",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      2,
+      545,
+      481,
+      812
+    ],
+    "exportSize": [
+      479,
+      267
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Settlement arrival and quartermaster"
+  },
+  {
+    "key": "fieldwork/arrival-dawnbridge",
+    "path": "assets/fieldwork/arrival-dawnbridge.webp",
+    "source": "towns",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      485,
+      545,
+      963,
+      812
+    ],
+    "exportSize": [
+      478,
+      267
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Settlement arrival and quartermaster"
+  },
+  {
+    "key": "fieldwork/arrival-sluicecross",
+    "path": "assets/fieldwork/arrival-sluicecross.webp",
+    "source": "towns",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      967,
+      545,
+      1446,
+      812
+    ],
+    "exportSize": [
+      479,
+      267
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Settlement arrival and quartermaster"
+  },
+  {
+    "key": "fieldwork/arrival-kitehook",
+    "path": "assets/fieldwork/arrival-kitehook.webp",
+    "source": "towns",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      2,
+      816,
+      481,
+      1084
+    ],
+    "exportSize": [
+      479,
+      268
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Settlement arrival and quartermaster"
+  },
+  {
+    "key": "fieldwork/arrival-boughhall",
+    "path": "assets/fieldwork/arrival-boughhall.webp",
+    "source": "towns",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      485,
+      816,
+      963,
+      1084
+    ],
+    "exportSize": [
+      478,
+      268
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Settlement arrival and quartermaster"
+  },
+  {
+    "key": "fieldwork/arrival-waystation",
+    "path": "assets/fieldwork/arrival-waystation.webp",
+    "source": "towns",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      967,
+      816,
+      1446,
+      1084
+    ],
+    "exportSize": [
+      479,
+      268
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Settlement arrival and quartermaster"
+  },
+  {
+    "key": "fieldwork/home-willow",
+    "path": "assets/fieldwork/home-willow.webp",
+    "source": "aftermath",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      9,
+      12,
+      347,
+      332
+    ],
+    "exportSize": [
+      344,
+      326
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Settlement homecoming"
+  },
+  {
+    "key": "fieldwork/home-mossbell",
+    "path": "assets/fieldwork/home-mossbell.webp",
+    "source": "aftermath",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      377,
+      14,
+      703,
+      349
+    ],
+    "exportSize": [
+      332,
+      341
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Settlement homecoming"
+  },
+  {
+    "key": "fieldwork/home-quarry",
+    "path": "assets/fieldwork/home-quarry.webp",
+    "source": "aftermath",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      728,
+      15,
+      1073,
+      339
+    ],
+    "exportSize": [
+      351,
+      330
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Settlement homecoming"
+  },
+  {
+    "key": "fieldwork/home-snowhaven",
+    "path": "assets/fieldwork/home-snowhaven.webp",
+    "source": "aftermath",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1090,
+      10,
+      1439,
+      344
+    ],
+    "exportSize": [
+      355,
+      340
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Settlement homecoming"
+  },
+  {
+    "key": "fieldwork/home-sundial",
+    "path": "assets/fieldwork/home-sundial.webp",
+    "source": "aftermath",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      7,
+      366,
+      358,
+      684
+    ],
+    "exportSize": [
+      357,
+      324
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Settlement homecoming"
+  },
+  {
+    "key": "fieldwork/home-ashford",
+    "path": "assets/fieldwork/home-ashford.webp",
+    "source": "aftermath",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      375,
+      371,
+      710,
+      701
+    ],
+    "exportSize": [
+      341,
+      336
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Settlement homecoming"
+  },
+  {
+    "key": "fieldwork/home-crownrest",
+    "path": "assets/fieldwork/home-crownrest.webp",
+    "source": "aftermath",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      730,
+      369,
+      1072,
+      696
+    ],
+    "exportSize": [
+      348,
+      333
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Settlement homecoming"
+  },
+  {
+    "key": "fieldwork/home-dawnbridge",
+    "path": "assets/fieldwork/home-dawnbridge.webp",
+    "source": "aftermath",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1094,
+      370,
+      1443,
+      706
+    ],
+    "exportSize": [
+      355,
+      342
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Settlement homecoming"
+  },
+  {
+    "key": "fieldwork/home-sluicecross",
+    "path": "assets/fieldwork/home-sluicecross.webp",
+    "source": "aftermath",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      6,
+      727,
+      357,
+      1069
+    ],
+    "exportSize": [
+      357,
+      348
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Settlement homecoming"
+  },
+  {
+    "key": "fieldwork/home-kitehook",
+    "path": "assets/fieldwork/home-kitehook.webp",
+    "source": "aftermath",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      375,
+      732,
+      719,
+      1070
+    ],
+    "exportSize": [
+      350,
+      344
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Settlement homecoming"
+  },
+  {
+    "key": "fieldwork/home-boughhall",
+    "path": "assets/fieldwork/home-boughhall.webp",
+    "source": "aftermath",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      728,
+      732,
+      1074,
+      1069
+    ],
+    "exportSize": [
+      352,
+      343
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Settlement homecoming"
+  },
+  {
+    "key": "fieldwork/street-0",
+    "path": "assets/fieldwork/street-0.webp",
+    "source": "streets",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      2,
+      2,
+      360,
+      360
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Town ground and street surface"
+  },
+  {
+    "key": "fieldwork/street-1",
+    "path": "assets/fieldwork/street-1.webp",
+    "source": "streets",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      364,
+      2,
+      722,
+      360
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Town ground and street surface"
+  },
+  {
+    "key": "fieldwork/street-2",
+    "path": "assets/fieldwork/street-2.webp",
+    "source": "streets",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      726,
+      2,
+      1084,
+      360
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Town ground and street surface"
+  },
+  {
+    "key": "fieldwork/street-3",
+    "path": "assets/fieldwork/street-3.webp",
+    "source": "streets",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1088,
+      2,
+      1446,
+      360
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Town ground and street surface"
+  },
+  {
+    "key": "fieldwork/street-4",
+    "path": "assets/fieldwork/street-4.webp",
+    "source": "streets",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      2,
+      364,
+      360,
+      722
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Town ground and street surface"
+  },
+  {
+    "key": "fieldwork/street-5",
+    "path": "assets/fieldwork/street-5.webp",
+    "source": "streets",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      364,
+      364,
+      722,
+      722
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Town ground and street surface"
+  },
+  {
+    "key": "fieldwork/street-6",
+    "path": "assets/fieldwork/street-6.webp",
+    "source": "streets",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      726,
+      364,
+      1084,
+      722
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Town ground and street surface"
+  },
+  {
+    "key": "fieldwork/street-7",
+    "path": "assets/fieldwork/street-7.webp",
+    "source": "streets",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1088,
+      364,
+      1446,
+      722
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Town ground and street surface"
+  },
+  {
+    "key": "fieldwork/street-8",
+    "path": "assets/fieldwork/street-8.webp",
+    "source": "streets",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      2,
+      726,
+      360,
+      1084
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Town ground and street surface"
+  },
+  {
+    "key": "fieldwork/street-9",
+    "path": "assets/fieldwork/street-9.webp",
+    "source": "streets",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      364,
+      726,
+      722,
+      1084
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Town ground and street surface"
+  },
+  {
+    "key": "fieldwork/street-10",
+    "path": "assets/fieldwork/street-10.webp",
+    "source": "streets",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      726,
+      726,
+      1084,
+      1084
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Town ground and street surface"
+  },
+  {
+    "key": "fieldwork/street-11",
+    "path": "assets/fieldwork/street-11.webp",
+    "source": "streets",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1088,
+      726,
+      1446,
+      1084
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Town ground and street surface"
+  },
+  {
+    "key": "fieldwork/outpost-0",
+    "path": "assets/fieldwork/outpost-0.webp",
+    "source": "outposts",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      15,
+      23,
+      302,
+      274
+    ],
+    "exportSize": [
+      293,
+      257
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Small settlement landmark"
+  },
+  {
+    "key": "fieldwork/outpost-1",
+    "path": "assets/fieldwork/outpost-1.webp",
+    "source": "outposts",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      333,
+      18,
+      616,
+      285
+    ],
+    "exportSize": [
+      289,
+      273
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Small settlement landmark"
+  },
+  {
+    "key": "fieldwork/outpost-2",
+    "path": "assets/fieldwork/outpost-2.webp",
+    "source": "outposts",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      645,
+      9,
+      927,
+      294
+    ],
+    "exportSize": [
+      288,
+      291
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Small settlement landmark"
+  },
+  {
+    "key": "fieldwork/outpost-3",
+    "path": "assets/fieldwork/outpost-3.webp",
+    "source": "outposts",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      958,
+      17,
+      1249,
+      279
+    ],
+    "exportSize": [
+      297,
+      268
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Small settlement landmark"
+  },
+  {
+    "key": "fieldwork/outpost-4",
+    "path": "assets/fieldwork/outpost-4.webp",
+    "source": "outposts",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      15,
+      323,
+      300,
+      586
+    ],
+    "exportSize": [
+      291,
+      269
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Small settlement landmark"
+  },
+  {
+    "key": "fieldwork/outpost-5",
+    "path": "assets/fieldwork/outpost-5.webp",
+    "source": "outposts",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      325,
+      323,
+      620,
+      604
+    ],
+    "exportSize": [
+      301,
+      287
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Small settlement landmark"
+  },
+  {
+    "key": "fieldwork/outpost-6",
+    "path": "assets/fieldwork/outpost-6.webp",
+    "source": "outposts",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      641,
+      327,
+      935,
+      580
+    ],
+    "exportSize": [
+      300,
+      259
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Small settlement landmark"
+  },
+  {
+    "key": "fieldwork/outpost-7",
+    "path": "assets/fieldwork/outpost-7.webp",
+    "source": "outposts",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      957,
+      306,
+      1253,
+      582
+    ],
+    "exportSize": [
+      302,
+      282
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Small settlement landmark"
+  },
+  {
+    "key": "fieldwork/outpost-8",
+    "path": "assets/fieldwork/outpost-8.webp",
+    "source": "outposts",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      9,
+      639,
+      302,
+      897
+    ],
+    "exportSize": [
+      299,
+      264
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Small settlement landmark"
+  },
+  {
+    "key": "fieldwork/outpost-9",
+    "path": "assets/fieldwork/outpost-9.webp",
+    "source": "outposts",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      327,
+      621,
+      616,
+      915
+    ],
+    "exportSize": [
+      295,
+      300
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Small settlement landmark"
+  },
+  {
+    "key": "fieldwork/outpost-10",
+    "path": "assets/fieldwork/outpost-10.webp",
+    "source": "outposts",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      639,
+      629,
+      936,
+      890
+    ],
+    "exportSize": [
+      303,
+      267
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Small settlement landmark"
+  },
+  {
+    "key": "fieldwork/outpost-11",
+    "path": "assets/fieldwork/outpost-11.webp",
+    "source": "outposts",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      959,
+      618,
+      1251,
+      911
+    ],
+    "exportSize": [
+      298,
+      299
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Small settlement landmark"
+  },
+  {
+    "key": "fieldwork/outpost-12",
+    "path": "assets/fieldwork/outpost-12.webp",
+    "source": "outposts",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      11,
+      932,
+      304,
+      1241
+    ],
+    "exportSize": [
+      299,
+      315
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Small settlement landmark"
+  },
+  {
+    "key": "fieldwork/outpost-13",
+    "path": "assets/fieldwork/outpost-13.webp",
+    "source": "outposts",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      324,
+      934,
+      620,
+      1231
+    ],
+    "exportSize": [
+      302,
+      303
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Small settlement landmark"
+  },
+  {
+    "key": "fieldwork/outpost-14",
+    "path": "assets/fieldwork/outpost-14.webp",
+    "source": "outposts",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      643,
+      958,
+      931,
+      1215
+    ],
+    "exportSize": [
+      294,
+      263
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Small settlement landmark"
+  },
+  {
+    "key": "activities/lantern",
+    "path": "assets/activities/lantern.webp",
+    "source": "venues",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      2,
+      2,
+      766,
+      339
+    ],
+    "exportSize": [
+      764,
+      337
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Activity entrance and lobby"
+  },
+  {
+    "key": "activities/quarry",
+    "path": "assets/activities/quarry.webp",
+    "source": "venues",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      770,
+      2,
+      1534,
+      339
+    ],
+    "exportSize": [
+      764,
+      337
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Activity entrance and lobby"
+  },
+  {
+    "key": "activities/bay",
+    "path": "assets/activities/bay.webp",
+    "source": "venues",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      2,
+      343,
+      766,
+      681
+    ],
+    "exportSize": [
+      764,
+      338
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Activity entrance and lobby"
+  },
+  {
+    "key": "activities/yard",
+    "path": "assets/activities/yard.webp",
+    "source": "venues",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      770,
+      343,
+      1534,
+      681
+    ],
+    "exportSize": [
+      764,
+      338
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Activity entrance and lobby"
+  },
+  {
+    "key": "activities/wind",
+    "path": "assets/activities/wind.webp",
+    "source": "venues",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      2,
+      685,
+      766,
+      1022
+    ],
+    "exportSize": [
+      764,
+      337
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Activity entrance and lobby"
+  },
+  {
+    "key": "activities/dispatch",
+    "path": "assets/activities/dispatch.webp",
+    "source": "venues",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      770,
+      685,
+      1534,
+      1022
+    ],
+    "exportSize": [
+      764,
+      337
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Activity entrance and lobby"
+  },
+  {
+    "key": "activities/prop-0",
+    "path": "assets/activities/prop-0.webp",
+    "source": "props",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      78,
+      14,
+      237,
+      302
+    ],
+    "exportSize": [
+      146,
+      260
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Activity playing pieces"
+  },
+  {
+    "key": "activities/prop-1",
+    "path": "assets/activities/prop-1.webp",
+    "source": "props",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      347,
+      17,
+      597,
+      302
+    ],
+    "exportSize": [
+      229,
+      260
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Activity playing pieces"
+  },
+  {
+    "key": "activities/prop-2",
+    "path": "assets/activities/prop-2.webp",
+    "source": "props",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      701,
+      12,
+      876,
+      300
+    ],
+    "exportSize": [
+      160,
+      260
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Activity playing pieces"
+  },
+  {
+    "key": "activities/prop-3",
+    "path": "assets/activities/prop-3.webp",
+    "source": "props",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      991,
+      13,
+      1232,
+      299
+    ],
+    "exportSize": [
+      220,
+      260
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Activity playing pieces"
+  },
+  {
+    "key": "activities/prop-4",
+    "path": "assets/activities/prop-4.webp",
+    "source": "props",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      20,
+      383,
+      300,
+      528
+    ],
+    "exportSize": [
+      260,
+      137
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Activity playing pieces"
+  },
+  {
+    "key": "activities/prop-5",
+    "path": "assets/activities/prop-5.webp",
+    "source": "props",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      329,
+      349,
+      617,
+      562
+    ],
+    "exportSize": [
+      260,
+      194
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Activity playing pieces"
+  },
+  {
+    "key": "activities/prop-6",
+    "path": "assets/activities/prop-6.webp",
+    "source": "props",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      649,
+      359,
+      936,
+      561
+    ],
+    "exportSize": [
+      260,
+      185
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Activity playing pieces"
+  },
+  {
+    "key": "activities/prop-7",
+    "path": "assets/activities/prop-7.webp",
+    "source": "props",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      955,
+      327,
+      1242,
+      624
+    ],
+    "exportSize": [
+      251,
+      260
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Activity playing pieces"
+  },
+  {
+    "key": "activities/prop-8",
+    "path": "assets/activities/prop-8.webp",
+    "source": "props",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      23,
+      636,
+      292,
+      935
+    ],
+    "exportSize": [
+      234,
+      260
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Activity playing pieces"
+  },
+  {
+    "key": "activities/prop-9",
+    "path": "assets/activities/prop-9.webp",
+    "source": "props",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      337,
+      630,
+      608,
+      898
+    ],
+    "exportSize": [
+      260,
+      257
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Activity playing pieces"
+  },
+  {
+    "key": "activities/prop-10",
+    "path": "assets/activities/prop-10.webp",
+    "source": "props",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      651,
+      633,
+      929,
+      935
+    ],
+    "exportSize": [
+      240,
+      260
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Activity playing pieces"
+  },
+  {
+    "key": "activities/prop-11",
+    "path": "assets/activities/prop-11.webp",
+    "source": "props",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      1008,
+      624,
+      1242,
+      935
+    ],
+    "exportSize": [
+      197,
+      260
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Activity playing pieces"
+  },
+  {
+    "key": "activities/prop-12",
+    "path": "assets/activities/prop-12.webp",
+    "source": "props",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      36,
+      935,
+      291,
+      1230
+    ],
+    "exportSize": [
+      225,
+      260
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Activity playing pieces"
+  },
+  {
+    "key": "activities/prop-13",
+    "path": "assets/activities/prop-13.webp",
+    "source": "props",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      340,
+      942,
+      596,
+      1217
+    ],
+    "exportSize": [
+      242,
+      260
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Activity playing pieces"
+  },
+  {
+    "key": "activities/prop-14",
+    "path": "assets/activities/prop-14.webp",
+    "source": "props",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      637,
+      935,
+      939,
+      1215
+    ],
+    "exportSize": [
+      260,
+      241
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Activity playing pieces"
+  },
+  {
+    "key": "activities/prop-15",
+    "path": "assets/activities/prop-15.webp",
+    "source": "props",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      1015,
+      935,
+      1195,
+      1230
+    ],
+    "exportSize": [
+      161,
+      260
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Activity playing pieces"
+  },
+  {
+    "key": "fieldwork/evidence-0",
+    "path": "assets/fieldwork/evidence-0.webp",
+    "source": "evidence",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      2,
+      2,
+      312,
+      312
+    ],
+    "exportSize": [
+      310,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Field assignment, case file or chamber"
+  },
+  {
+    "key": "fieldwork/evidence-1",
+    "path": "assets/fieldwork/evidence-1.webp",
+    "source": "evidence",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      316,
+      2,
+      625,
+      312
+    ],
+    "exportSize": [
+      309,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Field assignment, case file or chamber"
+  },
+  {
+    "key": "fieldwork/evidence-2",
+    "path": "assets/fieldwork/evidence-2.webp",
+    "source": "evidence",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      629,
+      2,
+      938,
+      312
+    ],
+    "exportSize": [
+      309,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Field assignment, case file or chamber"
+  },
+  {
+    "key": "fieldwork/evidence-3",
+    "path": "assets/fieldwork/evidence-3.webp",
+    "source": "evidence",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      942,
+      2,
+      1252,
+      312
+    ],
+    "exportSize": [
+      310,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Field assignment, case file or chamber"
+  },
+  {
+    "key": "fieldwork/evidence-4",
+    "path": "assets/fieldwork/evidence-4.webp",
+    "source": "evidence",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      2,
+      316,
+      312,
+      625
+    ],
+    "exportSize": [
+      310,
+      309
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Field assignment, case file or chamber"
+  },
+  {
+    "key": "fieldwork/evidence-5",
+    "path": "assets/fieldwork/evidence-5.webp",
+    "source": "evidence",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      316,
+      316,
+      625,
+      625
+    ],
+    "exportSize": [
+      309,
+      309
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Field assignment, case file or chamber"
+  },
+  {
+    "key": "fieldwork/evidence-6",
+    "path": "assets/fieldwork/evidence-6.webp",
+    "source": "evidence",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      629,
+      316,
+      938,
+      625
+    ],
+    "exportSize": [
+      309,
+      309
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Field assignment, case file or chamber"
+  },
+  {
+    "key": "fieldwork/evidence-7",
+    "path": "assets/fieldwork/evidence-7.webp",
+    "source": "evidence",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      942,
+      316,
+      1252,
+      625
+    ],
+    "exportSize": [
+      310,
+      309
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Field assignment, case file or chamber"
+  },
+  {
+    "key": "fieldwork/evidence-8",
+    "path": "assets/fieldwork/evidence-8.webp",
+    "source": "evidence",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      2,
+      629,
+      312,
+      938
+    ],
+    "exportSize": [
+      310,
+      309
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Field assignment, case file or chamber"
+  },
+  {
+    "key": "fieldwork/evidence-9",
+    "path": "assets/fieldwork/evidence-9.webp",
+    "source": "evidence",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      316,
+      629,
+      625,
+      938
+    ],
+    "exportSize": [
+      309,
+      309
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Field assignment, case file or chamber"
+  },
+  {
+    "key": "chambers/echo",
+    "path": "assets/chambers/echo.webp",
+    "source": "evidence",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      316,
+      629,
+      625,
+      938
+    ],
+    "exportSize": [
+      309,
+      309
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Interactive chamber notes"
+  },
+  {
+    "key": "fieldwork/evidence-10",
+    "path": "assets/fieldwork/evidence-10.webp",
+    "source": "evidence",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      629,
+      629,
+      938,
+      938
+    ],
+    "exportSize": [
+      309,
+      309
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Field assignment, case file or chamber"
+  },
+  {
+    "key": "chambers/mirrors",
+    "path": "assets/chambers/mirrors.webp",
+    "source": "evidence",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      629,
+      629,
+      938,
+      938
+    ],
+    "exportSize": [
+      309,
+      309
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Interactive chamber notes"
+  },
+  {
+    "key": "fieldwork/evidence-11",
+    "path": "assets/fieldwork/evidence-11.webp",
+    "source": "evidence",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      942,
+      629,
+      1252,
+      938
+    ],
+    "exportSize": [
+      310,
+      309
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Field assignment, case file or chamber"
+  },
+  {
+    "key": "chambers/conduit",
+    "path": "assets/chambers/conduit.webp",
+    "source": "evidence",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      942,
+      629,
+      1252,
+      938
+    ],
+    "exportSize": [
+      310,
+      309
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Interactive chamber notes"
+  },
+  {
+    "key": "fieldwork/evidence-12",
+    "path": "assets/fieldwork/evidence-12.webp",
+    "source": "evidence",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      2,
+      942,
+      312,
+      1252
+    ],
+    "exportSize": [
+      310,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Field assignment, case file or chamber"
+  },
+  {
+    "key": "chambers/constellation",
+    "path": "assets/chambers/constellation.webp",
+    "source": "evidence",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      2,
+      942,
+      312,
+      1252
+    ],
+    "exportSize": [
+      310,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Interactive chamber notes"
+  },
+  {
+    "key": "fieldwork/evidence-13",
+    "path": "assets/fieldwork/evidence-13.webp",
+    "source": "evidence",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      316,
+      942,
+      625,
+      1252
+    ],
+    "exportSize": [
+      309,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Field assignment, case file or chamber"
+  },
+  {
+    "key": "fieldwork/evidence-14",
+    "path": "assets/fieldwork/evidence-14.webp",
+    "source": "evidence",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      629,
+      942,
+      938,
+      1252
+    ],
+    "exportSize": [
+      309,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Field assignment, case file or chamber"
+  },
+  {
+    "key": "fieldwork/evidence-15",
+    "path": "assets/fieldwork/evidence-15.webp",
+    "source": "evidence",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      942,
+      942,
+      1252,
+      1252
+    ],
+    "exportSize": [
+      310,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Field assignment, case file or chamber"
+  },
+  {
+    "key": "activities/fishing-water",
+    "path": "assets/activities/fishing-water.webp",
+    "source": "fishing",
+    "sourceSize": [
+      1672,
+      941
+    ],
+    "sourceCrop": [
+      2,
+      2,
+      1670,
+      939
+    ],
+    "exportSize": [
+      1440,
+      809
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Shellbreak animated fishing contest"
+  },
+  {
+    "key": "activities/board-table",
+    "path": "assets/activities/board-table.webp",
+    "source": "board",
+    "sourceSize": [
+      1672,
+      941
+    ],
+    "sourceCrop": [
+      2,
+      2,
+      1670,
+      939
+    ],
+    "exportSize": [
+      1440,
+      809
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Lantern Lines tabletop"
+  },
+  {
+    "key": "activities/reward-lantern",
+    "path": "assets/activities/reward-lantern.webp",
+    "source": "rewards",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      106,
+      7,
+      456,
+      492
+    ],
+    "exportSize": [
+      189,
+      260
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Rare activity accessory card"
+  },
+  {
+    "key": "activities/reward-quarry",
+    "path": "assets/activities/reward-quarry.webp",
+    "source": "rewards",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      581,
+      9,
+      952,
+      497
+    ],
+    "exportSize": [
+      198,
+      260
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Rare activity accessory card"
+  },
+  {
+    "key": "activities/reward-bay",
+    "path": "assets/activities/reward-bay.webp",
+    "source": "rewards",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      1095,
+      7,
+      1422,
+      501
+    ],
+    "exportSize": [
+      173,
+      260
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Rare activity accessory card"
+  },
+  {
+    "key": "activities/reward-yard",
+    "path": "assets/activities/reward-yard.webp",
+    "source": "rewards",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      29,
+      510,
+      493,
+      1002
+    ],
+    "exportSize": [
+      245,
+      260
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Rare activity accessory card"
+  },
+  {
+    "key": "activities/reward-wind",
+    "path": "assets/activities/reward-wind.webp",
+    "source": "rewards",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      499,
+      512,
+      972,
+      1006
+    ],
+    "exportSize": [
+      249,
+      260
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Rare activity accessory card"
+  }
+]

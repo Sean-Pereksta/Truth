@@ -1,4 +1,33 @@
-# Reconnaissance campaign · preview acceptance
+# Fieldwork and occupied cities · 2.1 playable preview
+
+Open **index.html** directly or launch the game at its existing web address after deployment. A fresh campaign begins in Willow. Camp’s coach reaches the five games and the Copper Minnow from safe settlements. Ironveil opens after the ninth dossier report. Blackglass opens with the eight commander victories and courtyard clearance. Both are optional investigations.
+
+| Area | Verified in the playable build |
+|---|---|
+| Story and saves | A chronological Chrome fixture earned the 24 regional story assignments and eight commander victories, filed all twelve dossier reports, defeated Whisker, used the credits, returned to Dawnbridge and scored the three separate postgame exercises. Both evidence routes, six distinct dungeon plans and an actual pre-recon backup were included in the 225 campaign assertions. Portable import, rollback, cold backup recovery and a resting partner also passed. |
+| Existing quests | All 159 original stable IDs opened through their contacts, advanced through their objectives, paid once and restored through Continue. The 158 eligible assignments exercised both field discoveries. A separate legacy Berlin case retained earned clearance. The ledger gives the evidence and verification method for every ID. [Per-quest checklist](field-assignment-checklist.md) |
+| Cities and settlements | Every one of the 26 settlements had an exit and reachable services at a 22-unit body clearance. The test reached 110 stops, restored all 11 flagships with Player 2 and recovered a colliding legacy position. The two occupied districts have 48 planned blocks each. Six clues have two sources apiece. The city cases passed 116 checks. Both patrol sight and flashlight rendering stop at the same walls. A shot draws guards to its source. A separate 2,880-sample check covered commuter sidewalks, conversations, shelter and return. [City cases](city-investigations.md) · [Ironveil footage](media/ironveil-street-walk.webm) · [City comparison](media/occupied-streets-comparison.webp) |
+| Controller and activities | Virtual pad inputs in desktop Chrome covered either board seat, off-board shoves, the fishing race and independent lines, champion payouts, kite heats, shared switch commitments, reconnect and one-time mastery awards. A controller-only route from a fresh title took the coach, started fishing, entered the tavern and walked up to a poker table at 720p solo and 1080p co-op. The tavern suite covered solo and shared tables, three named conversations, darts, wallet settlement and interrupted games. All 150 seeded poker games completed. [Venue rules](town-activities.md) · [Poker and darts](copper-minnow.md) |
+| Chambers, equipment and encounters | Forty current and legacy chamber configurations passed 180 specific next-move checks. Another 65 browser checks covered field inputs, puzzle devices, physical shortcuts, expedition state and recovery. All 65 firearms rendered four action phases and projected a consistent barrel point. All 24 blades rendered three action phases. Twenty recipes, 24 weapon tuning installations, three postgame upgrades and six distinct Berlin loadouts passed. [Encounter, motion and mastery checks](chambers-and-mastery.md) |
+| Artwork | The art library opened from disk and decoded all 383 new gallery entries, including 159 individual case paintings. Static checks measured the stored crops of the artwork and 140 animation frames against the real textures. [Art Library](../art-gallery.html) · [Asset inventory](asset-manifest.md) |
+
+**Town changes.** These paired views use the same camera before and after local work and campaign progress. [Willow](media/settlement-willow.webp) · [Mossbell](media/settlement-mossbell.webp) · [Goat’s Rest](media/settlement-quarry.webp) · [Snowhaven](media/settlement-snowhaven.webp) · [Sundial](media/settlement-sundial.webp) · [Ashford](media/settlement-ashford.webp) · [Crownrest](media/settlement-crownrest.webp) · [Dawnbridge](media/settlement-dawnbridge.webp) · [Sluicecross](media/settlement-sluicecross.webp) · [Kitehook](media/settlement-kitehook.webp) · [Boughhall](media/settlement-boughhall.webp)
+
+**Current street views.** The hangars and covered market follow the canal in Ironveil. The newspaper offices and ministry share a processional boulevard in Blackglass. Side streets connect both frontages to rear courtyards and cover. [Ironveil canal](media/ironveil-canal-crossing.webp) · [Blackglass civic square](media/blackglass-civic-streets.webp)
+
+## Measurements and test limits
+
+The test machine ran Chrome 157.0.8103.52 on Windows with an AMD Ryzen 7 5825U and Radeon Graphics. In eight fresh browser starts, median game-ready time was 1.314 seconds on the published base and 1.285 seconds on this build. The median painted-title time was 1.216 seconds on both. Windows managed the filesystem cache.
+
+Against the same level-15 Fencer, the Field Pistol clear improved from 13.12 to 10.62 seconds, and the Trench Scattergun from 7.90 to 7.08 seconds. The enemy’s lunge deals more damage if it connects. During its 0.82-second recovery the player deals 35% additional damage. Partial enemy health migrates proportionally. [Measured encounters and inputs](chambers-and-mastery.md)
+
+At fixed 1280 × 720, the 180-frame two-player, six-enemy fixture recorded median / 95th-percentile frame intervals of 16.7 / 33.4 ms on the base and 16.8 / 33.6 ms on the fieldwork build. Game update and render submission measured 6.0 / 11.7 ms and 7.5 / 15.3 ms respectively. Other local acceptance work was running during these samples. In two 21-second walks at 1366 × 768, Ironveil measured 17.0 / 26.8 ms and Blackglass 17.3 / 33.1 ms. Active fishing and board interiors both measured 16.7 / 16.9 ms at 720p. Timing is machine- and scene-dependent.
+
+Controller checks used the browser Gamepad API with one or two simulated devices. Long campaign and quest fixtures accelerated travel, supplied selected prerequisites and called combat resolution handlers. The six-family boss test maintained player health while fighting all four phases. Fresh-title coach travel ran at gameplay speed using controller inputs alone. Physical controllers, an uninterrupted human title-to-credits run, blind puzzle and town-recognition sessions, and the requested 10–14 campaign hours plus 5–8 optional hours remain unverified.
+
+---
+
+# Reconnaissance campaign · earlier preview acceptance
 
 The playable expansion adds twelve investigation operations, six dungeon plans, three connected regions, six enemy roles, twelve weapons, eight suits and three post-credits exercises. The title and camp use an original animated campfire painting. The party roster and current lead update with the active campaign.
 

@@ -83,8 +83,28 @@ const {chromium} = require('playwright');
       check(g.ui.questId==='escort_0'&&!!document.querySelector('.quest-detail [data-action="track"]'),'legacy handoff opens the selected assignment and tracking action');
       g.ui.reconArchiveOpen=false;g.ui.hideMenu();
       g.start({slot:0,load:true});p=g.players[0];
+      let nextRegion=0;
+      function clearRegionalChain(region){
+        for(let job=0;job<3;job++){
+          const id='main_'+region+'_'+job,q=OW.Content.quests.find(q=>q.id===id),world=Q.surface(g);
+          place(g.questContact(q));g.interact(p);
+          check(g.ui.menu==='dialogue'&&g.acceptQuestFromNpc(id),'regional contact accepts '+id);
+          g.ui.hideMenu();if(OW.FieldAssignments.route(g,q)===-1){place(g.assignmentSites(q).left);g.interact(p);}
+          const loc=world.getLocation(q.target);
+          place(loc);
+          for(const guard of job===2?[q.target+'_commander']:loc.enemyIds){
+            if(world.dead.has(guard))continue;
+            const enemy=world._active.get(guard)||world._dormant.get(guard)||world._createEnemy(world._spawns.get(guard));
+            g.killEnemy(enemy,p);
+          }
+          g.updateLocations(.1);g.checkQuests();check(g.questProgress(q).readyForTurnIn,'regional field objective '+id);
+          place(g.questTurnInContact(q));g.interact(p);
+          check(!!g.finishQuestFromNpc(id)&&g.completedQuests.has(id),'regional NPC pays '+id);g.ui.hideMenu();
+        }
+      }
       for(const [idx,op] of Q.book.ops.entries()){
-        const world=Q.surface(g);for(const n of op.bosses||[])world.liberated.add('boss_'+n);
+        for(const n of op.bosses||[])while(nextRegion<=n)clearRegionalChain(nextRegion++);
+        const world=Q.surface(g);
         const src=op.site?world.getLocation(op.site):null;
         if(src){
           if(src.id==='recon_vault'){
@@ -130,8 +150,8 @@ const {chromium} = require('playwright');
       }
       check(g.world.berlinUnlocked()&&g.checkpoint.locationId==='recon_courtyard','eight commanders plus dossier opens courtyard checkpoint');
       const finalQuest=OW.Content.quests.find(q=>q.id==='main_berlin_final');
-      g.completedQuests.add(finalQuest.prerequisite);
-      function speak(npc){place(npc);g.npcLocation=npc;g.shopPlayer=0;g.ui.showMenu('dialogue',0);}
+      check(g.completedQuests.has(finalQuest.prerequisite),'the final quest prerequisite was completed at its contact');
+      function speak(npc){place(npc);g.interact(p);}
       speak(g.questContact(finalQuest));
       check(g.acceptQuestFromNpc(finalQuest.id),'cleared approach accepts shipped Berlin job through its NPC');
       g.ui.hideMenu();
@@ -140,11 +160,11 @@ const {chromium} = require('playwright');
       boss.hp=boss.maxHp*.65;
       for(let n=0;n<24;n++)g.updateAdvancedEnemy(boss,p,OW.Content.bosses[8],.04);
       check(OW.ReconCombat.record(boss)?.intelSpent===true,'observed document code silences first phase-two relay');
-      g.completeBoss(boss);
+      g.killEnemy(boss,p);
       check(g.campaignWon&&g.ui.menu==='victory','Whisker victory enters the epilogue');
       function choose(action){const b=document.querySelector('[data-action="'+action+'"]');if(!b)throw Error('Missing '+action);b.click();}
       choose('recon-credits');choose('recon-home');
-      check(!g.paused&&g.checkpoint.locationId==='town_0','credits return the party to Willow');
+      check(!g.paused&&g.checkpoint.locationId==='town_7','credits return the party to the Dawnbridge departure hub');
       check(g.questProgress(finalQuest).readyForTurnIn&&!g.completedQuests.has(finalQuest.id),'Berlin NPC reward waits until the debrief after credits');
       speak(g.questTurnInContact(finalQuest));const gold=p.gold,payout=g.finishQuestFromNpc(finalQuest.id);
       check(payout&&p.gold===gold+finalQuest.rewardGold&&!g.finishQuestFromNpc(finalQuest.id),'Berlin NPC pays the final quest once');

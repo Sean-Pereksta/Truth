@@ -24,8 +24,8 @@ check('standing in the warned lane takes actual damage while the co-op partner o
 check('a real blade hit interrupts windup and cancels both attack and its obsolete warnings',()=>{
   const {e,p}=reset();p.x=2060;begin(e,p);g.meleeAttack(p);g.updateMelee(p,.11);assert(e.hp<1000);assert.equal(e.specialMove,null);assert(e.fencerRecovery>0);assert(!g.effects.some(f=>f.alive&&f.readableEnemyId===e.id));assert(g.effects.some(f=>f.type==='text'&&/INTERRUPTED/.test(f.text||'')));const hp=p.hp;advance(.8);assert.equal(p.hp,hp);
 });
-check('ordinary shots do not cancel the tell and the recovery reward is exactly 20 percent damage',()=>{
-  const {e,p}=reset();begin(e,p);g.damageEnemy(e,100,p);assert.equal(e.hp,900);assert(e.specialMove);p.y+=140;advance(.92);const before=e.hp;g.damageEnemy(e,100,p);assert.equal(before-e.hp,120);advance(1.2);assert(!(e.fencerRecovery>0));const hp=e.hp;g.damageEnemy(e,100,p);assert.equal(hp-e.hp,100);
+check('ordinary shots do not cancel the tell and the recovery reward is exactly 35 percent damage',()=>{
+  const {e,p}=reset();begin(e,p);g.damageEnemy(e,100,p);assert.equal(e.hp,900);assert(e.specialMove);p.y+=140;advance(.92);const before=e.hp;g.damageEnemy(e,100,p);assert.equal(before-e.hp,135);advance(1.2);assert(!(e.fencerRecovery>0));const hp=e.hp;g.damageEnemy(e,100,p);assert.equal(hp-e.hp,100);
 });
 check('freezing a winding-up Fencer retains the warning until its delayed attack can resume',()=>{
   const {e,p}=reset();begin(e,p);e.freeze=1.4;advance(1.2);assert(e.specialMove.windup>.55);assert(g.effects.some(f=>f.alive&&f.type==='chargeLane'&&f.readableEnemyId===e.id));p.y+=140;advance(1.4);assert.equal(p.hp,1000);assert(e.fencerRecovery>0);
@@ -47,5 +47,19 @@ check('extended warnings give a Fencer the matching 870 ms lane and windup',()=>
   assert.equal(e.specialMove.windup,.87);
   assert(g.effects.some(f=>f.alive&&f.type==='chargeLane'&&f.readableEnemyId===e.id&&f.life===.87));
   advance(.78);assert.equal(p.hp,1000);assert.equal(e.x,2000);
+});
+check('ordinary health scaling preserves wounded patrols and leaves bosses and authored waves at their own budgets',()=>{
+  const original=W.Content.enemyScaling(4),published=.84*Math.pow(original.health,.84);
+  vm.runInContext(fs.readFileSync(path.join(root,'data/recon-enemies.js'),'utf8'),c,{filename:'data/recon-enemies.js'});
+  const newScale=W.Content.enemyScaling(4).health,record=scale=>({id:'patrol',type,region:4,regionScaleApplied:true,regionHealthScale:scale,regionDamage:1,maxHp:100*scale,hp:37*scale});
+  assert.equal(W.Content.enemyScaling(0).health,.84);
+  assert(newScale<published);
+  for(const saved of [record(published),{...record(W.Content.enemyScaling(4,true).health),regionHealthScale:undefined}, {hp:37,maxHp:100,type,region:4}]){
+    g.ensureEnemyScaling(saved);assert(Math.abs(saved.hp/saved.maxHp-.37)<1e-10);assert(Math.abs(saved.maxHp-100*newScale)<1e-9);
+    const settled=[saved.hp,saved.maxHp];g.ensureEnemyScaling(saved);assert.deepEqual([saved.hp,saved.maxHp],settled);
+  }
+  for(const e of [{...record(published),boss:true},{...record(published),regionDamage:undefined},{...record(published),invasionId:'defense'}]){
+    const before=[e.hp,e.maxHp];g.ensureEnemyScaling(e);assert.deepEqual([e.hp,e.maxHp],before);
+  }
 });
 console.log(checks+' readable Fencer combat checks passed.');

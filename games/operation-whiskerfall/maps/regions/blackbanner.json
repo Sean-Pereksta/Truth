@@ -23,7 +23,7 @@
       "region": 7,
       "radius": 300,
       "npc": "Captain Dawn",
-      "description": "Friendly resistance settlement: merchant, healing, upgrades, and mission board.",
+      "description": "The relay arches overlooks Messenger square. Align the east-bank relay lantern with the western messenger standard.",
       "x": 1430,
       "y": 8710,
       "cleared": false,
@@ -31,7 +31,8 @@
       "index": 81,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "dawnbridge"
     },
     {
       "id": "base_7_0",
@@ -294,13 +295,14 @@
       "region": 7,
       "radius": 250,
       "npc": "Resistance Wayfinder",
-      "description": "A peaceful refuge with a friendly quest scout and an upgrade forge.",
+      "description": "Last Lantern watch hut stands on Radio path. Local supplies, a checkpoint and the resistance forge.",
       "cleared": false,
       "enemyIds": [],
       "index": 100,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-11"
     },
     {
       "id": "forge_town_7",
@@ -1300,6 +1302,136 @@
       "cleared": false,
       "enemyIds": [],
       "index": 336
+    },
+    {
+      "id": "work_town_7",
+      "type": "townWork",
+      "name": "Messenger square",
+      "region": 7,
+      "townId": "town_7",
+      "radius": 45,
+      "x": 1533.7512886940358,
+      "y": 8904,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 344
+    },
+    {
+      "id": "city_blackglass",
+      "type": "occupiedCity",
+      "name": "Blackglass Borough",
+      "description": "Night tram shelter · Embassy Row",
+      "x": 2680,
+      "y": 14765,
+      "radius": 68,
+      "region": 7,
+      "city": "blackglass",
+      "sector": "berlin",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 362
+    },
+    {
+      "id": "city_blackglass_witness",
+      "type": "cityLead",
+      "name": "Lamplighter’s window",
+      "description": "Lamplighter’s window · Printer’s Quarter",
+      "x": 780,
+      "y": 15130,
+      "radius": 68,
+      "region": 7,
+      "city": "blackglass",
+      "sector": "berlin",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 363
+    },
+    {
+      "id": "city_blackglass_archive",
+      "type": "cityLead",
+      "name": "Blackglass municipal archive",
+      "description": "Blackglass municipal archive · The Radio Ward",
+      "x": 3140,
+      "y": 16480,
+      "radius": 68,
+      "region": 7,
+      "city": "blackglass",
+      "sector": "berlin",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 364
+    },
+    {
+      "id": "city_blackglass_roof",
+      "type": "cityLead",
+      "name": "Roof of the night press",
+      "description": "Roof of the night press · Archive Square",
+      "x": 1245,
+      "y": 16930,
+      "radius": 68,
+      "region": 7,
+      "city": "blackglass",
+      "sector": "berlin",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 365
+    },
+    {
+      "id": "city_blackglass_relay",
+      "type": "cityLead",
+      "name": "Ministry relay booth",
+      "description": "Ministry relay booth · Embassy Row",
+      "x": 3625,
+      "y": 15620,
+      "radius": 68,
+      "region": 7,
+      "city": "blackglass",
+      "sector": "berlin",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 366
+    },
+    {
+      "id": "city_blackglass_exit",
+      "type": "cityLead",
+      "name": "West postern",
+      "description": "West postern · Archive Square",
+      "x": 350,
+      "y": 16480,
+      "radius": 68,
+      "region": 7,
+      "city": "blackglass",
+      "sector": "berlin",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 367
+    },
+    {
+      "id": "city_blackglass_tram",
+      "name": "Dawnbridge night tram",
+      "type": "cityTram",
+      "x": 1725,
+      "y": 8555,
+      "region": 7,
+      "radius": 60,
+      "city": "blackglass",
+      "townId": "town_7",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 368
+    },
+    {
+      "id": "city_blackglass_return",
+      "name": "Return tram to Dawnbridge",
+      "type": "cityTram",
+      "x": 2830,
+      "y": 14765,
+      "region": 7,
+      "radius": 62,
+      "city": "blackglass",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 369
     }
   ],
   "enemySpawns": [
@@ -2485,32 +2617,443 @@
       "boss": false,
       "patrol": 4.71238898038469,
       "deepEnemy": true
+    },
+    {
+      "id": "city_blackglass_watch_0",
+      "type": 1,
+      "name": "Night watch corporal",
+      "x": 780,
+      "y": 15620,
+      "homeX": 780,
+      "homeY": 15620,
+      "region": 7,
+      "level": 22,
+      "boss": false,
+      "patrol": 0,
+      "cityWatch": "blackglass",
+      "watchRoute": "y",
+      "watchPhase": 0,
+      "watchPath": [
+        {
+          "x": 780,
+          "y": 15620
+        },
+        {
+          "x": 1245,
+          "y": 15620
+        },
+        {
+          "x": 1245,
+          "y": 16030
+        },
+        {
+          "x": 780,
+          "y": 16030
+        }
+      ]
+    },
+    {
+      "id": "city_blackglass_watch_1",
+      "type": 0,
+      "name": "Lamplight patrol",
+      "x": 1245,
+      "y": 15620,
+      "homeX": 1245,
+      "homeY": 15620,
+      "region": 7,
+      "level": 22,
+      "boss": false,
+      "patrol": 0.7,
+      "cityWatch": "blackglass",
+      "watchRoute": "x",
+      "watchPhase": 0.7,
+      "watchPath": [
+        {
+          "x": 1245,
+          "y": 15620
+        },
+        {
+          "x": 780,
+          "y": 15620
+        },
+        {
+          "x": 780,
+          "y": 15130
+        },
+        {
+          "x": 1245,
+          "y": 15130
+        }
+      ]
+    },
+    {
+      "id": "city_blackglass_watch_2",
+      "type": 0,
+      "name": "Lamplight patrol",
+      "x": 1685,
+      "y": 16480,
+      "homeX": 1685,
+      "homeY": 16480,
+      "region": 7,
+      "level": 22,
+      "boss": false,
+      "patrol": 1.4,
+      "cityWatch": "blackglass",
+      "watchRoute": "x",
+      "watchPhase": 1.4,
+      "watchPath": [
+        {
+          "x": 1685,
+          "y": 16480
+        },
+        {
+          "x": 2240,
+          "y": 16480
+        },
+        {
+          "x": 2240,
+          "y": 16030
+        },
+        {
+          "x": 1685,
+          "y": 16030
+        }
+      ]
+    },
+    {
+      "id": "city_blackglass_watch_3",
+      "type": 0,
+      "name": "Lamplight patrol",
+      "x": 2240,
+      "y": 15130,
+      "homeX": 2240,
+      "homeY": 15130,
+      "region": 7,
+      "level": 22,
+      "boss": false,
+      "patrol": 2.0999999999999996,
+      "cityWatch": "blackglass",
+      "watchRoute": "y",
+      "watchPhase": 2.0999999999999996,
+      "watchPath": [
+        {
+          "x": 2240,
+          "y": 15130
+        },
+        {
+          "x": 1685,
+          "y": 15130
+        },
+        {
+          "x": 1685,
+          "y": 15620
+        },
+        {
+          "x": 2240,
+          "y": 15620
+        }
+      ]
+    },
+    {
+      "id": "city_blackglass_watch_4",
+      "type": 1,
+      "name": "Night watch corporal",
+      "x": 2680,
+      "y": 16030,
+      "homeX": 2680,
+      "homeY": 16030,
+      "region": 7,
+      "level": 22,
+      "boss": false,
+      "patrol": 2.8,
+      "cityWatch": "blackglass",
+      "watchRoute": "x",
+      "watchPhase": 2.8,
+      "watchPath": [
+        {
+          "x": 2680,
+          "y": 16030
+        },
+        {
+          "x": 3140,
+          "y": 16030
+        },
+        {
+          "x": 3140,
+          "y": 15620
+        },
+        {
+          "x": 2680,
+          "y": 15620
+        }
+      ]
+    },
+    {
+      "id": "city_blackglass_watch_5",
+      "type": 0,
+      "name": "Lamplight patrol",
+      "x": 3140,
+      "y": 16030,
+      "homeX": 3140,
+      "homeY": 16030,
+      "region": 7,
+      "level": 22,
+      "boss": false,
+      "patrol": 3.5,
+      "cityWatch": "blackglass",
+      "watchRoute": "x",
+      "watchPhase": 3.5,
+      "watchPath": [
+        {
+          "x": 3140,
+          "y": 16030
+        },
+        {
+          "x": 2680,
+          "y": 16030
+        },
+        {
+          "x": 2680,
+          "y": 15620
+        },
+        {
+          "x": 3140,
+          "y": 15620
+        }
+      ]
+    },
+    {
+      "id": "city_blackglass_watch_6",
+      "type": 0,
+      "name": "Lamplight patrol",
+      "x": 3140,
+      "y": 16930,
+      "homeX": 3140,
+      "homeY": 16930,
+      "region": 7,
+      "level": 22,
+      "boss": false,
+      "patrol": 4.199999999999999,
+      "cityWatch": "blackglass",
+      "watchRoute": "y",
+      "watchPhase": 4.199999999999999,
+      "watchPath": [
+        {
+          "x": 3140,
+          "y": 16930
+        },
+        {
+          "x": 3625,
+          "y": 16930
+        },
+        {
+          "x": 3625,
+          "y": 17400
+        },
+        {
+          "x": 3140,
+          "y": 17400
+        }
+      ]
+    },
+    {
+      "id": "city_blackglass_watch_7",
+      "type": 0,
+      "name": "Lamplight patrol",
+      "x": 3625,
+      "y": 16480,
+      "homeX": 3625,
+      "homeY": 16480,
+      "region": 7,
+      "level": 22,
+      "boss": false,
+      "patrol": 4.8999999999999995,
+      "cityWatch": "blackglass",
+      "watchRoute": "x",
+      "watchPhase": 4.8999999999999995,
+      "watchPath": [
+        {
+          "x": 3625,
+          "y": 16480
+        },
+        {
+          "x": 3140,
+          "y": 16480
+        },
+        {
+          "x": 3140,
+          "y": 16030
+        },
+        {
+          "x": 3625,
+          "y": 16030
+        }
+      ]
+    },
+    {
+      "id": "city_blackglass_watch_8",
+      "type": 1,
+      "name": "Night watch corporal",
+      "x": 780,
+      "y": 16930,
+      "homeX": 780,
+      "homeY": 16930,
+      "region": 7,
+      "level": 22,
+      "boss": false,
+      "patrol": 5.6,
+      "cityWatch": "blackglass",
+      "watchRoute": "x",
+      "watchPhase": 5.6,
+      "watchPath": [
+        {
+          "x": 780,
+          "y": 16930
+        },
+        {
+          "x": 1245,
+          "y": 16930
+        },
+        {
+          "x": 1245,
+          "y": 16480
+        },
+        {
+          "x": 780,
+          "y": 16480
+        }
+      ]
+    },
+    {
+      "id": "city_blackglass_watch_9",
+      "type": 0,
+      "name": "Lamplight patrol",
+      "x": 1685,
+      "y": 16030,
+      "homeX": 1685,
+      "homeY": 16030,
+      "region": 7,
+      "level": 22,
+      "boss": false,
+      "patrol": 6.3,
+      "cityWatch": "blackglass",
+      "watchRoute": "y",
+      "watchPhase": 6.3,
+      "watchPath": [
+        {
+          "x": 1685,
+          "y": 16030
+        },
+        {
+          "x": 1245,
+          "y": 16030
+        },
+        {
+          "x": 1245,
+          "y": 16480
+        },
+        {
+          "x": 1685,
+          "y": 16480
+        }
+      ]
+    },
+    {
+      "id": "city_blackglass_watch_10",
+      "type": 0,
+      "name": "Lamplight patrol",
+      "x": 2240,
+      "y": 16930,
+      "homeX": 2240,
+      "homeY": 16930,
+      "region": 7,
+      "level": 22,
+      "boss": false,
+      "patrol": 7,
+      "cityWatch": "blackglass",
+      "watchRoute": "x",
+      "watchPhase": 7,
+      "watchPath": [
+        {
+          "x": 2240,
+          "y": 16930
+        },
+        {
+          "x": 2680,
+          "y": 16930
+        },
+        {
+          "x": 2680,
+          "y": 16480
+        },
+        {
+          "x": 2240,
+          "y": 16480
+        }
+      ]
+    },
+    {
+      "id": "city_blackglass_watch_11",
+      "type": 0,
+      "name": "Lamplight patrol",
+      "x": 3625,
+      "y": 15130,
+      "homeX": 3625,
+      "homeY": 15130,
+      "region": 7,
+      "level": 22,
+      "boss": false,
+      "patrol": 7.699999999999999,
+      "cityWatch": "blackglass",
+      "watchRoute": "x",
+      "watchPhase": 7.699999999999999,
+      "watchPath": [
+        {
+          "x": 3625,
+          "y": 15130
+        },
+        {
+          "x": 3140,
+          "y": 15130
+        },
+        {
+          "x": 3140,
+          "y": 14765
+        },
+        {
+          "x": 3625,
+          "y": 14765
+        }
+      ]
     }
   ],
   "objects": [
     {
       "id": "town_7_building_0",
       "type": "building",
-      "x": 1205,
-      "y": 8560,
+      "x": 1430,
+      "y": 8475,
       "w": 155,
       "h": 130,
       "solid": true,
       "variant": 3,
       "locationId": "town_7",
-      "region": 7
+      "region": 7,
+      "townId": "town_7",
+      "townPainting": "landmark-dawnbridge"
     },
     {
       "id": "town_7_building_1",
       "type": "building",
-      "x": 1655,
-      "y": 8560,
+      "x": 1715,
+      "y": 8595,
       "w": 155,
       "h": 130,
       "solid": true,
       "variant": 0,
       "locationId": "town_7",
-      "region": 7
+      "region": 7,
+      "townId": "town_7"
     },
     {
       "id": "town_7_building_2",
@@ -2522,7 +3065,8 @@
       "solid": true,
       "variant": 1,
       "locationId": "town_7",
-      "region": 7
+      "region": 7,
+      "townId": "town_7"
     },
     {
       "id": "town_7_building_3",
@@ -2534,7 +3078,8 @@
       "solid": true,
       "variant": 2,
       "locationId": "town_7",
-      "region": 7
+      "region": 7,
+      "townId": "town_7"
     },
     {
       "id": "town_7_well",
@@ -4045,7 +4590,9 @@
       "solid": true,
       "variant": 3,
       "locationId": "town_way_7",
-      "region": 7
+      "region": 7,
+      "townId": "town_way_7",
+      "townPainting": "outpost-11"
     },
     {
       "id": "town_way_7_building_1",
@@ -4057,7 +4604,8 @@
       "solid": true,
       "variant": 0,
       "locationId": "town_way_7",
-      "region": 7
+      "region": 7,
+      "townId": "town_way_7"
     },
     {
       "id": "town_way_7_building_2",
@@ -4069,7 +4617,8 @@
       "solid": true,
       "variant": 1,
       "locationId": "town_way_7",
-      "region": 7
+      "region": 7,
+      "townId": "town_way_7"
     },
     {
       "id": "town_way_7_building_3",
@@ -4081,7 +4630,8 @@
       "solid": true,
       "variant": 2,
       "locationId": "town_way_7",
-      "region": 7
+      "region": 7,
+      "townId": "town_way_7"
     },
     {
       "id": "town_way_7_well",
@@ -9510,6 +10060,4206 @@
       "solid": false,
       "locationId": "recon_vault_east",
       "region": 7,
+      "variant": 0
+    },
+    {
+      "id": "work_town_7_lamp",
+      "type": "townWork",
+      "townId": "town_7",
+      "locationId": "work_town_7",
+      "x": 1533.7512886940358,
+      "y": 8904,
+      "w": 52,
+      "h": 67,
+      "solid": false,
+      "variant": 0,
+      "region": 7
+    },
+    {
+      "id": "town_7_homecoming",
+      "type": "townAftermath",
+      "townId": "town_7",
+      "x": 1305,
+      "y": 8794,
+      "w": 130,
+      "h": 108,
+      "solid": false,
+      "variant": 0,
+      "region": 7
+    },
+    {
+      "id": "city_blackglass_frontage_0",
+      "type": "cityBuilding",
+      "x": 564.5,
+      "y": 15071,
+      "w": 315.27000000000004,
+      "h": 192.95999999999998,
+      "visualWidth": 315.27000000000004,
+      "frontY": 15079,
+      "cityFootprint": {
+        "x": 425.7812,
+        "y": 14982.52,
+        "w": 277.43760000000003,
+        "h": 96.47999999999999
+      },
+      "cityArt": "black-front-2",
+      "flip": true,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_0",
+      "type": "cityBuilding",
+      "x": 495.683,
+      "y": 14894.12,
+      "w": 183.06,
+      "h": 134,
+      "visualWidth": 183.06,
+      "frontY": 14902.12,
+      "cityFootprint": {
+        "x": 415.1366,
+        "y": 14835.12,
+        "w": 161.0928,
+        "h": 67
+      },
+      "cityArt": "urban-landmark-9",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_0",
+      "type": "streetFixture",
+      "painting": "civic-7",
+      "x": 712,
+      "y": 15094,
+      "w": 68,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_arcade_0",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 410,
+      "y": 15091,
+      "w": 42,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_frontage_1",
+      "type": "cityBuilding",
+      "x": 1012,
+      "y": 15071,
+      "w": 347.82,
+      "h": 192.95999999999998,
+      "visualWidth": 347.82,
+      "frontY": 15079,
+      "cityFootprint": {
+        "x": 858.9592,
+        "y": 14982.52,
+        "w": 306.0816,
+        "h": 96.47999999999999
+      },
+      "cityArt": "black-front-1",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_1",
+      "type": "cityBuilding",
+      "x": 936.078,
+      "y": 14894.12,
+      "w": 201.96,
+      "h": 134,
+      "visualWidth": 201.96,
+      "frontY": 14902.12,
+      "cityFootprint": {
+        "x": 847.2156,
+        "y": 14835.12,
+        "w": 177.72480000000002,
+        "h": 67
+      },
+      "cityArt": "black-front-0",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_1",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 1177,
+      "y": 15094,
+      "w": 82,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_court_west_2",
+      "type": "cityBuilding",
+      "x": 1374.97,
+      "y": 15071,
+      "w": 169.94000000000005,
+      "h": 182.24,
+      "visualWidth": 169.94000000000005,
+      "frontY": 15079,
+      "cityFootprint": {
+        "x": 1300.1964,
+        "y": 14987.88,
+        "w": 149.54720000000006,
+        "h": 91.12
+      },
+      "cityArt": "black-front-7",
+      "flip": true,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_court_east_2",
+      "type": "cityBuilding",
+      "x": 1574.97,
+      "y": 15063,
+      "w": 128.05999999999995,
+      "h": 182.24,
+      "visualWidth": 128.05999999999995,
+      "frontY": 15071,
+      "cityFootprint": {
+        "x": 1518.6236000000001,
+        "y": 14979.88,
+        "w": 112.69279999999995,
+        "h": 91.12
+      },
+      "cityArt": "facade-13",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_rear_2",
+      "type": "cityBuilding",
+      "x": 1464.5,
+      "y": 14886.08,
+      "w": 317.59000000000003,
+      "h": 123.28,
+      "visualWidth": 317.59000000000003,
+      "frontY": 14894.08,
+      "cityFootprint": {
+        "x": 1324.7604,
+        "y": 14832.44,
+        "w": 279.47920000000005,
+        "h": 61.64
+      },
+      "cityArt": "black-front-3",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_2",
+      "type": "streetFixture",
+      "painting": "civic-3",
+      "x": 1617,
+      "y": 15094,
+      "w": 64,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_arcade_2",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 1305,
+      "y": 15091,
+      "w": 42,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_court_west_3",
+      "type": "cityBuilding",
+      "x": 1819.33,
+      "y": 15071,
+      "w": 178.66000000000008,
+      "h": 182.24,
+      "visualWidth": 178.66000000000008,
+      "frontY": 15079,
+      "cityFootprint": {
+        "x": 1740.7196,
+        "y": 14987.88,
+        "w": 157.22080000000008,
+        "h": 91.12
+      },
+      "cityArt": "black-front-3",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_court_east_3",
+      "type": "cityBuilding",
+      "x": 2076.83,
+      "y": 15063,
+      "w": 234.33999999999992,
+      "h": 182.24,
+      "visualWidth": 234.33999999999992,
+      "frontY": 15071,
+      "cityFootprint": {
+        "x": 1973.7204,
+        "y": 14979.88,
+        "w": 206.21919999999992,
+        "h": 91.12
+      },
+      "cityArt": "black-front-8",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_rear_3",
+      "type": "cityBuilding",
+      "x": 1962,
+      "y": 14886.08,
+      "w": 422.24,
+      "h": 123.28,
+      "visualWidth": 422.24,
+      "frontY": 14894.08,
+      "cityFootprint": {
+        "x": 1776.2144,
+        "y": 14832.44,
+        "w": 371.57120000000003,
+        "h": 61.64
+      },
+      "cityArt": "black-front-8",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_3",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 2172,
+      "y": 15094,
+      "w": 68,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_square_4",
+      "type": "cityBuilding",
+      "x": 2459.5,
+      "y": 14918.24,
+      "w": 272.22,
+      "h": 128.64,
+      "visualWidth": 272.22,
+      "frontY": 14926.24,
+      "cityFootprint": {
+        "x": 2339.7232,
+        "y": 14861.92,
+        "w": 239.55360000000002,
+        "h": 64.32
+      },
+      "cityArt": "urban-landmark-10",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_square_clock_4",
+      "type": "streetFixture",
+      "painting": "civic-1",
+      "x": 2303,
+      "y": 15074,
+      "w": 48,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_square_5",
+      "type": "cityBuilding",
+      "x": 2909.5,
+      "y": 14918.24,
+      "w": 285,
+      "h": 128.64,
+      "visualWidth": 285,
+      "frontY": 14926.24,
+      "cityFootprint": {
+        "x": 2784.1,
+        "y": 14861.92,
+        "w": 250.8,
+        "h": 64.32
+      },
+      "cityArt": "urban-landmark-11",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_square_clock_5",
+      "type": "streetFixture",
+      "painting": "civic-1",
+      "x": 2743,
+      "y": 15074,
+      "w": 48,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_frontage_6",
+      "type": "cityBuilding",
+      "x": 3382,
+      "y": 15071,
+      "w": 382.18,
+      "h": 192.95999999999998,
+      "visualWidth": 382.18,
+      "frontY": 15079,
+      "cityFootprint": {
+        "x": 3213.8408,
+        "y": 14982.52,
+        "w": 336.3184,
+        "h": 96.47999999999999
+      },
+      "cityArt": "black-front-12",
+      "flip": true,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_6",
+      "type": "cityBuilding",
+      "x": 3382,
+      "y": 14894.12,
+      "w": 226,
+      "h": 134,
+      "visualWidth": 226,
+      "frontY": 14902.12,
+      "cityFootprint": {
+        "x": 3282.56,
+        "y": 14835.12,
+        "w": 198.88,
+        "h": 67
+      },
+      "cityArt": "black-front-3",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_6",
+      "type": "streetFixture",
+      "painting": "civic-7",
+      "x": 3557,
+      "y": 15094,
+      "w": 68,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_arcade_6",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 3200,
+      "y": 15091,
+      "w": 42,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_court_west_7",
+      "type": "cityBuilding",
+      "x": 3734.0299999999997,
+      "y": 15071,
+      "w": 128.05999999999995,
+      "h": 182.24,
+      "visualWidth": 128.05999999999995,
+      "frontY": 15079,
+      "cityFootprint": {
+        "x": 3677.6836,
+        "y": 14987.88,
+        "w": 112.69279999999995,
+        "h": 91.12
+      },
+      "cityArt": "facade-15",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_court_east_7",
+      "type": "cityBuilding",
+      "x": 3934.0299999999997,
+      "y": 15063,
+      "w": 169.94000000000005,
+      "h": 182.24,
+      "visualWidth": 169.94000000000005,
+      "frontY": 15071,
+      "cityFootprint": {
+        "x": 3859.2563999999998,
+        "y": 14979.88,
+        "w": 149.54720000000006,
+        "h": 91.12
+      },
+      "cityArt": "black-front-8",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_rear_7",
+      "type": "cityBuilding",
+      "x": 3844.5,
+      "y": 14886.08,
+      "w": 317.59000000000003,
+      "h": 123.28,
+      "visualWidth": 317.59000000000003,
+      "frontY": 14894.08,
+      "cityFootprint": {
+        "x": 3704.7604,
+        "y": 14832.44,
+        "w": 279.47920000000005,
+        "h": 61.64
+      },
+      "cityArt": "black-front-8",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_7",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 3997,
+      "y": 15094,
+      "w": 82,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_frontage_8",
+      "type": "cityBuilding",
+      "x": 564.5,
+      "y": 15561,
+      "w": 328.83,
+      "h": 224,
+      "visualWidth": 328.83,
+      "frontY": 15569,
+      "cityFootprint": {
+        "x": 419.8148,
+        "y": 15457,
+        "w": 289.37039999999996,
+        "h": 112
+      },
+      "cityArt": "black-front-9",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_8",
+      "type": "cityBuilding",
+      "x": 564.5,
+      "y": 15301.62,
+      "w": 226,
+      "h": 156,
+      "visualWidth": 226,
+      "frontY": 15309.62,
+      "cityFootprint": {
+        "x": 465.06,
+        "y": 15231.62,
+        "w": 198.88,
+        "h": 78
+      },
+      "cityArt": "black-front-6",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_8",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 712,
+      "y": 15584,
+      "w": 64,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_arcade_8",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 410,
+      "y": 15581,
+      "w": 42,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_court_west_9",
+      "type": "cityBuilding",
+      "x": 894.53,
+      "y": 15561,
+      "w": 139.05999999999995,
+      "h": 236,
+      "visualWidth": 139.05999999999995,
+      "frontY": 15569,
+      "cityFootprint": {
+        "x": 833.3436,
+        "y": 15451,
+        "w": 122.37279999999996,
+        "h": 118
+      },
+      "cityArt": "facade-12",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_court_east_9",
+      "type": "cityBuilding",
+      "x": 1107.03,
+      "y": 15553,
+      "w": 183.94000000000005,
+      "h": 240,
+      "visualWidth": 183.94000000000005,
+      "frontY": 15561,
+      "cityFootprint": {
+        "x": 1026.0964,
+        "y": 15441,
+        "w": 161.86720000000005,
+        "h": 120
+      },
+      "cityArt": "black-front-7",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_rear_9",
+      "type": "cityBuilding",
+      "x": 1012,
+      "y": 15289.83,
+      "w": 340.34000000000003,
+      "h": 162,
+      "visualWidth": 340.34000000000003,
+      "frontY": 15297.83,
+      "cityFootprint": {
+        "x": 862.2504,
+        "y": 15216.83,
+        "w": 299.49920000000003,
+        "h": 81
+      },
+      "cityArt": "black-front-7",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_9",
+      "type": "streetFixture",
+      "painting": "civic-8",
+      "x": 1177,
+      "y": 15584,
+      "w": 68,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_frontage_10",
+      "type": "cityBuilding",
+      "x": 1464.5,
+      "y": 15561,
+      "w": 324.57,
+      "h": 224,
+      "visualWidth": 324.57,
+      "frontY": 15569,
+      "cityFootprint": {
+        "x": 1321.6892,
+        "y": 15457,
+        "w": 285.6216,
+        "h": 112
+      },
+      "cityArt": "black-front-10",
+      "flip": true,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_10",
+      "type": "cityBuilding",
+      "x": 1393.653,
+      "y": 15301.62,
+      "w": 188.46,
+      "h": 156,
+      "visualWidth": 188.46,
+      "frontY": 15309.62,
+      "cityFootprint": {
+        "x": 1310.7306,
+        "y": 15231.62,
+        "w": 165.84480000000002,
+        "h": 78
+      },
+      "cityArt": "black-front-12",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_10",
+      "type": "streetFixture",
+      "painting": "civic-0",
+      "x": 1617,
+      "y": 15584,
+      "w": 82,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_arcade_10",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 1305,
+      "y": 15581,
+      "w": 42,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_frontage_11",
+      "type": "cityBuilding",
+      "x": 1962,
+      "y": 15561,
+      "w": 431.52000000000004,
+      "h": 224,
+      "visualWidth": 431.52000000000004,
+      "frontY": 15569,
+      "cityFootprint": {
+        "x": 1772.1312,
+        "y": 15457,
+        "w": 379.73760000000004,
+        "h": 112
+      },
+      "cityArt": "black-front-15",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_11",
+      "type": "cityBuilding",
+      "x": 1854.3,
+      "y": 15301.62,
+      "w": 226,
+      "h": 156,
+      "visualWidth": 226,
+      "frontY": 15309.62,
+      "cityFootprint": {
+        "x": 1754.86,
+        "y": 15231.62,
+        "w": 198.88,
+        "h": 78
+      },
+      "cityArt": "urban-landmark-8",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_11",
+      "type": "streetFixture",
+      "painting": "civic-7",
+      "x": 2172,
+      "y": 15584,
+      "w": 64,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_court_west_12",
+      "type": "cityBuilding",
+      "x": 2369.9700000000003,
+      "y": 15561,
+      "w": 169.94000000000005,
+      "h": 236,
+      "visualWidth": 169.94000000000005,
+      "frontY": 15569,
+      "cityFootprint": {
+        "x": 2295.1964000000003,
+        "y": 15451,
+        "w": 149.54720000000006,
+        "h": 118
+      },
+      "cityArt": "black-front-5",
+      "flip": true,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_court_east_12",
+      "type": "cityBuilding",
+      "x": 2569.9700000000003,
+      "y": 15553,
+      "w": 128.05999999999995,
+      "h": 240,
+      "visualWidth": 128.05999999999995,
+      "frontY": 15561,
+      "cityFootprint": {
+        "x": 2513.6236000000004,
+        "y": 15441,
+        "w": 112.69279999999995,
+        "h": 120
+      },
+      "cityArt": "facade-10",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_rear_12",
+      "type": "cityBuilding",
+      "x": 2459.5,
+      "y": 15289.83,
+      "w": 317.59000000000003,
+      "h": 162,
+      "visualWidth": 317.59000000000003,
+      "frontY": 15297.83,
+      "cityFootprint": {
+        "x": 2319.7604,
+        "y": 15216.83,
+        "w": 279.47920000000005,
+        "h": 81
+      },
+      "cityArt": "black-front-6",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_12",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 2612,
+      "y": 15584,
+      "w": 68,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_arcade_12",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 2300,
+      "y": 15581,
+      "w": 42,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_frontage_13",
+      "type": "cityBuilding",
+      "x": 2909.5,
+      "y": 15561,
+      "w": 343.17,
+      "h": 224,
+      "visualWidth": 343.17,
+      "frontY": 15569,
+      "cityFootprint": {
+        "x": 2758.5052,
+        "y": 15457,
+        "w": 301.9896,
+        "h": 112
+      },
+      "cityArt": "black-front-6",
+      "flip": true,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_13",
+      "type": "cityBuilding",
+      "x": 2834.593,
+      "y": 15301.62,
+      "w": 199.26000000000002,
+      "h": 156,
+      "visualWidth": 199.26000000000002,
+      "frontY": 15309.62,
+      "cityFootprint": {
+        "x": 2746.9186,
+        "y": 15231.62,
+        "w": 175.3488,
+        "h": 78
+      },
+      "cityArt": "urban-landmark-8",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_13",
+      "type": "streetFixture",
+      "painting": "civic-3",
+      "x": 3072,
+      "y": 15584,
+      "w": 82,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_court_west_14",
+      "type": "cityBuilding",
+      "x": 3282.5699999999997,
+      "y": 15561,
+      "w": 195.13999999999987,
+      "h": 236,
+      "visualWidth": 195.13999999999987,
+      "frontY": 15569,
+      "cityFootprint": {
+        "x": 3196.7084,
+        "y": 15451,
+        "w": 171.72319999999988,
+        "h": 118
+      },
+      "cityArt": "black-front-0",
+      "flip": true,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_court_east_14",
+      "type": "cityBuilding",
+      "x": 3505.0699999999997,
+      "y": 15553,
+      "w": 147.86000000000013,
+      "h": 240,
+      "visualWidth": 147.86000000000013,
+      "frontY": 15561,
+      "cityFootprint": {
+        "x": 3440.0116,
+        "y": 15441,
+        "w": 130.11680000000013,
+        "h": 120
+      },
+      "cityArt": "facade-12",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_rear_14",
+      "type": "cityBuilding",
+      "x": 3382,
+      "y": 15289.83,
+      "w": 358.54,
+      "h": 162,
+      "visualWidth": 358.54,
+      "frontY": 15297.83,
+      "cityFootprint": {
+        "x": 3224.2424,
+        "y": 15216.83,
+        "w": 315.5152,
+        "h": 81
+      },
+      "cityArt": "black-front-12",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_14",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 3557,
+      "y": 15584,
+      "w": 64,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_arcade_14",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 3200,
+      "y": 15581,
+      "w": 42,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_frontage_15",
+      "type": "cityBuilding",
+      "x": 3844.5,
+      "y": 15561,
+      "w": 324.57,
+      "h": 224,
+      "visualWidth": 324.57,
+      "frontY": 15569,
+      "cityFootprint": {
+        "x": 3701.6892,
+        "y": 15457,
+        "w": 285.6216,
+        "h": 112
+      },
+      "cityArt": "black-front-2",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_15",
+      "type": "cityBuilding",
+      "x": 3773.653,
+      "y": 15301.62,
+      "w": 188.46,
+      "h": 156,
+      "visualWidth": 188.46,
+      "frontY": 15309.62,
+      "cityFootprint": {
+        "x": 3690.7306,
+        "y": 15231.62,
+        "w": 165.84480000000002,
+        "h": 78
+      },
+      "cityArt": "black-front-11",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_15",
+      "type": "streetFixture",
+      "painting": "civic-8",
+      "x": 3997,
+      "y": 15584,
+      "w": 68,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_court_west_16",
+      "type": "cityBuilding",
+      "x": 456.83,
+      "y": 15971,
+      "w": 123.65999999999997,
+      "h": 212.84,
+      "visualWidth": 123.65999999999997,
+      "frontY": 15979,
+      "cityFootprint": {
+        "x": 402.4196,
+        "y": 15872.58,
+        "w": 108.82079999999998,
+        "h": 106.42
+      },
+      "cityArt": "facade-14",
+      "flip": true,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_court_east_16",
+      "type": "cityBuilding",
+      "x": 651.8299999999999,
+      "y": 15963,
+      "w": 164.34000000000003,
+      "h": 212.84,
+      "visualWidth": 164.34000000000003,
+      "frontY": 15971,
+      "cityFootprint": {
+        "x": 579.5203999999999,
+        "y": 15864.58,
+        "w": 144.61920000000003,
+        "h": 106.42
+      },
+      "cityArt": "black-front-1",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_rear_16",
+      "type": "cityBuilding",
+      "x": 564.5,
+      "y": 15755.03,
+      "w": 308.49,
+      "h": 143.98000000000002,
+      "visualWidth": 308.49,
+      "frontY": 15763.03,
+      "cityFootprint": {
+        "x": 428.7644,
+        "y": 15691.04,
+        "w": 271.4712,
+        "h": 71.99000000000001
+      },
+      "cityArt": "black-front-1",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_16",
+      "type": "streetFixture",
+      "painting": "civic-7",
+      "x": 712,
+      "y": 15994,
+      "w": 82,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_arcade_16",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 410,
+      "y": 15991,
+      "w": 42,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_court_west_17",
+      "type": "cityBuilding",
+      "x": 916.97,
+      "y": 15971,
+      "w": 183.94000000000005,
+      "h": 212.84,
+      "visualWidth": 183.94000000000005,
+      "frontY": 15979,
+      "cityFootprint": {
+        "x": 836.0364,
+        "y": 15872.58,
+        "w": 161.86720000000005,
+        "h": 106.42
+      },
+      "cityArt": "black-front-3",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_court_east_17",
+      "type": "cityBuilding",
+      "x": 1129.47,
+      "y": 15963,
+      "w": 139.05999999999995,
+      "h": 212.84,
+      "visualWidth": 139.05999999999995,
+      "frontY": 15971,
+      "cityFootprint": {
+        "x": 1068.2836,
+        "y": 15864.58,
+        "w": 122.37279999999996,
+        "h": 106.42
+      },
+      "cityArt": "facade-10",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_rear_17",
+      "type": "cityBuilding",
+      "x": 1012,
+      "y": 15755.03,
+      "w": 340.34000000000003,
+      "h": 143.98000000000002,
+      "visualWidth": 340.34000000000003,
+      "frontY": 15763.03,
+      "cityFootprint": {
+        "x": 862.2504,
+        "y": 15691.04,
+        "w": 299.49920000000003,
+        "h": 71.99000000000001
+      },
+      "cityArt": "black-front-13",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_17",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 1177,
+      "y": 15994,
+      "w": 64,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_frontage_18",
+      "type": "cityBuilding",
+      "x": 1464.5,
+      "y": 15971,
+      "w": 324.57,
+      "h": 224,
+      "visualWidth": 324.57,
+      "frontY": 15979,
+      "cityFootprint": {
+        "x": 1321.6892,
+        "y": 15867,
+        "w": 285.6216,
+        "h": 112
+      },
+      "cityArt": "black-front-14",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_18",
+      "type": "cityBuilding",
+      "x": 1393.653,
+      "y": 15764.42,
+      "w": 188.46,
+      "h": 156,
+      "visualWidth": 188.46,
+      "frontY": 15772.42,
+      "cityFootprint": {
+        "x": 1310.7306,
+        "y": 15694.42,
+        "w": 165.84480000000002,
+        "h": 78
+      },
+      "cityArt": "urban-landmark-9",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_18",
+      "type": "streetFixture",
+      "painting": "civic-3",
+      "x": 1617,
+      "y": 15994,
+      "w": 68,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_arcade_18",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 1305,
+      "y": 15991,
+      "w": 42,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_square_19",
+      "type": "cityBuilding",
+      "x": 1962,
+      "y": 15792.59,
+      "w": 285,
+      "h": 150.23999999999998,
+      "visualWidth": 285,
+      "frontY": 15800.59,
+      "cityFootprint": {
+        "x": 1836.6,
+        "y": 15725.47,
+        "w": 250.8,
+        "h": 75.11999999999999
+      },
+      "cityArt": "urban-landmark-6",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 0,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_square_clock_19",
+      "type": "streetFixture",
+      "painting": "civic-1",
+      "x": 1748,
+      "y": 15974,
+      "w": 48,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_frontage_20",
+      "type": "cityBuilding",
+      "x": 2459.5,
+      "y": 15971,
+      "w": 324.57,
+      "h": 224,
+      "visualWidth": 324.57,
+      "frontY": 15979,
+      "cityFootprint": {
+        "x": 2316.6892,
+        "y": 15867,
+        "w": 285.6216,
+        "h": 112
+      },
+      "cityArt": "black-front-12",
+      "flip": true,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_20",
+      "type": "cityBuilding",
+      "x": 2388.653,
+      "y": 15764.42,
+      "w": 188.46,
+      "h": 156,
+      "visualWidth": 188.46,
+      "frontY": 15772.42,
+      "cityFootprint": {
+        "x": 2305.7306,
+        "y": 15694.42,
+        "w": 165.84480000000002,
+        "h": 78
+      },
+      "cityArt": "black-front-1",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_20",
+      "type": "streetFixture",
+      "painting": "civic-8",
+      "x": 2612,
+      "y": 15994,
+      "w": 64,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_arcade_20",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 2300,
+      "y": 15991,
+      "w": 42,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_frontage_21",
+      "type": "cityBuilding",
+      "x": 2909.5,
+      "y": 15971,
+      "w": 357.93,
+      "h": 224,
+      "visualWidth": 357.93,
+      "frontY": 15979,
+      "cityFootprint": {
+        "x": 2752.0108,
+        "y": 15867,
+        "w": 314.9784,
+        "h": 112
+      },
+      "cityArt": "black-front-8",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_21",
+      "type": "cityBuilding",
+      "x": 2909.5,
+      "y": 15764.42,
+      "w": 226,
+      "h": 156,
+      "visualWidth": 226,
+      "frontY": 15772.42,
+      "cityFootprint": {
+        "x": 2810.06,
+        "y": 15694.42,
+        "w": 198.88,
+        "h": 78
+      },
+      "cityArt": "black-front-13",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_21",
+      "type": "streetFixture",
+      "painting": "civic-0",
+      "x": 3072,
+      "y": 15994,
+      "w": 68,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_frontage_22",
+      "type": "cityBuilding",
+      "x": 3382,
+      "y": 15971,
+      "w": 366.42,
+      "h": 224,
+      "visualWidth": 366.42,
+      "frontY": 15979,
+      "cityFootprint": {
+        "x": 3220.7752,
+        "y": 15867,
+        "w": 322.44960000000003,
+        "h": 112
+      },
+      "cityArt": "black-front-4",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_22",
+      "type": "cityBuilding",
+      "x": 3302.018,
+      "y": 15764.42,
+      "w": 212.76000000000002,
+      "h": 156,
+      "visualWidth": 212.76000000000002,
+      "frontY": 15772.42,
+      "cityFootprint": {
+        "x": 3208.4036,
+        "y": 15694.42,
+        "w": 187.2288,
+        "h": 78
+      },
+      "cityArt": "urban-landmark-9",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_22",
+      "type": "streetFixture",
+      "painting": "civic-7",
+      "x": 3557,
+      "y": 15994,
+      "w": 82,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_arcade_22",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 3200,
+      "y": 15991,
+      "w": 42,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_court_west_23",
+      "type": "cityBuilding",
+      "x": 3734.0299999999997,
+      "y": 15971,
+      "w": 128.05999999999995,
+      "h": 212.84,
+      "visualWidth": 128.05999999999995,
+      "frontY": 15979,
+      "cityFootprint": {
+        "x": 3677.6836,
+        "y": 15872.58,
+        "w": 112.69279999999995,
+        "h": 106.42
+      },
+      "cityArt": "facade-13",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_court_east_23",
+      "type": "cityBuilding",
+      "x": 3934.0299999999997,
+      "y": 15963,
+      "w": 169.94000000000005,
+      "h": 212.84,
+      "visualWidth": 169.94000000000005,
+      "frontY": 15971,
+      "cityFootprint": {
+        "x": 3859.2563999999998,
+        "y": 15864.58,
+        "w": 149.54720000000006,
+        "h": 106.42
+      },
+      "cityArt": "black-front-5",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_rear_23",
+      "type": "cityBuilding",
+      "x": 3844.5,
+      "y": 15755.03,
+      "w": 317.59000000000003,
+      "h": 143.98000000000002,
+      "visualWidth": 317.59000000000003,
+      "frontY": 15763.03,
+      "cityFootprint": {
+        "x": 3704.7604,
+        "y": 15691.04,
+        "w": 279.47920000000005,
+        "h": 71.99000000000001
+      },
+      "cityArt": "black-front-5",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 1,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_23",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 3997,
+      "y": 15994,
+      "w": 64,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_frontage_24",
+      "type": "cityBuilding",
+      "x": 564.5,
+      "y": 16421,
+      "w": 315.27000000000004,
+      "h": 224,
+      "visualWidth": 315.27000000000004,
+      "frontY": 16429,
+      "cityFootprint": {
+        "x": 425.7812,
+        "y": 16317,
+        "w": 277.43760000000003,
+        "h": 112
+      },
+      "cityArt": "black-front-10",
+      "flip": true,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_24",
+      "type": "cityBuilding",
+      "x": 495.683,
+      "y": 16188.02,
+      "w": 183.06,
+      "h": 156,
+      "visualWidth": 183.06,
+      "frontY": 16196.02,
+      "cityFootprint": {
+        "x": 415.1366,
+        "y": 16118.02,
+        "w": 161.0928,
+        "h": 78
+      },
+      "cityArt": "urban-landmark-9",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_24",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 712,
+      "y": 16444,
+      "w": 68,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_arcade_24",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 410,
+      "y": 16441,
+      "w": 42,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_frontage_25",
+      "type": "cityBuilding",
+      "x": 1012,
+      "y": 16421,
+      "w": 347.82,
+      "h": 224,
+      "visualWidth": 347.82,
+      "frontY": 16429,
+      "cityFootprint": {
+        "x": 858.9592,
+        "y": 16317,
+        "w": 306.0816,
+        "h": 112
+      },
+      "cityArt": "black-front-15",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_25",
+      "type": "cityBuilding",
+      "x": 936.078,
+      "y": 16188.02,
+      "w": 201.96,
+      "h": 156,
+      "visualWidth": 201.96,
+      "frontY": 16196.02,
+      "cityFootprint": {
+        "x": 847.2156,
+        "y": 16118.02,
+        "w": 177.72480000000002,
+        "h": 78
+      },
+      "cityArt": "black-front-4",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_25",
+      "type": "streetFixture",
+      "painting": "civic-8",
+      "x": 1177,
+      "y": 16444,
+      "w": 82,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_square_26",
+      "type": "cityBuilding",
+      "x": 1464.5,
+      "y": 16219.79,
+      "w": 272.22,
+      "h": 169.44,
+      "visualWidth": 272.22,
+      "frontY": 16227.79,
+      "cityFootprint": {
+        "x": 1344.7232,
+        "y": 16143.070000000002,
+        "w": 239.55360000000002,
+        "h": 84.72
+      },
+      "cityArt": "urban-landmark-6",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_square_clock_26",
+      "type": "streetFixture",
+      "painting": "civic-1",
+      "x": 1308,
+      "y": 16424,
+      "w": 48,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_square_27",
+      "type": "cityBuilding",
+      "x": 1962,
+      "y": 16219.79,
+      "w": 285,
+      "h": 169.44,
+      "visualWidth": 285,
+      "frontY": 16227.79,
+      "cityFootprint": {
+        "x": 1836.6,
+        "y": 16143.070000000002,
+        "w": 250.8,
+        "h": 84.72
+      },
+      "cityArt": "urban-landmark-10",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_square_clock_27",
+      "type": "streetFixture",
+      "painting": "civic-1",
+      "x": 1748,
+      "y": 16424,
+      "w": 48,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_court_west_28",
+      "type": "cityBuilding",
+      "x": 2349.0299999999997,
+      "y": 16421,
+      "w": 128.05999999999995,
+      "h": 236,
+      "visualWidth": 128.05999999999995,
+      "frontY": 16429,
+      "cityFootprint": {
+        "x": 2292.6836,
+        "y": 16311,
+        "w": 112.69279999999995,
+        "h": 118
+      },
+      "cityArt": "facade-13",
+      "flip": true,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_court_east_28",
+      "type": "cityBuilding",
+      "x": 2549.0299999999997,
+      "y": 16413,
+      "w": 169.94000000000005,
+      "h": 240,
+      "visualWidth": 169.94000000000005,
+      "frontY": 16421,
+      "cityFootprint": {
+        "x": 2474.2563999999998,
+        "y": 16301,
+        "w": 149.54720000000006,
+        "h": 120
+      },
+      "cityArt": "black-front-14",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_rear_28",
+      "type": "cityBuilding",
+      "x": 2459.5,
+      "y": 16177.43,
+      "w": 317.59000000000003,
+      "h": 162,
+      "visualWidth": 317.59000000000003,
+      "frontY": 16185.43,
+      "cityFootprint": {
+        "x": 2319.7604,
+        "y": 16104.43,
+        "w": 279.47920000000005,
+        "h": 81
+      },
+      "cityArt": "black-front-14",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_28",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 2612,
+      "y": 16444,
+      "w": 82,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_arcade_28",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 2300,
+      "y": 16441,
+      "w": 42,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_court_west_29",
+      "type": "cityBuilding",
+      "x": 2793.4300000000003,
+      "y": 16421,
+      "w": 136.86000000000013,
+      "h": 236,
+      "visualWidth": 136.86000000000013,
+      "frontY": 16429,
+      "cityFootprint": {
+        "x": 2733.2116,
+        "y": 16311,
+        "w": 120.43680000000012,
+        "h": 118
+      },
+      "cityArt": "facade-14",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_court_east_29",
+      "type": "cityBuilding",
+      "x": 3003.4300000000003,
+      "y": 16413,
+      "w": 181.13999999999987,
+      "h": 240,
+      "visualWidth": 181.13999999999987,
+      "frontY": 16421,
+      "cityFootprint": {
+        "x": 2923.7284000000004,
+        "y": 16301,
+        "w": 159.40319999999988,
+        "h": 120
+      },
+      "cityArt": "black-front-4",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_rear_29",
+      "type": "cityBuilding",
+      "x": 2909.5,
+      "y": 16177.43,
+      "w": 335.79,
+      "h": 162,
+      "visualWidth": 335.79,
+      "frontY": 16185.43,
+      "cityFootprint": {
+        "x": 2761.7524,
+        "y": 16104.43,
+        "w": 295.4952,
+        "h": 81
+      },
+      "cityArt": "black-front-4",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_29",
+      "type": "streetFixture",
+      "painting": "civic-3",
+      "x": 3072,
+      "y": 16444,
+      "w": 64,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_court_west_30",
+      "type": "cityBuilding",
+      "x": 3282.5699999999997,
+      "y": 16421,
+      "w": 195.13999999999987,
+      "h": 236,
+      "visualWidth": 195.13999999999987,
+      "frontY": 16429,
+      "cityFootprint": {
+        "x": 3196.7084,
+        "y": 16311,
+        "w": 171.72319999999988,
+        "h": 118
+      },
+      "cityArt": "black-front-1",
+      "flip": true,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_court_east_30",
+      "type": "cityBuilding",
+      "x": 3505.0699999999997,
+      "y": 16413,
+      "w": 147.86000000000013,
+      "h": 240,
+      "visualWidth": 147.86000000000013,
+      "frontY": 16421,
+      "cityFootprint": {
+        "x": 3440.0116,
+        "y": 16301,
+        "w": 130.11680000000013,
+        "h": 120
+      },
+      "cityArt": "facade-10",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_rear_30",
+      "type": "cityBuilding",
+      "x": 3382,
+      "y": 16177.43,
+      "w": 358.54,
+      "h": 162,
+      "visualWidth": 358.54,
+      "frontY": 16185.43,
+      "cityFootprint": {
+        "x": 3224.2424,
+        "y": 16104.43,
+        "w": 315.5152,
+        "h": 81
+      },
+      "cityArt": "black-front-15",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_30",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 3557,
+      "y": 16444,
+      "w": 68,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_arcade_30",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 3200,
+      "y": 16441,
+      "w": 42,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_frontage_31",
+      "type": "cityBuilding",
+      "x": 3844.5,
+      "y": 16421,
+      "w": 338.53,
+      "h": 224,
+      "visualWidth": 338.53,
+      "frontY": 16429,
+      "cityFootprint": {
+        "x": 3695.5468,
+        "y": 16317,
+        "w": 297.90639999999996,
+        "h": 112
+      },
+      "cityArt": "black-front-7",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_31",
+      "type": "cityBuilding",
+      "x": 3844.5,
+      "y": 16188.02,
+      "w": 226,
+      "h": 156,
+      "visualWidth": 226,
+      "frontY": 16196.02,
+      "cityFootprint": {
+        "x": 3745.06,
+        "y": 16118.02,
+        "w": 198.88,
+        "h": 78
+      },
+      "cityArt": "black-front-2",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_31",
+      "type": "streetFixture",
+      "painting": "civic-8",
+      "x": 3997,
+      "y": 16444,
+      "w": 82,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_frontage_32",
+      "type": "cityBuilding",
+      "x": 564.5,
+      "y": 16871,
+      "w": 328.83,
+      "h": 224,
+      "visualWidth": 328.83,
+      "frontY": 16879,
+      "cityFootprint": {
+        "x": 419.8148,
+        "y": 16767,
+        "w": 289.37039999999996,
+        "h": 112
+      },
+      "cityArt": "black-front-14",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_32",
+      "type": "cityBuilding",
+      "x": 564.5,
+      "y": 16638.02,
+      "w": 226,
+      "h": 156,
+      "visualWidth": 226,
+      "frontY": 16646.02,
+      "cityFootprint": {
+        "x": 465.06,
+        "y": 16568.02,
+        "w": 198.88,
+        "h": 78
+      },
+      "cityArt": "black-front-8",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_32",
+      "type": "streetFixture",
+      "painting": "civic-7",
+      "x": 712,
+      "y": 16894,
+      "w": 64,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_arcade_32",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 410,
+      "y": 16891,
+      "w": 42,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_court_west_33",
+      "type": "cityBuilding",
+      "x": 916.97,
+      "y": 16871,
+      "w": 183.94000000000005,
+      "h": 236,
+      "visualWidth": 183.94000000000005,
+      "frontY": 16879,
+      "cityFootprint": {
+        "x": 836.0364,
+        "y": 16761,
+        "w": 161.86720000000005,
+        "h": 118
+      },
+      "cityArt": "black-front-13",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_court_east_33",
+      "type": "cityBuilding",
+      "x": 1129.47,
+      "y": 16863,
+      "w": 139.05999999999995,
+      "h": 240,
+      "visualWidth": 139.05999999999995,
+      "frontY": 16871,
+      "cityFootprint": {
+        "x": 1068.2836,
+        "y": 16751,
+        "w": 122.37279999999996,
+        "h": 120
+      },
+      "cityArt": "facade-8",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_rear_33",
+      "type": "cityBuilding",
+      "x": 1012,
+      "y": 16627.43,
+      "w": 340.34000000000003,
+      "h": 162,
+      "visualWidth": 340.34000000000003,
+      "frontY": 16635.43,
+      "cityFootprint": {
+        "x": 862.2504,
+        "y": 16554.43,
+        "w": 299.49920000000003,
+        "h": 81
+      },
+      "cityArt": "black-front-10",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_33",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 1177,
+      "y": 16894,
+      "w": 68,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_frontage_34",
+      "type": "cityBuilding",
+      "x": 1464.5,
+      "y": 16871,
+      "w": 324.57,
+      "h": 224,
+      "visualWidth": 324.57,
+      "frontY": 16879,
+      "cityFootprint": {
+        "x": 1321.6892,
+        "y": 16767,
+        "w": 285.6216,
+        "h": 112
+      },
+      "cityArt": "black-front-12",
+      "flip": true,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_34",
+      "type": "cityBuilding",
+      "x": 1393.653,
+      "y": 16638.02,
+      "w": 188.46,
+      "h": 156,
+      "visualWidth": 188.46,
+      "frontY": 16646.02,
+      "cityFootprint": {
+        "x": 1310.7306,
+        "y": 16568.02,
+        "w": 165.84480000000002,
+        "h": 78
+      },
+      "cityArt": "urban-landmark-9",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_34",
+      "type": "streetFixture",
+      "painting": "civic-3",
+      "x": 1617,
+      "y": 16894,
+      "w": 82,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_arcade_34",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 1305,
+      "y": 16891,
+      "w": 42,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_frontage_35",
+      "type": "cityBuilding",
+      "x": 1962,
+      "y": 16871,
+      "w": 431.52000000000004,
+      "h": 224,
+      "visualWidth": 431.52000000000004,
+      "frontY": 16879,
+      "cityFootprint": {
+        "x": 1772.1312,
+        "y": 16767,
+        "w": 379.73760000000004,
+        "h": 112
+      },
+      "cityArt": "black-front-8",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_35",
+      "type": "cityBuilding",
+      "x": 1854.3,
+      "y": 16638.02,
+      "w": 226,
+      "h": 156,
+      "visualWidth": 226,
+      "frontY": 16646.02,
+      "cityFootprint": {
+        "x": 1754.86,
+        "y": 16568.02,
+        "w": 198.88,
+        "h": 78
+      },
+      "cityArt": "black-front-3",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_35",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 2172,
+      "y": 16894,
+      "w": 64,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_works_36",
+      "type": "cityBuilding",
+      "x": 2469.97,
+      "y": 16863,
+      "w": 300.14,
+      "h": 260,
+      "visualWidth": 300.14,
+      "frontY": 16871,
+      "cityFootprint": {
+        "x": 2337.9084,
+        "y": 16741,
+        "w": 264.1232,
+        "h": 130
+      },
+      "cityArt": "urban-landmark-7",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_siding_36",
+      "type": "streetFixture",
+      "painting": "civic-7",
+      "x": 2310,
+      "y": 16571,
+      "w": 48,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_court_west_37",
+      "type": "cityBuilding",
+      "x": 2793.4300000000003,
+      "y": 16871,
+      "w": 136.86000000000013,
+      "h": 236,
+      "visualWidth": 136.86000000000013,
+      "frontY": 16879,
+      "cityFootprint": {
+        "x": 2733.2116,
+        "y": 16761,
+        "w": 120.43680000000012,
+        "h": 118
+      },
+      "cityArt": "facade-9",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_court_east_37",
+      "type": "cityBuilding",
+      "x": 3003.4300000000003,
+      "y": 16863,
+      "w": 181.13999999999987,
+      "h": 240,
+      "visualWidth": 181.13999999999987,
+      "frontY": 16871,
+      "cityFootprint": {
+        "x": 2923.7284000000004,
+        "y": 16751,
+        "w": 159.40319999999988,
+        "h": 120
+      },
+      "cityArt": "black-front-10",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_rear_37",
+      "type": "cityBuilding",
+      "x": 2909.5,
+      "y": 16627.43,
+      "w": 335.79,
+      "h": 162,
+      "visualWidth": 335.79,
+      "frontY": 16635.43,
+      "cityFootprint": {
+        "x": 2761.7524,
+        "y": 16554.43,
+        "w": 295.4952,
+        "h": 81
+      },
+      "cityArt": "black-front-10",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_37",
+      "type": "streetFixture",
+      "painting": "civic-0",
+      "x": 3072,
+      "y": 16894,
+      "w": 82,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_frontage_38",
+      "type": "cityBuilding",
+      "x": 3382,
+      "y": 16871,
+      "w": 366.42,
+      "h": 224,
+      "visualWidth": 366.42,
+      "frontY": 16879,
+      "cityFootprint": {
+        "x": 3220.7752,
+        "y": 16767,
+        "w": 322.44960000000003,
+        "h": 112
+      },
+      "cityArt": "black-front-11",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_38",
+      "type": "cityBuilding",
+      "x": 3302.018,
+      "y": 16638.02,
+      "w": 212.76000000000002,
+      "h": 156,
+      "visualWidth": 212.76000000000002,
+      "frontY": 16646.02,
+      "cityFootprint": {
+        "x": 3208.4036,
+        "y": 16568.02,
+        "w": 187.2288,
+        "h": 78
+      },
+      "cityArt": "black-front-0",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_38",
+      "type": "streetFixture",
+      "painting": "civic-7",
+      "x": 3557,
+      "y": 16894,
+      "w": 64,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_arcade_38",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 3200,
+      "y": 16891,
+      "w": 42,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_court_west_39",
+      "type": "cityBuilding",
+      "x": 3754.9700000000003,
+      "y": 16871,
+      "w": 169.94000000000005,
+      "h": 236,
+      "visualWidth": 169.94000000000005,
+      "frontY": 16879,
+      "cityFootprint": {
+        "x": 3680.1964000000003,
+        "y": 16761,
+        "w": 149.54720000000006,
+        "h": 118
+      },
+      "cityArt": "black-front-10",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_court_east_39",
+      "type": "cityBuilding",
+      "x": 3954.9700000000003,
+      "y": 16863,
+      "w": 128.05999999999995,
+      "h": 240,
+      "visualWidth": 128.05999999999995,
+      "frontY": 16871,
+      "cityFootprint": {
+        "x": 3898.6236000000004,
+        "y": 16751,
+        "w": 112.69279999999995,
+        "h": 120
+      },
+      "cityArt": "facade-14",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_rear_39",
+      "type": "cityBuilding",
+      "x": 3844.5,
+      "y": 16627.43,
+      "w": 317.59000000000003,
+      "h": 162,
+      "visualWidth": 317.59000000000003,
+      "frontY": 16635.43,
+      "cityFootprint": {
+        "x": 3704.7604,
+        "y": 16554.43,
+        "w": 279.47920000000005,
+        "h": 81
+      },
+      "cityArt": "black-front-3",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_39",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 3997,
+      "y": 16894,
+      "w": 68,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_court_west_40",
+      "type": "cityBuilding",
+      "x": 456.83,
+      "y": 17341,
+      "w": 123.65999999999997,
+      "h": 236,
+      "visualWidth": 123.65999999999997,
+      "frontY": 17349,
+      "cityFootprint": {
+        "x": 402.4196,
+        "y": 17231,
+        "w": 108.82079999999998,
+        "h": 118
+      },
+      "cityArt": "facade-15",
+      "flip": true,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_court_east_40",
+      "type": "cityBuilding",
+      "x": 651.8299999999999,
+      "y": 17333,
+      "w": 164.34000000000003,
+      "h": 240,
+      "visualWidth": 164.34000000000003,
+      "frontY": 17341,
+      "cityFootprint": {
+        "x": 579.5203999999999,
+        "y": 17221,
+        "w": 144.61920000000003,
+        "h": 120
+      },
+      "cityArt": "black-front-11",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_rear_40",
+      "type": "cityBuilding",
+      "x": 564.5,
+      "y": 17083.63,
+      "w": 308.49,
+      "h": 162,
+      "visualWidth": 308.49,
+      "frontY": 17091.63,
+      "cityFootprint": {
+        "x": 428.7644,
+        "y": 17010.63,
+        "w": 271.4712,
+        "h": 81
+      },
+      "cityArt": "black-front-11",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_40",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 712,
+      "y": 17364,
+      "w": 82,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_arcade_40",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 410,
+      "y": 17361,
+      "w": 42,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_frontage_41",
+      "type": "cityBuilding",
+      "x": 1012,
+      "y": 17341,
+      "w": 347.82,
+      "h": 224,
+      "visualWidth": 347.82,
+      "frontY": 17349,
+      "cityFootprint": {
+        "x": 858.9592,
+        "y": 17237,
+        "w": 306.0816,
+        "h": 112
+      },
+      "cityArt": "black-front-6",
+      "flip": true,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_41",
+      "type": "cityBuilding",
+      "x": 936.078,
+      "y": 17094.82,
+      "w": 201.96,
+      "h": 156,
+      "visualWidth": 201.96,
+      "frontY": 17102.82,
+      "cityFootprint": {
+        "x": 847.2156,
+        "y": 17024.82,
+        "w": 177.72480000000002,
+        "h": 78
+      },
+      "cityArt": "black-front-6",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_41",
+      "type": "streetFixture",
+      "painting": "civic-8",
+      "x": 1177,
+      "y": 17364,
+      "w": 64,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_works_42",
+      "type": "cityBuilding",
+      "x": 1474.97,
+      "y": 17333,
+      "w": 300.14,
+      "h": 260,
+      "visualWidth": 300.14,
+      "frontY": 17341,
+      "cityFootprint": {
+        "x": 1342.9084,
+        "y": 17211,
+        "w": 264.1232,
+        "h": 130
+      },
+      "cityArt": "urban-landmark-8",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_siding_42",
+      "type": "streetFixture",
+      "painting": "civic-7",
+      "x": 1315,
+      "y": 17021,
+      "w": 48,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_court_west_43",
+      "type": "cityBuilding",
+      "x": 1847.17,
+      "y": 17341,
+      "w": 234.34000000000015,
+      "h": 236,
+      "visualWidth": 234.34000000000015,
+      "frontY": 17349,
+      "cityFootprint": {
+        "x": 1744.0604,
+        "y": 17231,
+        "w": 206.21920000000014,
+        "h": 118
+      },
+      "cityArt": "black-front-2",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_court_east_43",
+      "type": "cityBuilding",
+      "x": 2104.67,
+      "y": 17333,
+      "w": 178.65999999999985,
+      "h": 240,
+      "visualWidth": 178.65999999999985,
+      "frontY": 17341,
+      "cityFootprint": {
+        "x": 2026.0596,
+        "y": 17221,
+        "w": 157.22079999999988,
+        "h": 120
+      },
+      "cityArt": "black-front-12",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_rear_43",
+      "type": "cityBuilding",
+      "x": 1962,
+      "y": 17083.63,
+      "w": 422.24,
+      "h": 162,
+      "visualWidth": 422.24,
+      "frontY": 17091.63,
+      "cityFootprint": {
+        "x": 1776.2144,
+        "y": 17010.63,
+        "w": 371.57120000000003,
+        "h": 81
+      },
+      "cityArt": "black-front-12",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 2,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_43",
+      "type": "streetFixture",
+      "painting": "civic-7",
+      "x": 2172,
+      "y": 17364,
+      "w": 82,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_frontage_44",
+      "type": "cityBuilding",
+      "x": 2459.5,
+      "y": 17341,
+      "w": 338.53,
+      "h": 224,
+      "visualWidth": 338.53,
+      "frontY": 17349,
+      "cityFootprint": {
+        "x": 2310.5468,
+        "y": 17237,
+        "w": 297.90639999999996,
+        "h": 112
+      },
+      "cityArt": "black-front-1",
+      "flip": true,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_44",
+      "type": "cityBuilding",
+      "x": 2459.5,
+      "y": 17094.82,
+      "w": 226,
+      "h": 156,
+      "visualWidth": 226,
+      "frontY": 17102.82,
+      "cityFootprint": {
+        "x": 2360.06,
+        "y": 17024.82,
+        "w": 198.88,
+        "h": 78
+      },
+      "cityArt": "black-front-11",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_44",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 2612,
+      "y": 17364,
+      "w": 64,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_arcade_44",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 2300,
+      "y": 17361,
+      "w": 42,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_frontage_45",
+      "type": "cityBuilding",
+      "x": 2909.5,
+      "y": 17341,
+      "w": 343.17,
+      "h": 224,
+      "visualWidth": 343.17,
+      "frontY": 17349,
+      "cityFootprint": {
+        "x": 2758.5052,
+        "y": 17237,
+        "w": 301.9896,
+        "h": 112
+      },
+      "cityArt": "black-front-7",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_45",
+      "type": "cityBuilding",
+      "x": 2834.593,
+      "y": 17094.82,
+      "w": 199.26000000000002,
+      "h": 156,
+      "visualWidth": 199.26000000000002,
+      "frontY": 17102.82,
+      "cityFootprint": {
+        "x": 2746.9186,
+        "y": 17024.82,
+        "w": 175.3488,
+        "h": 78
+      },
+      "cityArt": "urban-landmark-8",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_45",
+      "type": "streetFixture",
+      "painting": "civic-3",
+      "x": 3072,
+      "y": 17364,
+      "w": 68,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_court_west_46",
+      "type": "cityBuilding",
+      "x": 3258.9300000000003,
+      "y": 17341,
+      "w": 147.86000000000013,
+      "h": 236,
+      "visualWidth": 147.86000000000013,
+      "frontY": 17349,
+      "cityFootprint": {
+        "x": 3193.8716000000004,
+        "y": 17231,
+        "w": 130.11680000000013,
+        "h": 118
+      },
+      "cityArt": "facade-13",
+      "flip": true,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_court_east_46",
+      "type": "cityBuilding",
+      "x": 3481.4300000000003,
+      "y": 17333,
+      "w": 195.13999999999987,
+      "h": 240,
+      "visualWidth": 195.13999999999987,
+      "frontY": 17341,
+      "cityFootprint": {
+        "x": 3395.5684000000006,
+        "y": 17221,
+        "w": 171.72319999999988,
+        "h": 120
+      },
+      "cityArt": "black-front-7",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_rear_46",
+      "type": "cityBuilding",
+      "x": 3382,
+      "y": 17083.63,
+      "w": 358.54,
+      "h": 162,
+      "visualWidth": 358.54,
+      "frontY": 17091.63,
+      "cityFootprint": {
+        "x": 3224.2424,
+        "y": 17010.63,
+        "w": 315.5152,
+        "h": 81
+      },
+      "cityArt": "black-front-7",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_46",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 3557,
+      "y": 17364,
+      "w": 82,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_arcade_46",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 3200,
+      "y": 17361,
+      "w": 42,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_frontage_47",
+      "type": "cityBuilding",
+      "x": 3844.5,
+      "y": 17341,
+      "w": 324.57,
+      "h": 224,
+      "visualWidth": 324.57,
+      "frontY": 17349,
+      "cityFootprint": {
+        "x": 3701.6892,
+        "y": 17237,
+        "w": 285.6216,
+        "h": 112
+      },
+      "cityArt": "black-front-14",
+      "flip": true,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_upper_47",
+      "type": "cityBuilding",
+      "x": 3773.653,
+      "y": 17094.82,
+      "w": 188.46,
+      "h": 156,
+      "visualWidth": 188.46,
+      "frontY": 17102.82,
+      "cityFootprint": {
+        "x": 3690.7306,
+        "y": 17024.82,
+        "w": 165.84480000000002,
+        "h": 78
+      },
+      "cityArt": "black-front-12",
+      "flip": false,
+      "cityKey": "blackglass",
+      "district": 3,
+      "region": 7,
+      "solid": true,
+      "variant": 0
+    },
+    {
+      "id": "city_blackglass_stoop_47",
+      "type": "streetFixture",
+      "painting": "civic-8",
+      "x": 3997,
+      "y": 17364,
+      "w": 64,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_lead_0",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 2628,
+      "y": 14739,
+      "w": 71,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_lead_1",
+      "type": "streetFixture",
+      "painting": "civic-7",
+      "x": 728,
+      "y": 15104,
+      "w": 71,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_lead_2",
+      "type": "streetFixture",
+      "painting": "civic-1",
+      "x": 3088,
+      "y": 16454,
+      "w": 71,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_lead_3",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 1193,
+      "y": 16904,
+      "w": 71,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_lead_4",
+      "type": "streetFixture",
+      "painting": "civic-9",
+      "x": 3573,
+      "y": 15594,
+      "w": 71,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_lead_5",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 298,
+      "y": 16454,
+      "w": 71,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_light_0",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 837,
+      "y": 14815,
+      "w": 43,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_resident_0",
+      "type": "friendlyCat",
+      "x": 780,
+      "y": 14765,
+      "homeX": 780,
+      "homeY": 14765,
+      "w": 108,
+      "h": 72,
+      "role": 0,
+      "skin": 0,
+      "phase": 0,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          74,
+          0
+        ],
+        [
+          112,
+          0
+        ]
+      ],
+      "friendly": true,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_light_1",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 1742,
+      "y": 16080,
+      "w": 43,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_resident_1",
+      "type": "friendlyCat",
+      "x": 1685,
+      "y": 16030,
+      "homeX": 1685,
+      "homeY": 16030,
+      "w": 108,
+      "h": 72,
+      "role": 1,
+      "skin": 1,
+      "phase": 0.7,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          74,
+          0
+        ],
+        [
+          112,
+          0
+        ]
+      ],
+      "friendly": true,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_light_2",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 2297,
+      "y": 15670,
+      "w": 43,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_resident_2",
+      "type": "friendlyCat",
+      "x": 2240,
+      "y": 15620,
+      "homeX": 2240,
+      "homeY": 15620,
+      "w": 108,
+      "h": 72,
+      "role": 2,
+      "skin": 2,
+      "phase": 1.4,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          74,
+          0
+        ],
+        [
+          112,
+          0
+        ]
+      ],
+      "friendly": true,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_light_3",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 3197,
+      "y": 16530,
+      "w": 43,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_resident_3",
+      "type": "friendlyCat",
+      "x": 3140,
+      "y": 16480,
+      "homeX": 3140,
+      "homeY": 16480,
+      "w": 108,
+      "h": 72,
+      "role": 3,
+      "skin": 3,
+      "phase": 2.0999999999999996,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          74,
+          0
+        ],
+        [
+          112,
+          0
+        ]
+      ],
+      "friendly": true,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_light_4",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 407,
+      "y": 16530,
+      "w": 43,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_resident_4",
+      "type": "friendlyCat",
+      "x": 350,
+      "y": 16480,
+      "homeX": 350,
+      "homeY": 16480,
+      "w": 108,
+      "h": 72,
+      "role": 4,
+      "skin": 0,
+      "phase": 2.8,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          74,
+          0
+        ],
+        [
+          112,
+          0
+        ]
+      ],
+      "friendly": true,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_light_5",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 2737,
+      "y": 17450,
+      "w": 43,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_resident_5",
+      "type": "friendlyCat",
+      "x": 2680,
+      "y": 17400,
+      "homeX": 2680,
+      "homeY": 17400,
+      "w": 108,
+      "h": 72,
+      "role": 5,
+      "skin": 1,
+      "phase": 3.5,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          74,
+          0
+        ],
+        [
+          112,
+          0
+        ]
+      ],
+      "friendly": true,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_light_6",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 4122,
+      "y": 15180,
+      "w": 43,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_resident_6",
+      "type": "friendlyCat",
+      "x": 4065,
+      "y": 15130,
+      "homeX": 4065,
+      "homeY": 15130,
+      "w": 108,
+      "h": 72,
+      "role": 0,
+      "skin": 2,
+      "phase": 4.199999999999999,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          74,
+          0
+        ],
+        [
+          112,
+          0
+        ]
+      ],
+      "friendly": true,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_light_7",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 1302,
+      "y": 16980,
+      "w": 43,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_resident_7",
+      "type": "friendlyCat",
+      "x": 1245,
+      "y": 16930,
+      "homeX": 1245,
+      "homeY": 16930,
+      "w": 108,
+      "h": 72,
+      "role": 1,
+      "skin": 3,
+      "phase": 4.8999999999999995,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          74,
+          0
+        ],
+        [
+          112,
+          0
+        ]
+      ],
+      "friendly": true,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_light_8",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 1742,
+      "y": 15180,
+      "w": 43,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_resident_8",
+      "type": "friendlyCat",
+      "x": 1685,
+      "y": 15130,
+      "homeX": 1685,
+      "homeY": 15130,
+      "w": 108,
+      "h": 72,
+      "role": 2,
+      "skin": 0,
+      "phase": 5.6,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          74,
+          0
+        ],
+        [
+          112,
+          0
+        ]
+      ],
+      "friendly": true,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_light_9",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 3682,
+      "y": 16080,
+      "w": 43,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_resident_9",
+      "type": "friendlyCat",
+      "x": 3625,
+      "y": 16030,
+      "homeX": 3625,
+      "homeY": 16030,
+      "w": 108,
+      "h": 72,
+      "role": 3,
+      "skin": 1,
+      "phase": 6.3,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          74,
+          0
+        ],
+        [
+          112,
+          0
+        ]
+      ],
+      "friendly": true,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_tram_stop",
+      "type": "streetFixture",
+      "painting": "civic-5",
+      "x": 1725,
+      "y": 8555,
+      "w": 105,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "city_blackglass_streetcar",
+      "type": "streetFixture",
+      "painting": "civic-10",
+      "x": 2830,
+      "y": 14740,
+      "w": 120,
+      "h": 85,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_7_street_regular_0",
+      "type": "friendlyCat",
+      "x": 1430,
+      "y": 8680,
+      "homeX": 1430,
+      "homeY": 8680,
+      "w": 100,
+      "h": 72,
+      "role": 1,
+      "skin": 0,
+      "phase": 0,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          -65,
+          0
+        ],
+        [
+          0,
+          -50
+        ]
+      ],
+      "region": 7,
+      "friendly": true,
+      "locationId": "town_7",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_7_street_regular_2",
+      "type": "friendlyCat",
+      "x": 1585,
+      "y": 8730,
+      "homeX": 1585,
+      "homeY": 8730,
+      "w": 100,
+      "h": 72,
+      "role": 3,
+      "skin": 2,
+      "phase": 3.4,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 7,
+      "friendly": true,
+      "locationId": "town_7",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_7_street_regular_3",
+      "type": "friendlyCat",
+      "x": 1565,
+      "y": 8795,
+      "homeX": 1565,
+      "homeY": 8795,
+      "w": 100,
+      "h": 72,
+      "role": 4,
+      "skin": 3,
+      "phase": 5.1,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 7,
+      "friendly": true,
+      "locationId": "town_7",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_7_street_regular_4",
+      "type": "friendlyCat",
+      "x": 1655,
+      "y": 8800,
+      "homeX": 1655,
+      "homeY": 8800,
+      "w": 100,
+      "h": 72,
+      "role": 5,
+      "skin": 0,
+      "phase": 6.8,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 7,
+      "friendly": true,
+      "locationId": "town_7",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_7_street_regular_5",
+      "type": "friendlyCat",
+      "x": 1725,
+      "y": 8830,
+      "homeX": 1725,
+      "homeY": 8830,
+      "w": 100,
+      "h": 72,
+      "role": 0,
+      "skin": 1,
+      "phase": 8.5,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          -65,
+          0
+        ]
+      ],
+      "region": 7,
+      "friendly": true,
+      "locationId": "town_7",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_7_street_regular_7",
+      "type": "friendlyCat",
+      "x": 1355,
+      "y": 8835,
+      "homeX": 1355,
+      "homeY": 8835,
+      "w": 100,
+      "h": 72,
+      "role": 2,
+      "skin": 3,
+      "phase": 11.9,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 7,
+      "friendly": true,
+      "locationId": "town_7",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_7_street_regular_8",
+      "type": "friendlyCat",
+      "x": 1320,
+      "y": 8805,
+      "homeX": 1320,
+      "homeY": 8805,
+      "w": 100,
+      "h": 72,
+      "role": 3,
+      "skin": 0,
+      "phase": 13.6,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 7,
+      "friendly": true,
+      "locationId": "town_7",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_7_street_regular_9",
+      "type": "friendlyCat",
+      "x": 1280,
+      "y": 8755,
+      "homeX": 1280,
+      "homeY": 8755,
+      "w": 100,
+      "h": 72,
+      "role": 4,
+      "skin": 1,
+      "phase": 15.299999999999999,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 7,
+      "friendly": true,
+      "locationId": "town_7",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_7_street_regular_10",
+      "type": "friendlyCat",
+      "x": 1430,
+      "y": 8680,
+      "homeX": 1430,
+      "homeY": 8680,
+      "w": 100,
+      "h": 72,
+      "role": 5,
+      "skin": 2,
+      "phase": 17,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          -65,
+          0
+        ],
+        [
+          0,
+          -50
+        ]
+      ],
+      "region": 7,
+      "friendly": true,
+      "locationId": "town_7",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_7_city_trade_0",
+      "type": "streetFixture",
+      "painting": "civic-2",
+      "x": 1042,
+      "y": 8815,
+      "w": 115,
+      "h": 100,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_7_city_trade_1",
+      "type": "streetFixture",
+      "painting": "civic-8",
+      "x": 1770,
+      "y": 9015,
+      "w": 140,
+      "h": 100,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_7_city_trade_2",
+      "type": "streetFixture",
+      "painting": "civic-6",
+      "x": 1575,
+      "y": 8638,
+      "w": 65,
+      "h": 100,
+      "region": 7,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_7_rowhouses_0",
+      "type": "streetFixture",
+      "painting": "homes-7",
+      "x": 1015,
+      "y": 8560,
+      "w": 165,
+      "h": 120,
+      "region": 7,
+      "solid": false,
+      "variant": 0
+    },
+    {
+      "id": "town_7_rowhouses_1",
+      "type": "streetFixture",
+      "painting": "homes-7",
+      "x": 1845,
+      "y": 8560,
+      "w": 165,
+      "h": 120,
+      "region": 7,
+      "solid": false,
+      "variant": 0
+    },
+    {
+      "id": "town_7_rowhouses_2",
+      "type": "streetFixture",
+      "painting": "homes-7",
+      "x": 890,
+      "y": 8842,
+      "w": 165,
+      "h": 120,
+      "region": 7,
+      "solid": false,
+      "variant": 0
+    },
+    {
+      "id": "town_7_rowhouses_3",
+      "type": "streetFixture",
+      "painting": "homes-7",
+      "x": 1970,
+      "y": 8842,
+      "w": 165,
+      "h": 120,
+      "region": 7,
+      "solid": false,
       "variant": 0
     }
   ]

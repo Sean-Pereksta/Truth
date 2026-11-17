@@ -25,6 +25,7 @@ const read = file => JSON.parse(fs.readFileSync(path.join(root,file),'utf8'));
 const worldFile='maps/world/world.json', world=read(worldFile);
 for (const k of ['seed','width','height','chunkSize','start','regions','locations','roads','rivers','bridges']) world[k]=w[k];
 world.sectors=C.sectors; world.enemySpawnCount=w._spawns.size; world.objectCount=w.objects.length;
+world.cityDistricts=(w.cityZones||[]).map(({id,name,region,left,right,top,bottom,quarters,avenues,tram})=>({id,name,region,left,right,top,bottom,quarters,avenues,tram}));
 write(worldFile,world);
 for (const region of w.regions) {
   const inRegion = e=>e.region===region.index;

@@ -2,7 +2,7 @@
   "locations": [
     {
       "id": "town_10",
-      "name": "Rushlight Landing",
+      "name": "Sluicecross",
       "description": "Reed ferries meet at a brick pumping station.",
       "type": "town",
       "region": 10,
@@ -13,7 +13,7 @@
     },
     {
       "id": "town_11",
-      "name": "Leeward Inn",
+      "name": "Kitehook Station",
       "description": "The bell above the slate switchbacks rings before each gust.",
       "type": "town",
       "region": 11,
@@ -24,7 +24,7 @@
     },
     {
       "id": "town_12",
-      "name": "Lamplighter Refuge",
+      "name": "Boughhall",
       "description": "Rope bridges hang between the roots of an ancient lantern tree.",
       "type": "town",
       "region": 12,

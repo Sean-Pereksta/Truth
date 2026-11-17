@@ -4,9 +4,9 @@
   // Geography uses the original, unscaled world coordinates. Interior plans are
   // in their own 180-pixel grid so scaling an overworld save cannot move a wall.
   const regions = [
-    ['hushfen', 'Hushfen Basin', 'marsh', '#668981', 0, 3700, 7, 'Rushlight Landing', 'Reed ferries meet at a brick pumping station.'],
-    ['glasswind', 'Glasswind Shelf', 'mountain', '#8498b4', 3700, 3700, 12, 'Leeward Inn', 'The bell above the slate switchbacks rings before each gust.'],
-    ['gloamroot', 'Gloamroot Canopy', 'forest', '#827591', 7400, 3800, 17, 'Lamplighter Refuge', 'Rope bridges hang between the roots of an ancient lantern tree.']
+    ['hushfen', 'Hushfen Basin', 'marsh', '#668981', 0, 3700, 7, 'Sluicecross', 'Reed ferries meet at a brick pumping station.'],
+    ['glasswind', 'Glasswind Shelf', 'mountain', '#8498b4', 3700, 3700, 12, 'Kitehook Station', 'The bell above the slate switchbacks rings before each gust.'],
+    ['gloamroot', 'Gloamroot Canopy', 'forest', '#827591', 7400, 3800, 17, 'Boughhall', 'Rope bridges hang between the roots of an ancient lantern tree.']
   ];
   const locations = [];
   regions.forEach(([slug,name,biome,color,y,h,level,town,description], i) => {

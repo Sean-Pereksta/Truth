@@ -1,0 +1,1377 @@
+[
+  {
+    "key": "fieldwork/facade-0",
+    "path": "assets/fieldwork/facade-0.webp",
+    "source": "city-facades",
+    "sourceSize": [
+      1312,
+      1199
+    ],
+    "sourceCrop": [
+      6,
+      6,
+      329,
+      307
+    ],
+    "exportSize": [
+      329,
+      307
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Occupied city architecture"
+  },
+  {
+    "key": "fieldwork/facade-1",
+    "path": "assets/fieldwork/facade-1.webp",
+    "source": "city-facades",
+    "sourceSize": [
+      1312,
+      1199
+    ],
+    "sourceCrop": [
+      329,
+      17,
+      650,
+      308
+    ],
+    "exportSize": [
+      327,
+      297
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Occupied city architecture"
+  },
+  {
+    "key": "fieldwork/facade-2",
+    "path": "assets/fieldwork/facade-2.webp",
+    "source": "city-facades",
+    "sourceSize": [
+      1312,
+      1199
+    ],
+    "sourceCrop": [
+      661,
+      47,
+      978,
+      300
+    ],
+    "exportSize": [
+      323,
+      259
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Occupied city architecture"
+  },
+  {
+    "key": "fieldwork/facade-3",
+    "path": "assets/fieldwork/facade-3.webp",
+    "source": "city-facades",
+    "sourceSize": [
+      1312,
+      1199
+    ],
+    "sourceCrop": [
+      985,
+      5,
+      1308,
+      299
+    ],
+    "exportSize": [
+      329,
+      300
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Occupied city architecture"
+  },
+  {
+    "key": "fieldwork/facade-4",
+    "path": "assets/fieldwork/facade-4.webp",
+    "source": "city-facades",
+    "sourceSize": [
+      1312,
+      1199
+    ],
+    "sourceCrop": [
+      20,
+      320,
+      296,
+      599
+    ],
+    "exportSize": [
+      282,
+      285
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Occupied city architecture"
+  },
+  {
+    "key": "fieldwork/facade-5",
+    "path": "assets/fieldwork/facade-5.webp",
+    "source": "city-facades",
+    "sourceSize": [
+      1312,
+      1199
+    ],
+    "sourceCrop": [
+      320,
+      308,
+      628,
+      595
+    ],
+    "exportSize": [
+      314,
+      293
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Occupied city architecture"
+  },
+  {
+    "key": "fieldwork/facade-6",
+    "path": "assets/fieldwork/facade-6.webp",
+    "source": "city-facades",
+    "sourceSize": [
+      1312,
+      1199
+    ],
+    "sourceCrop": [
+      646,
+      308,
+      973,
+      591
+    ],
+    "exportSize": [
+      333,
+      289
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Occupied city architecture"
+  },
+  {
+    "key": "fieldwork/facade-7",
+    "path": "assets/fieldwork/facade-7.webp",
+    "source": "city-facades",
+    "sourceSize": [
+      1312,
+      1199
+    ],
+    "sourceCrop": [
+      988,
+      309,
+      1299,
+      596
+    ],
+    "exportSize": [
+      317,
+      293
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Occupied city architecture"
+  },
+  {
+    "key": "fieldwork/facade-8",
+    "path": "assets/fieldwork/facade-8.webp",
+    "source": "city-facades",
+    "sourceSize": [
+      1312,
+      1199
+    ],
+    "sourceCrop": [
+      7,
+      601,
+      320,
+      887
+    ],
+    "exportSize": [
+      319,
+      292
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Occupied city architecture"
+  },
+  {
+    "key": "fieldwork/facade-9",
+    "path": "assets/fieldwork/facade-9.webp",
+    "source": "city-facades",
+    "sourceSize": [
+      1312,
+      1199
+    ],
+    "sourceCrop": [
+      336,
+      607,
+      628,
+      888
+    ],
+    "exportSize": [
+      298,
+      287
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Occupied city architecture"
+  },
+  {
+    "key": "fieldwork/facade-10",
+    "path": "assets/fieldwork/facade-10.webp",
+    "source": "city-facades",
+    "sourceSize": [
+      1312,
+      1199
+    ],
+    "sourceCrop": [
+      640,
+      666,
+      989,
+      885
+    ],
+    "exportSize": [
+      355,
+      225
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Occupied city architecture"
+  },
+  {
+    "key": "fieldwork/facade-11",
+    "path": "assets/fieldwork/facade-11.webp",
+    "source": "city-facades",
+    "sourceSize": [
+      1312,
+      1199
+    ],
+    "sourceCrop": [
+      1002,
+      601,
+      1305,
+      887
+    ],
+    "exportSize": [
+      309,
+      292
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Occupied city architecture"
+  },
+  {
+    "key": "fieldwork/facade-12",
+    "path": "assets/fieldwork/facade-12.webp",
+    "source": "city-facades",
+    "sourceSize": [
+      1312,
+      1199
+    ],
+    "sourceCrop": [
+      4,
+      909,
+      341,
+      1189
+    ],
+    "exportSize": [
+      343,
+      286
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Occupied city architecture"
+  },
+  {
+    "key": "fieldwork/facade-13",
+    "path": "assets/fieldwork/facade-13.webp",
+    "source": "city-facades",
+    "sourceSize": [
+      1312,
+      1199
+    ],
+    "sourceCrop": [
+      348,
+      900,
+      650,
+      1179
+    ],
+    "exportSize": [
+      308,
+      285
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Occupied city architecture"
+  },
+  {
+    "key": "fieldwork/facade-14",
+    "path": "assets/fieldwork/facade-14.webp",
+    "source": "city-facades",
+    "sourceSize": [
+      1312,
+      1199
+    ],
+    "sourceCrop": [
+      658,
+      925,
+      952,
+      1179
+    ],
+    "exportSize": [
+      300,
+      260
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Occupied city architecture"
+  },
+  {
+    "key": "fieldwork/facade-15",
+    "path": "assets/fieldwork/facade-15.webp",
+    "source": "city-facades",
+    "sourceSize": [
+      1312,
+      1199
+    ],
+    "sourceCrop": [
+      959,
+      931,
+      1310,
+      1179
+    ],
+    "exportSize": [
+      357,
+      254
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Occupied city architecture"
+  },
+  {
+    "key": "fieldwork/city-ironveil",
+    "path": "assets/fieldwork/city-ironveil.webp",
+    "source": "city-plates",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      0,
+      0,
+      1774,
+      444
+    ],
+    "exportSize": [
+      1360,
+      340
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Occupied city case file"
+  },
+  {
+    "key": "fieldwork/city-blackglass",
+    "path": "assets/fieldwork/city-blackglass.webp",
+    "source": "city-plates",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      0,
+      444,
+      1774,
+      887
+    ],
+    "exportSize": [
+      1360,
+      340
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Occupied city case file"
+  },
+  {
+    "key": "fieldwork/homes-0",
+    "path": "assets/fieldwork/homes-0.webp",
+    "source": "homes",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      7,
+      26,
+      374,
+      339
+    ],
+    "exportSize": [
+      373,
+      319
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "fieldwork/homes-1",
+    "path": "assets/fieldwork/homes-1.webp",
+    "source": "homes",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      380,
+      21,
+      725,
+      339
+    ],
+    "exportSize": [
+      351,
+      324
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "fieldwork/homes-2",
+    "path": "assets/fieldwork/homes-2.webp",
+    "source": "homes",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      729,
+      11,
+      1087,
+      330
+    ],
+    "exportSize": [
+      364,
+      325
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "fieldwork/homes-3",
+    "path": "assets/fieldwork/homes-3.webp",
+    "source": "homes",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1094,
+      24,
+      1444,
+      336
+    ],
+    "exportSize": [
+      356,
+      318
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "fieldwork/homes-4",
+    "path": "assets/fieldwork/homes-4.webp",
+    "source": "homes",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      3,
+      339,
+      367,
+      677
+    ],
+    "exportSize": [
+      370,
+      344
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "fieldwork/homes-5",
+    "path": "assets/fieldwork/homes-5.webp",
+    "source": "homes",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      381,
+      339,
+      708,
+      681
+    ],
+    "exportSize": [
+      333,
+      348
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "fieldwork/homes-6",
+    "path": "assets/fieldwork/homes-6.webp",
+    "source": "homes",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      718,
+      359,
+      1080,
+      678
+    ],
+    "exportSize": [
+      368,
+      325
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "fieldwork/homes-7",
+    "path": "assets/fieldwork/homes-7.webp",
+    "source": "homes",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1090,
+      382,
+      1444,
+      674
+    ],
+    "exportSize": [
+      360,
+      298
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "fieldwork/homes-8",
+    "path": "assets/fieldwork/homes-8.webp",
+    "source": "homes",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      11,
+      719,
+      357,
+      1066
+    ],
+    "exportSize": [
+      352,
+      353
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "fieldwork/homes-9",
+    "path": "assets/fieldwork/homes-9.webp",
+    "source": "homes",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      364,
+      692,
+      715,
+      1080
+    ],
+    "exportSize": [
+      357,
+      394
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "fieldwork/homes-10",
+    "path": "assets/fieldwork/homes-10.webp",
+    "source": "homes",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      722,
+      719,
+      1089,
+      1055
+    ],
+    "exportSize": [
+      373,
+      342
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "fieldwork/civic-0",
+    "path": "assets/fieldwork/civic-0.webp",
+    "source": "civic",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      7,
+      6,
+      413,
+      323
+    ],
+    "exportSize": [
+      412,
+      323
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "fieldwork/civic-1",
+    "path": "assets/fieldwork/civic-1.webp",
+    "source": "civic",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      413,
+      5,
+      653,
+      330
+    ],
+    "exportSize": [
+      246,
+      331
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "fieldwork/civic-2",
+    "path": "assets/fieldwork/civic-2.webp",
+    "source": "civic",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      736,
+      5,
+      1080,
+      330
+    ],
+    "exportSize": [
+      350,
+      331
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "fieldwork/civic-3",
+    "path": "assets/fieldwork/civic-3.webp",
+    "source": "civic",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1112,
+      5,
+      1440,
+      340
+    ],
+    "exportSize": [
+      334,
+      341
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "fieldwork/civic-4",
+    "path": "assets/fieldwork/civic-4.webp",
+    "source": "civic",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      10,
+      349,
+      383,
+      691
+    ],
+    "exportSize": [
+      379,
+      348
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "fieldwork/civic-5",
+    "path": "assets/fieldwork/civic-5.webp",
+    "source": "civic",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      405,
+      367,
+      775,
+      686
+    ],
+    "exportSize": [
+      376,
+      325
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "fieldwork/civic-6",
+    "path": "assets/fieldwork/civic-6.webp",
+    "source": "civic",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      775,
+      348,
+      1015,
+      694
+    ],
+    "exportSize": [
+      246,
+      352
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "fieldwork/civic-7",
+    "path": "assets/fieldwork/civic-7.webp",
+    "source": "civic",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1136,
+      376,
+      1424,
+      666
+    ],
+    "exportSize": [
+      294,
+      296
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "fieldwork/civic-8",
+    "path": "assets/fieldwork/civic-8.webp",
+    "source": "civic",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      5,
+      704,
+      387,
+      1078
+    ],
+    "exportSize": [
+      388,
+      380
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "fieldwork/civic-9",
+    "path": "assets/fieldwork/civic-9.webp",
+    "source": "civic",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      400,
+      700,
+      764,
+      1054
+    ],
+    "exportSize": [
+      370,
+      360
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "fieldwork/civic-10",
+    "path": "assets/fieldwork/civic-10.webp",
+    "source": "civic",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      794,
+      731,
+      1106,
+      1048
+    ],
+    "exportSize": [
+      318,
+      323
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "fieldwork/civic-11",
+    "path": "assets/fieldwork/civic-11.webp",
+    "source": "civic",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1125,
+      715,
+      1443,
+      1050
+    ],
+    "exportSize": [
+      324,
+      341
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Living town structure"
+  },
+  {
+    "key": "tavern/taproom",
+    "path": "assets/tavern/taproom.webp",
+    "source": "bar-room",
+    "sourceSize": [
+      1672,
+      941
+    ],
+    "sourceCrop": [
+      0,
+      0,
+      1672,
+      941
+    ],
+    "exportSize": [
+      1360,
+      765
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Copper Minnow tavern"
+  },
+  {
+    "key": "tavern/barkeep",
+    "path": "assets/tavern/barkeep.webp",
+    "source": "bar-art",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      58,
+      8,
+      419,
+      438
+    ],
+    "exportSize": [
+      367,
+      436
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Copper Minnow tavern"
+  },
+  {
+    "key": "tavern/angler",
+    "path": "assets/tavern/angler.webp",
+    "source": "bar-art",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      478,
+      12,
+      855,
+      438
+    ],
+    "exportSize": [
+      383,
+      432
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Copper Minnow tavern"
+  },
+  {
+    "key": "tavern/dealer",
+    "path": "assets/tavern/dealer.webp",
+    "source": "bar-art",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      945,
+      9,
+      1257,
+      438
+    ],
+    "exportSize": [
+      318,
+      435
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Copper Minnow tavern"
+  },
+  {
+    "key": "tavern/mouse",
+    "path": "assets/tavern/mouse.webp",
+    "source": "bar-art",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      1378,
+      93,
+      1665,
+      442
+    ],
+    "exportSize": [
+      293,
+      355
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Copper Minnow tavern"
+  },
+  {
+    "key": "tavern/chips",
+    "path": "assets/tavern/chips.webp",
+    "source": "bar-art",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      49,
+      513,
+      396,
+      840
+    ],
+    "exportSize": [
+      353,
+      333
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Copper Minnow tavern"
+  },
+  {
+    "key": "tavern/card-back",
+    "path": "assets/tavern/card-back.webp",
+    "source": "bar-art",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      492,
+      458,
+      769,
+      847
+    ],
+    "exportSize": [
+      283,
+      395
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Copper Minnow tavern"
+  },
+  {
+    "key": "tavern/darts",
+    "path": "assets/tavern/darts.webp",
+    "source": "bar-art",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      843,
+      475,
+      1268,
+      860
+    ],
+    "exportSize": [
+      431,
+      391
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Copper Minnow tavern"
+  },
+  {
+    "key": "tavern/exterior",
+    "path": "assets/tavern/exterior.webp",
+    "source": "bar-art",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      1268,
+      442,
+      1759,
+      878
+    ],
+    "exportSize": [
+      460,
+      409
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Copper Minnow tavern"
+  },
+  {
+    "key": "tavern/table-easy",
+    "path": "assets/tavern/table-easy.webp",
+    "source": "bar-tables",
+    "sourceSize": [
+      1312,
+      1199
+    ],
+    "sourceCrop": [
+      39,
+      89,
+      603,
+      489
+    ],
+    "exportSize": [
+      460,
+      328
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Copper Minnow tavern"
+  },
+  {
+    "key": "tavern/table-regular",
+    "path": "assets/tavern/table-regular.webp",
+    "source": "bar-tables",
+    "sourceSize": [
+      1312,
+      1199
+    ],
+    "sourceCrop": [
+      663,
+      20,
+      1283,
+      517
+    ],
+    "exportSize": [
+      460,
+      370
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Copper Minnow tavern"
+  },
+  {
+    "key": "tavern/table-expert",
+    "path": "assets/tavern/table-expert.webp",
+    "source": "bar-tables",
+    "sourceSize": [
+      1312,
+      1199
+    ],
+    "sourceCrop": [
+      10,
+      534,
+      703,
+      1150
+    ],
+    "exportSize": [
+      460,
+      409
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Copper Minnow tavern"
+  },
+  {
+    "key": "tavern/target",
+    "path": "assets/tavern/target.webp",
+    "source": "bar-tables",
+    "sourceSize": [
+      1312,
+      1199
+    ],
+    "sourceCrop": [
+      814,
+      517,
+      1224,
+      1169
+    ],
+    "exportSize": [
+      278,
+      440
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "frames": 1,
+    "consumer": "Copper Minnow tavern"
+  },
+  {
+    "key": "tavern/room",
+    "path": "assets/tavern/room.webp",
+    "source": "bar-floor",
+    "sourceSize": [
+      1672,
+      941
+    ],
+    "sourceCrop": [
+      0,
+      0,
+      1672,
+      941
+    ],
+    "exportSize": [
+      1360,
+      765
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Copper Minnow tavern"
+  }
+]

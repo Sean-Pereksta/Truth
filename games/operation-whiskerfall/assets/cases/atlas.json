@@ -1,0 +1,3977 @@
+[
+  {
+    "key": "cases/main_0_0",
+    "path": "assets/cases/main_0_0.webp",
+    "source": "cases-0",
+    "sourceSize": [
+      1263,
+      1246
+    ],
+    "sourceCrop": [
+      2,
+      2,
+      313,
+      308
+    ],
+    "exportSize": [
+      311,
+      306
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "A Spark in Greenfields \u00b7 Hedgerow bell post"
+  },
+  {
+    "key": "cases/main_0_1",
+    "path": "assets/cases/main_0_1.webp",
+    "source": "cases-0",
+    "sourceSize": [
+      1263,
+      1246
+    ],
+    "sourceCrop": [
+      317,
+      2,
+      629,
+      308
+    ],
+    "exportSize": [
+      312,
+      306
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Cut the Supply Line \u00b7 Roadside dispatch box"
+  },
+  {
+    "key": "cases/main_0_2",
+    "path": "assets/cases/main_0_2.webp",
+    "source": "cases-0",
+    "sourceSize": [
+      1263,
+      1246
+    ],
+    "sourceCrop": [
+      633,
+      2,
+      946,
+      308
+    ],
+    "exportSize": [
+      313,
+      306
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Defeat Colonel Ironwhisker \u00b7 Colonel\u2019s relay book"
+  },
+  {
+    "key": "cases/side_0_0",
+    "path": "assets/cases/side_0_0.webp",
+    "source": "cases-0",
+    "sourceSize": [
+      1263,
+      1246
+    ],
+    "sourceCrop": [
+      950,
+      2,
+      1261,
+      308
+    ],
+    "exportSize": [
+      311,
+      306
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Secrets of Greenfields Reach \u00b7 Ochre handprint"
+  },
+  {
+    "key": "cases/side_0_1",
+    "path": "assets/cases/side_0_1.webp",
+    "source": "cases-0",
+    "sourceSize": [
+      1263,
+      1246
+    ],
+    "sourceCrop": [
+      2,
+      312,
+      313,
+      621
+    ],
+    "exportSize": [
+      311,
+      309
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Supplies for the Resistance \u00b7 Millers\u2019 blue knot"
+  },
+  {
+    "key": "cases/side_0_2",
+    "path": "assets/cases/side_0_2.webp",
+    "source": "cases-0",
+    "sourceSize": [
+      1263,
+      1246
+    ],
+    "sourceCrop": [
+      317,
+      312,
+      629,
+      621
+    ],
+    "exportSize": [
+      312,
+      309
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Bring Them Home \u00b7 Miller Reed\u2019s apron"
+  },
+  {
+    "key": "cases/side_0_3",
+    "path": "assets/cases/side_0_3.webp",
+    "source": "cases-0",
+    "sourceSize": [
+      1263,
+      1246
+    ],
+    "sourceCrop": [
+      633,
+      312,
+      945,
+      621
+    ],
+    "exportSize": [
+      312,
+      309
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Stop the War Convoy \u00b7 Flour wagon switch"
+  },
+  {
+    "key": "cases/side_0_4",
+    "path": "assets/cases/side_0_4.webp",
+    "source": "cases-0",
+    "sourceSize": [
+      1263,
+      1246
+    ],
+    "sourceCrop": [
+      949,
+      312,
+      1261,
+      621
+    ],
+    "exportSize": [
+      312,
+      309
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Reclaim the Countryside \u00b7 Crooked apple brand"
+  },
+  {
+    "key": "cases/escort_0",
+    "path": "assets/cases/escort_0.webp",
+    "source": "cases-0",
+    "sourceSize": [
+      1263,
+      1246
+    ],
+    "sourceCrop": [
+      2,
+      625,
+      313,
+      931
+    ],
+    "exportSize": [
+      311,
+      306
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "A Courier\u2019s First Run \u00b7 Courier\u2019s spare basket"
+  },
+  {
+    "key": "cases/defend_0",
+    "path": "assets/cases/defend_0.webp",
+    "source": "cases-0",
+    "sourceSize": [
+      1263,
+      1246
+    ],
+    "sourceCrop": [
+      317,
+      625,
+      629,
+      931
+    ],
+    "exportSize": [
+      312,
+      306
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Hold the Orchard Road \u00b7 Wagon barricade"
+  },
+  {
+    "key": "cases/assassination_0",
+    "path": "assets/cases/assassination_0.webp",
+    "source": "cases-0",
+    "sourceSize": [
+      1263,
+      1246
+    ],
+    "sourceCrop": [
+      633,
+      625,
+      946,
+      931
+    ],
+    "exportSize": [
+      313,
+      306
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Wanted: Captain Gristle \u00b7 Gristle\u2019s chipped buckle"
+  },
+  {
+    "key": "cases/bounty_0",
+    "path": "assets/cases/bounty_0.webp",
+    "source": "cases-0",
+    "sourceSize": [
+      1263,
+      1246
+    ],
+    "sourceCrop": [
+      950,
+      625,
+      1261,
+      931
+    ],
+    "exportSize": [
+      311,
+      306
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Commander Bounty: General Soot \u00b7 Soot\u2019s burnt orders"
+  },
+  {
+    "key": "cases/main_1_0",
+    "path": "assets/cases/main_1_0.webp",
+    "source": "cases-0",
+    "sourceSize": [
+      1263,
+      1246
+    ],
+    "sourceCrop": [
+      2,
+      935,
+      313,
+      1244
+    ],
+    "exportSize": [
+      311,
+      309
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Into the Mosswood \u00b7 Pine resin tally"
+  },
+  {
+    "key": "cases/main_1_1",
+    "path": "assets/cases/main_1_1.webp",
+    "source": "cases-0",
+    "sourceSize": [
+      1263,
+      1246
+    ],
+    "sourceCrop": [
+      317,
+      935,
+      629,
+      1244
+    ],
+    "exportSize": [
+      312,
+      309
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Silence the Forest Guns \u00b7 Pine pitch drum"
+  },
+  {
+    "key": "cases/main_1_2",
+    "path": "assets/cases/main_1_2.webp",
+    "source": "cases-0",
+    "sourceSize": [
+      1263,
+      1246
+    ],
+    "sourceCrop": [
+      633,
+      935,
+      945,
+      1244
+    ],
+    "exportSize": [
+      312,
+      309
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Defeat Major Bramble \u00b7 Bramble\u2019s tree rings"
+  },
+  {
+    "key": "cases/side_1_0",
+    "path": "assets/cases/side_1_0.webp",
+    "source": "cases-0",
+    "sourceSize": [
+      1263,
+      1246
+    ],
+    "sourceCrop": [
+      949,
+      935,
+      1261,
+      1244
+    ],
+    "exportSize": [
+      312,
+      309
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Secrets of Mosswood Wilds \u00b7 Glowcap spores"
+  },
+  {
+    "key": "cases/side_1_1",
+    "path": "assets/cases/side_1_1.webp",
+    "source": "cases-1",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      2,
+      2,
+      310,
+      313
+    ],
+    "exportSize": [
+      308,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Supplies for the Resistance \u00b7 Woven moss strap"
+  },
+  {
+    "key": "cases/side_1_2",
+    "path": "assets/cases/side_1_2.webp",
+    "source": "cases-1",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      314,
+      2,
+      622,
+      313
+    ],
+    "exportSize": [
+      308,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Bring Them Home \u00b7 Fenn\u2019s bell rope"
+  },
+  {
+    "key": "cases/side_1_3",
+    "path": "assets/cases/side_1_3.webp",
+    "source": "cases-1",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      626,
+      2,
+      934,
+      313
+    ],
+    "exportSize": [
+      308,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Stop the War Convoy \u00b7 Pitch barrel mark"
+  },
+  {
+    "key": "cases/side_1_4",
+    "path": "assets/cases/side_1_4.webp",
+    "source": "cases-1",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      938,
+      2,
+      1245,
+      313
+    ],
+    "exportSize": [
+      307,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Reclaim the Countryside \u00b7 Three pine cuts"
+  },
+  {
+    "key": "cases/escort_1",
+    "path": "assets/cases/escort_1.webp",
+    "source": "cases-1",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      2,
+      317,
+      309,
+      629
+    ],
+    "exportSize": [
+      307,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Letters through Mosswood \u00b7 Bellkeeper\u2019s pouch"
+  },
+  {
+    "key": "cases/defend_1",
+    "path": "assets/cases/defend_1.webp",
+    "source": "cases-1",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      313,
+      317,
+      622,
+      629
+    ],
+    "exportSize": [
+      309,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Hold the Mosswood Road \u00b7 Stream gate"
+  },
+  {
+    "key": "cases/assassination_1",
+    "path": "assets/cases/assassination_1.webp",
+    "source": "cases-1",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      626,
+      317,
+      932,
+      629
+    ],
+    "exportSize": [
+      306,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Wanted: Captain Thorn \u00b7 Thorn\u2019s resin glove"
+  },
+  {
+    "key": "cases/bounty_1",
+    "path": "assets/cases/bounty_1.webp",
+    "source": "cases-1",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      936,
+      317,
+      1245,
+      629
+    ],
+    "exportSize": [
+      309,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Commander Bounty: General Nettle \u00b7 Nettle\u2019s drawstring"
+  },
+  {
+    "key": "cases/main_2_0",
+    "path": "assets/cases/main_2_0.webp",
+    "source": "cases-1",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      2,
+      633,
+      311,
+      941
+    ],
+    "exportSize": [
+      309,
+      308
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Mountain Road \u00b7 Chalked counterweight"
+  },
+  {
+    "key": "cases/main_2_1",
+    "path": "assets/cases/main_2_1.webp",
+    "source": "cases-1",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      315,
+      633,
+      621,
+      941
+    ],
+    "exportSize": [
+      306,
+      308
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Take the High Ground \u00b7 Pulleys at the quarry"
+  },
+  {
+    "key": "cases/main_2_2",
+    "path": "assets/cases/main_2_2.webp",
+    "source": "cases-1",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      625,
+      633,
+      932,
+      941
+    ],
+    "exportSize": [
+      307,
+      308
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Defeat General Flintfang \u00b7 Flintfang\u2019s slate"
+  },
+  {
+    "key": "cases/side_2_0",
+    "path": "assets/cases/side_2_0.webp",
+    "source": "cases-1",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      936,
+      633,
+      1245,
+      941
+    ],
+    "exportSize": [
+      309,
+      308
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Secrets of Stonecrest Highlands \u00b7 Miner\u2019s boot nail"
+  },
+  {
+    "key": "cases/side_2_1",
+    "path": "assets/cases/side_2_1.webp",
+    "source": "cases-1",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      2,
+      945,
+      309,
+      1259
+    ],
+    "exportSize": [
+      307,
+      314
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Supplies for the Resistance \u00b7 Copper boot cleat"
+  },
+  {
+    "key": "cases/side_2_2",
+    "path": "assets/cases/side_2_2.webp",
+    "source": "cases-1",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      313,
+      945,
+      621,
+      1259
+    ],
+    "exportSize": [
+      308,
+      314
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Bring Them Home \u00b7 Alba\u2019s pit tag"
+  },
+  {
+    "key": "cases/side_2_3",
+    "path": "assets/cases/side_2_3.webp",
+    "source": "cases-1",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      625,
+      945,
+      934,
+      1259
+    ],
+    "exportSize": [
+      309,
+      314
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Stop the War Convoy \u00b7 Copper brake shoe"
+  },
+  {
+    "key": "cases/side_2_4",
+    "path": "assets/cases/side_2_4.webp",
+    "source": "cases-1",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      938,
+      945,
+      1245,
+      1259
+    ],
+    "exportSize": [
+      307,
+      314
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Reclaim the Countryside \u00b7 Copper bootprints"
+  },
+  {
+    "key": "cases/escort_2",
+    "path": "assets/cases/escort_2.webp",
+    "source": "cases-2",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      2,
+      2,
+      311,
+      313
+    ],
+    "exportSize": [
+      309,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Medicine for the Pass \u00b7 Red medicine tin"
+  },
+  {
+    "key": "cases/defend_2",
+    "path": "assets/cases/defend_2.webp",
+    "source": "cases-2",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      315,
+      2,
+      622,
+      313
+    ],
+    "exportSize": [
+      307,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Hold the Stonecrest Road \u00b7 Engineer\u2019s jack"
+  },
+  {
+    "key": "cases/assassination_2",
+    "path": "assets/cases/assassination_2.webp",
+    "source": "cases-2",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      626,
+      2,
+      933,
+      313
+    ],
+    "exportSize": [
+      307,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Wanted: Captain Scree \u00b7 Scree\u2019s broken spur"
+  },
+  {
+    "key": "cases/bounty_2",
+    "path": "assets/cases/bounty_2.webp",
+    "source": "cases-2",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      937,
+      2,
+      1245,
+      313
+    ],
+    "exportSize": [
+      308,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Commander Bounty: General Basalt \u00b7 Basalt\u2019s slate badge"
+  },
+  {
+    "key": "cases/main_3_0",
+    "path": "assets/cases/main_3_0.webp",
+    "source": "cases-2",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      2,
+      317,
+      311,
+      628
+    ],
+    "exportSize": [
+      309,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "A Winter Offensive \u00b7 Red mitten post"
+  },
+  {
+    "key": "cases/main_3_1",
+    "path": "assets/cases/main_3_1.webp",
+    "source": "cases-2",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      315,
+      317,
+      622,
+      628
+    ],
+    "exportSize": [
+      307,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Thaw the Front Line \u00b7 Thaw valve"
+  },
+  {
+    "key": "cases/main_3_2",
+    "path": "assets/cases/main_3_2.webp",
+    "source": "cases-2",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      626,
+      317,
+      933,
+      628
+    ],
+    "exportSize": [
+      307,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Defeat Marshal Whiteclaw \u00b7 Whiteclaw\u2019s coal slips"
+  },
+  {
+    "key": "cases/side_3_0",
+    "path": "assets/cases/side_3_0.webp",
+    "source": "cases-2",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      937,
+      317,
+      1245,
+      628
+    ],
+    "exportSize": [
+      308,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Secrets of Frostmarch \u00b7 Soot in the snow"
+  },
+  {
+    "key": "cases/side_3_1",
+    "path": "assets/cases/side_3_1.webp",
+    "source": "cases-2",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      2,
+      632,
+      311,
+      942
+    ],
+    "exportSize": [
+      309,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Supplies for the Resistance \u00b7 Quilted bundle"
+  },
+  {
+    "key": "cases/side_3_2",
+    "path": "assets/cases/side_3_2.webp",
+    "source": "cases-2",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      315,
+      632,
+      622,
+      942
+    ],
+    "exportSize": [
+      307,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Bring Them Home \u00b7 Purl\u2019s quilt peg"
+  },
+  {
+    "key": "cases/side_3_3",
+    "path": "assets/cases/side_3_3.webp",
+    "source": "cases-2",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      626,
+      632,
+      933,
+      942
+    ],
+    "exportSize": [
+      307,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Stop the War Convoy \u00b7 Red sled runner"
+  },
+  {
+    "key": "cases/side_3_4",
+    "path": "assets/cases/side_3_4.webp",
+    "source": "cases-2",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      937,
+      632,
+      1245,
+      942
+    ],
+    "exportSize": [
+      308,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Reclaim the Countryside \u00b7 Crooked ski trail"
+  },
+  {
+    "key": "cases/escort_3",
+    "path": "assets/cases/escort_3.webp",
+    "source": "cases-2",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      2,
+      946,
+      311,
+      1259
+    ],
+    "exportSize": [
+      309,
+      313
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Warmth for Snowhaven \u00b7 Wool parcel"
+  },
+  {
+    "key": "cases/defend_3",
+    "path": "assets/cases/defend_3.webp",
+    "source": "cases-2",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      315,
+      946,
+      622,
+      1259
+    ],
+    "exportSize": [
+      307,
+      313
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Hold the Frostmarch Road \u00b7 Windbreak stake"
+  },
+  {
+    "key": "cases/assassination_3",
+    "path": "assets/cases/assassination_3.webp",
+    "source": "cases-2",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      626,
+      946,
+      933,
+      1259
+    ],
+    "exportSize": [
+      307,
+      313
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Wanted: Captain Rime \u00b7 Rime\u2019s boot wrap"
+  },
+  {
+    "key": "cases/bounty_3",
+    "path": "assets/cases/bounty_3.webp",
+    "source": "cases-2",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      937,
+      946,
+      1245,
+      1259
+    ],
+    "exportSize": [
+      308,
+      313
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Commander Bounty: General Hoarfang \u00b7 Hoarfang\u2019s frosted lens"
+  },
+  {
+    "key": "cases/main_4_0",
+    "path": "assets/cases/main_4_0.webp",
+    "source": "cases-3",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      2,
+      2,
+      309,
+      312
+    ],
+    "exportSize": [
+      307,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Long Caravan \u00b7 Broken clay seal"
+  },
+  {
+    "key": "cases/main_4_1",
+    "path": "assets/cases/main_4_1.webp",
+    "source": "cases-3",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      313,
+      2,
+      620,
+      312
+    ],
+    "exportSize": [
+      307,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Desert Signal \u00b7 Sundial vane"
+  },
+  {
+    "key": "cases/main_4_2",
+    "path": "assets/cases/main_4_2.webp",
+    "source": "cases-3",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      624,
+      2,
+      932,
+      312
+    ],
+    "exportSize": [
+      308,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Defeat Field Marshal Sirocco \u00b7 Sirocco\u2019s shadow print"
+  },
+  {
+    "key": "cases/side_4_0",
+    "path": "assets/cases/side_4_0.webp",
+    "source": "cases-3",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      936,
+      2,
+      1245,
+      312
+    ],
+    "exportSize": [
+      309,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Secrets of Sunscar Dunes \u00b7 Reed stylus"
+  },
+  {
+    "key": "cases/side_4_1",
+    "path": "assets/cases/side_4_1.webp",
+    "source": "cases-3",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      2,
+      316,
+      309,
+      627
+    ],
+    "exportSize": [
+      307,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Supplies for the Resistance \u00b7 Hollow jar lid"
+  },
+  {
+    "key": "cases/side_4_2",
+    "path": "assets/cases/side_4_2.webp",
+    "source": "cases-3",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      313,
+      316,
+      622,
+      627
+    ],
+    "exportSize": [
+      309,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Bring Them Home \u00b7 Tamar\u2019s water token"
+  },
+  {
+    "key": "cases/side_4_3",
+    "path": "assets/cases/side_4_3.webp",
+    "source": "cases-3",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      626,
+      316,
+      932,
+      627
+    ],
+    "exportSize": [
+      306,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Stop the War Convoy \u00b7 Ceramic cart seal"
+  },
+  {
+    "key": "cases/side_4_4",
+    "path": "assets/cases/side_4_4.webp",
+    "source": "cases-3",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      936,
+      316,
+      1245,
+      627
+    ],
+    "exportSize": [
+      309,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Reclaim the Countryside \u00b7 Coin with a hole"
+  },
+  {
+    "key": "cases/escort_4",
+    "path": "assets/cases/escort_4.webp",
+    "source": "cases-3",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      2,
+      631,
+      309,
+      944
+    ],
+    "exportSize": [
+      307,
+      313
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Water for the Caravan \u00b7 Water ledger"
+  },
+  {
+    "key": "cases/defend_4",
+    "path": "assets/cases/defend_4.webp",
+    "source": "cases-3",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      313,
+      631,
+      620,
+      944
+    ],
+    "exportSize": [
+      307,
+      313
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Hold the Sunscar Road \u00b7 Reservoir shade"
+  },
+  {
+    "key": "cases/assassination_4",
+    "path": "assets/cases/assassination_4.webp",
+    "source": "cases-3",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      624,
+      631,
+      932,
+      944
+    ],
+    "exportSize": [
+      308,
+      313
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Wanted: Captain Dustfang \u00b7 Dustfang\u2019s water token"
+  },
+  {
+    "key": "cases/bounty_4",
+    "path": "assets/cases/bounty_4.webp",
+    "source": "cases-3",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      936,
+      631,
+      1245,
+      944
+    ],
+    "exportSize": [
+      309,
+      313
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Commander Bounty: General Copperdune \u00b7 Copperdune\u2019s scales"
+  },
+  {
+    "key": "cases/main_5_0",
+    "path": "assets/cases/main_5_0.webp",
+    "source": "cases-3",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      2,
+      948,
+      309,
+      1259
+    ],
+    "exportSize": [
+      307,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Across the Delta \u00b7 Half-submerged buoy"
+  },
+  {
+    "key": "cases/main_5_1",
+    "path": "assets/cases/main_5_1.webp",
+    "source": "cases-3",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      313,
+      948,
+      622,
+      1259
+    ],
+    "exportSize": [
+      309,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Clear the River \u00b7 River chain"
+  },
+  {
+    "key": "cases/main_5_2",
+    "path": "assets/cases/main_5_2.webp",
+    "source": "cases-3",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      626,
+      948,
+      932,
+      1259
+    ],
+    "exportSize": [
+      306,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Defeat Admiral Miretooth \u00b7 Miretooth\u2019s tide book"
+  },
+  {
+    "key": "cases/side_5_0",
+    "path": "assets/cases/side_5_0.webp",
+    "source": "cases-3",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      936,
+      948,
+      1245,
+      1259
+    ],
+    "exportSize": [
+      309,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Secrets of Reedwater Delta \u00b7 Knotted reed"
+  },
+  {
+    "key": "cases/side_5_1",
+    "path": "assets/cases/side_5_1.webp",
+    "source": "cases-4",
+    "sourceSize": [
+      1245,
+      1263
+    ],
+    "sourceCrop": [
+      2,
+      2,
+      319,
+      309
+    ],
+    "exportSize": [
+      317,
+      307
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Supplies for the Resistance \u00b7 Whittled cork"
+  },
+  {
+    "key": "cases/side_5_2",
+    "path": "assets/cases/side_5_2.webp",
+    "source": "cases-4",
+    "sourceSize": [
+      1245,
+      1263
+    ],
+    "sourceCrop": [
+      323,
+      2,
+      620,
+      309
+    ],
+    "exportSize": [
+      297,
+      307
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Bring Them Home \u00b7 Lark\u2019s half-net"
+  },
+  {
+    "key": "cases/side_5_3",
+    "path": "assets/cases/side_5_3.webp",
+    "source": "cases-4",
+    "sourceSize": [
+      1245,
+      1263
+    ],
+    "sourceCrop": [
+      624,
+      2,
+      939,
+      309
+    ],
+    "exportSize": [
+      315,
+      307
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Stop the War Convoy \u00b7 Tide signal"
+  },
+  {
+    "key": "cases/side_5_4",
+    "path": "assets/cases/side_5_4.webp",
+    "source": "cases-4",
+    "sourceSize": [
+      1245,
+      1263
+    ],
+    "sourceCrop": [
+      943,
+      2,
+      1243,
+      309
+    ],
+    "exportSize": [
+      300,
+      307
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Reclaim the Countryside \u00b7 Black cork float"
+  },
+  {
+    "key": "cases/escort_5",
+    "path": "assets/cases/escort_5.webp",
+    "source": "cases-4",
+    "sourceSize": [
+      1245,
+      1263
+    ],
+    "sourceCrop": [
+      2,
+      313,
+      319,
+      624
+    ],
+    "exportSize": [
+      317,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Delta Messenger \u00b7 Rush message tube"
+  },
+  {
+    "key": "cases/defend_5",
+    "path": "assets/cases/defend_5.webp",
+    "source": "cases-4",
+    "sourceSize": [
+      1245,
+      1263
+    ],
+    "sourceCrop": [
+      323,
+      313,
+      621,
+      624
+    ],
+    "exportSize": [
+      298,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Hold the Reedwater Road \u00b7 Ferry chain"
+  },
+  {
+    "key": "cases/assassination_5",
+    "path": "assets/cases/assassination_5.webp",
+    "source": "cases-4",
+    "sourceSize": [
+      1245,
+      1263
+    ],
+    "sourceCrop": [
+      625,
+      313,
+      940,
+      624
+    ],
+    "exportSize": [
+      315,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Wanted: Captain Murk \u00b7 Murk\u2019s oar notch"
+  },
+  {
+    "key": "cases/bounty_5",
+    "path": "assets/cases/bounty_5.webp",
+    "source": "cases-4",
+    "sourceSize": [
+      1245,
+      1263
+    ],
+    "sourceCrop": [
+      944,
+      313,
+      1243,
+      624
+    ],
+    "exportSize": [
+      299,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Commander Bounty: General Bogclaw \u00b7 Bogclaw\u2019s float"
+  },
+  {
+    "key": "cases/main_6_0",
+    "path": "assets/cases/main_6_0.webp",
+    "source": "cases-4",
+    "sourceSize": [
+      1245,
+      1263
+    ],
+    "sourceCrop": [
+      2,
+      628,
+      318,
+      944
+    ],
+    "exportSize": [
+      316,
+      316
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Break the War Machine \u00b7 Stamped axle"
+  },
+  {
+    "key": "cases/main_6_1",
+    "path": "assets/cases/main_6_1.webp",
+    "source": "cases-4",
+    "sourceSize": [
+      1245,
+      1263
+    ],
+    "sourceCrop": [
+      322,
+      628,
+      620,
+      944
+    ],
+    "exportSize": [
+      298,
+      316
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Sabotage the Foundry \u00b7 Switchyard semaphore"
+  },
+  {
+    "key": "cases/main_6_2",
+    "path": "assets/cases/main_6_2.webp",
+    "source": "cases-4",
+    "sourceSize": [
+      1245,
+      1263
+    ],
+    "sourceCrop": [
+      624,
+      628,
+      939,
+      944
+    ],
+    "exportSize": [
+      315,
+      316
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Defeat Director Geargnash \u00b7 Geargnash\u2019s calibration key"
+  },
+  {
+    "key": "cases/side_6_0",
+    "path": "assets/cases/side_6_0.webp",
+    "source": "cases-4",
+    "sourceSize": [
+      1245,
+      1263
+    ],
+    "sourceCrop": [
+      943,
+      628,
+      1243,
+      944
+    ],
+    "exportSize": [
+      300,
+      316
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Secrets of Emberworks \u00b7 Split firebrick"
+  },
+  {
+    "key": "cases/side_6_1",
+    "path": "assets/cases/side_6_1.webp",
+    "source": "cases-4",
+    "sourceSize": [
+      1245,
+      1263
+    ],
+    "sourceCrop": [
+      2,
+      948,
+      318,
+      1261
+    ],
+    "exportSize": [
+      316,
+      313
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Supplies for the Resistance \u00b7 Blue chalk cross"
+  },
+  {
+    "key": "cases/side_6_2",
+    "path": "assets/cases/side_6_2.webp",
+    "source": "cases-4",
+    "sourceSize": [
+      1245,
+      1263
+    ],
+    "sourceCrop": [
+      322,
+      948,
+      622,
+      1261
+    ],
+    "exportSize": [
+      300,
+      313
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Bring Them Home \u00b7 Copper\u2019s red rag"
+  },
+  {
+    "key": "cases/side_6_3",
+    "path": "assets/cases/side_6_3.webp",
+    "source": "cases-4",
+    "sourceSize": [
+      1245,
+      1263
+    ],
+    "sourceCrop": [
+      626,
+      948,
+      939,
+      1261
+    ],
+    "exportSize": [
+      313,
+      313
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Stop the War Convoy \u00b7 Siding stamp"
+  },
+  {
+    "key": "cases/side_6_4",
+    "path": "assets/cases/side_6_4.webp",
+    "source": "cases-4",
+    "sourceSize": [
+      1245,
+      1263
+    ],
+    "sourceCrop": [
+      943,
+      948,
+      1243,
+      1261
+    ],
+    "exportSize": [
+      300,
+      313
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Reclaim the Countryside \u00b7 Split rivet"
+  },
+  {
+    "key": "cases/escort_6",
+    "path": "assets/cases/escort_6.webp",
+    "source": "cases-5",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      2,
+      2,
+      313,
+      310
+    ],
+    "exportSize": [
+      311,
+      308
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "A Package for the Forge \u00b7 Heatproof parcel"
+  },
+  {
+    "key": "cases/defend_6",
+    "path": "assets/cases/defend_6.webp",
+    "source": "cases-5",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      317,
+      2,
+      629,
+      310
+    ],
+    "exportSize": [
+      312,
+      308
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Hold the Emberworks Road \u00b7 Tool cart"
+  },
+  {
+    "key": "cases/assassination_6",
+    "path": "assets/cases/assassination_6.webp",
+    "source": "cases-5",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      633,
+      2,
+      945,
+      310
+    ],
+    "exportSize": [
+      312,
+      308
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Wanted: Captain Rivet \u00b7 Rivet\u2019s white gauntlet"
+  },
+  {
+    "key": "cases/bounty_6",
+    "path": "assets/cases/bounty_6.webp",
+    "source": "cases-5",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      949,
+      2,
+      1259,
+      310
+    ],
+    "exportSize": [
+      310,
+      308
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Commander Bounty: General Crucible \u00b7 Crucible\u2019s slag seal"
+  },
+  {
+    "key": "cases/main_7_0",
+    "path": "assets/cases/main_7_0.webp",
+    "source": "cases-5",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      2,
+      314,
+      314,
+      619
+    ],
+    "exportSize": [
+      312,
+      305
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "At the Gates \u00b7 Stonecutters\u2019 tally"
+  },
+  {
+    "key": "cases/main_7_1",
+    "path": "assets/cases/main_7_1.webp",
+    "source": "cases-5",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      318,
+      314,
+      627,
+      619
+    ],
+    "exportSize": [
+      309,
+      305
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Last Approach \u00b7 Gatehouse tally"
+  },
+  {
+    "key": "cases/main_7_2",
+    "path": "assets/cases/main_7_2.webp",
+    "source": "cases-5",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      631,
+      314,
+      944,
+      619
+    ],
+    "exportSize": [
+      313,
+      305
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Break Vex\u2019s Command \u00b7 Vex\u2019s double stamp"
+  },
+  {
+    "key": "cases/side_7_0",
+    "path": "assets/cases/side_7_0.webp",
+    "source": "cases-5",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      948,
+      314,
+      1259,
+      619
+    ],
+    "exportSize": [
+      311,
+      305
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Secrets of Blackbanner Citadel \u00b7 Carved hinge"
+  },
+  {
+    "key": "cases/side_7_1",
+    "path": "assets/cases/side_7_1.webp",
+    "source": "cases-5",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      2,
+      623,
+      313,
+      930
+    ],
+    "exportSize": [
+      311,
+      307
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Supplies for the Resistance \u00b7 Courier\u2019s ribbon"
+  },
+  {
+    "key": "cases/side_7_2",
+    "path": "assets/cases/side_7_2.webp",
+    "source": "cases-5",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      317,
+      623,
+      627,
+      930
+    ],
+    "exportSize": [
+      310,
+      307
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Bring Them Home \u00b7 Nell\u2019s letter seal"
+  },
+  {
+    "key": "cases/side_7_3",
+    "path": "assets/cases/side_7_3.webp",
+    "source": "cases-5",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      631,
+      623,
+      944,
+      930
+    ],
+    "exportSize": [
+      313,
+      307
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Stop the War Convoy \u00b7 Bridge tally block"
+  },
+  {
+    "key": "cases/side_7_4",
+    "path": "assets/cases/side_7_4.webp",
+    "source": "cases-5",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      948,
+      623,
+      1259,
+      930
+    ],
+    "exportSize": [
+      311,
+      307
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Reclaim the Countryside \u00b7 Tin crown"
+  },
+  {
+    "key": "cases/escort_7",
+    "path": "assets/cases/escort_7.webp",
+    "source": "cases-5",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      2,
+      934,
+      315,
+      1245
+    ],
+    "exportSize": [
+      313,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Last Dispatch \u00b7 Velvet\u2019s satchel"
+  },
+  {
+    "key": "cases/defend_7",
+    "path": "assets/cases/defend_7.webp",
+    "source": "cases-5",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      319,
+      934,
+      627,
+      1245
+    ],
+    "exportSize": [
+      308,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Hold the Citadel Road \u00b7 Messenger screen"
+  },
+  {
+    "key": "cases/assassination_7",
+    "path": "assets/cases/assassination_7.webp",
+    "source": "cases-5",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      631,
+      934,
+      946,
+      1245
+    ],
+    "exportSize": [
+      315,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Wanted: Captain Onyx \u00b7 Onyx\u2019s glass ring"
+  },
+  {
+    "key": "cases/bounty_7",
+    "path": "assets/cases/bounty_7.webp",
+    "source": "cases-5",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "sourceCrop": [
+      950,
+      934,
+      1259,
+      1245
+    ],
+    "exportSize": [
+      309,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Commander Bounty: General Nightiron \u00b7 Nightiron\u2019s black ribbon"
+  },
+  {
+    "key": "cases/main_berlin_final",
+    "path": "assets/cases/main_berlin_final.webp",
+    "source": "cases-6",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      2,
+      2,
+      309,
+      314
+    ],
+    "exportSize": [
+      307,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Operation Whiskerfall: The Berlin Reckoning \u00b7 Relay-cutting diagram"
+  },
+  {
+    "key": "cases/sabotage_0",
+    "path": "assets/cases/sabotage_0.webp",
+    "source": "cases-6",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      313,
+      2,
+      621,
+      314
+    ],
+    "exportSize": [
+      308,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Paws Off the Airwaves \u00b7 Fuse inspector\u2019s cloth"
+  },
+  {
+    "key": "cases/delivery_0",
+    "path": "assets/cases/delivery_0.webp",
+    "source": "cases-6",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      625,
+      2,
+      932,
+      314
+    ],
+    "exportSize": [
+      307,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Baker\u2019s Last Basket \u00b7 Warm loaf under the hedge"
+  },
+  {
+    "key": "cases/triage_1",
+    "path": "assets/cases/triage_1.webp",
+    "source": "cases-6",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      936,
+      2,
+      1244,
+      314
+    ],
+    "exportSize": [
+      308,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Not One Paw Left Behind \u00b7 Sorrel\u2019s medallion"
+  },
+  {
+    "key": "cases/recon_1",
+    "path": "assets/cases/recon_1.webp",
+    "source": "cases-6",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      2,
+      318,
+      309,
+      628
+    ],
+    "exportSize": [
+      307,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "What the Owls Heard \u00b7 Twisted listening foil"
+  },
+  {
+    "key": "cases/demolition_2",
+    "path": "assets/cases/demolition_2.webp",
+    "source": "cases-6",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      313,
+      318,
+      620,
+      628
+    ],
+    "exportSize": [
+      307,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "An Avalanche of Our Own \u00b7 Cracked warning bell"
+  },
+  {
+    "key": "cases/recovery_2",
+    "path": "assets/cases/recovery_2.webp",
+    "source": "cases-6",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      624,
+      318,
+      933,
+      628
+    ],
+    "exportSize": [
+      309,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "A Map Written in Echoes \u00b7 Scratched survey clip"
+  },
+  {
+    "key": "cases/signal_3",
+    "path": "assets/cases/signal_3.webp",
+    "source": "cases-6",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      937,
+      318,
+      1244,
+      628
+    ],
+    "exportSize": [
+      307,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Aurora Code \u00b7 Forked antenna tip"
+  },
+  {
+    "key": "cases/delivery_3",
+    "path": "assets/cases/delivery_3.webp",
+    "source": "cases-6",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      2,
+      632,
+      310,
+      944
+    ],
+    "exportSize": [
+      308,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "A Hearth for Snowhaven \u00b7 Blue heater cell"
+  },
+  {
+    "key": "cases/recovery_4",
+    "path": "assets/cases/recovery_4.webp",
+    "source": "cases-6",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      314,
+      632,
+      620,
+      944
+    ],
+    "exportSize": [
+      306,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Water Beneath the Sand \u00b7 Wet pottery ring"
+  },
+  {
+    "key": "cases/infiltration_4",
+    "path": "assets/cases/infiltration_4.webp",
+    "source": "cases-6",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      624,
+      632,
+      932,
+      944
+    ],
+    "exportSize": [
+      308,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Mirage Ledger \u00b7 Two water seals"
+  },
+  {
+    "key": "cases/triage_5",
+    "path": "assets/cases/triage_5.webp",
+    "source": "cases-6",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      936,
+      632,
+      1244,
+      944
+    ],
+    "exportSize": [
+      308,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Lanterns in the Fog \u00b7 Double-knotted net"
+  },
+  {
+    "key": "cases/sabotage_5",
+    "path": "assets/cases/sabotage_5.webp",
+    "source": "cases-6",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      2,
+      948,
+      309,
+      1261
+    ],
+    "exportSize": [
+      307,
+      313
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The River Remembers \u00b7 Reverse-flow gauge"
+  },
+  {
+    "key": "cases/demolition_6",
+    "path": "assets/cases/demolition_6.webp",
+    "source": "cases-6",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      313,
+      948,
+      620,
+      1261
+    ],
+    "exportSize": [
+      307,
+      313
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Quiet Assembly Line \u00b7 Stamping wheel"
+  },
+  {
+    "key": "cases/recovery_6",
+    "path": "assets/cases/recovery_6.webp",
+    "source": "cases-6",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      624,
+      948,
+      931,
+      1261
+    ],
+    "exportSize": [
+      307,
+      313
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Cinder\u2019s Spare Heart \u00b7 Blue winding wire"
+  },
+  {
+    "key": "cases/infiltration_7",
+    "path": "assets/cases/infiltration_7.webp",
+    "source": "cases-6",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      935,
+      948,
+      1244,
+      1261
+    ],
+    "exportSize": [
+      309,
+      313
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Nine Lives of Intelligence \u00b7 Double-stamped gate slip"
+  },
+  {
+    "key": "cases/signal_7",
+    "path": "assets/cases/signal_7.webp",
+    "source": "cases-7",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      2,
+      2,
+      309,
+      314
+    ],
+    "exportSize": [
+      307,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "One Voice Before Dawn \u00b7 Worn song cylinder"
+  },
+  {
+    "key": "cases/vault_0_0",
+    "path": "assets/cases/vault_0_0.webp",
+    "source": "cases-7",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      313,
+      2,
+      620,
+      314
+    ],
+    "exportSize": [
+      307,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Echoes Below \u00b7 Greenfields Reach \u00b7 Cracked first rune"
+  },
+  {
+    "key": "cases/vault_0_1",
+    "path": "assets/cases/vault_0_1.webp",
+    "source": "cases-7",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      624,
+      2,
+      932,
+      314
+    ],
+    "exportSize": [
+      308,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "A Light in the Deep \u00b7 Greenfields Reach Depths \u00b7 Split receiver"
+  },
+  {
+    "key": "cases/vault_1_0",
+    "path": "assets/cases/vault_1_0.webp",
+    "source": "cases-7",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      936,
+      2,
+      1244,
+      314
+    ],
+    "exportSize": [
+      308,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "A Light in the Deep \u00b7 Mosswood Wilds \u00b7 Shutter hinge"
+  },
+  {
+    "key": "cases/vault_1_1",
+    "path": "assets/cases/vault_1_1.webp",
+    "source": "cases-7",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      2,
+      318,
+      309,
+      630
+    ],
+    "exportSize": [
+      307,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Moonmoss Vigil \u00b7 Mosswood Wilds \u00b7 Trial bell"
+  },
+  {
+    "key": "cases/vault_2_0",
+    "path": "assets/cases/vault_2_0.webp",
+    "source": "cases-7",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      313,
+      318,
+      620,
+      630
+    ],
+    "exportSize": [
+      307,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Broken Waterworks \u00b7 Stonecrest Highlands \u00b7 Pressure dial"
+  },
+  {
+    "key": "cases/vault_2_1",
+    "path": "assets/cases/vault_2_1.webp",
+    "source": "cases-7",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      624,
+      318,
+      933,
+      630
+    ],
+    "exportSize": [
+      309,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Starless Vault \u00b7 Stonecrest Highlands Depths \u00b7 Linked star marks"
+  },
+  {
+    "key": "cases/vault_3_0",
+    "path": "assets/cases/vault_3_0.webp",
+    "source": "cases-7",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      937,
+      318,
+      1244,
+      630
+    ],
+    "exportSize": [
+      307,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Starless Vault \u00b7 Frostmarch \u00b7 Linked frost studs"
+  },
+  {
+    "key": "cases/vault_3_1",
+    "path": "assets/cases/vault_3_1.webp",
+    "source": "cases-7",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      2,
+      634,
+      310,
+      945
+    ],
+    "exportSize": [
+      308,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Aurora Gauntlet \u00b7 Frostmarch \u00b7 Aurora gong"
+  },
+  {
+    "key": "cases/vault_4_0",
+    "path": "assets/cases/vault_4_0.webp",
+    "source": "cases-7",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      314,
+      634,
+      620,
+      945
+    ],
+    "exportSize": [
+      306,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Echoes Below \u00b7 Sunscar Dunes \u00b7 Chipped echo rune"
+  },
+  {
+    "key": "cases/vault_4_1",
+    "path": "assets/cases/vault_4_1.webp",
+    "source": "cases-7",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      624,
+      634,
+      932,
+      945
+    ],
+    "exportSize": [
+      308,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "A Light in the Deep \u00b7 Sunscar Dunes Depths \u00b7 Sun mirror lock"
+  },
+  {
+    "key": "cases/vault_5_0",
+    "path": "assets/cases/vault_5_0.webp",
+    "source": "cases-7",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      936,
+      634,
+      1244,
+      945
+    ],
+    "exportSize": [
+      308,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "A Light in the Deep \u00b7 Reedwater Delta \u00b7 Tarnished mirror"
+  },
+  {
+    "key": "cases/vault_5_1",
+    "path": "assets/cases/vault_5_1.webp",
+    "source": "cases-7",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      2,
+      949,
+      309,
+      1261
+    ],
+    "exportSize": [
+      307,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Drowned Watch \u00b7 Reedwater Delta \u00b7 Watch bell"
+  },
+  {
+    "key": "cases/vault_6_0",
+    "path": "assets/cases/vault_6_0.webp",
+    "source": "cases-7",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      313,
+      949,
+      620,
+      1261
+    ],
+    "exportSize": [
+      307,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Broken Waterworks \u00b7 Emberworks \u00b7 Blackened gauge"
+  },
+  {
+    "key": "cases/vault_6_1",
+    "path": "assets/cases/vault_6_1.webp",
+    "source": "cases-7",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      624,
+      949,
+      933,
+      1261
+    ],
+    "exportSize": [
+      309,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Starless Vault \u00b7 Emberworks Depths \u00b7 Twin star terminals"
+  },
+  {
+    "key": "cases/vault_7_0",
+    "path": "assets/cases/vault_7_0.webp",
+    "source": "cases-7",
+    "sourceSize": [
+      1246,
+      1263
+    ],
+    "sourceCrop": [
+      937,
+      949,
+      1244,
+      1261
+    ],
+    "exportSize": [
+      307,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Starless Vault \u00b7 Blackbanner Citadel \u00b7 Crown star chart"
+  },
+  {
+    "key": "cases/vault_7_1",
+    "path": "assets/cases/vault_7_1.webp",
+    "source": "cases-8",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      2,
+      2,
+      309,
+      314
+    ],
+    "exportSize": [
+      307,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Last Resistance \u00b7 Blackbanner Citadel \u00b7 Rally drum"
+  },
+  {
+    "key": "cases/camp_waves_0",
+    "path": "assets/cases/camp_waves_0.webp",
+    "source": "cases-8",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      313,
+      2,
+      620,
+      314
+    ],
+    "exportSize": [
+      307,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Hold the Orchard Line \u00b7 Quartermaster\u2019s bell"
+  },
+  {
+    "key": "cases/camp_waves_2",
+    "path": "assets/cases/camp_waves_2.webp",
+    "source": "cases-8",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      624,
+      2,
+      934,
+      314
+    ],
+    "exportSize": [
+      310,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Turn the Lantern Line \u00b7 Lantern keeper\u2019s switch"
+  },
+  {
+    "key": "cases/camp_waves_4",
+    "path": "assets/cases/camp_waves_4.webp",
+    "source": "cases-8",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      938,
+      2,
+      1245,
+      314
+    ],
+    "exportSize": [
+      307,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Last Water at Sundial \u00b7 Last full water jar"
+  },
+  {
+    "key": "cases/camp_waves_6",
+    "path": "assets/cases/camp_waves_6.webp",
+    "source": "cases-8",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      2,
+      318,
+      309,
+      629
+    ],
+    "exportSize": [
+      307,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "A Hearth in the Ash \u00b7 Evacuation tally"
+  },
+  {
+    "key": "cases/demolition_1",
+    "path": "assets/cases/demolition_1.webp",
+    "source": "cases-8",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      313,
+      318,
+      622,
+      629
+    ],
+    "exportSize": [
+      309,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Bramble\u2019s Silent Sawmill \u00b7 Feed wheel clutch"
+  },
+  {
+    "key": "cases/demolition_3",
+    "path": "assets/cases/demolition_3.webp",
+    "source": "cases-8",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      626,
+      318,
+      932,
+      629
+    ],
+    "exportSize": [
+      306,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Break the Winter Battery \u00b7 Relay switch box"
+  },
+  {
+    "key": "cases/demolition_5",
+    "path": "assets/cases/demolition_5.webp",
+    "source": "cases-8",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      936,
+      318,
+      1245,
+      629
+    ],
+    "exportSize": [
+      309,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Cut the Floodgate Supply \u00b7 Feedwater gauge"
+  },
+  {
+    "key": "cases/demolition_7",
+    "path": "assets/cases/demolition_7.webp",
+    "source": "cases-8",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      2,
+      633,
+      309,
+      944
+    ],
+    "exportSize": [
+      307,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Citadel Goes Dark \u00b7 Searchlight breaker"
+  },
+  {
+    "key": "cases/stormglass_beacons",
+    "path": "assets/cases/stormglass_beacons.webp",
+    "source": "cases-8",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      313,
+      633,
+      620,
+      944
+    ],
+    "exportSize": [
+      307,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "A Light Beyond the Snow \u00b7 Salt-pitted lens"
+  },
+  {
+    "key": "cases/stormglass_salvage",
+    "path": "assets/cases/stormglass_salvage.webp",
+    "source": "cases-8",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      624,
+      633,
+      932,
+      944
+    ],
+    "exportSize": [
+      308,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Salvage the Glass Tide \u00b7 Green wax crate seal"
+  },
+  {
+    "key": "cases/stormglass_moorings",
+    "path": "assets/cases/stormglass_moorings.webp",
+    "source": "cases-8",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      936,
+      633,
+      1245,
+      944
+    ],
+    "exportSize": [
+      309,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Cut the Harpoon Lines \u00b7 Frayed harpoon line"
+  },
+  {
+    "key": "cases/stormglass_prison",
+    "path": "assets/cases/stormglass_prison.webp",
+    "source": "cases-8",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      2,
+      948,
+      309,
+      1259
+    ],
+    "exportSize": [
+      307,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Drowned Bell Prisoners \u00b7 Diver\u2019s bell tally"
+  },
+  {
+    "key": "cases/stormglass_convoy",
+    "path": "assets/cases/stormglass_convoy.webp",
+    "source": "cases-8",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      313,
+      948,
+      620,
+      1259
+    ],
+    "exportSize": [
+      307,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Break the Crown Blockade \u00b7 Load-line marker"
+  },
+  {
+    "key": "cases/stormglass_homecoming",
+    "path": "assets/cases/stormglass_homecoming.webp",
+    "source": "cases-8",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      624,
+      948,
+      932,
+      1259
+    ],
+    "exportSize": [
+      308,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Homecoming Lights \u00b7 Saltwater lantern"
+  },
+  {
+    "key": "cases/defense_stormglass_beacon",
+    "path": "assets/cases/defense_stormglass_beacon.webp",
+    "source": "cases-8",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      936,
+      948,
+      1245,
+      1259
+    ],
+    "exportSize": [
+      309,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Keep the Saltwind Burning \u00b7 Saltwind stores"
+  },
+  {
+    "key": "cases/defense_stormglass_rescue",
+    "path": "assets/cases/defense_stormglass_rescue.webp",
+    "source": "cases-9",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      2,
+      2,
+      310,
+      312
+    ],
+    "exportSize": [
+      308,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "A Shore for the Shipwrecked \u00b7 Patient roster"
+  },
+  {
+    "key": "cases/defense_stormglass_lantern",
+    "path": "assets/cases/defense_stormglass_lantern.webp",
+    "source": "cases-9",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      314,
+      2,
+      622,
+      312
+    ],
+    "exportSize": [
+      308,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Last Lantern Holds \u00b7 Oil handcart"
+  },
+  {
+    "key": "cases/defense_sunkencrown_reeds",
+    "path": "assets/cases/defense_sunkencrown_reeds.webp",
+    "source": "cases-9",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      626,
+      2,
+      932,
+      312
+    ],
+    "exportSize": [
+      306,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Stand at Reedcrown Landing \u00b7 Anchor flag"
+  },
+  {
+    "key": "cases/defense_sunkencrown_bell",
+    "path": "assets/cases/defense_sunkencrown_bell.webp",
+    "source": "cases-9",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      936,
+      2,
+      1245,
+      312
+    ],
+    "exportSize": [
+      309,
+      310
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Let the Sunken Bell Ring \u00b7 Medicine sling"
+  },
+  {
+    "key": "cases/defense_sunkencrown_evacuation",
+    "path": "assets/cases/defense_sunkencrown_evacuation.webp",
+    "source": "cases-9",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      2,
+      316,
+      310,
+      627
+    ],
+    "exportSize": [
+      308,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "Until the Last Ferry Leaves \u00b7 Painted draft line"
+  },
+  {
+    "key": "cases/invasion_orchard",
+    "path": "assets/cases/invasion_orchard.webp",
+    "source": "cases-9",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      314,
+      316,
+      621,
+      627
+    ],
+    "exportSize": [
+      307,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "When the Orchard Answers \u00b7 Harvest tally"
+  },
+  {
+    "key": "cases/invasion_frost",
+    "path": "assets/cases/invasion_frost.webp",
+    "source": "cases-9",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      625,
+      316,
+      932,
+      627
+    ],
+    "exportSize": [
+      307,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Night Warmhearth Fell \u00b7 Evacuees\u2019 quilt"
+  },
+  {
+    "key": "cases/invasion_berlin",
+    "path": "assets/cases/invasion_berlin.webp",
+    "source": "cases-9",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      936,
+      316,
+      1245,
+      627
+    ],
+    "exportSize": [
+      309,
+      311
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "All Roads to the Resistance \u00b7 Pennant register"
+  },
+  {
+    "key": "cases/hidden_gunsmith",
+    "path": "assets/cases/hidden_gunsmith.webp",
+    "source": "cases-9",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      2,
+      631,
+      311,
+      943
+    ],
+    "exportSize": [
+      309,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Gunsmith Below \u00b7 File marks on a receiver"
+  },
+  {
+    "key": "cases/hidden_lastwatch",
+    "path": "assets/cases/hidden_lastwatch.webp",
+    "source": "cases-9",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      315,
+      631,
+      623,
+      943
+    ],
+    "exportSize": [
+      308,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Last Watch \u00b7 Crooked shutter latch"
+  },
+  {
+    "key": "cases/hidden_blackglass",
+    "path": "assets/cases/hidden_blackglass.webp",
+    "source": "cases-9",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      627,
+      631,
+      933,
+      943
+    ],
+    "exportSize": [
+      306,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Blackglass Trail \u00b7 Violet ribbon"
+  },
+  {
+    "key": "cases/rare_rimeglass",
+    "path": "assets/cases/rare_rimeglass.webp",
+    "source": "cases-9",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      937,
+      631,
+      1245,
+      943
+    ],
+    "exportSize": [
+      308,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "A Breath Beneath the Ice \u00b7 Twin ice-blue gauges"
+  },
+  {
+    "key": "cases/rare_cindercoil",
+    "path": "assets/cases/rare_cindercoil.webp",
+    "source": "cases-9",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      2,
+      947,
+      311,
+      1259
+    ],
+    "exportSize": [
+      309,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Furnace That Wouldn\u2019t Die \u00b7 Scorched bridge plate"
+  },
+  {
+    "key": "cases/rare_zephyr",
+    "path": "assets/cases/rare_zephyr.webp",
+    "source": "cases-9",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      315,
+      947,
+      621,
+      1259
+    ],
+    "exportSize": [
+      306,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Wind Remembers \u00b7 Chipped vane silhouette"
+  },
+  {
+    "key": "cases/rare_kraken",
+    "path": "assets/cases/rare_kraken.webp",
+    "source": "cases-9",
+    "sourceSize": [
+      1247,
+      1261
+    ],
+    "sourceCrop": [
+      625,
+      947,
+      932,
+      1259
+    ],
+    "exportSize": [
+      307,
+      312
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "The Beast Beneath the Crown \u00b7 Three-anchor knot"
+  }
+]

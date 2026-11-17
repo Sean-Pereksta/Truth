@@ -23,7 +23,7 @@
       "region": 2,
       "radius": 300,
       "npc": "Ranger Crag",
-      "description": "Friendly resistance settlement: merchant, healing, upgrades, and mission board.",
+      "description": "Quarry Ring overlooks Lower terrace. The old gate has two facing mallets. Underneath is the name of the first stonecutter to fight here.",
       "x": 10790,
       "y": 1430,
       "cleared": false,
@@ -31,7 +31,8 @@
       "index": 24,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "quarry"
     },
     {
       "id": "town_extra_2",
@@ -40,7 +41,7 @@
       "region": 2,
       "radius": 270,
       "npc": "Quartermaster Slate",
-      "description": "A quiet village supporting the resistance.",
+      "description": "Highstone signal bell stands on Bell steps. Local supplies, a checkpoint and the resistance forge.",
       "x": 12090,
       "y": 4160,
       "cleared": false,
@@ -48,7 +49,8 @@
       "index": 25,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-2"
     },
     {
       "id": "base_2_0",
@@ -259,13 +261,14 @@
       "region": 2,
       "radius": 250,
       "npc": "Resistance Wayfinder",
-      "description": "A peaceful refuge with a friendly quest scout and an upgrade forge.",
+      "description": "The badger brazier stands on Iron path. Local supplies, a checkpoint and the resistance forge.",
       "cleared": false,
       "enemyIds": [],
       "index": 95,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-6"
     },
     {
       "id": "forge_town_2",
@@ -1612,6 +1615,33 @@
       "cleared": false,
       "enemyIds": [],
       "index": 332
+    },
+    {
+      "id": "work_town_2",
+      "type": "townWork",
+      "name": "Lower terrace",
+      "region": 2,
+      "townId": "town_2",
+      "radius": 45,
+      "x": 10690,
+      "y": 1635,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 339
+    },
+    {
+      "x": 10649,
+      "y": 1513,
+      "id": "activity_quarry",
+      "type": "activity",
+      "name": "Quarry Ring",
+      "description": "Quarry amphitheater · Enter the chalk ring. Move around cover, strike within reach and dodge the painted attack marks. Stand near a fallen partner to revive them.",
+      "radius": 66,
+      "region": 2,
+      "activity": "quarry",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 349
     }
   ],
   "enemySpawns": [
@@ -2541,14 +2571,16 @@
     {
       "id": "town_2_building_0",
       "type": "building",
-      "x": 10565,
-      "y": 1280,
+      "x": 10875,
+      "y": 1205,
       "w": 155,
       "h": 130,
       "solid": true,
       "variant": 2,
       "locationId": "town_2",
-      "region": 2
+      "region": 2,
+      "townId": "town_2",
+      "townPainting": "landmark-quarry"
     },
     {
       "id": "town_2_building_1",
@@ -2560,19 +2592,21 @@
       "solid": true,
       "variant": 3,
       "locationId": "town_2",
-      "region": 2
+      "region": 2,
+      "townId": "town_2"
     },
     {
       "id": "town_2_building_2",
       "type": "building",
-      "x": 10790,
-      "y": 1125,
+      "x": 11075,
+      "y": 1265,
       "w": 160,
       "h": 135,
       "solid": true,
       "variant": 0,
       "locationId": "town_2",
-      "region": 2
+      "region": 2,
+      "townId": "town_2"
     },
     {
       "id": "town_2_building_3",
@@ -2584,7 +2618,8 @@
       "solid": true,
       "variant": 1,
       "locationId": "town_2",
-      "region": 2
+      "region": 2,
+      "townId": "town_2"
     },
     {
       "id": "town_2_well",
@@ -2751,7 +2786,9 @@
       "solid": true,
       "variant": 2,
       "locationId": "town_extra_2",
-      "region": 2
+      "region": 2,
+      "townId": "town_extra_2",
+      "townPainting": "outpost-2"
     },
     {
       "id": "town_extra_2_building_1",
@@ -2763,7 +2800,8 @@
       "solid": true,
       "variant": 3,
       "locationId": "town_extra_2",
-      "region": 2
+      "region": 2,
+      "townId": "town_extra_2"
     },
     {
       "id": "town_extra_2_building_2",
@@ -2775,7 +2813,8 @@
       "solid": true,
       "variant": 0,
       "locationId": "town_extra_2",
-      "region": 2
+      "region": 2,
+      "townId": "town_extra_2"
     },
     {
       "id": "town_extra_2_building_3",
@@ -2787,7 +2826,8 @@
       "solid": true,
       "variant": 1,
       "locationId": "town_extra_2",
-      "region": 2
+      "region": 2,
+      "townId": "town_extra_2"
     },
     {
       "id": "town_extra_2_well",
@@ -4088,7 +4128,9 @@
       "solid": true,
       "variant": 2,
       "locationId": "town_way_2",
-      "region": 2
+      "region": 2,
+      "townId": "town_way_2",
+      "townPainting": "outpost-6"
     },
     {
       "id": "town_way_2_building_1",
@@ -4100,7 +4142,8 @@
       "solid": true,
       "variant": 3,
       "locationId": "town_way_2",
-      "region": 2
+      "region": 2,
+      "townId": "town_way_2"
     },
     {
       "id": "town_way_2_building_2",
@@ -4112,7 +4155,8 @@
       "solid": true,
       "variant": 0,
       "locationId": "town_way_2",
-      "region": 2
+      "region": 2,
+      "townId": "town_way_2"
     },
     {
       "id": "town_way_2_building_3",
@@ -4124,7 +4168,8 @@
       "solid": true,
       "variant": 1,
       "locationId": "town_way_2",
-      "region": 2
+      "region": 2,
+      "townId": "town_way_2"
     },
     {
       "id": "town_way_2_well",
@@ -11152,6 +11197,159 @@
       "label": "Frostmarch · LV 10",
       "variant": 0,
       "region": 2
+    },
+    {
+      "id": "work_town_2_lamp",
+      "type": "townWork",
+      "townId": "town_2",
+      "locationId": "work_town_2",
+      "x": 10690,
+      "y": 1635,
+      "w": 52,
+      "h": 67,
+      "solid": false,
+      "variant": 0,
+      "region": 2
+    },
+    {
+      "id": "town_2_homecoming",
+      "type": "townAftermath",
+      "townId": "town_2",
+      "x": 10665,
+      "y": 1514,
+      "w": 130,
+      "h": 108,
+      "solid": false,
+      "variant": 0,
+      "region": 2
+    },
+    {
+      "id": "town_2_street_regular_0",
+      "type": "friendlyCat",
+      "x": 10790,
+      "y": 1400,
+      "homeX": 10790,
+      "homeY": 1400,
+      "w": 100,
+      "h": 72,
+      "role": 2,
+      "skin": 0,
+      "phase": 0,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 2,
+      "friendly": true,
+      "locationId": "town_2",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_2_street_regular_1",
+      "type": "friendlyCat",
+      "x": 10890,
+      "y": 1400,
+      "homeX": 10890,
+      "homeY": 1400,
+      "w": 100,
+      "h": 72,
+      "role": 3,
+      "skin": 1,
+      "phase": 1.7,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 2,
+      "friendly": true,
+      "locationId": "town_2",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_2_street_regular_2",
+      "type": "friendlyCat",
+      "x": 10945,
+      "y": 1450,
+      "homeX": 10945,
+      "homeY": 1450,
+      "w": 100,
+      "h": 72,
+      "role": 4,
+      "skin": 2,
+      "phase": 3.4,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 2,
+      "friendly": true,
+      "locationId": "town_2",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_2_street_regular_3",
+      "type": "friendlyCat",
+      "x": 10925,
+      "y": 1515,
+      "homeX": 10925,
+      "homeY": 1515,
+      "w": 100,
+      "h": 72,
+      "role": 5,
+      "skin": 3,
+      "phase": 5.1,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 2,
+      "friendly": true,
+      "locationId": "town_2",
+      "variant": 0,
+      "solid": false
     }
   ]
 }
