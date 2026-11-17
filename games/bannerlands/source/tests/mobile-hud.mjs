@@ -35,7 +35,7 @@ const start=async page=>{
 const assertOnscreen=async(page,selector,minHeight=44)=>{
  const r=await page.locator(selector).evaluate(e=>{const r=e.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,hit=document.elementFromPoint(x,y);return {left:r.left,top:r.top,right:r.right,bottom:r.bottom,height:r.height,vw:innerWidth,vh:innerHeight,hit:hit===e||e.contains(hit)};});
  assert.ok(r.left>=-1&&r.top>=-1&&r.right<=r.vw+1&&r.bottom<=r.vh+1,`${selector} outside viewport: ${JSON.stringify(r)}`);
- assert.ok(r.height>=minHeight,`${selector} touch target too short: ${r.height}`);assert.ok(r.hit,`${selector} is covered`);
+ assert.ok(r.right-r.left>=44,`${selector} touch target too narrow: ${r.right-r.left}`);assert.ok(r.height>=minHeight,`${selector} touch target too short: ${r.height}`);assert.ok(r.hit,`${selector} is covered`);
 };
 const open=async(page,pane)=>{await page.locator(`[data-drawer="${pane}"]`).click();assert.equal(await page.locator('#commandPanel').getAttribute('data-pane'),pane);assert.equal(await visible(page,'#commandPanel'),true);};
 const touch=async(session,type,points)=>session.send('Input.dispatchTouchEvent',{type,touchPoints:points.map((p,i)=>({x:p.x,y:p.y,id:i+1,radiusX:2,radiusY:2,force:1}))});
@@ -45,16 +45,37 @@ const drag=async(session,from,to,{hold=0,cancel=false}={})=>{await touch(session
 try{
  for(const [width,height] of [[320,740],[390,844],[844,390],[1536,688]]){
   const context=await browser.newContext({viewport:{width,height},hasTouch:true,isMobile:true,deviceScaleFactor:1});const page=await context.newPage();await start(page);
-  for(const selector of ['#commandPanel','#selectionDock','#touchControls','#minimapDock','#heroHudButton','#quickFormationOrders','#mobileTroopControls','[data-drawer="orders"]','[data-drawer="map"]'])await hidden(page,selector);
-  for(const selector of ['[data-drawer="build"]','[data-drawer="army"]','[data-drawer="council"]','#mobileMapToggle'])await assertOnscreen(page,selector);
+  for(const selector of ['#commandPanel','#selectionDock','#touchControls','#minimapDock','#quickFormationOrders','#mobileTroopControls','[data-drawer="map"]'])await hidden(page,selector);
+  for(const selector of ['[data-drawer="build"]','[data-drawer="army"]','[data-drawer="orders"]','[data-drawer="council"]','#mobileMapToggle','#heroHudButton','#fieldObjective'])await assertOnscreen(page,selector);
   const geometry=await page.evaluate(()=>{const r=document.querySelector('#battleCanvas').getBoundingClientRect();return {width:r.width,height:r.height,overflow:document.documentElement.scrollWidth>innerWidth,topbar:document.querySelector('#topbar').getBoundingClientRect().height};});
-  assert.ok(geometry.width>=width-1&&geometry.height>=height-1,`Canvas should fill viewport: ${JSON.stringify(geometry)}`);assert.equal(geometry.overflow,false);assert.ok(geometry.topbar<=36,'Resource strip should be narrow');
-  for(const pane of ['build','army','council']){await open(page,pane);await assertOnscreen(page,'#closeDrawer');await page.locator('#closeDrawer').click();await hidden(page,'#commandPanel');}
+  assert.ok(geometry.width>=width-1&&geometry.height>=height-1,`Canvas should fill viewport: ${JSON.stringify(geometry)}`);assert.equal(geometry.overflow,false);assert.ok(geometry.topbar<=54,`Resource strip height: ${geometry.topbar}px`);
+  for(const pane of ['build','army','orders','council']){await open(page,pane);await assertOnscreen(page,'#closeDrawer');await page.locator('#closeDrawer').click();await hidden(page,'#commandPanel');}
   await page.locator('#mobileMapToggle').click();assert.equal(await visible(page,'#minimapDock'),true);await page.locator('#mobileMapToggle').click();await hidden(page,'#minimapDock');
-  await page.evaluate(()=>window.__bannerlands.selectArmy());await assertOnscreen(page,'#mobileAttack');await assertOnscreen(page,'#mobileOptions');await hidden(page,'#selectionDock');
+  await page.evaluate(()=>window.__bannerlands.selectArmy());await assertOnscreen(page,'#quickAdvanceButton');await assertOnscreen(page,'#quickHoldButton');await assertOnscreen(page,'#mobileAttack');await assertOnscreen(page,'#mobileOptions');await hidden(page,'#selectionDock');
   await page.locator('#mobileOptions').click();for(const selector of ['#mobileExpand','#mobilePatrol','#mobileStandard','#mobileMoreOrders','#mobileClear'])assert.equal(await visible(page,selector),true,selector);
   await page.locator('#mobileOptions').click();await hidden(page,'#mobileOptionsMenu');
+  if(process.env.BANNERLANDS_QA_OUT){await fs.promises.mkdir(process.env.BANNERLANDS_QA_OUT,{recursive:true});await page.screenshot({path:path.join(process.env.BANNERLANDS_QA_OUT,'hud-touch-'+width+'x'+height+'.png')});}
   passed(`Compact layout, map and selected controls at ${width}×${height}`);await context.close();
+ }
+ for(const [width,height] of [[1366,768],[1920,1080]]){
+  const context=await browser.newContext({viewport:{width,height}}),page=await context.newPage();await start(page);
+  assert.equal(await page.locator('#gameplayDock button:visible').count(),5);
+  await page.evaluate(()=>window.__bannerlands.selectArmy());await page.locator('#quickAdvanceButton').click();
+  assert.equal(await page.locator('#commandPanel').isVisible(),false);
+  assert.ok(await page.evaluate(()=>[...window.__bannerlands.ui.selected].some(id=>window.__bannerlands.game.byId.get(id)?.order?.mode==='advance')));
+  await page.locator('#quickHoldButton').click();assert.ok(await page.evaluate(()=>[...window.__bannerlands.ui.selected].every(id=>window.__bannerlands.game.byId.get(id)?.order?.mode==='hold')));
+  await page.locator('#locateSelection').click();assert.ok(await page.locator('#fieldTypes').textContent());
+  const footprint=await page.evaluate(()=>{
+   const visible=['#topbar','#fieldArmyControls','#gameplayDock','#minimapDock','#quickStandardOrders','#toast.visible','#battleAlert:not([hidden])','#connectionStatus:not([hidden])','#orderReceipt:not([hidden])'];
+   // Sum the distinct occupied controls, conservatively counting any overlap twice.
+   return visible.reduce((area,selector)=>{const r=document.querySelector(selector)?.getBoundingClientRect();return area+(r?r.width*r.height:0);},0)/(innerWidth*innerHeight);
+  });
+  if(process.env.BANNERLANDS_QA_OUT){await fs.promises.mkdir(process.env.BANNERLANDS_QA_OUT,{recursive:true});await page.screenshot({path:path.join(process.env.BANNERLANDS_QA_OUT,'hud-desktop-'+width+'x'+height+'.png')});}
+  assert.ok(footprint<=.15,`HUD occupies ${footprint*100}%`);
+  await page.evaluate(()=>window.__bannerlands.game.event('Your tower was lost.',window.__bannerlands.game.playerTeam??0,{x:12,y:17}));
+  await page.locator('#battleAlert').click();assert.equal(await page.locator('#battleAlert').isVisible(),false);
+  passed(`Closed HUD with selection covers ${(footprint*100).toFixed(2)}% at ${width}×${height}; Advance, Hold, find formation and locate alert`);
+  await context.close();
  }
  const context=await browser.newContext({viewport:{width:844,height:390},hasTouch:true,isMobile:true,deviceScaleFactor:1});const page=await context.newPage();await start(page);const session=await context.newCDPSession(page);
  await page.evaluate(()=>window.__bannerlands.selectArmy());

@@ -59,17 +59,27 @@ try{
   const mainMenus=[];
   for(const size of [{width:1440,height:960},{width:390,height:844}]){
     await page.setViewportSize(size);await page.goto(server.url);await page.waitForFunction(()=>window.__bannerlands&&!document.getElementById('startButton').disabled,{timeout:120000});
-    for(const selector of ['#hostLobbyButton','#browseLobbiesButton','#joinInviteButton','.online-download'])assert.ok(await page.locator(selector).isVisible());
+    for(const selector of ['#startButton','#browseLobbiesButton','#joinInviteButton','.online-download'])assert.ok(await page.locator(selector).isVisible());
     const menu=await page.locator('.campaign-menu').evaluate(el=>({rect:{x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y,width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height},scrollWidth:el.scrollWidth,clientWidth:el.clientWidth}));
     assert.ok(menu.scrollWidth<=menu.clientWidth+1,'Original campaign menu has no horizontal overflow');assert.ok(menu.rect.y>=0&&menu.rect.y+menu.rect.height<=size.height+1,'Original campaign menu stays inside viewport');
     if(size.width<600){await page.locator('#menuCampaignTab').click();assert.equal(await page.locator('#menuOverlay').getAttribute('data-menu-tab'),'campaign');if(out)await page.screenshot({path:path.join(out,'bannerlands-mobile-campaign-before-return.png')});await page.locator('#menuHouseTab').click();}
-    await page.locator('#hostLobbyButton').click();assert.ok(await page.locator('.multiplayer-download:visible').count()>0,'Browser host entry clearly offers the download');await page.locator('[data-action="close"]').click();
+    assert.equal(await page.locator('#hostLobbyButton').isVisible(),false);
+    await page.locator('#joinInviteButton').click();assert.equal(await page.locator('[data-view="host"]').isVisible(),false);await page.locator('[data-action="close"]').click();
     if(out)await page.screenshot({path:path.join(out,'bannerlands-main-menu-'+size.width+'.png')});
-    await page.locator('.online-download').click();await page.waitForURL('**/download.html');assert.equal(await page.title(),'Download Bannerlands for Windows');assert.ok(await page.locator('#downloadInstaller').isVisible());
+    await page.locator('.online-download').click();await page.waitForURL('**/download.html');assert.equal(await page.title(),'Download Bannerlands');assert.ok(await page.locator('#publishedWindows').isVisible());
     const download=await page.evaluate(()=>({width:document.documentElement.scrollWidth,viewport:innerWidth}));assert.ok(download.width<=download.viewport+1,'Download page has no horizontal overflow');
     if(out)await page.screenshot({path:path.join(out,'bannerlands-download-'+size.width+'.png')});
     mainMenus.push({...size,menu,download});
   }
+  const versions=await page.evaluate(async()=>{const p=await import('/multiplayer/protocol.js');return {version:p.GAME_VERSION,assetVersion:p.ASSET_VERSION,protocolVersion:p.PROTOCOL_VERSION};});
+  const files=['Bannerlands.html','Bannerlands-Setup.exe','Bannerlands-Windows-x64.zip'].map(path=>({path,bytes:42,sha256:'1'.repeat(64)}));
+  let manifest={...versions,files};
+  await page.route('**/release-manifest.json',route=>route.fulfill({json:manifest}));
+  await page.reload();await page.waitForSelector('#downloadOffline:visible');
+  for(const [id,path] of [['downloadOffline',files[0].path],['downloadInstaller',files[1].path],['downloadPortable',files[2].path]])assert.equal(await page.locator('#'+id).getAttribute('href'),path);
+  manifest={...manifest,assetVersion:'different-art'};
+  await page.reload();await page.waitForFunction(()=>document.querySelector('#releaseState').textContent.includes('have not been posted'));
+  assert.equal(await page.locator('#downloadOffline').isVisible(),false);
   const installed=await browser.newPage({viewport:{width:1440,height:960}});
   await installed.addInitScript(()=>{window.bannerlandsHost={status:async()=>({status:'ready'}),host:async()=>({}),stop:async()=>({})};});
   await installed.goto(server.url);await installed.waitForFunction(()=>window.__bannerlands&&!document.getElementById('startButton').disabled,{timeout:120000});

@@ -23,7 +23,7 @@ export function combatPose(u,g,definition={},moving=false){
   const now=g.time||0,event=u.attackVisual,age=event?(event.elapsed??now-event.at):Infinity;
   const ranged=definition.class==='archer'||definition.ranged||u.type==='archer';
   const crossbow=crossbows.has(u.type),hammer=!!definition.hammer;
-  const windup=hammer?.2:definition.spearWeapon?.16:.12;
+  const windup=hammer?.2:ranged&&!crossbow?.28:definition.spearWeapon?.16:.12;
   const active=event&&age>=0&&age<(crossbow?.12:hammer?.4:definition.spearWeapon?.3:.26);
   const reload=crossbow&&!moving?crossbowReloadPose(u,definition):null;
   const hit=u.hitVisual,hitAge=hit?now-hit.at:Infinity,reacting=hitAge>=0&&hitAge<.18;
@@ -67,3 +67,25 @@ export function combatPose(u,g,definition={},moving=false){
 // Character equipment is painted into complete authored raster action frames.
 // Retained as a compatibility hook; UI markers are rendered separately.
 export function drawCombatAccents(){}
+
+// A crowded rank needs one readable contact per effect/patch. Choose locally
+// visible events before assigning the budget, so hidden impacts cannot suppress
+// a visible cue or disclose a gunner in fog.
+export function visibleCombatEffects(g,bounds,lowDetail=false){
+  const bursts=new Map(),limit=lowDetail?24:48,cell=lowDetail?48:32;
+  const cx=bounds?(bounds.left+bounds.right)/2:0,cy=bounds?(bounds.top+bounds.bottom)/2:0;
+  for(const f of g.effects||[]){
+    if(lowDetail&&f.type==='dust')continue;
+    const p=iso(f.x,f.y);
+    if(bounds&&(p.x<bounds.left||p.x>bounds.right||p.y<bounds.top||p.y>bounds.bottom))continue;
+    if(g.config?.fogOfWar&&!g.isVisibleTo(g.playerTeam??0,{x:f.x,y:f.y}))continue;
+    const key=[Math.floor(p.x/cell),Math.floor(p.y/cell),f.type,f.kind||'',f.team].join('|');
+    const prior=bursts.get(key);
+    if(!prior||f.life/(f.maxLife||1)>prior.f.life/(prior.f.maxLife||1)){
+      bursts.set(key,{f,p,priority:f.type==='dust'?2:f.type==='hit'?1:0,distance:(p.x-cx)**2+(p.y-cy)**2});
+    }
+  }
+  const chosen=[...bursts.values()];
+  if(chosen.length>limit){chosen.sort((a,b)=>a.priority-b.priority||a.distance-b.distance);chosen.length=limit;}
+  return chosen;
+}

@@ -173,7 +173,61 @@ Collision candidate bins preserve exact fixed-seed outcomes and original
 iteration order; projection caching, presentation precision and property-delta
 encoding change network work rather than combat rules or graphics.
 
-Remaining release gates:
+### Four-player preview soak
+
+On November 17, 2026, four Chrome players joined a private standard Crownlands
+campaign on the reference laptop with twelve AI houses, fog and seed 44277.
+The guest issued Hold, recruited infantry and recovered the same house after
+reloading. All four players retained control of their assigned troops. The
+180-second post-reload sample recorded zero browser errors, guest polling
+failures or resynchronizations.
+
+| Measure | Result |
+| --- | --- |
+| Guest frame interval, p95 / p99 | 133.4 / 200.0 ms |
+| Guest frames over 100 ms | 448 of 1,931 |
+| Host simulation progress | 51.8 game seconds in 184.69 wall seconds (0.28×) |
+| Visible pending feedback for Hold | 9.6 ms |
+| Host acknowledgment for Hold / recruit | 511.3 / 644.4 ms |
+
+The wall-time measurement includes the final ownership checks. Sampled
+JavaScript heap sizes (first / peak / last) were 161 / 268 / 191 MiB on the host
+and 17 / 32 / 28 MiB for the guest. Native and graphics memory were outside the
+measurement. The normal starting armies on this shared machine missed the
+sustained real-time target. Full-capacity army timings, lower-powered hardware
+and independent physical networks have separate acceptance checks.
+[Recorded soak results](multiplayer-evidence/battlefield-preview-soak.json)
+
+### Battlefield preview packaging and production handoff
+
+On Windows, `npm run build:release -- --output <folder> --cloudflared <exe>`
+builds the website ZIP, offline HTML, Windows installer and portable ZIP from
+the same checkout. Use the Node runtime and cloudflared binary pinned in
+`source/hosting/licenses/components.json`. Unpack the website ZIP beside the
+other three files. Its download page checks the game, art and protocol versions
+in `release-manifest.json` before showing the local downloads. The outer
+manifest and `SHA256SUMS.txt` also cover the website ZIP. The review build uses
+the checked-in crest for both Windows launch paths.
+
+The current temporary connection is suitable for preview testing. A production
+pilot needs a publisher-operated relay or managed tunnel, a scoped credential
+per host, and a stable public address for each active match. The publisher
+must choose an operator and validate provisioning, revocation, traffic cost,
+availability and outage behavior before enabling public discovery. Exercise a
+complete match, an interrupted guest connection and a host shutdown from two
+independent physical networks, using the signed candidate and the deployed web
+build. [Cloudflare Quick Tunnels](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/)
+
+For Windows distribution, provision the verified publisher identity and signing
+service, sign the final setup executable using SHA-256 and an RFC 3161
+timestamp, and verify the signature and publisher on a clean Windows machine
+with `signtool verify /pa /v Bannerlands-Setup.exe`. Recalculate the release
+checksums and both manifests from the signed bytes before publication. The
+current preview packager emits unsigned files. Signing and the independent
+network test require the release operator's infrastructure.
+[Microsoft SignTool](https://learn.microsoft.com/en-us/windows/win32/seccrypto/signtool)
+
+### Acceptance checks
 
 - Complete a real match between separate physical locations over independently
   connected devices. A same-laptop trip through a public tunnel is useful

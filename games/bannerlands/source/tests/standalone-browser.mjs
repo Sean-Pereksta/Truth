@@ -12,6 +12,7 @@ assert.ok(file,'Provide BANNERLANDS_STANDALONE or a path argument to the built B
 assert.ok(fs.existsSync(file),'Standalone file exists');
 const browser=await chromium.launch({headless:true,executablePath:process.env.BANNERLANDS_BROWSER});
 const page=await browser.newPage({viewport:{width:1440,height:900}}),errors=[],external=[];
+await page.context().setOffline(true);
 page.on('pageerror',error=>errors.push(error.message));
 page.on('console',message=>{if(message.type()==='error')errors.push(message.text());});
 await page.route(/^https?:/,route=>{external.push(route.request().url());return route.abort();});
@@ -34,6 +35,29 @@ try{
   assert.equal(await page.evaluate(()=>window.__bannerlands.ui.selected.has(window.__bannerlands.game.heroFor(0).id)),true);
   assert.equal(await page.locator('#quickStandardOrders').isVisible(),true);
   await page.keyboard.press('z');await page.keyboard.press('Escape');
+  // Stage a short skirmish on legal ground in the campaign that just opened.
+  // Movement, target acquisition, projectiles and damage use the real game.
+  const combat=await page.evaluate(()=>{
+    const {game:g}=window.__bannerlands;
+    let center;
+    for(let y=8;!center&&y<g.H-8;y++)for(let x=8;x<g.W-8;x++){
+      if([-3,-2,-1,0,1,2,3].every(dx=>[-1,0,1].every(dy=>g.navigation.isClearPoint(x+dx,y+dy,.3)))&&g.buildings.every(b=>Math.hypot(x-b.x,y-b.y)>6)){center={x,y};break;}
+    }
+    if(!center)throw new Error('No passable skirmish ground.');
+    const soldiers=[];
+    for(const team of [0,1]){
+      const side=team?1:-1,ids=[];
+      for(const [i,type] of ['infantry','archer','cavalry'].entries()){
+        const u=g.addUnit(team,type,center.x+side*2,center.y+i-1);
+        soldiers.push(u);ids.push(u.id);
+      }
+      g.command(ids,center.x-side*2,center.y,'attack','line');
+    }
+    g.hash.rebuild(g.units);g.paused=false;
+    for(let tick=0;tick<360&&soldiers.every(u=>u.hp===u.maxHp);tick++)g.update(1/30);
+    return {wounded:soldiers.filter(u=>u.hp<u.maxHp).length,time:g.time};
+  });
+  assert.ok(combat.wounded>0&&combat.time>0,'Standalone combat deals damage offline');
   assert.deepEqual(errors,[],'Standalone runtime and artwork loaders have no errors');assert.deepEqual(external,[],'All game dependencies load offline');
   if(process.env.LANDS_RENDER_OUT){fs.mkdirSync(process.env.LANDS_RENDER_OUT,{recursive:true});await page.screenshot({path:path.join(process.env.LANDS_RENDER_OUT,'standalone-battlefield.png')});}
   console.log('PASS Standalone loads 16 painted heroes and house flags,23 painted troops and both pike buildings offline; portrait selects the hero and reveals the flag action.');

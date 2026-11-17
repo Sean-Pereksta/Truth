@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {combatPose,crossbowReloadPose,drawCombatAccents} from '../../combat-visuals.js';
+import {combatPose,crossbowReloadPose,drawCombatAccents,visibleCombatEffects} from '../../combat-visuals.js';
 import {Game,HOUSES,UNIT_DEFS} from '../../core.js';
 let checks=0;
 const test=(name,fn)=>{fn();checks++;console.log('PASS '+name);};
@@ -67,5 +67,17 @@ test('Simulation strikes still apply identical damage immediately and record the
   const u=g.addUnit(0,'stormbreaker',20,20),v=g.addUnit(1,'archer',20.7,20);v.facingX=-1;v.facingY=0;g.hash.rebuild(g.units);const hp=v.hp;g.attack(u,v);
   assert.equal(v.hp,hp-UNIT_DEFS.stormbreaker.damage);assert.equal(u.attackVisual.at,g.time);assert.equal(u.attackVisual.dx,1);assert.equal(u.attackVisual.cycle,u.cooldown);assert.ok(v.knockT>0);assert.equal(v.hitVisual.at,g.time);
   assert.equal(combatPose(u,g,UNIT_DEFS[u.type]).frame,2);
+});
+test('Crowded effects retain visible contacts, honor fog and prioritize the camera center',()=>{
+  const effect=(x,y,type,life=1)=>({x,y,type,life,maxLife:1,team:0});
+  const g={playerTeam:0,config:{fogOfWar:true},effects:[],isVisibleTo:(_team,p)=>p.team===0||p.y!==6};
+  for(let x=1;x<=70;x++)g.effects.push(effect(x,0,'blockImpact'));
+  const focal=effect(26,0,'chargeImpact'),duplicate=effect(26.01,0,'chargeImpact',.5),hidden=effect(26,6,'braceImpact');
+  g.effects.push(focal,duplicate,hidden,effect(24,1,'dust'),effect(500,0,'explosion'));
+  const bounds={left:0,right:1400,top:-350,bottom:1050};
+  const picked=visibleCombatEffects(g,bounds,true).map(event=>event.f);
+  assert.equal(picked.length,24);assert.ok(picked.includes(focal));assert.ok(!picked.includes(duplicate)&&!picked.includes(hidden));
+  assert.ok(picked.every(f=>f.type!=='dust'&&f.type!=='explosion'));
+  assert.ok(!picked.includes(g.effects[0]),'An edge event yields to the center when saturated.');
 });
 console.log(`${checks} combat presentation checks passed.`);

@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
-import {Game} from '../../core.js';
+import {Game,UNIT_DEFS} from '../../core.js';
+import {formationStatus,placeFormation} from '../../formation-placement.js';
+import {snapshotWorld,createRemoteGame,applySnapshot} from '../../multiplayer/snapshot.js';
 
 let checks=0;
 const test=(name,fn)=>{fn();checks++;console.log('PASS '+name);};
-function fixture(){
-  const g=new Game({landscape:'open',scale:'standard',enemies:1,house:9,fogOfWar:false,seed:72742});
+function fixture(config={}){
+  const g=new Game({landscape:'open',scale:'standard',enemies:1,house:9,fogOfWar:false,seed:72742,...config});
   g.units=[];g.buildings=[];g.byId.clear();g.projectiles=[];g.effects=[];g.fireZones=[];g.castles=[];
   for(const t of g.tiles){t.terrain=t.x===0||t.y===0||t.x===g.W-1||t.y===g.H-1?'water':'grass';t.feature=null;t.owner=0;t.claim=-1;t.capture=0;}
   g.navigation.invalidate();
@@ -45,6 +47,7 @@ test('Spearmen engage as a formed company and do not pursue through their neighb
   assert.ok(foes.some(u=>u.hp<1000),'The front ranks reach real weapon range and deal damage.');
   assert.ok(troops.every(u=>u.order.mode==='advance'&&Math.hypot(u.x-u.order.x,u.y-u.order.y)<.75),'Combat preserves each soldier\'s slot.');
   assert.ok(troops.some(u=>g.isSpearBraced(u,{x:-1,y:0})),'After the line halts, spears can prepare their stationary brace.');
+  assert.equal(formationStatus(troops,UNIT_DEFS),'Engaged');
 });
 
 test('A breaks formation into independent charges, and a move command cancels W immediately',()=>{
@@ -80,14 +83,142 @@ test('A large mixed company advances at a shared pace and preserves its rear ran
   assert.ok(Math.max(...troops.slice(120).map(u=>u.order.x))<Math.max(...troops.slice(0,120).map(u=>u.order.x)),'Crossbows retain their protected rear ranks.');
 });
 
-test('Advancing formations respect impassable riverbanks and cross a five-lane bridge',()=>{
+for(const feature of ['bridge','pass'])test(`Advancing formations cross a five-lane ${feature} under losses and regain their width`,()=>{
   const g=fixture(),troops=Array.from({length:160},()=>g.addUnit(0,'bridge_warden',40,40.5)),ids=troops.map(u=>u.id);
   g.command(ids,40,40.5,'move','line',{x:1,y:0});for(const u of troops){u.x=u.order.x;u.y=u.order.y;u.facingX=1;u.facingY=0;}
-  for(let y=1;y<g.H-1;y++)for(const x of [48,49]){const t=g.tileAt(x,y);t.terrain='water';t.feature=y>=38&&y<=42?'bridge':null;t.featureAxis='x';}
+  for(let y=1;y<g.H-1;y++)for(const x of [48,49]){const t=g.tileAt(x,y);t.terrain=feature==='bridge'?'water':'mountain';t.feature=y>=38&&y<=42?feature:null;t.featureAxis='x';}
   g.navigation.invalidate();const foes=company(g,1,18,60,40.5,'infantry');for(const u of foes){g.hold([u.id]);u.cooldown=1e9;u.hp=u.maxHp=1000;}
-  g.advance(ids);
-  for(let i=0;i<1800;i++){g.update(1/30);assert.ok(troops.every(u=>g.isWalkable(u.x,u.y)));if(troops.every(u=>u.x>50.3))break;}
-  assert.ok(troops.every(u=>u.x>50.3),'Every rank must eventually cross the passable bridge.');
+  g.advance(ids);const c=[...g.formationAdvances.values()][0];
+  const slots=new Map(troops.map(u=>[u.id,u.order.advanceIndex]));
+  let loss=false,widened=false;
+  for(let i=0;i<1800;i++){
+    g.update(1/30);
+    const living=troops.filter(u=>u.hp>0);
+    assert.ok(living.every(u=>g.isWalkable(u.x,u.y)));
+    if(!loss&&c.status==='Crossing'&&c.x>47){troops[0].hp=0;loss=true;}
+    if(loss&&c.crossing)assert.ok(living.every(u=>u.order.advanceIndex===slots.get(u.id)),'No one switches files on the bridge.');
+    if(loss&&!c.crossing&&living.every(u=>u.x>50.3)){widened=true;break;}
+  }
+  assert.ok(loss&&widened,'The surviving ranks cross the bridge and regain their full width.');
+});
+
+test('Open-field losses preserve the exact control march, order, front, and all unpromoted slots',()=>{
+  function march(withLosses){
+    const g=fixture(),troops=company(g,0,32,30,40),foes=company(g,1,10,62,40,'infantry');
+    for(const u of foes){g.hold([u.id]);u.cooldown=1e9;}
+    g.advance(troops.map(u=>u.id),'pike',{ranks:4,lockFacing:true});
+    const c=[...g.formationAdvances.values()][0],orders=troops.map(u=>u.order);
+    for(const u of troops){u.x=u.order.x;u.y=u.order.y;}
+    step(g,2);
+    const path=[],start=c.x;let changes=0,stops=0;
+    for(let tick=0;tick<180;tick++){
+      if(withLosses&&[4,36,68].includes(tick))troops.find(u=>u.hp>0&&u.order.advanceIndex===3).hp=0;
+      if(withLosses&&tick===100)for(const u of troops)if([0,1,2,8,9,10,16,17,18,31].includes(u.order.advanceIndex))u.hp=0;
+      const living=troops.filter(u=>u.hp>0),before=liveSlots(living),x=c.x,enemy=c.enemyId;
+      g.update(1/30);
+      const promoted=living.filter(u=>u.order.advanceIndex!==before.get(u.id).index);
+      assert.ok(promoted.length<=2);changes+=promoted.length;
+      for(const u of living){
+        assert.equal(u.order,orders[troops.indexOf(u)]);assert.equal(u.order.advanceId,c.id);assert.ok(u.order.lockFacing);
+        if(!promoted.includes(u))assert.deepEqual(liveSlots([u]).get(u.id),before.get(u.id));
+      }
+      assert.equal(c.enemyId,enemy);assert.equal(c.angle,0);assert.equal(formationStatus(living,UNIT_DEFS),'Advancing');
+      if(x===c.x)stops++;path.push([c.x,c.y]);
+    }
+    assert.equal(stops,0);assert.ok(!withLosses||changes>0);
+    return {path,travel:c.x-start};
+  }
+  const control=march(false),losses=march(true);
+  assert.deepEqual(losses,control);console.log(`Matched march: ${control.travel.toFixed(3)} tiles in 180 ticks, zero stops with and without losses.`);
+});
+function liveSlots(troops){
+  return new Map(troops.map(({id,order})=>[id,{index:order.advanceIndex,side:order.slotSide,back:order.slotBack}]));
+}
+
+test('Lead rank loss, a lone survivor and a wipe preserve rear roles and clean up the cohort',()=>{
+  const g=fixture(),pikes=company(g,0,8,30,40),archers=company(g,0,4,28,40,'river_ranger'),all=[...pikes,...archers];
+  const foes=company(g,1,8,58,40,'infantry');for(const u of foes)g.hold([u.id]);
+  g.advance(all.map(u=>u.id),'line',{ranks:3,lockFacing:true});
+  const c=[...g.formationAdvances.values()][0],protectedSlots=liveSlots(archers);
+  for(const u of all){u.x=u.order.x;u.y=u.order.y;}
+  step(g,2);
+  for(const u of pikes.slice(0,4))u.hp=0;
+  for(let tick=0;tick<30;tick++){const x=c.x;g.update(1/30);assert.ok(c.x>x);}
+  assert.ok(pikes.slice(4).some(u=>u.order.advanceIndex<4),'A surviving pike takes the lead.');
+  assert.deepEqual(liveSlots(archers),protectedSlots);
+  for(const u of all.slice(0,-1))u.hp=0;
+  const last=all.at(-1),order=last.order,x=c.x;
+  step(g,1);assert.equal(last.order,order);assert.ok(c.x>x);assert.equal(c.members.length,1);
+  assert.equal(c.status,'Advancing');assert.equal(last.order.marchSide,last.order.slotSide);assert.equal(last.order.marchBack,last.order.slotBack);
+  // The last archer may close a rear-rank gap, but cannot fill a pike lane.
+  assert.equal(c.slots[last.order.advanceIndex].role,4);
+  last.hp=0;g.update(1/30);assert.equal(g.formationAdvances.size,0);
+});
+
+test('A surviving outside file reaches real weapon contact without resetting its slot or stopping for losses',()=>{
+  for(const bothWings of [false,true]){
+    const g=fixture(),troops=company(g,0,32,30,40),foes=company(g,1,4,43,40,'infantry');
+    for(const u of foes){g.hold([u.id]);u.cooldown=1e9;u.hp=u.maxHp=1000;}
+    g.advance(troops.map(u=>u.id),'line',{ranks:1,lockFacing:!bothWings});
+    for(const u of troops){u.x=u.order.x;u.y=u.order.y;}
+    step(g,2);
+    const c=[...g.formationAdvances.values()][0],survivors=bothWings?[troops[0],troops.at(-1)]:[troops.at(-1)];
+    const original=liveSlots(survivors);
+    for(const u of troops)if(!survivors.includes(u))u.hp=0;
+    for(let tick=0;tick<900&&foes.every(u=>u.hp===1000);tick++){
+      const x=c.x,y=c.y;g.update(1/30);
+      assert.ok(c.x!==x||c.y!==y||c.status==='Engaged','A loss alone cannot interrupt an underway wheel or march.');
+      if(c.status==='Engaged')assert.ok(survivors.some(s=>foes.some(f=>Math.hypot(s.x-f.x,s.y-f.y)<=g.unitRange(s)+.1)));
+    }
+    assert.deepEqual(liveSlots(survivors),original);
+    assert.ok(foes.some(u=>u.hp<1000),'An empty center cannot claim contact on behalf of the surviving wing.');
+  }
+});
+
+test('Allied guest snapshots preserve the host anchor, slots and march status after a loss',()=>{
+  const g=fixture({mode:'team-conquest',enemies:3,multiplayer:true,humanTeams:[0,1]}),troops=company(g,0,12,30,40),ids=troops.map(u=>u.id),ally=1;
+  assert.ok(g.allied(0,ally)&&g.hostile(0,2));
+  for(const team of [2,3])g.addBuilding(team,'keep',90,70+team*2);
+  company(g,2,8,48,40,'infantry').forEach(u=>g.hold([u.id]));
+  g.advance(ids,'line',{ranks:3,lockFacing:true});step(g,2);
+  const view=createRemoteGame(snapshotWorld(g,ally,{initial:true})),c=[...g.formationAdvances.values()][0];
+  troops[0].hp=0;step(g,.8);applySnapshot(view,snapshotWorld(g,ally,{sequence:1}));
+  const remote=view.formationAdvances.get(c.id),living=troops.filter(u=>u.hp>0),remoteTroops=living.map(u=>view.byId.get(u.id));
+  assert.ok(!view.byId.has(troops[0].id));assert.deepEqual(remote.members,c.members);
+  assert.deepEqual([remote.x,remote.y,remote.angle,remote.lockFacing,remote.status],[c.x,c.y,c.angle,c.lockFacing,c.status]);
+  assert.deepEqual(liveSlots(remoteTroops),liveSlots(living));assert.equal(formationStatus(remoteTroops,UNIT_DEFS),formationStatus(living,UNIT_DEFS));
+  assert.ok(snapshotWorld(g,2).formationAdvances.length===0);
+});
+
+test('Fixed-destination moves and Form Up retain their destination through losses and accept a replacement order',()=>{
+  for(const placement of [false,true]){
+    const g=fixture(),troops=company(g,0,24,30,40),ids=troops.map(u=>u.id);
+    if(placement)placeFormation(g,ids,{x:42,y:40,angle:0,ranks:3,lockFacing:true},UNIT_DEFS);
+    else g.command(ids,42,40,'move','line',{x:1,y:0});
+    step(g,1);troops[0].hp=0;
+    const living=troops.slice(1),orders=living.map(u=>u.order),start=living[4].x;
+    step(g,1);assert.ok(living[4].x>start);
+    living.forEach((u,i)=>{assert.equal(u.order,orders[i]);assert.equal(u.order.groupX,42);});
+    g.command(living.map(u=>u.id),22,38,'move');step(g,.1);
+    assert.ok(living.every(u=>u.order.groupX===22&&!u.order.placementId));
+    assert.equal(g.placedFormations?.size||0,0);
+  }
+});
+
+test('Blocked ground holds the anchor, while Hold detaches only the selected troops',()=>{
+  const g=fixture(),troops=company(g,0,12,30,40);
+  for(let y=1;y<g.H-1;y++)g.tileAt(34,y).terrain='mountain';
+  g.navigation.invalidate();
+  company(g,1,12,50,40,'infantry').forEach(u=>g.hold([u.id]));
+  g.advance(troops.map(u=>u.id),'pike',{ranks:3,lockFacing:true});
+  step(g,2);const c=[...g.formationAdvances.values()][0],x=c.x;
+  assert.equal(formationStatus(troops,UNIT_DEFS),'Blocked');
+  const [held,...marching]=troops;g.hold([held.id]);g.setFacingLock([held.id],false);
+  step(g,.5);
+  assert.equal(c.x,x);assert.equal(held.order.mode,'hold');assert.equal(held.order.advanceId,undefined);
+  assert.ok(c.lockFacing);assert.ok(marching.every(u=>u.order.advanceId===c.id&&u.order.advanceStatus==='Blocked'));
+  g.attackNearest(marching.map(u=>u.id));g.update(1/30);
+  assert.equal(g.formationAdvances.size,0);assert.ok(marching.every(u=>u.order.mode==='attack'));
 });
 
 console.log(`${checks} formation advance checks passed.`);

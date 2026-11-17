@@ -1,0 +1,69 @@
+{
+  "date": "2026-11-17",
+  "scenario": {
+    "landscape": "Crownlands",
+    "scale": "standard",
+    "mode": "conquest",
+    "seed": 44277,
+    "fogEnabled": true,
+    "humanSeats": 4,
+    "aiHouses": 12,
+    "startingArmies": "normal campaign start",
+    "connection": "private loopback",
+    "rendererContexts": 4,
+    "viewport": [
+      1440,
+      960
+    ]
+  },
+  "reference": {
+    "os": "Windows 11 x64",
+    "cpu": "AMD Ryzen 7 5825U",
+    "logicalProcessors": 16,
+    "usableMemoryGiB": 13.84,
+    "browser": "Chrome 157.0.8103.52",
+    "node": "24.19.0"
+  },
+  "method": "Four separate Chrome contexts and the authoritative host shared the reference laptop. The guest issued Hold and recruited infantry, then reloaded and recovered its original seat. Guest frame sampling began after reconnect. Host simulation progress spans the timed sample and final ownership checks.",
+  "frameSample": {
+    "requestedSeconds": 180,
+    "frameIntervals": 1931,
+    "p95Ms": 133.4,
+    "p99Ms": 200,
+    "stallsOver100Ms": 448
+  },
+  "hostProgress": {
+    "wallSeconds": 184.693,
+    "simulationSeconds": 51.8,
+    "realTimeRatio": 0.2805
+  },
+  "orders": {
+    "visiblePendingFeedbackMs": 9.6,
+    "acknowledgmentMs": {
+      "hold": 511.3,
+      "recruitInfantry": 644.4
+    }
+  },
+  "javascriptHeap": {
+    "host": {
+      "samples": 29,
+      "firstBytes": 168649552,
+      "peakBytes": 280657048,
+      "lastBytes": 200261800
+    },
+    "guest": {
+      "samples": 36,
+      "firstBytes": 17905497,
+      "peakBytes": 33308497,
+      "lastBytes": 29697823
+    }
+  },
+  "functionalChecks": {
+    "sameSeatAfterReload": true,
+    "allSelectionsOwned": true,
+    "pageErrors": 0,
+    "postReloadPollFailures": 0,
+    "postReloadResynchronizations": 0,
+    "directoryOperations": 0
+  }
+}

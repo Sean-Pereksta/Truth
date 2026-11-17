@@ -1,3 +1,4 @@
+import {queueArtwork} from './asset-loader.js';
 // Painted bridge sides are cosmetic and baked into the renderer's static
 // bridge-chunk cache. The lane deck, navigation and bridge tiles stay unchanged.
 const bridgeArtPoint=(x,y)=>({x:(x-y)*28,y:(x+y)*14});
@@ -74,7 +75,7 @@ export class BridgeArtwork{
   constructor(){this.ready=false;this.frames={};}
   async load(source='./assets/bridges/stone-edges.png'){
     this.ready=false;
-    const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('Painted bridge side artwork could not load.'));im.src=source;});
+    const image=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=()=>reject(new Error('Painted bridge side artwork could not load.'));queueArtwork(im,source);});
     return this.setAtlas(image);
   }
   setAtlas(image){

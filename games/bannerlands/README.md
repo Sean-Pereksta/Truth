@@ -11,7 +11,7 @@ where the selected mode permits them. Browser guests join without downloading.
 The installer includes the hosting components and creates a Bannerlands desktop
 icon and Start menu entry.
 
-Use [Download Bannerlands](download.html) for the versioned Windows installer,
+Use [Download Bannerlands](download.html) for available Windows and offline builds,
 or see [the multiplayer guide](docs/Online-Multiplayer.md) for setup, validation,
 measurements and remaining release gates. This is a testing preview: maximum
 army campaigns still exceed the measured real-time budget, and separate-location
@@ -67,7 +67,7 @@ territory artwork reduce work on large maps. See
 On desktop the minimap is always visible in the battlefield corner; on touch
 screens it opens and closes using Map. Minimap navigation preserves the current panel. Buttons and
 selected panel titles show opening shortcuts: Build (B), Muster (U), Orders (O),
-Map (M), and More/Council (C). The map refreshes at a bounded six times per second.
+Map (M), and Council (C). The map refreshes at a bounded six times per second.
 
 The Battlefield Visuals update adds contact-timed attacks and reloads, blended
 terrain transitions, small floating house-selection crests, and painted bridge
@@ -162,14 +162,24 @@ clear On/Off choices and visible guidance.
 
 The playable web entry is `index.html`. The current editable JavaScript, CSS, and artwork are beside it. Serve this folder over HTTP; opening the split-module entry directly with `file://` is unsupported.
 
-The battlefield fills the screen. On touch screens, a narrow strip shows gold
-and supply, with Build, Muster and More below and an independently toggled
-minimap in the bottom-right corner. More includes Orders, Council, objectives,
-settings and pause. Panels close on an outside tap without issuing an order.
+The top strip shows gold and income, troop supply, territory, hero health and
+the current objective. Click the hero to find them, or the objective for the
+realm panel. The bottom command bar opens Build, Muster, Orders, Map and Council.
+On touch, Map toggles the minimap and its Map details button opens the drawer.
+Select troops for a count by type and immediate Advance and Hold controls.
+Click the selected count to center the camera on that formation. A loss alert
+with a location marker takes you to the affected area.
+
+With the drawer closed and a mixed army selected, the visible HUD covered
+11.58% of a 1366×768 viewport and 5.86% at 1920×1080 in Chrome. The measurement
+included the minimap and a temporary order confirmation. Players could locate
+the formation and issue Advance or Hold directly. Touch tests covered 320×740,
+390×844, 844×390 and 1536×688 viewports, including 44-pixel command targets,
+map toggling, pan, pinch and tap targeting.
 
 Drag to pan, pinch to zoom, hold briefly and drag to box-select, or double-tap a
 troop to select all living troops of that exact type. With troops selected, tap
-ground to move or a visible enemy to target it. Small Attack and Options buttons
+ground to move or a visible enemy to target it. Attack and Options buttons
 appear at bottom left; Options includes nearby expansion, cavalry patrol and the
 selected hero's flag action. More orders retains formations, groups, rallies and
 all advanced controls. Construction and rally targeting keep drag-to-pan

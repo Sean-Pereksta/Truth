@@ -3,12 +3,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {performance} from 'node:perf_hooks';
 import {gzipSync} from 'node:zlib';
-import {createAuthority} from '../../multiplayer/authority.js';
-import {createSnapshotDelta} from '../../multiplayer/transport-delta.js';
-import {HOUSE_CONTENT,BUILD_DEFS,UNIT_DEFS} from '../../core.js';
-import {houseCanRecruit} from '../../regiments.js';
+import {fileURLToPath,pathToFileURL} from 'node:url';
 
 const argument=(name,fallback)=>process.argv.find(value=>value.startsWith('--'+name+'='))?.slice(name.length+3)??fallback;
+const root=argument('game-root',fileURLToPath(new URL('../../',import.meta.url)));
+const fromGame=file=>import(pathToFileURL(path.resolve(root,file)));
+const {createAuthority}=await fromGame('multiplayer/authority.js');
+const {createSnapshotDelta}=await fromGame('multiplayer/transport-delta.js');
+const {HOUSE_CONTENT,UNIT_DEFS}=await fromGame('core.js');
+const {houseCanRecruit}=await fromGame('regiments.js');
 const simulationHz=30,snapshotHz=10,dt=1/simulationHz;
 const ticks=Number(argument('ticks',900)),warmup=Number(argument('warmup',300)),sampleEvery=simulationHz/snapshotHz;
 if(!Number.isInteger(ticks)||ticks<20||ticks>24000||!Number.isInteger(warmup)||warmup<0||warmup>10000)throw new Error('Choose valid benchmark tick counts.');
@@ -42,7 +45,7 @@ function createScenario(settings){
   if(settings.full)fillArmies(authority.game);return {authority,humans,game:authority.game};
 }
 function checksum(game){return {time:game.time,seed:game.seed,units:game.units.length,positions:game.units.reduce((sum,value)=>sum+value.id*(value.x+value.y*.137+value.hp*.001),0),gold:game.teams.map(value=>value.gold),counts:game.teams.map(value=>value.count),winner:game.winner};}
-const results={measuredAt:new Date().toISOString(),hardware:{cpu:os.cpus()[0]?.model,logicalProcessors:os.cpus().length,memoryGiB:os.totalmem()/2**30,os:os.platform()+' '+os.release(),arch:os.arch(),node:process.version},method:{seed:44277,landscape:'four-rivers',difficulty:'veteran',simulationHz,snapshotHz,sampleTicks:ticks,warmupTicks:warmup,measuredGameSeconds:ticks/simulationHz,warmupGameSeconds:warmup/simulationHz,compression:'gzip level 3, independent response per guest (matches host server)',transport:'property deltas with exact sequence baseline; static terrain initial only',scope:'Synthetic authoritative CPU, replication, compressed bandwidth and heap. No GPU/browser FPS, physical network, Firebase, thermal soak, or real-world latency measurement. Other task browser/build/test workloads were paused for the final run.',baseline:'The same game, seed, human/AI split, full-capacity positions and human commands run first with simulation only. Gameplay checksums must match the replication run; protocol projection cannot change combat outcomes. Full-update raw byte comparisons are sampled once per guest before the timed loop.',fullCapacity:'Every participating house keeps its normal 280 starting troop capacity; full fixtures fill all houses to capacity without changing combat or AI rules.'},scenarios:[]};
+const results={measuredAt:new Date().toISOString(),hardware:{cpu:os.cpus()[0]?.model,logicalProcessors:os.cpus().length,memoryGiB:os.totalmem()/2**30,os:os.platform()+' '+os.release(),arch:os.arch(),node:process.version},method:{seed:44277,landscape:'four-rivers',difficulty:'veteran',simulationHz,snapshotHz,sampleTicks:ticks,warmupTicks:warmup,measuredGameSeconds:ticks/simulationHz,warmupGameSeconds:warmup/simulationHz,compression:'gzip level 3, independent response per guest (matches host server)',transport:'property deltas with exact sequence baseline; static terrain initial only',scope:'Synthetic authoritative CPU, replication, compressed bandwidth and heap. No GPU/browser FPS, physical network, Firebase, thermal soak, or real-world latency measurement.',baseline:'The same game, seed, human/AI split, full-capacity positions and human commands run first with simulation only. Gameplay checksums must match the replication run; protocol projection cannot change combat outcomes. Full-update raw byte comparisons are sampled once per guest before the timed loop.',fullCapacity:'Every participating house keeps its normal 280 starting troop capacity; full fixtures fill all houses to capacity without changing combat or AI rules.'},scenarios:[]};
 results.method.privateStartFixture='Fixed identity [0..houseCount-1] start permutation supplied privately by the benchmark, preserving the measured scenario layout. Production hosting uses an independent OS-crypto permutation after terrain generation; this fixture is never read from lobby/config or published.';
 for(const settings of scenarios){
   const baseline=createScenario(settings);for(const team of baseline.humans)baseline.game.command(baseline.game.group(team).map(value=>value.id),baseline.game.W/2,baseline.game.H/2,'attack','line');for(let tick=0;tick<warmup;tick++)baseline.authority.step(dt);
@@ -65,7 +68,7 @@ for(const settings of scenarios){
       const projectionAt=performance.now(),projection=authority.projection();let sharedProjectionMs=performance.now()-projectionAt;
       for(let index=0;index<humans.length;index++){
         const snapshotAt=performance.now(),snapshot=authority.snapshot(humans[index],{projection});snapshotTimes.push(performance.now()-snapshotAt+sharedProjectionMs);sharedProjectionMs=0;
-        const deltaAt=performance.now(),delta=createSnapshotDelta(previous[index],snapshot,previous[index].sequence,snapshot.sequence),json=JSON.stringify(delta);deltaTimes.push(performance.now()-deltaAt);
+        const deltaAt=performance.now(),delta=createSnapshotDelta(previous[index],snapshot,previous[index].sequence,snapshot.sequence,projection.unitPatchCache),json=JSON.stringify(delta);deltaTimes.push(performance.now()-deltaAt);
         const compressionAt=performance.now(),compressed=gzipSync(json,{level:3});compressionTimes.push(performance.now()-compressionAt);
         deltaBytes.push(Buffer.byteLength(json));gzipBytes.push(compressed.length);previous[index]=snapshot;processedSnapshots++;
       }
@@ -75,6 +78,7 @@ for(const settings of scenarios){
   const wallMs=performance.now()-startedAt,heapAfter=process.memoryUsage().heapUsed;
   const finalChecksum=checksum(game),gameplayParity=JSON.stringify(finalChecksum)===JSON.stringify(baselineChecksum);if(!gameplayParity)throw new Error('Replication changed the authoritative gameplay checksum.');
   const row={...settings,humanTeams:humans,aiHouses:settings.houses-settings.humans,baseline:{wallMs:baselineWallMs,simulationMs:summary(baselineTimes),checksum:baselineChecksum},gameplayParity,checksum:finalChecksum,startupMs,initialSync:{allGuestsSnapshotMs:initialMs,rawBytesPerGuest:summary(initialRaw),gzipBytesPerGuest:summary(initialCompressed)},initialUnits,peakUnits,remainingUnits:game.units.length,normalCapacities:game.teams.map(value=>value.cap),gameTime:game.time,winner:game.winner,wallMs,simulatedSecondsPerWallSecond:(ticks/simulationHz)/(wallMs/1000),simulationMs:summary(simTimes),snapshotPerGuestMs:summary(snapshotTimes),deltaAndSerializePerGuestMs:summary(deltaTimes),gzipPerGuestMs:summary(compressionTimes),combinedHostTickMs:summary(cycleTimes),fullUpdateRawBytes:summary(fullBytes),deltaRawBytes:summary(deltaBytes),deltaGzipBytes:summary(gzipBytes),aggregateOutboundGzipBytesPerGameSecond:gzipBytes.reduce((a,b)=>a+b,0)/(ticks/simulationHz),heap:{before:heapBefore,after:heapAfter,peak:peakHeap,garbageCollectedBefore:!!global.gc},processedSnapshots};
+  row.ticksOver100Ms=cycleTimes.filter(value=>value>100).length;
   results.scenarios.push(row);fs.mkdirSync(path.dirname(output),{recursive:true});fs.writeFileSync(output,JSON.stringify(results,null,2)+'\n');
   console.log(JSON.stringify({scenario:row.id,simulationP95Ms:row.simulationMs.p95,snapshotP95Ms:row.snapshotPerGuestMs.p95,combinedHostTickP95Ms:row.combinedHostTickMs.p95,compressedBytesPerSecond:row.aggregateOutboundGzipBytesPerGameSecond,peakUnits:row.peakUnits,wallSeconds:wallMs/1000}));
 }

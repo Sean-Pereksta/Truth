@@ -20,4 +20,12 @@ assert.equal(selectPaintedFrame({hp:100,shieldGuard:'guard',vx:.1,vy:0},{time:10
 assert.equal(selectPaintedFrame({hp:100,facingX:1,facingY:0,order:{facingX:0,facingY:1}},{time:10},shield),shield.actions.turn,'Logical turning uses the existing authored orientation');
 assert.equal(PAINTED_TROOPS.dread_pike.actions.guard,undefined,'Dread Pikes have no shield artwork action');
 assert.ok(Object.values(PAINTED_TROOPS).every(d=>d.facing==='screen-right-mirrored'),'All actions preserve the original two facings');
+const rider=PAINTED_TROOPS.cavalry,mount={hp:100,chargeRunup:.7,momentum:.4};
+assert.equal(selectPaintedFrame(mount,{time:1},rider,true),rider.actions.lower);
+mount.charging=true;assert.equal(selectPaintedFrame(mount,{time:1},rider,true),rider.actions.brace);
+mount.attackAnim=.8;assert.equal(selectPaintedFrame(mount,{time:1},rider,true),rider.actions.thrust);
+mount.charging=false;mount.chargeCooldown=3;assert.equal(selectPaintedFrame(mount,{time:1},rider),rider.actions.recovery);
+const ranger=PAINTED_TROOPS.river_ranger;
+assert.equal(selectPaintedFrame({hp:100},{time:1},ranger,false,.5),ranger.actions.aim);
+assert.ok(shield.actions.walk.includes(selectPaintedFrame({hp:100,phase:Math.PI,order:{mode:'advance'}},{time:0},shield,true)));
 console.log('PASS authored shot/lower/reload, halberd swing/thrust, shield transitions, no-shield pikes and original facings.');

@@ -13,7 +13,7 @@ const PRIVATE_TEAM=fields('gold income count cap tiles alive kills upgrades home
 const UNIT=fields('id team type x y radius hp maxHp vx vy motionVX motionVY facingX facingY backpedaling attackAnim phase cooldown charging chargeSpeed chargeRunup chargeTravel chargeCooldown chargeElapsed chargeBlockedUntil momentum knockT spawn hit shieldType shieldGuard shieldGuardTime shieldLowerUntil spearState spearReadiness braceTime elite isKing royalReinforcement setupProgress berserkUntil poisonUntil crippledUntil shockUntil snaredUntil stunUntil resolveUntil venomUntil specialGuardUntil stormUntil rushUntil harvestUntil bearUntil pathsUntil disciplineUntil heroProfile heroMode standardId standardBlocked crossbowState reloading aiming');
 const BUILDING=fields('id team type x y radius hp maxHp level castleId restoredCastle remembered lastSeen hit progress spawnTimer cooldown musterCooldown');
 const STANDARD=fields('id type team owner heroId carrierId x y facingX facingY hp maxHp radius state dormant handlingHeroId bornAt destroyedAt plantedAt');
-const ORDER=fields('x y mode formation facingX facingY groupX groupY retreat regroup placementId formationPreset lockFacing slotIndex slotSide slotBack slotBlocked advanceId advanceIndex marchSide marchBack');
+const ORDER=fields('x y mode formation facingX facingY groupX groupY retreat regroup placementId formationPreset lockFacing slotIndex slotSide slotBack slotBlocked advanceId advanceIndex marchSide marchBack advanceStatus');
 const VISUAL=fields('at elapsed cycle dx dy distance action blocked');
 const RELOAD=fields('stage progress duration total completed');
 const STANDARD_ACTION=fields('kind phase progress duration targetId standardId keepId x y fallen startedAt');
@@ -29,7 +29,7 @@ const LANDMARK=fields('id name kind x y axis width length');
 const CONFIG=fields('house houses humanTeams enemies difficulty scale mode landscape fogOfWar multiplayer');
 const MATCH_MODE=fields('id label teams objectiveGoal kingSurvival fixedArmies flagWaves flagRequired flagReinforcements flagInterval controlGoal flagPriority flagCooldown');
 const ORDER_FIELDS=fields('id alliance kind x y issuer createdAt launchAt expiresAt');
-const COHORT=fields('id x y angle faceX faceY width depth spacing columns ranks preset lockFacing faceInPlace members count radius team');
+const COHORT=fields('id x y angle faceX faceY width depth spacing columns ranks preset lockFacing faceInPlace members count radius team status');
 const SLOT=fields('index x y side back rank blocked unitId');
 const PUBLIC_ORDER=fields('mode formation facingX facingY lockFacing formationPreset');
 const PUBLIC_STANDARD_ACTION=fields('kind phase progress duration');
@@ -86,7 +86,7 @@ function publicUnit(value){
 // Its caller supplies an authority revision so commands made between ticks
 // invalidate it as well. Fog filtering and private orders are applied later.
 export function prepareSnapshotProjection(game){
-  return {game,units:new Map(game.units.map(value=>[value.id,publicUnit(value)])),buildings:new Map(game.buildings.map(value=>[value.id,pick(value,BUILDING,true)])),teams:new Map(game.teams.map(value=>[value.id,pick(value,IDENTITY)]))};
+  return {game,unitViews:new Map(),unitPatchCache:new WeakMap(),buildings:new Map(game.buildings.map(value=>[value.id,pick(value,BUILDING,true)])),teams:new Map(game.teams.map(value=>[value.id,pick(value,IDENTITY)]))};
 }
 
 export function snapshotWorld(game,team,{initial=false,sequence=0,projection=null}={}){
@@ -100,13 +100,24 @@ export function snapshotWorld(game,team,{initial=false,sequence=0,projection=nul
   const knownIds=new Set([...units,...buildings,...standards].map(value=>value.id));
   const ownEntity=value=>allied(value);
   const serializeUnit=value=>{
-    const base=projection?.game===game?projection.units.get(value.id):null,out=base?{...base}:publicUnit(value);
+    // The only seat-specific decisions on a visible soldier are allied orders
+    // and visibility of its target. Cache the exact view for this revision.
+    const own=ownEntity(value),targetKnown=!!value.target&&knownIds.has(value.target.id);
+    const visibility=(own?2:0)+(targetKnown?1:0);
+    let views;
+    if(projection?.game===game){
+      views=projection.unitViews.get(value.id);
+      if(views?.[visibility])return views[visibility];
+      if(!views){views=[];projection.unitViews.set(value.id,views);}
+    }
+    const out=publicUnit(value);
     // Aiming animations use a boolean; the simulation's crossbowAim embeds a
     // private target reference and must never be serialized wholesale.
-    if(value.order)out.order=ownEntity(value)?pick(value.order,ORDER,true):pick(value.order,PUBLIC_ORDER,true);
-    if(value.target&&knownIds.has(value.target.id))out.targetId=value.target.id;
-    if(value.standardAction&&(ownEntity(value)||value.standardAction.phase==='handling'))out.standardAction=pick(value.standardAction,ownEntity(value)?STANDARD_ACTION:PUBLIC_STANDARD_ACTION,true);
-    if(value.standardVisual)out.standardVisual=pick(value.standardVisual,ownEntity(value)?STANDARD_VISUAL:PUBLIC_STANDARD_VISUAL,true);
+    if(value.order)out.order=pick(value.order,own?ORDER:PUBLIC_ORDER,true);
+    if(targetKnown)out.targetId=value.target.id;
+    if(value.standardAction&&(own||value.standardAction.phase==='handling'))out.standardAction=pick(value.standardAction,own?STANDARD_ACTION:PUBLIC_STANDARD_ACTION,true);
+    if(value.standardVisual)out.standardVisual=pick(value.standardVisual,own?STANDARD_VISUAL:PUBLIC_STANDARD_VISUAL,true);
+    if(views)views[visibility]=out;
     return out;
   };
   const data=fog?game.vision.dataFor(team):null,len=game.W*game.H;
@@ -151,7 +162,7 @@ export function snapshotWorld(game,team,{initial=false,sequence=0,projection=nul
     castles:(fog?game.knownCastleSites(team):game.castles).map(value=>pick(value,SITE)),objectives,
     objectiveScores:score(game.objectiveScores),controlScores:score(game.controlScores),
     teamOrders:game.teamOrders.filter(value=>value.alliance===alliance).map(value=>pick(value,ORDER_FIELDS)),
-    events:game.events.filter(value=>value.team===-1||game.allied(team,value.team)).map(value=>pick(value,fields('id text team time'))),
+    events:game.events.filter(value=>value.team===-1||game.allied(team,value.team)).map(value=>pick(value,fields('id text team time x y'))),
     aftermath:{time:game.aftermath.time,bodies:game.aftermath.bodies.filter(value=>visible({x:value.x,y:value.y})).map(value=>pick(value,BODY))},
     territory:{owners:encodeRuns(owners),captures},
     fog:fog?{visible:encodeRuns(data.current),explored:encodeRuns(data.explored)}:null,

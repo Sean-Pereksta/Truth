@@ -9,6 +9,28 @@ const terrainPolishAt=(g,x,y)=>x>=0&&y>=0&&x<g.W&&y<g.H?g.tiles[y*g.W+x]:null;
 const terrainPolishLand=t=>!!t&&['grass','forest','hill'].includes(t.terrain)&&(!t.feature||t.feature==='road');
 const terrainPolishOpenLand=t=>terrainPolishLand(t)&&!t.feature;
 
+// Roadside field boundaries belong to the map. Their placement must not depend
+// on a living faction, a discovered building or any hidden settlement state.
+export function roadsideFields(g){
+  if(!['riverlands','highlands'].includes(g.landscape?.id))return null;
+  const fields=new Uint8Array(g.W*g.H);
+  for(let y=2;y+4<g.H;y+=5)for(let x=2;x+5<g.W;x+=6){
+    if(terrainPolishHash(x,y,52)<.22)continue;
+    let open=true,road=false;
+    for(let sy=y-1;sy<=y+3;sy++)for(let sx=x-1;sx<=x+4;sx++){
+      const t=terrainPolishAt(g,sx,sy);
+      if(sy>=y&&sy<y+3&&sx>=x&&sx<x+4){
+        if(!t||t.feature||t.terrain!=='grass')open=false;
+      }else if(t?.feature==='road')road=true;
+    }
+    if(!open||!road)continue;
+    for(let dy=0;dy<3;dy++)for(let dx=0;dx<4;dx++){
+      fields[(y+dy)*g.W+x+dx]=16|(dy===0?1:0)|(dx===3?2:0)|(dy===2?4:0)|(dx===0?8:0);
+    }
+  }
+  return fields;
+}
+
 // Kept separate from painting so callers and checks can inspect eligible edges
 // without allocating a canvas. Sides are north, east, south, west.
 export function terrainPolishEdges(g,t){

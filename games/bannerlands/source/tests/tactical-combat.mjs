@@ -136,6 +136,8 @@ test('Hold preserves placed slots and facing settings, including casualty fillin
   assert.deepEqual(troops.map(u=>u.order.slotIndex),indices);assert.ok(troops.every(u=>u.order.placementId===c.id&&u.order.formationPreset==='pike'&&u.order.lockFacing));
   assert.ok(c.x<33&&c.y<32,'The stopped cohort must not retain its distant travel destination.');
   const front=troops.find(u=>u.order.slotBack<0),gap=c.slots.find(s=>s.index===front.order.slotIndex),point={x:gap.x,y:gap.y};front.hp=0;g.time+=.3;updatePlacedFormations(g,.3,UNIT_DEFS);
+  assert.equal(gap.unitId,null,'The first update leaves the lost soldier’s place open.');
+  g.time+=.3;updatePlacedFormations(g,.3,UNIT_DEFS);
   const replacement=troops.find(u=>u.hp>0&&u.order.slotIndex===gap.index);assert.ok(replacement);assert.equal(replacement.order.x,point.x);assert.equal(replacement.order.y,point.y);assert.ok(replacement.order.x<34);
 });
 console.log(`${checks} tactical combat checks passed.`);

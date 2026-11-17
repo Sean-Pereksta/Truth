@@ -51,8 +51,12 @@ test('A front casualty promotes a rear soldier without resetting planted neighbo
  const g=fixture(),troops=company(g,12),result=placeFormation(g,troops.map(u=>u.id),{x:35,y:40,angle:0,ranks:3,preset:'pike',lockFacing:true},UNIT_DEFS);
  for(const u of troops){u.x=u.order.x;u.y=u.order.y;u.order.mode='hold';u.braceTime=.8;}
  const dead=troops[0],deadSlot=dead.order.slotIndex,others=new Map(troops.slice(1).map(u=>[u.id,{index:u.order.slotIndex,x:u.order.x,y:u.order.y}]));dead.hp=0;
- updatePlacedFormations(g,1/60,UNIT_DEFS);const changed=troops.slice(1).filter(u=>u.order.slotIndex!==others.get(u.id).index);
- assert.equal(changed.length,2,'The nearest rear lane steps forward, followed by its next rear rank.');assert.ok(changed.some(u=>u.order.slotIndex===deadSlot));
+ updatePlacedFormations(g,1/60,UNIT_DEFS);
+ assert.ok(troops.slice(1).every(u=>u.order.slotIndex===others.get(u.id).index),'The lost soldier leaves a gap immediately.');
+ g.time+=.3;updatePlacedFormations(g,1/60,UNIT_DEFS);
+ const changed=troops.slice(1).filter(u=>u.order.slotIndex!==others.get(u.id).index);
+ assert.deepEqual(changed.map(u=>u.id),[troops[4].id],'The nearest compatible soldier in the next rank takes the gap.');
+ assert.equal(changed[0].order.slotIndex,deadSlot);
  for(const u of troops.slice(1).filter(u=>!changed.includes(u))){assert.equal(u.braceTime,.8);assert.equal(u.order.x,others.get(u.id).x);assert.equal(u.order.y,others.get(u.id).y);}
  assert.equal(g.placedFormations.get(result.formation.id).members.length,11);
 });

@@ -48,6 +48,31 @@ The mobile Form command uses a compact configuration sheet and battlefield
 placement. Outside placement, normal camera dragging and pinch zoom remain
 available. Contextual commands show Form, Hold/Brace, Advance and Retreat.
 
+### Advancing under losses
+
+W gives the company an initial moment to form. Once it marches, each
+survivor follows its assigned slot at its own pace. A fallen soldier leaves
+a gap for at least 0.25 game seconds. On open ground, up to two rear-rank
+soldiers per refill pass can take a reachable vacancy of the same role.
+Promotions wait during a turn, at weapon contact, on blocked ground and
+through a narrow crossing. After a bridge or pass, the surviving files
+return to their original width. Z issues a fresh formation for the selection.
+
+The selection bar reports Advancing, Crossing, Engaged or Blocked. Turning,
+Forming and Seeking describe orientation changes, initial assembly and a
+search for a visible enemy force. An isolated outside file keeps its slot
+and steers that file into weapon contact.
+
+The open-field regression uses seed 72742, 32 Bridge Wardens in four ranks
+and ten holding enemy infantry. It measures 180 updates at 30 Hz after the
+initial assembly. Three successive front casualties precede a simultaneous
+front and rear loss. On `72a979c`, the control traveled 5.960 tiles without
+stopping. The casualty run traveled 4.517 tiles and stopped for 35 updates.
+The corrected runs both travel 5.960 tiles along the same per-update anchor
+positions with zero stops or order resets. Run
+`node source/tests/formation-advance.mjs` to reproduce the comparison and
+the allied guest, crossing, last-survivor and replacement-order checks.
+
 ## Equipment rules
 
 Stark's additional Shield Bearers become Winter Pikemen, and Tyrell's become

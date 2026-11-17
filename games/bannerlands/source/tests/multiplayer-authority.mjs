@@ -4,6 +4,7 @@ import {createAuthority,validateCampaignConfig,createPrivateHomePermutation} fro
 import {snapshotWorld,createRemoteGame,applySnapshot,decodeRuns} from '../../multiplayer/snapshot.js';
 import {PROTOCOL_VERSION,GAME_VERSION,ASSET_VERSION,MAX_HUMANS,compatible} from '../../multiplayer/protocol.js';
 import {formationPreview} from '../../formation-placement.js';
+import {createSnapshotDelta,applySnapshotDelta} from '../../multiplayer/transport-delta.js';
 
 let cases=0;
 const test=(name,fn)=>{fn();cases++;console.log('PASS '+name);};
@@ -132,6 +133,33 @@ test('shared host projections preserve fog filtering and refresh after commands'
   assert.equal(match.projection(),projection);assert.ok(!snapshot.units.some(value=>value.team===2));
   const hero=match.game.heroFor(1),exactX=hero.x;assert.ok(Math.abs(snapshot.units.find(value=>value.id===hero.id).x-exactX)<=.000501);assert.equal(match.game.heroFor(1).x,exactX);
   assert.equal(match.command(1,{v:1,seq:1,type:'useHousePower',args:[]}).ok,true);assert.notEqual(match.projection(),projection);match.step();assert.notEqual(match.projection(),projection);
+});
+test('shared unit views and patches exactly match independently filtered guest snapshots',()=>{
+  for(const fogOfWar of [false,true]){
+    const seats=[0,1,2,3],match=createAuthority({...config,fogOfWar},{humanTeams:seats,privateHomePermutation:seats});
+    const seen=seats.map(team=>match.snapshot(team)),previous=seen.slice();
+    const hero=match.game.heroFor(1),target=match.game.heroFor(3);
+    hero.target=target;
+    // Two enemies can see the same hero but only one sees the distant target.
+    const visible=match.game.isVisibleTo.bind(match.game);
+    match.game.isVisibleTo=(team,entity)=>entity===hero?true:entity===target?team>=2:visible(team,entity);
+    match.game.vision.update(true);
+    for(let tick=0;tick<5;tick++){
+      if(tick)match.step();
+      const projection=match.projection();
+      for(const team of [2,1,0,3]){
+        const exact=match.snapshot(team),view=match.snapshot(team,{projection});
+        assert.deepEqual(view,exact);
+        if(fogOfWar&&!tick&&(team===0||team===2))assert.equal(view.units.find(u=>u.id===hero.id).targetId,team===2?target.id:undefined);
+        for(const base of [previous[team],seen[team]]){
+          const delta=createSnapshotDelta(base,view,base.sequence,view.sequence,projection.unitPatchCache);
+          assert.deepEqual(delta,createSnapshotDelta(base,exact,base.sequence,exact.sequence));
+          assert.deepEqual(applySnapshotDelta(base,delta),exact);
+        }
+        previous[team]=view;
+      }
+    }
+  }
 });
 test('hidden objective cooldown and disappearance are unknown to AI and guests alike',()=>{
   const match=createAuthority({...config,fogOfWar:true,mode:'defend-king'},{humanTeams:[0,1]}),world=match.game;world.time=15;world.updateObjectives(0);world.vision.update(true);

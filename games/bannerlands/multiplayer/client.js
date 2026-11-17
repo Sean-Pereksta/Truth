@@ -46,8 +46,8 @@ export class PresentationBuffer{
 }
 
 export class MultiplayerClient{
- constructor({origin=globalThis.location?.origin,fetchImpl=globalThis.fetch?.bind(globalThis),storage=globalThis.sessionStorage,onState=()=>{},onStatus=()=>{},onCommand=()=>{},now=clock}={}){
-  this.origin=new URL(origin).origin;this.fetchImpl=fetchImpl;this.storage=storage;this.onState=onState;this.onStatus=onStatus;this.onCommand=onCommand;this.now=now;
+ constructor({origin=globalThis.location?.origin,fetchImpl=globalThis.fetch?.bind(globalThis),storage=globalThis.sessionStorage,onState=()=>{},onStatus=()=>{},onCommand=()=>{},onPending=()=>{},now=clock}={}){
+  this.origin=new URL(origin).origin;this.fetchImpl=fetchImpl;this.storage=storage;this.onState=onState;this.onStatus=onStatus;this.onCommand=onCommand;this.onPending=onPending;this.now=now;
   this.session=null;this.game=null;this.lobby=null;this.sequence=0;this.queue=[];this.sending=false;this.running=false;this.timer=null;this.lastGood=0;this.etag=null;this.presentation=new PresentationBuffer();
   this.metrics={requests:0,receivedBytes:0,commands:0,commandRoundTrips:[],resyncs:0,pollFailures:0};
   this.generation=0;this.commandEpoch=0;this.pollPromise=null;this.controllers=new Set();this.commandControllers=new Set();
@@ -98,7 +98,7 @@ export class MultiplayerClient{
   if(this.queue.length>=32)return {ok:false,message:'Too many pending commands. Wait for the host.'};
   const envelope={v:PROTOCOL_VERSION,matchId:this.lobby.matchId,seq:++this.sequence,type,args:cloneArgs(args)};
   this.game.lastPendingCommand=envelope.seq;
-  this.queue.push(envelope);this.flushCommands();return {ok:true,pending:true,seq:envelope.seq,message:'Order sent · awaiting host confirmation.'};
+  this.queue.push(envelope);this.onPending(envelope);this.flushCommands();return {ok:true,pending:true,seq:envelope.seq,message:'Order sent · awaiting host confirmation.'};
  }
  async flushCommands(){
   if(this.sending)return;this.sending=true;const epoch=this.commandEpoch,generation=this.generation;
@@ -153,7 +153,7 @@ export class MultiplayerClient{
   }catch(error){
    if(generation!==this.generation||!this.running)return;
    this.lastError=error.message;this.metrics.pollFailures++;
-   if(error.status===401||error.status===410){this.running=false;this.forget();this.onStatus('closed',error.message);}
+   if(error.status===401||error.status===410||error.status===409){this.running=false;this.forget();this.onStatus('closed',error.message);}
    else this.onStatus('reconnecting','Reconnecting to the host. Your house remains reserved; the battle continues.');
    throw error;
   }finally{if(this.running&&generation===this.generation){clearTimeout(this.timer);this.timer=setTimeout(()=>this.poll(),this.now()-this.lastGood>5000?1000:100);}}

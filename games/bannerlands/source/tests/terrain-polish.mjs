@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
-import {paintTerrainPolish,terrainPolishEdges} from '../../terrain-polish.js';
+import {paintTerrainPolish,terrainPolishEdges,roadsideFields} from '../../terrain-polish.js';
 
 let checks=0;
 const test=(name,fn)=>{fn();checks++;console.log('PASS '+name);};
@@ -30,6 +30,16 @@ test('Water, mountains, bridge decks, fords and passes never receive terrain pol
 });
 
 const require=createRequire(import.meta.url);let raster;
+test('Roadside parcels follow permanent roads and spare every non-grass or obstructed tile',()=>{
+  const g=fixture();g.landscape={id:'riverlands'};
+  for(const t of g.tiles){t.terrain='grass';t.feature=t.y===1?'road':null;}
+  const fields=roadsideFields(g);
+  assert.ok(fields.some(v=>v&16));
+  for(const t of g.tiles)if(fields[t.y*g.W+t.x])assert.equal(t.feature,null);
+  const blocked=g.tiles.find(t=>fields[t.y*g.W+t.x]);blocked.terrain='hill';
+  assert.equal(roadsideFields(g)[blocked.y*g.W+blocked.x],0);
+  g.landscape.id='open';assert.equal(roadsideFields(g),null);
+});
 try{raster=require(process.env.LANDS_CANVAS_MODULE||'@napi-rs/canvas');}
 catch{console.log('SKIP terrain-polish raster checks: install @napi-rs/canvas or set LANDS_CANVAS_MODULE.');}
 if(raster){

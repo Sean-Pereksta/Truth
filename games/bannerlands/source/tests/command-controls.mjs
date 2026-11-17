@@ -295,21 +295,21 @@ test('All sixteen houses retain their original menus while eligible houses gain 
   }
 });
 
-await testAsync('Boot waits for regiment and conquest art, and failed new art keeps Start disabled',async()=>{
-  for(const failed of [null,'loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt','loadPaintedTroops','loadPikeBuildings','loadPaintedHeroes']){
+await testAsync('Play Solo waits for critical art and a load failure offers a retry',async()=>{
+  for(const failed of [null,'loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt','loadBattlefieldProjectiles','loadPaintedTroops','loadPikeBuildings','loadPaintedHeroes']){
     const f=fixture({realMenu:true}),loads=[],errors=[],effects=[];
     f.context.console={warn(){},error:(...args)=>errors.push(args)};f.context.renderer={};
-    for(const method of ['loadTroops','loadStructures','loadCampaignArt','loadTerrain','loadHouseArt','loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt','loadPaintedTroops','loadPikeBuildings','loadPaintedHeroes','loadLandsArt','loadLandsGround'])f.context.renderer[method]=(...args)=>{loads.push({method,args});return method===failed?Promise.reject(new Error('Missing test artwork')):Promise.resolve();};
+    for(const method of ['loadTroops','loadStructures','loadCampaignArt','loadTerrain','loadHouseArt','loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt','loadBattlefieldProjectiles','loadPaintedTroops','loadPikeBuildings','loadPaintedHeroes','loadLandsArt','loadLandsGround','loadBattlefieldArt'])f.context.renderer[method]=(...args)=>{loads.push({method,args});return method===failed?Promise.reject(new Error('Missing test artwork')):Promise.resolve();};
     for(const name of ['paintBuildingIcons','paintHousePreview','paintTownHall','fitMap','updateHud'])f.context[name]=()=>effects.push(name);
-    f.context.frame=()=>{};f.context.requestAnimationFrame=()=>effects.push('frame');
+    f.context.online=null;f.context.performance={mark:()=>{}};f.context.frame=()=>{};f.context.requestAnimationFrame=()=>effects.push('frame');
     for(const prefix of ['const HOUSE_ART_SOURCES=','const REGIMENT_ART_SOURCES=','const CONQUEST_ART_SOURCES=','const REINFORCEMENT_ART_SOURCES=','const PAINTED_TROOP_SOURCES=','const HERO_ART_SOURCES=']){const line=source.split('\n').find(line=>line.startsWith(prefix));assert.ok(line);vm.runInContext(line,f.context);}
-    vm.runInContext(extract('boot'),f.context);const boot=f.context.boot();assert.equal(f.element('startButton').disabled,true);assert.ok(f.element('startButton').innerHTML.includes('PREPARING'));
+    vm.runInContext(extract('boot'),f.context);const boot=f.context.boot();assert.equal(f.element('startButton').disabled,true);assert.ok(f.element('startButton').textContent.includes('PREPARING'));
     await boot;
     const sheets=loads.find(load=>load.method==='loadRegimentArt')?.args[0];assert.ok(sheets);assert.deepEqual(Object.keys(sheets).sort(),['bear','dragon','falcon','lion','rose','sun','wolf']);assert.equal(new Set(Object.values(sheets)).size,7);
     assert.equal(loads.find(load=>load.method==='loadRegimentBuildings')?.args[0],'assets/regiments/production-buildings.png');
     assert.equal(Object.keys(loads.find(load=>load.method==='loadPaintedHeroes')?.args[0]||{}).length,16);
-    if(failed){assert.equal(f.element('startButton').disabled,true);assert.equal(f.element('startButton').innerHTML,'ARTWORK COULD NOT LOAD');assert.equal(errors.length,1);assert.equal(effects.includes('frame'),false);}
-    else{assert.equal(f.element('startButton').disabled,false);assert.ok(f.element('startButton').innerHTML.includes('RAISE THE BANNERS'));assert.equal(errors.length,0);assert.equal(effects.includes('frame'),true);}
+    if(failed){assert.equal(f.element('startButton').disabled,false);assert.equal(f.element('startButton').textContent,'RETRY BATTLE ART');assert.equal(typeof f.element('startButton').onclick,'function');assert.equal(errors.length,1);assert.equal(effects.includes('frame'),false);}
+    else{assert.equal(f.element('startButton').disabled,false);assert.ok(f.element('startButton').innerHTML.includes('PLAY SOLO'));assert.equal(errors.length,0);assert.equal(effects.includes('frame'),true);}
   }
 });
 

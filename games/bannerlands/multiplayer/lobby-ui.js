@@ -11,6 +11,7 @@ export function mountLobbyUI({container=document.body,getConfig=()=>({}),onHost,
   const status=$('.multiplayer-status');let active='home',busy=false,session=null,assetsReady=false,previousFocus=null,destroyed=false,lastPhase=null,lastLobbyError=null;
   $('[data-game-version]').textContent=gameVersion;$('[data-asset-version]').textContent=assetVersion;$('[data-protocol-version]').textContent=String(protocolVersion);
   for(const link of $$('[data-download]')){link.href=downloadUrl;link.target='_blank';link.rel='noopener noreferrer';link.hidden=!showDownload;}
+  for(const button of $$('[data-view="host"]'))button.hidden=!canHost;
   if(!showDownload)$('[data-pane="home"] h3 + p').textContent=canHost?'Host a campaign on this device. Friends can join the full game in their browser.':'This offline edition supports single-player; multiplayer hosting is unavailable in this edition.';
   $('[data-pane="host"] button[type="submit"]').disabled=!canHost;
   function setStatus(message,{error=false,loading=false}={}){status.textContent=String(message||'');status.classList.toggle('error',error);status.classList.toggle('loading',loading);status.setAttribute('aria-busy',String(loading));}
@@ -54,8 +55,11 @@ export function mountLobbyUI({container=document.body,getConfig=()=>({}),onHost,
     if(!list.children.length){const empty=document.createElement('p');empty.textContent='No compatible campaigns have open seats.';list.append(empty);}
   }
   function renderSession(value){
-    const lobby=value?.lobby||value;session={...value,lobby};if(!lobby)return;
-    const entering=root.hidden||active!=='session';if(entering)setStatus(lobby.status==='closed'?'The host has closed this lobby.':'Connected to the lobby. Confirm your house and campaign settings.',{error:lobby.status==='closed'});
+    const lobby=value?.lobby||value;if(!lobby)return;
+    // A lobby heartbeat must not dismiss an invitation the player is typing.
+    const entering=!session||session.lobby?.id!==lobby.id||session.session?.sessionId!==value.session?.sessionId||value.matchEnded||lobby.status==='starting'&&lastPhase!=='starting';
+    session={...value,lobby};
+    if(entering)setStatus(lobby.status==='closed'?'The host has closed this lobby.':'Connected to the lobby. Confirm your house and campaign settings.',{error:lobby.status==='closed'});
     const you=value.session||value.player||{},team=you.team??value.team,players=lobby.players||[],self=players.find(p=>p.team===team||you.sessionId&&p.id===you.sessionId),isHost=value.isHost??self?.host??false;
     const synchronizing=lobby.status==='starting',synchronized=players.filter(player=>player.synchronized).length,lobbyError=typeof lobby.error==='string'?lobby.error:lobby.error?.message||null;
     if(synchronizing&&lastPhase!=='starting')setStatus('Synchronizing the battlefield for every commander…',{loading:true});
@@ -74,9 +78,9 @@ export function mountLobbyUI({container=document.body,getConfig=()=>({}),onHost,
     $('[data-action="ready"]').textContent=synchronizing?'Ready':self?.ready?'Not Ready':'Mark Ready';$('[data-action="ready"]').disabled=!assetsReady||!self||!['waiting','full'].includes(lobby.status);
     $('[data-action="start"]').hidden=!isHost;$('[data-action="start"]').disabled=!players.length||!players.every(p=>p.ready&&p.assetsReady&&p.connected)||!['waiting','full'].includes(lobby.status);
     $('.multiplayer-host-controls').hidden=!isHost;$('[data-public]').checked=lobby.public===true;$('[data-public]').disabled=!['waiting','full'].includes(lobby.status);$('[data-session-humans]').value=String(lobby.maxHumans);$('[data-action="configure"]').disabled=!['waiting','full'].includes(lobby.status);$('[data-session-humans]').disabled=!['waiting','full'].includes(lobby.status);$('[data-action="end"]').hidden=!['starting','in-progress'].includes(lobby.status);$('[data-action="end"]').textContent=synchronizing?'Cancel Start and Return to Lobby':'End Match and Return to Lobby';$('[data-action="leave"]').textContent=isHost?'Stop Hosting':'Leave Lobby';
-    $('.multiplayer-assets').textContent=!assetsReady?'Loading the full painted artwork… You can mark ready when loading and synchronization finish.':synchronizing?(self?.synchronized?'Your battlefield is synchronized. Waiting for every commander: ':'Artwork loaded. Receiving your battlefield. ')+synchronized+' / '+players.length+' synchronized. The battle stays at its opening state until everyone is ready. A stalled start returns to the lobby after 45 seconds.':'Artwork loaded. Confirm the displayed campaign settings before marking ready.';
+    $('.multiplayer-assets').textContent=!assetsReady?'Loading battle artwork… Mark Ready when it finishes.':synchronizing?(self?.synchronized?'Your battlefield is synchronized. Waiting for every commander: ':'Artwork loaded. Receiving your battlefield. ')+synchronized+' / '+players.length+' synchronized. The battle stays at its opening state until everyone is ready. A stalled start returns to the lobby after 45 seconds.':'Artwork loaded. Confirm the displayed campaign settings before marking ready.';
     const invite=value.inviteUrl||value.guestInvite;$('.multiplayer-invite').hidden=!isHost||!invite;if(invite)$('.multiplayer-invite input').value=invite;
-    if(root.hidden||active!=='session')show('session');
+    if(entering&&(root.hidden||active!=='session'))show('session');
   }
   function setAssetsReady(ready){assetsReady=ready===true;if(session)renderSession(session);}
   root.addEventListener('click',event=>{

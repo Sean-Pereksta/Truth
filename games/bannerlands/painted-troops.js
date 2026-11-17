@@ -1,4 +1,5 @@
 import {PAINTED_FRAME_BOUNDS} from './painted-frame-bounds.js';
+import {RELOAD_STAGES} from './tactical-combat.js';
 // Authored raster actions, with the game's original screen-right + mirror facings.
 // Logical facing, reach and guard calculations never select an extra art direction.
 const walk=[0,1,2,3],death=[13,14,15];
@@ -38,17 +39,27 @@ export const PAINTED_TROOPS=Object.freeze(Object.fromEntries(Object.entries({
 const troopIndex=new Map(Object.values(PAINTED_TROOPS).map(d=>[d.type+'|'+(d.house||''),d]));
 export function paintedTroopDefinition(type,house){return troopIndex.get(type+'|'+(house||''))||troopIndex.get(type+'|')||null;}
 const actionFrame=(actions,name,phase=0)=>{const v=actions[name];return Array.isArray(v)?v[Math.min(v.length-1,Math.max(0,Math.floor(phase*v.length)))]:v;};
-export function selectPaintedFrame(u,g,definition,moving=false){
+export function selectPaintedFrame(u,g,definition,moving=false,windup=0){
   const a=definition.actions,now=g.time||0;
   if(u.hp<=0){const age=Math.max(0,now-(u.bornAt??now));return actionFrame(a,'death',Math.min(.999,age/.65));}
-  if(u.hitVisual&&now-u.hitVisual.at<.15&&now>=u.hitVisual.at)return u.hitVisual.blocked&&u.shieldGuard==='guard'?(a.block??a.hit??a.ready):(a.hit??a.ready);
+  if(u.hitVisual&&now-u.hitVisual.at<.15&&now>=u.hitVisual.at)return u.hitVisual.blocked?(a.block??a.hit??a.ready):(a.hit??a.ready);
   const strike=u.attackVisual,age=strike?(strike.elapsed??now-strike.at):Infinity;
   if(age>=0&&age<(definition.kind==='crossbow'?.10:.32))return age<.10?(a.fire??(strike.action==='swing'?a.swing:a.thrust)??a.thrust??a.ready):(a.recovery??a.ready);
   if(u.reloading&&u.reload&&!moving){
     const stage=u.reload.stage||'span',p=(u.reload.progress||0)/(u.reload.duration||1);
+    if(Array.isArray(a[stage])){
+      const index=RELOAD_STAGES.findIndex(s=>s.name===stage);
+      if(index>=0){const start=index?RELOAD_STAGES[index-1].end:0;return actionFrame(a,stage,(p-start)/(RELOAD_STAGES[index].end-start));}
+    }
     return actionFrame(a,stage,p)??a.lower??a.ready;
   }
   if(u.crossbowAim||u.aiming||u.pendingShot)return a.aim??a.ready;
+  if(definition.kind==='bow'&&windup>0)return a.aim;
+  if(definition.kind==='mounted'){
+    if(u.charging&&u.attackAnim>.55)return a.thrust;
+    if(!u.charging&&u.chargeCooldown>2.72)return a.recovery;
+    if(moving&&u.chargeRunup>.25)return u.charging||u.momentum>.7?a.brace:a.lower;
+  }
   if((u.shieldLowerUntil||0)>now&&a.lower!=null)return a.lower;
   // Readiness is authoritative even during harmless collision adjustments.
   // Real travel orders clear these states immediately in the simulation.
@@ -60,7 +71,7 @@ export function selectPaintedFrame(u,g,definition,moving=false){
   if(moving){
     if(u.backpedaling&&a.backward!=null)return a.backward;
     if(u.charging&&a.brace!=null)return a.brace;
-    if(u.order?.mode==='advance'&&a.lower!=null)return a.lower;
+    if(u.order?.mode==='advance'&&definition.kind==='polearm')return a.lower;
     const phase=(((u.phase||0)/(Math.PI*2))%1+1)%1;
     return actionFrame(a,'walk',phase);
   }

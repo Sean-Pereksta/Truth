@@ -99,7 +99,7 @@ export async function createMatchServer({config={},lobby={},hostToken=secret(),i
     const previous=session.history.get(since);
     const remember=value=>{session.history.set(sequence,value);while(session.history.size>4)session.history.delete(session.history.keys().next().value);};
     if(initial||!previous){const full=initial?snapshot:authority.snapshot(key,{initial:true,sequence,projection:authority.projection()});remember(full);return {snapshot:full};}
-    const delta=createSnapshotDelta(previous,snapshot,since,sequence);remember(snapshot);return {delta};
+    const delta=createSnapshotDelta(previous,snapshot,since,sequence,authority.projection().unitPatchCache);remember(snapshot);return {delta};
   }
   const api=async(req,res,url)=>{
     metrics.requests++;prune();
