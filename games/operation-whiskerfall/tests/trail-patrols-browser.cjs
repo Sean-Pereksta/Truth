@@ -57,6 +57,24 @@ const {pathToFileURL}=require('node:url'),{chromium}=require('playwright');
       ok(g.ui.isOpen,'town contact should serve party after pursuit');g.ui.hideMenu();
       const lost=spawn('test-lost-pursuer',0,course(radius-100));lost.pursuitTarget=1;lost.streetChase=true;lost.pursuitMemory=.1;
       p.smokeTime=1;tick(2);ok(lost.pursuitTarget==null&&!g.townUnderPursuit(p),'lost chase prevents services');p.smokeTime=0;
+      // An opaque wall crosses the street between the last sighting and P2.
+      // Check movement, projectiles, targeting and service recovery together.
+      const wall=course(radius-165),outer=course(radius-65),inside=course(radius-235);
+      const nx=(outer.x-wall.x)/100,ny=(outer.y-wall.y)/100;
+      const wallDistance=o=>(o.x-wall.x)*nx+(o.y-wall.y)*ny;
+      const townCollision=w.isBlocked;
+      try{
+        w.isBlocked=function(x,y,r=0){
+          return Math.abs((x-wall.x)*nx+(y-wall.y)*ny)<26+r&&Math.abs((y-wall.y)*nx-(x-wall.x)*ny)<1200+r||townCollision.call(this,x,y,r);
+        };
+        Object.assign(p,inside);p.invuln=0;
+        const guard=spawn('test-wall-pursuer',0,outer),health=p.hp;
+        Object.assign(guard,{pursuitTarget:1,streetChase:true,pursuitMemory:4,lastPursuitX:p.x,lastPursuitY:p.y});
+        tick(130);
+        ok(guard.pursuitTarget===1&&wallDistance(guard)>26&&health===p.hp,'wall should protect the target while the pursuer searches');
+        tick(150);
+        ok(guard.pursuitTarget==null&&health===p.hp&&!g.townUnderPursuit(p),'lost sight releases the town after the search expires');
+      }finally{w.isBlocked=townCollision;}
       const spec=id=>C.enemies[C.trailEnemyTypes[id]];
       for(const id of ['gallows_bell','seam_ripper']){
         const at=course(radius+100),e=spawn('test-'+id,C.trailEnemyTypes[id],at),s=spec(id);

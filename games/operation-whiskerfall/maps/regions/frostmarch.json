@@ -601,7 +601,8 @@
           "attackHints": [
             "Step across the locked bayonet lane.",
             "Hold your counter until the return charge ends in phases two and three.",
-            "Stay outside the rifle cone for both volleys."
+            "Stay outside the rifle cone for both volleys.",
+            "In the breach drill, clear the short sweep and the longer thrust."
           ]
         },
         {
@@ -616,7 +617,8 @@
           "attackHints": [
             "The sniper takes two shots down the same sightline.",
             "When the camouflage shifts, watch the marked landing and the shot from the second nest.",
-            "Step out early on the final, faster double tap."
+            "Step out early on the final, faster double tap.",
+            "Leave the marked snare before the sniper round follows."
           ]
         },
         {
@@ -630,7 +632,8 @@
           "finalBoss": false,
           "attackHints": [
             "Quarry shells land on marked stakes. Leave both circles in later phases.",
-            "Step back from the core impact, then close inside the outer shockwave."
+            "Step back from the core impact, then close inside the outer shockwave.",
+            "The walking barrage marches through three circles in order."
           ]
         },
         {
@@ -645,7 +648,8 @@
           "attackHints": [
             "Cross the skate track, then move out of the following ice fan.",
             "Leave the frost patch until the last pulse. A hit chills the fighter.",
-            "The last bloom strikes three times."
+            "The last bloom strikes three times.",
+            "The split glacier leaves a central gap, then fires straight through it."
           ]
         },
         {
@@ -660,7 +664,8 @@
           "attackHints": [
             "Read both sections of the switchback before crossing.",
             "Sandglass rockets stagger along two marked points.",
-            "Counter when the second dash stops."
+            "Counter when the second dash stops.",
+            "The mirage cut begins at a new flank. Watch the track from its landing."
           ]
         },
         {
@@ -674,7 +679,8 @@
           "finalBoss": false,
           "attackHints": [
             "The poison broadside hits port and starboard before the center.",
-            "Step clear of the purge cone and its follow-up drain."
+            "Step clear of the purge cone and its follow-up drain.",
+            "The ebb tide sweeps the outer fan first. Move out before the inner fan fills."
           ]
         },
         {
@@ -688,7 +694,8 @@
           "finalBoss": false,
           "attackHints": [
             "Hit the exposed igniter during the windup to defuse every mine.",
-            "The furnace vent has a hollow center. Leave it before the core flares."
+            "The furnace vent has a hollow center. Leave it before the core flares.",
+            "Destroy the dynamo to cancel both beams, or stand outside their lane."
           ]
         },
         {
@@ -702,7 +709,8 @@
           "finalBoss": false,
           "attackHints": [
             "The open wedge in the encirclement is safe. Keep moving past the next mark.",
-            "The firing order locks a double volley and then a shell. Counter after the shell."
+            "The firing order locks a double volley and then a shell. Counter after the shell.",
+            "Interrupt the execution order by hitting Vex, or take cover from each linked rifle."
           ]
         },
         {
@@ -866,7 +874,8 @@
           "attackHints": [
             "Step across the locked bayonet lane.",
             "Hold your counter until the return charge ends in phases two and three.",
-            "Stay outside the rifle cone for both volleys."
+            "Stay outside the rifle cone for both volleys.",
+            "In the breach drill, clear the short sweep and the longer thrust."
           ]
         },
         {
@@ -881,7 +890,8 @@
           "attackHints": [
             "The sniper takes two shots down the same sightline.",
             "When the camouflage shifts, watch the marked landing and the shot from the second nest.",
-            "Step out early on the final, faster double tap."
+            "Step out early on the final, faster double tap.",
+            "Leave the marked snare before the sniper round follows."
           ]
         },
         {
@@ -895,7 +905,8 @@
           "finalBoss": false,
           "attackHints": [
             "Quarry shells land on marked stakes. Leave both circles in later phases.",
-            "Step back from the core impact, then close inside the outer shockwave."
+            "Step back from the core impact, then close inside the outer shockwave.",
+            "The walking barrage marches through three circles in order."
           ]
         },
         {
@@ -910,7 +921,8 @@
           "attackHints": [
             "Cross the skate track, then move out of the following ice fan.",
             "Leave the frost patch until the last pulse. A hit chills the fighter.",
-            "The last bloom strikes three times."
+            "The last bloom strikes three times.",
+            "The split glacier leaves a central gap, then fires straight through it."
           ]
         },
         {
@@ -925,7 +937,8 @@
           "attackHints": [
             "Read both sections of the switchback before crossing.",
             "Sandglass rockets stagger along two marked points.",
-            "Counter when the second dash stops."
+            "Counter when the second dash stops.",
+            "The mirage cut begins at a new flank. Watch the track from its landing."
           ]
         },
         {
@@ -939,7 +952,8 @@
           "finalBoss": false,
           "attackHints": [
             "The poison broadside hits port and starboard before the center.",
-            "Step clear of the purge cone and its follow-up drain."
+            "Step clear of the purge cone and its follow-up drain.",
+            "The ebb tide sweeps the outer fan first. Move out before the inner fan fills."
           ]
         },
         {
@@ -953,7 +967,8 @@
           "finalBoss": false,
           "attackHints": [
             "Hit the exposed igniter during the windup to defuse every mine.",
-            "The furnace vent has a hollow center. Leave it before the core flares."
+            "The furnace vent has a hollow center. Leave it before the core flares.",
+            "Destroy the dynamo to cancel both beams, or stand outside their lane."
           ]
         },
         {
@@ -967,7 +982,8 @@
           "finalBoss": false,
           "attackHints": [
             "The open wedge in the encirclement is safe. Keep moving past the next mark.",
-            "The firing order locks a double volley and then a shell. Counter after the shell."
+            "The firing order locks a double volley and then a shell. Counter after the shell.",
+            "Interrupt the execution order by hitting Vex, or take cover from each linked rifle."
           ]
         },
         {
@@ -1136,7 +1152,8 @@
           "attackHints": [
             "Step across the locked bayonet lane.",
             "Hold your counter until the return charge ends in phases two and three.",
-            "Stay outside the rifle cone for both volleys."
+            "Stay outside the rifle cone for both volleys.",
+            "In the breach drill, clear the short sweep and the longer thrust."
           ]
         },
         {
@@ -1151,7 +1168,8 @@
           "attackHints": [
             "The sniper takes two shots down the same sightline.",
             "When the camouflage shifts, watch the marked landing and the shot from the second nest.",
-            "Step out early on the final, faster double tap."
+            "Step out early on the final, faster double tap.",
+            "Leave the marked snare before the sniper round follows."
           ]
         },
         {
@@ -1165,7 +1183,8 @@
           "finalBoss": false,
           "attackHints": [
             "Quarry shells land on marked stakes. Leave both circles in later phases.",
-            "Step back from the core impact, then close inside the outer shockwave."
+            "Step back from the core impact, then close inside the outer shockwave.",
+            "The walking barrage marches through three circles in order."
           ]
         },
         {
@@ -1180,7 +1199,8 @@
           "attackHints": [
             "Cross the skate track, then move out of the following ice fan.",
             "Leave the frost patch until the last pulse. A hit chills the fighter.",
-            "The last bloom strikes three times."
+            "The last bloom strikes three times.",
+            "The split glacier leaves a central gap, then fires straight through it."
           ]
         },
         {
@@ -1195,7 +1215,8 @@
           "attackHints": [
             "Read both sections of the switchback before crossing.",
             "Sandglass rockets stagger along two marked points.",
-            "Counter when the second dash stops."
+            "Counter when the second dash stops.",
+            "The mirage cut begins at a new flank. Watch the track from its landing."
           ]
         },
         {
@@ -1209,7 +1230,8 @@
           "finalBoss": false,
           "attackHints": [
             "The poison broadside hits port and starboard before the center.",
-            "Step clear of the purge cone and its follow-up drain."
+            "Step clear of the purge cone and its follow-up drain.",
+            "The ebb tide sweeps the outer fan first. Move out before the inner fan fills."
           ]
         },
         {
@@ -1223,7 +1245,8 @@
           "finalBoss": false,
           "attackHints": [
             "Hit the exposed igniter during the windup to defuse every mine.",
-            "The furnace vent has a hollow center. Leave it before the core flares."
+            "The furnace vent has a hollow center. Leave it before the core flares.",
+            "Destroy the dynamo to cancel both beams, or stand outside their lane."
           ]
         },
         {
@@ -1237,7 +1260,8 @@
           "finalBoss": false,
           "attackHints": [
             "The open wedge in the encirclement is safe. Keep moving past the next mark.",
-            "The firing order locks a double volley and then a shell. Counter after the shell."
+            "The firing order locks a double volley and then a shell. Counter after the shell.",
+            "Interrupt the execution order by hitting Vex, or take cover from each linked rifle."
           ]
         },
         {

@@ -373,26 +373,6 @@
     if((key==='hookclaw_skirmisher'||key==='lantern_stalker') && r.cooldown>0)
       walk(g,e,offset(e,a+(r.cycle%2?1:-1)*Math.PI/2,60),spec.speed*1.27,dt);
   }
-  // A couple of independent scouts flank established patrol posts. Do not add
-  // them to a base's clearance ledger or disturb the seeded spawn sequence.
-  const build=W.World.prototype._buildEnemies;
-  W.World.prototype._buildEnemies=function(){
-    build.call(this);
-    const rosters=[
-      [0,'hookclaw_skirmisher','rivet_guard'],[2,'rivet_guard','signal_sergeant'],
-      [4,'glasswind_sharpshot','hookclaw_skirmisher'],[5,'sluice_warden','lantern_stalker'],
-      [6,'signal_sergeant','glasswind_sharpshot'],[7,'lantern_stalker','rivet_guard']
-    ];
-    for(const [region,...pair] of rosters){
-      const post=Array.from(this._spawns.values()).find(spawn=>spawn.id.startsWith('patrol_'+region+'_') && !spawn.boss);
-      if(!post)continue;
-      pair.forEach((id,i)=>{
-        const x=post.x+(i?85:-85),y=post.y+72;
-        this._spawn({id:'recon_patrol_'+region+'_'+i,type:W.Content.reconEnemyTypes[id],x,y,homeX:x,homeY:y,
-          level:post.level,patrol:i*Math.PI,region,locationId:null,boss:false});
-      });
-    }
-  };
   const advanced=G.updateAdvancedEnemy;
   G.updateAdvancedEnemy=function(e,target,spec,dt){
     if(e.reconRelay){e.velocityX=e.velocityY=0;return true;}

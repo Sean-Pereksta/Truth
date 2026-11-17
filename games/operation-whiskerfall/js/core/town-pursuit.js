@@ -2,6 +2,7 @@
   'use strict';
   const W=window.OW, G=W.Game.prototype, rodents=new Map();
   function able(p){return !!p&&p.hp>0&&!p.downed&&!(p.smokeTime>0);}
+  G.pursuitRange=function(e){return W.Content.enemies[e.type]?.role==='sniper'?1870:1360;};
   G.canPursueTown=function(e){
     if(this.world.isDungeon||this.world.isTutorial||e.boss||e.cityWatch||e.turret||e.guardianOwner)return false;
     if(!rodents.has(e.type))rodents.set(e.type,W.Audio.prototype.isRodent(e));
@@ -27,7 +28,7 @@
   G.updateTownPursuit=function(e,spec,dt){
     if(e.pursuitTarget==null&&!e.returnFromTown)return false;
     let p=this.players[e.pursuitTarget],town=this.safeZoneAt(e.x,e.y);
-    if(!able(p)||W.dist(e,p)>(spec.role==='sniper'?1870:1360)){
+    if(!able(p)||W.dist(e,p)>this.pursuitRange(e)){
       if(e.pursuitTarget!=null){end(e);e.returnFromTown=!!town;}
       if(town){approach(this,e,{x:e.homeX,y:e.homeY},spec.speed,dt);return true;}
       e.returnFromTown=false;return false;
@@ -72,7 +73,7 @@
     return this.world.activeEnemies.some(e=>{
       if(e.pursuitTarget==null||e.hp<=0||e.dead)return false;
       const target=this.players[e.pursuitTarget];
-      return able(target)&&this.safeZoneAt(target.x,target.y)===town&&W.dist(e,target)<1360;
+      return able(target)&&this.safeZoneAt(target.x,target.y)===town&&W.dist(e,target)<=this.pursuitRange(e);
     });
   };
   const rest=G.nearTown;

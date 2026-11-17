@@ -517,13 +517,16 @@
         this.reveal(p.x,p.y);
       }
       // Keep pursuing enemies alive while their current position is still close to either player.
-      for(const e of this._active.values())if(!this.dead.has(e.id)&&e.hp>0&&!this.gateAt(e.x,e.y)){let d=Infinity;for(const p of players)d=Math.min(d,sq(e.x-p.x)+sq(e.y-p.y));if(d<=sq(radius+160))desired.set(e.id,{def:this._spawns.get(e.id)||e,distance:d});}
+      for(const e of this._active.values())if(!this.dead.has(e.id)&&e.hp>0&&!this.gateAt(e.x,e.y)){
+        let d=Infinity;for(const p of players)d=Math.min(d,sq(e.x-p.x)+sq(e.y-p.y));
+        const retain=e.pursuitTarget!=null&&game?.pursuitRange?Math.max(radius+160,game.pursuitRange(e)):radius+160;
+        if(d<=sq(retain))desired.set(e.id,{def:this._spawns.get(e.id)||e,distance:d});
+      }
       const ranked=[...desired.entries()].sort((a,b)=>Number(this._active.get(b[0])?.pursuitTarget!=null)-Number(this._active.get(a[0])?.pursuitTarget!=null)||a[1].distance-b[1].distance);
       const chosen=(this.selectTrailPatrols?this.selectTrailPatrols(ranked,players):ranked).slice(0,this.maxActiveEnemies),keep=new Set(chosen.map(e=>e[0]));
       for(const [id,e]of this._active)if(!keep.has(id)||this.dead.has(id)||e.hp<=0){if(!this.dead.has(id)&&e.hp>0&&!e.ephemeral)this._dormant.set(id,e);else this._dormant.delete(id);this._active.delete(id);}
       for(const [id,item]of chosen)if(!this._active.has(id)&&!this.dead.has(id)){const e=this._dormant.get(id)||this._createEnemy(item.def);this._dormant.delete(id);this._active.set(id,e);}
       this.chunks=chunks;this.activeEnemies=[...this._active.values()];this._rebuildEnemyGrid();
-      // The `game` parameter is reserved for event integration. AI belongs to the game loop.
     }
     _rebuildEnemyGrid() {this._enemyGrid.clear();for(const e of this.activeEnemies)if(e.hp>0&&!this.dead.has(e.id))this._index(this._enemyGrid,e.x,e.y,e);}
     addEnemy(enemy) {enemy.ephemeral=true;this._active.set(enemy.id,enemy);if(!this.activeEnemies.some(e=>e.id===enemy.id))this.activeEnemies.push(enemy);this._rebuildEnemyGrid();return enemy;}
