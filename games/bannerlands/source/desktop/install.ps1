@@ -3,7 +3,8 @@ $ErrorActionPreference='Stop'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $installationPath=[IO.Path]::GetFullPath($Destination)
 if([IO.Path]::GetPathRoot($installationPath).TrimEnd('\') -eq $installationPath.TrimEnd('\')) {throw 'The installation location cannot be a drive root.'}
-$stagingPath=Join-Path ([IO.Path]::GetTempPath()) ('BannerlandsSetup-'+[Guid]::NewGuid().ToString('N'))
+$stagingParent=[IO.Path]::GetDirectoryName($installationPath)
+$stagingPath=Join-Path $stagingParent ('.bl-setup-'+[Guid]::NewGuid().ToString('N').Substring(0,12))
 New-Item -ItemType Directory -Force -Path $stagingPath | Out-Null
 try {
   [IO.Compression.ZipFile]::ExtractToDirectory($PayloadPath,$stagingPath)
@@ -12,7 +13,10 @@ try {
   foreach($file in $manifest.files) {
     $verifiedPath=[IO.Path]::GetFullPath((Join-Path $packagePath $file.path))
     if(-not $verifiedPath.StartsWith($packagePath+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase)) {throw 'Invalid file in installation manifest.'}
-    if((Get-FileHash -LiteralPath $verifiedPath -Algorithm SHA256).Hash.ToLowerInvariant() -ne $file.sha256) {throw ('Package verification failed: '+$file.path)}
+    $hashAlgorithm=[Security.Cryptography.SHA256]::Create()
+    $fileStream=[IO.File]::OpenRead($verifiedPath)
+    try {$actualHash=([BitConverter]::ToString($hashAlgorithm.ComputeHash($fileStream))).Replace('-','').ToLowerInvariant()} finally {$fileStream.Dispose();$hashAlgorithm.Dispose()}
+    if($actualHash -ne $file.sha256) {throw ('Package verification failed: '+$file.path)}
   }
   if(Test-Path -LiteralPath (Join-Path $installationPath 'build-manifest.json')) {
     & (Join-Path $packagePath 'Uninstall Bannerlands.ps1') -InstallationRoot $installationPath -ShutdownOnly -Quiet
@@ -54,5 +58,5 @@ try {
   throw
 } finally {
   $verifiedStaging=[IO.Path]::GetFullPath($stagingPath)
-  if($verifiedStaging.StartsWith([IO.Path]::GetFullPath([IO.Path]::GetTempPath()),[StringComparison]::OrdinalIgnoreCase) -and [IO.Path]::GetFileName($verifiedStaging).StartsWith('BannerlandsSetup-')) {Remove-Item -LiteralPath $verifiedStaging -Recurse -Force}
+  if([IO.Path]::GetDirectoryName($verifiedStaging) -eq $stagingParent -and [IO.Path]::GetFileName($verifiedStaging).StartsWith('.bl-setup-')) {Remove-Item -LiteralPath $verifiedStaging -Recurse -Force}
 }

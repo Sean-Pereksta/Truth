@@ -34,7 +34,8 @@ await copy(nodeBinary,path.join(packageRoot,'runtime','node.exe'));await copy(pa
 for(const entry of await fs.readdir(gameRoot,{withFileTypes:true}))if(entry.isFile()&&/\.(js|css|html)$/.test(entry.name))await copy(path.join(gameRoot,entry.name),path.join(packageRoot,'game',entry.name));
 await copy(path.join(gameRoot,'assets'),path.join(packageRoot,'game','assets'));
 await copy(path.join(gameRoot,'multiplayer'),path.join(packageRoot,'game','multiplayer'));
-for(const relative of ['multiplayer-server.mjs','hosting','desktop'])await copy(path.join(gameRoot,'source',relative),path.join(packageRoot,'game','source',relative));
+for(const relative of ['multiplayer-server.mjs','desktop'])await copy(path.join(gameRoot,'source',relative),path.join(packageRoot,'game','source',relative));
+for(const entry of await fs.readdir(path.join(gameRoot,'source','hosting'),{withFileTypes:true}))if(entry.isFile())await copy(path.join(gameRoot,'source','hosting',entry.name),path.join(packageRoot,'game','source','hosting',entry.name));
 await fs.writeFile(path.join(packageRoot,'game','package.json'),JSON.stringify({name:'bannerlands',private:true,type:'module',version:GAME_VERSION},null,2));
 await copy(path.join(gameRoot,'source','hosting','licenses'),path.join(packageRoot,'notices'));
 await copy(path.resolve(dependencyLicenses),path.join(packageRoot,'notices','cloudflared-dependencies'));
