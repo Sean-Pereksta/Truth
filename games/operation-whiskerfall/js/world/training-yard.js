@@ -12,6 +12,7 @@
     ['“First, the gate yard,” Saffron said. “Learn the alarm drill. Then meet me at Willow and we’ll follow her trail.”','The resistance opens its training gate.']
   ].map(([caption,alt],i)=>({caption,alt,art:'comics/orchard-dispatch.webp',crop:{cols:2,rows:2,col:i%2,row:Math.floor(i/2)}}));
   const fresh=()=>({phase:'comic',panel:0,step:'movement'});
+  const complete=()=>({phase:'complete',panel:panels.length-1,step:'exit'});
   const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
   const towards=(a,b)=>Math.atan2(b.y-a.y,b.x-a.x);
   const yardRegion={name:'Resistance gate yard',biome:'grassland',color:'#7c865d',level:1};
@@ -79,7 +80,7 @@
   G.start=function(opts={}){
     if(!opts.load){
       W.Comics.reset(this);clearYardUi(this);this.yardSurface=null;
-      this.opening=opts.opening?fresh():null;
+      this.opening=opts.opening?fresh():complete();
     }
     return start.apply(this,arguments);
   };
@@ -120,12 +121,13 @@
   const load=G.load;
   G.load=function(slot=0){
     const data=W.Save.read(slot);if(!data)return false;
-    const previous=this.opening;this.opening=data.opening?{phase:data.opening.phase,panel:data.opening.panel,step:data.opening.step}:null;
+    const previous=this.opening;this.opening=data.opening?{phase:data.opening.phase,panel:data.opening.panel,step:data.opening.step}:complete();
     let ok;try{ok=load.call(this,slot);}finally{if(!ok)this.opening=previous;}
     if(!ok)return false;
     W.Comics.reset(this);clearYardUi(this);this.yardSurface=null;this.paused=this.ui.isOpen;
     if(this.opening?.phase==='comic')showOpening(this);
     if(this.opening?.phase==='training')enterYard(this,data.opening.positions);
+    if(!data.opening)this.save(false);
     return true;
   };
   const damage=G.damageEnemy;

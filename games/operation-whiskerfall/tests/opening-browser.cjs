@@ -23,8 +23,8 @@ const {pathToFileURL}=require('node:url'),{chromium}=require('playwright');
       await page.evaluate(([i,b])=>{Object.assign(pads[i].buttons[b],{pressed:true,value:1});},[owner,button]);
       await tick();await page.evaluate(([i,b])=>{Object.assign(pads[i].buttons[b],{pressed:false,value:0});},[owner,button]);await tick();
     };
-    const resume=async()=>{
-      const slot=await page.evaluate(()=>{OW.game.save(false);return OW.game.slot;});
+    const resume=async(otherSlot)=>{
+      const slot=otherSlot??await page.evaluate(()=>{OW.game.save(false);return OW.game.slot;});
       await page.reload();await page.waitForFunction(()=>window.OW?.game?.ready,null,{timeout:120000});
       await page.evaluate(()=>{OW.game.frame=()=>{};});
       await page.locator('[data-action=slot][data-value="'+slot+'"]').click();
@@ -66,7 +66,36 @@ const {pathToFileURL}=require('node:url'),{chromium}=require('playwright');
     await page.evaluate(()=>{
       const g=OW.game,d=g.snapshot();delete d.opening;OW.Save.write(1,d);g.start({load:true,slot:1});
     });
-    await check(()=>!OW.game.opening&&!OW.game.world.isTutorial&&!OW.game.comic,'legacy slot resumes on surface');
+    await check(()=>OW.game.opening.phase==='complete'&&!OW.game.world.isTutorial&&!OW.game.comic,'legacy slot resumes on surface');
+    // Legacy chamber saves hold return positions in players and interior
+    // positions in activeDungeon. Exercise both record shapes through Continue.
+    const legacy=await page.evaluate(()=>{
+      const g=OW.game;g.start({slot:0,coop:true});
+      const cave=OW.Content.dungeons.find(d=>d.puzzle==='constellation'&&d.encounter!=='survival'),entry=g.world.getLocation(cave.id);
+      g.players.forEach((p,i)=>Object.assign(p,{x:entry.x+i*40,y:entry.y}));g.interact(g.players[0]);
+      if(g.world.entry?.id!==cave.id)throw Error('Could not enter test chamber');
+      g.players[1].gold=731;g.players[1].inventory[0].upgrade=2;g.acceptedQuests.add('main_0_0');
+      g.puzzleAction(0);
+      const data=g.snapshot();delete data.opening;
+      if(!OW.Save.write(1,data))throw Error('Could not prepare legacy dungeon save');
+      return {id:cave.id,entry:{x:entry.x,y:entry.y},stars:data.dungeonStates[cave.id].stars};
+    });
+    await resume(1);
+    assert.ok(await page.evaluate(({id,entry,stars})=>{
+      const g=OW.game,s=OW.Save.read(1);
+      return !g.world.isDungeon&&!g.world.isTutorial&&!g.comic&&g.players.length===2&&
+        g.players.every(p=>OW.dist(p,entry)<230&&!g.world.isBlocked(p.x,p.y,19))&&
+        g.acceptedQuests.has('main_0_0')&&g.players[1].gold===731&&g.players[1].inventory[0].upgrade===2&&
+        JSON.stringify(g.dungeonStates[id].stars)===JSON.stringify(stars)&&s.opening.phase==='complete'&&!s.activeDungeon;
+    },legacy),'legacy chamber opens at surface entrance with both heroes, inventory, quest and puzzle intact');
+    await page.evaluate(id=>{
+      const g=OW.game,entry=g.world.getLocation(id);
+      g.players.forEach((p,i)=>Object.assign(p,{x:entry.x+i*36,y:entry.y}));
+      g.travelInteractUntil=0;g.interact(g.players[1]);
+    },legacy.id);
+    await check(()=>OW.game.world.isDungeon&&OW.game.world.state.stars[0],'re-enter the same chamber with puzzle progress');
+    await resume();
+    assert.ok(await page.evaluate(id=>OW.game.world.entry?.id===id&&OW.game.world.state.stars[0]&&OW.game.players[1].gold===731,legacy.id),'future Continue restores the migrated party underground');
     await page.evaluate(()=>{
       sessionStorage.coopDrill='1';window.pads=testPads();
       const g=OW.game;g.state='menu';g.ui.showMenu('main');g.ui.mainTab='new';g.ui.slot=2;g.ui.coop=true;g.ui.render();g.ui.host.querySelector('[data-action=launch]').click();
