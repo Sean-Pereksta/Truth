@@ -683,10 +683,10 @@
           "questId": "main_berlin_final",
           "finalBoss": true,
           "attackHints": [
-            "Phase I · Tyrant’s Arsenal: teleport rings, marked artillery and rocket fans.",
-            "Phase II · Blink Assault: a wider arsenal joins the teleport and delayed strike combinations.",
-            "Phase III · Berlin Lockdown: lingering hazards, summoned elites and orbital strikes.",
-            "Phase IV · Last Whisker: chained teleports weave every attack together. Save dodge and healing for this phase."
+            "Command duel · cross the locked dash or double volley, then counter.",
+            "Signal network · shoot the relay to interrupt the broken ring. Its open wedge is safe.",
+            "False retreat · leave the marked landing and deal with the signal escort.",
+            "Last stand · anticipate the double shot and the following landing, then attack together."
           ]
         }
       ],
@@ -952,10 +952,10 @@
           "questId": "main_berlin_final",
           "finalBoss": true,
           "attackHints": [
-            "Phase I · Tyrant’s Arsenal: teleport rings, marked artillery and rocket fans.",
-            "Phase II · Blink Assault: a wider arsenal joins the teleport and delayed strike combinations.",
-            "Phase III · Berlin Lockdown: lingering hazards, summoned elites and orbital strikes.",
-            "Phase IV · Last Whisker: chained teleports weave every attack together. Save dodge and healing for this phase."
+            "Command duel · cross the locked dash or double volley, then counter.",
+            "Signal network · shoot the relay to interrupt the broken ring. Its open wedge is safe.",
+            "False retreat · leave the marked landing and deal with the signal escort.",
+            "Last stand · anticipate the double shot and the following landing, then attack together."
           ]
         }
       ],
@@ -1224,10 +1224,10 @@
           "questId": "main_berlin_final",
           "finalBoss": true,
           "attackHints": [
-            "Phase I · Tyrant’s Arsenal: teleport rings, marked artillery and rocket fans.",
-            "Phase II · Blink Assault: a wider arsenal joins the teleport and delayed strike combinations.",
-            "Phase III · Berlin Lockdown: lingering hazards, summoned elites and orbital strikes.",
-            "Phase IV · Last Whisker: chained teleports weave every attack together. Save dodge and healing for this phase."
+            "Command duel · cross the locked dash or double volley, then counter.",
+            "Signal network · shoot the relay to interrupt the broken ring. Its open wedge is safe.",
+            "False retreat · leave the marked landing and deal with the signal escort.",
+            "Last stand · anticipate the double shot and the following landing, then attack together."
           ]
         }
       ],
@@ -1392,6 +1392,54 @@
       "cleared": false,
       "enemyIds": [],
       "index": 298
+    },
+    {
+      "id": "missing_dispatches_perch",
+      "name": "Orchard stile",
+      "type": "reconLead",
+      "region": 0,
+      "x": 1755,
+      "y": 1345.5,
+      "radius": 75,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 325
+    },
+    {
+      "id": "missing_dispatches_cache",
+      "name": "Red satchel",
+      "type": "reconLead",
+      "region": 0,
+      "x": 2431,
+      "y": 2236,
+      "radius": 75,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 326
+    },
+    {
+      "id": "double_entry_perch",
+      "name": "Bridge tally",
+      "type": "reconLead",
+      "region": 0,
+      "x": 2054,
+      "y": 3432,
+      "radius": 75,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 327
+    },
+    {
+      "id": "double_entry_cache",
+      "name": "Toll collector’s chest",
+      "type": "reconLead",
+      "region": 0,
+      "x": 2925,
+      "y": 3354,
+      "radius": 75,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 328
     }
   ],
   "enemySpawns": [

@@ -4,14 +4,14 @@
   const fencer=e=>e&&!e.boss&&W.Content.enemies[e.type]?.role==='fencer';
   function clearTell(g,e){for(const effect of g.effects||[])if(effect.alive&&effect.readableEnemyId===e.id)effect.alive=false;}
   function recovery(g,e,interrupted){
-    e.specialMove=null;e.jumpHeight=0;e.stun=0;e.fencerRecovery=1.05;e.fireTimer=Math.max(e.fireTimer||0,1.25);
+    e.specialMove=null;e.jumpHeight=0;e.stun=0;e.fencerRecovery=.82;e.fireTimer=Math.max(e.fireTimer||0,.96);
     e.combatState='recovery';g.setAnim(e,'land');clearTell(g,e);g.text(interrupted?'INTERRUPTED · EXPOSED':'EXPOSED',e.x,e.y-53,'#a9edc0');
   }
   const effect=G.effect;G.effect=function(type,x,y,radius,life,extra={}){return effect.call(this,type,x,y,radius,life,this._fencerTell&&['telegraph','chargeLane'].includes(type)?{...extra,readableEnemyId:this._fencerTell}:extra);};
   const begin=G.beginMove;G.beginMove=function(e,target,kind,windup,duration,damage,radius){
     if(!fencer(e)||kind!=='charge')return begin.call(this,e,target,kind,windup,duration,damage,radius);
     const previous=this._fencerTell;this._fencerTell=e.id;
-    try{begin.call(this,e,target,kind,.75,.32,damage,40);}finally{this._fencerTell=previous;}
+    try{begin.call(this,e,target,kind,this.settings?.longWarnings?.87:.58,.28,damage,40);}finally{this._fencerTell=previous;}
     if(e.specialMove){e.specialMove.readableFencer=true;this.text('LOCKED LUNGE',e.x,e.y-53,'#ffd197');if(!this.fencerLessonShown){this.fencerLessonShown=true;this.ui.toast('Fencers lock their lunge direction. Sidestep the amber lane, or interrupt the windup with your blade. Their green recovery takes 20% extra damage.');}}
   };
   const advance=G.updateAdvancedEnemy;G.updateAdvancedEnemy=function(e,target,spec,dt){
@@ -44,5 +44,5 @@
   };
   const damagePlayer=G.damagePlayer;G.damagePlayer=function(p,amount,source){const down=p.downed,result=damagePlayer.call(this,p,amount,source);if(!down&&p.downed&&fencer(source))this.ui.toast('Downed by a Fencer lunge. Dodge across the amber lane, then attack during its green recovery.','error');return result;};
   if(W.Renderer?.prototype.drawActor){const R=W.Renderer.prototype,draw=R.drawActor;R.drawActor=function(e,isPlayer=false,...args){const result=draw.call(this,e,isPlayer,...args);if(!isPlayer&&fencer(e)&&e.hp>0&&e.fencerRecovery>0){const c=this.ctx;c.save();c.strokeStyle='#a9edc0';c.lineWidth=2;c.globalAlpha=.8;c.beginPath();c.ellipse(e.x,e.y+3,30,12,0,0,Math.PI*2);c.stroke();c.restore();}return result;};}
-  W.ReadableCombat={fencerWindup:.75,fencerRecovery:1.05,recoveryDamageMultiplier:1.2};
+  W.ReadableCombat={fencerWindup:.58,fencerRecovery:.82,recoveryDamageMultiplier:1.2};
 })();

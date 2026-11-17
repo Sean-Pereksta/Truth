@@ -779,10 +779,10 @@
           "questId": "main_berlin_final",
           "finalBoss": true,
           "attackHints": [
-            "Phase I · Tyrant’s Arsenal: teleport rings, marked artillery and rocket fans.",
-            "Phase II · Blink Assault: a wider arsenal joins the teleport and delayed strike combinations.",
-            "Phase III · Berlin Lockdown: lingering hazards, summoned elites and orbital strikes.",
-            "Phase IV · Last Whisker: chained teleports weave every attack together. Save dodge and healing for this phase."
+            "Command duel · cross the locked dash or double volley, then counter.",
+            "Signal network · shoot the relay to interrupt the broken ring. Its open wedge is safe.",
+            "False retreat · leave the marked landing and deal with the signal escort.",
+            "Last stand · anticipate the double shot and the following landing, then attack together."
           ]
         }
       ],
@@ -1064,10 +1064,10 @@
           "questId": "main_berlin_final",
           "finalBoss": true,
           "attackHints": [
-            "Phase I · Tyrant’s Arsenal: teleport rings, marked artillery and rocket fans.",
-            "Phase II · Blink Assault: a wider arsenal joins the teleport and delayed strike combinations.",
-            "Phase III · Berlin Lockdown: lingering hazards, summoned elites and orbital strikes.",
-            "Phase IV · Last Whisker: chained teleports weave every attack together. Save dodge and healing for this phase."
+            "Command duel · cross the locked dash or double volley, then counter.",
+            "Signal network · shoot the relay to interrupt the broken ring. Its open wedge is safe.",
+            "False retreat · leave the marked landing and deal with the signal escort.",
+            "Last stand · anticipate the double shot and the following landing, then attack together."
           ]
         }
       ],
@@ -1394,6 +1394,20 @@
       "cleared": false,
       "enemyIds": [],
       "index": 304
+    },
+    {
+      "id": "recon_depot",
+      "name": "Cinder Rail Depot",
+      "type": "cave",
+      "recon": true,
+      "region": 6,
+      "x": 7475,
+      "y": 11245,
+      "radius": 105,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 320,
+      "dungeonId": "recon_depot"
     }
   ],
   "enemySpawns": [
@@ -8619,6 +8633,18 @@
       "label": "Emberworks · LV 19",
       "variant": 0,
       "region": 6
+    },
+    {
+      "id": "recon_depot_entrance",
+      "type": "cave",
+      "x": 7475,
+      "y": 11210,
+      "w": 155,
+      "h": 130,
+      "solid": false,
+      "locationId": "recon_depot",
+      "region": 6,
+      "variant": 0
     }
   ]
 }

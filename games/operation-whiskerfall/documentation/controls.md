@@ -1,5 +1,17 @@
 # MeowQuest the Purr’d Reich — field controls
 
+## The courier investigation
+
+Start a campaign and follow the pinned orchard lead outside Willow. At the observation mark, tap Interact and stay in position while the ring fills. At the recovery mark, defeat the guards and interact with the evidence. Open the Journal and choose **Send field debrief**. The dossier records the clue's source, pays each hero once and shows the next destination. Its **Field assignments** control opens the original quest list. The Berlin approach tracks the twelve reports and eight commanders separately.
+
+Open Camp with Start or Escape. The camp card shows party health, location and the current lead. The title and camp have a painted campfire with moving embers. Settings includes a living-camp animation switch and honors the device's reduced-motion preference.
+
+In Controls, use the player tabs to choose each hero's stick deadzone, aim response, aim assistance, movement stick and button labels. **Twin-stick** resets that player's profile and **Steady aim** enables assistance. The shared button layout retains existing remaps. The right stick button triggers a heavy strike on press and can be remapped. A disconnected controller pauses the field and can reclaim its hero on reconnect. The assignment buttons in Controls also support a replacement device.
+
+At a forge, use the bumpers to move between **Upgrade**, **Tune** and **Craft**. Choose a recipe, compare its effects and costs, and confirm for the named hero. New gear can be equipped immediately or stored. Each recipe lists the evidence or expedition required. High-contrast warnings, longer recon windups, reduced impact flashes and camera shake are available in Settings.
+
+For a portable backup, use **Settings → Export campaign**. Select the destination slot before importing from the title. During play, import restores the backup into the active slot. If the game reports temporary storage, export the newest copy before closing the tab. For the deployed game, use the same browser profile and game URL to access existing local slots.
+
 Inventory cards now include their own **Equip**, **Equip backup**, or **Use** buttons. Inspect a card to compare its details. Skills includes a painted illustration for each ability, two equipped slots, category tabs and a separate passive-training tab.
 
 Interact with a cat using E / B. Choose a reply to talk, ask about a job, or access supplies. B goes back through the conversation; Escape / Start leaves it. Complete a field objective, follow the arrow to its named recipient, then choose **Finish quest**. A check-mark crest identifies ready turn-ins. The reward display lists what you earned and can mark your next contact. Speaking-only objectives complete as soon as the correct conversation happens.

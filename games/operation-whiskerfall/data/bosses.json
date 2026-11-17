@@ -155,7 +155,7 @@
     "id": "adolph_whisker",
     "name": "Adolph Whisker",
     "pattern": "whisker",
-    "hp": 42000,
+    "hp": 9500,
     "damage": 48,
     "speed": 135,
     "color": "#c86174",
@@ -166,10 +166,10 @@
     "phases": 4,
     "finalBoss": true,
     "attackHints": [
-      "Phase I · Tyrant’s Arsenal: teleport rings, marked artillery and rocket fans.",
-      "Phase II · Blink Assault: a wider arsenal joins the teleport and delayed strike combinations.",
-      "Phase III · Berlin Lockdown: lingering hazards, summoned elites and orbital strikes.",
-      "Phase IV · Last Whisker: chained teleports weave every attack together. Save dodge and healing for this phase."
+      "Command duel · cross the locked dash or double volley, then counter.",
+      "Signal network · shoot the relay to interrupt the broken ring. Its open wedge is safe.",
+      "False retreat · leave the marked landing and deal with the signal escort.",
+      "Last stand · anticipate the double shot and the following landing, then attack together."
     ]
   }
 ]

@@ -28,7 +28,7 @@
       if(a.phase==='windup'&&a.timer<=0){
         for(const f of this.effects)if(f.prismOwner===e.id)f.alive=false;
         const amount=(spec.damage||15)*(1+(e.level||1)*.065)*(1+(e.region||0)*.04);
-        for(const target of targets(this))if(a.lanes.some(l=>segmentDistance(target,l.start,l.end)<tuning.laneRadius+16)&&this.lineOfSight(e,target)){
+        for(const target of targets(this))if(a.lanes.some(l=>segmentDistance(target,l.start,l.end)<tuning.laneRadius)&&this.lineOfSight(e,target)){
           const hp=target.hp;if(this.players.includes(target)||target.campProxy)this.damagePlayer(target,amount,{x:e.x,y:e.y,kind:'prismFrost'});else target.hp=Math.max(0,target.hp-amount);if(target.hp<hp)target.slowTime=Math.max(target.slowTime||0,tuning.slow);
         }
         for(const lane of a.lanes)this.effect('prismLane',lane.start.x,lane.start.y,tuning.laneRadius,.25,{prismOwner:e.id,tx:lane.end.x,ty:lane.end.y,warning:false,color:'#b9f8ff'});

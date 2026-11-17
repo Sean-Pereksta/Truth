@@ -156,5 +156,53 @@
     "y": 7280,
     "w": 4680,
     "h": 7280
+  },
+  {
+    "id": 10,
+    "index": 10,
+    "reconRegion": true,
+    "slug": "hushfen",
+    "name": "Hushfen Basin",
+    "biome": "marsh",
+    "color": "#668981",
+    "x": 23400,
+    "y": 0,
+    "w": 3120,
+    "h": 4810,
+    "level": 7,
+    "description": "Reed ferries meet at a brick pumping station.",
+    "commander": "Berlin dispatch network"
+  },
+  {
+    "id": 11,
+    "index": 11,
+    "reconRegion": true,
+    "slug": "glasswind",
+    "name": "Glasswind Shelf",
+    "biome": "mountain",
+    "color": "#8498b4",
+    "x": 23400,
+    "y": 4810,
+    "w": 3120,
+    "h": 4810,
+    "level": 12,
+    "description": "The bell above the slate switchbacks rings before each gust.",
+    "commander": "Berlin dispatch network"
+  },
+  {
+    "id": 12,
+    "index": 12,
+    "reconRegion": true,
+    "slug": "gloamroot",
+    "name": "Gloamroot Canopy",
+    "biome": "forest",
+    "color": "#827591",
+    "x": 23400,
+    "y": 9620,
+    "w": 3120,
+    "h": 4940,
+    "level": 17,
+    "description": "Rope bridges hang between the roots of an ancient lantern tree.",
+    "commander": "Berlin dispatch network"
   }
 ]

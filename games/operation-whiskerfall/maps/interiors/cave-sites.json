@@ -1,5 +1,5 @@
 {
-  "description": "Twenty enterable caverns: sixteen legacy puzzle and survival chambers plus four distinct hidden expeditions, two permanent keys, and Nacremaw in the Drowned Maw. Geometry and interactions are implemented by js/world/dungeons.js and js/world/distant-vaults.js.",
+  "description": "Expedition and reconnaissance interiors, entrances and guardian rewards.",
   "sites": [
     {
       "id": "cave_0_0",
@@ -346,6 +346,90 @@
       "cleared": false,
       "enemyIds": [],
       "index": 307
+    },
+    {
+      "id": "recon_archive",
+      "name": "Floodgate Archive",
+      "type": "cave",
+      "recon": true,
+      "region": 10,
+      "x": 25220,
+      "y": 2886,
+      "radius": 105,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 317,
+      "dungeonId": "recon_archive"
+    },
+    {
+      "id": "recon_spire",
+      "name": "Signal Spire",
+      "type": "cave",
+      "recon": true,
+      "region": 11,
+      "x": 25480,
+      "y": 8125,
+      "radius": 105,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 318,
+      "dungeonId": "recon_spire"
+    },
+    {
+      "id": "recon_court",
+      "name": "Lantern Court",
+      "type": "cave",
+      "recon": true,
+      "region": 12,
+      "x": 25545,
+      "y": 12285,
+      "radius": 105,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 319,
+      "dungeonId": "recon_court"
+    },
+    {
+      "id": "recon_depot",
+      "name": "Cinder Rail Depot",
+      "type": "cave",
+      "recon": true,
+      "region": 6,
+      "x": 7475,
+      "y": 11245,
+      "radius": 105,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 320,
+      "dungeonId": "recon_depot"
+    },
+    {
+      "id": "recon_cistern",
+      "name": "Mirror Cistern",
+      "type": "cave",
+      "recon": true,
+      "region": 4,
+      "x": 16770,
+      "y": 11011,
+      "radius": 105,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 321,
+      "dungeonId": "recon_cistern"
+    },
+    {
+      "id": "recon_vault",
+      "name": "Blackglass Command Vault",
+      "type": "cave",
+      "recon": true,
+      "region": 7,
+      "x": 2639,
+      "y": 8658,
+      "radius": 105,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 322,
+      "dungeonId": "recon_vault"
     }
   ],
   "dungeons": [
@@ -1161,6 +1245,108 @@
       ],
       "puzzle": "distant",
       "distantVault": true
+    },
+    {
+      "id": "recon_archive",
+      "name": "Floodgate Archive",
+      "title": "Pump wheel",
+      "level": 7,
+      "region": 10,
+      "guardian": 0,
+      "variant": 0,
+      "puzzle": "echo",
+      "sequence": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "recon": true
+    },
+    {
+      "id": "recon_spire",
+      "name": "Signal Spire",
+      "title": "Windbreak winch",
+      "level": 12,
+      "region": 11,
+      "guardian": 0,
+      "variant": 0,
+      "puzzle": "echo",
+      "sequence": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "recon": true
+    },
+    {
+      "id": "recon_court",
+      "name": "Lantern Court",
+      "title": "Root gate latch",
+      "level": 17,
+      "region": 12,
+      "guardian": 0,
+      "variant": 0,
+      "puzzle": "echo",
+      "sequence": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "recon": true
+    },
+    {
+      "id": "recon_depot",
+      "name": "Cinder Rail Depot",
+      "title": "Siding switch",
+      "level": 18,
+      "region": 6,
+      "guardian": 0,
+      "variant": 0,
+      "puzzle": "echo",
+      "sequence": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "recon": true
+    },
+    {
+      "id": "recon_cistern",
+      "name": "Mirror Cistern",
+      "title": "Heliostat",
+      "level": 20,
+      "region": 4,
+      "guardian": 0,
+      "variant": 0,
+      "puzzle": "echo",
+      "sequence": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "recon": true
+    },
+    {
+      "id": "recon_vault",
+      "name": "Blackglass Command Vault",
+      "title": "Maintenance relay",
+      "level": 25,
+      "region": 7,
+      "guardian": 0,
+      "variant": 0,
+      "puzzle": "echo",
+      "sequence": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "recon": true
     }
   ],
   "guardians": [
@@ -1820,6 +2006,152 @@
       "y": 3100,
       "level": 16,
       "clue": "Search the Smuggler’s Tool Chest east of Reedlight Refuge in Reedwater. Defeat its three guards, then recover the foundry key."
+    }
+  ],
+  "reconnaissance": [
+    {
+      "id": "recon_archive",
+      "name": "Floodgate Archive",
+      "region": 10,
+      "x": 19400,
+      "y": 2220,
+      "level": 7,
+      "palette": "#77b4a4",
+      "machine": "Pump wheel",
+      "crossing": "Drained intake",
+      "shortcut": "Dry culvert",
+      "lesson": "Turn the pump wheel. The striped intake drains, joining the ledger room to the upper catwalk.",
+      "map": [
+        "###########",
+        "#O...##...#",
+        "#..#A##.R.#",
+        "#..#..#...#",
+        "####..#...#",
+        "#..KT...#.#",
+        "#.....#...#",
+        "#.S...#####",
+        "###########"
+      ]
+    },
+    {
+      "id": "recon_spire",
+      "name": "Signal Spire",
+      "region": 11,
+      "x": 19600,
+      "y": 6250,
+      "level": 12,
+      "palette": "#94adc9",
+      "machine": "Windbreak winch",
+      "crossing": "Lee passage",
+      "shortcut": "Cable lift",
+      "lesson": "Raise the windbreak. Cross the pale wind stripes between gusts, then watch the west perch or clear the east platform.",
+      "map": [
+        "###########",
+        "#O...#..R.#",
+        "###..#.#..#",
+        "#...##.#..#",
+        "#.####.#..#",
+        "#...A..#K.#",
+        "####T.....#",
+        "#..S...####",
+        "###########"
+      ]
+    },
+    {
+      "id": "recon_court",
+      "name": "Lantern Court",
+      "region": 12,
+      "x": 19650,
+      "y": 9450,
+      "level": 17,
+      "palette": "#b49ac4",
+      "machine": "Root gate latch",
+      "crossing": "High bridge",
+      "shortcut": "Inside bridge",
+      "lesson": "Unlatch the high bridge and follow the courier between the lanterns. A search party protects the low signet press.",
+      "map": [
+        "###########",
+        "#.O....#..#",
+        "#.####.#R.#",
+        "#....A.#..#",
+        "#.##.#.#..#",
+        "#.#..#.K..#",
+        "#.T####.#.#",
+        "#...S.....#",
+        "###########"
+      ]
+    },
+    {
+      "id": "recon_depot",
+      "name": "Cinder Rail Depot",
+      "region": 6,
+      "x": 5750,
+      "y": 8650,
+      "level": 18,
+      "palette": "#da9973",
+      "machine": "Siding switch",
+      "crossing": "Freight platform",
+      "shortcut": "Service tunnel",
+      "lesson": "Switch the siding, then board the freight platform at the striped track. The eastern booth holds a duplicate manifest.",
+      "map": [
+        "###########",
+        "#..O...####",
+        "#.####....#",
+        "#..A.##.R.#",
+        "###..##...#",
+        "#.T.......#",
+        "#.#.###K#.#",
+        "#.S.......#",
+        "###########"
+      ]
+    },
+    {
+      "id": "recon_cistern",
+      "name": "Mirror Cistern",
+      "region": 4,
+      "x": 12900,
+      "y": 8470,
+      "level": 20,
+      "palette": "#d7bd85",
+      "machine": "Heliostat",
+      "crossing": "Projected seal",
+      "shortcut": "Shaft ladder",
+      "lesson": "Rotate the heliostat until the beam opens the seal. Cross the shaft between sweeps, or use the guarded manual override.",
+      "map": [
+        "###########",
+        "#...O..#..#",
+        "#.###A.#R.#",
+        "#.#...##..#",
+        "#...T.....#",
+        "#.###.###.#",
+        "#.K...#...#",
+        "#...S...###",
+        "###########"
+      ]
+    },
+    {
+      "id": "recon_vault",
+      "name": "Blackglass Command Vault",
+      "region": 7,
+      "x": 2030,
+      "y": 6660,
+      "level": 25,
+      "palette": "#9bb3be",
+      "machine": "Maintenance relay",
+      "crossing": "Document lift",
+      "shortcut": "Courtyard hatch",
+      "lesson": "Cut the maintenance relay to reach document storage unseen. The east gatehouse leads to the same courtyard with its captured order.",
+      "map": [
+        "###########",
+        "#.O...#...#",
+        "#.###.#.R.#",
+        "#...A.#...#",
+        "###.#.#.#.#",
+        "#..T#...#X#",
+        "#.#####K#.#",
+        "#.S.......#",
+        "###########"
+      ]
     }
   ]
 }

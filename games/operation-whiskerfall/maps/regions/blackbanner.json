@@ -747,10 +747,10 @@
           "questId": "main_berlin_final",
           "finalBoss": true,
           "attackHints": [
-            "Phase I · Tyrant’s Arsenal: teleport rings, marked artillery and rocket fans.",
-            "Phase II · Blink Assault: a wider arsenal joins the teleport and delayed strike combinations.",
-            "Phase III · Berlin Lockdown: lingering hazards, summoned elites and orbital strikes.",
-            "Phase IV · Last Whisker: chained teleports weave every attack together. Save dodge and healing for this phase."
+            "Command duel · cross the locked dash or double volley, then counter.",
+            "Signal network · shoot the relay to interrupt the broken ring. Its open wedge is safe.",
+            "False retreat · leave the marked landing and deal with the signal escort.",
+            "Last stand · anticipate the double shot and the following landing, then attack together."
           ]
         }
       ],
@@ -1028,10 +1028,10 @@
           "questId": "main_berlin_final",
           "finalBoss": true,
           "attackHints": [
-            "Phase I · Tyrant’s Arsenal: teleport rings, marked artillery and rocket fans.",
-            "Phase II · Blink Assault: a wider arsenal joins the teleport and delayed strike combinations.",
-            "Phase III · Berlin Lockdown: lingering hazards, summoned elites and orbital strikes.",
-            "Phase IV · Last Whisker: chained teleports weave every attack together. Save dodge and healing for this phase."
+            "Command duel · cross the locked dash or double volley, then counter.",
+            "Signal network · shoot the relay to interrupt the broken ring. Its open wedge is safe.",
+            "False retreat · leave the marked landing and deal with the signal escort.",
+            "Last stand · anticipate the double shot and the following landing, then attack together."
           ]
         }
       ],
@@ -1238,6 +1238,68 @@
       "cleared": false,
       "enemyIds": [],
       "index": 300
+    },
+    {
+      "id": "recon_vault",
+      "name": "Blackglass Command Vault",
+      "type": "cave",
+      "recon": true,
+      "region": 7,
+      "x": 2639,
+      "y": 8658,
+      "radius": 105,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 322,
+      "dungeonId": "recon_vault"
+    },
+    {
+      "id": "recon_courtyard",
+      "name": "Courtyard field station",
+      "type": "reconCheckpoint",
+      "x": 3120,
+      "y": 8593,
+      "region": 7,
+      "radius": 65,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 323
+    },
+    {
+      "id": "recon_vault_east",
+      "name": "Blackglass · Southern Gatehouse",
+      "type": "reconEntry",
+      "x": 3822,
+      "y": 9477,
+      "region": 7,
+      "radius": 105,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 324
+    },
+    {
+      "id": "berlin_dossier_perch",
+      "name": "Dawnbridge survey table",
+      "type": "reconLead",
+      "region": 7,
+      "x": 1627.2848638937776,
+      "y": 8943.868626910316,
+      "radius": 75,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 335
+    },
+    {
+      "id": "berlin_dossier_cache",
+      "name": "Gate courier rendezvous",
+      "type": "reconLead",
+      "region": 7,
+      "x": 2223,
+      "y": 9555,
+      "radius": 75,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 336
     }
   ],
   "enemySpawns": [
@@ -9413,6 +9475,42 @@
       "label": "Blackbanner Citadel · LV 22",
       "variant": 0,
       "region": 7
+    },
+    {
+      "id": "recon_vault_entrance",
+      "type": "cave",
+      "x": 2639,
+      "y": 8623,
+      "w": 155,
+      "h": 130,
+      "solid": false,
+      "locationId": "recon_vault",
+      "region": 7,
+      "variant": 0
+    },
+    {
+      "id": "recon_courtyard_station",
+      "type": "tower",
+      "x": 3120,
+      "y": 8551,
+      "w": 145,
+      "h": 100,
+      "solid": false,
+      "locationId": "recon_courtyard",
+      "region": 7,
+      "variant": 0
+    },
+    {
+      "id": "recon_vault_east_gatehouse",
+      "type": "tower",
+      "x": 3822,
+      "y": 9432,
+      "w": 99,
+      "h": 125,
+      "solid": false,
+      "locationId": "recon_vault_east",
+      "region": 7,
+      "variant": 0
     }
   ]
 }

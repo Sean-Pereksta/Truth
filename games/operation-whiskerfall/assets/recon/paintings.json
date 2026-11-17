@@ -1,0 +1,1477 @@
+[
+  {
+    "key": "plate-archive",
+    "path": "assets/recon/plate-archive.webp",
+    "generation": "d09479f6-de63-475f-b30f-3b926edf3d72",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      0,
+      0,
+      887,
+      296
+    ],
+    "exportSize": [
+      887,
+      296
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "plate"
+  },
+  {
+    "key": "plate-spire",
+    "path": "assets/recon/plate-spire.webp",
+    "generation": "d09479f6-de63-475f-b30f-3b926edf3d72",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      887,
+      0,
+      1774,
+      296
+    ],
+    "exportSize": [
+      887,
+      296
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "plate"
+  },
+  {
+    "key": "plate-court",
+    "path": "assets/recon/plate-court.webp",
+    "generation": "d09479f6-de63-475f-b30f-3b926edf3d72",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      0,
+      296,
+      887,
+      591
+    ],
+    "exportSize": [
+      887,
+      295
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "plate"
+  },
+  {
+    "key": "plate-depot",
+    "path": "assets/recon/plate-depot.webp",
+    "generation": "d09479f6-de63-475f-b30f-3b926edf3d72",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      887,
+      296,
+      1774,
+      591
+    ],
+    "exportSize": [
+      887,
+      295
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "plate"
+  },
+  {
+    "key": "plate-cistern",
+    "path": "assets/recon/plate-cistern.webp",
+    "generation": "d09479f6-de63-475f-b30f-3b926edf3d72",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      0,
+      591,
+      887,
+      887
+    ],
+    "exportSize": [
+      887,
+      296
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "plate"
+  },
+  {
+    "key": "plate-vault",
+    "path": "assets/recon/plate-vault.webp",
+    "generation": "d09479f6-de63-475f-b30f-3b926edf3d72",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      887,
+      591,
+      1774,
+      887
+    ],
+    "exportSize": [
+      887,
+      296
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "plate"
+  },
+  {
+    "key": "floor-archive",
+    "path": "assets/recon/floor-archive.webp",
+    "generation": "bd67dc08-4a2d-4b13-b941-eeeb52bca0dc",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      0,
+      0,
+      418,
+      627
+    ],
+    "exportSize": [
+      256,
+      256
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "floor"
+  },
+  {
+    "key": "floor-spire",
+    "path": "assets/recon/floor-spire.webp",
+    "generation": "bd67dc08-4a2d-4b13-b941-eeeb52bca0dc",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      418,
+      0,
+      836,
+      627
+    ],
+    "exportSize": [
+      256,
+      256
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "floor"
+  },
+  {
+    "key": "floor-court",
+    "path": "assets/recon/floor-court.webp",
+    "generation": "bd67dc08-4a2d-4b13-b941-eeeb52bca0dc",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      836,
+      0,
+      1254,
+      627
+    ],
+    "exportSize": [
+      256,
+      256
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "floor"
+  },
+  {
+    "key": "floor-depot",
+    "path": "assets/recon/floor-depot.webp",
+    "generation": "bd67dc08-4a2d-4b13-b941-eeeb52bca0dc",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      0,
+      627,
+      418,
+      1254
+    ],
+    "exportSize": [
+      256,
+      256
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "floor"
+  },
+  {
+    "key": "floor-cistern",
+    "path": "assets/recon/floor-cistern.webp",
+    "generation": "bd67dc08-4a2d-4b13-b941-eeeb52bca0dc",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      418,
+      627,
+      836,
+      1254
+    ],
+    "exportSize": [
+      256,
+      256
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "floor"
+  },
+  {
+    "key": "floor-vault",
+    "path": "assets/recon/floor-vault.webp",
+    "generation": "bd67dc08-4a2d-4b13-b941-eeeb52bca0dc",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      836,
+      627,
+      1254,
+      1254
+    ],
+    "exportSize": [
+      256,
+      256
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "floor"
+  },
+  {
+    "key": "mechanism-archive",
+    "path": "assets/recon/mechanism-archive.webp",
+    "generation": "078ab8c3-f0d6-4bf2-846c-1d673c67f759",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      58,
+      46,
+      453,
+      496
+    ],
+    "exportSize": [
+      395,
+      450
+    ],
+    "anchor": [
+      0.5,
+      1
+    ],
+    "animation": "static",
+    "consumer": "mechanism"
+  },
+  {
+    "key": "mechanism-spire",
+    "path": "assets/recon/mechanism-spire.webp",
+    "generation": "078ab8c3-f0d6-4bf2-846c-1d673c67f759",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      585,
+      6,
+      972,
+      512
+    ],
+    "exportSize": [
+      387,
+      506
+    ],
+    "anchor": [
+      0.5,
+      1
+    ],
+    "animation": "static",
+    "consumer": "mechanism"
+  },
+  {
+    "key": "mechanism-court",
+    "path": "assets/recon/mechanism-court.webp",
+    "generation": "078ab8c3-f0d6-4bf2-846c-1d673c67f759",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      1098,
+      10,
+      1455,
+      487
+    ],
+    "exportSize": [
+      357,
+      477
+    ],
+    "anchor": [
+      0.5,
+      1
+    ],
+    "animation": "static",
+    "consumer": "mechanism"
+  },
+  {
+    "key": "mechanism-depot",
+    "path": "assets/recon/mechanism-depot.webp",
+    "generation": "078ab8c3-f0d6-4bf2-846c-1d673c67f759",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      47,
+      539,
+      464,
+      975
+    ],
+    "exportSize": [
+      417,
+      436
+    ],
+    "anchor": [
+      0.5,
+      1
+    ],
+    "animation": "static",
+    "consumer": "mechanism"
+  },
+  {
+    "key": "mechanism-cistern",
+    "path": "assets/recon/mechanism-cistern.webp",
+    "generation": "078ab8c3-f0d6-4bf2-846c-1d673c67f759",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      548,
+      512,
+      971,
+      1005
+    ],
+    "exportSize": [
+      423,
+      493
+    ],
+    "anchor": [
+      0.5,
+      1
+    ],
+    "animation": "static",
+    "consumer": "mechanism"
+  },
+  {
+    "key": "mechanism-vault",
+    "path": "assets/recon/mechanism-vault.webp",
+    "generation": "078ab8c3-f0d6-4bf2-846c-1d673c67f759",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      1078,
+      527,
+      1472,
+      996
+    ],
+    "exportSize": [
+      394,
+      469
+    ],
+    "anchor": [
+      0.5,
+      1
+    ],
+    "animation": "static",
+    "consumer": "mechanism"
+  },
+  {
+    "key": "chapter-1",
+    "path": "assets/recon/chapter-1.webp",
+    "generation": "60edb73c-fbe2-40a9-ab7f-040662d43252",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      0,
+      0,
+      512,
+      1024
+    ],
+    "exportSize": [
+      300,
+      600
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "journal"
+  },
+  {
+    "key": "chapter-2",
+    "path": "assets/recon/chapter-2.webp",
+    "generation": "60edb73c-fbe2-40a9-ab7f-040662d43252",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      512,
+      0,
+      1024,
+      1024
+    ],
+    "exportSize": [
+      300,
+      600
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "journal"
+  },
+  {
+    "key": "chapter-3",
+    "path": "assets/recon/chapter-3.webp",
+    "generation": "60edb73c-fbe2-40a9-ab7f-040662d43252",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      1024,
+      0,
+      1536,
+      1024
+    ],
+    "exportSize": [
+      300,
+      600
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "journal"
+  },
+  {
+    "key": "forge",
+    "path": "assets/recon/forge.webp",
+    "generation": "d84258d1-a28e-47e2-9f4b-fd1d8aa67e4f",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      0,
+      0,
+      1536,
+      1024
+    ],
+    "exportSize": [
+      1000,
+      667
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "forge"
+  },
+  {
+    "key": "wall-archive",
+    "path": "assets/recon/wall-archive.webp",
+    "generation": "52c2daed-1f56-4529-8528-abe28e9be85a",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      8,
+      156,
+      505,
+      396
+    ],
+    "exportSize": [
+      265,
+      128
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "terrain boundary"
+  },
+  {
+    "key": "wall-spire",
+    "path": "assets/recon/wall-spire.webp",
+    "generation": "52c2daed-1f56-4529-8528-abe28e9be85a",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      519,
+      155,
+      1017,
+      388
+    ],
+    "exportSize": [
+      274,
+      128
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "terrain boundary"
+  },
+  {
+    "key": "wall-court",
+    "path": "assets/recon/wall-court.webp",
+    "generation": "52c2daed-1f56-4529-8528-abe28e9be85a",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      1030,
+      151,
+      1530,
+      389
+    ],
+    "exportSize": [
+      269,
+      128
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "terrain boundary"
+  },
+  {
+    "key": "wall-depot",
+    "path": "assets/recon/wall-depot.webp",
+    "generation": "52c2daed-1f56-4529-8528-abe28e9be85a",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      8,
+      648,
+      505,
+      896
+    ],
+    "exportSize": [
+      257,
+      128
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "terrain boundary"
+  },
+  {
+    "key": "wall-cistern",
+    "path": "assets/recon/wall-cistern.webp",
+    "generation": "52c2daed-1f56-4529-8528-abe28e9be85a",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      518,
+      648,
+      1018,
+      896
+    ],
+    "exportSize": [
+      258,
+      128
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "terrain boundary"
+  },
+  {
+    "key": "wall-vault",
+    "path": "assets/recon/wall-vault.webp",
+    "generation": "52c2daed-1f56-4529-8528-abe28e9be85a",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      1029,
+      641,
+      1532,
+      894
+    ],
+    "exportSize": [
+      254,
+      128
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "terrain boundary"
+  },
+  {
+    "key": "contact-1",
+    "path": "assets/recon/contact-1.webp",
+    "generation": "832f6c1d-3f56-42f4-b80a-87dfe71bb42c",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      0,
+      0,
+      362,
+      362
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "operation briefing"
+  },
+  {
+    "key": "contact-2",
+    "path": "assets/recon/contact-2.webp",
+    "generation": "832f6c1d-3f56-42f4-b80a-87dfe71bb42c",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      362,
+      0,
+      724,
+      362
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "operation briefing"
+  },
+  {
+    "key": "contact-3",
+    "path": "assets/recon/contact-3.webp",
+    "generation": "832f6c1d-3f56-42f4-b80a-87dfe71bb42c",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      724,
+      0,
+      1086,
+      362
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "operation briefing"
+  },
+  {
+    "key": "contact-4",
+    "path": "assets/recon/contact-4.webp",
+    "generation": "832f6c1d-3f56-42f4-b80a-87dfe71bb42c",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1086,
+      0,
+      1448,
+      362
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "operation briefing"
+  },
+  {
+    "key": "contact-5",
+    "path": "assets/recon/contact-5.webp",
+    "generation": "832f6c1d-3f56-42f4-b80a-87dfe71bb42c",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      0,
+      362,
+      362,
+      724
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "operation briefing"
+  },
+  {
+    "key": "contact-6",
+    "path": "assets/recon/contact-6.webp",
+    "generation": "832f6c1d-3f56-42f4-b80a-87dfe71bb42c",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      362,
+      362,
+      724,
+      724
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "operation briefing"
+  },
+  {
+    "key": "contact-7",
+    "path": "assets/recon/contact-7.webp",
+    "generation": "832f6c1d-3f56-42f4-b80a-87dfe71bb42c",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      724,
+      362,
+      1086,
+      724
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "operation briefing"
+  },
+  {
+    "key": "contact-8",
+    "path": "assets/recon/contact-8.webp",
+    "generation": "832f6c1d-3f56-42f4-b80a-87dfe71bb42c",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1086,
+      362,
+      1448,
+      724
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "operation briefing"
+  },
+  {
+    "key": "contact-9",
+    "path": "assets/recon/contact-9.webp",
+    "generation": "832f6c1d-3f56-42f4-b80a-87dfe71bb42c",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      0,
+      724,
+      362,
+      1086
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "operation briefing"
+  },
+  {
+    "key": "contact-10",
+    "path": "assets/recon/contact-10.webp",
+    "generation": "832f6c1d-3f56-42f4-b80a-87dfe71bb42c",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      362,
+      724,
+      724,
+      1086
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "operation briefing"
+  },
+  {
+    "key": "contact-11",
+    "path": "assets/recon/contact-11.webp",
+    "generation": "832f6c1d-3f56-42f4-b80a-87dfe71bb42c",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      724,
+      724,
+      1086,
+      1086
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "operation briefing"
+  },
+  {
+    "key": "contact-12",
+    "path": "assets/recon/contact-12.webp",
+    "generation": "832f6c1d-3f56-42f4-b80a-87dfe71bb42c",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1086,
+      724,
+      1448,
+      1086
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "operation briefing"
+  },
+  {
+    "key": "resource-gold",
+    "path": "assets/recon/resource-gold.webp",
+    "generation": "d7191010-5cd9-4fa7-8423-b8f29d4f5bc6",
+    "sourceSize": [
+      2172,
+      724
+    ],
+    "sourceCrop": [
+      45,
+      72,
+      638,
+      676
+    ],
+    "exportSize": [
+      94,
+      96
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "forge price"
+  },
+  {
+    "key": "resource-materials",
+    "path": "assets/recon/resource-materials.webp",
+    "generation": "d7191010-5cd9-4fa7-8423-b8f29d4f5bc6",
+    "sourceSize": [
+      2172,
+      724
+    ],
+    "sourceCrop": [
+      737,
+      40,
+      1414,
+      686
+    ],
+    "exportSize": [
+      96,
+      92
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "forge price"
+  },
+  {
+    "key": "resource-cores",
+    "path": "assets/recon/resource-cores.webp",
+    "generation": "d7191010-5cd9-4fa7-8423-b8f29d4f5bc6",
+    "sourceSize": [
+      2172,
+      724
+    ],
+    "sourceCrop": [
+      1566,
+      28,
+      2093,
+      694
+    ],
+    "exportSize": [
+      76,
+      96
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "forge price"
+  },
+  {
+    "key": "courier-camp",
+    "path": "assets/recon/courier-camp.webp",
+    "generation": "27427839-e3a1-4817-bc6d-35c8a7aeb914",
+    "sourceSize": [
+      1672,
+      941
+    ],
+    "sourceCrop": [
+      0,
+      0,
+      1672,
+      941
+    ],
+    "exportSize": [
+      1672,
+      941
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "living camp"
+  },
+  {
+    "key": "landmark-rushlight",
+    "path": "assets/recon/landmark-rushlight.webp",
+    "generation": "97df46cb-3ceb-4c28-a217-6321b0162d79",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      10,
+      104,
+      504,
+      481
+    ],
+    "exportSize": [
+      330,
+      252
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "world landmark"
+  },
+  {
+    "key": "landmark-leeward",
+    "path": "assets/recon/landmark-leeward.webp",
+    "generation": "97df46cb-3ceb-4c28-a217-6321b0162d79",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      537,
+      10,
+      1024,
+      476
+    ],
+    "exportSize": [
+      314,
+      300
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "world landmark"
+  },
+  {
+    "key": "landmark-lamplighter",
+    "path": "assets/recon/landmark-lamplighter.webp",
+    "generation": "97df46cb-3ceb-4c28-a217-6321b0162d79",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      1024,
+      4,
+      1535,
+      485
+    ],
+    "exportSize": [
+      319,
+      300
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "world landmark"
+  },
+  {
+    "key": "landmark-gatehouse",
+    "path": "assets/recon/landmark-gatehouse.webp",
+    "generation": "97df46cb-3ceb-4c28-a217-6321b0162d79",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      3,
+      518,
+      510,
+      960
+    ],
+    "exportSize": [
+      330,
+      288
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "world landmark"
+  },
+  {
+    "key": "landmark-hatch",
+    "path": "assets/recon/landmark-hatch.webp",
+    "generation": "97df46cb-3ceb-4c28-a217-6321b0162d79",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      516,
+      587,
+      1024,
+      969
+    ],
+    "exportSize": [
+      330,
+      248
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "world landmark"
+  },
+  {
+    "key": "landmark-courtyard",
+    "path": "assets/recon/landmark-courtyard.webp",
+    "generation": "97df46cb-3ceb-4c28-a217-6321b0162d79",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      1024,
+      518,
+      1535,
+      958
+    ],
+    "exportSize": [
+      330,
+      284
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "world landmark"
+  },
+  {
+    "key": "commander-0",
+    "path": "assets/recon/commander-0.webp",
+    "generation": "a730e148-20bd-402d-bd40-86cc8aaf3ae8",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      0,
+      0,
+      418,
+      418
+    ],
+    "exportSize": [
+      190,
+      190
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "commander bounty poster"
+  },
+  {
+    "key": "commander-1",
+    "path": "assets/recon/commander-1.webp",
+    "generation": "a730e148-20bd-402d-bd40-86cc8aaf3ae8",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      418,
+      0,
+      836,
+      418
+    ],
+    "exportSize": [
+      190,
+      190
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "commander bounty poster"
+  },
+  {
+    "key": "commander-2",
+    "path": "assets/recon/commander-2.webp",
+    "generation": "a730e148-20bd-402d-bd40-86cc8aaf3ae8",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      836,
+      0,
+      1254,
+      418
+    ],
+    "exportSize": [
+      190,
+      190
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "commander bounty poster"
+  },
+  {
+    "key": "commander-3",
+    "path": "assets/recon/commander-3.webp",
+    "generation": "a730e148-20bd-402d-bd40-86cc8aaf3ae8",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      0,
+      418,
+      418,
+      836
+    ],
+    "exportSize": [
+      190,
+      190
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "commander bounty poster"
+  },
+  {
+    "key": "commander-4",
+    "path": "assets/recon/commander-4.webp",
+    "generation": "a730e148-20bd-402d-bd40-86cc8aaf3ae8",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      418,
+      418,
+      836,
+      836
+    ],
+    "exportSize": [
+      190,
+      190
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "commander bounty poster"
+  },
+  {
+    "key": "commander-5",
+    "path": "assets/recon/commander-5.webp",
+    "generation": "a730e148-20bd-402d-bd40-86cc8aaf3ae8",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      836,
+      418,
+      1254,
+      836
+    ],
+    "exportSize": [
+      190,
+      190
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "commander bounty poster"
+  },
+  {
+    "key": "commander-6",
+    "path": "assets/recon/commander-6.webp",
+    "generation": "a730e148-20bd-402d-bd40-86cc8aaf3ae8",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      0,
+      836,
+      418,
+      1254
+    ],
+    "exportSize": [
+      190,
+      190
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "commander bounty poster"
+  },
+  {
+    "key": "commander-7",
+    "path": "assets/recon/commander-7.webp",
+    "generation": "a730e148-20bd-402d-bd40-86cc8aaf3ae8",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      418,
+      836,
+      836,
+      1254
+    ],
+    "exportSize": [
+      190,
+      190
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "commander bounty poster"
+  },
+  {
+    "key": "commander-8",
+    "path": "assets/recon/commander-8.webp",
+    "generation": "a730e148-20bd-402d-bd40-86cc8aaf3ae8",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      836,
+      836,
+      1254,
+      1254
+    ],
+    "exportSize": [
+      190,
+      190
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "commander bounty poster"
+  }
+]

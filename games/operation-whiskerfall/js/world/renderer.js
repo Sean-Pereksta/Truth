@@ -100,7 +100,9 @@
       const colors=['#759b50','#527a48','#888e78','#c8af70','#d8e6e3','#5c8771','#7a8077','#3b879b'];
       for(let y=0;y<size;y+=160)for(let x=0;x<size;x+=160){
         const wx=cx*size+x,wy=cy*size+y,t=this.terrainType(world,wx+80,wy+80),tile=biomeTile[t]??0;
-        if((t==='coast'||t==='isles')&&this.images.coastalTerrain){const im=this.images.coastalTerrain,n=t==='isles'?2:0;ctx.drawImage(im,(n%2)*im.width/2,Math.floor(n/2)*im.height/2,im.width/2,im.height/2,x,y,160,160);}
+        const regional=OW.ReconArt?.regionalGround(world.regionAt?.(wx+80,wy+80));
+        if(regional)ctx.drawImage(regional,x,y,160,160);
+        else if((t==='coast'||t==='isles')&&this.images.coastalTerrain){const im=this.images.coastalTerrain,n=t==='isles'?2:0;ctx.drawImage(im,(n%2)*im.width/2,Math.floor(n/2)*im.height/2,im.width/2,im.height/2,x,y,160,160);}
         else if(this.images.terrain){const im=this.images.terrain;ctx.drawImage(im,(tile%4)*im.width/4,Math.floor(tile/4)*im.height/2,im.width/4,im.height/2,x,y,160,160);}
         else {ctx.fillStyle=colors[tile];ctx.fillRect(x,y,160,160);}
         ctx.fillStyle='rgba(26,48,25,'+(hash(wx,wy)*.055)+')';ctx.fillRect(x,y,160,160);

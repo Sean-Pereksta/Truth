@@ -238,5 +238,57 @@
     "price": 1810,
     "crit": 0.125,
     "description": "A broad swing with heavy impact."
+  },
+  {
+    "id": "leafsaber",
+    "name": "Leafrunner Saber",
+    "level": 1,
+    "damage": 21,
+    "range": 76,
+    "speed": 0.29,
+    "reconArt": 8,
+    "reconFamily": "saber",
+    "description": "A fast cut. Dodge an incoming strike, then cut within 0.55s for a double-damage riposte.",
+    "riposteTime": 0.55,
+    "arc": 1.04
+  },
+  {
+    "id": "bellfoil",
+    "name": "Bell Tower Foil",
+    "level": 1,
+    "damage": 27,
+    "range": 107,
+    "speed": 0.39,
+    "reconArt": 9,
+    "reconFamily": "saber",
+    "description": "Longer reach and a narrower arc. A timely dodge opens a 0.7s double-damage riposte.",
+    "riposteTime": 0.7,
+    "arc": 0.71
+  },
+  {
+    "id": "latchhammer",
+    "name": "Latch Hammer",
+    "level": 1,
+    "damage": 33,
+    "range": 86,
+    "speed": 0.52,
+    "reconArt": 10,
+    "reconFamily": "maul",
+    "description": "Wide, short sweeps expose shields. Heavy swings stop guards.",
+    "riposteTime": 0.55,
+    "arc": 1.38
+  },
+  {
+    "id": "turnkey",
+    "name": "Turnkey Maul",
+    "level": 1,
+    "damage": 48,
+    "range": 114,
+    "speed": 0.74,
+    "reconArt": 11,
+    "reconFamily": "maul",
+    "description": "A long two-paw reach and a deliberate recovery. Heavy blows sweep through a shield line.",
+    "riposteTime": 0.55,
+    "arc": 1.58
   }
 ]

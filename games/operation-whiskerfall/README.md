@@ -1,8 +1,12 @@
 # MeowQuest the Purr’d Reich
 
-An original, illustrated open-world resistance action RPG for one or two local players. Explore ten connected territories and the Berlin Sector, defeat all eight regional commanders, then confront Adolph Whisker to win the campaign.
+An illustrated reconnaissance action RPG for one or two local players. Investigate missing couriers in Greenfields Reach, follow twelve leads through thirteen territories, defeat the eight commanders and reach Adolph Whisker in the Berlin Sector.
 
-## Faster regional enemy progression
+Open `index.html` with the entire game folder together. Choose a slot at the painted courier camp. During play, open the Journal to compare observation and recovery routes, mark evidence on the map and send debriefs. Each debrief opens a lead or a forge opportunity. After the epilogue and credits, return to Willow for unfinished assignments, regional exercises or a Whisker rematch.
+
+Existing slots open through **Continue**. To carry saves between browsers or installations, export the campaign from Settings and import the JSON file into the desired slot. See [field controls](documentation/controls.md), [save recovery](documentation/save-recovery.md) and the [acceptance report](documentation/acceptance-report.md).
+
+## Previous regional progression update
 
 Regular enemies gain health and damage much faster after Greenfields. Campaign health multipliers now rise through **1, 2.2, 4, 6.6, 10.2, 15.2, 22 and 31**; damage multipliers rise through **1, 1.8, 2.8, 4.2, 6, 8.4, 11.5 and 15.5**, in addition to existing enemy-level bonuses. Blackbanner patrols have about twice their previous health and 89% more damage. Stormglass Coast uses **8.9× health / 5.4× damage** and Sunken Crown uses **15.2× / 8.4×**, matching their level-12 and level-16 side routes.
 

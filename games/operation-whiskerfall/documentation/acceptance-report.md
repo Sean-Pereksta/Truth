@@ -1,4 +1,19 @@
-# 1.9 preview acceptance status
+# Reconnaissance campaign · preview acceptance
+
+The playable expansion adds twelve investigation operations, six dungeon plans, three connected regions, six enemy roles, twelve weapons, eight suits and three post-credits exercises. The title and camp use an original animated campfire painting. The party roster and current lead update with the active campaign.
+
+| Verification | Observed result |
+|---|---|
+| Campaign and migration | Chrome exercised both evidence routes for every operation, both heroes at entrances and exits, switch collision, dungeon re-entry, durable shortcuts, one-time debrief rewards and the courtyard checkpoint. Tests supplied prerequisites and repositioned heroes. Separate legacy fixtures covered unfinished assignments, earned Berlin access, an active finale, a completed campaign and a resting partner. |
+| Controller and couch play | Two virtual controllers used the browser Gamepad API from title through settings, co-op, clue confirmation, journal, forge, save, reload and Continue. Travel to the test locations was accelerated. Mixed keyboard/controller play, per-player focus, purchase cancellation and reconnection at a new device index were exercised. |
+| Portable campaigns | Chrome downloaded a JSON backup, imported it during play and restored the second hero at camp. Malformed files and an injected late loading failure preserved the previous slot. Cold reload recovered a deliberately damaged primary from backup. A simulated quota failure retained the newest session copy, which became durable when writes resumed. |
+| Combat | The representative level-15 Fencer fight fell from 22.12 to 13.12 simulated seconds with the upgraded Field Pistol and from 12.08 to 8.07 seconds with the upgraded Scattergun. Three continuous scripted fights crossed all four Whisker phases. The separate [combat report](combat-playtest.md) describes the enlarged test health pool, hit geometry, frame pacing and normal-speed and quarter-speed captures. |
+| Art and UI | Desktop Chrome 157.0.8103.52 on Windows, AMD Ryzen 7 5825U with Radeon Graphics opened the build directly from disk at 1280 × 720 and 1920 × 1080. Checks covered the title, field, forge, journal, Floodgate Archive and both heroes in the new suits. The [art library](../art-gallery.html) and [asset manifest](asset-manifest.md) include the exports. |
+| Load and pacing | One fresh browser session per sample, while other checks were running. At 720p the original title reached DOM content loaded in 1.08 s and the expanded build in 1.94 s. Field p50/p95 frame intervals were 16.7/16.8 ms and 16.7/17.0 ms respectively. The expanded 1080p sample measured 1.62 s and 16.7/33.6 ms. These timings describe the measured previews, not a hardware minimum. |
+
+**Open release checks.** A timed first clear with human players, the optional-content duration, physical USB/Bluetooth controllers and a listening test remain outstanding. The 10–14 hour campaign and 5–8 optional hours are design targets. The scripted checks establish functional coverage and do not establish those durations.
+
+## Previous release · 1.9 preview acceptance status
 
 All **71 automated suites passed**, and all **68 runtime JavaScript files passed syntax checks**. All 76 script and stylesheet references in the game entry point resolve locally. The complete results are in `test-results.json`.
 
