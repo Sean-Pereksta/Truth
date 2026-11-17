@@ -2,7 +2,7 @@
   "version": 1,
   "seed": 763219,
   "width": 26520,
-  "height": 14560,
+  "height": 17745,
   "chunkSize": 640,
   "start": {
     "x": 1430,
@@ -241,7 +241,7 @@
       "region": 0,
       "radius": 300,
       "npc": "Captain Saffron",
-      "description": "Friendly resistance settlement: merchant, healing, upgrades, and mission board.",
+      "description": "The dispatch willow overlooks Dispatch green. Compare the seal with the copy pinned behind Saffron’s map.",
       "x": 1430,
       "y": 1430,
       "cleared": false,
@@ -249,7 +249,8 @@
       "index": 0,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "willow"
     },
     {
       "id": "town_extra_0",
@@ -258,7 +259,7 @@
       "region": 0,
       "radius": 270,
       "npc": "Quartermaster Hazel",
-      "description": "A quiet village supporting the resistance.",
+      "description": "Applewick cider press stands on Cider lane. Local supplies, a checkpoint and the resistance forge.",
       "x": 2730,
       "y": 4160,
       "cleared": false,
@@ -266,7 +267,8 @@
       "index": 1,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-0"
     },
     {
       "id": "base_0_0",
@@ -449,7 +451,7 @@
       "region": 1,
       "radius": 300,
       "npc": "Scout Juniper",
-      "description": "Friendly resistance settlement: merchant, healing, upgrades, and mission board.",
+      "description": "Bellkeeper’s Tea Room overlooks Bell path. Follow the lowest bell rope over the footbridge. Its knot is a carved Scout.",
       "x": 6110,
       "y": 1430,
       "cleared": false,
@@ -457,7 +459,8 @@
       "index": 12,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "mossbell"
     },
     {
       "id": "town_extra_1",
@@ -466,7 +469,7 @@
       "region": 1,
       "radius": 270,
       "npc": "Quartermaster Fern",
-      "description": "A quiet village supporting the resistance.",
+      "description": "Fern Hollow herb loft stands on Herbalist’s walk. Local supplies, a checkpoint and the resistance forge.",
       "x": 7410,
       "y": 4160,
       "cleared": false,
@@ -474,7 +477,8 @@
       "index": 13,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-1"
     },
     {
       "id": "base_1_0",
@@ -663,7 +667,7 @@
       "region": 2,
       "radius": 300,
       "npc": "Ranger Crag",
-      "description": "Friendly resistance settlement: merchant, healing, upgrades, and mission board.",
+      "description": "Quarry Ring overlooks Lower terrace. The old gate has two facing mallets. Underneath is the name of the first stonecutter to fight here.",
       "x": 10790,
       "y": 1430,
       "cleared": false,
@@ -671,7 +675,8 @@
       "index": 24,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "quarry"
     },
     {
       "id": "town_extra_2",
@@ -680,7 +685,7 @@
       "region": 2,
       "radius": 270,
       "npc": "Quartermaster Slate",
-      "description": "A quiet village supporting the resistance.",
+      "description": "Highstone signal bell stands on Bell steps. Local supplies, a checkpoint and the resistance forge.",
       "x": 12090,
       "y": 4160,
       "cleared": false,
@@ -688,7 +693,8 @@
       "index": 25,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-2"
     },
     {
       "id": "base_2_0",
@@ -897,7 +903,7 @@
       "region": 3,
       "radius": 300,
       "npc": "Medic Lumi",
-      "description": "Friendly resistance settlement: merchant, healing, upgrades, and mission board.",
+      "description": "The warming hall overlooks Quilt walk. Medic Lumi left the brazier wick in the covered passage. Relight it before the blankets freeze.",
       "x": 15470,
       "y": 1430,
       "cleared": false,
@@ -905,7 +911,8 @@
       "index": 36,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "snowhaven"
     },
     {
       "id": "town_extra_3",
@@ -914,7 +921,7 @@
       "region": 3,
       "radius": 270,
       "npc": "Quartermaster Aurora",
-      "description": "A quiet village supporting the resistance.",
+      "description": "Whitepine post cabin stands on Needle path. Local supplies, a checkpoint and the resistance forge.",
       "x": 16770,
       "y": 4160,
       "cleared": false,
@@ -922,7 +929,8 @@
       "index": 37,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-3"
     },
     {
       "id": "base_3_0",
@@ -1135,7 +1143,7 @@
       "region": 4,
       "radius": 300,
       "npc": "Trader Sol",
-      "description": "Friendly resistance settlement: merchant, healing, upgrades, and mission board.",
+      "description": "Reservoir sundial overlooks Caravan arcade. Match the lowest tide notch to the route cut into the blue caravan tile.",
       "x": 15470,
       "y": 8710,
       "cleared": false,
@@ -1143,7 +1151,8 @@
       "index": 48,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "sundial"
     },
     {
       "id": "base_4_0",
@@ -1360,7 +1369,7 @@
       "region": 5,
       "radius": 300,
       "npc": "Harbormaster Reed",
-      "description": "Friendly resistance settlement: merchant, healing, upgrades, and mission board.",
+      "description": "The otter ferry stands on Oarsmen’s lane. Local supplies, a checkpoint and the resistance forge.",
       "x": 10790,
       "y": 8710,
       "cleared": false,
@@ -1368,7 +1377,8 @@
       "index": 59,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-14"
     },
     {
       "id": "base_5_0",
@@ -1585,7 +1595,7 @@
       "region": 6,
       "radius": 300,
       "npc": "Engineer Cinder",
-      "description": "Friendly resistance settlement: merchant, healing, upgrades, and mission board.",
+      "description": "Foundry signal box overlooks Boiler street. Follow the whistle pipe to the spur. A sheared cotter pin has wedged the workshop bell.",
       "x": 6110,
       "y": 8710,
       "cleared": false,
@@ -1593,7 +1603,8 @@
       "index": 70,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "ashford"
     },
     {
       "id": "base_6_0",
@@ -1812,7 +1823,7 @@
       "region": 7,
       "radius": 300,
       "npc": "Captain Dawn",
-      "description": "Friendly resistance settlement: merchant, healing, upgrades, and mission board.",
+      "description": "The relay arches overlooks Messenger square. Align the east-bank relay lantern with the western messenger standard.",
       "x": 1430,
       "y": 8710,
       "cleared": false,
@@ -1820,7 +1831,8 @@
       "index": 81,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "dawnbridge"
     },
     {
       "id": "base_7_0",
@@ -2083,13 +2095,14 @@
       "region": 0,
       "radius": 250,
       "npc": "Resistance Wayfinder",
-      "description": "A peaceful refuge with a friendly quest scout and an upgrade forge.",
+      "description": "Clover creamery stands on Milking lane. Local supplies, a checkpoint and the resistance forge.",
       "cleared": false,
       "enemyIds": [],
       "index": 93,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-4"
     },
     {
       "id": "town_way_1",
@@ -2100,13 +2113,14 @@
       "region": 1,
       "radius": 250,
       "npc": "Resistance Wayfinder",
-      "description": "A peaceful refuge with a friendly quest scout and an upgrade forge.",
+      "description": "Fernlight lantern bridge stands on Lantern walk. Local supplies, a checkpoint and the resistance forge.",
       "cleared": false,
       "enemyIds": [],
       "index": 94,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-5"
     },
     {
       "id": "town_way_2",
@@ -2117,13 +2131,14 @@
       "region": 2,
       "radius": 250,
       "npc": "Resistance Wayfinder",
-      "description": "A peaceful refuge with a friendly quest scout and an upgrade forge.",
+      "description": "The badger brazier stands on Iron path. Local supplies, a checkpoint and the resistance forge.",
       "cleared": false,
       "enemyIds": [],
       "index": 95,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-6"
     },
     {
       "id": "town_way_3",
@@ -2134,13 +2149,14 @@
       "region": 3,
       "radius": 250,
       "npc": "Resistance Wayfinder",
-      "description": "A peaceful refuge with a friendly quest scout and an upgrade forge.",
+      "description": "Warmhearth soup kitchen stands on Kitchen court. Local supplies, a checkpoint and the resistance forge.",
       "cleared": false,
       "enemyIds": [],
       "index": 96,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-7"
     },
     {
       "id": "town_way_4",
@@ -2151,13 +2167,14 @@
       "region": 4,
       "radius": 250,
       "npc": "Resistance Wayfinder",
-      "description": "A peaceful refuge with a friendly quest scout and an upgrade forge.",
+      "description": "Amber glass stall stands on Glass walk. Local supplies, a checkpoint and the resistance forge.",
       "cleared": false,
       "enemyIds": [],
       "index": 97,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-8"
     },
     {
       "id": "town_way_5",
@@ -2168,13 +2185,14 @@
       "region": 5,
       "radius": 250,
       "npc": "Resistance Wayfinder",
-      "description": "A peaceful refuge with a friendly quest scout and an upgrade forge.",
+      "description": "Reedlight net shed stands on Netters’ quay. Local supplies, a checkpoint and the resistance forge.",
       "cleared": false,
       "enemyIds": [],
       "index": 98,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-9"
     },
     {
       "id": "town_way_6",
@@ -2185,13 +2203,14 @@
       "region": 6,
       "radius": 250,
       "npc": "Resistance Wayfinder",
-      "description": "A peaceful refuge with a friendly quest scout and an upgrade forge.",
+      "description": "Ember Rest kiln stands on Kiln street. Local supplies, a checkpoint and the resistance forge.",
       "cleared": false,
       "enemyIds": [],
       "index": 99,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-10"
     },
     {
       "id": "town_way_7",
@@ -2202,13 +2221,14 @@
       "region": 7,
       "radius": 250,
       "npc": "Resistance Wayfinder",
-      "description": "A peaceful refuge with a friendly quest scout and an upgrade forge.",
+      "description": "Last Lantern watch hut stands on Radio path. Local supplies, a checkpoint and the resistance forge.",
       "cleared": false,
       "enemyIds": [],
       "index": 100,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-11"
     },
     {
       "id": "town_8",
@@ -2219,13 +2239,14 @@
       "y": 2990,
       "radius": 300,
       "npc": "Keeper Nacre",
-      "description": "A cliffside haven for lighthouse keepers and shipwreck survivors.",
+      "description": "Brinewatch light stands on Lighthouse walk. Local supplies, a checkpoint and the resistance forge.",
       "cleared": false,
       "enemyIds": [],
       "index": 101,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-12"
     },
     {
       "id": "town_stormglass_lantern",
@@ -2236,13 +2257,14 @@
       "y": 5980,
       "radius": 280,
       "npc": "Tinker Pip",
-      "description": "Salvagers keep the coastal lamps burning from this sheltered quay.",
+      "description": "The crescent beacon stands on Beacon quay. Local supplies, a checkpoint and the resistance forge.",
       "cleared": false,
       "enemyIds": [],
       "index": 102,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-13"
     },
     {
       "id": "town_9",
@@ -2253,13 +2275,14 @@
       "y": 11310,
       "radius": 300,
       "npc": "Captain Coral",
-      "description": "Fishing families and escaped prisoners share a safe island harbor.",
+      "description": "Shellbreak fish market overlooks Crescent quay. Fenn’s salvage net tangled in a bollard. Follow the cork floats down the old quay.",
       "cleared": false,
       "enemyIds": [],
       "index": 103,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "crownrest"
     },
     {
       "id": "base_stormglass_0",
@@ -12569,7 +12592,7 @@
         ],
         "dialogue": [
           "Follow the frost-blue pipes northeast from Warmhearth to Keeper Thistle.",
-          "Wake both lake pumps, then turn the central regulator. The stone crossing between the two lakes is always safe. Entrance requires the Rimeglass Valve Key. Search the Frozen Courier Cache east of Badger’s Lantern in Stonecrest. Defeat its three sentries, then recover the valve key. Defeat the guardian, recover its expedition seal, then return to Keeper Thistle. REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold."
+          "Prime the west pump, send pressure east with the central regulator, then prime the east pump. Lock both gauges at the regulator. The central crossing stays dry. Entrance requires the Rimeglass Valve Key. Search the Frozen Courier Cache east of Badger’s Lantern in Stonecrest. Defeat its three sentries, then recover the valve key. Defeat the guardian, recover its expedition seal, then return to Keeper Thistle. REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold."
         ],
         "topics": {
           "advice": [
@@ -12590,7 +12613,7 @@
         ],
         "dialogue": [
           "Follow the frost-blue pipes northeast from Warmhearth to Keeper Thistle.",
-          "Wake both lake pumps, then turn the central regulator. The stone crossing between the two lakes is always safe. Entrance requires the Rimeglass Valve Key. Search the Frozen Courier Cache east of Badger’s Lantern in Stonecrest. Defeat its three sentries, then recover the valve key. Defeat the guardian, recover its expedition seal, then return to Keeper Thistle. REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold."
+          "Prime the west pump, send pressure east with the central regulator, then prime the east pump. Lock both gauges at the regulator. The central crossing stays dry. Entrance requires the Rimeglass Valve Key. Search the Frozen Courier Cache east of Badger’s Lantern in Stonecrest. Defeat its three sentries, then recover the valve key. Defeat the guardian, recover its expedition seal, then return to Keeper Thistle. REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold."
         ],
         "topics": {
           "advice": [
@@ -12605,7 +12628,7 @@
       ],
       "dialogue": [
         "Follow the frost-blue pipes northeast from Warmhearth to Keeper Thistle.",
-        "Wake both lake pumps, then turn the central regulator. The stone crossing between the two lakes is always safe. Entrance requires the Rimeglass Valve Key. Search the Frozen Courier Cache east of Badger’s Lantern in Stonecrest. Defeat its three sentries, then recover the valve key. Defeat the guardian, recover its expedition seal, then return to Keeper Thistle. REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold."
+        "Prime the west pump, send pressure east with the central regulator, then prime the east pump. Lock both gauges at the regulator. The central crossing stays dry. Entrance requires the Rimeglass Valve Key. Search the Frozen Courier Cache east of Badger’s Lantern in Stonecrest. Defeat its three sentries, then recover the valve key. Defeat the guardian, recover its expedition seal, then return to Keeper Thistle. REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold."
       ],
       "role": "scholar",
       "portrait": 3,
@@ -12650,7 +12673,7 @@
         ],
         "dialogue": [
           "Follow the silent furnace chimneys east of Ember Rest to Foreman Brindle.",
-          "Turn one valve in each side wing to cool the furnace bridge. Either wing can be visited first; the bridge stays open. Entrance requires the Cindercoil Foundry Key. Search the Smuggler’s Tool Chest east of Reedlight Refuge in Reedwater. Defeat its three guards, then recover the foundry key. Defeat the guardian, recover its expedition seal, then return to Foreman Brindle. REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark."
+          "Turn the cooling valves in both wings. The first valve vents a temporary crossing. The north and south routes stay cool. Entrance requires the Cindercoil Foundry Key. Search the Smuggler’s Tool Chest east of Reedlight Refuge in Reedwater. Defeat its three guards, then recover the foundry key. Defeat the guardian, recover its expedition seal, then return to Foreman Brindle. REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark."
         ],
         "topics": {
           "advice": [
@@ -12671,7 +12694,7 @@
         ],
         "dialogue": [
           "Follow the silent furnace chimneys east of Ember Rest to Foreman Brindle.",
-          "Turn one valve in each side wing to cool the furnace bridge. Either wing can be visited first; the bridge stays open. Entrance requires the Cindercoil Foundry Key. Search the Smuggler’s Tool Chest east of Reedlight Refuge in Reedwater. Defeat its three guards, then recover the foundry key. Defeat the guardian, recover its expedition seal, then return to Foreman Brindle. REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark."
+          "Turn the cooling valves in both wings. The first valve vents a temporary crossing. The north and south routes stay cool. Entrance requires the Cindercoil Foundry Key. Search the Smuggler’s Tool Chest east of Reedlight Refuge in Reedwater. Defeat its three guards, then recover the foundry key. Defeat the guardian, recover its expedition seal, then return to Foreman Brindle. REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark."
         ],
         "topics": {
           "advice": [
@@ -12686,7 +12709,7 @@
       ],
       "dialogue": [
         "Follow the silent furnace chimneys east of Ember Rest to Foreman Brindle.",
-        "Turn one valve in each side wing to cool the furnace bridge. Either wing can be visited first; the bridge stays open. Entrance requires the Cindercoil Foundry Key. Search the Smuggler’s Tool Chest east of Reedlight Refuge in Reedwater. Defeat its three guards, then recover the foundry key. Defeat the guardian, recover its expedition seal, then return to Foreman Brindle. REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark."
+        "Turn the cooling valves in both wings. The first valve vents a temporary crossing. The north and south routes stay cool. Entrance requires the Cindercoil Foundry Key. Search the Smuggler’s Tool Chest east of Reedlight Refuge in Reedwater. Defeat its three guards, then recover the foundry key. Defeat the guardian, recover its expedition seal, then return to Foreman Brindle. REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark."
       ],
       "role": "engineer",
       "portrait": 0,
@@ -12731,7 +12754,7 @@
         ],
         "dialogue": [
           "Follow the wind bells northeast of Reedlight Refuge to Pilgrim Sora.",
-          "Ring the three terrace bells in any order, then awaken the sanctuary in the middle of the loop. Defeat the guardian, recover its expedition seal, then return to Pilgrim Sora. REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary."
+          "Read the worn weather vane at the lower terrace. Follow the rising gust from a reed to a feather to a cloud. Ring these bells, then awaken the sanctuary. Defeat the guardian, recover its expedition seal, then return to Pilgrim Sora. REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary."
         ],
         "topics": {
           "advice": [
@@ -12751,7 +12774,7 @@
         ],
         "dialogue": [
           "Follow the wind bells northeast of Reedlight Refuge to Pilgrim Sora.",
-          "Ring the three terrace bells in any order, then awaken the sanctuary in the middle of the loop. Defeat the guardian, recover its expedition seal, then return to Pilgrim Sora. REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary."
+          "Read the worn weather vane at the lower terrace. Follow the rising gust from a reed to a feather to a cloud. Ring these bells, then awaken the sanctuary. Defeat the guardian, recover its expedition seal, then return to Pilgrim Sora. REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary."
         ],
         "topics": {
           "advice": [
@@ -12765,7 +12788,7 @@
       ],
       "dialogue": [
         "Follow the wind bells northeast of Reedlight Refuge to Pilgrim Sora.",
-        "Ring the three terrace bells in any order, then awaken the sanctuary in the middle of the loop. Defeat the guardian, recover its expedition seal, then return to Pilgrim Sora. REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary."
+        "Read the worn weather vane at the lower terrace. Follow the rising gust from a reed to a feather to a cloud. Ring these bells, then awaken the sanctuary. Defeat the guardian, recover its expedition seal, then return to Pilgrim Sora. REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary."
       ],
       "role": "medic",
       "portrait": 5,
@@ -12810,7 +12833,7 @@
         ],
         "dialogue": [
           "Follow the shell markers east of Crownrest Haven to Diver Pearl at the Drowned Maw seaside cave.",
-          "Release the three tide anchors along the flooded piers. Beyond the gate waits Nacremaw, the Great Kraken: an optional level 26 challenge with no time limit. Defeat Nacremaw, the Great Kraken, recover its expedition seal, then return to Diver Pearl. REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge."
+          "Release three tide anchors to raise the piers. The ferryman’s tide marks show a short return route. Nacremaw awaits beyond the tide gate. Defeat Nacremaw, the Great Kraken, recover its expedition seal, then return to Diver Pearl. REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge."
         ],
         "topics": {
           "advice": [
@@ -12830,7 +12853,7 @@
         ],
         "dialogue": [
           "Follow the shell markers east of Crownrest Haven to Diver Pearl at the Drowned Maw seaside cave.",
-          "Release the three tide anchors along the flooded piers. Beyond the gate waits Nacremaw, the Great Kraken: an optional level 26 challenge with no time limit. Defeat Nacremaw, the Great Kraken, recover its expedition seal, then return to Diver Pearl. REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge."
+          "Release three tide anchors to raise the piers. The ferryman’s tide marks show a short return route. Nacremaw awaits beyond the tide gate. Defeat Nacremaw, the Great Kraken, recover its expedition seal, then return to Diver Pearl. REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge."
         ],
         "topics": {
           "advice": [
@@ -12844,7 +12867,7 @@
       ],
       "dialogue": [
         "Follow the shell markers east of Crownrest Haven to Diver Pearl at the Drowned Maw seaside cave.",
-        "Release the three tide anchors along the flooded piers. Beyond the gate waits Nacremaw, the Great Kraken: an optional level 26 challenge with no time limit. Defeat Nacremaw, the Great Kraken, recover its expedition seal, then return to Diver Pearl. REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge."
+        "Release three tide anchors to raise the piers. The ferryman’s tide marks show a short return route. Nacremaw awaits beyond the tide gate. Defeat Nacremaw, the Great Kraken, recover its expedition seal, then return to Diver Pearl. REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge."
       ],
       "role": "scout",
       "portrait": 3,
@@ -12883,8 +12906,8 @@
     },
     {
       "id": "town_10",
-      "name": "Rushlight Landing",
-      "description": "Reed ferries meet at a brick pumping station.",
+      "name": "Sluicecross",
+      "description": "Ferrymaster’s gauge overlooks Lower boardwalk. Keeper Edda scored the old high-water line on a piling. Compare it with the slanted reading today.",
       "type": "town",
       "region": 10,
       "x": 24440,
@@ -12896,11 +12919,12 @@
       "index": 311,
       "friendly": true,
       "safe": true,
-      "safeRadius": 465
+      "safeRadius": 465,
+      "streetKey": "sluicecross"
     },
     {
       "id": "forge_town_10",
-      "name": "Rushlight Landing Forge",
+      "name": "Sluicecross Forge",
       "type": "forge",
       "region": 10,
       "x": 24720,
@@ -12913,8 +12937,8 @@
     },
     {
       "id": "town_11",
-      "name": "Leeward Inn",
-      "description": "The bell above the slate switchbacks rings before each gust.",
+      "name": "Kitehook Station",
+      "description": "Leeward cable station overlooks Cliff switchback. Anwen’s pennants hang slack on one side of the lift. Secure the lee-side cable before launch.",
       "type": "town",
       "region": 11,
       "x": 24440,
@@ -12926,11 +12950,12 @@
       "index": 313,
       "friendly": true,
       "safe": true,
-      "safeRadius": 465
+      "safeRadius": 465,
+      "streetKey": "kitehook"
     },
     {
       "id": "forge_town_11",
-      "name": "Leeward Inn Forge",
+      "name": "Kitehook Station Forge",
       "type": "forge",
       "region": 11,
       "x": 24720,
@@ -12943,8 +12968,8 @@
     },
     {
       "id": "town_12",
-      "name": "Lamplighter Refuge",
-      "description": "Rope bridges hang between the roots of an ancient lantern tree.",
+      "name": "Boughhall",
+      "description": "The hollow lantern tree overlooks Upper root walk. Rue’s couriers tie amber thread to the sheltered root. Trace it to the empty bridge lantern.",
       "type": "town",
       "region": 12,
       "x": 24440,
@@ -12956,11 +12981,12 @@
       "index": 315,
       "friendly": true,
       "safe": true,
-      "safeRadius": 465
+      "safeRadius": 465,
+      "streetKey": "boughhall"
     },
     {
       "id": "forge_town_12",
-      "name": "Lamplighter Refuge Forge",
+      "name": "Boughhall Forge",
       "type": "forge",
       "region": 12,
       "x": 24720,
@@ -13222,6 +13248,466 @@
       "cleared": false,
       "enemyIds": [],
       "index": 336
+    },
+    {
+      "id": "work_town_0",
+      "type": "townWork",
+      "name": "Dispatch green",
+      "region": 0,
+      "townId": "town_0",
+      "radius": 45,
+      "x": 1325,
+      "y": 1617,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 337
+    },
+    {
+      "id": "work_town_1",
+      "type": "townWork",
+      "name": "Bell path",
+      "region": 1,
+      "townId": "town_1",
+      "radius": 45,
+      "x": 6230,
+      "y": 1635,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 338
+    },
+    {
+      "id": "work_town_2",
+      "type": "townWork",
+      "name": "Lower terrace",
+      "region": 2,
+      "townId": "town_2",
+      "radius": 45,
+      "x": 10690,
+      "y": 1635,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 339
+    },
+    {
+      "id": "work_town_3",
+      "type": "townWork",
+      "name": "Quilt walk",
+      "region": 3,
+      "townId": "town_3",
+      "radius": 45,
+      "x": 15590,
+      "y": 1620,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 340
+    },
+    {
+      "id": "work_town_4",
+      "type": "townWork",
+      "name": "Caravan arcade",
+      "region": 4,
+      "townId": "town_4",
+      "radius": 45,
+      "x": 15400.03332099679,
+      "y": 8936,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 341
+    },
+    {
+      "id": "work_town_6",
+      "type": "townWork",
+      "name": "Boiler street",
+      "region": 6,
+      "townId": "town_6",
+      "radius": 45,
+      "x": 6225,
+      "y": 8915,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 342
+    },
+    {
+      "id": "work_town_9",
+      "type": "townWork",
+      "name": "Crescent quay",
+      "region": 9,
+      "townId": "town_9",
+      "radius": 45,
+      "x": 20305,
+      "y": 11490,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 343
+    },
+    {
+      "id": "work_town_7",
+      "type": "townWork",
+      "name": "Messenger square",
+      "region": 7,
+      "townId": "town_7",
+      "radius": 45,
+      "x": 1533.7512886940358,
+      "y": 8904,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 344
+    },
+    {
+      "id": "work_town_10",
+      "type": "townWork",
+      "name": "Lower boardwalk",
+      "region": 10,
+      "townId": "town_10",
+      "radius": 45,
+      "x": 24545,
+      "y": 1395,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 345
+    },
+    {
+      "id": "work_town_11",
+      "type": "townWork",
+      "name": "Cliff switchback",
+      "region": 11,
+      "townId": "town_11",
+      "radius": 45,
+      "x": 24545,
+      "y": 6210,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 346
+    },
+    {
+      "id": "work_town_12",
+      "type": "townWork",
+      "name": "Upper root walk",
+      "region": 12,
+      "townId": "town_12",
+      "radius": 45,
+      "x": 24540,
+      "y": 11015,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 347
+    },
+    {
+      "x": 6081.348050684956,
+      "y": 1592.4932792470142,
+      "id": "activity_lantern",
+      "type": "activity",
+      "name": "Lantern Lines",
+      "description": "Bellkeeper’s Tea Room · Hold two of the three lanterns at the start of your turn to score. First to four Signals, or highest after twelve rounds, wins after equal turns.",
+      "radius": 66,
+      "region": 1,
+      "activity": "lantern",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 348
+    },
+    {
+      "x": 10649,
+      "y": 1513,
+      "id": "activity_quarry",
+      "type": "activity",
+      "name": "Quarry Ring",
+      "description": "Quarry amphitheater · Enter the chalk ring. Move around cover, strike within reach and dodge the painted attack marks. Stand near a fallen partner to revive them.",
+      "radius": 66,
+      "region": 2,
+      "activity": "quarry",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 349
+    },
+    {
+      "x": 20538,
+      "y": 11416,
+      "id": "activity_bay",
+      "type": "activity",
+      "name": "Shellbreak Bay",
+      "description": "Shellbreak fishing pier · Aim along the water, cast, then hook when the float dives. Reel to bring fish in and ease off while they pull. Lark buys catches and posts a three-species commission.",
+      "radius": 66,
+      "region": 9,
+      "activity": "bay",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 350
+    },
+    {
+      "x": 5972,
+      "y": 8804,
+      "id": "activity_yard",
+      "type": "activity",
+      "name": "Switchyard Dispatch",
+      "description": "Copper rail spur · Deliver leaf, wheel and star cargo to their matching platforms. Set switches and releases, read the next-beat preview, then dispatch. One rewind per shift.",
+      "radius": 66,
+      "region": 6,
+      "activity": "yard",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 351
+    },
+    {
+      "x": 24595.049282429674,
+      "y": 6101.4333236487355,
+      "id": "activity_wind",
+      "type": "activity",
+      "name": "Windpost Trial",
+      "description": "Sheltered launch · Steer through six numbered rings. Hold the line through gusts and ease it before tension peaks. Cliff strikes restart at your last ring and add five seconds.",
+      "radius": 66,
+      "region": 11,
+      "activity": "wind",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 352
+    },
+    {
+      "id": "tavern_copper_minnow",
+      "type": "tavern",
+      "region": 9,
+      "x": 20207.745751406263,
+      "y": 11163.053686926882,
+      "radius": 68,
+      "name": "The Copper Minnow",
+      "description": "Crownrest harborside tavern · conversations, five-card draw for coins and darts.",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 353
+    },
+    {
+      "id": "city_ironveil",
+      "type": "occupiedCity",
+      "name": "Ironveil City",
+      "description": "Union station shelter · Union Market",
+      "x": 6010,
+      "y": 14755,
+      "radius": 68,
+      "region": 6,
+      "city": "ironveil",
+      "sector": null,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 354
+    },
+    {
+      "id": "city_ironveil_witness",
+      "type": "cityLead",
+      "name": "Printer’s soup window",
+      "description": "Printer’s soup window · Founders’ Arcade",
+      "x": 5545,
+      "y": 16095,
+      "radius": 68,
+      "region": 6,
+      "city": "ironveil",
+      "sector": null,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 355
+    },
+    {
+      "id": "city_ironveil_archive",
+      "type": "cityLead",
+      "name": "Bonded freight archive",
+      "description": "Bonded freight archive · The Packing Yards",
+      "x": 7905,
+      "y": 15565,
+      "radius": 68,
+      "region": 6,
+      "city": "ironveil",
+      "sector": null,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 356
+    },
+    {
+      "id": "city_ironveil_roof",
+      "type": "cityLead",
+      "name": "Kiln roof lookout",
+      "description": "Kiln roof lookout · Founders’ Arcade",
+      "x": 6010,
+      "y": 16980,
+      "radius": 68,
+      "region": 6,
+      "city": "ironveil",
+      "sector": null,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 357
+    },
+    {
+      "id": "city_ironveil_relay",
+      "type": "cityLead",
+      "name": "Freight dispatch relay",
+      "description": "Freight dispatch relay · West Chimneys",
+      "x": 8390,
+      "y": 16980,
+      "radius": 68,
+      "region": 6,
+      "city": "ironveil",
+      "sector": null,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 358
+    },
+    {
+      "id": "city_ironveil_exit",
+      "type": "cityLead",
+      "name": "Canal evacuation steps",
+      "description": "Canal evacuation steps · Union Market",
+      "x": 5115,
+      "y": 15215,
+      "radius": 68,
+      "region": 6,
+      "city": "ironveil",
+      "sector": null,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 359
+    },
+    {
+      "id": "city_ironveil_tram",
+      "name": "Ashford freight tram",
+      "type": "cityTram",
+      "x": 6435.614674589207,
+      "y": 8668.910362600904,
+      "region": 6,
+      "radius": 60,
+      "city": "ironveil",
+      "townId": "town_6",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 360
+    },
+    {
+      "id": "city_ironveil_return",
+      "name": "Return tram to Ashford Refuge",
+      "type": "cityTram",
+      "x": 6160,
+      "y": 14755,
+      "region": 6,
+      "radius": 62,
+      "city": "ironveil",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 361
+    },
+    {
+      "id": "city_blackglass",
+      "type": "occupiedCity",
+      "name": "Blackglass Borough",
+      "description": "Night tram shelter · Embassy Row",
+      "x": 2680,
+      "y": 14765,
+      "radius": 68,
+      "region": 7,
+      "city": "blackglass",
+      "sector": "berlin",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 362
+    },
+    {
+      "id": "city_blackglass_witness",
+      "type": "cityLead",
+      "name": "Lamplighter’s window",
+      "description": "Lamplighter’s window · Printer’s Quarter",
+      "x": 780,
+      "y": 15130,
+      "radius": 68,
+      "region": 7,
+      "city": "blackglass",
+      "sector": "berlin",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 363
+    },
+    {
+      "id": "city_blackglass_archive",
+      "type": "cityLead",
+      "name": "Blackglass municipal archive",
+      "description": "Blackglass municipal archive · The Radio Ward",
+      "x": 3140,
+      "y": 16480,
+      "radius": 68,
+      "region": 7,
+      "city": "blackglass",
+      "sector": "berlin",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 364
+    },
+    {
+      "id": "city_blackglass_roof",
+      "type": "cityLead",
+      "name": "Roof of the night press",
+      "description": "Roof of the night press · Archive Square",
+      "x": 1245,
+      "y": 16930,
+      "radius": 68,
+      "region": 7,
+      "city": "blackglass",
+      "sector": "berlin",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 365
+    },
+    {
+      "id": "city_blackglass_relay",
+      "type": "cityLead",
+      "name": "Ministry relay booth",
+      "description": "Ministry relay booth · Embassy Row",
+      "x": 3625,
+      "y": 15620,
+      "radius": 68,
+      "region": 7,
+      "city": "blackglass",
+      "sector": "berlin",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 366
+    },
+    {
+      "id": "city_blackglass_exit",
+      "type": "cityLead",
+      "name": "West postern",
+      "description": "West postern · Archive Square",
+      "x": 350,
+      "y": 16480,
+      "radius": 68,
+      "region": 7,
+      "city": "blackglass",
+      "sector": "berlin",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 367
+    },
+    {
+      "id": "city_blackglass_tram",
+      "name": "Dawnbridge night tram",
+      "type": "cityTram",
+      "x": 1725,
+      "y": 8555,
+      "region": 7,
+      "radius": 60,
+      "city": "blackglass",
+      "townId": "town_7",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 368
+    },
+    {
+      "id": "city_blackglass_return",
+      "name": "Return tram to Dawnbridge",
+      "type": "cityTram",
+      "x": 2830,
+      "y": 14765,
+      "region": 7,
+      "radius": 62,
+      "city": "blackglass",
+      "cleared": false,
+      "enemyIds": [],
+      "index": 369
     }
   ],
   "roads": [
@@ -19114,6 +19600,5972 @@
           "y": 9477
         }
       ]
+    },
+    {
+      "x1": 1180,
+      "y1": 1435,
+      "x2": 1260,
+      "y2": 1330,
+      "width": 46,
+      "kind": "local",
+      "name": "Willow Resistance Camp · Dispatch green",
+      "points": [
+        {
+          "x": 1180,
+          "y": 1435
+        },
+        {
+          "x": 1260,
+          "y": 1330
+        }
+      ]
+    },
+    {
+      "x1": 1260,
+      "y1": 1330,
+      "x2": 1430,
+      "y2": 1302,
+      "width": 46,
+      "kind": "local",
+      "name": "Willow Resistance Camp · Dispatch green",
+      "points": [
+        {
+          "x": 1260,
+          "y": 1330
+        },
+        {
+          "x": 1430,
+          "y": 1302
+        }
+      ]
+    },
+    {
+      "x1": 1430,
+      "y1": 1302,
+      "x2": 1597,
+      "y2": 1346,
+      "width": 46,
+      "kind": "local",
+      "name": "Willow Resistance Camp · Dispatch green",
+      "points": [
+        {
+          "x": 1430,
+          "y": 1302
+        },
+        {
+          "x": 1597,
+          "y": 1346
+        }
+      ]
+    },
+    {
+      "x1": 1597,
+      "y1": 1346,
+      "x2": 1641,
+      "y2": 1446,
+      "width": 46,
+      "kind": "local",
+      "name": "Willow Resistance Camp · Dispatch green",
+      "points": [
+        {
+          "x": 1597,
+          "y": 1346
+        },
+        {
+          "x": 1641,
+          "y": 1446
+        }
+      ]
+    },
+    {
+      "x1": 1641,
+      "y1": 1446,
+      "x2": 1550,
+      "y2": 1542,
+      "width": 46,
+      "kind": "local",
+      "name": "Willow Resistance Camp · Dispatch green",
+      "points": [
+        {
+          "x": 1641,
+          "y": 1446
+        },
+        {
+          "x": 1550,
+          "y": 1542
+        }
+      ]
+    },
+    {
+      "x1": 1550,
+      "y1": 1542,
+      "x2": 1350,
+      "y2": 1565,
+      "width": 46,
+      "kind": "local",
+      "name": "Willow Resistance Camp · Dispatch green",
+      "points": [
+        {
+          "x": 1550,
+          "y": 1542
+        },
+        {
+          "x": 1350,
+          "y": 1565
+        }
+      ]
+    },
+    {
+      "x1": 1350,
+      "y1": 1565,
+      "x2": 1209,
+      "y2": 1505,
+      "width": 46,
+      "kind": "local",
+      "name": "Willow Resistance Camp · Dispatch green",
+      "points": [
+        {
+          "x": 1350,
+          "y": 1565
+        },
+        {
+          "x": 1209,
+          "y": 1505
+        }
+      ]
+    },
+    {
+      "x1": 1209,
+      "y1": 1505,
+      "x2": 1180,
+      "y2": 1435,
+      "width": 46,
+      "kind": "local",
+      "name": "Willow Resistance Camp · Dispatch green",
+      "points": [
+        {
+          "x": 1209,
+          "y": 1505
+        },
+        {
+          "x": 1180,
+          "y": 1435
+        }
+      ]
+    },
+    {
+      "x1": 2510,
+      "y1": 4325,
+      "x2": 2730,
+      "y2": 4160,
+      "width": 34,
+      "kind": "local",
+      "name": "Applewick · Cider lane",
+      "points": [
+        {
+          "x": 2510,
+          "y": 4325
+        },
+        {
+          "x": 2730,
+          "y": 4160
+        }
+      ]
+    },
+    {
+      "x1": 2730,
+      "y1": 4160,
+      "x2": 2885,
+      "y2": 4090,
+      "width": 34,
+      "kind": "local",
+      "name": "Applewick · Cider lane",
+      "points": [
+        {
+          "x": 2730,
+          "y": 4160
+        },
+        {
+          "x": 2885,
+          "y": 4090
+        }
+      ]
+    },
+    {
+      "x1": 2730,
+      "y1": 4160,
+      "x2": 2902,
+      "y2": 4265,
+      "width": 34,
+      "kind": "local",
+      "name": "Applewick · Cider lane",
+      "points": [
+        {
+          "x": 2730,
+          "y": 4160
+        },
+        {
+          "x": 2902,
+          "y": 4265
+        }
+      ]
+    },
+    {
+      "x1": 5770,
+      "y1": 1530,
+      "x2": 5935,
+      "y2": 1460,
+      "width": 46,
+      "kind": "local",
+      "name": "Mossbell Village · Bell path",
+      "points": [
+        {
+          "x": 5770,
+          "y": 1530
+        },
+        {
+          "x": 5935,
+          "y": 1460
+        }
+      ]
+    },
+    {
+      "x1": 5935,
+      "y1": 1460,
+      "x2": 5990,
+      "y2": 1400,
+      "width": 46,
+      "kind": "local",
+      "name": "Mossbell Village · Bell path",
+      "points": [
+        {
+          "x": 5935,
+          "y": 1460
+        },
+        {
+          "x": 5990,
+          "y": 1400
+        }
+      ]
+    },
+    {
+      "x1": 5990,
+      "y1": 1400,
+      "x2": 6135,
+      "y2": 1408,
+      "width": 46,
+      "kind": "local",
+      "name": "Mossbell Village · Bell path",
+      "points": [
+        {
+          "x": 5990,
+          "y": 1400
+        },
+        {
+          "x": 6135,
+          "y": 1408
+        }
+      ]
+    },
+    {
+      "x1": 6135,
+      "y1": 1408,
+      "x2": 6204,
+      "y2": 1490,
+      "width": 46,
+      "kind": "local",
+      "name": "Mossbell Village · Bell path",
+      "points": [
+        {
+          "x": 6135,
+          "y": 1408
+        },
+        {
+          "x": 6204,
+          "y": 1490
+        }
+      ]
+    },
+    {
+      "x1": 6204,
+      "y1": 1490,
+      "x2": 6335,
+      "y2": 1545,
+      "width": 46,
+      "kind": "local",
+      "name": "Mossbell Village · Bell path",
+      "points": [
+        {
+          "x": 6204,
+          "y": 1490
+        },
+        {
+          "x": 6335,
+          "y": 1545
+        }
+      ]
+    },
+    {
+      "x1": 6335,
+      "y1": 1545,
+      "x2": 6440,
+      "y2": 1510,
+      "width": 46,
+      "kind": "local",
+      "name": "Mossbell Village · Bell path",
+      "points": [
+        {
+          "x": 6335,
+          "y": 1545
+        },
+        {
+          "x": 6440,
+          "y": 1510
+        }
+      ]
+    },
+    {
+      "x1": 7120,
+      "y1": 4290,
+      "x2": 7250,
+      "y2": 4225,
+      "width": 34,
+      "kind": "local",
+      "name": "Fern Hollow · Herbalist’s walk",
+      "points": [
+        {
+          "x": 7120,
+          "y": 4290
+        },
+        {
+          "x": 7250,
+          "y": 4225
+        }
+      ]
+    },
+    {
+      "x1": 7250,
+      "y1": 4225,
+      "x2": 7250,
+      "y2": 4112,
+      "width": 34,
+      "kind": "local",
+      "name": "Fern Hollow · Herbalist’s walk",
+      "points": [
+        {
+          "x": 7250,
+          "y": 4225
+        },
+        {
+          "x": 7250,
+          "y": 4112
+        }
+      ]
+    },
+    {
+      "x1": 7250,
+      "y1": 4112,
+      "x2": 7380,
+      "y2": 4095,
+      "width": 34,
+      "kind": "local",
+      "name": "Fern Hollow · Herbalist’s walk",
+      "points": [
+        {
+          "x": 7250,
+          "y": 4112
+        },
+        {
+          "x": 7380,
+          "y": 4095
+        }
+      ]
+    },
+    {
+      "x1": 7380,
+      "y1": 4095,
+      "x2": 7390,
+      "y2": 4190,
+      "width": 34,
+      "kind": "local",
+      "name": "Fern Hollow · Herbalist’s walk",
+      "points": [
+        {
+          "x": 7380,
+          "y": 4095
+        },
+        {
+          "x": 7390,
+          "y": 4190
+        }
+      ]
+    },
+    {
+      "x1": 7390,
+      "y1": 4190,
+      "x2": 7536,
+      "y2": 4210,
+      "width": 34,
+      "kind": "local",
+      "name": "Fern Hollow · Herbalist’s walk",
+      "points": [
+        {
+          "x": 7390,
+          "y": 4190
+        },
+        {
+          "x": 7536,
+          "y": 4210
+        }
+      ]
+    },
+    {
+      "x1": 7536,
+      "y1": 4210,
+      "x2": 7532,
+      "y2": 4298,
+      "width": 34,
+      "kind": "local",
+      "name": "Fern Hollow · Herbalist’s walk",
+      "points": [
+        {
+          "x": 7536,
+          "y": 4210
+        },
+        {
+          "x": 7532,
+          "y": 4298
+        }
+      ]
+    },
+    {
+      "x1": 7532,
+      "y1": 4298,
+      "x2": 7695,
+      "y2": 4295,
+      "width": 34,
+      "kind": "local",
+      "name": "Fern Hollow · Herbalist’s walk",
+      "points": [
+        {
+          "x": 7532,
+          "y": 4298
+        },
+        {
+          "x": 7695,
+          "y": 4295
+        }
+      ]
+    },
+    {
+      "x1": 10450,
+      "y1": 1550,
+      "x2": 10635,
+      "y2": 1550,
+      "width": 46,
+      "kind": "local",
+      "name": "Goat’s Rest · Lower terrace",
+      "points": [
+        {
+          "x": 10450,
+          "y": 1550
+        },
+        {
+          "x": 10635,
+          "y": 1550
+        }
+      ]
+    },
+    {
+      "x1": 10635,
+      "y1": 1550,
+      "x2": 10680,
+      "y2": 1485,
+      "width": 46,
+      "kind": "local",
+      "name": "Goat’s Rest · Lower terrace",
+      "points": [
+        {
+          "x": 10635,
+          "y": 1550
+        },
+        {
+          "x": 10680,
+          "y": 1485
+        }
+      ]
+    },
+    {
+      "x1": 10680,
+      "y1": 1485,
+      "x2": 10885,
+      "y2": 1485,
+      "width": 46,
+      "kind": "local",
+      "name": "Goat’s Rest · Lower terrace",
+      "points": [
+        {
+          "x": 10680,
+          "y": 1485
+        },
+        {
+          "x": 10885,
+          "y": 1485
+        }
+      ]
+    },
+    {
+      "x1": 10885,
+      "y1": 1485,
+      "x2": 10930,
+      "y2": 1405,
+      "width": 46,
+      "kind": "local",
+      "name": "Goat’s Rest · Lower terrace",
+      "points": [
+        {
+          "x": 10885,
+          "y": 1485
+        },
+        {
+          "x": 10930,
+          "y": 1405
+        }
+      ]
+    },
+    {
+      "x1": 10930,
+      "y1": 1405,
+      "x2": 11105,
+      "y2": 1405,
+      "width": 46,
+      "kind": "local",
+      "name": "Goat’s Rest · Lower terrace",
+      "points": [
+        {
+          "x": 10930,
+          "y": 1405
+        },
+        {
+          "x": 11105,
+          "y": 1405
+        }
+      ]
+    },
+    {
+      "x1": 11750,
+      "y1": 4280,
+      "x2": 11935,
+      "y2": 4280,
+      "width": 34,
+      "kind": "local",
+      "name": "Highstone · Bell steps",
+      "points": [
+        {
+          "x": 11750,
+          "y": 4280
+        },
+        {
+          "x": 11935,
+          "y": 4280
+        }
+      ]
+    },
+    {
+      "x1": 11935,
+      "y1": 4280,
+      "x2": 11980,
+      "y2": 4215,
+      "width": 34,
+      "kind": "local",
+      "name": "Highstone · Bell steps",
+      "points": [
+        {
+          "x": 11935,
+          "y": 4280
+        },
+        {
+          "x": 11980,
+          "y": 4215
+        }
+      ]
+    },
+    {
+      "x1": 11980,
+      "y1": 4215,
+      "x2": 12185,
+      "y2": 4215,
+      "width": 34,
+      "kind": "local",
+      "name": "Highstone · Bell steps",
+      "points": [
+        {
+          "x": 11980,
+          "y": 4215
+        },
+        {
+          "x": 12185,
+          "y": 4215
+        }
+      ]
+    },
+    {
+      "x1": 12185,
+      "y1": 4215,
+      "x2": 12230,
+      "y2": 4135,
+      "width": 34,
+      "kind": "local",
+      "name": "Highstone · Bell steps",
+      "points": [
+        {
+          "x": 12185,
+          "y": 4215
+        },
+        {
+          "x": 12230,
+          "y": 4135
+        }
+      ]
+    },
+    {
+      "x1": 12230,
+      "y1": 4135,
+      "x2": 12405,
+      "y2": 4135,
+      "width": 34,
+      "kind": "local",
+      "name": "Highstone · Bell steps",
+      "points": [
+        {
+          "x": 12230,
+          "y": 4135
+        },
+        {
+          "x": 12405,
+          "y": 4135
+        }
+      ]
+    },
+    {
+      "x1": 15180,
+      "y1": 1560,
+      "x2": 15310,
+      "y2": 1495,
+      "width": 46,
+      "kind": "local",
+      "name": "Snowhaven · Quilt walk",
+      "points": [
+        {
+          "x": 15180,
+          "y": 1560
+        },
+        {
+          "x": 15310,
+          "y": 1495
+        }
+      ]
+    },
+    {
+      "x1": 15310,
+      "y1": 1495,
+      "x2": 15310,
+      "y2": 1382,
+      "width": 46,
+      "kind": "local",
+      "name": "Snowhaven · Quilt walk",
+      "points": [
+        {
+          "x": 15310,
+          "y": 1495
+        },
+        {
+          "x": 15310,
+          "y": 1382
+        }
+      ]
+    },
+    {
+      "x1": 15310,
+      "y1": 1382,
+      "x2": 15440,
+      "y2": 1365,
+      "width": 46,
+      "kind": "local",
+      "name": "Snowhaven · Quilt walk",
+      "points": [
+        {
+          "x": 15310,
+          "y": 1382
+        },
+        {
+          "x": 15440,
+          "y": 1365
+        }
+      ]
+    },
+    {
+      "x1": 15440,
+      "y1": 1365,
+      "x2": 15450,
+      "y2": 1460,
+      "width": 46,
+      "kind": "local",
+      "name": "Snowhaven · Quilt walk",
+      "points": [
+        {
+          "x": 15440,
+          "y": 1365
+        },
+        {
+          "x": 15450,
+          "y": 1460
+        }
+      ]
+    },
+    {
+      "x1": 15450,
+      "y1": 1460,
+      "x2": 15596,
+      "y2": 1480,
+      "width": 46,
+      "kind": "local",
+      "name": "Snowhaven · Quilt walk",
+      "points": [
+        {
+          "x": 15450,
+          "y": 1460
+        },
+        {
+          "x": 15596,
+          "y": 1480
+        }
+      ]
+    },
+    {
+      "x1": 15596,
+      "y1": 1480,
+      "x2": 15592,
+      "y2": 1568,
+      "width": 46,
+      "kind": "local",
+      "name": "Snowhaven · Quilt walk",
+      "points": [
+        {
+          "x": 15596,
+          "y": 1480
+        },
+        {
+          "x": 15592,
+          "y": 1568
+        }
+      ]
+    },
+    {
+      "x1": 15592,
+      "y1": 1568,
+      "x2": 15755,
+      "y2": 1565,
+      "width": 46,
+      "kind": "local",
+      "name": "Snowhaven · Quilt walk",
+      "points": [
+        {
+          "x": 15592,
+          "y": 1568
+        },
+        {
+          "x": 15755,
+          "y": 1565
+        }
+      ]
+    },
+    {
+      "x1": 16430,
+      "y1": 4260,
+      "x2": 16595,
+      "y2": 4190,
+      "width": 34,
+      "kind": "local",
+      "name": "Whitepine · Needle path",
+      "points": [
+        {
+          "x": 16430,
+          "y": 4260
+        },
+        {
+          "x": 16595,
+          "y": 4190
+        }
+      ]
+    },
+    {
+      "x1": 16595,
+      "y1": 4190,
+      "x2": 16650,
+      "y2": 4130,
+      "width": 34,
+      "kind": "local",
+      "name": "Whitepine · Needle path",
+      "points": [
+        {
+          "x": 16595,
+          "y": 4190
+        },
+        {
+          "x": 16650,
+          "y": 4130
+        }
+      ]
+    },
+    {
+      "x1": 16650,
+      "y1": 4130,
+      "x2": 16795,
+      "y2": 4138,
+      "width": 34,
+      "kind": "local",
+      "name": "Whitepine · Needle path",
+      "points": [
+        {
+          "x": 16650,
+          "y": 4130
+        },
+        {
+          "x": 16795,
+          "y": 4138
+        }
+      ]
+    },
+    {
+      "x1": 16795,
+      "y1": 4138,
+      "x2": 16864,
+      "y2": 4220,
+      "width": 34,
+      "kind": "local",
+      "name": "Whitepine · Needle path",
+      "points": [
+        {
+          "x": 16795,
+          "y": 4138
+        },
+        {
+          "x": 16864,
+          "y": 4220
+        }
+      ]
+    },
+    {
+      "x1": 16864,
+      "y1": 4220,
+      "x2": 16995,
+      "y2": 4275,
+      "width": 34,
+      "kind": "local",
+      "name": "Whitepine · Needle path",
+      "points": [
+        {
+          "x": 16864,
+          "y": 4220
+        },
+        {
+          "x": 16995,
+          "y": 4275
+        }
+      ]
+    },
+    {
+      "x1": 16995,
+      "y1": 4275,
+      "x2": 17100,
+      "y2": 4240,
+      "width": 34,
+      "kind": "local",
+      "name": "Whitepine · Needle path",
+      "points": [
+        {
+          "x": 16995,
+          "y": 4275
+        },
+        {
+          "x": 17100,
+          "y": 4240
+        }
+      ]
+    },
+    {
+      "x1": 15155,
+      "y1": 8750,
+      "x2": 15250,
+      "y2": 8660,
+      "width": 46,
+      "kind": "local",
+      "name": "Sundial Oasis · Caravan arcade",
+      "points": [
+        {
+          "x": 15155,
+          "y": 8750
+        },
+        {
+          "x": 15250,
+          "y": 8660
+        }
+      ]
+    },
+    {
+      "x1": 15250,
+      "y1": 8660,
+      "x2": 15470,
+      "y2": 8610,
+      "width": 46,
+      "kind": "local",
+      "name": "Sundial Oasis · Caravan arcade",
+      "points": [
+        {
+          "x": 15250,
+          "y": 8660
+        },
+        {
+          "x": 15470,
+          "y": 8610
+        }
+      ]
+    },
+    {
+      "x1": 15470,
+      "y1": 8610,
+      "x2": 15675,
+      "y2": 8660,
+      "width": 46,
+      "kind": "local",
+      "name": "Sundial Oasis · Caravan arcade",
+      "points": [
+        {
+          "x": 15470,
+          "y": 8610
+        },
+        {
+          "x": 15675,
+          "y": 8660
+        }
+      ]
+    },
+    {
+      "x1": 15675,
+      "y1": 8660,
+      "x2": 15785,
+      "y2": 8750,
+      "width": 46,
+      "kind": "local",
+      "name": "Sundial Oasis · Caravan arcade",
+      "points": [
+        {
+          "x": 15675,
+          "y": 8660
+        },
+        {
+          "x": 15785,
+          "y": 8750
+        }
+      ]
+    },
+    {
+      "x1": 15155,
+      "y1": 8750,
+      "x2": 15258,
+      "y2": 8840,
+      "width": 46,
+      "kind": "local",
+      "name": "Sundial Oasis · Caravan arcade",
+      "points": [
+        {
+          "x": 15155,
+          "y": 8750
+        },
+        {
+          "x": 15258,
+          "y": 8840
+        }
+      ]
+    },
+    {
+      "x1": 15258,
+      "y1": 8840,
+      "x2": 15470,
+      "y2": 8880,
+      "width": 46,
+      "kind": "local",
+      "name": "Sundial Oasis · Caravan arcade",
+      "points": [
+        {
+          "x": 15258,
+          "y": 8840
+        },
+        {
+          "x": 15470,
+          "y": 8880
+        }
+      ]
+    },
+    {
+      "x1": 15470,
+      "y1": 8880,
+      "x2": 15675,
+      "y2": 8840,
+      "width": 46,
+      "kind": "local",
+      "name": "Sundial Oasis · Caravan arcade",
+      "points": [
+        {
+          "x": 15470,
+          "y": 8880
+        },
+        {
+          "x": 15675,
+          "y": 8840
+        }
+      ]
+    },
+    {
+      "x1": 15675,
+      "y1": 8840,
+      "x2": 15785,
+      "y2": 8750,
+      "width": 46,
+      "kind": "local",
+      "name": "Sundial Oasis · Caravan arcade",
+      "points": [
+        {
+          "x": 15675,
+          "y": 8840
+        },
+        {
+          "x": 15785,
+          "y": 8750
+        }
+      ]
+    },
+    {
+      "x1": 10450,
+      "y1": 8830,
+      "x2": 10635,
+      "y2": 8830,
+      "width": 34,
+      "kind": "local",
+      "name": "Otter’s Crossing · Oarsmen’s lane",
+      "points": [
+        {
+          "x": 10450,
+          "y": 8830
+        },
+        {
+          "x": 10635,
+          "y": 8830
+        }
+      ]
+    },
+    {
+      "x1": 10635,
+      "y1": 8830,
+      "x2": 10680,
+      "y2": 8765,
+      "width": 34,
+      "kind": "local",
+      "name": "Otter’s Crossing · Oarsmen’s lane",
+      "points": [
+        {
+          "x": 10635,
+          "y": 8830
+        },
+        {
+          "x": 10680,
+          "y": 8765
+        }
+      ]
+    },
+    {
+      "x1": 10680,
+      "y1": 8765,
+      "x2": 10885,
+      "y2": 8765,
+      "width": 34,
+      "kind": "local",
+      "name": "Otter’s Crossing · Oarsmen’s lane",
+      "points": [
+        {
+          "x": 10680,
+          "y": 8765
+        },
+        {
+          "x": 10885,
+          "y": 8765
+        }
+      ]
+    },
+    {
+      "x1": 10885,
+      "y1": 8765,
+      "x2": 10930,
+      "y2": 8685,
+      "width": 34,
+      "kind": "local",
+      "name": "Otter’s Crossing · Oarsmen’s lane",
+      "points": [
+        {
+          "x": 10885,
+          "y": 8765
+        },
+        {
+          "x": 10930,
+          "y": 8685
+        }
+      ]
+    },
+    {
+      "x1": 10930,
+      "y1": 8685,
+      "x2": 11105,
+      "y2": 8685,
+      "width": 34,
+      "kind": "local",
+      "name": "Otter’s Crossing · Oarsmen’s lane",
+      "points": [
+        {
+          "x": 10930,
+          "y": 8685
+        },
+        {
+          "x": 11105,
+          "y": 8685
+        }
+      ]
+    },
+    {
+      "x1": 5810,
+      "y1": 8805,
+      "x2": 6410,
+      "y2": 8805,
+      "width": 46,
+      "kind": "local",
+      "name": "Ashford Refuge · Boiler street",
+      "points": [
+        {
+          "x": 5810,
+          "y": 8805
+        },
+        {
+          "x": 6410,
+          "y": 8805
+        }
+      ]
+    },
+    {
+      "x1": 5815,
+      "y1": 8655,
+      "x2": 6220,
+      "y2": 8655,
+      "width": 46,
+      "kind": "local",
+      "name": "Ashford Refuge · Boiler street",
+      "points": [
+        {
+          "x": 5815,
+          "y": 8655
+        },
+        {
+          "x": 6220,
+          "y": 8655
+        }
+      ]
+    },
+    {
+      "x1": 6220,
+      "y1": 8655,
+      "x2": 6303,
+      "y2": 8716,
+      "width": 46,
+      "kind": "local",
+      "name": "Ashford Refuge · Boiler street",
+      "points": [
+        {
+          "x": 6220,
+          "y": 8655
+        },
+        {
+          "x": 6303,
+          "y": 8716
+        }
+      ]
+    },
+    {
+      "x1": 6303,
+      "y1": 8716,
+      "x2": 6405,
+      "y2": 8716,
+      "width": 46,
+      "kind": "local",
+      "name": "Ashford Refuge · Boiler street",
+      "points": [
+        {
+          "x": 6303,
+          "y": 8716
+        },
+        {
+          "x": 6405,
+          "y": 8716
+        }
+      ]
+    },
+    {
+      "x1": 1080,
+      "y1": 8750,
+      "x2": 1310,
+      "y2": 8750,
+      "width": 46,
+      "kind": "local",
+      "name": "Dawnbridge · Messenger square",
+      "points": [
+        {
+          "x": 1080,
+          "y": 8750
+        },
+        {
+          "x": 1310,
+          "y": 8750
+        }
+      ]
+    },
+    {
+      "x1": 1310,
+      "y1": 8750,
+      "x2": 1530,
+      "y2": 8750,
+      "width": 46,
+      "kind": "local",
+      "name": "Dawnbridge · Messenger square",
+      "points": [
+        {
+          "x": 1310,
+          "y": 8750
+        },
+        {
+          "x": 1530,
+          "y": 8750
+        }
+      ]
+    },
+    {
+      "x1": 1530,
+      "y1": 8750,
+      "x2": 1765,
+      "y2": 8750,
+      "width": 46,
+      "kind": "local",
+      "name": "Dawnbridge · Messenger square",
+      "points": [
+        {
+          "x": 1530,
+          "y": 8750
+        },
+        {
+          "x": 1765,
+          "y": 8750
+        }
+      ]
+    },
+    {
+      "x1": 1635,
+      "y1": 8750,
+      "x2": 1680,
+      "y2": 8855,
+      "width": 46,
+      "kind": "local",
+      "name": "Dawnbridge · Messenger square",
+      "points": [
+        {
+          "x": 1635,
+          "y": 8750
+        },
+        {
+          "x": 1680,
+          "y": 8855
+        }
+      ]
+    },
+    {
+      "x1": 1680,
+      "y1": 8855,
+      "x2": 1750,
+      "y2": 8910,
+      "width": 46,
+      "kind": "local",
+      "name": "Dawnbridge · Messenger square",
+      "points": [
+        {
+          "x": 1680,
+          "y": 8855
+        },
+        {
+          "x": 1750,
+          "y": 8910
+        }
+      ]
+    },
+    {
+      "x1": 326,
+      "y1": 4195,
+      "x2": 546,
+      "y2": 4030,
+      "width": 34,
+      "kind": "local",
+      "name": "Clover Rest · Milking lane",
+      "points": [
+        {
+          "x": 326,
+          "y": 4195
+        },
+        {
+          "x": 546,
+          "y": 4030
+        }
+      ]
+    },
+    {
+      "x1": 546,
+      "y1": 4030,
+      "x2": 701,
+      "y2": 3960,
+      "width": 34,
+      "kind": "local",
+      "name": "Clover Rest · Milking lane",
+      "points": [
+        {
+          "x": 546,
+          "y": 4030
+        },
+        {
+          "x": 701,
+          "y": 3960
+        }
+      ]
+    },
+    {
+      "x1": 546,
+      "y1": 4030,
+      "x2": 718,
+      "y2": 4135,
+      "width": 34,
+      "kind": "local",
+      "name": "Clover Rest · Milking lane",
+      "points": [
+        {
+          "x": 546,
+          "y": 4030
+        },
+        {
+          "x": 718,
+          "y": 4135
+        }
+      ]
+    },
+    {
+      "x1": 4936,
+      "y1": 4160,
+      "x2": 5066,
+      "y2": 4095,
+      "width": 34,
+      "kind": "local",
+      "name": "Fernlight Refuge · Lantern walk",
+      "points": [
+        {
+          "x": 4936,
+          "y": 4160
+        },
+        {
+          "x": 5066,
+          "y": 4095
+        }
+      ]
+    },
+    {
+      "x1": 5066,
+      "y1": 4095,
+      "x2": 5066,
+      "y2": 3982,
+      "width": 34,
+      "kind": "local",
+      "name": "Fernlight Refuge · Lantern walk",
+      "points": [
+        {
+          "x": 5066,
+          "y": 4095
+        },
+        {
+          "x": 5066,
+          "y": 3982
+        }
+      ]
+    },
+    {
+      "x1": 5066,
+      "y1": 3982,
+      "x2": 5196,
+      "y2": 3965,
+      "width": 34,
+      "kind": "local",
+      "name": "Fernlight Refuge · Lantern walk",
+      "points": [
+        {
+          "x": 5066,
+          "y": 3982
+        },
+        {
+          "x": 5196,
+          "y": 3965
+        }
+      ]
+    },
+    {
+      "x1": 5196,
+      "y1": 3965,
+      "x2": 5206,
+      "y2": 4060,
+      "width": 34,
+      "kind": "local",
+      "name": "Fernlight Refuge · Lantern walk",
+      "points": [
+        {
+          "x": 5196,
+          "y": 3965
+        },
+        {
+          "x": 5206,
+          "y": 4060
+        }
+      ]
+    },
+    {
+      "x1": 5206,
+      "y1": 4060,
+      "x2": 5352,
+      "y2": 4080,
+      "width": 34,
+      "kind": "local",
+      "name": "Fernlight Refuge · Lantern walk",
+      "points": [
+        {
+          "x": 5206,
+          "y": 4060
+        },
+        {
+          "x": 5352,
+          "y": 4080
+        }
+      ]
+    },
+    {
+      "x1": 5352,
+      "y1": 4080,
+      "x2": 5348,
+      "y2": 4168,
+      "width": 34,
+      "kind": "local",
+      "name": "Fernlight Refuge · Lantern walk",
+      "points": [
+        {
+          "x": 5352,
+          "y": 4080
+        },
+        {
+          "x": 5348,
+          "y": 4168
+        }
+      ]
+    },
+    {
+      "x1": 5348,
+      "y1": 4168,
+      "x2": 5511,
+      "y2": 4165,
+      "width": 34,
+      "kind": "local",
+      "name": "Fernlight Refuge · Lantern walk",
+      "points": [
+        {
+          "x": 5348,
+          "y": 4168
+        },
+        {
+          "x": 5511,
+          "y": 4165
+        }
+      ]
+    },
+    {
+      "x1": 9566,
+      "y1": 4150,
+      "x2": 9751,
+      "y2": 4150,
+      "width": 34,
+      "kind": "local",
+      "name": "Badger’s Lantern · Iron path",
+      "points": [
+        {
+          "x": 9566,
+          "y": 4150
+        },
+        {
+          "x": 9751,
+          "y": 4150
+        }
+      ]
+    },
+    {
+      "x1": 9751,
+      "y1": 4150,
+      "x2": 9796,
+      "y2": 4085,
+      "width": 34,
+      "kind": "local",
+      "name": "Badger’s Lantern · Iron path",
+      "points": [
+        {
+          "x": 9751,
+          "y": 4150
+        },
+        {
+          "x": 9796,
+          "y": 4085
+        }
+      ]
+    },
+    {
+      "x1": 9796,
+      "y1": 4085,
+      "x2": 10001,
+      "y2": 4085,
+      "width": 34,
+      "kind": "local",
+      "name": "Badger’s Lantern · Iron path",
+      "points": [
+        {
+          "x": 9796,
+          "y": 4085
+        },
+        {
+          "x": 10001,
+          "y": 4085
+        }
+      ]
+    },
+    {
+      "x1": 10001,
+      "y1": 4085,
+      "x2": 10046,
+      "y2": 4005,
+      "width": 34,
+      "kind": "local",
+      "name": "Badger’s Lantern · Iron path",
+      "points": [
+        {
+          "x": 10001,
+          "y": 4085
+        },
+        {
+          "x": 10046,
+          "y": 4005
+        }
+      ]
+    },
+    {
+      "x1": 10046,
+      "y1": 4005,
+      "x2": 10221,
+      "y2": 4005,
+      "width": 34,
+      "kind": "local",
+      "name": "Badger’s Lantern · Iron path",
+      "points": [
+        {
+          "x": 10046,
+          "y": 4005
+        },
+        {
+          "x": 10221,
+          "y": 4005
+        }
+      ]
+    },
+    {
+      "x1": 14246,
+      "y1": 4130,
+      "x2": 14411,
+      "y2": 4060,
+      "width": 34,
+      "kind": "local",
+      "name": "Warmhearth · Kitchen court",
+      "points": [
+        {
+          "x": 14246,
+          "y": 4130
+        },
+        {
+          "x": 14411,
+          "y": 4060
+        }
+      ]
+    },
+    {
+      "x1": 14411,
+      "y1": 4060,
+      "x2": 14466,
+      "y2": 4000,
+      "width": 34,
+      "kind": "local",
+      "name": "Warmhearth · Kitchen court",
+      "points": [
+        {
+          "x": 14411,
+          "y": 4060
+        },
+        {
+          "x": 14466,
+          "y": 4000
+        }
+      ]
+    },
+    {
+      "x1": 14466,
+      "y1": 4000,
+      "x2": 14611,
+      "y2": 4008,
+      "width": 34,
+      "kind": "local",
+      "name": "Warmhearth · Kitchen court",
+      "points": [
+        {
+          "x": 14466,
+          "y": 4000
+        },
+        {
+          "x": 14611,
+          "y": 4008
+        }
+      ]
+    },
+    {
+      "x1": 14611,
+      "y1": 4008,
+      "x2": 14680,
+      "y2": 4090,
+      "width": 34,
+      "kind": "local",
+      "name": "Warmhearth · Kitchen court",
+      "points": [
+        {
+          "x": 14611,
+          "y": 4008
+        },
+        {
+          "x": 14680,
+          "y": 4090
+        }
+      ]
+    },
+    {
+      "x1": 14680,
+      "y1": 4090,
+      "x2": 14811,
+      "y2": 4145,
+      "width": 34,
+      "kind": "local",
+      "name": "Warmhearth · Kitchen court",
+      "points": [
+        {
+          "x": 14680,
+          "y": 4090
+        },
+        {
+          "x": 14811,
+          "y": 4145
+        }
+      ]
+    },
+    {
+      "x1": 14811,
+      "y1": 4145,
+      "x2": 14916,
+      "y2": 4110,
+      "width": 34,
+      "kind": "local",
+      "name": "Warmhearth · Kitchen court",
+      "points": [
+        {
+          "x": 14811,
+          "y": 4145
+        },
+        {
+          "x": 14916,
+          "y": 4110
+        }
+      ]
+    },
+    {
+      "x1": 14366,
+      "y1": 11475,
+      "x2": 14586,
+      "y2": 11310,
+      "width": 34,
+      "kind": "local",
+      "name": "Amber Rest · Glass walk",
+      "points": [
+        {
+          "x": 14366,
+          "y": 11475
+        },
+        {
+          "x": 14586,
+          "y": 11310
+        }
+      ]
+    },
+    {
+      "x1": 14586,
+      "y1": 11310,
+      "x2": 14741,
+      "y2": 11240,
+      "width": 34,
+      "kind": "local",
+      "name": "Amber Rest · Glass walk",
+      "points": [
+        {
+          "x": 14586,
+          "y": 11310
+        },
+        {
+          "x": 14741,
+          "y": 11240
+        }
+      ]
+    },
+    {
+      "x1": 14586,
+      "y1": 11310,
+      "x2": 14758,
+      "y2": 11415,
+      "width": 34,
+      "kind": "local",
+      "name": "Amber Rest · Glass walk",
+      "points": [
+        {
+          "x": 14586,
+          "y": 11310
+        },
+        {
+          "x": 14758,
+          "y": 11415
+        }
+      ]
+    },
+    {
+      "x1": 9616,
+      "y1": 11440,
+      "x2": 9746,
+      "y2": 11375,
+      "width": 34,
+      "kind": "local",
+      "name": "Reedlight Refuge · Netters’ quay",
+      "points": [
+        {
+          "x": 9616,
+          "y": 11440
+        },
+        {
+          "x": 9746,
+          "y": 11375
+        }
+      ]
+    },
+    {
+      "x1": 9746,
+      "y1": 11375,
+      "x2": 9746,
+      "y2": 11262,
+      "width": 34,
+      "kind": "local",
+      "name": "Reedlight Refuge · Netters’ quay",
+      "points": [
+        {
+          "x": 9746,
+          "y": 11375
+        },
+        {
+          "x": 9746,
+          "y": 11262
+        }
+      ]
+    },
+    {
+      "x1": 9746,
+      "y1": 11262,
+      "x2": 9876,
+      "y2": 11245,
+      "width": 34,
+      "kind": "local",
+      "name": "Reedlight Refuge · Netters’ quay",
+      "points": [
+        {
+          "x": 9746,
+          "y": 11262
+        },
+        {
+          "x": 9876,
+          "y": 11245
+        }
+      ]
+    },
+    {
+      "x1": 9876,
+      "y1": 11245,
+      "x2": 9886,
+      "y2": 11340,
+      "width": 34,
+      "kind": "local",
+      "name": "Reedlight Refuge · Netters’ quay",
+      "points": [
+        {
+          "x": 9876,
+          "y": 11245
+        },
+        {
+          "x": 9886,
+          "y": 11340
+        }
+      ]
+    },
+    {
+      "x1": 9886,
+      "y1": 11340,
+      "x2": 10032,
+      "y2": 11360,
+      "width": 34,
+      "kind": "local",
+      "name": "Reedlight Refuge · Netters’ quay",
+      "points": [
+        {
+          "x": 9886,
+          "y": 11340
+        },
+        {
+          "x": 10032,
+          "y": 11360
+        }
+      ]
+    },
+    {
+      "x1": 10032,
+      "y1": 11360,
+      "x2": 10028,
+      "y2": 11448,
+      "width": 34,
+      "kind": "local",
+      "name": "Reedlight Refuge · Netters’ quay",
+      "points": [
+        {
+          "x": 10032,
+          "y": 11360
+        },
+        {
+          "x": 10028,
+          "y": 11448
+        }
+      ]
+    },
+    {
+      "x1": 10028,
+      "y1": 11448,
+      "x2": 10191,
+      "y2": 11445,
+      "width": 34,
+      "kind": "local",
+      "name": "Reedlight Refuge · Netters’ quay",
+      "points": [
+        {
+          "x": 10028,
+          "y": 11448
+        },
+        {
+          "x": 10191,
+          "y": 11445
+        }
+      ]
+    },
+    {
+      "x1": 4886,
+      "y1": 11430,
+      "x2": 5071,
+      "y2": 11430,
+      "width": 34,
+      "kind": "local",
+      "name": "Ember Rest · Kiln street",
+      "points": [
+        {
+          "x": 4886,
+          "y": 11430
+        },
+        {
+          "x": 5071,
+          "y": 11430
+        }
+      ]
+    },
+    {
+      "x1": 5071,
+      "y1": 11430,
+      "x2": 5116,
+      "y2": 11365,
+      "width": 34,
+      "kind": "local",
+      "name": "Ember Rest · Kiln street",
+      "points": [
+        {
+          "x": 5071,
+          "y": 11430
+        },
+        {
+          "x": 5116,
+          "y": 11365
+        }
+      ]
+    },
+    {
+      "x1": 5116,
+      "y1": 11365,
+      "x2": 5321,
+      "y2": 11365,
+      "width": 34,
+      "kind": "local",
+      "name": "Ember Rest · Kiln street",
+      "points": [
+        {
+          "x": 5116,
+          "y": 11365
+        },
+        {
+          "x": 5321,
+          "y": 11365
+        }
+      ]
+    },
+    {
+      "x1": 5321,
+      "y1": 11365,
+      "x2": 5366,
+      "y2": 11285,
+      "width": 34,
+      "kind": "local",
+      "name": "Ember Rest · Kiln street",
+      "points": [
+        {
+          "x": 5321,
+          "y": 11365
+        },
+        {
+          "x": 5366,
+          "y": 11285
+        }
+      ]
+    },
+    {
+      "x1": 5366,
+      "y1": 11285,
+      "x2": 5541,
+      "y2": 11285,
+      "width": 34,
+      "kind": "local",
+      "name": "Ember Rest · Kiln street",
+      "points": [
+        {
+          "x": 5366,
+          "y": 11285
+        },
+        {
+          "x": 5541,
+          "y": 11285
+        }
+      ]
+    },
+    {
+      "x1": 206,
+      "y1": 11410,
+      "x2": 371,
+      "y2": 11340,
+      "width": 34,
+      "kind": "local",
+      "name": "Last Lantern · Radio path",
+      "points": [
+        {
+          "x": 206,
+          "y": 11410
+        },
+        {
+          "x": 371,
+          "y": 11340
+        }
+      ]
+    },
+    {
+      "x1": 371,
+      "y1": 11340,
+      "x2": 426,
+      "y2": 11280,
+      "width": 34,
+      "kind": "local",
+      "name": "Last Lantern · Radio path",
+      "points": [
+        {
+          "x": 371,
+          "y": 11340
+        },
+        {
+          "x": 426,
+          "y": 11280
+        }
+      ]
+    },
+    {
+      "x1": 426,
+      "y1": 11280,
+      "x2": 571,
+      "y2": 11288,
+      "width": 34,
+      "kind": "local",
+      "name": "Last Lantern · Radio path",
+      "points": [
+        {
+          "x": 426,
+          "y": 11280
+        },
+        {
+          "x": 571,
+          "y": 11288
+        }
+      ]
+    },
+    {
+      "x1": 571,
+      "y1": 11288,
+      "x2": 640,
+      "y2": 11370,
+      "width": 34,
+      "kind": "local",
+      "name": "Last Lantern · Radio path",
+      "points": [
+        {
+          "x": 571,
+          "y": 11288
+        },
+        {
+          "x": 640,
+          "y": 11370
+        }
+      ]
+    },
+    {
+      "x1": 640,
+      "y1": 11370,
+      "x2": 771,
+      "y2": 11425,
+      "width": 34,
+      "kind": "local",
+      "name": "Last Lantern · Radio path",
+      "points": [
+        {
+          "x": 640,
+          "y": 11370
+        },
+        {
+          "x": 771,
+          "y": 11425
+        }
+      ]
+    },
+    {
+      "x1": 771,
+      "y1": 11425,
+      "x2": 876,
+      "y2": 11390,
+      "width": 34,
+      "kind": "local",
+      "name": "Last Lantern · Radio path",
+      "points": [
+        {
+          "x": 771,
+          "y": 11425
+        },
+        {
+          "x": 876,
+          "y": 11390
+        }
+      ]
+    },
+    {
+      "x1": 19514,
+      "y1": 3155,
+      "x2": 19734,
+      "y2": 2990,
+      "width": 34,
+      "kind": "local",
+      "name": "Brinewatch Refuge · Lighthouse walk",
+      "points": [
+        {
+          "x": 19514,
+          "y": 3155
+        },
+        {
+          "x": 19734,
+          "y": 2990
+        }
+      ]
+    },
+    {
+      "x1": 19734,
+      "y1": 2990,
+      "x2": 19889,
+      "y2": 2920,
+      "width": 34,
+      "kind": "local",
+      "name": "Brinewatch Refuge · Lighthouse walk",
+      "points": [
+        {
+          "x": 19734,
+          "y": 2990
+        },
+        {
+          "x": 19889,
+          "y": 2920
+        }
+      ]
+    },
+    {
+      "x1": 19734,
+      "y1": 2990,
+      "x2": 19906,
+      "y2": 3095,
+      "width": 34,
+      "kind": "local",
+      "name": "Brinewatch Refuge · Lighthouse walk",
+      "points": [
+        {
+          "x": 19734,
+          "y": 2990
+        },
+        {
+          "x": 19906,
+          "y": 3095
+        }
+      ]
+    },
+    {
+      "x1": 21680,
+      "y1": 6110,
+      "x2": 21810,
+      "y2": 6045,
+      "width": 34,
+      "kind": "local",
+      "name": "Lantern Quay · Beacon quay",
+      "points": [
+        {
+          "x": 21680,
+          "y": 6110
+        },
+        {
+          "x": 21810,
+          "y": 6045
+        }
+      ]
+    },
+    {
+      "x1": 21810,
+      "y1": 6045,
+      "x2": 21810,
+      "y2": 5932,
+      "width": 34,
+      "kind": "local",
+      "name": "Lantern Quay · Beacon quay",
+      "points": [
+        {
+          "x": 21810,
+          "y": 6045
+        },
+        {
+          "x": 21810,
+          "y": 5932
+        }
+      ]
+    },
+    {
+      "x1": 21810,
+      "y1": 5932,
+      "x2": 21940,
+      "y2": 5915,
+      "width": 34,
+      "kind": "local",
+      "name": "Lantern Quay · Beacon quay",
+      "points": [
+        {
+          "x": 21810,
+          "y": 5932
+        },
+        {
+          "x": 21940,
+          "y": 5915
+        }
+      ]
+    },
+    {
+      "x1": 21940,
+      "y1": 5915,
+      "x2": 21950,
+      "y2": 6010,
+      "width": 34,
+      "kind": "local",
+      "name": "Lantern Quay · Beacon quay",
+      "points": [
+        {
+          "x": 21940,
+          "y": 5915
+        },
+        {
+          "x": 21950,
+          "y": 6010
+        }
+      ]
+    },
+    {
+      "x1": 21950,
+      "y1": 6010,
+      "x2": 22096,
+      "y2": 6030,
+      "width": 34,
+      "kind": "local",
+      "name": "Lantern Quay · Beacon quay",
+      "points": [
+        {
+          "x": 21950,
+          "y": 6010
+        },
+        {
+          "x": 22096,
+          "y": 6030
+        }
+      ]
+    },
+    {
+      "x1": 22096,
+      "y1": 6030,
+      "x2": 22092,
+      "y2": 6118,
+      "width": 34,
+      "kind": "local",
+      "name": "Lantern Quay · Beacon quay",
+      "points": [
+        {
+          "x": 22096,
+          "y": 6030
+        },
+        {
+          "x": 22092,
+          "y": 6118
+        }
+      ]
+    },
+    {
+      "x1": 22092,
+      "y1": 6118,
+      "x2": 22255,
+      "y2": 6115,
+      "width": 34,
+      "kind": "local",
+      "name": "Lantern Quay · Beacon quay",
+      "points": [
+        {
+          "x": 22092,
+          "y": 6118
+        },
+        {
+          "x": 22255,
+          "y": 6115
+        }
+      ]
+    },
+    {
+      "x1": 20055,
+      "y1": 11350,
+      "x2": 20160,
+      "y2": 11415,
+      "width": 46,
+      "kind": "local",
+      "name": "Crownrest Haven · Crescent quay",
+      "points": [
+        {
+          "x": 20055,
+          "y": 11350
+        },
+        {
+          "x": 20160,
+          "y": 11415
+        }
+      ]
+    },
+    {
+      "x1": 20160,
+      "y1": 11415,
+      "x2": 20315,
+      "y2": 11470,
+      "width": 46,
+      "kind": "local",
+      "name": "Crownrest Haven · Crescent quay",
+      "points": [
+        {
+          "x": 20160,
+          "y": 11415
+        },
+        {
+          "x": 20315,
+          "y": 11470
+        }
+      ]
+    },
+    {
+      "x1": 20315,
+      "y1": 11470,
+      "x2": 20510,
+      "y2": 11495,
+      "width": 46,
+      "kind": "local",
+      "name": "Crownrest Haven · Crescent quay",
+      "points": [
+        {
+          "x": 20315,
+          "y": 11470
+        },
+        {
+          "x": 20510,
+          "y": 11495
+        }
+      ]
+    },
+    {
+      "x1": 20510,
+      "y1": 11495,
+      "x2": 20660,
+      "y2": 11468,
+      "width": 46,
+      "kind": "local",
+      "name": "Crownrest Haven · Crescent quay",
+      "points": [
+        {
+          "x": 20510,
+          "y": 11495
+        },
+        {
+          "x": 20660,
+          "y": 11468
+        }
+      ]
+    },
+    {
+      "x1": 20660,
+      "y1": 11468,
+      "x2": 20770,
+      "y2": 11430,
+      "width": 46,
+      "kind": "local",
+      "name": "Crownrest Haven · Crescent quay",
+      "points": [
+        {
+          "x": 20660,
+          "y": 11468
+        },
+        {
+          "x": 20770,
+          "y": 11430
+        }
+      ]
+    },
+    {
+      "x1": 20482,
+      "y1": 11489,
+      "x2": 20482,
+      "y2": 11610,
+      "width": 46,
+      "kind": "local",
+      "name": "Crownrest Haven · Crescent quay",
+      "points": [
+        {
+          "x": 20482,
+          "y": 11489
+        },
+        {
+          "x": 20482,
+          "y": 11610
+        }
+      ]
+    },
+    {
+      "x1": 24155,
+      "y1": 1293,
+      "x2": 24302,
+      "y2": 1293,
+      "width": 46,
+      "kind": "local",
+      "name": "Sluicecross · Lower boardwalk",
+      "points": [
+        {
+          "x": 24155,
+          "y": 1293
+        },
+        {
+          "x": 24302,
+          "y": 1293
+        }
+      ]
+    },
+    {
+      "x1": 24302,
+      "y1": 1293,
+      "x2": 24302,
+      "y2": 1191,
+      "width": 46,
+      "kind": "local",
+      "name": "Sluicecross · Lower boardwalk",
+      "points": [
+        {
+          "x": 24302,
+          "y": 1293
+        },
+        {
+          "x": 24302,
+          "y": 1191
+        }
+      ]
+    },
+    {
+      "x1": 24302,
+      "y1": 1191,
+      "x2": 24508,
+      "y2": 1191,
+      "width": 46,
+      "kind": "local",
+      "name": "Sluicecross · Lower boardwalk",
+      "points": [
+        {
+          "x": 24302,
+          "y": 1191
+        },
+        {
+          "x": 24508,
+          "y": 1191
+        }
+      ]
+    },
+    {
+      "x1": 24508,
+      "y1": 1191,
+      "x2": 24508,
+      "y2": 1295,
+      "width": 46,
+      "kind": "local",
+      "name": "Sluicecross · Lower boardwalk",
+      "points": [
+        {
+          "x": 24508,
+          "y": 1191
+        },
+        {
+          "x": 24508,
+          "y": 1295
+        }
+      ]
+    },
+    {
+      "x1": 24508,
+      "y1": 1295,
+      "x2": 24665,
+      "y2": 1295,
+      "width": 46,
+      "kind": "local",
+      "name": "Sluicecross · Lower boardwalk",
+      "points": [
+        {
+          "x": 24508,
+          "y": 1295
+        },
+        {
+          "x": 24665,
+          "y": 1295
+        }
+      ]
+    },
+    {
+      "x1": 24665,
+      "y1": 1295,
+      "x2": 24665,
+      "y2": 1405,
+      "width": 46,
+      "kind": "local",
+      "name": "Sluicecross · Lower boardwalk",
+      "points": [
+        {
+          "x": 24665,
+          "y": 1295
+        },
+        {
+          "x": 24665,
+          "y": 1405
+        }
+      ]
+    },
+    {
+      "x1": 24160,
+      "y1": 6205,
+      "x2": 24568,
+      "y2": 6205,
+      "width": 46,
+      "kind": "local",
+      "name": "Kitehook Station · Cliff switchback",
+      "points": [
+        {
+          "x": 24160,
+          "y": 6205
+        },
+        {
+          "x": 24568,
+          "y": 6205
+        }
+      ]
+    },
+    {
+      "x1": 24568,
+      "y1": 6205,
+      "x2": 24630,
+      "y2": 6133,
+      "width": 46,
+      "kind": "local",
+      "name": "Kitehook Station · Cliff switchback",
+      "points": [
+        {
+          "x": 24568,
+          "y": 6205
+        },
+        {
+          "x": 24630,
+          "y": 6133
+        }
+      ]
+    },
+    {
+      "x1": 24630,
+      "y1": 6133,
+      "x2": 24320,
+      "y2": 6133,
+      "width": 46,
+      "kind": "local",
+      "name": "Kitehook Station · Cliff switchback",
+      "points": [
+        {
+          "x": 24630,
+          "y": 6133
+        },
+        {
+          "x": 24320,
+          "y": 6133
+        }
+      ]
+    },
+    {
+      "x1": 24320,
+      "y1": 6133,
+      "x2": 24277,
+      "y2": 6060,
+      "width": 46,
+      "kind": "local",
+      "name": "Kitehook Station · Cliff switchback",
+      "points": [
+        {
+          "x": 24320,
+          "y": 6133
+        },
+        {
+          "x": 24277,
+          "y": 6060
+        }
+      ]
+    },
+    {
+      "x1": 24277,
+      "y1": 6060,
+      "x2": 24552,
+      "y2": 6060,
+      "width": 46,
+      "kind": "local",
+      "name": "Kitehook Station · Cliff switchback",
+      "points": [
+        {
+          "x": 24277,
+          "y": 6060
+        },
+        {
+          "x": 24552,
+          "y": 6060
+        }
+      ]
+    },
+    {
+      "x1": 24552,
+      "y1": 6060,
+      "x2": 24630,
+      "y2": 5995,
+      "width": 46,
+      "kind": "local",
+      "name": "Kitehook Station · Cliff switchback",
+      "points": [
+        {
+          "x": 24552,
+          "y": 6060
+        },
+        {
+          "x": 24630,
+          "y": 5995
+        }
+      ]
+    },
+    {
+      "x1": 24170,
+      "y1": 10900,
+      "x2": 24260,
+      "y2": 10790,
+      "width": 46,
+      "kind": "local",
+      "name": "Boughhall · Upper root walk",
+      "points": [
+        {
+          "x": 24170,
+          "y": 10900
+        },
+        {
+          "x": 24260,
+          "y": 10790
+        }
+      ]
+    },
+    {
+      "x1": 24260,
+      "y1": 10790,
+      "x2": 24405,
+      "y2": 10805,
+      "width": 46,
+      "kind": "local",
+      "name": "Boughhall · Upper root walk",
+      "points": [
+        {
+          "x": 24260,
+          "y": 10790
+        },
+        {
+          "x": 24405,
+          "y": 10805
+        }
+      ]
+    },
+    {
+      "x1": 24405,
+      "y1": 10805,
+      "x2": 24455,
+      "y2": 10885,
+      "width": 46,
+      "kind": "local",
+      "name": "Boughhall · Upper root walk",
+      "points": [
+        {
+          "x": 24405,
+          "y": 10805
+        },
+        {
+          "x": 24455,
+          "y": 10885
+        }
+      ]
+    },
+    {
+      "x1": 24455,
+      "y1": 10885,
+      "x2": 24378,
+      "y2": 10990,
+      "width": 46,
+      "kind": "local",
+      "name": "Boughhall · Upper root walk",
+      "points": [
+        {
+          "x": 24455,
+          "y": 10885
+        },
+        {
+          "x": 24378,
+          "y": 10990
+        }
+      ]
+    },
+    {
+      "x1": 24378,
+      "y1": 10990,
+      "x2": 24235,
+      "y2": 10969,
+      "width": 46,
+      "kind": "local",
+      "name": "Boughhall · Upper root walk",
+      "points": [
+        {
+          "x": 24378,
+          "y": 10990
+        },
+        {
+          "x": 24235,
+          "y": 10969
+        }
+      ]
+    },
+    {
+      "x1": 24235,
+      "y1": 10969,
+      "x2": 24170,
+      "y2": 10900,
+      "width": 46,
+      "kind": "local",
+      "name": "Boughhall · Upper root walk",
+      "points": [
+        {
+          "x": 24235,
+          "y": 10969
+        },
+        {
+          "x": 24170,
+          "y": 10900
+        }
+      ]
+    },
+    {
+      "x1": 24455,
+      "y1": 10885,
+      "x2": 24563,
+      "y2": 10785,
+      "width": 46,
+      "kind": "local",
+      "name": "Boughhall · Upper root walk",
+      "points": [
+        {
+          "x": 24455,
+          "y": 10885
+        },
+        {
+          "x": 24563,
+          "y": 10785
+        }
+      ]
+    },
+    {
+      "x1": 24563,
+      "y1": 10785,
+      "x2": 24696,
+      "y2": 10815,
+      "width": 46,
+      "kind": "local",
+      "name": "Boughhall · Upper root walk",
+      "points": [
+        {
+          "x": 24563,
+          "y": 10785
+        },
+        {
+          "x": 24696,
+          "y": 10815
+        }
+      ]
+    },
+    {
+      "x1": 24696,
+      "y1": 10815,
+      "x2": 24710,
+      "y2": 10925,
+      "width": 46,
+      "kind": "local",
+      "name": "Boughhall · Upper root walk",
+      "points": [
+        {
+          "x": 24696,
+          "y": 10815
+        },
+        {
+          "x": 24710,
+          "y": 10925
+        }
+      ]
+    },
+    {
+      "x1": 24710,
+      "y1": 10925,
+      "x2": 24618,
+      "y2": 10980,
+      "width": 46,
+      "kind": "local",
+      "name": "Boughhall · Upper root walk",
+      "points": [
+        {
+          "x": 24710,
+          "y": 10925
+        },
+        {
+          "x": 24618,
+          "y": 10980
+        }
+      ]
+    },
+    {
+      "x1": 24618,
+      "y1": 10980,
+      "x2": 24498,
+      "y2": 10957,
+      "width": 46,
+      "kind": "local",
+      "name": "Boughhall · Upper root walk",
+      "points": [
+        {
+          "x": 24618,
+          "y": 10980
+        },
+        {
+          "x": 24498,
+          "y": 10957
+        }
+      ]
+    },
+    {
+      "x1": 24498,
+      "y1": 10957,
+      "x2": 24455,
+      "y2": 10885,
+      "width": 46,
+      "kind": "local",
+      "name": "Boughhall · Upper root walk",
+      "points": [
+        {
+          "x": 24498,
+          "y": 10957
+        },
+        {
+          "x": 24455,
+          "y": 10885
+        }
+      ]
+    },
+    {
+      "x1": 5115,
+      "y1": 16095,
+      "x2": 6450,
+      "y2": 16095,
+      "width": 125,
+      "kind": "local",
+      "name": "Foundry Boulevard",
+      "points": [
+        {
+          "x": 5115,
+          "y": 16095
+        },
+        {
+          "x": 6450,
+          "y": 16095
+        }
+      ]
+    },
+    {
+      "x1": 6450,
+      "y1": 16095,
+      "x2": 7445,
+      "y2": 16095,
+      "width": 125,
+      "kind": "local",
+      "name": "Foundry Boulevard",
+      "points": [
+        {
+          "x": 6450,
+          "y": 16095
+        },
+        {
+          "x": 7445,
+          "y": 16095
+        }
+      ]
+    },
+    {
+      "x1": 7445,
+      "y1": 16095,
+      "x2": 8830,
+      "y2": 16095,
+      "width": 125,
+      "kind": "local",
+      "name": "Foundry Boulevard",
+      "points": [
+        {
+          "x": 7445,
+          "y": 16095
+        },
+        {
+          "x": 8830,
+          "y": 16095
+        }
+      ]
+    },
+    {
+      "x1": 5115,
+      "y1": 14755,
+      "x2": 8830,
+      "y2": 14755,
+      "width": 91,
+      "kind": "local",
+      "name": "Union Station Road",
+      "points": [
+        {
+          "x": 5115,
+          "y": 14755
+        },
+        {
+          "x": 8830,
+          "y": 14755
+        }
+      ]
+    },
+    {
+      "x1": 5115,
+      "y1": 17380,
+      "x2": 8830,
+      "y2": 17380,
+      "width": 83,
+      "kind": "local",
+      "name": "South Wharf Road",
+      "points": [
+        {
+          "x": 5115,
+          "y": 17380
+        },
+        {
+          "x": 8830,
+          "y": 17380
+        }
+      ]
+    },
+    {
+      "x1": 5115,
+      "y1": 14755,
+      "x2": 5115,
+      "y2": 17380,
+      "width": 76,
+      "kind": "local",
+      "name": "West Lock Walk",
+      "points": [
+        {
+          "x": 5115,
+          "y": 14755
+        },
+        {
+          "x": 5115,
+          "y": 17380
+        }
+      ]
+    },
+    {
+      "x1": 8830,
+      "y1": 14755,
+      "x2": 8830,
+      "y2": 17380,
+      "width": 86,
+      "kind": "local",
+      "name": "East Freight Way",
+      "points": [
+        {
+          "x": 8830,
+          "y": 14755
+        },
+        {
+          "x": 8830,
+          "y": 17380
+        }
+      ]
+    },
+    {
+      "x1": 6010,
+      "y1": 14755,
+      "x2": 6010,
+      "y2": 16475,
+      "width": 83,
+      "kind": "local",
+      "name": "Clockmakers’ Cut",
+      "points": [
+        {
+          "x": 6010,
+          "y": 14755
+        },
+        {
+          "x": 6010,
+          "y": 16475
+        }
+      ]
+    },
+    {
+      "x1": 6010,
+      "y1": 16475,
+      "x2": 5545,
+      "y2": 16475,
+      "width": 83,
+      "kind": "local",
+      "name": "Clockmakers’ Cut",
+      "points": [
+        {
+          "x": 6010,
+          "y": 16475
+        },
+        {
+          "x": 5545,
+          "y": 16475
+        }
+      ]
+    },
+    {
+      "x1": 5545,
+      "y1": 16475,
+      "x2": 5545,
+      "y2": 17380,
+      "width": 83,
+      "kind": "local",
+      "name": "Clockmakers’ Cut",
+      "points": [
+        {
+          "x": 5545,
+          "y": 16475
+        },
+        {
+          "x": 5545,
+          "y": 17380
+        }
+      ]
+    },
+    {
+      "x1": 7005,
+      "y1": 14755,
+      "x2": 7005,
+      "y2": 17380,
+      "width": 96,
+      "kind": "local",
+      "name": "Founders’ Arcade",
+      "points": [
+        {
+          "x": 7005,
+          "y": 14755
+        },
+        {
+          "x": 7005,
+          "y": 17380
+        }
+      ]
+    },
+    {
+      "x1": 8390,
+      "y1": 14755,
+      "x2": 8390,
+      "y2": 15565,
+      "width": 83,
+      "kind": "local",
+      "name": "Packing House Road",
+      "points": [
+        {
+          "x": 8390,
+          "y": 14755
+        },
+        {
+          "x": 8390,
+          "y": 15565
+        }
+      ]
+    },
+    {
+      "x1": 8390,
+      "y1": 15565,
+      "x2": 7905,
+      "y2": 15565,
+      "width": 83,
+      "kind": "local",
+      "name": "Packing House Road",
+      "points": [
+        {
+          "x": 8390,
+          "y": 15565
+        },
+        {
+          "x": 7905,
+          "y": 15565
+        }
+      ]
+    },
+    {
+      "x1": 7905,
+      "y1": 15565,
+      "x2": 7905,
+      "y2": 16980,
+      "width": 83,
+      "kind": "local",
+      "name": "Packing House Road",
+      "points": [
+        {
+          "x": 7905,
+          "y": 15565
+        },
+        {
+          "x": 7905,
+          "y": 16980
+        }
+      ]
+    },
+    {
+      "x1": 7905,
+      "y1": 16980,
+      "x2": 8390,
+      "y2": 16980,
+      "width": 83,
+      "kind": "local",
+      "name": "Packing House Road",
+      "points": [
+        {
+          "x": 7905,
+          "y": 16980
+        },
+        {
+          "x": 8390,
+          "y": 16980
+        }
+      ]
+    },
+    {
+      "x1": 8390,
+      "y1": 16980,
+      "x2": 8390,
+      "y2": 17380,
+      "width": 83,
+      "kind": "local",
+      "name": "Packing House Road",
+      "points": [
+        {
+          "x": 8390,
+          "y": 16980
+        },
+        {
+          "x": 8390,
+          "y": 17380
+        }
+      ]
+    },
+    {
+      "x1": 7445,
+      "y1": 14755,
+      "x2": 7445,
+      "y2": 15215,
+      "width": 54,
+      "kind": "local",
+      "name": "Towpath Tram",
+      "points": [
+        {
+          "x": 7445,
+          "y": 14755
+        },
+        {
+          "x": 7445,
+          "y": 15215
+        }
+      ]
+    },
+    {
+      "x1": 7445,
+      "y1": 15215,
+      "x2": 7905,
+      "y2": 15215,
+      "width": 54,
+      "kind": "local",
+      "name": "Towpath Tram",
+      "points": [
+        {
+          "x": 7445,
+          "y": 15215
+        },
+        {
+          "x": 7905,
+          "y": 15215
+        }
+      ]
+    },
+    {
+      "x1": 7905,
+      "y1": 15215,
+      "x2": 7905,
+      "y2": 16095,
+      "width": 54,
+      "kind": "local",
+      "name": "Towpath Tram",
+      "points": [
+        {
+          "x": 7905,
+          "y": 15215
+        },
+        {
+          "x": 7905,
+          "y": 16095
+        }
+      ]
+    },
+    {
+      "x1": 7905,
+      "y1": 16095,
+      "x2": 8390,
+      "y2": 16095,
+      "width": 54,
+      "kind": "local",
+      "name": "Towpath Tram",
+      "points": [
+        {
+          "x": 7905,
+          "y": 16095
+        },
+        {
+          "x": 8390,
+          "y": 16095
+        }
+      ]
+    },
+    {
+      "x1": 8390,
+      "y1": 16095,
+      "x2": 8390,
+      "y2": 17380,
+      "width": 54,
+      "kind": "local",
+      "name": "Towpath Tram",
+      "points": [
+        {
+          "x": 8390,
+          "y": 16095
+        },
+        {
+          "x": 8390,
+          "y": 17380
+        }
+      ]
+    },
+    {
+      "x1": 5115,
+      "y1": 15215,
+      "x2": 7005,
+      "y2": 15215,
+      "width": 69,
+      "kind": "local",
+      "name": "Coopers’ Rows",
+      "points": [
+        {
+          "x": 5115,
+          "y": 15215
+        },
+        {
+          "x": 7005,
+          "y": 15215
+        }
+      ]
+    },
+    {
+      "x1": 7005,
+      "y1": 15215,
+      "x2": 8830,
+      "y2": 15215,
+      "width": 37,
+      "kind": "local",
+      "name": "Coopers’ Rows",
+      "points": [
+        {
+          "x": 7005,
+          "y": 15215
+        },
+        {
+          "x": 8830,
+          "y": 15215
+        }
+      ]
+    },
+    {
+      "x1": 5115,
+      "y1": 15565,
+      "x2": 6450,
+      "y2": 15565,
+      "width": 37,
+      "kind": "local",
+      "name": "Engine Alley",
+      "points": [
+        {
+          "x": 5115,
+          "y": 15565
+        },
+        {
+          "x": 6450,
+          "y": 15565
+        }
+      ]
+    },
+    {
+      "x1": 6450,
+      "y1": 15565,
+      "x2": 7905,
+      "y2": 15565,
+      "width": 69,
+      "kind": "local",
+      "name": "Engine Alley",
+      "points": [
+        {
+          "x": 6450,
+          "y": 15565
+        },
+        {
+          "x": 7905,
+          "y": 15565
+        }
+      ]
+    },
+    {
+      "x1": 7905,
+      "y1": 15565,
+      "x2": 8830,
+      "y2": 15565,
+      "width": 37,
+      "kind": "local",
+      "name": "Engine Alley",
+      "points": [
+        {
+          "x": 7905,
+          "y": 15565
+        },
+        {
+          "x": 8830,
+          "y": 15565
+        }
+      ]
+    },
+    {
+      "x1": 5115,
+      "y1": 16475,
+      "x2": 7005,
+      "y2": 16475,
+      "width": 69,
+      "kind": "local",
+      "name": "Tinsmith Steps",
+      "points": [
+        {
+          "x": 5115,
+          "y": 16475
+        },
+        {
+          "x": 7005,
+          "y": 16475
+        }
+      ]
+    },
+    {
+      "x1": 7005,
+      "y1": 16475,
+      "x2": 8830,
+      "y2": 16475,
+      "width": 37,
+      "kind": "local",
+      "name": "Tinsmith Steps",
+      "points": [
+        {
+          "x": 7005,
+          "y": 16475
+        },
+        {
+          "x": 8830,
+          "y": 16475
+        }
+      ]
+    },
+    {
+      "x1": 5115,
+      "y1": 16980,
+      "x2": 6450,
+      "y2": 16980,
+      "width": 37,
+      "kind": "local",
+      "name": "Hearth Lane",
+      "points": [
+        {
+          "x": 5115,
+          "y": 16980
+        },
+        {
+          "x": 6450,
+          "y": 16980
+        }
+      ]
+    },
+    {
+      "x1": 6450,
+      "y1": 16980,
+      "x2": 8830,
+      "y2": 16980,
+      "width": 69,
+      "kind": "local",
+      "name": "Hearth Lane",
+      "points": [
+        {
+          "x": 6450,
+          "y": 16980
+        },
+        {
+          "x": 8830,
+          "y": 16980
+        }
+      ]
+    },
+    {
+      "x1": 5545,
+      "y1": 14755,
+      "x2": 5545,
+      "y2": 16475,
+      "width": 37,
+      "kind": "local",
+      "name": "Engine Alley",
+      "points": [
+        {
+          "x": 5545,
+          "y": 14755
+        },
+        {
+          "x": 5545,
+          "y": 16475
+        }
+      ]
+    },
+    {
+      "x1": 6010,
+      "y1": 16475,
+      "x2": 6010,
+      "y2": 17380,
+      "width": 37,
+      "kind": "local",
+      "name": "Canal Market",
+      "points": [
+        {
+          "x": 6010,
+          "y": 16475
+        },
+        {
+          "x": 6010,
+          "y": 17380
+        }
+      ]
+    },
+    {
+      "x1": 6450,
+      "y1": 14755,
+      "x2": 6450,
+      "y2": 15565,
+      "width": 37,
+      "kind": "local",
+      "name": "Tinsmith Steps",
+      "points": [
+        {
+          "x": 6450,
+          "y": 14755
+        },
+        {
+          "x": 6450,
+          "y": 15565
+        }
+      ]
+    },
+    {
+      "x1": 6450,
+      "y1": 16095,
+      "x2": 6450,
+      "y2": 17380,
+      "width": 37,
+      "kind": "local",
+      "name": "Tinsmith Steps",
+      "points": [
+        {
+          "x": 6450,
+          "y": 16095
+        },
+        {
+          "x": 6450,
+          "y": 17380
+        }
+      ]
+    },
+    {
+      "x1": 7445,
+      "y1": 15215,
+      "x2": 7445,
+      "y2": 16095,
+      "width": 37,
+      "kind": "local",
+      "name": "Coopers’ Rows",
+      "points": [
+        {
+          "x": 7445,
+          "y": 15215
+        },
+        {
+          "x": 7445,
+          "y": 16095
+        }
+      ]
+    },
+    {
+      "x1": 7445,
+      "y1": 16095,
+      "x2": 7445,
+      "y2": 17380,
+      "width": 37,
+      "kind": "local",
+      "name": "Coopers’ Rows",
+      "points": [
+        {
+          "x": 7445,
+          "y": 16095
+        },
+        {
+          "x": 7445,
+          "y": 17380
+        }
+      ]
+    },
+    {
+      "x1": 7905,
+      "y1": 14755,
+      "x2": 7905,
+      "y2": 15565,
+      "width": 37,
+      "kind": "local",
+      "name": "Engine Alley",
+      "points": [
+        {
+          "x": 7905,
+          "y": 14755
+        },
+        {
+          "x": 7905,
+          "y": 15565
+        }
+      ]
+    },
+    {
+      "x1": 7905,
+      "y1": 16980,
+      "x2": 7905,
+      "y2": 17380,
+      "width": 37,
+      "kind": "local",
+      "name": "Engine Alley",
+      "points": [
+        {
+          "x": 7905,
+          "y": 16980
+        },
+        {
+          "x": 7905,
+          "y": 17380
+        }
+      ]
+    },
+    {
+      "x1": 8390,
+      "y1": 15565,
+      "x2": 8390,
+      "y2": 16980,
+      "width": 37,
+      "kind": "local",
+      "name": "Canal Market",
+      "points": [
+        {
+          "x": 8390,
+          "y": 15565
+        },
+        {
+          "x": 8390,
+          "y": 16980
+        }
+      ]
+    },
+    {
+      "x1": 6010,
+      "y1": 14120,
+      "x2": 6010,
+      "y2": 14755,
+      "width": 85,
+      "kind": "local",
+      "name": "Ironveil City northern approach",
+      "points": [
+        {
+          "x": 6010,
+          "y": 14120
+        },
+        {
+          "x": 6010,
+          "y": 14755
+        }
+      ]
+    },
+    {
+      "x1": 6524,
+      "y1": 15120,
+      "x2": 6524,
+      "y2": 17115,
+      "width": 35,
+      "kind": "local",
+      "name": "Coal Barge Towpath",
+      "points": [
+        {
+          "x": 6524,
+          "y": 15120
+        },
+        {
+          "x": 6524,
+          "y": 17115
+        }
+      ]
+    },
+    {
+      "x1": 6690,
+      "y1": 15120,
+      "x2": 6690,
+      "y2": 17115,
+      "width": 35,
+      "kind": "local",
+      "name": "Coal Barge Towpath",
+      "points": [
+        {
+          "x": 6690,
+          "y": 15120
+        },
+        {
+          "x": 6690,
+          "y": 17115
+        }
+      ]
+    },
+    {
+      "x1": 5309.16,
+      "y1": 15215,
+      "x2": 5309.16,
+      "y2": 14982.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Coopers’ Rows",
+      "points": [
+        {
+          "x": 5309.16,
+          "y": 15215
+        },
+        {
+          "x": 5309.16,
+          "y": 14982.5
+        }
+      ]
+    },
+    {
+      "x1": 5309.16,
+      "y1": 14982.5,
+      "x2": 5545,
+      "y2": 14982.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Coopers’ Rows",
+      "points": [
+        {
+          "x": 5309.16,
+          "y": 14982.5
+        },
+        {
+          "x": 5545,
+          "y": 14982.5
+        }
+      ]
+    },
+    {
+      "x1": 6450,
+      "y1": 14862,
+      "x2": 6924,
+      "y2": 14862,
+      "width": 39,
+      "kind": "local",
+      "name": "Freight siding",
+      "points": [
+        {
+          "x": 6450,
+          "y": 14862
+        },
+        {
+          "x": 6924,
+          "y": 14862
+        }
+      ]
+    },
+    {
+      "x1": 6924,
+      "y1": 14862,
+      "x2": 6941,
+      "y2": 14883,
+      "width": 39,
+      "kind": "local",
+      "name": "Freight siding",
+      "points": [
+        {
+          "x": 6924,
+          "y": 14862
+        },
+        {
+          "x": 6941,
+          "y": 14883
+        }
+      ]
+    },
+    {
+      "x1": 8170.64,
+      "y1": 15215,
+      "x2": 8170.64,
+      "y2": 14982.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Engine Alley",
+      "points": [
+        {
+          "x": 8170.64,
+          "y": 15215
+        },
+        {
+          "x": 8170.64,
+          "y": 14982.5
+        }
+      ]
+    },
+    {
+      "x1": 8170.64,
+      "y1": 14982.5,
+      "x2": 8390,
+      "y2": 14982.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Engine Alley",
+      "points": [
+        {
+          "x": 8170.64,
+          "y": 14982.5
+        },
+        {
+          "x": 8390,
+          "y": 14982.5
+        }
+      ]
+    },
+    {
+      "x1": 8588.56,
+      "y1": 15215,
+      "x2": 8588.56,
+      "y2": 14982.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Canal Market",
+      "points": [
+        {
+          "x": 8588.56,
+          "y": 15215
+        },
+        {
+          "x": 8588.56,
+          "y": 14982.5
+        }
+      ]
+    },
+    {
+      "x1": 8588.56,
+      "y1": 14982.5,
+      "x2": 8830,
+      "y2": 14982.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Canal Market",
+      "points": [
+        {
+          "x": 8588.56,
+          "y": 14982.5
+        },
+        {
+          "x": 8830,
+          "y": 14982.5
+        }
+      ]
+    },
+    {
+      "x1": 5349.84,
+      "y1": 15565,
+      "x2": 5349.84,
+      "y2": 15387.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Engine Alley",
+      "points": [
+        {
+          "x": 5349.84,
+          "y": 15565
+        },
+        {
+          "x": 5349.84,
+          "y": 15387.5
+        }
+      ]
+    },
+    {
+      "x1": 5349.84,
+      "y1": 15387.5,
+      "x2": 5545,
+      "y2": 15387.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Engine Alley",
+      "points": [
+        {
+          "x": 5349.84,
+          "y": 15387.5
+        },
+        {
+          "x": 5545,
+          "y": 15387.5
+        }
+      ]
+    },
+    {
+      "x1": 6208.56,
+      "y1": 15565,
+      "x2": 6208.56,
+      "y2": 15387.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Tinsmith Steps",
+      "points": [
+        {
+          "x": 6208.56,
+          "y": 15565
+        },
+        {
+          "x": 6208.56,
+          "y": 15387.5
+        }
+      ]
+    },
+    {
+      "x1": 6208.56,
+      "y1": 15387.5,
+      "x2": 6450,
+      "y2": 15387.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Tinsmith Steps",
+      "points": [
+        {
+          "x": 6208.56,
+          "y": 15387.5
+        },
+        {
+          "x": 6450,
+          "y": 15387.5
+        }
+      ]
+    },
+    {
+      "x1": 6817.32,
+      "y1": 15565,
+      "x2": 6817.32,
+      "y2": 15387.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Hearth Lane",
+      "points": [
+        {
+          "x": 6817.32,
+          "y": 15565
+        },
+        {
+          "x": 6817.32,
+          "y": 15387.5
+        }
+      ]
+    },
+    {
+      "x1": 6817.32,
+      "y1": 15387.5,
+      "x2": 7005,
+      "y2": 15387.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Hearth Lane",
+      "points": [
+        {
+          "x": 6817.32,
+          "y": 15387.5
+        },
+        {
+          "x": 7005,
+          "y": 15387.5
+        }
+      ]
+    },
+    {
+      "x1": 8390,
+      "y1": 15322,
+      "x2": 8749,
+      "y2": 15322,
+      "width": 39,
+      "kind": "local",
+      "name": "Freight siding",
+      "points": [
+        {
+          "x": 8390,
+          "y": 15322
+        },
+        {
+          "x": 8749,
+          "y": 15322
+        }
+      ]
+    },
+    {
+      "x1": 8749,
+      "y1": 15322,
+      "x2": 8766,
+      "y2": 15343,
+      "width": 39,
+      "kind": "local",
+      "name": "Freight siding",
+      "points": [
+        {
+          "x": 8749,
+          "y": 15322
+        },
+        {
+          "x": 8766,
+          "y": 15343
+        }
+      ]
+    },
+    {
+      "x1": 5309.16,
+      "y1": 16095,
+      "x2": 5309.16,
+      "y2": 15827.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Canal Market",
+      "points": [
+        {
+          "x": 5309.16,
+          "y": 16095
+        },
+        {
+          "x": 5309.16,
+          "y": 15827.5
+        }
+      ]
+    },
+    {
+      "x1": 5309.16,
+      "y1": 15827.5,
+      "x2": 5545,
+      "y2": 15827.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Canal Market",
+      "points": [
+        {
+          "x": 5309.16,
+          "y": 15827.5
+        },
+        {
+          "x": 5545,
+          "y": 15827.5
+        }
+      ]
+    },
+    {
+      "x1": 6010,
+      "y1": 15672,
+      "x2": 6369,
+      "y2": 15672,
+      "width": 39,
+      "kind": "local",
+      "name": "Freight siding",
+      "points": [
+        {
+          "x": 6010,
+          "y": 15672
+        },
+        {
+          "x": 6369,
+          "y": 15672
+        }
+      ]
+    },
+    {
+      "x1": 6369,
+      "y1": 15672,
+      "x2": 6386,
+      "y2": 15693,
+      "width": 39,
+      "kind": "local",
+      "name": "Freight siding",
+      "points": [
+        {
+          "x": 6369,
+          "y": 15672
+        },
+        {
+          "x": 6386,
+          "y": 15693
+        }
+      ]
+    },
+    {
+      "x1": 8630.44,
+      "y1": 16095,
+      "x2": 8630.44,
+      "y2": 15827.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Hearth Lane",
+      "points": [
+        {
+          "x": 8630.44,
+          "y": 16095
+        },
+        {
+          "x": 8630.44,
+          "y": 15827.5
+        }
+      ]
+    },
+    {
+      "x1": 8630.44,
+      "y1": 15827.5,
+      "x2": 8830,
+      "y2": 15827.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Hearth Lane",
+      "points": [
+        {
+          "x": 8630.44,
+          "y": 15827.5
+        },
+        {
+          "x": 8830,
+          "y": 15827.5
+        }
+      ]
+    },
+    {
+      "x1": 6010,
+      "y1": 16202,
+      "x2": 6369,
+      "y2": 16202,
+      "width": 39,
+      "kind": "local",
+      "name": "Freight siding",
+      "points": [
+        {
+          "x": 6010,
+          "y": 16202
+        },
+        {
+          "x": 6369,
+          "y": 16202
+        }
+      ]
+    },
+    {
+      "x1": 6369,
+      "y1": 16202,
+      "x2": 6386,
+      "y2": 16223,
+      "width": 39,
+      "kind": "local",
+      "name": "Freight siding",
+      "points": [
+        {
+          "x": 6369,
+          "y": 16202
+        },
+        {
+          "x": 6386,
+          "y": 16223
+        }
+      ]
+    },
+    {
+      "x1": 7652.36,
+      "y1": 16475,
+      "x2": 7652.36,
+      "y2": 16282.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Tinsmith Steps",
+      "points": [
+        {
+          "x": 7652.36,
+          "y": 16475
+        },
+        {
+          "x": 7652.36,
+          "y": 16282.5
+        }
+      ]
+    },
+    {
+      "x1": 7652.36,
+      "y1": 16282.5,
+      "x2": 7905,
+      "y2": 16282.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Tinsmith Steps",
+      "points": [
+        {
+          "x": 7652.36,
+          "y": 16282.5
+        },
+        {
+          "x": 7905,
+          "y": 16282.5
+        }
+      ]
+    },
+    {
+      "x1": 8630.44,
+      "y1": 16475,
+      "x2": 8630.44,
+      "y2": 16282.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Coopers’ Rows",
+      "points": [
+        {
+          "x": 8630.44,
+          "y": 16475
+        },
+        {
+          "x": 8630.44,
+          "y": 16282.5
+        }
+      ]
+    },
+    {
+      "x1": 8630.44,
+      "y1": 16282.5,
+      "x2": 8830,
+      "y2": 16282.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Coopers’ Rows",
+      "points": [
+        {
+          "x": 8630.44,
+          "y": 16282.5
+        },
+        {
+          "x": 8830,
+          "y": 16282.5
+        }
+      ]
+    },
+    {
+      "x1": 5349.84,
+      "y1": 16980,
+      "x2": 5349.84,
+      "y2": 16725,
+      "width": 32,
+      "kind": "local",
+      "name": "Hearth Lane",
+      "points": [
+        {
+          "x": 5349.84,
+          "y": 16980
+        },
+        {
+          "x": 5349.84,
+          "y": 16725
+        }
+      ]
+    },
+    {
+      "x1": 5349.84,
+      "y1": 16725,
+      "x2": 5545,
+      "y2": 16725,
+      "width": 32,
+      "kind": "local",
+      "name": "Hearth Lane",
+      "points": [
+        {
+          "x": 5349.84,
+          "y": 16725
+        },
+        {
+          "x": 5545,
+          "y": 16725
+        }
+      ]
+    },
+    {
+      "x1": 5754.56,
+      "y1": 16980,
+      "x2": 5754.56,
+      "y2": 16725,
+      "width": 32,
+      "kind": "local",
+      "name": "Coopers’ Rows",
+      "points": [
+        {
+          "x": 5754.56,
+          "y": 16980
+        },
+        {
+          "x": 5754.56,
+          "y": 16725
+        }
+      ]
+    },
+    {
+      "x1": 5754.56,
+      "y1": 16725,
+      "x2": 6010,
+      "y2": 16725,
+      "width": 32,
+      "kind": "local",
+      "name": "Coopers’ Rows",
+      "points": [
+        {
+          "x": 5754.56,
+          "y": 16725
+        },
+        {
+          "x": 6010,
+          "y": 16725
+        }
+      ]
+    },
+    {
+      "x1": 7905,
+      "y1": 16582,
+      "x2": 8309,
+      "y2": 16582,
+      "width": 39,
+      "kind": "local",
+      "name": "Freight siding",
+      "points": [
+        {
+          "x": 7905,
+          "y": 16582
+        },
+        {
+          "x": 8309,
+          "y": 16582
+        }
+      ]
+    },
+    {
+      "x1": 8309,
+      "y1": 16582,
+      "x2": 8326,
+      "y2": 16603,
+      "width": 39,
+      "kind": "local",
+      "name": "Freight siding",
+      "points": [
+        {
+          "x": 8309,
+          "y": 16582
+        },
+        {
+          "x": 8326,
+          "y": 16603
+        }
+      ]
+    },
+    {
+      "x1": 5754.56,
+      "y1": 17380,
+      "x2": 5754.56,
+      "y2": 17177.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Engine Alley",
+      "points": [
+        {
+          "x": 5754.56,
+          "y": 17380
+        },
+        {
+          "x": 5754.56,
+          "y": 17177.5
+        }
+      ]
+    },
+    {
+      "x1": 5754.56,
+      "y1": 17177.5,
+      "x2": 6010,
+      "y2": 17177.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Engine Alley",
+      "points": [
+        {
+          "x": 5754.56,
+          "y": 17177.5
+        },
+        {
+          "x": 6010,
+          "y": 17177.5
+        }
+      ]
+    },
+    {
+      "x1": 6754.84,
+      "y1": 17380,
+      "x2": 6754.84,
+      "y2": 17177.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Tinsmith Steps",
+      "points": [
+        {
+          "x": 6754.84,
+          "y": 17380
+        },
+        {
+          "x": 6754.84,
+          "y": 17177.5
+        }
+      ]
+    },
+    {
+      "x1": 6754.84,
+      "y1": 17177.5,
+      "x2": 7005,
+      "y2": 17177.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Tinsmith Steps",
+      "points": [
+        {
+          "x": 6754.84,
+          "y": 17177.5
+        },
+        {
+          "x": 7005,
+          "y": 17177.5
+        }
+      ]
+    },
+    {
+      "x1": 7005,
+      "y1": 17087,
+      "x2": 7364,
+      "y2": 17087,
+      "width": 39,
+      "kind": "local",
+      "name": "Freight siding",
+      "points": [
+        {
+          "x": 7005,
+          "y": 17087
+        },
+        {
+          "x": 7364,
+          "y": 17087
+        }
+      ]
+    },
+    {
+      "x1": 7364,
+      "y1": 17087,
+      "x2": 7381,
+      "y2": 17108,
+      "width": 39,
+      "kind": "local",
+      "name": "Freight siding",
+      "points": [
+        {
+          "x": 7364,
+          "y": 17087
+        },
+        {
+          "x": 7381,
+          "y": 17108
+        }
+      ]
+    },
+    {
+      "x1": 8588.56,
+      "y1": 17380,
+      "x2": 8588.56,
+      "y2": 17177.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Canal Market",
+      "points": [
+        {
+          "x": 8588.56,
+          "y": 17380
+        },
+        {
+          "x": 8588.56,
+          "y": 17177.5
+        }
+      ]
+    },
+    {
+      "x1": 8588.56,
+      "y1": 17177.5,
+      "x2": 8830,
+      "y2": 17177.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Canal Market",
+      "points": [
+        {
+          "x": 8588.56,
+          "y": 17177.5
+        },
+        {
+          "x": 8830,
+          "y": 17177.5
+        }
+      ]
+    },
+    {
+      "x1": 350,
+      "y1": 16030,
+      "x2": 1685,
+      "y2": 16030,
+      "width": 150,
+      "kind": "local",
+      "name": "Ministry Parade",
+      "points": [
+        {
+          "x": 350,
+          "y": 16030
+        },
+        {
+          "x": 1685,
+          "y": 16030
+        }
+      ]
+    },
+    {
+      "x1": 1685,
+      "y1": 16030,
+      "x2": 2680,
+      "y2": 16030,
+      "width": 150,
+      "kind": "local",
+      "name": "Ministry Parade",
+      "points": [
+        {
+          "x": 1685,
+          "y": 16030
+        },
+        {
+          "x": 2680,
+          "y": 16030
+        }
+      ]
+    },
+    {
+      "x1": 2680,
+      "y1": 16030,
+      "x2": 4065,
+      "y2": 16030,
+      "width": 150,
+      "kind": "local",
+      "name": "Ministry Parade",
+      "points": [
+        {
+          "x": 2680,
+          "y": 16030
+        },
+        {
+          "x": 4065,
+          "y": 16030
+        }
+      ]
+    },
+    {
+      "x1": 350,
+      "y1": 14765,
+      "x2": 4065,
+      "y2": 14765,
+      "width": 91,
+      "kind": "local",
+      "name": "Night Post Drive",
+      "points": [
+        {
+          "x": 350,
+          "y": 14765
+        },
+        {
+          "x": 4065,
+          "y": 14765
+        }
+      ]
+    },
+    {
+      "x1": 350,
+      "y1": 17400,
+      "x2": 4065,
+      "y2": 17400,
+      "width": 83,
+      "kind": "local",
+      "name": "The Embassy Ring",
+      "points": [
+        {
+          "x": 350,
+          "y": 17400
+        },
+        {
+          "x": 4065,
+          "y": 17400
+        }
+      ]
+    },
+    {
+      "x1": 350,
+      "y1": 14765,
+      "x2": 350,
+      "y2": 17400,
+      "width": 76,
+      "kind": "local",
+      "name": "West Postern Road",
+      "points": [
+        {
+          "x": 350,
+          "y": 14765
+        },
+        {
+          "x": 350,
+          "y": 17400
+        }
+      ]
+    },
+    {
+      "x1": 4065,
+      "y1": 14765,
+      "x2": 4065,
+      "y2": 17400,
+      "width": 86,
+      "kind": "local",
+      "name": "Archive Procession",
+      "points": [
+        {
+          "x": 4065,
+          "y": 14765
+        },
+        {
+          "x": 4065,
+          "y": 17400
+        }
+      ]
+    },
+    {
+      "x1": 1245,
+      "y1": 14765,
+      "x2": 1245,
+      "y2": 16480,
+      "width": 83,
+      "kind": "local",
+      "name": "Pressmen’s Lane",
+      "points": [
+        {
+          "x": 1245,
+          "y": 14765
+        },
+        {
+          "x": 1245,
+          "y": 16480
+        }
+      ]
+    },
+    {
+      "x1": 1245,
+      "y1": 16480,
+      "x2": 780,
+      "y2": 16480,
+      "width": 83,
+      "kind": "local",
+      "name": "Pressmen’s Lane",
+      "points": [
+        {
+          "x": 1245,
+          "y": 16480
+        },
+        {
+          "x": 780,
+          "y": 16480
+        }
+      ]
+    },
+    {
+      "x1": 780,
+      "y1": 16480,
+      "x2": 780,
+      "y2": 17400,
+      "width": 83,
+      "kind": "local",
+      "name": "Pressmen’s Lane",
+      "points": [
+        {
+          "x": 780,
+          "y": 16480
+        },
+        {
+          "x": 780,
+          "y": 17400
+        }
+      ]
+    },
+    {
+      "x1": 2240,
+      "y1": 14765,
+      "x2": 2240,
+      "y2": 17400,
+      "width": 138,
+      "kind": "local",
+      "name": "Civic Axis",
+      "points": [
+        {
+          "x": 2240,
+          "y": 14765
+        },
+        {
+          "x": 2240,
+          "y": 17400
+        }
+      ]
+    },
+    {
+      "x1": 3625,
+      "y1": 14765,
+      "x2": 3625,
+      "y2": 15620,
+      "width": 83,
+      "kind": "local",
+      "name": "Embassy Crescent",
+      "points": [
+        {
+          "x": 3625,
+          "y": 14765
+        },
+        {
+          "x": 3625,
+          "y": 15620
+        }
+      ]
+    },
+    {
+      "x1": 3625,
+      "y1": 15620,
+      "x2": 3140,
+      "y2": 15620,
+      "width": 83,
+      "kind": "local",
+      "name": "Embassy Crescent",
+      "points": [
+        {
+          "x": 3625,
+          "y": 15620
+        },
+        {
+          "x": 3140,
+          "y": 15620
+        }
+      ]
+    },
+    {
+      "x1": 3140,
+      "y1": 15620,
+      "x2": 3140,
+      "y2": 16930,
+      "width": 83,
+      "kind": "local",
+      "name": "Embassy Crescent",
+      "points": [
+        {
+          "x": 3140,
+          "y": 15620
+        },
+        {
+          "x": 3140,
+          "y": 16930
+        }
+      ]
+    },
+    {
+      "x1": 3140,
+      "y1": 16930,
+      "x2": 3625,
+      "y2": 16930,
+      "width": 83,
+      "kind": "local",
+      "name": "Embassy Crescent",
+      "points": [
+        {
+          "x": 3140,
+          "y": 16930
+        },
+        {
+          "x": 3625,
+          "y": 16930
+        }
+      ]
+    },
+    {
+      "x1": 3625,
+      "y1": 16930,
+      "x2": 3625,
+      "y2": 17400,
+      "width": 83,
+      "kind": "local",
+      "name": "Embassy Crescent",
+      "points": [
+        {
+          "x": 3625,
+          "y": 16930
+        },
+        {
+          "x": 3625,
+          "y": 17400
+        }
+      ]
+    },
+    {
+      "x1": 350,
+      "y1": 15620,
+      "x2": 1685,
+      "y2": 15620,
+      "width": 54,
+      "kind": "local",
+      "name": "The Night Mail",
+      "points": [
+        {
+          "x": 350,
+          "y": 15620
+        },
+        {
+          "x": 1685,
+          "y": 15620
+        }
+      ]
+    },
+    {
+      "x1": 1685,
+      "y1": 15620,
+      "x2": 1685,
+      "y2": 16930,
+      "width": 54,
+      "kind": "local",
+      "name": "The Night Mail",
+      "points": [
+        {
+          "x": 1685,
+          "y": 15620
+        },
+        {
+          "x": 1685,
+          "y": 16930
+        }
+      ]
+    },
+    {
+      "x1": 1685,
+      "y1": 16930,
+      "x2": 2680,
+      "y2": 16930,
+      "width": 54,
+      "kind": "local",
+      "name": "The Night Mail",
+      "points": [
+        {
+          "x": 1685,
+          "y": 16930
+        },
+        {
+          "x": 2680,
+          "y": 16930
+        }
+      ]
+    },
+    {
+      "x1": 2680,
+      "y1": 16930,
+      "x2": 2680,
+      "y2": 17400,
+      "width": 54,
+      "kind": "local",
+      "name": "The Night Mail",
+      "points": [
+        {
+          "x": 2680,
+          "y": 16930
+        },
+        {
+          "x": 2680,
+          "y": 17400
+        }
+      ]
+    },
+    {
+      "x1": 350,
+      "y1": 15130,
+      "x2": 2240,
+      "y2": 15130,
+      "width": 69,
+      "kind": "local",
+      "name": "Stag Passage",
+      "points": [
+        {
+          "x": 350,
+          "y": 15130
+        },
+        {
+          "x": 2240,
+          "y": 15130
+        }
+      ]
+    },
+    {
+      "x1": 2240,
+      "y1": 15130,
+      "x2": 4065,
+      "y2": 15130,
+      "width": 37,
+      "kind": "local",
+      "name": "Stag Passage",
+      "points": [
+        {
+          "x": 2240,
+          "y": 15130
+        },
+        {
+          "x": 4065,
+          "y": 15130
+        }
+      ]
+    },
+    {
+      "x1": 350,
+      "y1": 15620,
+      "x2": 1685,
+      "y2": 15620,
+      "width": 37,
+      "kind": "local",
+      "name": "Press Alley",
+      "points": [
+        {
+          "x": 350,
+          "y": 15620
+        },
+        {
+          "x": 1685,
+          "y": 15620
+        }
+      ]
+    },
+    {
+      "x1": 1685,
+      "y1": 15620,
+      "x2": 3140,
+      "y2": 15620,
+      "width": 69,
+      "kind": "local",
+      "name": "Press Alley",
+      "points": [
+        {
+          "x": 1685,
+          "y": 15620
+        },
+        {
+          "x": 3140,
+          "y": 15620
+        }
+      ]
+    },
+    {
+      "x1": 3140,
+      "y1": 15620,
+      "x2": 4065,
+      "y2": 15620,
+      "width": 37,
+      "kind": "local",
+      "name": "Press Alley",
+      "points": [
+        {
+          "x": 3140,
+          "y": 15620
+        },
+        {
+          "x": 4065,
+          "y": 15620
+        }
+      ]
+    },
+    {
+      "x1": 350,
+      "y1": 16480,
+      "x2": 2240,
+      "y2": 16480,
+      "width": 69,
+      "kind": "local",
+      "name": "Garden Stairs",
+      "points": [
+        {
+          "x": 350,
+          "y": 16480
+        },
+        {
+          "x": 2240,
+          "y": 16480
+        }
+      ]
+    },
+    {
+      "x1": 2240,
+      "y1": 16480,
+      "x2": 4065,
+      "y2": 16480,
+      "width": 37,
+      "kind": "local",
+      "name": "Garden Stairs",
+      "points": [
+        {
+          "x": 2240,
+          "y": 16480
+        },
+        {
+          "x": 4065,
+          "y": 16480
+        }
+      ]
+    },
+    {
+      "x1": 350,
+      "y1": 16930,
+      "x2": 1685,
+      "y2": 16930,
+      "width": 37,
+      "kind": "local",
+      "name": "Chancery Lane",
+      "points": [
+        {
+          "x": 350,
+          "y": 16930
+        },
+        {
+          "x": 1685,
+          "y": 16930
+        }
+      ]
+    },
+    {
+      "x1": 1685,
+      "y1": 16930,
+      "x2": 4065,
+      "y2": 16930,
+      "width": 69,
+      "kind": "local",
+      "name": "Chancery Lane",
+      "points": [
+        {
+          "x": 1685,
+          "y": 16930
+        },
+        {
+          "x": 4065,
+          "y": 16930
+        }
+      ]
+    },
+    {
+      "x1": 780,
+      "y1": 14765,
+      "x2": 780,
+      "y2": 16480,
+      "width": 37,
+      "kind": "local",
+      "name": "Press Alley",
+      "points": [
+        {
+          "x": 780,
+          "y": 14765
+        },
+        {
+          "x": 780,
+          "y": 16480
+        }
+      ]
+    },
+    {
+      "x1": 1245,
+      "y1": 16480,
+      "x2": 1245,
+      "y2": 17400,
+      "width": 37,
+      "kind": "local",
+      "name": "Crescent Mews",
+      "points": [
+        {
+          "x": 1245,
+          "y": 16480
+        },
+        {
+          "x": 1245,
+          "y": 17400
+        }
+      ]
+    },
+    {
+      "x1": 1685,
+      "y1": 14765,
+      "x2": 1685,
+      "y2": 15620,
+      "width": 37,
+      "kind": "local",
+      "name": "Garden Stairs",
+      "points": [
+        {
+          "x": 1685,
+          "y": 14765
+        },
+        {
+          "x": 1685,
+          "y": 15620
+        }
+      ]
+    },
+    {
+      "x1": 1685,
+      "y1": 16030,
+      "x2": 1685,
+      "y2": 17400,
+      "width": 37,
+      "kind": "local",
+      "name": "Garden Stairs",
+      "points": [
+        {
+          "x": 1685,
+          "y": 16030
+        },
+        {
+          "x": 1685,
+          "y": 17400
+        }
+      ]
+    },
+    {
+      "x1": 2680,
+      "y1": 15130,
+      "x2": 2680,
+      "y2": 16030,
+      "width": 37,
+      "kind": "local",
+      "name": "Stag Passage",
+      "points": [
+        {
+          "x": 2680,
+          "y": 15130
+        },
+        {
+          "x": 2680,
+          "y": 16030
+        }
+      ]
+    },
+    {
+      "x1": 2680,
+      "y1": 16030,
+      "x2": 2680,
+      "y2": 17400,
+      "width": 37,
+      "kind": "local",
+      "name": "Stag Passage",
+      "points": [
+        {
+          "x": 2680,
+          "y": 16030
+        },
+        {
+          "x": 2680,
+          "y": 17400
+        }
+      ]
+    },
+    {
+      "x1": 3140,
+      "y1": 14765,
+      "x2": 3140,
+      "y2": 15620,
+      "width": 37,
+      "kind": "local",
+      "name": "Press Alley",
+      "points": [
+        {
+          "x": 3140,
+          "y": 14765
+        },
+        {
+          "x": 3140,
+          "y": 15620
+        }
+      ]
+    },
+    {
+      "x1": 3140,
+      "y1": 16930,
+      "x2": 3140,
+      "y2": 17400,
+      "width": 37,
+      "kind": "local",
+      "name": "Press Alley",
+      "points": [
+        {
+          "x": 3140,
+          "y": 16930
+        },
+        {
+          "x": 3140,
+          "y": 17400
+        }
+      ]
+    },
+    {
+      "x1": 3625,
+      "y1": 15620,
+      "x2": 3625,
+      "y2": 16930,
+      "width": 37,
+      "kind": "local",
+      "name": "Crescent Mews",
+      "points": [
+        {
+          "x": 3625,
+          "y": 15620
+        },
+        {
+          "x": 3625,
+          "y": 16930
+        }
+      ]
+    },
+    {
+      "x1": 2680,
+      "y1": 14120,
+      "x2": 2680,
+      "y2": 14765,
+      "width": 85,
+      "kind": "local",
+      "name": "Blackglass Borough northern approach",
+      "points": [
+        {
+          "x": 2680,
+          "y": 14120
+        },
+        {
+          "x": 2680,
+          "y": 14765
+        }
+      ]
+    },
+    {
+      "x1": 1485.44,
+      "y1": 15130,
+      "x2": 1485.44,
+      "y2": 14945,
+      "width": 32,
+      "kind": "local",
+      "name": "Crescent Mews",
+      "points": [
+        {
+          "x": 1485.44,
+          "y": 15130
+        },
+        {
+          "x": 1485.44,
+          "y": 14945
+        }
+      ]
+    },
+    {
+      "x1": 1485.44,
+      "y1": 14945,
+      "x2": 1685,
+      "y2": 14945,
+      "width": 32,
+      "kind": "local",
+      "name": "Crescent Mews",
+      "points": [
+        {
+          "x": 1485.44,
+          "y": 14945
+        },
+        {
+          "x": 1685,
+          "y": 14945
+        }
+      ]
+    },
+    {
+      "x1": 1934.16,
+      "y1": 15130,
+      "x2": 1934.16,
+      "y2": 14945,
+      "width": 32,
+      "kind": "local",
+      "name": "Garden Stairs",
+      "points": [
+        {
+          "x": 1934.16,
+          "y": 15130
+        },
+        {
+          "x": 1934.16,
+          "y": 14945
+        }
+      ]
+    },
+    {
+      "x1": 1934.16,
+      "y1": 14945,
+      "x2": 2240,
+      "y2": 14945,
+      "width": 32,
+      "kind": "local",
+      "name": "Garden Stairs",
+      "points": [
+        {
+          "x": 1934.16,
+          "y": 14945
+        },
+        {
+          "x": 2240,
+          "y": 14945
+        }
+      ]
+    },
+    {
+      "x1": 3823.56,
+      "y1": 15130,
+      "x2": 3823.56,
+      "y2": 14945,
+      "width": 32,
+      "kind": "local",
+      "name": "Crescent Mews",
+      "points": [
+        {
+          "x": 3823.56,
+          "y": 15130
+        },
+        {
+          "x": 3823.56,
+          "y": 14945
+        }
+      ]
+    },
+    {
+      "x1": 3823.56,
+      "y1": 14945,
+      "x2": 4065,
+      "y2": 14945,
+      "width": 32,
+      "kind": "local",
+      "name": "Crescent Mews",
+      "points": [
+        {
+          "x": 3823.56,
+          "y": 14945
+        },
+        {
+          "x": 4065,
+          "y": 14945
+        }
+      ]
+    },
+    {
+      "x1": 989.56,
+      "y1": 15620,
+      "x2": 989.56,
+      "y2": 15372.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Crescent Mews",
+      "points": [
+        {
+          "x": 989.56,
+          "y": 15620
+        },
+        {
+          "x": 989.56,
+          "y": 15372.5
+        }
+      ]
+    },
+    {
+      "x1": 989.56,
+      "y1": 15372.5,
+      "x2": 1245,
+      "y2": 15372.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Crescent Mews",
+      "points": [
+        {
+          "x": 989.56,
+          "y": 15372.5
+        },
+        {
+          "x": 1245,
+          "y": 15372.5
+        }
+      ]
+    },
+    {
+      "x1": 2480.44,
+      "y1": 15620,
+      "x2": 2480.44,
+      "y2": 15372.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Stag Passage",
+      "points": [
+        {
+          "x": 2480.44,
+          "y": 15620
+        },
+        {
+          "x": 2480.44,
+          "y": 15372.5
+        }
+      ]
+    },
+    {
+      "x1": 2480.44,
+      "y1": 15372.5,
+      "x2": 2680,
+      "y2": 15372.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Stag Passage",
+      "points": [
+        {
+          "x": 2480.44,
+          "y": 15372.5
+        },
+        {
+          "x": 2680,
+          "y": 15372.5
+        }
+      ]
+    },
+    {
+      "x1": 3405.64,
+      "y1": 15620,
+      "x2": 3405.64,
+      "y2": 15372.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Crescent Mews",
+      "points": [
+        {
+          "x": 3405.64,
+          "y": 15620
+        },
+        {
+          "x": 3405.64,
+          "y": 15372.5
+        }
+      ]
+    },
+    {
+      "x1": 3405.64,
+      "y1": 15372.5,
+      "x2": 3625,
+      "y2": 15372.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Crescent Mews",
+      "points": [
+        {
+          "x": 3405.64,
+          "y": 15372.5
+        },
+        {
+          "x": 3625,
+          "y": 15372.5
+        }
+      ]
+    },
+    {
+      "x1": 544.16,
+      "y1": 16030,
+      "x2": 544.16,
+      "y2": 15822.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Crescent Mews",
+      "points": [
+        {
+          "x": 544.16,
+          "y": 16030
+        },
+        {
+          "x": 544.16,
+          "y": 15822.5
+        }
+      ]
+    },
+    {
+      "x1": 544.16,
+      "y1": 15822.5,
+      "x2": 780,
+      "y2": 15822.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Crescent Mews",
+      "points": [
+        {
+          "x": 544.16,
+          "y": 15822.5
+        },
+        {
+          "x": 780,
+          "y": 15822.5
+        }
+      ]
+    },
+    {
+      "x1": 1034.44,
+      "y1": 16030,
+      "x2": 1034.44,
+      "y2": 15822.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Garden Stairs",
+      "points": [
+        {
+          "x": 1034.44,
+          "y": 16030
+        },
+        {
+          "x": 1034.44,
+          "y": 15822.5
+        }
+      ]
+    },
+    {
+      "x1": 1034.44,
+      "y1": 15822.5,
+      "x2": 1245,
+      "y2": 15822.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Garden Stairs",
+      "points": [
+        {
+          "x": 1034.44,
+          "y": 15822.5
+        },
+        {
+          "x": 1245,
+          "y": 15822.5
+        }
+      ]
+    },
+    {
+      "x1": 3823.56,
+      "y1": 16030,
+      "x2": 3823.56,
+      "y2": 15822.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Chancery Lane",
+      "points": [
+        {
+          "x": 3823.56,
+          "y": 16030
+        },
+        {
+          "x": 3823.56,
+          "y": 15822.5
+        }
+      ]
+    },
+    {
+      "x1": 3823.56,
+      "y1": 15822.5,
+      "x2": 4065,
+      "y2": 15822.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Chancery Lane",
+      "points": [
+        {
+          "x": 3823.56,
+          "y": 15822.5
+        },
+        {
+          "x": 4065,
+          "y": 15822.5
+        }
+      ]
+    },
+    {
+      "x1": 2438.56,
+      "y1": 16480,
+      "x2": 2438.56,
+      "y2": 16252.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Crescent Mews",
+      "points": [
+        {
+          "x": 2438.56,
+          "y": 16480
+        },
+        {
+          "x": 2438.56,
+          "y": 16252.5
+        }
+      ]
+    },
+    {
+      "x1": 2438.56,
+      "y1": 16252.5,
+      "x2": 2680,
+      "y2": 16252.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Crescent Mews",
+      "points": [
+        {
+          "x": 2438.56,
+          "y": 16252.5
+        },
+        {
+          "x": 2680,
+          "y": 16252.5
+        }
+      ]
+    },
+    {
+      "x1": 2887.36,
+      "y1": 16480,
+      "x2": 2887.36,
+      "y2": 16252.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Garden Stairs",
+      "points": [
+        {
+          "x": 2887.36,
+          "y": 16480
+        },
+        {
+          "x": 2887.36,
+          "y": 16252.5
+        }
+      ]
+    },
+    {
+      "x1": 2887.36,
+      "y1": 16252.5,
+      "x2": 3140,
+      "y2": 16252.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Garden Stairs",
+      "points": [
+        {
+          "x": 2887.36,
+          "y": 16252.5
+        },
+        {
+          "x": 3140,
+          "y": 16252.5
+        }
+      ]
+    },
+    {
+      "x1": 3405.64,
+      "y1": 16480,
+      "x2": 3405.64,
+      "y2": 16252.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Chancery Lane",
+      "points": [
+        {
+          "x": 3405.64,
+          "y": 16480
+        },
+        {
+          "x": 3405.64,
+          "y": 16252.5
+        }
+      ]
+    },
+    {
+      "x1": 3405.64,
+      "y1": 16252.5,
+      "x2": 3625,
+      "y2": 16252.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Chancery Lane",
+      "points": [
+        {
+          "x": 3405.64,
+          "y": 16252.5
+        },
+        {
+          "x": 3625,
+          "y": 16252.5
+        }
+      ]
+    },
+    {
+      "x1": 1034.44,
+      "y1": 16930,
+      "x2": 1034.44,
+      "y2": 16702.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Stag Passage",
+      "points": [
+        {
+          "x": 1034.44,
+          "y": 16930
+        },
+        {
+          "x": 1034.44,
+          "y": 16702.5
+        }
+      ]
+    },
+    {
+      "x1": 1034.44,
+      "y1": 16702.5,
+      "x2": 1245,
+      "y2": 16702.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Stag Passage",
+      "points": [
+        {
+          "x": 1034.44,
+          "y": 16702.5
+        },
+        {
+          "x": 1245,
+          "y": 16702.5
+        }
+      ]
+    },
+    {
+      "x1": 2240,
+      "y1": 16587,
+      "x2": 2599,
+      "y2": 16587,
+      "width": 32,
+      "kind": "local",
+      "name": "Messenger approach",
+      "points": [
+        {
+          "x": 2240,
+          "y": 16587
+        },
+        {
+          "x": 2599,
+          "y": 16587
+        }
+      ]
+    },
+    {
+      "x1": 2599,
+      "y1": 16587,
+      "x2": 2616,
+      "y2": 16608,
+      "width": 32,
+      "kind": "local",
+      "name": "Messenger approach",
+      "points": [
+        {
+          "x": 2599,
+          "y": 16587
+        },
+        {
+          "x": 2616,
+          "y": 16608
+        }
+      ]
+    },
+    {
+      "x1": 2887.36,
+      "y1": 16930,
+      "x2": 2887.36,
+      "y2": 16702.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Chancery Lane",
+      "points": [
+        {
+          "x": 2887.36,
+          "y": 16930
+        },
+        {
+          "x": 2887.36,
+          "y": 16702.5
+        }
+      ]
+    },
+    {
+      "x1": 2887.36,
+      "y1": 16702.5,
+      "x2": 3140,
+      "y2": 16702.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Chancery Lane",
+      "points": [
+        {
+          "x": 2887.36,
+          "y": 16702.5
+        },
+        {
+          "x": 3140,
+          "y": 16702.5
+        }
+      ]
+    },
+    {
+      "x1": 3865.44,
+      "y1": 16930,
+      "x2": 3865.44,
+      "y2": 16702.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Press Alley",
+      "points": [
+        {
+          "x": 3865.44,
+          "y": 16930
+        },
+        {
+          "x": 3865.44,
+          "y": 16702.5
+        }
+      ]
+    },
+    {
+      "x1": 3865.44,
+      "y1": 16702.5,
+      "x2": 4065,
+      "y2": 16702.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Press Alley",
+      "points": [
+        {
+          "x": 3865.44,
+          "y": 16702.5
+        },
+        {
+          "x": 4065,
+          "y": 16702.5
+        }
+      ]
+    },
+    {
+      "x1": 544.16,
+      "y1": 17400,
+      "x2": 544.16,
+      "y2": 17162.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Stag Passage",
+      "points": [
+        {
+          "x": 544.16,
+          "y": 17400
+        },
+        {
+          "x": 544.16,
+          "y": 17162.5
+        }
+      ]
+    },
+    {
+      "x1": 544.16,
+      "y1": 17162.5,
+      "x2": 780,
+      "y2": 17162.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Stag Passage",
+      "points": [
+        {
+          "x": 544.16,
+          "y": 17162.5
+        },
+        {
+          "x": 780,
+          "y": 17162.5
+        }
+      ]
+    },
+    {
+      "x1": 1245,
+      "y1": 17037,
+      "x2": 1604,
+      "y2": 17037,
+      "width": 32,
+      "kind": "local",
+      "name": "Messenger approach",
+      "points": [
+        {
+          "x": 1245,
+          "y": 17037
+        },
+        {
+          "x": 1604,
+          "y": 17037
+        }
+      ]
+    },
+    {
+      "x1": 1604,
+      "y1": 17037,
+      "x2": 1621,
+      "y2": 17058,
+      "width": 32,
+      "kind": "local",
+      "name": "Messenger approach",
+      "points": [
+        {
+          "x": 1604,
+          "y": 17037
+        },
+        {
+          "x": 1621,
+          "y": 17058
+        }
+      ]
+    },
+    {
+      "x1": 1989.8400000000001,
+      "y1": 17400,
+      "x2": 1989.8400000000001,
+      "y2": 17162.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Garden Stairs",
+      "points": [
+        {
+          "x": 1989.8400000000001,
+          "y": 17400
+        },
+        {
+          "x": 1989.8400000000001,
+          "y": 17162.5
+        }
+      ]
+    },
+    {
+      "x1": 1989.8400000000001,
+      "y1": 17162.5,
+      "x2": 2240,
+      "y2": 17162.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Garden Stairs",
+      "points": [
+        {
+          "x": 1989.8400000000001,
+          "y": 17162.5
+        },
+        {
+          "x": 2240,
+          "y": 17162.5
+        }
+      ]
+    },
+    {
+      "x1": 3358.36,
+      "y1": 17400,
+      "x2": 3358.36,
+      "y2": 17162.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Press Alley",
+      "points": [
+        {
+          "x": 3358.36,
+          "y": 17400
+        },
+        {
+          "x": 3358.36,
+          "y": 17162.5
+        }
+      ]
+    },
+    {
+      "x1": 3358.36,
+      "y1": 17162.5,
+      "x2": 3625,
+      "y2": 17162.5,
+      "width": 32,
+      "kind": "local",
+      "name": "Press Alley",
+      "points": [
+        {
+          "x": 3358.36,
+          "y": 17162.5
+        },
+        {
+          "x": 3625,
+          "y": 17162.5
+        }
+      ]
     }
   ],
   "rivers": [
@@ -20340,11 +26792,65 @@
       "region": 9
     }
   ],
-  "enemySpawnCount": 636,
-  "objectCount": 7401,
+  "enemySpawnCount": 660,
+  "objectCount": 7932,
   "streaming": {
     "radius": 1450,
     "maxActiveEnemies": 160,
     "refreshSeconds": 0.35
-  }
+  },
+  "cityDistricts": [
+    {
+      "id": "city_ironveil",
+      "name": "Ironveil City",
+      "region": 6,
+      "left": 4940,
+      "right": 9130,
+      "top": 14560,
+      "bottom": 17720,
+      "quarters": [
+        "Union Market",
+        "The Packing Yards",
+        "Founders’ Arcade",
+        "West Chimneys"
+      ],
+      "avenues": [
+        "Kiln Avenue",
+        "Canal Street",
+        "Brakeshoe Lane",
+        "Civic Parade",
+        "Furnace Row",
+        "Tin Roof Walk",
+        "Glassmakers Way",
+        "Union Road"
+      ],
+      "tram": "Ashford freight tram"
+    },
+    {
+      "id": "city_blackglass",
+      "name": "Blackglass Borough",
+      "region": 7,
+      "left": 175,
+      "right": 4410,
+      "top": 14560,
+      "bottom": 17720,
+      "quarters": [
+        "Printer’s Quarter",
+        "Embassy Row",
+        "Archive Square",
+        "The Radio Ward"
+      ],
+      "avenues": [
+        "Ministry Walk",
+        "Ledger Street",
+        "Printer’s Row",
+        "Archive Boulevard",
+        "Night Post",
+        "Crescent Lane",
+        "Semaphore Street",
+        "West Parade"
+      ],
+      "tram": "Dawnbridge night tram"
+    }
+  ]
 }

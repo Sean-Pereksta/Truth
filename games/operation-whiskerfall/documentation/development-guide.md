@@ -1,5 +1,12 @@
 # Development guide
 
+## Fieldwork and occupied districts
+
+Set the production order in `index.html`. Town street plans and occupied districts extend the original seeded world, followed by field assignments and optional city case data. The city renderer uses world coordinates for street surfaces and the same footprint index for clipped flashlight rays and cover. Commuters, trams and the working barge are streamed separately from the saved static object list. Each case, venue settlement and mastery receipt has a stable key. All 159 assignment covers are indexed by the existing quest ID.
+
+Run `node tools/export-catalogues.cjs` to update world and catalogue snapshots and `node tools/export-fieldwork-gallery.cjs` after changing a fieldwork atlas. The latter emits the local script consumed by the standalone art gallery, including opening it directly from disk. The `--browser` release check includes quest, city, chamber, venue, tavern and gallery runs. See the [acceptance report](acceptance-report.md) for fixture setup and limits, and the [assignment ledger](field-assignment-checklist.md) for per-ID results.
+
+
 ## Reconnaissance campaign
 
 `index.html` lists the production load order. The enemy, equipment and dossier data modules follow the existing catalogue data. Run `node tools/export-catalogues.cjs` after changing them. This generates the readable catalogues, region exports, interior plans and operation data using the production data order. New geography is appended after generating the shipped world from its original seed.

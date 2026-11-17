@@ -21,7 +21,7 @@
   C.enemyScaling = function (region, legacy = false) {
     const scale = originalScaling(region, legacy);
     if (legacy) return scale;
-    return {health: 0.84 * Math.pow(scale.health, 0.84), damage: 0.9 * Math.pow(scale.damage, 0.48)};
+    return {health: 0.84 * Math.pow(scale.health, 0.79), damage: 0.9 * Math.pow(scale.damage, 0.48)};
   };
   const whisker = C.bosses.find(b => b.id === 'adolph_whisker');
   whisker.hp = 9500;

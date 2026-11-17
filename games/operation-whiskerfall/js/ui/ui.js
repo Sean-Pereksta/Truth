@@ -28,9 +28,9 @@
       const remembered=(this.controllerFocus||[]).map(control=>this.focusKey(control));
       if(this.menu==='main'){this.host.innerHTML=this.mainMenu();this.restoreFocus(remembered);return;}
       if(this.menu==='victory'){this.host.innerHTML=this.victory();this.restoreFocus(remembered);return;}
-      const titles={pause:'Camp',inventory:'Gear',shop:'Supplies',dialogue:'Conversation',bounty:'Bounties',forge:'Forge',map:'Map',journal:'Field journal',skills:'Skills',reward:'Choose a reward',settings:'Settings',controls:'Controls'};
-      const renderers={pause:()=>this.pauseMenu(),inventory:()=>this.inventoryMenu(false),shop:()=>this.inventoryMenu(true),dialogue:()=>this.dialogueMenu(),bounty:()=>this.bountyMenu(),forge:()=>this.forgeMenu(),map:()=>this.mapMenu(),journal:()=>this.journalMenu(),skills:()=>this.skillsMenu(),reward:()=>this.rewardMenu(),settings:()=>this.settingsMenu(),controls:()=>this.controlsMenu()};
-      this.host.innerHTML=`<div class="menu-layer"><section class="panel field-menu menu-${this.menu}" role="dialog" aria-modal="true" aria-label="${escape(titles[this.menu])}"><header class="panel-header"><div><h2>${titles[this.menu]||'MeowQuest'}</h2></div><button class="close" data-action="close">← ${this.game.state==='playing'?'Resume':'Back'}</button></header>${this.game.state==='playing'&&this.menu!=='pause'?this.nav():''}<div class="panel-content">${(renderers[this.menu]||renderers.pause)()}</div><footer class="panel-footer"><span>${this.fieldLegend?.()||'<kbd>A</kbd> Select <kbd>B</kbd> Back'}</span></footer></section></div>`;
+      const titles={townGuide:'Town notices',venueRoutes:'Town activities',chamber:'Mechanism notes',pause:'Camp',inventory:'Gear',shop:'Supplies',dialogue:'Conversation',bounty:'Bounties',forge:'Forge',map:'Map',journal:'Field journal',skills:'Skills',reward:'Choose a reward',settings:'Settings',controls:'Controls'};
+      const renderers={townGuide:()=>this.townGuideMenu(),venueRoutes:()=>this.venueRoutesMenu(),chamber:()=>this.chamberMenu(),pause:()=>this.pauseMenu(),inventory:()=>this.inventoryMenu(false),shop:()=>this.inventoryMenu(true),dialogue:()=>this.dialogueMenu(),bounty:()=>this.bountyMenu(),forge:()=>this.forgeMenu(),map:()=>this.mapMenu(),journal:()=>this.journalMenu(),skills:()=>this.skillsMenu(),reward:()=>this.rewardMenu(),settings:()=>this.settingsMenu(),controls:()=>this.controlsMenu()};
+      this.host.innerHTML=`<div class="menu-layer"><section class="panel field-menu menu-${this.menu}" role="dialog" aria-modal="true" aria-label="${escape(titles[this.menu])}"><header class="panel-header"><div><h2>${titles[this.menu]||'MeowQuest'}</h2></div><button class="close" data-action="close">← ${this.game.state==='playing'?'Resume':'Back'}</button></header>${this.game.state==='playing'&&this.menu!=='pause'&&this.menu!=='chamber'?this.nav():''}<div class="panel-content">${(renderers[this.menu]||renderers.pause)()}</div><footer class="panel-footer"><span>${this.fieldLegend?.()||'<kbd>A</kbd> Select <kbd>B</kbd> Back'}</span></footer></section></div>`;
       this.restoreFocus(remembered);
       if(this.menu==='map')requestAnimationFrame(()=>this.drawMap());
     }
@@ -38,7 +38,7 @@
     focusKey(control){return control?{action:control.dataset?.action,value:control.dataset?.value,setting:control.dataset?.setting,id:control.id||'',tag:control.tagName,type:control.type||''}:null;}
     sameFocus(control,key){return !!control&&!!key&&control.dataset?.action===key.action&&control.dataset?.value===key.value&&control.dataset?.setting===key.setting&&(control.id||'')===key.id&&control.tagName===key.tag&&(control.type||'')===key.type;}
     defaultControllerFocus(controls){
-      const preferred={main:['confirm-new','launch','main-tab'],pause:['close','save'],inventory:this.filter==='ability'?['ability-unlock','ability-inspect','ability-primary','ability-secondary','filter']:['item','filter'],shop:['item','filter'],dialogue:['dialogue-topic','accept-quest'],journal:['quest','journal-filter'],bounty:['poster-track'],forge:['upgrade','upgrade-armor','forge-armor'],skills:['ability-unlock','ability-inspect','skill','training-inspect','player'],controls:['remap-key','control-player'],victory:['post-victory'],reward:['choose-reward'],map:['travel','map-location']};
+      const preferred={chamber:['chamber-node','chamber-hint','close'],main:['confirm-new','launch','main-tab'],pause:['close','save'],inventory:this.filter==='ability'?['ability-unlock','ability-inspect','ability-primary','ability-secondary','filter']:['item','filter'],shop:['item','filter'],dialogue:['dialogue-topic','accept-quest'],journal:['quest','journal-filter'],bounty:['poster-track'],forge:['upgrade','upgrade-armor','forge-armor'],skills:['ability-unlock','ability-inspect','skill','training-inspect','player'],controls:['remap-key','control-player'],victory:['post-victory'],reward:['choose-reward'],map:['travel','map-location']};
       if(this.menu==='settings'){const setting=controls.find(control=>control.dataset?.setting);if(setting)return setting;}
       for(const action of preferred[this.menu]||[]){const selected=controls.find(control=>control.dataset?.action===action&&control.classList?.contains('selected')),first=controls.find(control=>control.dataset?.action===action);if(selected||first)return selected||first;}
       return controls[0]||null;
@@ -430,7 +430,80 @@
       canvas.setAttribute?.('aria-label','Dungeon floor plan. Green square: surface exit. Blue bar: puzzle mural. '+(state.solved?'Puzzle gate open. ':'Puzzle gate locked. ')+(state.bossDead?'Treasure gate open. ':'Treasure gate locked. ')+(state.claimed?'Relic recovered.':'Gold diamond: reliquary.'));
     }
     mapClick(e,canvas){const r=canvas.getBoundingClientRect(),w=this.game.world,x=(e.clientX-r.left)/r.width*w.width,y=(e.clientY-r.top)/r.height*w.height;const nearest=w.locations.reduce((best,l)=>Math.hypot(l.x-x,l.y-y)<(best?Math.hypot(best.x-x,best.y-y):Infinity)?l:best,null);this.selectedLocation=nearest&&Math.hypot(nearest.x-x,nearest.y-y)<450&&this.locationKnown(nearest)?nearest:null;const px=this.selectedLocation?.x||x,py=this.selectedLocation?.y||y;if(this.game.setMarker)this.game.setMarker(px,py);else this.game.marker={x:px,y:py};this.render();}
-    drawMinimap(){const canvas=document.getElementById('minimap');if(!canvas)return;const frame=document.getElementById('minimap-frame');frame?.classList?.toggle('dungeon-minimap',!!this.game.world.isDungeon);if(this.game.world.isDungeon){this.drawDungeonMinimap(canvas);return;}canvas.setAttribute?.('aria-label','Nearby terrain radar. Friendly settlements, enemies and your current waypoint.');const ctx=canvas.getContext('2d'),g=this.game,w=g.world,p=g.players[0],range=1400,s=canvas.width/range;ctx.fillStyle='#132e28';ctx.fillRect(0,0,180,180);const map=(x,y)=>[90+(x-p.x)*s,90+(y-p.y)*s];for(const r of w.regions){ctx.fillStyle=r.color||'#355546';const [x,y]=map(r.x,r.y);ctx.fillRect(x,y,r.w*s,r.h*s);}ctx.fillStyle='#0b24175a';ctx.fillRect(0,0,180,180);ctx.strokeStyle='#e7dbb02a';ctx.lineWidth=1;ctx.beginPath();ctx.arc(90,90,55,0,Math.PI*2);ctx.stroke();for(const l of w.locations){if(Math.hypot(l.x-p.x,l.y-p.y)>800)continue;const [x,y]=map(l.x,l.y);ctx.fillStyle=l.type==='town'||w.liberated.has(l.id)?'#b4d49b':l.type==='boss'?'#edc260':'#e3a286';ctx.fillRect(x-2,y-2,4,4);}for(const e of w.activeEnemies||[]){if(e.hp<=0)continue;const [x,y]=map(e.x,e.y);ctx.fillStyle='#e58c72';ctx.fillRect(x-1,y-1,2,2);}for(const pl of g.players){const [x,y]=map(pl.x,pl.y);ctx.fillStyle=pl.id===0?'#fff4d3':'#9ed6e0';ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();}if(g.marker){const [x,y]=map(g.marker.x,g.marker.y);ctx.strokeStyle='#edca79';ctx.beginPath();ctx.arc(Math.max(8,Math.min(172,x)),Math.max(8,Math.min(172,y)),5,0,Math.PI*2);ctx.stroke();}}
+    cityRadarPlan(city){
+      this.cityRadarPlans??=new WeakMap();
+      let sheet=this.cityRadarPlans.get(city);
+      if(sheet)return sheet;
+      // Rasterize at close to the HUD's display scale once per generated district.
+      const scale=1/6;
+      sheet=document.createElement('canvas');
+      sheet.width=Math.ceil((city.right-city.left)*scale);
+      sheet.height=Math.ceil((city.bottom-city.top)*scale);
+      const c=sheet.getContext('2d'),iron=city.key==='ironveil';
+      c.setTransform(scale,0,0,scale,-city.left*scale,-city.top*scale);
+      c.fillStyle=iron?'#3e413b':'#393f48';
+      c.fillRect(city.left,city.top,city.right-city.left,city.bottom-city.top);
+      function fill(area,color){c.fillStyle=color;c.fillRect(area.x,area.y,area.w,area.h);}
+      for(const b of city.blocks)fill(b,iron?'#49463e':'#484751');
+      for(const square of city.squares)fill(square,square.kind==='garden'?'#50684f':iron?'#766b50':'#696779');
+      c.lineJoin='round';c.lineCap='round';
+      for(const route of city.routes){
+        if(route.points.length<2)continue;
+        c.beginPath();c.moveTo(route.points[0].x,route.points[0].y);
+        for(let i=1;i<route.points.length;i++)c.lineTo(route.points[i].x,route.points[i].y);
+        c.lineWidth=route.width;
+        c.strokeStyle=route.kind==='boulevard'?(iron?'#a29b7b':'#959eae'):route.kind==='alley'?'#777b73':route.kind==='rail'?'#5b5349':(iron?'#888775':'#848f96');
+        c.stroke();
+        if(route.kind==='rail'){
+          c.save();c.strokeStyle='#bdab83';c.lineWidth=9;c.setLineDash([22,22]);c.stroke();c.restore();
+        }
+      }
+      for(const b of city.cover){
+        fill(b,iron?'#2e322f':'#282f39');
+        c.lineWidth=5;c.strokeStyle=iron?'#736f5c':'#65717d';c.strokeRect(b.x,b.y,b.w,b.h);
+      }
+      for(const canal of city.canals){
+        fill(canal,'#2f6470');
+        for(const bridge of canal.bridges)fill(bridge,'#a69b78');
+      }
+      this.cityRadarPlans.set(city,sheet);
+      return sheet;
+    }
+    drawMinimap(){
+      const canvas=document.getElementById('minimap');if(!canvas)return;
+      const g=this.game,w=g.world,frame=document.getElementById('minimap-frame');
+      frame?.classList?.toggle('dungeon-minimap',!!w.isDungeon);
+      if(w.isDungeon){this.drawDungeonMinimap(canvas);return;}
+      const p=g.players[0],city=OW.CityWatch?.zone(w,p);
+      canvas.setAttribute?.('aria-label',city?city.name+' street radar. Nearby streets, buildings, heroes and your current waypoint.':'Nearby terrain radar. Friendly settlements, enemies and your current waypoint.');
+      const ctx=canvas.getContext('2d'),range=1400,s=canvas.width/range;
+      const map=(x,y)=>[90+(x-p.x)*s,90+(y-p.y)*s];
+      ctx.fillStyle='#132e28';ctx.fillRect(0,0,180,180);
+      for(const r of w.regions){
+        const [x,y]=map(r.x,r.y);ctx.fillStyle=r.color||'#355546';ctx.fillRect(x,y,r.w*s,r.h*s);
+      }
+      ctx.fillStyle='#0b24175a';ctx.fillRect(0,0,180,180);
+      if(city){
+        const [x,y]=map(city.left,city.top);
+        ctx.drawImage(this.cityRadarPlan(city),x,y,(city.right-city.left)*s,(city.bottom-city.top)*s);
+      }
+      ctx.strokeStyle='#e7dbb02a';ctx.lineWidth=1;ctx.beginPath();ctx.arc(90,90,55,0,Math.PI*2);ctx.stroke();
+      for(const l of w.locations){
+        if(Math.hypot(l.x-p.x,l.y-p.y)>800)continue;
+        const [x,y]=map(l.x,l.y);
+        ctx.fillStyle=l.type==='town'||w.liberated.has(l.id)?'#b4d49b':l.type==='boss'?'#edc260':'#e3a286';ctx.fillRect(x-2,y-2,4,4);
+      }
+      for(const e of w.activeEnemies||[]){
+        if(e.hp<=0)continue;
+        const [x,y]=map(e.x,e.y);ctx.fillStyle='#e58c72';ctx.fillRect(x-1,y-1,2,2);
+      }
+      for(const pl of g.players){
+        const [x,y]=map(pl.x,pl.y);ctx.fillStyle=pl.id===0?'#fff4d3':'#9ed6e0';ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();
+      }
+      if(g.marker){
+        const [x,y]=map(g.marker.x,g.marker.y);ctx.strokeStyle='#edca79';ctx.beginPath();ctx.arc(Math.max(8,Math.min(172,x)),Math.max(8,Math.min(172,y)),5,0,Math.PI*2);ctx.stroke();
+      }
+    }
   }
   OW.UI=UI;
 })();

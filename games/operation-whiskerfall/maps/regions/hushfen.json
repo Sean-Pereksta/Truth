@@ -18,8 +18,8 @@
   "locations": [
     {
       "id": "town_10",
-      "name": "Rushlight Landing",
-      "description": "Reed ferries meet at a brick pumping station.",
+      "name": "Sluicecross",
+      "description": "Ferrymaster’s gauge overlooks Lower boardwalk. Keeper Edda scored the old high-water line on a piling. Compare it with the slanted reading today.",
       "type": "town",
       "region": 10,
       "x": 24440,
@@ -31,11 +31,12 @@
       "index": 311,
       "friendly": true,
       "safe": true,
-      "safeRadius": 465
+      "safeRadius": 465,
+      "streetKey": "sluicecross"
     },
     {
       "id": "forge_town_10",
-      "name": "Rushlight Landing Forge",
+      "name": "Sluicecross Forge",
       "type": "forge",
       "region": 10,
       "x": 24720,
@@ -59,6 +60,19 @@
       "enemyIds": [],
       "index": 317,
       "dungeonId": "recon_archive"
+    },
+    {
+      "id": "work_town_10",
+      "type": "townWork",
+      "name": "Lower boardwalk",
+      "region": 10,
+      "townId": "town_10",
+      "radius": 45,
+      "x": 24545,
+      "y": 1395,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 345
     }
   ],
   "enemySpawns": [
@@ -223,35 +237,39 @@
     {
       "id": "town_10_house_0",
       "type": "house",
-      "x": 24270,
+      "x": 24345,
+      "y": 1060,
+      "w": 152,
+      "h": 125,
+      "solid": true,
+      "region": 10,
+      "variant": 0,
+      "townId": "town_10",
+      "townPainting": "landmark-sluicecross"
+    },
+    {
+      "id": "town_10_house_1",
+      "type": "house",
+      "x": 24670,
       "y": 1115,
       "w": 152,
       "h": 125,
       "solid": true,
       "region": 10,
-      "variant": 0
-    },
-    {
-      "id": "town_10_house_1",
-      "type": "house",
-      "x": 24615,
-      "y": 1100,
-      "w": 152,
-      "h": 125,
-      "solid": true,
-      "region": 10,
-      "variant": 1
+      "variant": 1,
+      "townId": "town_10"
     },
     {
       "id": "town_10_house_2",
       "type": "house",
-      "x": 24230,
-      "y": 1405,
+      "x": 24210,
+      "y": 1385,
       "w": 152,
       "h": 125,
       "solid": true,
       "region": 10,
-      "variant": 2
+      "variant": 2,
+      "townId": "town_10"
     },
     {
       "id": "forge_town_10_workshop",
@@ -289,7 +307,7 @@
       "w": 32,
       "h": 60,
       "solid": false,
-      "label": "Rushlight Landing",
+      "label": "Sluicecross",
       "variant": 0,
       "region": 10
     },
@@ -2383,6 +2401,159 @@
       "variant": 0,
       "solid": false,
       "region": 10
+    },
+    {
+      "id": "work_town_10_lamp",
+      "type": "townWork",
+      "townId": "town_10",
+      "locationId": "work_town_10",
+      "x": 24545,
+      "y": 1395,
+      "w": 52,
+      "h": 67,
+      "solid": false,
+      "variant": 0,
+      "region": 10
+    },
+    {
+      "id": "town_10_homecoming",
+      "type": "townAftermath",
+      "townId": "town_10",
+      "x": 24315,
+      "y": 1319,
+      "w": 130,
+      "h": 108,
+      "solid": false,
+      "variant": 0,
+      "region": 10
+    },
+    {
+      "id": "town_10_street_regular_0",
+      "type": "friendlyCat",
+      "x": 24440,
+      "y": 1205,
+      "homeX": 24440,
+      "homeY": 1205,
+      "w": 100,
+      "h": 72,
+      "role": 2,
+      "skin": 0,
+      "phase": 0,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 10,
+      "friendly": true,
+      "locationId": "town_10",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_10_street_regular_1",
+      "type": "friendlyCat",
+      "x": 24540,
+      "y": 1205,
+      "homeX": 24540,
+      "homeY": 1205,
+      "w": 100,
+      "h": 72,
+      "role": 3,
+      "skin": 1,
+      "phase": 1.7,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 10,
+      "friendly": true,
+      "locationId": "town_10",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_10_street_regular_2",
+      "type": "friendlyCat",
+      "x": 24595,
+      "y": 1255,
+      "homeX": 24595,
+      "homeY": 1255,
+      "w": 100,
+      "h": 72,
+      "role": 4,
+      "skin": 2,
+      "phase": 3.4,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          -65,
+          0
+        ]
+      ],
+      "region": 10,
+      "friendly": true,
+      "locationId": "town_10",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_10_street_regular_3",
+      "type": "friendlyCat",
+      "x": 24575,
+      "y": 1320,
+      "homeX": 24575,
+      "homeY": 1320,
+      "w": 100,
+      "h": 72,
+      "role": 5,
+      "skin": 3,
+      "phase": 5.1,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          70,
+          40
+        ],
+        [
+          0,
+          -50
+        ]
+      ],
+      "region": 10,
+      "friendly": true,
+      "locationId": "town_10",
+      "variant": 0,
+      "solid": false
     }
   ]
 }

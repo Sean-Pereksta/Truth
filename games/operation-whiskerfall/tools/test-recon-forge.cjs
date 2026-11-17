@@ -65,4 +65,16 @@ for(const item of patterns.filter(i=>i.reconSuit)){funded();assert.ok(buy(item.i
 assert.ok(W.Save.validPlayer(p));assert.ok(g.save(false));
 const exported=W.Save.export(0);assert.ok(exported.length>500);assert.ok(W.Save.import(1,exported));
 assert.deepEqual(W.Save.read(1).players[0].reconTunes,p.reconTunes);
+// The rank-eleven crafts are exclusive to their individual postgame exercise.
+g.campaignWon=true;g.reconDossier={scores:{}};
+const b=g.blade(p);p.armorRank=10;p.weaponUpgrades[p.weapon]=10;p.reconBladeRanks[b.id]=10;
+for(const [station,exercise] of [['gun','intact'],['blade','quiet'],['suit','crossing']]){
+  const unavailable=quote('Upgrade',station);assert.match(unavailable.reason,/Dawnbridge/);
+  funded();g.reconDossier.scores[exercise]=1;
+  const plan=quote('Upgrade',station);assert.equal(plan.reason,'');assert.equal(plan.cost.gold,940);
+  assert.ok(F.commit(g,plan));assert.equal(F.commit(g,plan),false);
+  assert.equal(quote('Upgrade',station).reason,'Fully reinforced');
+}
+assert.ok(W.Save.validPlayer(p));assert.ok(g.save(false));assert.equal(W.Save.read(0).players[0].armorRank,11);
+console.log('Passed three Dawnbridge masterwork unlocks, exact costs, rank caps and persistence.');
 console.log('Passed 20 recipes, 24 weapon tuning installs, ownership, preview, storage rollback, stale confirms, rank persistence and export/import.');

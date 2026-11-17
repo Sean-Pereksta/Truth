@@ -1,0 +1,1402 @@
+{
+  "faces": {
+    "path": "assets/tavern/faces.webp",
+    "sourceId": "exec-0375f3de-9a59-4848-b527-79801ca4d66c",
+    "generator": "OpenAI ImageGen",
+    "prompt": "Transparent expressive character PORTRAIT animation atlas, perfectly regular 6 columns x 4 rows, exactly 24 head-and-shoulders busts, each entirely isolated in own equally sized cell. Painted woodland cat RPG, inked gouache. Within each row same recognizable character design and position throughout. Row 1: gray stocky elderly cat barkeep, curled ivory mustache, rolled sleeves. Row 2: orange fisher aunt, red scarf, broad cheeks, extremely expressive ears. Row 3: elegant tuxedo cat poker dealer with green vest, fine white eyebrows, reserved expressions. Row 4: wizened mouse card master with navy sweater, brass earring and narrow eyes, extremely subtle control of face. SIX different expressions left to right for every row: attentive neutral open eyes, blinking eyes closed, pleased by a strong hand (lifted brow/ear), worried by poor cards (drooping brow/ear), composed bluff sideways glance, win/loss reaction (wry grin). Keep row 2 exaggerated and row 4 nearly unreadable with only slight ear/whisker variations. Genuine transparent background, no backdrops, no letters, no cards covering faces, equal cell padding. High resolution, distinct painted details at 70px.",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "exportSize": [
+      828,
+      544
+    ],
+    "frames": [
+      {
+        "row": 0,
+        "pose": 0,
+        "crop": [
+          0,
+          0,
+          138,
+          136
+        ],
+        "artBounds": [
+          4,
+          5,
+          130,
+          128
+        ],
+        "sourceCrop": [
+          0,
+          4,
+          254,
+          254
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 0,
+        "pose": 1,
+        "crop": [
+          138,
+          0,
+          138,
+          136
+        ],
+        "artBounds": [
+          142,
+          5,
+          130,
+          128
+        ],
+        "sourceCrop": [
+          257,
+          3,
+          511,
+          254
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 0,
+        "pose": 2,
+        "crop": [
+          276,
+          0,
+          138,
+          136
+        ],
+        "artBounds": [
+          280,
+          3,
+          129,
+          130
+        ],
+        "sourceCrop": [
+          514,
+          0,
+          767,
+          254
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 0,
+        "pose": 3,
+        "crop": [
+          414,
+          0,
+          138,
+          136
+        ],
+        "artBounds": [
+          418,
+          16,
+          129,
+          117
+        ],
+        "sourceCrop": [
+          770,
+          26,
+          1023,
+          254
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 0,
+        "pose": 4,
+        "crop": [
+          552,
+          0,
+          138,
+          136
+        ],
+        "artBounds": [
+          556,
+          5,
+          129,
+          128
+        ],
+        "sourceCrop": [
+          1026,
+          3,
+          1279,
+          254
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 0,
+        "pose": 5,
+        "crop": [
+          690,
+          0,
+          138,
+          136
+        ],
+        "artBounds": [
+          694,
+          4,
+          129,
+          129
+        ],
+        "sourceCrop": [
+          1282,
+          2,
+          1535,
+          254
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 1,
+        "pose": 0,
+        "crop": [
+          0,
+          136,
+          138,
+          136
+        ],
+        "artBounds": [
+          5,
+          141,
+          127,
+          128
+        ],
+        "sourceCrop": [
+          3,
+          258,
+          253,
+          510
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 1,
+        "pose": 1,
+        "crop": [
+          138,
+          136,
+          138,
+          136
+        ],
+        "artBounds": [
+          143,
+          155,
+          127,
+          114
+        ],
+        "sourceCrop": [
+          259,
+          285,
+          510,
+          510
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 1,
+        "pose": 2,
+        "crop": [
+          276,
+          136,
+          138,
+          136
+        ],
+        "artBounds": [
+          281,
+          140,
+          128,
+          129
+        ],
+        "sourceCrop": [
+          515,
+          255,
+          768,
+          510
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 1,
+        "pose": 3,
+        "crop": [
+          414,
+          136,
+          138,
+          136
+        ],
+        "artBounds": [
+          418,
+          161,
+          130,
+          108
+        ],
+        "sourceCrop": [
+          769,
+          298,
+          1025,
+          510
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 1,
+        "pose": 4,
+        "crop": [
+          552,
+          136,
+          138,
+          136
+        ],
+        "artBounds": [
+          557,
+          144,
+          127,
+          125
+        ],
+        "sourceCrop": [
+          1027,
+          264,
+          1278,
+          510
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 1,
+        "pose": 5,
+        "crop": [
+          690,
+          136,
+          138,
+          136
+        ],
+        "artBounds": [
+          695,
+          139,
+          127,
+          130
+        ],
+        "sourceCrop": [
+          1284,
+          254,
+          1535,
+          510
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 2,
+        "pose": 0,
+        "crop": [
+          0,
+          272,
+          138,
+          136
+        ],
+        "artBounds": [
+          8,
+          275,
+          121,
+          130
+        ],
+        "sourceCrop": [
+          9,
+          515,
+          244,
+          767
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 2,
+        "pose": 1,
+        "crop": [
+          138,
+          272,
+          138,
+          136
+        ],
+        "artBounds": [
+          146,
+          275,
+          121,
+          130
+        ],
+        "sourceCrop": [
+          266,
+          515,
+          500,
+          767
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 2,
+        "pose": 2,
+        "crop": [
+          276,
+          272,
+          138,
+          136
+        ],
+        "artBounds": [
+          284,
+          275,
+          121,
+          130
+        ],
+        "sourceCrop": [
+          522,
+          515,
+          756,
+          767
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 2,
+        "pose": 3,
+        "crop": [
+          414,
+          272,
+          138,
+          136
+        ],
+        "artBounds": [
+          422,
+          291,
+          121,
+          114
+        ],
+        "sourceCrop": [
+          778,
+          546,
+          1012,
+          767
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 2,
+        "pose": 4,
+        "crop": [
+          552,
+          272,
+          138,
+          136
+        ],
+        "artBounds": [
+          560,
+          276,
+          121,
+          129
+        ],
+        "sourceCrop": [
+          1034,
+          517,
+          1268,
+          767
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 2,
+        "pose": 5,
+        "crop": [
+          690,
+          272,
+          138,
+          136
+        ],
+        "artBounds": [
+          698,
+          276,
+          121,
+          129
+        ],
+        "sourceCrop": [
+          1290,
+          517,
+          1525,
+          767
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 3,
+        "pose": 0,
+        "crop": [
+          0,
+          408,
+          138,
+          136
+        ],
+        "artBounds": [
+          7,
+          413,
+          124,
+          128
+        ],
+        "sourceCrop": [
+          13,
+          783,
+          243,
+          1022
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 3,
+        "pose": 1,
+        "crop": [
+          138,
+          408,
+          138,
+          136
+        ],
+        "artBounds": [
+          145,
+          412,
+          123,
+          129
+        ],
+        "sourceCrop": [
+          270,
+          783,
+          499,
+          1023
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 3,
+        "pose": 2,
+        "crop": [
+          276,
+          408,
+          138,
+          136
+        ],
+        "artBounds": [
+          282,
+          411,
+          126,
+          130
+        ],
+        "sourceCrop": [
+          522,
+          780,
+          756,
+          1022
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 3,
+        "pose": 3,
+        "crop": [
+          414,
+          408,
+          138,
+          136
+        ],
+        "artBounds": [
+          421,
+          421,
+          123,
+          120
+        ],
+        "sourceCrop": [
+          782,
+          799,
+          1011,
+          1023
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 3,
+        "pose": 4,
+        "crop": [
+          552,
+          408,
+          138,
+          136
+        ],
+        "artBounds": [
+          559,
+          414,
+          123,
+          127
+        ],
+        "sourceCrop": [
+          1038,
+          786,
+          1267,
+          1023
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 3,
+        "pose": 5,
+        "crop": [
+          690,
+          408,
+          138,
+          136
+        ],
+        "artBounds": [
+          697,
+          412,
+          124,
+          129
+        ],
+        "sourceCrop": [
+          1292,
+          782,
+          1523,
+          1023
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      }
+    ]
+  },
+  "walk": {
+    "path": "assets/tavern/walk.webp",
+    "sourceId": "exec-bd5594b7-469b-404d-aadc-ff65411e80cf",
+    "generator": "OpenAI ImageGen",
+    "prompt": "Transparent production 4 columns by 4 rows animation sheet of four anthropomorphic tavern patrons full-body, top-down three-quarter RPG style, ink and gouache. Same consistent fixed scale, all right-facing, complete bodies contained within separate equal cells. Row1 stout gray cat barkeep with cream mustache, apron and rolled sleeves. Row2 orange tabby fisher aunt with red scarf and brown overcoat. Row3 elegant black and white tuxedo cat with green waistcoat and copper watch. Row4 small elderly gray mouse with yellow brass earring and cloudy blue sweater. 4 columns in each row are actual different movement/conversation poses: standing idle open eyes, walk left foot forward, walk right foot forward, animated talking gesture with open mouth and raised paw. Eye and ear changes, tails move. Warm lamplight. NO text, background, ground tiles or frames. Clean alpha.",
+    "sourceSize": [
+      1261,
+      1247
+    ],
+    "exportSize": [
+      552,
+      648
+    ],
+    "frames": [
+      {
+        "row": 0,
+        "pose": 0,
+        "crop": [
+          0,
+          0,
+          138,
+          162
+        ],
+        "artBounds": [
+          14,
+          28,
+          110,
+          131
+        ],
+        "sourceCrop": [
+          18,
+          8,
+          272,
+          311
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 0,
+        "pose": 1,
+        "crop": [
+          138,
+          0,
+          138,
+          162
+        ],
+        "artBounds": [
+          146,
+          28,
+          122,
+          131
+        ],
+        "sourceCrop": [
+          312,
+          9,
+          594,
+          311
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 0,
+        "pose": 2,
+        "crop": [
+          276,
+          0,
+          138,
+          162
+        ],
+        "artBounds": [
+          288,
+          30,
+          113,
+          129
+        ],
+        "sourceCrop": [
+          643,
+          10,
+          903,
+          308
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 0,
+        "pose": 3,
+        "crop": [
+          414,
+          0,
+          138,
+          162
+        ],
+        "artBounds": [
+          417,
+          27,
+          132,
+          132
+        ],
+        "sourceCrop": [
+          950,
+          6,
+          1255,
+          311
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 1,
+        "pose": 0,
+        "crop": [
+          0,
+          162,
+          138,
+          162
+        ],
+        "artBounds": [
+          11,
+          187,
+          116,
+          134
+        ],
+        "sourceCrop": [
+          11,
+          320,
+          273,
+          622
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 1,
+        "pose": 1,
+        "crop": [
+          138,
+          162,
+          138,
+          162
+        ],
+        "artBounds": [
+          146,
+          185,
+          121,
+          136
+        ],
+        "sourceCrop": [
+          314,
+          320,
+          586,
+          627
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 1,
+        "pose": 2,
+        "crop": [
+          276,
+          162,
+          138,
+          162
+        ],
+        "artBounds": [
+          285,
+          184,
+          120,
+          137
+        ],
+        "sourceCrop": [
+          647,
+          321,
+          918,
+          630
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 1,
+        "pose": 3,
+        "crop": [
+          414,
+          162,
+          138,
+          162
+        ],
+        "artBounds": [
+          417,
+          185,
+          132,
+          136
+        ],
+        "sourceCrop": [
+          951,
+          320,
+          1248,
+          625
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 2,
+        "pose": 0,
+        "crop": [
+          0,
+          324,
+          138,
+          162
+        ],
+        "artBounds": [
+          19,
+          331,
+          99,
+          152
+        ],
+        "sourceCrop": [
+          41,
+          632,
+          254,
+          958
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 2,
+        "pose": 1,
+        "crop": [
+          138,
+          324,
+          138,
+          162
+        ],
+        "artBounds": [
+          149,
+          333,
+          116,
+          150
+        ],
+        "sourceCrop": [
+          325,
+          633,
+          574,
+          956
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 2,
+        "pose": 2,
+        "crop": [
+          276,
+          324,
+          138,
+          162
+        ],
+        "artBounds": [
+          285,
+          333,
+          119,
+          150
+        ],
+        "sourceCrop": [
+          653,
+          633,
+          908,
+          955
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 2,
+        "pose": 3,
+        "crop": [
+          414,
+          324,
+          138,
+          162
+        ],
+        "artBounds": [
+          417,
+          332,
+          132,
+          151
+        ],
+        "sourceCrop": [
+          965,
+          632,
+          1249,
+          956
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 3,
+        "pose": 0,
+        "crop": [
+          0,
+          486,
+          138,
+          162
+        ],
+        "artBounds": [
+          14,
+          515,
+          109,
+          130
+        ],
+        "sourceCrop": [
+          38,
+          972,
+          257,
+          1233
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 3,
+        "pose": 1,
+        "crop": [
+          138,
+          486,
+          138,
+          162
+        ],
+        "artBounds": [
+          145,
+          517,
+          124,
+          128
+        ],
+        "sourceCrop": [
+          321,
+          972,
+          571,
+          1229
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 3,
+        "pose": 2,
+        "crop": [
+          276,
+          486,
+          138,
+          162
+        ],
+        "artBounds": [
+          288,
+          519,
+          113,
+          126
+        ],
+        "sourceCrop": [
+          661,
+          972,
+          888,
+          1226
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 3,
+        "pose": 3,
+        "crop": [
+          414,
+          486,
+          138,
+          162
+        ],
+        "artBounds": [
+          417,
+          513,
+          132,
+          132
+        ],
+        "sourceCrop": [
+          964,
+          968,
+          1230,
+          1234
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      }
+    ]
+  },
+  "anglers": {
+    "path": "assets/activities/anglers.webp",
+    "sourceId": "exec-3585865d-a96b-447b-bfcd-46de413436fa",
+    "generator": "OpenAI ImageGen",
+    "prompt": "TRUE TRANSPARENT animation sprite sheet, 4 columns by 3 rows, 12 separate fully visible hand-painted tiny FISHING CAT characters in side view, all facing RIGHT and holding long slender fishing rods pointed to the right. Grid exact even cells, each figure comfortably centered with clear transparent padding. Four successive poses in every row: standing ready with rod extended; overhead backswing; casting line forward with paw reaching far; leaning back reeling under load with rod bent into arc. Row one is the same orange tabby hero wearing olive cap and khaki scout jacket. Row two same ivory-white hero wearing blue neckerchief and light canvas fisher coat. Row three same stocky older gray cat fisherman captain, navy mariner sweater, yellow fisherman cap, whiskered face. Expressive silhouettes legible at 64 pixels. Gouache and ink animal adventure game on shellbreak bay. No water, no docks, no text, no scene or scenery, no floating separate fishing line. Each complete body, pole, and motion entirely within each cell.",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "exportSize": [
+      680,
+      432
+    ],
+    "frames": [
+      {
+        "row": 0,
+        "pose": 0,
+        "crop": [
+          0,
+          0,
+          170,
+          144
+        ],
+        "artBounds": [
+          14,
+          37,
+          141,
+          104
+        ],
+        "sourceCrop": [
+          12,
+          75,
+          353,
+          328
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 0,
+        "pose": 1,
+        "crop": [
+          170,
+          0,
+          170,
+          144
+        ],
+        "artBounds": [
+          211,
+          8,
+          87,
+          133
+        ],
+        "sourceCrop": [
+          378,
+          7,
+          589,
+          329
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 0,
+        "pose": 2,
+        "crop": [
+          340,
+          0,
+          170,
+          144
+        ],
+        "artBounds": [
+          343,
+          41,
+          164,
+          100
+        ],
+        "sourceCrop": [
+          696,
+          85,
+          1094,
+          328
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 0,
+        "pose": 3,
+        "crop": [
+          510,
+          0,
+          170,
+          144
+        ],
+        "artBounds": [
+          528,
+          20,
+          134,
+          121
+        ],
+        "sourceCrop": [
+          1110,
+          34,
+          1435,
+          327
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 1,
+        "pose": 0,
+        "crop": [
+          0,
+          144,
+          170,
+          144
+        ],
+        "artBounds": [
+          13,
+          175,
+          143,
+          110
+        ],
+        "sourceCrop": [
+          8,
+          423,
+          352,
+          689
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 1,
+        "pose": 1,
+        "crop": [
+          170,
+          144,
+          170,
+          144
+        ],
+        "artBounds": [
+          211,
+          151,
+          88,
+          134
+        ],
+        "sourceCrop": [
+          377,
+          366,
+          590,
+          689
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 1,
+        "pose": 2,
+        "crop": [
+          340,
+          144,
+          170,
+          144
+        ],
+        "artBounds": [
+          343,
+          177,
+          164,
+          108
+        ],
+        "sourceCrop": [
+          704,
+          431,
+          1099,
+          690
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 1,
+        "pose": 3,
+        "crop": [
+          510,
+          144,
+          170,
+          144
+        ],
+        "artBounds": [
+          529,
+          160,
+          132,
+          125
+        ],
+        "sourceCrop": [
+          1118,
+          389,
+          1436,
+          689
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 2,
+        "pose": 0,
+        "crop": [
+          0,
+          288,
+          170,
+          144
+        ],
+        "artBounds": [
+          17,
+          315,
+          136,
+          114
+        ],
+        "sourceCrop": [
+          9,
+          777,
+          353,
+          1067
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 2,
+        "pose": 1,
+        "crop": [
+          170,
+          288,
+          170,
+          144
+        ],
+        "artBounds": [
+          211,
+          295,
+          88,
+          134
+        ],
+        "sourceCrop": [
+          373,
+          726,
+          597,
+          1067
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 2,
+        "pose": 2,
+        "crop": [
+          340,
+          288,
+          170,
+          144
+        ],
+        "artBounds": [
+          343,
+          320,
+          164,
+          109
+        ],
+        "sourceCrop": [
+          678,
+          790,
+          1094,
+          1066
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      },
+      {
+        "row": 2,
+        "pose": 3,
+        "crop": [
+          510,
+          288,
+          170,
+          144
+        ],
+        "artBounds": [
+          529,
+          305,
+          132,
+          124
+        ],
+        "sourceCrop": [
+          1107,
+          752,
+          1441,
+          1066
+        ],
+        "anchor": [
+          0.5,
+          0.96
+        ]
+      }
+    ]
+  }
+}

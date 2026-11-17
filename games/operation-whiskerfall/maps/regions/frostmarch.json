@@ -23,7 +23,7 @@
       "region": 3,
       "radius": 300,
       "npc": "Medic Lumi",
-      "description": "Friendly resistance settlement: merchant, healing, upgrades, and mission board.",
+      "description": "The warming hall overlooks Quilt walk. Medic Lumi left the brazier wick in the covered passage. Relight it before the blankets freeze.",
       "x": 15470,
       "y": 1430,
       "cleared": false,
@@ -31,7 +31,8 @@
       "index": 36,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "snowhaven"
     },
     {
       "id": "town_extra_3",
@@ -40,7 +41,7 @@
       "region": 3,
       "radius": 270,
       "npc": "Quartermaster Aurora",
-      "description": "A quiet village supporting the resistance.",
+      "description": "Whitepine post cabin stands on Needle path. Local supplies, a checkpoint and the resistance forge.",
       "x": 16770,
       "y": 4160,
       "cleared": false,
@@ -48,7 +49,8 @@
       "index": 37,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-3"
     },
     {
       "id": "base_3_0",
@@ -263,13 +265,14 @@
       "region": 3,
       "radius": 250,
       "npc": "Resistance Wayfinder",
-      "description": "A peaceful refuge with a friendly quest scout and an upgrade forge.",
+      "description": "Warmhearth soup kitchen stands on Kitchen court. Local supplies, a checkpoint and the resistance forge.",
       "cleared": false,
       "enemyIds": [],
       "index": 96,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-7"
     },
     {
       "id": "forge_town_3",
@@ -1544,7 +1547,7 @@
         ],
         "dialogue": [
           "Follow the frost-blue pipes northeast from Warmhearth to Keeper Thistle.",
-          "Wake both lake pumps, then turn the central regulator. The stone crossing between the two lakes is always safe. Entrance requires the Rimeglass Valve Key. Search the Frozen Courier Cache east of Badger’s Lantern in Stonecrest. Defeat its three sentries, then recover the valve key. Defeat the guardian, recover its expedition seal, then return to Keeper Thistle. REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold."
+          "Prime the west pump, send pressure east with the central regulator, then prime the east pump. Lock both gauges at the regulator. The central crossing stays dry. Entrance requires the Rimeglass Valve Key. Search the Frozen Courier Cache east of Badger’s Lantern in Stonecrest. Defeat its three sentries, then recover the valve key. Defeat the guardian, recover its expedition seal, then return to Keeper Thistle. REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold."
         ],
         "topics": {
           "advice": [
@@ -1565,7 +1568,7 @@
         ],
         "dialogue": [
           "Follow the frost-blue pipes northeast from Warmhearth to Keeper Thistle.",
-          "Wake both lake pumps, then turn the central regulator. The stone crossing between the two lakes is always safe. Entrance requires the Rimeglass Valve Key. Search the Frozen Courier Cache east of Badger’s Lantern in Stonecrest. Defeat its three sentries, then recover the valve key. Defeat the guardian, recover its expedition seal, then return to Keeper Thistle. REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold."
+          "Prime the west pump, send pressure east with the central regulator, then prime the east pump. Lock both gauges at the regulator. The central crossing stays dry. Entrance requires the Rimeglass Valve Key. Search the Frozen Courier Cache east of Badger’s Lantern in Stonecrest. Defeat its three sentries, then recover the valve key. Defeat the guardian, recover its expedition seal, then return to Keeper Thistle. REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold."
         ],
         "topics": {
           "advice": [
@@ -1580,7 +1583,7 @@
       ],
       "dialogue": [
         "Follow the frost-blue pipes northeast from Warmhearth to Keeper Thistle.",
-        "Wake both lake pumps, then turn the central regulator. The stone crossing between the two lakes is always safe. Entrance requires the Rimeglass Valve Key. Search the Frozen Courier Cache east of Badger’s Lantern in Stonecrest. Defeat its three sentries, then recover the valve key. Defeat the guardian, recover its expedition seal, then return to Keeper Thistle. REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold."
+        "Prime the west pump, send pressure east with the central regulator, then prime the east pump. Lock both gauges at the regulator. The central crossing stays dry. Entrance requires the Rimeglass Valve Key. Search the Frozen Courier Cache east of Badger’s Lantern in Stonecrest. Defeat its three sentries, then recover the valve key. Defeat the guardian, recover its expedition seal, then return to Keeper Thistle. REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold."
       ],
       "role": "scholar",
       "portrait": 3,
@@ -1612,6 +1615,19 @@
       "cleared": false,
       "enemyIds": [],
       "index": 334
+    },
+    {
+      "id": "work_town_3",
+      "type": "townWork",
+      "name": "Quilt walk",
+      "region": 3,
+      "townId": "town_3",
+      "radius": 45,
+      "x": 15590,
+      "y": 1620,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 340
     }
   ],
   "enemySpawns": [
@@ -2499,26 +2515,29 @@
     {
       "id": "town_3_building_0",
       "type": "building",
-      "x": 15245,
-      "y": 1280,
+      "x": 15395,
+      "y": 1215,
       "w": 155,
       "h": 130,
       "solid": true,
       "variant": 3,
       "locationId": "town_3",
-      "region": 3
+      "region": 3,
+      "townId": "town_3",
+      "townPainting": "landmark-snowhaven"
     },
     {
       "id": "town_3_building_1",
       "type": "building",
-      "x": 15695,
-      "y": 1280,
+      "x": 15680,
+      "y": 1270,
       "w": 155,
       "h": 130,
       "solid": true,
       "variant": 0,
       "locationId": "town_3",
-      "region": 3
+      "region": 3,
+      "townId": "town_3"
     },
     {
       "id": "town_3_building_2",
@@ -2530,19 +2549,21 @@
       "solid": true,
       "variant": 1,
       "locationId": "town_3",
-      "region": 3
+      "region": 3,
+      "townId": "town_3"
     },
     {
       "id": "town_3_building_3",
       "type": "building",
-      "x": 15250,
-      "y": 1665,
+      "x": 15280,
+      "y": 1660,
       "w": 125,
       "h": 105,
       "solid": true,
       "variant": 2,
       "locationId": "town_3",
-      "region": 3
+      "region": 3,
+      "townId": "town_3"
     },
     {
       "id": "town_3_well",
@@ -2709,7 +2730,9 @@
       "solid": true,
       "variant": 3,
       "locationId": "town_extra_3",
-      "region": 3
+      "region": 3,
+      "townId": "town_extra_3",
+      "townPainting": "outpost-3"
     },
     {
       "id": "town_extra_3_building_1",
@@ -2721,7 +2744,8 @@
       "solid": true,
       "variant": 0,
       "locationId": "town_extra_3",
-      "region": 3
+      "region": 3,
+      "townId": "town_extra_3"
     },
     {
       "id": "town_extra_3_building_2",
@@ -2733,7 +2757,8 @@
       "solid": true,
       "variant": 1,
       "locationId": "town_extra_3",
-      "region": 3
+      "region": 3,
+      "townId": "town_extra_3"
     },
     {
       "id": "town_extra_3_building_3",
@@ -2745,7 +2770,8 @@
       "solid": true,
       "variant": 2,
       "locationId": "town_extra_3",
-      "region": 3
+      "region": 3,
+      "townId": "town_extra_3"
     },
     {
       "id": "town_extra_3_well",
@@ -4046,7 +4072,9 @@
       "solid": true,
       "variant": 3,
       "locationId": "town_way_3",
-      "region": 3
+      "region": 3,
+      "townId": "town_way_3",
+      "townPainting": "outpost-7"
     },
     {
       "id": "town_way_3_building_1",
@@ -4058,7 +4086,8 @@
       "solid": true,
       "variant": 0,
       "locationId": "town_way_3",
-      "region": 3
+      "region": 3,
+      "townId": "town_way_3"
     },
     {
       "id": "town_way_3_building_2",
@@ -4070,7 +4099,8 @@
       "solid": true,
       "variant": 1,
       "locationId": "town_way_3",
-      "region": 3
+      "region": 3,
+      "townId": "town_way_3"
     },
     {
       "id": "town_way_3_building_3",
@@ -4082,7 +4112,8 @@
       "solid": true,
       "variant": 2,
       "locationId": "town_way_3",
-      "region": 3
+      "region": 3,
+      "townId": "town_way_3"
     },
     {
       "id": "town_way_3_well",
@@ -10187,6 +10218,159 @@
       "label": "Stormglass Coast · LV 12",
       "variant": 0,
       "region": 3
+    },
+    {
+      "id": "work_town_3_lamp",
+      "type": "townWork",
+      "townId": "town_3",
+      "locationId": "work_town_3",
+      "x": 15590,
+      "y": 1620,
+      "w": 52,
+      "h": 67,
+      "solid": false,
+      "variant": 0,
+      "region": 3
+    },
+    {
+      "id": "town_3_homecoming",
+      "type": "townAftermath",
+      "townId": "town_3",
+      "x": 15345,
+      "y": 1514,
+      "w": 130,
+      "h": 108,
+      "solid": false,
+      "variant": 0,
+      "region": 3
+    },
+    {
+      "id": "town_3_street_regular_0",
+      "type": "friendlyCat",
+      "x": 15470,
+      "y": 1400,
+      "homeX": 15470,
+      "homeY": 1400,
+      "w": 100,
+      "h": 72,
+      "role": 3,
+      "skin": 0,
+      "phase": 0,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 3,
+      "friendly": true,
+      "locationId": "town_3",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_3_street_regular_1",
+      "type": "friendlyCat",
+      "x": 15570,
+      "y": 1400,
+      "homeX": 15570,
+      "homeY": 1400,
+      "w": 100,
+      "h": 72,
+      "role": 4,
+      "skin": 1,
+      "phase": 1.7,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 3,
+      "friendly": true,
+      "locationId": "town_3",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_3_street_regular_2",
+      "type": "friendlyCat",
+      "x": 15625,
+      "y": 1450,
+      "homeX": 15625,
+      "homeY": 1450,
+      "w": 100,
+      "h": 72,
+      "role": 5,
+      "skin": 2,
+      "phase": 3.4,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 3,
+      "friendly": true,
+      "locationId": "town_3",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_3_street_regular_3",
+      "type": "friendlyCat",
+      "x": 15605,
+      "y": 1515,
+      "homeX": 15605,
+      "homeY": 1515,
+      "w": 100,
+      "h": 72,
+      "role": 0,
+      "skin": 3,
+      "phase": 5.1,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 3,
+      "friendly": true,
+      "locationId": "town_3",
+      "variant": 0,
+      "solid": false
     }
   ]
 }

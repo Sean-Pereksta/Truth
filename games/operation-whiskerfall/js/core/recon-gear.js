@@ -101,6 +101,11 @@
   const clear=G.clearPlayerCombat;
   if(clear)G.clearPlayerCombat=function(p){ripostes.delete(p);perfectDodges.delete(p);return clear.call(this,p);};
 
+  const masterworkPlans={
+    gun:{measure:'intact',source:'Unbroken seal',name:'Sealed breech'},
+    blade:{measure:'quiet',source:'Lantern census',name:'Silent temper'},
+    suit:{measure:'crossing',source:'Against the current',name:'Storm binding'}
+  };
   function choices(g,p,tab){
     const gun=g.weapon(p),blade=g.blade(p);
     if(tab==='Upgrade')return ['gun','suit',...(blade.reconFamily?['blade']:[])];
@@ -148,16 +153,21 @@
       q.name=id==='suit'?'Outfit reinforcement':id==='blade'?blade.name:gun.name;
       q.item=id==='suit'?p.equipment?.armor:C.equipment.find(v=>id==='blade'?v.melee===p.melee:v.weapon===p.weapon);
       q.description=id==='suit'?'Each rank adds 12 maximum health and 2.2 percentage points of protection, up to the armor cap.':'Each rank adds 12% of base weapon damage.';
-      q.before='Rank +'+rank;q.after='Rank +'+Math.min(10,rank+1);q.gate=rank>=10?'Fully reinforced':'';
+      const plan=masterworkPlans[id],unlocked=g.campaignWon&&(g.reconDossier?.scores?.[plan.measure]||0)>0;
+      const cap=unlocked?11:10,nextRank=Math.min(cap,rank+1);
+      q.before='Rank +'+rank;q.after='Rank +'+Math.max(rank,nextRank);
+      q.gate=rank>=11?'Fully reinforced':rank===10&&!unlocked?'Finish '+plan.source+' from Dawnbridge after the Berlin campaign.':'';
+      if(rank>=10){q.name=plan.name+' · '+q.name;q.source='Dawnbridge operation · '+plan.source;q.description+=' The masterwork pattern adds the eleventh rank.';}
       if(id==='suit'){
         q.before+=' · '+Math.round((p.armorBonus||0)*1000)/10+'% armor · '+p.maxHp+' health';
-        q.after+=' · '+Math.round(Math.min(.72,(p.armorBonus||0)+(rank<10?.022:0))*1000)/10+'% armor · '+(p.maxHp+(rank<10?12:0))+' health';
+        q.after+=' · '+Math.round(Math.min(.72,(p.armorBonus||0)+(rank<cap?.022:0))*1000)/10+'% armor · '+(p.maxHp+(rank<cap?12:0))+' health';
       }else{
         const base=id==='blade'?C.melee[p.melee].damage:gun.damage;
         q.before+=' · '+number(base*(1+.12*rank))+' base damage';
-        q.after+=' · '+number(base*(1+.12*Math.min(10,rank+1)))+' base damage';
+        q.after+=' · '+number(base*(1+.12*Math.max(rank,nextRank)))+' base damage';
       }
       q.cost=id==='suit'?paid(90+65*rank,6+4*rank,[4,8].includes(rank)?1:0):paid(80+75*rank,5+3*rank,[5,9].includes(rank)?1:0);
+      if(rank===10)q.cost=paid(940,75,3);
       signature=[id==='suit'?p.armorSet:id==='blade'?p.melee:p.weapon,rank];
     }else{
       const custom=id.includes('.'),target=id.startsWith('blade')?blade:gun,mode=custom?Number(id.split('.')[1]):id;
@@ -232,7 +242,7 @@
     if(!validate.call(this,p))return false;
     const tunes=p.reconTunes,ranks=p.reconBladeRanks,record=v=>v&&typeof v==='object'&&!Array.isArray(v);
     if(tunes!==undefined&&(!record(tunes)||!Object.entries(tunes).every(([id,t])=>[...C.weapons,...C.melee].some(w=>w.id===id&&w.reconFamily)&&record(t)&&Array.isArray(t.unlocked)&&t.unlocked.every(m=>m===0||m===1)&&t.unlocked.includes(t.active))))return false;
-    return ranks===undefined||record(ranks)&&Object.entries(ranks).every(([id,n])=>C.melee.some(b=>b.reconFamily&&b.id===id)&&Number.isInteger(n)&&n>=0&&n<=10);
+    return ranks===undefined||record(ranks)&&Object.entries(ranks).every(([id,n])=>C.melee.some(b=>b.reconFamily&&b.id===id)&&Number.isInteger(n)&&n>=0&&n<=11);
   };
   W.ReconGear={walkScale,bladeImpact,extraStun,choices,quote,commit,describe,tunedGun,tunedBlade};
 }());

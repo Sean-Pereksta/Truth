@@ -1,0 +1,1252 @@
+[
+  {
+    "key": "fieldwork/iron-front-0",
+    "path": "assets/fieldwork/iron-front-0.webp",
+    "source": "iron-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      4,
+      18,
+      358,
+      265
+    ],
+    "exportSize": [
+      360,
+      253
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/iron-front-1",
+    "path": "assets/fieldwork/iron-front-1.webp",
+    "source": "iron-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      367,
+      6,
+      719,
+      264
+    ],
+    "exportSize": [
+      358,
+      264
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/iron-front-2",
+    "path": "assets/fieldwork/iron-front-2.webp",
+    "source": "iron-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      729,
+      9,
+      1082,
+      273
+    ],
+    "exportSize": [
+      359,
+      270
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/iron-front-3",
+    "path": "assets/fieldwork/iron-front-3.webp",
+    "source": "iron-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1091,
+      15,
+      1445,
+      273
+    ],
+    "exportSize": [
+      360,
+      264
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/iron-front-4",
+    "path": "assets/fieldwork/iron-front-4.webp",
+    "source": "iron-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      0,
+      299,
+      358,
+      534
+    ],
+    "exportSize": [
+      364,
+      241
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/iron-front-5",
+    "path": "assets/fieldwork/iron-front-5.webp",
+    "source": "iron-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      366,
+      282,
+      720,
+      543
+    ],
+    "exportSize": [
+      360,
+      267
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/iron-front-6",
+    "path": "assets/fieldwork/iron-front-6.webp",
+    "source": "iron-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      729,
+      276,
+      1085,
+      536
+    ],
+    "exportSize": [
+      362,
+      266
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/iron-front-7",
+    "path": "assets/fieldwork/iron-front-7.webp",
+    "source": "iron-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1091,
+      277,
+      1448,
+      543
+    ],
+    "exportSize": [
+      363,
+      272
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/iron-front-8",
+    "path": "assets/fieldwork/iron-front-8.webp",
+    "source": "iron-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      5,
+      544,
+      358,
+      807
+    ],
+    "exportSize": [
+      359,
+      269
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/iron-front-9",
+    "path": "assets/fieldwork/iron-front-9.webp",
+    "source": "iron-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      367,
+      548,
+      722,
+      806
+    ],
+    "exportSize": [
+      361,
+      264
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/iron-front-10",
+    "path": "assets/fieldwork/iron-front-10.webp",
+    "source": "iron-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      728,
+      548,
+      1081,
+      806
+    ],
+    "exportSize": [
+      359,
+      264
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/iron-front-11",
+    "path": "assets/fieldwork/iron-front-11.webp",
+    "source": "iron-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1091,
+      550,
+      1448,
+      807
+    ],
+    "exportSize": [
+      363,
+      263
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/iron-front-12",
+    "path": "assets/fieldwork/iron-front-12.webp",
+    "source": "iron-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      5,
+      824,
+      357,
+      1086
+    ],
+    "exportSize": [
+      358,
+      268
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/iron-front-13",
+    "path": "assets/fieldwork/iron-front-13.webp",
+    "source": "iron-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      363,
+      814,
+      724,
+      1086
+    ],
+    "exportSize": [
+      367,
+      278
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/iron-front-14",
+    "path": "assets/fieldwork/iron-front-14.webp",
+    "source": "iron-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      728,
+      843,
+      1086,
+      1086
+    ],
+    "exportSize": [
+      364,
+      249
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/iron-front-15",
+    "path": "assets/fieldwork/iron-front-15.webp",
+    "source": "iron-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1086,
+      853,
+      1448,
+      1086
+    ],
+    "exportSize": [
+      368,
+      239
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/black-front-0",
+    "path": "assets/fieldwork/black-front-0.webp",
+    "source": "black-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      2,
+      26,
+      360,
+      277
+    ],
+    "exportSize": [
+      364,
+      257
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/black-front-1",
+    "path": "assets/fieldwork/black-front-1.webp",
+    "source": "black-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      365,
+      6,
+      721,
+      272
+    ],
+    "exportSize": [
+      362,
+      272
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/black-front-2",
+    "path": "assets/fieldwork/black-front-2.webp",
+    "source": "black-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      727,
+      14,
+      1083,
+      276
+    ],
+    "exportSize": [
+      362,
+      268
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/black-front-3",
+    "path": "assets/fieldwork/black-front-3.webp",
+    "source": "black-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1089,
+      56,
+      1447,
+      271
+    ],
+    "exportSize": [
+      364,
+      221
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/black-front-4",
+    "path": "assets/fieldwork/black-front-4.webp",
+    "source": "black-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1,
+      296,
+      362,
+      539
+    ],
+    "exportSize": [
+      367,
+      249
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/black-front-5",
+    "path": "assets/fieldwork/black-front-5.webp",
+    "source": "black-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      366,
+      277,
+      721,
+      544
+    ],
+    "exportSize": [
+      361,
+      273
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/black-front-6",
+    "path": "assets/fieldwork/black-front-6.webp",
+    "source": "black-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      727,
+      304,
+      1083,
+      540
+    ],
+    "exportSize": [
+      362,
+      242
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/black-front-7",
+    "path": "assets/fieldwork/black-front-7.webp",
+    "source": "black-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1088,
+      296,
+      1447,
+      541
+    ],
+    "exportSize": [
+      365,
+      251
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/black-front-8",
+    "path": "assets/fieldwork/black-front-8.webp",
+    "source": "black-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      2,
+      559,
+      362,
+      804
+    ],
+    "exportSize": [
+      366,
+      251
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/black-front-9",
+    "path": "assets/fieldwork/black-front-9.webp",
+    "source": "black-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      366,
+      574,
+      722,
+      798
+    ],
+    "exportSize": [
+      362,
+      230
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/black-front-10",
+    "path": "assets/fieldwork/black-front-10.webp",
+    "source": "black-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      727,
+      546,
+      1084,
+      802
+    ],
+    "exportSize": [
+      363,
+      262
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/black-front-11",
+    "path": "assets/fieldwork/black-front-11.webp",
+    "source": "black-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1088,
+      555,
+      1447,
+      800
+    ],
+    "exportSize": [
+      365,
+      251
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/black-front-12",
+    "path": "assets/fieldwork/black-front-12.webp",
+    "source": "black-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      4,
+      829,
+      359,
+      1079
+    ],
+    "exportSize": [
+      361,
+      256
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/black-front-13",
+    "path": "assets/fieldwork/black-front-13.webp",
+    "source": "black-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      365,
+      828,
+      722,
+      1074
+    ],
+    "exportSize": [
+      363,
+      252
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/black-front-14",
+    "path": "assets/fieldwork/black-front-14.webp",
+    "source": "black-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      727,
+      832,
+      1085,
+      1071
+    ],
+    "exportSize": [
+      364,
+      245
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/black-front-15",
+    "path": "assets/fieldwork/black-front-15.webp",
+    "source": "black-front",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1088,
+      822,
+      1448,
+      1071
+    ],
+    "exportSize": [
+      366,
+      255
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/urban-landmark-0",
+    "path": "assets/fieldwork/urban-landmark-0.webp",
+    "source": "urban-landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      6,
+      4,
+      355,
+      357
+    ],
+    "exportSize": [
+      355,
+      359
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/urban-landmark-1",
+    "path": "assets/fieldwork/urban-landmark-1.webp",
+    "source": "urban-landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      370,
+      46,
+      721,
+      344
+    ],
+    "exportSize": [
+      357,
+      304
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/urban-landmark-2",
+    "path": "assets/fieldwork/urban-landmark-2.webp",
+    "source": "urban-landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      738,
+      18,
+      1077,
+      357
+    ],
+    "exportSize": [
+      345,
+      345
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/urban-landmark-3",
+    "path": "assets/fieldwork/urban-landmark-3.webp",
+    "source": "urban-landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1094,
+      96,
+      1445,
+      356
+    ],
+    "exportSize": [
+      357,
+      266
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/urban-landmark-4",
+    "path": "assets/fieldwork/urban-landmark-4.webp",
+    "source": "urban-landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      6,
+      377,
+      356,
+      690
+    ],
+    "exportSize": [
+      356,
+      319
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/urban-landmark-5",
+    "path": "assets/fieldwork/urban-landmark-5.webp",
+    "source": "urban-landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      374,
+      376,
+      711,
+      707
+    ],
+    "exportSize": [
+      343,
+      337
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/urban-landmark-6",
+    "path": "assets/fieldwork/urban-landmark-6.webp",
+    "source": "urban-landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      729,
+      357,
+      1094,
+      690
+    ],
+    "exportSize": [
+      371,
+      339
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/urban-landmark-7",
+    "path": "assets/fieldwork/urban-landmark-7.webp",
+    "source": "urban-landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1108,
+      358,
+      1441,
+      705
+    ],
+    "exportSize": [
+      339,
+      353
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/urban-landmark-8",
+    "path": "assets/fieldwork/urban-landmark-8.webp",
+    "source": "urban-landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      12,
+      722,
+      347,
+      1073
+    ],
+    "exportSize": [
+      341,
+      357
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/urban-landmark-9",
+    "path": "assets/fieldwork/urban-landmark-9.webp",
+    "source": "urban-landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      369,
+      707,
+      707,
+      1073
+    ],
+    "exportSize": [
+      344,
+      372
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/urban-landmark-10",
+    "path": "assets/fieldwork/urban-landmark-10.webp",
+    "source": "urban-landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      728,
+      725,
+      1078,
+      1071
+    ],
+    "exportSize": [
+      356,
+      352
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/urban-landmark-11",
+    "path": "assets/fieldwork/urban-landmark-11.webp",
+    "source": "urban-landmarks",
+    "sourceSize": [
+      1448,
+      1086
+    ],
+    "sourceCrop": [
+      1096,
+      754,
+      1437,
+      1066
+    ],
+    "exportSize": [
+      347,
+      318
+    ],
+    "anchor": [
+      0.5,
+      0.97
+    ],
+    "frames": 1,
+    "consumer": "Urban frontage and district landmark"
+  },
+  {
+    "key": "fieldwork/urban-floor-0",
+    "path": "assets/fieldwork/urban-floor-0.webp",
+    "source": "urban-floor",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      0,
+      0,
+      512,
+      512
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "City street material"
+  },
+  {
+    "key": "fieldwork/urban-floor-1",
+    "path": "assets/fieldwork/urban-floor-1.webp",
+    "source": "urban-floor",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      512,
+      0,
+      1024,
+      512
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "City street material"
+  },
+  {
+    "key": "fieldwork/urban-floor-2",
+    "path": "assets/fieldwork/urban-floor-2.webp",
+    "source": "urban-floor",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      1024,
+      0,
+      1536,
+      512
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "City street material"
+  },
+  {
+    "key": "fieldwork/urban-floor-3",
+    "path": "assets/fieldwork/urban-floor-3.webp",
+    "source": "urban-floor",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      0,
+      512,
+      512,
+      1024
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "City street material"
+  },
+  {
+    "key": "fieldwork/urban-floor-4",
+    "path": "assets/fieldwork/urban-floor-4.webp",
+    "source": "urban-floor",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      512,
+      512,
+      1024,
+      1024
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "City street material"
+  },
+  {
+    "key": "fieldwork/urban-floor-5",
+    "path": "assets/fieldwork/urban-floor-5.webp",
+    "source": "urban-floor",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      1024,
+      512,
+      1536,
+      1024
+    ],
+    "exportSize": [
+      192,
+      192
+    ],
+    "anchor": [
+      0.5,
+      0.5
+    ],
+    "frames": 1,
+    "consumer": "City street material"
+  }
+]

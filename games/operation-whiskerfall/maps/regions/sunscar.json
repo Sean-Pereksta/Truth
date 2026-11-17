@@ -23,7 +23,7 @@
       "region": 4,
       "radius": 300,
       "npc": "Trader Sol",
-      "description": "Friendly resistance settlement: merchant, healing, upgrades, and mission board.",
+      "description": "Reservoir sundial overlooks Caravan arcade. Match the lowest tide notch to the route cut into the blue caravan tile.",
       "x": 15470,
       "y": 8710,
       "cleared": false,
@@ -31,7 +31,8 @@
       "index": 48,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "sundial"
     },
     {
       "id": "base_4_0",
@@ -250,13 +251,14 @@
       "region": 4,
       "radius": 250,
       "npc": "Resistance Wayfinder",
-      "description": "A peaceful refuge with a friendly quest scout and an upgrade forge.",
+      "description": "Amber glass stall stands on Glass walk. Local supplies, a checkpoint and the resistance forge.",
       "cleared": false,
       "enemyIds": [],
       "index": 97,
       "safeRadius": 500,
       "friendly": true,
-      "safe": true
+      "safe": true,
+      "streetKey": "outpost-8"
     },
     {
       "id": "forge_town_4",
@@ -1149,6 +1151,19 @@
       "enemyIds": [],
       "index": 321,
       "dungeonId": "recon_cistern"
+    },
+    {
+      "id": "work_town_4",
+      "type": "townWork",
+      "name": "Caravan arcade",
+      "region": 4,
+      "townId": "town_4",
+      "radius": 45,
+      "x": 15400.03332099679,
+      "y": 8936,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 341
     }
   ],
   "enemySpawns": [
@@ -2276,14 +2291,16 @@
     {
       "id": "town_4_building_0",
       "type": "building",
-      "x": 15245,
-      "y": 8560,
+      "x": 15485,
+      "y": 8490,
       "w": 155,
       "h": 130,
       "solid": true,
       "variant": 0,
       "locationId": "town_4",
-      "region": 4
+      "region": 4,
+      "townId": "town_4",
+      "townPainting": "landmark-sundial"
     },
     {
       "id": "town_4_building_1",
@@ -2295,19 +2312,21 @@
       "solid": true,
       "variant": 1,
       "locationId": "town_4",
-      "region": 4
+      "region": 4,
+      "townId": "town_4"
     },
     {
       "id": "town_4_building_2",
       "type": "building",
-      "x": 15470,
-      "y": 8405,
+      "x": 15725,
+      "y": 8620,
       "w": 160,
       "h": 135,
       "solid": true,
       "variant": 2,
       "locationId": "town_4",
-      "region": 4
+      "region": 4,
+      "townId": "town_4"
     },
     {
       "id": "town_4_building_3",
@@ -2319,7 +2338,8 @@
       "solid": true,
       "variant": 3,
       "locationId": "town_4",
-      "region": 4
+      "region": 4,
+      "townId": "town_4"
     },
     {
       "id": "town_4_well",
@@ -3620,7 +3640,9 @@
       "solid": true,
       "variant": 0,
       "locationId": "town_way_4",
-      "region": 4
+      "region": 4,
+      "townId": "town_way_4",
+      "townPainting": "outpost-8"
     },
     {
       "id": "town_way_4_building_1",
@@ -3632,7 +3654,8 @@
       "solid": true,
       "variant": 1,
       "locationId": "town_way_4",
-      "region": 4
+      "region": 4,
+      "townId": "town_way_4"
     },
     {
       "id": "town_way_4_building_2",
@@ -3644,7 +3667,8 @@
       "solid": true,
       "variant": 2,
       "locationId": "town_way_4",
-      "region": 4
+      "region": 4,
+      "townId": "town_way_4"
     },
     {
       "id": "town_way_4_building_3",
@@ -3656,7 +3680,8 @@
       "solid": true,
       "variant": 3,
       "locationId": "town_way_4",
-      "region": 4
+      "region": 4,
+      "townId": "town_way_4"
     },
     {
       "id": "town_way_4_well",
@@ -7466,6 +7491,435 @@
       "solid": false,
       "locationId": "recon_cistern",
       "region": 4,
+      "variant": 0
+    },
+    {
+      "id": "work_town_4_lamp",
+      "type": "townWork",
+      "townId": "town_4",
+      "locationId": "work_town_4",
+      "x": 15400.03332099679,
+      "y": 8936,
+      "w": 52,
+      "h": 67,
+      "solid": false,
+      "variant": 0,
+      "region": 4
+    },
+    {
+      "id": "town_4_homecoming",
+      "type": "townAftermath",
+      "townId": "town_4",
+      "x": 15345,
+      "y": 8794,
+      "w": 130,
+      "h": 108,
+      "solid": false,
+      "variant": 0,
+      "region": 4
+    },
+    {
+      "id": "town_4_street_regular_0",
+      "type": "friendlyCat",
+      "x": 15470,
+      "y": 8680,
+      "homeX": 15470,
+      "homeY": 8680,
+      "w": 100,
+      "h": 72,
+      "role": 4,
+      "skin": 0,
+      "phase": 0,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          -65,
+          0
+        ]
+      ],
+      "region": 4,
+      "friendly": true,
+      "locationId": "town_4",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_4_street_regular_1",
+      "type": "friendlyCat",
+      "x": 15570,
+      "y": 8680,
+      "homeX": 15570,
+      "homeY": 8680,
+      "w": 100,
+      "h": 72,
+      "role": 5,
+      "skin": 1,
+      "phase": 1.7,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 4,
+      "friendly": true,
+      "locationId": "town_4",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_4_street_regular_2",
+      "type": "friendlyCat",
+      "x": 15625,
+      "y": 8730,
+      "homeX": 15625,
+      "homeY": 8730,
+      "w": 100,
+      "h": 72,
+      "role": 0,
+      "skin": 2,
+      "phase": 3.4,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 4,
+      "friendly": true,
+      "locationId": "town_4",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_4_street_regular_3",
+      "type": "friendlyCat",
+      "x": 15605,
+      "y": 8795,
+      "homeX": 15605,
+      "homeY": 8795,
+      "w": 100,
+      "h": 72,
+      "role": 1,
+      "skin": 3,
+      "phase": 5.1,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 4,
+      "friendly": true,
+      "locationId": "town_4",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_4_street_regular_4",
+      "type": "friendlyCat",
+      "x": 15695,
+      "y": 8800,
+      "homeX": 15695,
+      "homeY": 8800,
+      "w": 100,
+      "h": 72,
+      "role": 2,
+      "skin": 0,
+      "phase": 6.8,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 4,
+      "friendly": true,
+      "locationId": "town_4",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_4_street_regular_5",
+      "type": "friendlyCat",
+      "x": 15765,
+      "y": 8830,
+      "homeX": 15765,
+      "homeY": 8830,
+      "w": 100,
+      "h": 72,
+      "role": 3,
+      "skin": 1,
+      "phase": 8.5,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          -65,
+          0
+        ]
+      ],
+      "region": 4,
+      "friendly": true,
+      "locationId": "town_4",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_4_street_regular_7",
+      "type": "friendlyCat",
+      "x": 15395,
+      "y": 8835,
+      "homeX": 15395,
+      "homeY": 8835,
+      "w": 100,
+      "h": 72,
+      "role": 5,
+      "skin": 3,
+      "phase": 11.9,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 4,
+      "friendly": true,
+      "locationId": "town_4",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_4_street_regular_8",
+      "type": "friendlyCat",
+      "x": 15360,
+      "y": 8805,
+      "homeX": 15360,
+      "homeY": 8805,
+      "w": 100,
+      "h": 72,
+      "role": 0,
+      "skin": 0,
+      "phase": 13.6,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 4,
+      "friendly": true,
+      "locationId": "town_4",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_4_street_regular_9",
+      "type": "friendlyCat",
+      "x": 15320,
+      "y": 8755,
+      "homeX": 15320,
+      "homeY": 8755,
+      "w": 100,
+      "h": 72,
+      "role": 1,
+      "skin": 1,
+      "phase": 15.299999999999999,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          70,
+          40
+        ]
+      ],
+      "region": 4,
+      "friendly": true,
+      "locationId": "town_4",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_4_street_regular_10",
+      "type": "friendlyCat",
+      "x": 15470,
+      "y": 8680,
+      "homeX": 15470,
+      "homeY": 8680,
+      "w": 100,
+      "h": 72,
+      "role": 2,
+      "skin": 2,
+      "phase": 17,
+      "streetRoute": [
+        [
+          0,
+          0
+        ],
+        [
+          65,
+          0
+        ],
+        [
+          -65,
+          0
+        ]
+      ],
+      "region": 4,
+      "friendly": true,
+      "locationId": "town_4",
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_4_city_trade_0",
+      "type": "streetFixture",
+      "painting": "civic-2",
+      "x": 15082,
+      "y": 8815,
+      "w": 115,
+      "h": 100,
+      "region": 4,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_4_city_trade_1",
+      "type": "streetFixture",
+      "painting": "civic-8",
+      "x": 15810,
+      "y": 9015,
+      "w": 140,
+      "h": 100,
+      "region": 4,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_4_city_trade_2",
+      "type": "streetFixture",
+      "painting": "civic-1",
+      "x": 15615,
+      "y": 8638,
+      "w": 65,
+      "h": 100,
+      "region": 4,
+      "variant": 0,
+      "solid": false
+    },
+    {
+      "id": "town_4_rowhouses_0",
+      "type": "streetFixture",
+      "painting": "homes-4",
+      "x": 15055,
+      "y": 8560,
+      "w": 165,
+      "h": 120,
+      "region": 4,
+      "solid": false,
+      "variant": 0
+    },
+    {
+      "id": "town_4_rowhouses_1",
+      "type": "streetFixture",
+      "painting": "homes-4",
+      "x": 15885,
+      "y": 8560,
+      "w": 165,
+      "h": 120,
+      "region": 4,
+      "solid": false,
+      "variant": 0
+    },
+    {
+      "id": "town_4_rowhouses_2",
+      "type": "streetFixture",
+      "painting": "homes-4",
+      "x": 14930,
+      "y": 8842,
+      "w": 165,
+      "h": 120,
+      "region": 4,
+      "solid": false,
+      "variant": 0
+    },
+    {
+      "id": "town_4_rowhouses_3",
+      "type": "streetFixture",
+      "painting": "homes-4",
+      "x": 16010,
+      "y": 8842,
+      "w": 165,
+      "h": 120,
+      "region": 4,
+      "solid": false,
       "variant": 0
     }
   ]

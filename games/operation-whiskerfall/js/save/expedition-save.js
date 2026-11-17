@@ -38,6 +38,19 @@
     if(!optional(data,'distantVaultKeyRuns',runs=>plain(runs)&&Object.keys(runs).length<=2&&Object.entries(runs).every(([id,run])=>keyIds.has(id)&&plain(run)&&Array.isArray(run.records)&&run.records.length===3&&records(run.records,3,record=>[0,1,2].some(index=>record.id==='vault-key-'+id+'-'+index)))))return false;
     if(data.dungeonStates!==undefined){
       if(!plain(data.dungeonStates))return false;
+      for(const [id,state] of Object.entries(data.dungeonStates)){
+        if(!plain(state))return false;
+        const cfg=W.Content.dungeons.find(d=>d.id===id);
+        if(!cfg||state.chamberRevision===undefined)continue;
+        if(![1,2].includes(state.chamberRevision))return false;
+        for(const key of ['shutterOpen','headerCharged','pressureEast','tideMissed','ferryMastered'])if(!optional(state,key,boolean))return false;
+        if(!optional(state,'starUndo',list=>Array.isArray(list)&&list.length<=32&&Array.from(list).every(i=>Number.isInteger(i)&&i>=0&&i<W.ChamberRules.graph(cfg,state).length)))return false;
+        if(!optional(state,'mirrors',list=>Array.isArray(list)&&list.length===6&&Array.from(list).every(n=>n===0||n===1)))return false;
+        if(!optional(state,'rotations',list=>Array.isArray(list)&&list.length===9&&Array.from(list).every(n=>Number.isInteger(n)&&n>=0&&n<4)))return false;
+        if(!optional(state,'stars',list=>Array.isArray(list)&&list.length===5&&Array.from(list).every(boolean)))return false;
+        if(!optional(state,'sequenceIndex',i=>Number.isInteger(i)&&i>=0&&i<=4))return false;
+        if(state.survival&&!optional(state.survival,'discharged',list=>unique(list,i=>i===0||i===1,2)))return false;
+      }
       for(const spec of specs())if(data.dungeonStates[spec.id]!==undefined&&!vaultState(data.dungeonStates[spec.id],spec))return false;
     }
     const active=data.activeDungeon,spec=specs().find(value=>value.id===active?.id);

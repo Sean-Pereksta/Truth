@@ -58,7 +58,7 @@
   enemies.push(
     {id:'roller',name:'Ironhide Roller',hp:125,damage:17,speed:54,range:540,fireRate:.3,xp:38,role:'roller',color:'#bd9e73',hint:'Watch the amber lane and the walls: fast armored rolls ricochet repeatedly. Attack during its brief dizzy recovery.'},
     {id:'blinkstalker',name:'Rift Stalker',hp:130,damage:24,speed:76,range:600,fireRate:.3,xp:50,role:'blinkstalker',color:'#c693e8',hint:'Move away from the violet destination rune. Its slash follows the arrival.'},
-    {id:'fencer',name:'Needleblade Fencer',hp:112,damage:26,speed:116,range:490,fireRate:.4,xp:46,role:'fencer',color:'#d99c96',hint:'The red line locks before the lunge. Dodge sideways, then attack during recovery.'},
+    {id:'fencer',name:'Needleblade Fencer',hp:112,damage:26,speed:116,range:490,fireRate:.4,xp:46,role:'fencer',color:'#d99c96',hint:'The amber lane locks before the lunge. Sidestep or interrupt it with a blade. The green recovery ring gives a 35% damage bonus.'},
     {id:'burrowrat',name:'Tunnel Fangrat',hp:82,damage:15,speed:138,range:420,fireRate:.45,xp:29,role:'burrowrat',color:'#a58d76',hint:'Dust circles reveal where it will surface.'},
     {id:'cinderbeast',name:'Cinderback Beast',hp:225,damage:27,speed:71,range:560,fireRate:.3,xp:64,role:'cinderbeast',color:'#ed9865',hint:'Its charge leaves burning ground. Move across its path.'},
     {id:'venomrat',name:'Venom Crown Rat',hp:115,damage:20,speed:103,range:510,fireRate:.5,xp:49,role:'venomrat',color:'#afcb70',hint:'Venom fans spread wide; find a gap before the next volley.'},

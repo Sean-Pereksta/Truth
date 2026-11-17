@@ -17,9 +17,49 @@
   function livingPlayers(g){return g.players.filter(p=>!p.downed&&p.hp>0);}
   function removeEncounterEnemies(g,owner){const world=g.world;world.activeEnemies=world.activeEnemies.filter(e=>{if(e.encounterOwner!==owner)return true;world._active?.delete(e.id);world._dormant?.delete(e.id);return false;});world._rebuildEnemyGrid();}
   function clearPoint(g,x,y,r=24,origin=null){const valid=p=>!g.world.isBlocked(p.x,p.y,r)&&!g.safeZoneAt(p.x,p.y)&&!g.pointLocked(p.x,p.y)&&(!origin||!g.world._navigationRay||g.world._navigationRay(origin.x,origin.y,p.x,p.y,18));if(valid({x,y}))return{x,y};for(let radius=40;radius<=400;radius+=40)for(let i=0;i<20;i++){const a=i*TAU/20,p={x:x+Math.cos(a)*radius,y:y+Math.sin(a)*radius};if(valid(p))return p;}return null;}
+  const trials={
+    1:{name:'Moonmoss shelter',brief:'Fight from the marked root bed for 40% protection. The shelter changes sides each wave.',waves:[['Hook patrol','hookclaw_skirmisher','raider','scout'],['Shield screen','rivet_guard','gunner','raider'],['Lantern hunt','lantern_stalker','hookclaw_skirmisher','gunner','raider']]},
+    3:{name:'Aurora ground rods',brief:'Draw a squad toward a ground rod and discharge it. Each rod holds one stun per wave.',waves:[['Paired lanes','prism_sentry','ice','raider'],['Narrow approach','rivet_guard','glasswind_sharpshot','leaper'],['Shutter battery','prism_sentry','frostwarden','glasswind_sharpshot','scout']]},
+    5:{name:'The bilge wheel',brief:'Hold the marked wheel for three seconds to prime a cleansing pulse. It restores the party and removes venom once per wave.',waves:[['Pier cutters','tideblade','scout','raider'],['Drowned battery','sluice_warden','venomrat','gunner'],['Deepwater screen','shellguard','harpooner','venomrat','raider'],['Anchor crew','sluice_warden','harpooner','tideblade','shellguard']]},
+    7:{name:'The divided relay',brief:'Choose one relay each wave. The west locker restores ammunition. The east relay disrupts the entire squad for two seconds.',waves:[['Probe','hookclaw_skirmisher','rivet_guard','raider'],['Flank','glasswind_sharpshot','lantern_stalker','raider'],['Breach','rivet_guard','signal_sergeant','fencer','scout'],['Counterattack','signal_sergeant','glasswind_sharpshot','lantern_stalker','rivet_guard']]}
+  };
+  function plan(w){return isTrial(w)&&w.state.chamberRevision===2?trials[w.config.region]:null;}
+  const trialPads=[{x:360,y:645},{x:800,y:645}];
+  function padActive(w,run,index){
+    const region=w.config.region;
+    if(run.phase!=='fighting')return false;
+    if(region===1||region===5)return index===(run.wave-1)%2;
+    return region===3?!(run.discharged||[]).includes(index):!run.discharged?.length;
+  }
+  function trialAction(g,p,i){
+    const w=g.world,run=trialState(w),region=w.config.region;
+    if(!plan(w)||!padActive(w,run,i)||![3,7].includes(region))return false;
+    run.discharged.push(i);
+    if(region===7&&i===0){
+      for(const hero of livingPlayers(g))hero.reserve=Math.min(600,hero.reserve+80);
+      g.ui.toast('West locker opened. Both fighters received reserve rounds.');
+    }else{
+      const targets=w.activeEnemies.filter(e=>e.encounterOwner===w.entry.id&&alive(e)&&(region===7||dist(e,trialPads[i])<235));
+      for(const e of targets)e.stun=Math.max(e.stun||0,2);
+      g.effect('shockwave',trialPads[i].x,trialPads[i].y,235,.55);
+      g.ui.toast('Relay discharged · '+targets.length+' targets staggered.');
+    }
+    g.save(false);return true;
+  }
+  const unshieldedDamage=G.damagePlayer;
+  G.damagePlayer=function(p,amount,source){
+    const w=this.world;
+    if(plan(w)&&w.config.region===1){
+      const run=trialState(w);
+      if(run.phase==='fighting'&&dist(p,trialPads[(run.wave-1)%2])<95)amount*=.6;
+    }
+    return unshieldedDamage.call(this,p,amount,source);
+  };
   function waveRoles(region,wave,survival){return survival?(region<3?[2,24,36,38]:region<6?[24,36,37,38,40,41]:[36,37,38,39,40,41,42,43]):region<2?[0,1,3]:region<5?[0,3,11,14]:[3,11,18,14];}
   function spawnWave(g,run,options){
-    const authored=quest(options.owner)?.wavePlan?.[run.wave-1],lineup=authored?[...authored.types,...(g.players.length>1?authored.coopTypes||[]:[])]:null;
+    const siege=options.survival&&plan(g.world),wave=siege?.waves?.[run.wave-1];
+    const trialPlan=wave&&{name:wave[0],brief:siege.brief,types:wave.slice(1).map(id=>W.Content.enemies.findIndex(e=>e.id===id)),coopTypes:[24],healthMultiplier:.77};
+    const authored=trialPlan||quest(options.owner)?.wavePlan?.[run.wave-1],lineup=authored?[...authored.types,...(g.players.length>1?authored.coopTypes||[]:[])]:null;
     const count=lineup?lineup.length:Math.min(8,3+run.wave+(options.region>=4?1:0)),types=waveRoles(options.region,run.wave,options.survival),records=[];
     if(g.world.activeEnemies.filter(alive).length+count>W.config.maxEnemies){run.phase='between';run.wave--;run.countdown=2;g.ui.toast('Clear nearby patrols to make room for the next squad.','event');return false;}
     for(let i=0;i<count;i++){
@@ -32,6 +72,7 @@
     // A wave never reports complete merely because every suggested spawn was blocked.
     if(!records.length||authored&&records.length!==count){run.phase='between';run.wave--;run.countdown=1;g.ui.toast('Reinforcements are finding a clear approach.','event');return false;}
     for(const e of records){g.world.addEnemy(e);g.effect('reinforcement',e.x,e.y,50,.8);}
+    if(siege){run.discharged=[];run.wheelCharge=0;}
     run.phase='fighting';run.enemyIds=records.map(e=>e.id);run.records=records;run.countdown=0;
     run.waveName=authored?.name||null;run.waveBrief=authored?.brief||null;
     g.ui.toast('WAVE '+run.wave+' / '+options.total+(authored?' · '+authored.name:'')+' · '+records.length+' enemies incoming.'+(authored?' '+authored.brief:''),'event');g.save(false);return true;
@@ -102,8 +143,19 @@
     if(this.paused)return;this.encounterDelta=dt;
     if(isTrial(this.world)){
       const w=this.world,s=trialState(w);if(w.state.solved)return;
+      const siege=plan(w);
+      if(siege){s.discharged=s.discharged||[];
+        if(w.config.region===5&&s.phase==='fighting'&&!s.discharged.length){
+          const pad=trialPads[(s.wave-1)%2];
+          if(livingPlayers(this).some(p=>dist(p,pad)<95)){
+            s.wheelCharge=Math.min(3,(s.wheelCharge||0)+dt);
+            if(s.wheelCharge>=3){s.discharged.push(0);for(const p of livingPlayers(this)){p.hp=Math.min(p.maxHp,p.hp+p.maxHp*.18);p.poisonTime=0;}this.effect('heal',pad.x,pad.y,140,1);this.ui.toast('Bilge pulse · venom cleared and 18% health restored.');this.save(false);}
+          }
+        }
+        if(s.phase==='between'){if(livingPlayers(this).some(p=>dist(p,{x:580,y:650})<110))this.interactionPrompt='E / B · ready for '+siege.waves[s.wave][0];return;}
+      }
       if(s.phase==='ready'){if(livingPlayers(this).some(p=>dist(p,{x:580,y:650})<105))this.interactionPrompt='E / B · begin survival trial';return;}
-      if(s.phase==='fighting'&&trackWave(this,s,{x:580,y:650})===0){if(s.wave>=w.config.waveCount){s.phase='cleared';this.solveDungeon();return;}s.phase='between';s.countdown=3;this.ui.toast('Wave cleared. Next wave in 3 seconds.','event');this.save(false);}
+      if(s.phase==='fighting'&&trackWave(this,s,{x:580,y:650})===0){if(s.wave>=w.config.waveCount){s.phase='cleared';this.solveDungeon();return;}s.phase='between';s.countdown=3;this.ui.toast(siege?'Checkpoint · '+siege.waves[s.wave][0]+' next. Ring the altar when ready.':'Wave cleared. Next wave in 3 seconds.','event');this.save(false);}
       else if(s.phase==='between'){s.countdown=Math.max(0,s.countdown-dt);if(s.countdown===0){s.wave++;spawnWave(this,s,{owner:w.entry.id,region:w.entry.region,total:w.config.waveCount,survival:true});}}
       return;
     }
@@ -135,6 +187,14 @@
   const interact=G.interact;G.interact=function(p){
     if(this.paused||p.downed)return interact.call(this,p);
     if(this.players.some(q=>q!==p&&q.downed&&dist(p,q)<100))return interact.call(this,p);
+    if(plan(this.world)&&!this.world.state.solved){
+      const i=trialPads.findIndex(n=>dist(p,n)<95);if(i>=0&&trialAction(this,p,i))return true;
+      if(dist(p,this.world.locations[2])<130)return this.ui.openChamberNotes(p);
+      const run=trialState(this.world);
+      if(run.phase==='between'&&dist(p,{x:580,y:650})<110){
+        run.wave++;return spawnWave(this,run,{owner:this.world.entry.id,region:this.world.entry.region,total:this.world.config.waveCount,survival:true});
+      }
+    }
     if(isTrial(this.world)&&!this.world.state.solved&&dist(p,{x:580,y:650})<110){const s=trialState(this.world);if(s.phase==='ready'){s.wave=1;s.attempt++;spawnWave(this,s,{owner:this.world.entry.id,region:this.world.entry.region,total:this.world.config.waveCount,survival:true});}else this.ui.toast('WAVE '+s.wave+' / '+this.world.config.waveCount+' · '+(s.remaining??s.enemyIds.length)+' enemies remaining.');return;}
     if(!this.world.isDungeon){
       for(const run of Object.values(this.encounterRuns||{}))if(dist(p,run)<105&&run.state!=='complete'){
@@ -191,9 +251,24 @@
   const draw=R.draw;R.draw=function(...args){
     const result=draw.apply(this,args),g=this.game,w=g.world;if(g.state!=='playing'||g.ui?.isOpen||!this.ctx)return result;
     let title,message,ratio=null;
-    if(isTrial(w)&&!w.state.solved){const s=trialState(w);title=w.config.title.toUpperCase();message=s.phase==='ready'?'Ring the watch altar with E / B to begin '+w.config.waveCount+' waves.':s.phase==='between'?'Wave '+s.wave+' cleared · next wave in '+Math.ceil(s.countdown)+'s':'Wave '+s.wave+' / '+w.config.waveCount+' · '+(s.remaining??s.enemyIds.length)+' enemies remaining';}
+    if(isTrial(w)&&!w.state.solved){const s=trialState(w);title=w.config.title.toUpperCase();message=s.phase==='ready'?'Ring the watch altar with E / B to begin '+w.config.waveCount+' waves.':s.phase==='between'?(plan(w)?'Prepare for '+plan(w).waves[s.wave][0]+' · ring the altar when ready':'Wave '+s.wave+' cleared · next wave in '+Math.ceil(s.countdown)+'s'):'Wave '+s.wave+' / '+w.config.waveCount+' · '+(s.remaining??s.enemyIds.length)+' enemies remaining';}
     else if(!w?.isDungeon){const run=Object.values(g.encounterRuns||{}).filter(r=>r.state==='active'&&r.phase!=='ready'&&dist(r,g.camera)<1100).sort((a,b)=>dist(a,g.camera)-dist(b,g.camera))[0];if(run){const q=quest(run.questId);title=q.title.toUpperCase();message=campText(g,q,run);ratio=run.hp/run.maxHp;}}
     if(!title)return result;const c=this.ctx,width=Math.min(620,this.width-30),x=(this.width-width)/2,y=w.isDungeon?98:134;c.save();c.setTransform(this.dpr,0,0,this.dpr,0,0);c.fillStyle='rgba(15,31,39,.94)';c.fillRect(x,y,width,62);c.strokeStyle='#9cbba9';c.lineWidth=1;c.strokeRect(x,y,width,62);text(c,title,this.width/2,y+23,14,'#efdcab');text(c,message,this.width/2,y+46,12,'#c7e3df');if(ratio!==null){c.fillStyle='#263f43';c.fillRect(x,y+59,width,3);c.fillStyle=ratio>.35?'#8fd2b0':'#f18d79';c.fillRect(x,y+59,width*Math.max(0,ratio),3);}c.restore();return result;
   };
-  W.Encounters={isTrial,trialState,spawnWave,trackWave,withCampTargets};
+  const ground=R.drawTerrain;
+  R.drawTerrain=function(w){
+    ground.apply(this,arguments);
+    const siege=plan(w);if(!siege||w.state.solved)return;
+    const s=trialState(w),c=this.ctx;
+    for(const [i,pad] of trialPads.entries()){
+      const active=padActive(w,s,i),region=w.config.region;
+      const name=region===1?'ROOT SHELTER':region===3?'GROUND ROD':region===5?'BILGE WHEEL':i?'JAMMER':'SUPPLY LOCKER';
+      c.save();c.fillStyle=active?'#629f8644':'#33383b66';c.strokeStyle=active?'#c4f0cb':'#6a7470';c.lineWidth=3;c.setLineDash(active?[]:[7,7]);c.beginPath();c.arc(pad.x,pad.y,95,0,TAU);c.fill();c.stroke();c.restore();
+      prop(this,i,active?1:0,pad.x,pad.y,74,70);
+      text(c,name,pad.x,pad.y+65,13,active?'#ecedd1':'#afada4');
+      const prompt=region===1?'−40% INCOMING':region===5?(s.discharged?.length?'PULSE SPENT':Math.floor((s.wheelCharge||0)/3*100)+'% PRIMED'):this.game.input?.actionLabel?.(0,'interact')+' · DISCHARGE';
+      if(active)text(c,prompt,pad.x,pad.y+84,12,'#fff0b8');
+    }
+  };
+  W.Encounters={isTrial,trialState,spawnWave,trackWave,withCampTargets,plan,padActive,trialPads};
 })();

@@ -716,7 +716,7 @@
       "layout": "figure-eight",
       "rewardStatement": "REWARD: Winter’s Whisper — freeze foes with precise shots — plus Frost Breath, a sweeping cone of biting cold.",
       "clue": "Follow the frost-blue pipes northeast from Warmhearth to Keeper Thistle.",
-      "instruction": "Wake both lake pumps, then turn the central regulator. The stone crossing between the two lakes is always safe.",
+      "instruction": "Prime the west pump, send pressure east with the central regulator, then prime the east pump. Lock both gauges at the regulator. The central crossing stays dry.",
       "rooms": [
         {
           "x": 160,
@@ -851,7 +851,7 @@
       "layout": "forked-valves",
       "rewardStatement": "REWARD: Ember Bastion Armor — taking a hit awakens a brief protective bulwark.",
       "clue": "Follow the silent furnace chimneys east of Ember Rest to Foreman Brindle.",
-      "instruction": "Turn one valve in each side wing to cool the furnace bridge. Either wing can be visited first; the bridge stays open.",
+      "instruction": "Turn the cooling valves in both wings. The first valve vents a temporary crossing. The north and south routes stay cool.",
       "rooms": [
         {
           "x": 160,
@@ -975,7 +975,7 @@
       "layout": "terraced-sanctuary",
       "rewardStatement": "REWARD: Galeweave Mantle — reload for speed and an empowered shot — plus Aurora Well, a healing sanctuary.",
       "clue": "Follow the wind bells northeast of Reedlight Refuge to Pilgrim Sora.",
-      "instruction": "Ring the three terrace bells in any order, then awaken the sanctuary in the middle of the loop.",
+      "instruction": "Read the worn weather vane at the lower terrace. Follow the rising gust from a reed to a feather to a cloud. Ring these bells, then awaken the sanctuary.",
       "rooms": [
         {
           "x": 160,
@@ -1128,7 +1128,7 @@
       "layout": "tidal-piers",
       "rewardStatement": "REWARD: Legendary Sea Beast Armor — summon spectral tentacles with repeated firearm hits and leave slowing ink when you dodge.",
       "clue": "Follow the shell markers east of Crownrest Haven to Diver Pearl at the Drowned Maw seaside cave.",
-      "instruction": "Release the three tide anchors along the flooded piers. Beyond the gate waits Nacremaw, the Great Kraken: an optional level 26 challenge with no time limit.",
+      "instruction": "Release three tide anchors to raise the piers. The ferryman’s tide marks show a short return route. Nacremaw awaits beyond the tide gate.",
       "rooms": [
         {
           "x": 160,

@@ -7,7 +7,7 @@
   const inside=(x,y,r)=>x>=r.x&&y>=r.y&&x<=r.x+r.w&&y<=r.y+r.h;
   const inArena=p=>!!p&&p.x>1120&&p.x<1760&&p.y>220&&p.y<1040;
   const segmentsDistance=(x,y,ax,ay,bx,by)=>{const dx=bx-ax,dy=by-ay,t=W.clamp(((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy||1),0,1);return Math.hypot(x-ax-dx*t,y-ay-dy*t);};
-  function initialState(){return{solved:false,bossDead:false,claimed:false,sequenceIndex:0,mirrors:[1,0,0,1,0,1],rotations:[2,3,1,0,0,2,1,1,3],stars:[false,false,false,false,false],enemies:[]};}
+  function initialState(){return{chamberRevision:2,solved:false,bossDead:false,claimed:false,sequenceIndex:0,mirrors:[1,0,0,1,0,1],rotations:[2,3,1,0,0,2,1,1,3],stars:[false,false,false,false,false],enemies:[]};}
   function nodesFor(kind){
     if(kind==='echo')return [{x:370,y:480},{x:760,y:480},{x:370,y:810},{x:760,y:810}];
     if(kind==='mirrors')return [{x:420,y:820},{x:420,y:480},{x:760,y:480},{x:760,y:820},{x:590,y:480},{x:590,y:650}];
@@ -15,7 +15,7 @@
     return Array.from({length:5},(_,i)=>({x:580+Math.sin(i*TAU/5)*225,y:660-Math.cos(i*TAU/5)*225}));
   }
   function mirrorTrace(state){
-    const nodes=nodesFor('mirrors'),lines=[];let x=250,y=820,dx=1,dy=0,previous=-1,hitReceiver=false;
+    const nodes=nodesFor('mirrors'),lines=[];let x=250,y=820,dx=1,dy=0,previous=-1,hitReceiver=false,moon=false;
     // Two side mirrors create visible dead ends without obscuring the main circuit.
     nodes[4]={x:250,y:480};nodes[5]={x:900,y:650};
     for(let step=0;step<16;step++){
@@ -23,29 +23,37 @@
       nodes.forEach((p,i)=>{const along=(p.x-x)*dx+(p.y-y)*dy,side=Math.abs((p.x-x)*dy-(p.y-y)*dx);if(i!==previous&&along>1&&side<2&&along<best){near=i;best=along;}});
       const receiver={x:920,y:820},along=(receiver.x-x)*dx+(receiver.y-y)*dy;
       if(along>0&&Math.abs((receiver.x-x)*dy-(receiver.y-y)*dx)<2&&along<best){lines.push({x1:x,y1:y,x2:receiver.x,y2:receiver.y});hitReceiver=true;break;}
+      if(x===760&&y===480&&dy<0){moon=true;lines.push({x1:x,y1:y,x2:760,y2:275});break;}
       if(near<0){const edge=dx>0?970:dx<0?190:dy>0?1000:250;lines.push({x1:x,y1:y,x2:dx?edge:x,y2:dy?edge:y});break;}
       const p=nodes[near];lines.push({x1:x,y1:y,x2:p.x,y2:p.y});x=p.x;y=p.y;previous=near;
       const ox=dx;dx=state.mirrors[near]===0?-dy:dy;dy=state.mirrors[near]===0?-ox:ox;
     }
-    return{lines,solved:hitReceiver,nodes};
+    return{lines,solved:hitReceiver,nodes,moon};
   }
   const pipeTypes=['elbow','elbow','elbow','elbow','straight','elbow','elbow','elbow','elbow'];
   function pipePorts(index,rotation){return(pipeTypes[index]==='straight'?[0,2]:[0,1]).map(v=>(v+rotation)%4);}
   function conduitTrace(state){
-    const nodes=nodesFor('conduit'),lit=[],lines=[{x1:240,y1:630,x2:315,y2:630}],seen=new Set();let index=3,incoming=2,solved=false;
+    const nodes=nodesFor('conduit'),lit=[],lines=[{x1:240,y1:630,x2:315,y2:630}],seen=new Set();let index=3,incoming=2,solved=false,header=false;
     for(let step=0;step<14;step++){
       if(index<0||index>=9||seen.has(index))break;
       const ports=pipePorts(index,state.rotations[index]);if(!ports.includes(incoming))break;
       seen.add(index);lit.push(index);const out=ports.find(p=>p!==incoming),p=nodes[index];
-      const dx=[1,0,-1,0][out],dy=[0,1,0,-1][out];lines.push({x1:p.x-dx*0,y1:p.y,x2:p.x+dx*75,y2:p.y+dy*75});
+      const dx=[1,0,-1,0][out],dy=[0,1,0,-1][out];lines.push({x1:p.x,y1:p.y,x2:p.x+dx*75,y2:p.y+dy*75});
+      if(index===0&&out===2){header=true;lines.push({x1:p.x,y1:p.y,x2:236,y2:p.y});break;}
       if(index===5&&out===0){solved=true;lines.push({x1:p.x,y1:p.y,x2:900,y2:630});break;}
       const col=index%3,row=Math.floor(index/3),nc=col+dx,nr=row+dy;if(nc<0||nc>2||nr<0||nr>2)break;
       index=nr*3+nc;incoming=(out+2)%4;
     }
-    return{lit,lines,solved};
+    return{lit,lines,solved,header};
   }
-  function starTarget(config){return Array.from({length:5},(_,i)=>(i+config.region+config.variant)%2===0);}
-  function puzzleStatus(config,state){if(config.puzzle==='mirrors')return mirrorTrace(state).solved;if(config.puzzle==='conduit')return conduitTrace(state).solved;if(config.puzzle==='constellation')return state.stars.every((v,i)=>v===starTarget(config)[i]);return state.sequenceIndex>=4;}
+  const rules=W.ChamberRules;
+  function starTarget(config,state={}){return rules.target(config,state);}
+  function puzzleStatus(config,state){
+    if(config.puzzle==='mirrors')return mirrorTrace(state).solved && (!rules.advanced(config,state)||state.shutterOpen);
+    if(config.puzzle==='conduit')return conduitTrace(state).solved && (!rules.advanced(config,state)||state.headerCharged);
+    if(config.puzzle==='constellation')return starTarget(config,state).every((value,i)=>state.stars[i]===value);
+    return state.sequenceIndex>=4;
+  }
   class DungeonWorld {
     constructor(game,entry,state){
       this.game=game;this.entry=entry;this.config=W.Content.dungeons.find(d=>d.id===entry.id);this.state=state;this.isDungeon=true;this.seed=game.overworld.seed;this.coordinateScale=1;
@@ -100,6 +108,7 @@
     if(!restoring&&this.players.some(p=>p.downed||distance(p,entry)>230)){this.ui.toast('Bring both fighters to the cave entrance before descending.');return false;}
     this.dungeonStates=this.dungeonStates||{};const state=this.dungeonStates[entry.id]||(this.dungeonStates[entry.id]=initialState());
     // Missing fields in earlier expansion saves are filled independently.
+    if(state.chamberRevision===undefined)state.chamberRevision=1;
     for(const [key,value]of Object.entries(initialState()))if(state[key]===undefined)state[key]=value;
     this.overworld=this.world;this.dungeonReturn=this.players.map((p,i)=>({x:entry.x+i*50,y:entry.y+90}));this.dungeonMarker=this.marker;
     this.overworldDrops=this.drops;this.overworldAllies=this.allies;
@@ -125,15 +134,45 @@
   G.solveDungeon=function(){const w=this.world;if(!w.isDungeon||w.state.solved)return;w.state.solved=true;this.effect('level',1060,620,130,1.4);this.audio.play('quest');this.ui.toast('The seal opens. '+W.DungeonGuardians[w.config.guardian].name+' awaits beyond it.','quest');this.save(false);};
   G.puzzleAction=function(index,reset=false){
     const w=this.world;if(!w.isDungeon||w.state.solved)return false;const s=w.state,c=w.config;
-    if(reset){const initial=initialState();s.sequenceIndex=0;s.mirrors=initial.mirrors;s.rotations=initial.rotations;s.stars=initial.stars;s.flash=0;this.ui.toast('Mechanism reset. The mural keeps its clue.');return true;}
-    if(c.puzzle==='echo'){if(index===c.sequence[s.sequenceIndex]){s.sequenceIndex++;this.audio.play('ui');}else{s.sequenceIndex=0;s.flash=1;this.audio.play('hit');this.ui.toast('Wrong note. All four seals reset—read the mural from left to right.');}}
-    else if(c.puzzle==='mirrors')s.mirrors[index]=1-s.mirrors[index];
-    else if(c.puzzle==='conduit')s.rotations[index]=(s.rotations[index]+1)%4;
-    else for(const n of [index,(index+1)%5,(index+4)%5])s.stars[n]=!s.stars[n];
-    if(puzzleStatus(c,s))this.solveDungeon();return true;
+    if(!reset&&(!Number.isInteger(index)||index<0||index>=currentNodes(w).length))return false;
+    if(reset){
+      const initial=initialState();
+      for(const key of ['sequenceIndex','mirrors','rotations','stars'])s[key]=initial[key];
+      s.headerCharged=false;s.shutterOpen=false;s.flash=0;s.starUndo=[];
+      this.ui.toast('Room reset. The field notes and recovered relics are safe.');
+    }else if(c.puzzle==='echo'){
+      if(index===c.sequence[s.sequenceIndex]){s.sequenceIndex++;this.audio.play('ui');}
+      else{s.sequenceIndex=0;s.flash=1;this.audio.play('hit');this.ui.toast('The chord broke. Replay the inlet strip, then the bell strip.');}
+    }else if(c.puzzle==='mirrors'){
+      s.mirrors[index]=1-s.mirrors[index];
+      if(rules.advanced(c,s)&&!s.shutterOpen&&mirrorTrace(s).moon){
+        s.shutterOpen=true;this.ui.toast('The crescent latch opened. Redirect the lamp into the eastern sun.');
+      }
+    }else if(c.puzzle==='conduit'){
+      s.rotations[index]=(s.rotations[index]+1)%4;
+      if(rules.advanced(c,s)&&!s.headerCharged&&conduitTrace(s).header){
+        s.headerCharged=true;this.ui.toast('The header holds its charge. Send the spring to the wheel.');
+      }
+    }else{
+      const history=s.starUndo||(s.starUndo=[]);history.push(index);if(history.length>32)history.shift();
+      for(const n of rules.affected(c,s,index))s.stars[n]=!s.stars[n];
+    }
+    if(puzzleStatus(c,s))this.solveDungeon();else this.save(false);
+    return true;
   };
-  function currentNodes(w){return w.config.puzzle==='mirrors'?mirrorTrace(w.state).nodes:nodesFor(w.config.puzzle);}
-  W.Dungeons={initialState,nodesFor,mirrorTrace,conduitTrace,pipePorts,starTarget,puzzleStatus,
+  G.undoChamberStar=function(){
+    const w=this.world,s=w.state;
+    if(!w.isDungeon||w.config.puzzle!=='constellation'||s.solved||!s.starUndo?.length)return false;
+    const key=s.starUndo.pop();for(const i of rules.affected(w.config,s,key))s.stars[i]=!s.stars[i];
+    this.save(false);return true;
+  };
+  function currentNodes(w){
+    const kind=w.config.puzzle;
+    if(kind==='mirrors')return mirrorTrace(w.state).nodes;
+    const nodes=nodesFor(kind);
+    return kind==='constellation'?nodes.slice(0,rules.graph(w.config,w.state).length):nodes;
+  }
+  W.Dungeons={initialState,nodesFor,currentNodes,mirrorTrace,conduitTrace,pipePorts,starTarget,puzzleStatus,
     hitProjectile(g,b,oldX,oldY){
       const w=g.world;if(!w.isDungeon||b.owner<0)return false;
       const roller=w.activeEnemies.find(e=>e.dungeonBoss&&e.guardian===0&&e.charging>0&&segmentsDistance(e.x,e.y,oldX,oldY,b.x,b.y)<48);
@@ -148,7 +187,12 @@
   G.interact=function(p){
     if(this.paused||p.downed)return;
     if(this.players.some(q=>q!==p&&q.downed&&distance(q,p)<100))return interact.call(this,p);
-    const w=this.world;if(!w.isDungeon){const entry=w.locations.filter(l=>l.type==='cave'&&distance(p,l)<130).sort((a,b)=>distance(p,a)-distance(p,b))[0];if(entry)return this.time<(this.travelInteractUntil||0)?false:this.enterDungeon(entry);return interact.call(this,p);}
+    const w=this.world;if(!w.isDungeon){
+      const entry=w.locations.filter(l=>l.type==='cave'&&distance(p,l)<130).sort((a,b)=>distance(p,a)-distance(p,b))[0];
+      const closerContact=entry&&w.locations.some(l=>l.type==='npc'&&distance(p,l)<distance(p,entry));
+      if(entry&&!closerContact)return this.time<(this.travelInteractUntil||0)?false:this.enterDungeon(entry);
+      return interact.call(this,p);
+    }
     const exit=w.locations[0],treasure=w.locations[1],board=w.locations[2];
     if(distance(p,{x:820,y:1460})<105){p.reserve=Math.max(120,p.reserve);this.ui.toast('Expedition supplies · reserve ammunition replenished. Reload with R / D-pad down.');return;}
     if(distance(p,exit)<125){if(this.time<(this.travelInteractUntil||0))return false;if(this.players.some(q=>q.downed||distance(q,exit)>260)){this.ui.toast('Bring both fighters to the exit.');return;}return this.leaveDungeon();}
@@ -157,8 +201,8 @@
       const drop=this.dropRewardChoice(reward,treasure.x,treasure.y,'Guardian’s reliquary','reliquary-'+w.entry.id,{dungeonId:w.entry.id});
       if(drop)this.openReward(drop,p);else{this.finishDungeonReward(w);this.ui.toast('Relics already owned · expedition supplies recovered','loot');this.checkQuests();}
       this.save(false);return;}
-    if(distance(p,board)<130){this.puzzleAction(0,true);return;}
-    if(!w.state.solved){const nodes=currentNodes(w),index=nodes.findIndex(n=>distance(p,n)<100);if(index>=0&&['mirrors','conduit'].includes(w.config.puzzle)){this.puzzleAction(index);this.audio.play('ui');return;}}
+    if(distance(p,board)<130){return this.ui.openChamberNotes?.(p);}
+    if(!w.state.solved){const nodes=currentNodes(w),index=nodes.findIndex(n=>distance(p,n)<100);if(index>=0){if(w.touchFrame===this.time&&w.touchIndex===index)return false;w.touchFrame=this.time;w.touchIndex=index;return this.puzzleAction(index);}}
     this.ui.toast(w.state.solved?'Explore beyond the open seal; the reliquary opens after the guardian falls.':'Read the mural. Shoot the marked stones; rotate nearby mirrors or pipes with E / B.');
   };
   const progress=G.questProgress,target=G.questTarget,objective=G.questObjectiveText;
@@ -382,11 +426,26 @@
     // Sparse ambient dust is deterministic and never resembles a projectile warning.
     c.save();for(let i=0;i<24;i++){const x=210+(i*277)%1490+Math.sin(clock*.13+i)*9,y=260+(i*193)%1280-Math.sin(clock*.24+i)*13;if(!rooms.some(room=>inside(x,y,room)))continue;c.globalAlpha=.12+Math.sin(clock*.5+i)*.06;orb(c,x,y,1.4,accent);}c.restore();
   }
+  const chamberPaintings=new Map();
+  function studyImage(kind){
+    if(!['echo','mirrors','conduit','constellation'].includes(kind)||typeof Image==='undefined')return null;
+    if(!chamberPaintings.has(kind)){
+      const im=new Image(),path='assets/chambers/'+kind+'.webp';
+      im.src=W.HeroArmorArt?.assetURL(path)||path;chamberPaintings.set(kind,im);
+    }
+    const im=chamberPaintings.get(kind);
+    return im.complete&&im.naturalWidth?im:null;
+  }
   function drawPuzzle(renderer,w){
     const c=renderer.ctx,s=w.state,config=w.config,nodes=currentNodes(w),lit=config.puzzle==='conduit'?conduitTrace(s).lit:[];
     const muralClear=(273-renderer.game.camera.y)*(renderer.game.camera.zoom||1)+renderer.height/2>185;
     const muralLabel=(...args)=>{if(muralClear)label(...args);};
     c.fillStyle='#12212b';c.fillRect(255,245,650,125);c.strokeStyle='#86794f';c.lineWidth=2;c.strokeRect(255,245,650,125);c.strokeStyle='#33444a';c.lineWidth=1;c.strokeRect(261,251,638,113);
+    const study=studyImage(config.puzzle);
+    if(study){
+      c.save();c.beginPath();c.rect(262,252,636,110);c.clip();const h=636*study.height/study.width;
+      c.drawImage(study,262,307-h/2,636,h);c.fillStyle='rgba(10,20,26,.76)';c.fillRect(289,253,582,107);c.restore();
+    }
     art(renderer,'dungeonProps',3,2,271,308,80,130,{alpha:.5});art(renderer,'dungeonProps',3,2,889,308,80,130,{alpha:.5,flip:true});
     muralLabel(c,config.title.toUpperCase(),580,273,18,'#f0d49c');
     if(config.encounter==='survival'){
@@ -399,8 +458,8 @@
       for(let i=0;i<4;i++){const a=i*Math.PI/2+Math.PI/4,x=580+Math.cos(a)*255,y=650+Math.sin(a)*255;socket(c,x,y,33,accent,cleared);art(renderer,'puzzleDevices',cleared?1:0,3,x,y,63,63,{glow:cleared?accent:undefined});}
       label(c,cleared?'TRIAL COMPLETE':'WAVE TRIAL',580,963,18,accent);return;
     }else if(config.puzzle==='echo'){
-      muralLabel(c,'Shoot the seals in the mural’s order. A wrong note resets all four.',580,302,13);
-      config.sequence.forEach((n,i)=>muralLabel(c,symbols[n],475+i*70,344,30,colors[n]));
+      muralLabel(c,'Join the two fragments by their broken edges.',580,302,15);
+      muralLabel(c,'INLET    '+symbols[config.sequence[0]]+' → '+symbols[config.sequence[1]]+'     ╱╲     '+symbols[config.sequence[2]]+' → '+symbols[config.sequence[3]]+'    BELL',580,343,21);
       nodes.forEach((n,i)=>{const on=config.sequence.indexOf(i)<s.sequenceIndex;socket(c,n.x,n.y+8,40,colors[i],on);c.save();
         if(!art(renderer,'puzzleDevices',i,0,n.x,n.y,86,90,{glow:s.flash>0?'#ff6571':on?colors[i]:undefined})){c.shadowColor=colors[i];c.shadowBlur=on?22:4;c.fillStyle=s.flash>0?'#a13c48':'#3b454a';c.beginPath();c.moveTo(n.x-31,n.y+22);c.lineTo(n.x-25,n.y-19);c.lineTo(n.x,n.y-40);c.lineTo(n.x+30,n.y-13);c.lineTo(n.x+36,n.y+24);c.closePath();c.fill();c.strokeStyle=on?colors[i]:'#6f7e7b';c.lineWidth=4;c.stroke();}
         // Symbols stay exact, high contrast and aligned with each actual shot target.
@@ -409,6 +468,7 @@
     }else if(config.puzzle==='mirrors'){
       muralLabel(c,'Guide amber light into the sun receiver. E / B or shoot to turn a mirror.',580,307,12);muralLabel(c,'/ turns east → north     \\ turns east → south',580,341,15);
       const trace=mirrorTrace(s);lightPath(renderer,trace.lines);
+      if(rules.advanced(config,s)){orb(c,760,275,19,s.shutterOpen?'#fff1b7':'#697486');label(c,'☾',760,282,22);label(c,s.shutterOpen?'LATCH OPEN':'CRESCENT',760,243,12);}
       glow(c,250,820,78,'#f4c775',.3);renderer.drawArtEffect?.(2,0,250,820,118,118,{alpha:.26});if(!art(renderer,'puzzleDevices',1,1,250,820,86,86,{glow:'#f3cc74'}))orb(c,250,820,24,'#f4d27e');
       if(trace.solved)renderer.drawArtEffect?.(2,0,920,820,130,130,{alpha:.34+Math.sin((renderer.clock||0)*2)*.04});
       if(!art(renderer,'puzzleDevices',trace.solved?2:3,1,920,820,86,86,{glow:trace.solved?'#b0ebbc':undefined}))orb(c,920,820,31,trace.solved?'#a6e3c3':'#756d49');
@@ -419,6 +479,7 @@
       muralLabel(c,'Rotate pipe joints with E / B or a shot. Connect water to the right-hand wheel.',580,305,12);muralLabel(c,'Only joined pipe ends carry water. Blue joints show the live route.',580,340,13);
       line(c,240,630,315,630,'#405b60',18);line(c,765,630,900,630,'#405b60',18);lightPath(renderer,[{x1:240,y1:630,x2:315,y2:630}], '#68d7e8',true);if(s.solved)lightPath(renderer,[{x1:765,y1:630,x2:900,y2:630}],'#68d7e8',true);
       label(c,'SPRING',235,570,12);label(c,'WHEEL',900,570,12);
+      if(rules.advanced(config,s)){orb(c,236,480,26,s.headerCharged?'#a3ece9':'#455563');label(c,s.headerCharged?'FULL':'0',236,485,12);label(c,'HEADER',236,441,12);if(conduitTrace(s).header)lightPath(renderer,[{x1:315,y1:480,x2:236,y2:480}],'#68d7e8',true);}
       nodes.forEach((n,i)=>{const active=lit.includes(i),ports=pipePorts(i,s.rotations[i]);c.fillStyle='#152b35';c.fillRect(n.x-70,n.y-70,140,140);c.strokeStyle='#5f6a63';c.lineWidth=2;c.strokeRect(n.x-70,n.y-70,140,140);
         // Physical port connectors meet at the exact 150px grid boundaries.
         const parts=ports.map(p=>({x1:n.x,y1:n.y,x2:n.x+[1,0,-1,0][p]*75,y2:n.y+[0,1,0,-1][p]*75}));for(const p of parts){line(c,p.x1,p.y1,p.x2,p.y2,'#151f29',20);line(c,p.x1,p.y1,p.x2,p.y2,'#768479',13);}
@@ -427,13 +488,16 @@
       if(!art(renderer,'puzzleDevices',3,2,240,630,90,90,{glow:'#75dce9'}))orb(c,240,630,26,'#79cfe2');
       if(!art(renderer,'puzzleDevices',2,2,900,630,92,92,{angle:s.solved?(renderer.clock||0)*.5:0}))orb(c,900,630,26,s.solved?'#a6e4d7':'#6f755c');
     }else{
-      muralLabel(c,'Shooting a star flips it AND its two linked neighbors. Match this pattern:',580,304,12);
-      if(muralClear)starTarget(config).forEach((on,i)=>{orb(c,480+i*50,337,12,on?'#f3d487':'#344b55');label(c,String(i+1),480+i*50,341,10,on?'#282b32':'#c8d6dc');});
+      muralLabel(c,'Light the chart. Each star flips itself and every directly linked neighbor.',580,304,12);
+      if(muralClear)starTarget(config,s).forEach((on,i)=>{orb(c,480+i*50,337,12,on?'#f3d487':'#344b55');label(c,String(i+1),480+i*50,341,10,on?'#282b32':'#c8d6dc');});
       c.save();c.globalAlpha=.23;art(renderer,'puzzleDevices',2,3,580,660,370,370);c.restore();
-      nodes.forEach((n,i)=>{const next=nodes[(i+1)%5];line(c,n.x,n.y,next.x,next.y,'#172c3b',8);line(c,n.x,n.y,next.x,next.y,'#63798d',2);if(s.stars[i]&&s.stars[(i+1)%5])lightPath(renderer,[{x1:n.x,y1:n.y,x2:next.x,y2:next.y}],'#b6b4f1');});
+      const links=rules.graph(config,s);
+      nodes.forEach((n,i)=>{for(const j of links[i]){if(j<=i)continue;const next=nodes[j];line(c,n.x,n.y,next.x,next.y,'#172c3b',8);line(c,n.x,n.y,next.x,next.y,'#8095a4',3);if(s.stars[i]&&s.stars[j])lightPath(renderer,[{x1:n.x,y1:n.y,x2:next.x,y2:next.y}],'#b6b4f1');}});
+      const focus=nodes.findIndex(n=>renderer.game.players.some(p=>distance(n,p)<100));
+      if(focus>=0)for(const i of rules.affected(config,s,focus))ring(c,nodes[i].x,nodes[i].y,45,i===focus?'#ffdf8a':'#a0dbdb',3);
       nodes.forEach((n,i)=>{socket(c,n.x,n.y,38,'#efd187',s.stars[i]);if(!art(renderer,'puzzleDevices',s.stars[i]?1:0,3,n.x,n.y,76,76,{glow:s.stars[i]?'#efd187':undefined}))orb(c,n.x,n.y,31,s.stars[i]?'#ecd181':'#304954');label(c,String(i+1),n.x,n.y+7,20,s.stars[i]?'#fff7c4':'#afc2d6');});
     }
-    label(c,s.solved?'SEAL OPEN':'E / B at mural · reset mechanism',580,1010,13,s.solved?'#9ae0bb':'#c2baa4');
+    label(c,s.solved?'SEAL OPEN':'Inspect the mural for controls, undo and clues',580,1010,13,s.solved?'#9ae0bb':'#c2baa4');
   }
   const terrain=R.drawTerrain;
   R.drawTerrain=function(w){if(!w.isDungeon)return terrain.call(this,w);const c=this.ctx;
@@ -519,9 +583,13 @@
   R.drawMap=function(c,width,height,options={}){const w=this.game.world;if(!w?.isDungeon)return map.call(this,c,width,height,options);c.fillStyle='#13232d';c.fillRect(0,0,width,height);c.save();c.scale(width/w.width,height/w.height);for(const r of rooms){c.fillStyle='#6e8887';c.fillRect(r.x,r.y,r.w,r.h);}c.fillStyle=w.state.solved?'#97d6ae':'#df9b69';c.fillRect(1020,530,100,180);c.fillStyle='#f4d68e';c.fillRect(1470,1370,70,70);for(const p of this.game.players)orb(c,p.x,p.y,26,'#fff2b6');c.restore();};
   const draw=R.draw;
   R.draw=function(dt){const g=this.game,w=g.world,runs=g.missionRuns;try{if(w?.isDungeon)g.missionRuns={};draw.call(this,dt);}finally{g.missionRuns=runs;}if(!w?.isDungeon||g.ui.isOpen||w.state.solved||w.config.encounter==='survival'||w.config.distantVault||!g.players.some(p=>p.x<1000&&p.y<1120))return;const c=this.ctx,width=Math.min(610,this.width-330),x=(this.width-width)/2,y=98;if(width<270)return;c.save();c.setTransform(this.dpr,0,0,this.dpr,0,0);c.fillStyle='rgba(14,31,39,.94)';c.fillRect(x,y,width,64);c.strokeStyle='#9c926c';c.lineWidth=1;c.strokeRect(x,y,width,64);
-    const clue={echo:'Shoot the runes in this order. A wrong shot resets the seal.',mirrors:'Turn mirrors with E / B or shoot. Guide light into the sun.',conduit:'Rotate joints with E / B or shoot. Connect spring to wheel.',constellation:'Each shot flips a star and both neighbors. Match this pattern.'}[w.config.puzzle];
-    label(c,clue,this.width/2,y+20,Math.min(13,width/44),'#e5d7b1');
-    if(w.config.puzzle==='echo')w.config.sequence.forEach((n,i)=>label(c,symbols[n],this.width/2-90+i*60,y+51,25,i<w.state.sequenceIndex?'#98e3be':colors[n]));
-    else if(w.config.puzzle==='constellation')starTarget(w.config).forEach((on,i)=>{orb(c,this.width/2-90+i*45,y+46,11,on?'#efd080':'#4d6068');label(c,String(i+1),this.width/2-90+i*45,y+50,10,on?'#22363d':'#c8d6dc');});
-    else label(c,w.config.puzzle==='mirrors'?'Follow the beam. A mirror changes its path by 90°.':'Water lights connected joints. Unjoined ends stop its flow.',this.width/2,y+48,Math.min(13,width/42),'#9fd4d8');c.restore();};
+    const cfg=w.config,state=w.state;
+    const head={echo:'Join the two mural fragments',mirrors:'Trace the lamp to the receiver',conduit:'Follow the spring through the joints',constellation:'Match the stars on the chart'}[cfg.puzzle];
+    label(c,head,this.width/2,y+21,16,'#e5d7b1');
+    let text='Inspect the north mural for controls and optional clues.';
+    if(cfg.puzzle==='echo')text=state.sequenceIndex+' / 4 seals ringing · inspect the inlet and bell fragments.';
+    if(cfg.puzzle==='mirrors'&&rules.advanced(cfg,state))text=state.shutterOpen?'Crescent latch open · light the eastern sun.':'Crescent latch shut · light the north receiver.';
+    if(cfg.puzzle==='conduit'&&rules.advanced(cfg,state))text=state.headerCharged?'Header full · turn the east wheel.':'Header empty · fill the upper tank.';
+    if(cfg.puzzle==='constellation')text='Chart   '+starTarget(cfg,state).map((on,i)=>(i+1)+(on?' ●':' ○')).join('     ');
+    label(c,text,this.width/2,y+48,Math.min(14,width/39),'#b5dfe1');c.restore();};
 })();

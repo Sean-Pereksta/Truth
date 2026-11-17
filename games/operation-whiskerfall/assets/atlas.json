@@ -7988,6 +7988,12 @@
     }
   },
   "externalAtlases": {
+    "townsAndActivities": "assets/fieldwork/atlas.json",
+    "cityAndTavern": "assets/fieldwork/street-atlas.json",
+    "fieldAnimations": "assets/fieldwork/motion-atlas.json",
+    "streetAnimations": "assets/fieldwork/street-motion.json",
+    "cityArchitecture": "assets/fieldwork/district-atlas.json",
+    "assignmentScenes": "assets/cases/atlas.json",
     "reconPaintings": "assets/recon/paintings.json",
     "reconCombat": "assets/recon/combat-frames.json",
     "reconEquipment": "assets/recon/gear-atlas.json",
