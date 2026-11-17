@@ -1,0 +1,86 @@
+{
+  "method": "Exact full gameplay state compared every thirty ticks against the original all-buildings collision enumeration. Includes full armies, every force, RNG, commands, private AI state, resources, fog, construction, destruction and upgraded variable radii. Timing is a paired correctness run, not isolated hardware qualification.",
+  "results": [
+    {
+      "houses": 4,
+      "full": false,
+      "fog": false,
+      "seed": 44277,
+      "simulationHz": 30,
+      "ticks": 180,
+      "units": 280,
+      "capacities": [
+        280,
+        280,
+        340,
+        280
+      ],
+      "exactStateParity": true,
+      "sha256": "c24048919acd2961b7d1003b28edd9aedbd2d6885c1339a669e0ee19e1134771",
+      "referenceP95Ms": 7.575199999999995,
+      "optimizedP95Ms": 6.853399999999965
+    },
+    {
+      "houses": 16,
+      "full": true,
+      "fog": false,
+      "seed": 44277,
+      "simulationHz": 30,
+      "ticks": 180,
+      "units": 4480,
+      "capacities": [
+        280,
+        280,
+        340,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280
+      ],
+      "exactStateParity": true,
+      "sha256": "f754acdeaae88d3618d3f88633aa8b57e90c4a72440397cadb929aecb03cb4b8",
+      "referenceP95Ms": 69.07090000000062,
+      "optimizedP95Ms": 57.72199999999975
+    },
+    {
+      "houses": 16,
+      "full": true,
+      "fog": true,
+      "seed": 44277,
+      "simulationHz": 30,
+      "ticks": 180,
+      "units": 4480,
+      "capacities": [
+        280,
+        280,
+        340,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280,
+        280
+      ],
+      "exactStateParity": true,
+      "sha256": "b7d8a39b37dd8a7c00089350f8881cf44505e95288ea1939b8d7679e55a0e846",
+      "referenceP95Ms": 116.63739999999962,
+      "optimizedP95Ms": 103.43130000000383
+    }
+  ]
+}

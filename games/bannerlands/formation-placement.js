@@ -20,7 +20,11 @@ export function formationRole(g,u,defs){
 export function formationPreview(g,troops,options={},defs={}){
   const settings=formationSettings(troops.length,options),angle=Number.isFinite(options.angle)?options.angle:0,fx=Math.cos(angle),fy=Math.sin(angle);
   const center={x:options.x??0,y:options.y??0},slots=[];
-  const buildings=(g.buildings||[]).filter(b=>b.hp>0).map(b=>({x:b.x,y:b.y,radius:g.buildingRadius?.(b)??b.radius??.6}));
+  const planningTeam=troops[0]?.team??g.playerTeam??0;
+  // A footprint may avoid observed and remembered structures, but cannot use
+  // a hidden enemy post as a placement oracle. Physical collision still uses
+  // the complete authoritative building list when troops reach that ground.
+  const buildings=(g.config?.fogOfWar&&g.knownBuildings?g.knownBuildings(planningTeam):g.buildings||[]).filter(b=>b.hp>0).map(b=>({x:b.x,y:b.y,radius:g.buildingRadius?.(b)??b.radius??.6}));
   for(let i=0;i<troops.length;i++){
     const rank=Math.floor(i/settings.columns),inRank=Math.min(settings.columns,troops.length-rank*settings.columns);
     let side=(i%settings.columns-(inRank-1)/2)*settings.spacing,back=(rank-(settings.ranks-1)/2)*settings.spacing;

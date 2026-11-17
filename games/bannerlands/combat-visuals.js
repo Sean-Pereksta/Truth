@@ -50,7 +50,7 @@ export function combatPose(u,g,definition={},moving=false){
     pose={frame:reload.stage==='raise'?0:3,attack:true,contact:0,recovery:reload.progress,
       dx:0,dy:0,tilt:0,crossbow:true,ranged:true,reload,bodyTilt:reload.bend*(reload.style==='lever'?.18:.08),bodyDrop:reload.bend*(reload.style==='lever'?3.8:1.8)};
   }else if(preparing){
-    const target=u.target,visible=!g.config?.fogOfWar||g.isVisibleTo?.(0,target),range=g.unitRange?.(u)??definition.range??.7;
+    const target=u.target,visible=!g.config?.fogOfWar||g.isVisibleTo?.(g.playerTeam??0,target),range=g.unitRange?.(u)??definition.range??.7;
     if(target.hp>0&&visible&&Math.hypot(target.x-u.x,target.y-u.y)<=range+(target.radius||.07)&&(!g.canAttackFacing||g.canAttackFacing(u,target))){
       const progress=1-u.cooldown/windup,dx=target.x-u.x,dy=target.y-u.y,length=Math.hypot(dx,dy)||1,dir=iso(dx/length,dy/length),len=Math.hypot(dir.x,dir.y)||1;
       pose={frame:hammer&&progress>.35?1:0,attack:true,contact:0,windup:progress,dx:-dir.x/len*progress*1.8,dy:-dir.y/len*progress*1.8,tilt:hammer?.025*progress:0,ranged,hammer};

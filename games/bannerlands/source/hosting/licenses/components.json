@@ -1,0 +1,9 @@
+{
+  "cloudflaredVersion": "2026.11.0",
+  "cloudflaredSHA256": "d5c1d82031da6253dcdcff64c944cd0fe063016edeb2e4fd088075fc9bd52d0a",
+  "cloudflaredReleaseDigest": "sha256:d5c1d82031da6253dcdcff64c944cd0fe063016edeb2e4fd088075fc9bd52d0a",
+  "nodeVersion": "v24.19.0",
+  "nodeSHA256": "3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237",
+  "licenseCollector": "github.com/google/go-licenses/v2 v2.0.1",
+  "sourceTag": "2026.11.0"
+}
