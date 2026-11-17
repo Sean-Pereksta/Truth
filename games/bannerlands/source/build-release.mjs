@@ -1,7 +1,6 @@
 import fs from 'node:fs/promises';
 import {createReadStream} from 'node:fs';
 import path from 'node:path';
-import os from 'node:os';
 import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
@@ -12,7 +11,9 @@ import {GAME_VERSION,ASSET_VERSION,PROTOCOL_VERSION} from '../multiplayer/protoc
 const root=fileURLToPath(new URL('../',import.meta.url));
 const option=name=>{const index=process.argv.indexOf('--'+name);return index<0?null:process.argv[index+1];};
 if(!option('output')||!option('cloudflared'))throw new Error('Supply --output <directory> and --cloudflared <pinned Windows executable>.');
-const output=path.resolve(option('output')),temp=await fs.mkdtemp(path.join(os.tmpdir(),'bannerlands-build-'));
+const output=path.resolve(option('output'));
+await fs.mkdir(output,{recursive:true});
+const outputRoot=await fs.realpath(output),temp=await fs.mkdtemp(path.join(outputRoot,'.build-'));
 const commit=execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim();
 const manifest={version:GAME_VERSION,assetVersion:ASSET_VERSION,protocolVersion:PROTOCOL_VERSION,sourceCommit:commit,files:[]};
 const run=(program,args,cwd=root)=>execFileSync(program,args,{cwd,windowsHide:true,stdio:'inherit'});
@@ -25,7 +26,6 @@ async function writeManifest(directory){
   await fs.writeFile(path.join(directory,'release-manifest.json'),JSON.stringify(manifest,null,2)+'\n');
 }
 try{
-  await fs.mkdir(output,{recursive:true});
   const windows=path.join(temp,'windows'),standalone=path.join(temp,'offline'),web=path.join(temp,'browser');
   run(process.execPath,['source/build-host.mjs','--output',windows,'--node',option('node')||process.execPath,
     '--cloudflared',path.resolve(option('cloudflared')),'--cloudflared-licenses',path.join(root,'source/hosting/licenses/cloudflared-dependencies'),'--source-commit',commit]);
@@ -45,5 +45,7 @@ try{
   await writeManifest(output);
   await fs.writeFile(path.join(output,'SHA256SUMS.txt'),manifest.files.map(file=>file.sha256+'  '+file.path).join('\n')+'\n');
 }finally{
-  await fs.rm(temp,{recursive:true,force:true});
+  const staging=await fs.realpath(temp);
+  if(path.dirname(staging)!==outputRoot||!path.basename(staging).startsWith('.build-'))throw new Error('Unexpected release staging directory.');
+  await fs.rm(staging,{recursive:true,force:true});
 }

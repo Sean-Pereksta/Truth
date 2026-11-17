@@ -42,5 +42,14 @@ if(!process.argv.includes('--baseline')){
  assert.equal(UNIT_DEFS.infantry.spearBrace,undefined);
  // Charge history prevents repeated impact farming against the same unit in one pass.
  const dedup=fixture({rows:1});dedup.step(3.5);assert.equal(dedup.g.stats.chargeImpacts,1);
+ const contact=fixture({rider:'cavalry'}),{snapshotWorld,createRemoteGame}=await import('../../multiplayer/snapshot.js');
+ while(!contact.g.stats.chargeImpacts&&contact.g.time<8){
+   assert.notEqual(contact.horse.attackVisual?.action,'charge');
+   contact.g.update(1/60);
+ }
+ assert.ok(contact.g.stats.chargeImpacts>0);
+ assert.equal(contact.horse.attackVisual.action,'charge');assert.equal(contact.horse.attackVisual.at,contact.g.time);
+ const guest=createRemoteGame(snapshotWorld(contact.g,1,{initial:true})),event=guest.byId.get(contact.horse.id).attackVisual;
+ assert.equal(event.action,'charge');assert.ok(Math.abs(event.at-contact.g.time)<.001);assert.equal(event.elapsed,0);
  console.log('PASS: actual run-up, multi-rank impacts, shoves, both faction counters, flank/rear, moving spears, and single-pass hit limits.');
 }

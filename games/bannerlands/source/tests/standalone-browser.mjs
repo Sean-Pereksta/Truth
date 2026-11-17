@@ -20,6 +20,11 @@ try{
   await page.goto(pathToFileURL(path.resolve(file)).href,{waitUntil:'load',timeout:120000});
   await page.waitForFunction(()=>document.getElementById('startButton')?.disabled===false,null,{timeout:120000});
   assert.equal(await page.locator('.online-download').isVisible(),false,'Downloaded offline game does not ask to download again');
+  assert.equal(await page.locator('#browseLobbiesButton').isVisible(),false,'The offline campaign has no network-only controls');
+  const painting=await page.locator('#menuOverlay .campaign-painting').evaluate(async img=>{
+    await img.decode();return [img.naturalWidth,img.naturalHeight,img.currentSrc.startsWith('data:image/webp;')];
+  });
+  assert.deepEqual(painting,[1600,900,true],'The offline campaign menu shows its original painted panorama');
   const loaded=await page.evaluate(()=>{
     const {renderer}=window.__bannerlands;
     return {painted:renderer.paintedRows?.size,ready:renderer.paintedArtReady,heroes:renderer.heroRows?.size,heroReady:renderer.heroArtReady,pikeBuildings:Object.keys(renderer.pikeBuildingFrames||{}),moduleScript:document.querySelector('script[type="module"]').hasAttribute('src')};
@@ -27,10 +32,23 @@ try{
   assert.equal(loaded.ready,true);assert.equal(loaded.painted,23);
   assert.equal(loaded.heroReady,true);assert.equal(loaded.heroes,16);
   assert.deepEqual(loaded.pikeBuildings.sort(),['thornwall_pavilion','winter_pike_hall']);assert.equal(loaded.moduleScript,false);
+  await page.waitForFunction(()=>performance.getEntriesByName('bannerlands-detail-art-finished').length>0,null,{timeout:120000});
+  const landscapeArt=await page.evaluate(()=>{
+    const r=window.__bannerlands.renderer;
+    return {bridge:r.bridgeArtwork?.spanReady,gallop:r.cavalryChargeFrames?.length,crags:r.highlandCrags?.length,
+      cartway:!!r.cartway,river:Object.keys(r.riverMaterials||{}).sort()};
+  });
+  assert.deepEqual(landscapeArt,{bridge:true,gallop:24,crags:6,cartway:true,river:['bank','channel','shoal']});
   await page.evaluate(()=>{
     document.getElementById('scaleSelect').value='standard';document.getElementById('enemySelect').value='1';document.getElementById('fogSelect').value='off';window.__bannerlands.start();window.__bannerlands.game.paused=true;
   });
   assert.equal(await page.locator('#menuOverlay').isVisible(),false);
+  const iconSize=await page.locator('[data-drawer="build"] .command-art').first().evaluate(async element=>{
+    const image=new Image(),url=getComputedStyle(element).backgroundImage.match(/^url\(["']?(data:image\/png;[^"')]+)["']?\)$/);
+    if(!url)return null;
+    image.src=url[1];await image.decode();return [image.naturalWidth,image.naturalHeight];
+  });
+  assert.deepEqual(iconSize,[576,384],'The painted command icons are visible from the offline archive');
   await page.locator('#heroHudButton').click();
   assert.equal(await page.evaluate(()=>window.__bannerlands.ui.selected.has(window.__bannerlands.game.heroFor(0).id)),true);
   assert.equal(await page.locator('#quickStandardOrders').isVisible(),true);
@@ -60,5 +78,5 @@ try{
   assert.ok(combat.wounded>0&&combat.time>0,'Standalone combat deals damage offline');
   assert.deepEqual(errors,[],'Standalone runtime and artwork loaders have no errors');assert.deepEqual(external,[],'All game dependencies load offline');
   if(process.env.LANDS_RENDER_OUT){fs.mkdirSync(process.env.LANDS_RENDER_OUT,{recursive:true});await page.screenshot({path:path.join(process.env.LANDS_RENDER_OUT,'standalone-battlefield.png')});}
-  console.log('PASS Standalone loads 16 painted heroes and house flags,23 painted troops and both pike buildings offline; portrait selects the hero and reveals the flag action.');
+  console.log('PASS Offline battle uses embedded painted troops, heroes, cavalry and Riverlands scenery, selects the hero and deals combat damage with zero external requests.');
 }finally{await browser.close();}

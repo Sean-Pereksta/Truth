@@ -3,3 +3,45 @@
 .online-menu-actions{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 8px;font:12px/1.5 'Segoe UI',sans-serif}.online-menu-actions button{padding:10px 13px;border:1px solid #71827680}.online-download{display:flex;justify-content:space-between;align-items:center;width:100%;padding:12px 14px;color:#eed7a4;text-decoration:none;background:#b8995417;border:1px solid #b8995480}.online-menu-actions p{width:100%;margin:0;color:#9caaa2;font-size:11px}.online-menu-actions button:focus-visible,.online-download:focus-visible{outline:2px solid #e5c78c;outline-offset:3px}
 .multiplayer-house-roster{border:1px solid #71827655;border-radius:4px;margin:18px 0;padding:12px}.multiplayer-house-roster legend{padding:0 6px;color:#d5c596}.multiplayer-roster-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 15px}.multiplayer-panel .multiplayer-roster-options label{margin:4px 0;font-size:12px}.multiplayer-roster-hint{font-size:12px;color:#a4b4ad}.multiplayer-roster-options input{flex-shrink:0}@media(max-width:480px){.multiplayer-roster-options{grid-template-columns:1fr}}
 #menuOverlay .campaign-menu{align-items:stretch}
+
+.multiplayer-overlay{background:#0b1519d9;backdrop-filter:blur(3px)}
+.multiplayer-panel{background:#172626;color:#e7e5d5;border-color:#807454;border-radius:3px;padding:clamp(18px,3vw,32px);box-shadow:0 18px 65px #0009}
+.multiplayer-panel>header>div{position:relative;min-height:54px;padding-left:63px}
+.multiplayer-panel>header>div::before{content:"";position:absolute;left:0;top:1px;width:49px;height:49px;background:url('../assets/interface/field-commands.png') 0 100% / 300% 200% no-repeat}
+.multiplayer-panel header h2{font:normal clamp(25px,4vw,34px)/1.1 Georgia,serif;color:#f4e8c8;margin:3px 0 0}
+.multiplayer-panel .eyebrow{color:#c1ad83;letter-spacing:.12em;font:600 10px/1.1 'Segoe UI',sans-serif}
+.multiplayer-panel nav{gap:0;padding:0;margin:16px 0;border-bottom:1px solid #706e51}
+.multiplayer-panel nav button{background:transparent;border:0;border-bottom:2px solid transparent;border-radius:0;min-height:44px;color:#c1c9be}
+.multiplayer-panel nav button.active{color:#ffe5ae;border-bottom-color:#d9bc7c;background:#b99c5510}
+.multiplayer-panel header>button,.multiplayer-panel button,.multiplayer-panel input:not([type=checkbox]),.multiplayer-panel select,.multiplayer-download{min-height:44px}
+.multiplayer-panel header>button{width:44px;flex:0 0 44px;line-height:1}
+.multiplayer-panel button:focus-visible,.multiplayer-panel a:focus-visible,.multiplayer-panel select:focus-visible{outline:2px solid #e6c287;outline-offset:2px}
+.multiplayer-panel button.primary,.multiplayer-download{background:#d4b77d;border:1px solid #e4c78f;color:#1c2622;font-weight:650;text-decoration:none}
+.multiplayer-panel button.primary:hover,.multiplayer-download:hover{background:#e5c999}
+.multiplayer-panel :is(button,input,select,a){touch-action:manipulation}
+.multiplayer-panel .multiplayer-status:empty{display:none}
+.multiplayer-panel .multiplayer-status:not(:empty){padding:.48rem .72rem;background:#20342f;border-left:2px solid #a99662}
+.multiplayer-panel .multiplayer-status.error{background:#372723;border-color:#bf8067}
+.multiplayer-panel h3{color:#ece2c7}
+@media(max-width:520px){.multiplayer-panel nav button{padding-inline:9px}.multiplayer-panel>header>div{padding-left:51px}.multiplayer-panel>header>div::before{width:41px;height:41px}}
+@media(pointer:coarse) and (orientation:landscape) and (max-height:520px){
+  .multiplayer-overlay{
+    padding:max(6px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));
+  }
+  .multiplayer-panel{
+    display:grid;grid-template-columns:minmax(136px,26%) minmax(0,1fr);
+    grid-template-rows:auto auto minmax(0,1fr) auto;column-gap:16px;
+    width:min(850px,100%);height:100%;max-height:100%;overflow:hidden;padding:8px 14px;
+  }
+  .multiplayer-panel>header{grid-area:1 / 1 / 2 / -1;min-height:44px;border-bottom:1px solid #575e4b;margin-bottom:5px}
+  .multiplayer-panel>header>div{min-height:38px;padding-left:44px;display:flex;align-items:center}
+  .multiplayer-panel>header>div::before{width:34px;height:34px}
+  .multiplayer-panel header .eyebrow{display:none}.multiplayer-panel header h2{font-size:23px;margin:0}
+  .multiplayer-panel nav{grid-area:2 / 1 / 5 / 2;display:flex;flex-direction:column;flex-wrap:nowrap;align-self:start;max-height:100%;overflow:auto;margin:0;border:0}
+  .multiplayer-panel nav button{flex:0 0 auto;text-align:left;min-height:44px;padding:6px 10px;border:0;border-left:2px solid transparent}
+  .multiplayer-panel nav button.active{border-left-color:#d9bc7c}
+  .multiplayer-panel>.multiplayer-status{grid-area:2 / 2;margin:0}
+  .multiplayer-panel>[data-pane]{grid-area:3 / 2;overflow:auto;overscroll-behavior:contain;min-height:0;padding:0 5px 10px}
+  .multiplayer-panel>[data-pane] h3{margin:6px 0}.multiplayer-panel>[data-pane] label{margin:7px 0}
+  .multiplayer-panel footer{grid-area:4 / 2;border:0;margin:0;padding:4px 5px 0;font-size:9px}
+}

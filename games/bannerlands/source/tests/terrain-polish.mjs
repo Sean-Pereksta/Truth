@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
-import {paintTerrainPolish,terrainPolishEdges,roadsideFields} from '../../terrain-polish.js';
+import {paintTerrainPolish,terrainPolishEdges,roadsideFields,preparePaintedGround,onPaintedApproach} from '../../terrain-polish.js';
+import {Game} from '../../core.js';
 
 let checks=0;
 const test=(name,fn)=>{fn();checks++;console.log('PASS '+name);};
@@ -27,6 +28,17 @@ test('Transition eligibility distinguishes exposed road, forest and land-side sh
 });
 test('Water, mountains, bridge decks, fords and passes never receive terrain polish',()=>{
   const g=fixture();for(const t of g.tiles)if(t.terrain==='water'||t.terrain==='mountain'||['bridge','ford','pass'].includes(t.feature))assert.equal(terrainPolishEdges(g,t),null);
+});
+
+test('Willow Bridge narrows into the meadow while its public road stays fully walkable',()=>{
+  const g=new Game({landscape:'riverlands',scale:'standard',seed:44277,enemies:1});
+  const ground=preparePaintedGround(g,{sliceGround:{}});
+  assert.equal(g.tileAt(37.5,20.5).feature,'road');
+  assert.ok(g.isWalkable(37.5,20.5));
+  assert.ok(!onPaintedApproach(ground,37.5,20.5),'Outside corner of the maneuvering area is grass.');
+  assert.ok(onPaintedApproach(ground,37.5,18.5),'Dirt reaches the painted bridge ramp.');
+  assert.ok(onPaintedApproach(ground,34.5,17.5),'The dirt track continues past the former square end.');
+  assert.ok(!onPaintedApproach(ground,31.5,17.5),'The travelled dirt has faded by the woodland.');
 });
 
 const require=createRequire(import.meta.url);let raster;

@@ -76,13 +76,13 @@ function tone(freq=240,kind='click',gain=.025){if(sound)soundscape?.play(kind,0,
 function chooseHouse(index){
  chosenHouse=index;const h=HOUSES[index],power=powerData(h);document.querySelectorAll('.house-choice').forEach((b,i)=>{b.classList.toggle('active',i===index);b.setAttribute('aria-pressed',String(i===index));});$('chosenTrait').textContent=`“${h.motto}.”`;
  $('chosenHouseName').textContent=h.name;$('menuSelectedHouse').textContent=h.name;$('chosenHouseEmblem').style.backgroundPosition=`${index%4*100/3}% ${Math.floor(index/4)*100/3}%`;$('chosenHouseEmblem').setAttribute('aria-label',h.name+' heraldry');
- $('chosenPlaystyle').textContent=h.playstyle||h.trait;$('chosenAdvantages').innerHTML=houseAdvantages(h).map(text=>`<li>${escapeHTML(text)}</li>`).join('');
+ $('chosenPlaystyle').textContent=h.playstyle||h.trait;$('menuHouseStyle').textContent=$('chosenPlaystyle').textContent;$('chosenAdvantages').innerHTML=houseAdvantages(h).map(text=>`<li>${escapeHTML(text)}</li>`).join('');
  $('chosenWeaknesses').innerHTML=houseWeaknesses(h).map(text=>`<li>${escapeHTML(text)}</li>`).join('');
  $('chosenPower').innerHTML=`<b>${escapeHTML(power.name)}</b><span>${escapeHTML(power.description)}</span><small>${power.cost?`${power.cost} gold · `:''}${power.cooldown}s cooldown · Activate with E</small>`;
  $('compareHousesButton').textContent='House details';$('compareHousesCouncilButton').textContent=`Compare all ${HOUSES.length} houses →`;$('houseCountPromise').textContent=`${HOUSES.length} houses · Equal starts`;labelMenuHotkeys();paintHousePreview();
 }
 function chooseMenuTab(tab,focus=false){
- const selected=tab==='campaign'?'campaign':'house';$('menuOverlay').dataset.menuTab=selected;
+ const selected=tab==='campaign'?'campaign':'house';$('menuOverlay').dataset.menuTab=selected;$('menuSetupContent').scrollTop=0;
  for(const [name,id]of [['house','menuHouseTab'],['campaign','menuCampaignTab']]){const button=$(id),active=name===selected;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;if(active&&focus)button.focus();}
 }
 for(const [name,id]of [['house','menuHouseTab'],['campaign','menuCampaignTab']]){
@@ -135,7 +135,7 @@ function terrainDescription(t){
 function knownOwner(t){return !t?-1:game.config?.fogOfWar?game.vision.ownersFor((game.playerTeam??0))[t.y*game.W+t.x]:t.owner;}
 function buildActionLists(){
  const house=game.houseContent((game.playerTeam??0)),sigil=game.teams[game.playerTeam??0].sigil,regiment=regimentForHouse(sigil),regimentBuilding=regimentBuildingForHouse(sigil),regiments=regimentsForHouse(sigil),facilities=regimentBuildingsForHouse(sigil);
- $('recruitList').innerHTML=['infantry','archer','cavalry',sigil==='sun'?'sun_horse_archer':'siege',house.unit,...regiments.filter(type=>type!=='sun_horse_archer')].filter(type=>houseCanRecruit(type,sigil)).map(type=>{const d=UNIT_DEFS[type],special=type===house.unit,drawn=special||d.regiment;return `<button class="action-card${drawn?' house-special-card':''}" data-recruit="${type}"${special?' data-special-recruit':''}${d.regiment?(type==='sun_horse_archer'?' data-horse-recruit':' data-regiment-recruit'):''} title="${escapeHTML(specialistTooltip(type))}">${drawn?`<span class="building-art" aria-hidden="true"><canvas data-unit-icon="${type}" width="96" height="96"></canvas></span>`:icon(icons[type])}<span class="action-copy"><span class="action-title"><b>${d.label}<span id="recruitBatch-${type}" style="font:8px 'Segoe UI';color:#718e87"> ×${d.batch}</span></b></span><small>${special?`Requires ${BUILD_DEFS[house.building].label}`:d.regiment?`Requires ${BUILD_DEFS[regimentRequiredBuilding(type,sigil)].label}`:d.role.split(' · ').pop()}</small></span><span class="cost" id="recruitCost-${type}">${d.cost}<small>GOLD</small></span></button>`;}).join('');
+ $('recruitList').innerHTML=['infantry','archer','cavalry',sigil==='sun'?'sun_horse_archer':'siege',house.unit,...regiments.filter(type=>type!=='sun_horse_archer')].filter(type=>houseCanRecruit(type,sigil)).map(type=>{const d=UNIT_DEFS[type],special=type===house.unit,drawn=special||d.regiment;return `<button class="action-card${drawn?' house-special-card':''}" data-recruit="${type}"${special?' data-special-recruit':''}${d.regiment?(type==='sun_horse_archer'?' data-horse-recruit':' data-regiment-recruit'):''} title="${escapeHTML(specialistTooltip(type))}"><span class="building-art" aria-hidden="true"><canvas data-unit-icon="${type}" width="96" height="96"></canvas></span><span class="action-copy"><span class="action-title"><b>${d.label}<span id="recruitBatch-${type}" class="recruit-batch"> ×${d.batch}</span></b></span><small>${special?`Requires ${BUILD_DEFS[house.building].label}`:d.regiment?`Requires ${BUILD_DEFS[regimentRequiredBuilding(type,sigil)].label}`:d.role}</small></span><span class="cost" id="recruitCost-${type}">${d.cost}<small>GOLD</small></span></button>`;}).join('');
  $('buildList').innerHTML=['barracks','range','stables','tower',sigil==='sun'?'sunbow_corral':'workshop',house.building,...facilities.filter(type=>type!=='sunbow_corral')].filter(type=>houseCanBuild(type,sigil)).map(type=>{const d=BUILD_DEFS[type];return `<button class="action-card building-card${type===house.building||(d.regimentBuilding||d.conquestBuilding||d.frontierBuilding)?' house-special-card':''}" data-build="${type}"${type===house.building?' data-special-build':''}${(d.regimentBuilding||d.conquestBuilding||d.frontierBuilding)?(type==='sunbow_corral'?' data-horse-build':' data-regiment-build'):''} title="${d.role}"><span class="building-art" aria-hidden="true"><canvas data-building-icon="${type}" width="96" height="96"></canvas></span><span class="action-copy"><span class="action-title"><b>${d.label}</b></span><small>${d.role.replace(' · ',' / ')}</small></span><span class="cost">${d.cost}<small>GOLD</small></span></button>`;}).join('');
  $('upgradeList').innerHTML=[['weapons','Tempered steel'],['armor','Reinforced armor'],['economy','Royal treasury']].map(([type,label])=>`<button class="action-card" data-upgrade="${type}">${icon(icons[type])}<span class="action-copy"><span class="action-title"><b>${label}</b></span><small id="upgradeEffect-${type}">${upgradeSummary(type,game.upgradeDetails(type,(game.playerTeam??0)))}</small></span><span class="cost" id="cost-${type}">200<small>0 / 500</small></span></button>`).join('');
  MENU_ACTIONS.army=['[data-recruit="infantry"]','[data-recruit="archer"]','[data-recruit="cavalry"]',sigil==='sun'?'[data-horse-recruit]':'[data-recruit="siege"]','[data-special-recruit]','[data-regiment-recruit]'];
@@ -433,6 +433,7 @@ $('mobileAttack').onclick=()=>{ $('mobileOptionsMenu').hidden=true;attackNearest
 $('mobileOptions').onclick=()=>{const menu=$('mobileOptionsMenu');menu.hidden=!menu.hidden;$('mobileOptions').setAttribute('aria-expanded',String(!menu.hidden));};
 for(const [id,action] of [['mobileExpand',expandNearby],['mobilePatrol',patrolBorder],['mobileStandard',standardCommand],['mobileMoreOrders',()=>battleHud.open('orders')],['mobileClear',()=>{$('clearSelection').click();}]])$(id).onclick=()=>{$('mobileOptionsMenu').hidden=true;$('mobileOptions').setAttribute('aria-expanded','false');action();};
 document.addEventListener('pointerdown',e=>{if(!$('mobileTroopControls').contains(e.target)){$('mobileOptionsMenu').hidden=true;$('mobileOptions').setAttribute('aria-expanded','false');}});
+$('mobileFindSelection').onclick=()=>{$('mobileOptionsMenu').hidden=true;$('mobileOptions').setAttribute('aria-expanded','false');$('locateSelection').click();};
 $('mobileMapToggle').onclick=()=>{const open=document.body.classList.toggle('mobile-map-open');$('mobileMapToggle').setAttribute('aria-expanded',String(open));if(open)renderer.drawMinimap(game,$('minimap'),view);};
 $('advanceButton').onclick=advanceAttack;
 $('faceOrderButton').onclick=beginFacing;
@@ -657,7 +658,7 @@ function updateHud(){
  const s=game.teams[game.playerTeam??0];$('gold').textContent=compactGold(s.gold);$('gold').title=num(s.gold)+' gold';$('income').textContent=`+${s.income.toFixed(1)}/s`;setHudHTML($('army'),`${num(s.count)} <i>/ ${s.cap}</i>`);setHudHTML($('land'),`${num(s.tiles)} <i>tiles</i>`);$('landPercent').textContent=`${percent(s)}% OF THE REALM`;
  $('fieldTerritory').textContent=percent(s)+'%';
  const mode=game.mode;
- $('fieldGoal').textContent=mode.kingSurvival?'Protect your king':mode.controlGoal?`Crown ${Math.floor(game.controlScores?.[s.alliance]||0)}/${mode.controlGoal}s`:mode.objectiveGoal?`Flags ${game.objectiveScores?.[s.alliance]||0}/${mode.objectiveGoal}`:mode.id.endsWith('dominion')?'Hold 65% of the realm':'Take enemy castles';
+ $('fieldGoal').textContent=mode.kingSurvival?'Protect your king':mode.controlGoal?`Crown ${Math.floor(game.controlScores?.[s.alliance]||0)}/${mode.controlGoal}s`:mode.objectiveGoal?`Flags ${game.objectiveScores?.[s.alliance]||0}/${mode.objectiveGoal}`:mode.id.endsWith('dominion')?'Hold 65%':'Take castles';
  updateHeroBeacon();
  $('clock').textContent=`${Math.floor(game.time/60).toString().padStart(2,'0')}:${Math.floor(game.time%60).toString().padStart(2,'0')}`;
  for(const id of ui.selected){const u=game.byId.get(id);if(!u||u.hp<=0)ui.selected.delete(id);}if(allSelected)for(const u of game.units)if(u.team===(game.playerTeam??0)&&u.hp>0)ui.selected.add(u.id);
@@ -677,8 +678,12 @@ function updateHud(){
  if(ui.formMode)refreshFormationPreview();document.querySelectorAll('[data-formation]').forEach(button=>button.classList.toggle('active',button.dataset.formation===ui.formation));
  const fieldState=formationStatus(troops,UNIT_DEFS);
  $('formationStatus').textContent=fieldState;$('fieldFormation').textContent=fieldState.split(' · ')[0];
- const typeSummary=Object.entries(counts).map(([type,n])=>n+' '+(type==='hero'?'hero':UNIT_DEFS[type].label)).join(' · ');
+ $('quickHoldButton').setAttribute('aria-pressed',String(troops.length>0&&troops.every(u=>u.order?.mode==='hold')));
+ $('quickAdvanceButton').setAttribute('aria-pressed',String(troops.length>0&&troops.every(u=>u.order?.mode==='advance')));
+ $('quickRetreatButton').setAttribute('aria-pressed',String(troops.length>0&&troops.every(u=>u.order?.retreat||u.order?.championWithdraw)));
+ const typeSummary=Object.entries(counts).map(([type,n])=>(type==='hero'?'Hero':UNIT_DEFS[type].label)+'\u00a0'+n).join(' · ');
  $('fieldTypes').textContent=typeSummary;$('fieldTypes').title=typeSummary;
+ $('ordersFormation').textContent=fieldState;$('ordersRoster').textContent=typeSummary;
  $('locateSelection').setAttribute('aria-label',`Find ${troops.length} selected troops`);
  $('quickFormationOrders').hidden=!troops.length||ui.formMode||buildings.length>0;
  $('lockFacingButton').setAttribute('aria-pressed',String(!!ui.formationOptions?.lockFacing));$('lockFacingButton').classList.toggle('active',!!ui.formationOptions?.lockFacing);
@@ -697,7 +702,7 @@ function updateHud(){
  $('selectionTitle').textContent=buildings.length?buildings.length===1?BUILD_DEFS[buildings[0].type].label:`${buildings.length} buildings selected`:troops.length?`${troops.length} ${troops.length===1?'soldier':'soldiers'} under your command`:'Your army awaits';
  $('selectionDetail').textContent=buildings.length?'Rally points & upgrades in Commands':troops.length?Object.entries(counts).map(([t,n])=>`${n} ${t==='hero'?'commander':UNIT_DEFS[t].label.toLowerCase()}`).join(' · '):'Tap a soldier or open Orders';
  updateHeroHud(troops);
- document.querySelectorAll('[data-recruit]').forEach(b=>{const type=b.dataset.recruit,d=game.recruitDetails(type,(game.playerTeam??0));$('recruitBatch-'+type).textContent=` ×${d.batch}`;$('recruitCost-'+type).innerHTML=`${d.cost}<small>GOLD</small>`;b.disabled=s.gold<d.cost||s.count+d.batch>s.cap||!s.alive||!d.unlocked||d.remaining>0;if(d.requiredBuilding)b.querySelector('.action-copy>small').textContent=!d.unlocked?`Build ${BUILD_DEFS[d.requiredBuilding].label} to unlock`:d.remaining>0?`Musters in ${Math.ceil(d.remaining)}s`:d.role.split(' · ').pop();});
+ document.querySelectorAll('[data-recruit]').forEach(b=>{const type=b.dataset.recruit,d=game.recruitDetails(type,(game.playerTeam??0));$('recruitBatch-'+type).textContent=` ×${d.batch}`;$('recruitCost-'+type).innerHTML=`${d.cost}<small>GOLD</small>`;b.disabled=s.gold<d.cost||s.count+d.batch>s.cap||!s.alive||!d.unlocked||d.remaining>0;if(d.requiredBuilding)b.querySelector('.action-copy>small').textContent=!d.unlocked?`Build ${BUILD_DEFS[d.requiredBuilding].label} to unlock`:d.remaining>0?`Musters in ${Math.ceil(d.remaining)}s`:d.role;});
  const structures=game.buildingStatus((game.playerTeam??0)),atStructureLimit=structures.count>=structures.cap;
  const nextStructureSlot=`Capture ${structures.nextTiles} more land ${structures.nextTiles===1?'tile':'tiles'} to unlock another structure slot.`;
  $('structureCapacity').textContent=`${num(structures.count)} / ${num(structures.cap)} STRUCTURES`;
@@ -795,7 +800,9 @@ async function boot(){
    renderer.loadReinforcementArt(REINFORCEMENT_ART_SOURCES),
    renderer.loadPikeBuildings('assets/overhaul/pike-buildings.png'),
    renderer.loadBridgeArt('assets/bridges/stone-edges.png'),
+   renderer.loadPaintedBridge('assets/battlefield-slice/river-bridge.png','assets/battlefield-slice/broad-bridge.png'),
    renderer.loadBattlefieldProjectiles('assets/battlefield-slice/projectiles.png'),
+   renderer.loadCavalryCharge('assets/battlefield-slice/cavalry-charge.png','assets/battlefield-slice/cavalry-directions.png'),
    renderer.loadPaintedTroops(PAINTED_TROOP_SOURCES),
    renderer.loadPaintedHeroes(HERO_ART_SOURCES)
   ];
@@ -819,15 +826,21 @@ async function boot(){
   console.error('Battle artwork failed to load',error);
   return;
  }
- // Base terrain already shows crossings and obstacles. Enrich its caches after
- // the player can enter a match; the next draw picks up each finished atlas.
+ // Keep the map playable while the remaining sheets load. Rebuild the
+ // terrain and overview once when the complete set of results is known.
+ renderer.deferLandscapeRefresh=true;
  const details=[
   renderer.loadLandsArt('assets/lands-atlas.png'),
   renderer.loadLandsGround('assets/lands-ground.png'),
+  renderer.loadRiverMaterials('assets/battlefield-slice/river.png'),
+  renderer.loadHighlandCrags('assets/battlefield-slice/highland-crags.png'),
+  renderer.loadCartway('assets/battlefield-slice/cartway.png'),
   renderer.loadBattlefieldArt('assets/battlefield-slice/ground.png'),
   renderer.loadBattlefieldArt('assets/battlefield-slice/details.png',true)
  ];
  await Promise.allSettled(details);
+ renderer.deferLandscapeRefresh=false;
+ renderer.refreshLandscape();
  renderer.menuView=null;
  performance.mark('bannerlands-detail-art-finished');
 }
@@ -839,18 +852,22 @@ if(location.protocol!=='file:')online=setupMultiplayer({getConfig:multiplayerCon
   if(!label.hidden){label.textContent=status==='closed'?'Session closed · Open lobby':'Reconnecting to host…';label.title=message;}
  },
  onPending:envelope=>{
-  const receipt=$('orderReceipt');receipt.dataset.seq=envelope.seq;receipt.dataset.match=envelope.matchId;receipt.hidden=false;receipt.textContent='Order pending · Awaiting host';
+  const receipt=$('orderReceipt');receipt.dataset.seq=envelope.seq;receipt.dataset.match=envelope.matchId;receipt.hidden=false;receipt.dataset.state='pending';receipt.textContent='Order pending · Awaiting host';
  },
  onOrderResult:(result,envelope)=>{
   const receipt=$('orderReceipt');
   if(receipt.dataset.match!==envelope.matchId)return;
   if(Number(receipt.dataset.seq)===envelope.seq){
+   receipt.dataset.state=result.ok?'confirmed':'rejected';
    receipt.textContent=result.ok?'Order confirmed by host':'Order rejected · '+(result.message||'Try again');
    setTimeout(()=>{if(receipt.dataset.match===envelope.matchId&&Number(receipt.dataset.seq)===envelope.seq)receipt.hidden=true;},3500);
   }else if(!result.ok)toast('Earlier order rejected · '+(result.message||'Try again'),true);
   if(ui.orderMarker?.seq===envelope.seq){if(result.ok)ui.orderMarker.pending=false;else ui.orderMarker=null;}
 }});
 Object.defineProperty(window.__bannerlands,'online',{get:()=>online});
-if(location.protocol==='file:')document.querySelector('.online-menu-actions').hidden=true;
+if(location.protocol==='file:'){
+ document.querySelector('.online-menu-actions').hidden=true;
+ $('browseLobbiesButton').hidden=true;
+}
 if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js',{type:'module'}).catch(()=>{});
 boot();

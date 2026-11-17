@@ -171,11 +171,16 @@ Click the selected count to center the camera on that formation. A loss alert
 with a location marker takes you to the affected area.
 
 With the drawer closed and a mixed army selected, the visible HUD covered
-11.58% of a 1366×768 viewport and 5.86% at 1920×1080 in Chrome. The measurement
+12.38% of a 1366×768 viewport and 6.26% at 1920×1080 in Chrome. The measurement
 included the minimap and a temporary order confirmation. Players could locate
-the formation and issue Advance or Hold directly. Touch tests covered 320×740,
-390×844, 844×390 and 1536×688 viewports, including 44-pixel command targets,
-map toggling, pan, pinch and tap targeting.
+the formation and issue Advance or Hold directly. The painted command bar
+shows shortcuts on desktop. On a horizontal phone it sits under the right
+thumb, with six orders in a single row at the lower left. Open Orders to see
+the formation status and troop roster, or Options to find the selected army.
+Chrome touch emulation covered 320×740, 390×844, 667×375, 740×320, 844×390
+and 1536×688. The three landscape phone sizes used 32-pixel side insets and
+an 8-pixel bottom inset. Drawer dismissal, 44-pixel command targets, minimap
+toggling, pan, pinch and issuing an order on the exposed field passed.
 
 Drag to pan, pinch to zoom, hold briefly and drag to box-select, or double-tap a
 troop to select all living troops of that exact type. With troops selected, tap

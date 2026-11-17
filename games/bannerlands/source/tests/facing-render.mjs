@@ -37,6 +37,33 @@ test('Selected facing markers follow the front while velocity points backward',(
   const draw=face=>{const c=canvas(),ctx=c.getContext('2d'),u=unit(),original=r.drawPaintedTroop;ctx.translate(320,240);u.facingX=face;r.drawPaintedTroop=()=>{};try{r.unit(ctx,u,g,{selected:new Set([1])},1);}finally{r.drawPaintedTroop=original;}return c;};
   assert.notDeepEqual(pixels(draw(1)),pixels(draw(-1)));
 });
+test('Large selections share local markers while retaining separate formations and opposite locked fronts',()=>{
+  const troops=Array.from({length:70},(_,i)=>({...unit(),id:i+1,x:Math.floor(i/5)*.75,y:i%5*.6}));
+  const selected=new Set(troops.map(u=>u.id));selected.add(2000);
+  const distant={...unit(),id:1000,x:70,y:20};selected.add(distant.id);
+  troops[1].order={facingX:-1,facingY:0};
+  const markers=r.selectionMarkers([...troops,distant],selected,1);
+  assert.ok(markers.size>=4&&markers.size<=12,'A handful of cues serves seventy nearby soldiers');
+  assert.ok(markers.has(distant.id)&&markers.has(troops[1].id),'Show the detached formation and opposing locked direction');
+  assert.equal(markers.has(2000),false,'A selected ID outside current sight cannot add a cue');
+  assert.equal(selected.size,72,'Every actual selection is retained');
+  assert.equal(r.selectionMarkers(troops,new Set([1]),1),null,'One unit keeps its full selection indicators');
+});
+test('Wounded health, brace and charge survive the large-group marker budget',()=>{
+  const selected=new Set(Array.from({length:70},(_,i)=>i+1));
+  const probe=(u,markers)=>{
+    const ctx=canvas().getContext('2d'),bars=[],rings=[],labels=[],rect=ctx.fillRect.bind(ctx),stroke=ctx.stroke.bind(ctx),label=ctx.fillText.bind(ctx);
+    ctx.fillRect=(x,y,w,h)=>{if(w===12&&h===2&&y===-29)bars.push(w);rect(x,y,w,h);};
+    ctx.stroke=()=>{rings.push(ctx.strokeStyle);stroke();};
+    ctx.fillText=(s,x,y)=>{labels.push(s);label(s,x,y);};
+    r.unit(ctx,u,g,{selected},1,markers);return {bars,rings,labels};
+  };
+  assert.ok(probe(unit(),null).bars.length>0,'Small-group full health');
+  const healthy=probe(unit(),new Set());assert.equal(healthy.bars.length,0);assert.ok(!healthy.rings.includes('#f6d986'));
+  assert.ok(probe(unit(),new Set([1])).rings.includes('#f6d986'),'Selected representative retains its existing gold ring');
+  const hurt=probe({...unit(),hp:127,charging:true,spearState:'braced',braceDir:{x:1,y:0},braceTime:1},new Set());
+  assert.ok(hurt.bars.length>0&&hurt.labels.includes('CHARGE')&&hurt.rings.includes('#b7d6d1'));
+});
 test('Bracing selects its full painted pose without drawing a replacement spear',()=>{
   const c=canvas(),ctx=c.getContext('2d'),u=unit(),calls=[],original=r.drawPaintedTroop;ctx.translate(320,240);Object.assign(u,{vx:0,backpedaling:false,spearState:'braced',braceDir:{x:1,y:0},braceTime:1});u.order.mode='attack';r.drawPaintedTroop=(...args)=>calls.push(args);
   try{r.unit(ctx,u,g,{selected:new Set()},1);}finally{r.drawPaintedTroop=original;}
@@ -57,5 +84,35 @@ test('Facing preview rotates and bounds passability queries for large armies',()
 test('Blocked destination slots remain visible and zero facing draws nothing',()=>{
   const c=canvas(),ctx=c.getContext('2d');ctx.translate(320,240);r.facingPreview(ctx,{isWalkable:()=>false},{x:0,y:0,faceX:1,faceY:0,count:12,formation:'spread'},1);assert.ok(opaque(c)>30);
   const invalid=canvas();r.facingPreview(invalid.getContext('2d'),g,{x:0,y:0,faceX:0,faceY:0,count:12},1);assert.equal(opaque(invalid),0);
+});
+await r.loadCavalryCharge(path.join(root,'assets/battlefield-slice/cavalry-charge.png'));
+const chargeFirst=new Renderer(canvas());
+await chargeFirst.loadCavalryCharge(path.join(root,'assets/battlefield-slice/cavalry-charge.png'));
+await chargeFirst.loadPaintedTroops({cavalry:path.join(root,PAINTED_TROOPS.cavalry.file)},['cavalry']);
+assert.equal(chargeFirst.getPaintedTroop('cavalry').chargeFrameStart,16);
+assert.equal(chargeFirst.getPaintedTroop('cavalry').frames.length,40);
+test('The cavalry views retain horse scale, ground registration and house-colored cloth',()=>{
+  const row=r.getPaintedTroop('cavalry','wolf'),start=row.chargeFrameStart;
+  assert.equal(row.frames.length,40);assert.equal(start,16);assert.equal(row.directionFrameStart,24);
+  assert.equal(r.getPaintedTroop('storm_rider','stag').chargeFrameStart,undefined);
+  const plate=canvas(9*110,3*168),ctx=plate.getContext('2d');
+  ctx.fillStyle='#68755a';ctx.fillRect(0,0,plate.width,plate.height);
+  const signatures=new Set();
+  for(let view=0;view<3;view++)for(let i=0;i<9;i++){
+    const index=i?start+view*8+i-1:row.actions.ready,top=view*168;
+    const frame=row.frames[index],a=r.paintedSprite(row,index,1),b=r.paintedSprite(row,index,-1);
+    assert.equal(a.anchorY,b.anchorY);assert.ok(Math.abs(a.anchorX+b.anchorX-a.width)<1e-6);
+    if(i){assert.ok(frame.height*frame.scale>35&&frame.height*frame.scale<60);signatures.add(frame.image.toBuffer('image/png').toString('base64'));}
+    for(const [j,color] of ['#6dace8','#cc4c40'].entries())r.drawPaintedTroop(ctx,row,index,1,110*i+45,top+65+j*84,color);
+    const blue=ctx.getImageData(110*i,top,110,80).data,red=ctx.getImageData(110*i,top+84,110,80).data;
+    let clothPixels=0;
+    for(let k=0;k<blue.length;k+=4)if(red[k]-blue[k]>8&&blue[k+2]-red[k+2]>8)clothPixels++;
+    assert.ok(clothPixels>12,'House cloth remains visible at normal zoom for frame '+index);
+  }
+  assert.equal(signatures.size,24);
+  if(process.env.LANDS_RENDER_OUT){
+    fs.mkdirSync(process.env.LANDS_RENDER_OUT,{recursive:true});
+    fs.writeFileSync(path.join(process.env.LANDS_RENDER_OUT,'cavalry-poses.png'),plate.toBuffer('image/png'));
+  }
 });
 console.log(`${cases} facing raster checks passed.`);

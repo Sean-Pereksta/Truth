@@ -3,8 +3,9 @@ BANNERLANDS — BATTLEFIELD VISUALS
 RIVERLANDS AND HIGHLAND MARCHES PREVIEW
 The two generated PNG sheets in assets/battlefield-slice provide painted ground
 and transparent detail sprites. Riverlands uses pasture, shallow ford gravel,
-reeds and ford stones. Highland Marches uses pasture, pass gravel, heather
-and shorter crags along the approach. Both landscapes use painted cart tracks,
+reeds and ford stones. Highland Marches uses pasture, pass gravel and six painted
+outcrops. Broken ridges and fractured peaks mark impassable rock. Lower heather
+shoulders and scree border the navigable pass. Both landscapes use painted cart tracks,
 field-edge fences, forest shrubs and stone keep foundations. Roadside plots occupy continuous grassland.
 Their placement uses the generated road network and never reads hidden armies
 or the location of an occupied castle. The ground materials are baked into the
@@ -68,6 +69,16 @@ Hidden troops cannot contribute to a crest or its position; fog loss removes
 the marker immediately, including while paused.
 
 BRIDGE GRAPHICS
+Short crossings use a broad painted stone bridge. Longer crossings use a narrow
+painting, with complete, rigid arch bays repeated on long lake causeways. Each
+painting contains the cobbles, ramps, parapets and stone piers. Its original
+proportions are preserved in both river directions. Units rise with the deck and pass behind the
+near parapet. Only open channels with dry banks and exposed water on both
+sides receive masonry. Willow Ford's shallow Rivermeet junction continues
+the ford surface. Its gameplay tiles and navigation remain intact.
+Use node source/tests/painted-crossings.mjs for topology and raster checks.
+
+The original edge atlas supplies the legacy fallback below.
 Bridge sidewalls use generated painted masonry, alpha-transparent arch spans
 and matching terminal/corner posts from assets/bridges/stone-edges.png.
 Pieces follow both isometric bridge directions and join at actual endpoints.

@@ -43,8 +43,11 @@ const tap=async(session,p)=>{await touch(session,'touchStart',[p]);await touch(s
 const drag=async(session,from,to,{hold=0,cancel=false}={})=>{await touch(session,'touchStart',[from]);if(hold)await new Promise(r=>setTimeout(r,hold));await touch(session,'touchMove',[to]);await touch(session,cancel?'touchCancel':'touchEnd',[]);};
 
 try{
- for(const [width,height] of [[320,740],[390,844],[844,390],[1536,688]]){
-  const context=await browser.newContext({viewport:{width,height},hasTouch:true,isMobile:true,deviceScaleFactor:1});const page=await context.newPage();await start(page);
+ for(const [width,height] of [[320,740],[390,844],[667,375],[740,320],[844,390],[1536,688]]){
+  const context=await browser.newContext({viewport:{width,height},hasTouch:true,isMobile:true,deviceScaleFactor:1});const page=await context.newPage();
+  const landscapePhone=width>height&&height<500,session=await context.newCDPSession(page);
+  if(landscapePhone)await session.send('Emulation.setSafeAreaInsetsOverride',{insets:{left:32,right:32,bottom:8,top:0}});
+  await start(page);
   for(const selector of ['#commandPanel','#selectionDock','#touchControls','#minimapDock','#quickFormationOrders','#mobileTroopControls','[data-drawer="map"]'])await hidden(page,selector);
   for(const selector of ['[data-drawer="build"]','[data-drawer="army"]','[data-drawer="orders"]','[data-drawer="council"]','#mobileMapToggle','#heroHudButton','#fieldObjective'])await assertOnscreen(page,selector);
   const geometry=await page.evaluate(()=>{const r=document.querySelector('#battleCanvas').getBoundingClientRect();return {width:r.width,height:r.height,overflow:document.documentElement.scrollWidth>innerWidth,topbar:document.querySelector('#topbar').getBoundingClientRect().height};});
@@ -54,6 +57,34 @@ try{
   await page.evaluate(()=>window.__bannerlands.selectArmy());await assertOnscreen(page,'#quickAdvanceButton');await assertOnscreen(page,'#quickHoldButton');await assertOnscreen(page,'#mobileAttack');await assertOnscreen(page,'#mobileOptions');await hidden(page,'#selectionDock');
   await page.locator('#mobileOptions').click();for(const selector of ['#mobileExpand','#mobilePatrol','#mobileStandard','#mobileMoreOrders','#mobileClear'])assert.equal(await visible(page,selector),true,selector);
   await page.locator('#mobileOptions').click();await hidden(page,'#mobileOptionsMenu');
+  if(landscapePhone){
+   for(const selector of ['#quickFormButton','#quickRetreatButton'])await assertOnscreen(page,selector);
+   await hidden(page,'#compactTroopSelection');
+   await page.locator('#mobileOptions').tap();await assertOnscreen(page,'#mobileFindSelection');await page.locator('#mobileFindSelection').tap();
+   const layout=await page.evaluate(()=>{
+    const bounds=id=>document.getElementById(id).getBoundingClientRect(),left=bounds('fieldArmyControls'),right=bounds('gameplayDock');
+    const x=innerWidth*.5,y=innerHeight*.48;
+    return {x,y,gap:right.left-left.right,left:left.left,right:innerWidth-right.right,bottom:innerHeight-right.bottom,orderBarHeight:left.height,field:document.elementFromPoint(x,y)?.id};
+   });
+   assert.ok(layout.left>=32&&layout.right>=32&&layout.bottom>=8&&layout.gap>=8,JSON.stringify(layout));
+   assert.ok(layout.orderBarHeight<=52,'Six orders occupy a single touch row.');assert.equal(layout.field,'battleCanvas');
+   const target=await page.evaluate(async()=>{
+    const {view,game}=window.__bannerlands,{screenToWorld}=await import('./render.js');
+    for(let y=innerHeight*.38;y<innerHeight*.62;y+=14)for(let x=innerWidth*.25;x<innerWidth*.78;x+=18){
+     const point=screenToWorld(x,y,view);
+     if(document.elementFromPoint(x,y)?.id==='battleCanvas'&&game.isWalkable(point.x,point.y)&&
+        !game.buildings.some(b=>Math.hypot(b.x-point.x,b.y-point.y)<3)&&!game.units.some(u=>Math.hypot(u.x-point.x,u.y-point.y)<1.5))return {x,y};
+    }return null;
+   });
+   assert.ok(target,'The exposed central field contains a reachable order target.');
+   await page.locator('#quickHoldButton').tap();
+   const notice=await page.locator('#toast.visible').boundingBox();
+   assert.ok(notice&&notice.x>=32&&notice.x+notice.width<=width-32,'Order feedback stays between the landscape safe areas.');
+   await tap(session,target);
+   assert.ok(await page.evaluate(()=>[...window.__bannerlands.ui.selected].some(id=>window.__bannerlands.game.byId.get(id)?.order?.mode!=='hold')),'Tapping exposed ground replaces Hold with the movement order.');
+   await open(page,'orders');assert.equal(await visible(page,'#ordersSelectionSummary'),true);
+   assert.ok(await page.locator('#ordersRoster').textContent());await assertOnscreen(page,'#closeDrawer');await page.locator('#closeDrawer').tap();
+  }
   if(process.env.BANNERLANDS_QA_OUT){await fs.promises.mkdir(process.env.BANNERLANDS_QA_OUT,{recursive:true});await page.screenshot({path:path.join(process.env.BANNERLANDS_QA_OUT,'hud-touch-'+width+'x'+height+'.png')});}
   passed(`Compact layout, map and selected controls at ${width}×${height}`);await context.close();
  }

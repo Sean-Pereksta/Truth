@@ -14,7 +14,7 @@ const raster=createRequire(import.meta.url)(process.env.LANDS_CANVAS_MODULE||'@n
 const canvas=(w=1,h=1)=>Object.assign(raster.createCanvas(w,h),{style:{}});
 globalThis.Image=raster.Image;
 globalThis.Path2D=raster.Path2D;
-globalThis.window={devicePixelRatio:1};
+globalThis.window={devicePixelRatio:2};
 globalThis.document={createElement:()=>canvas(),getElementById:()=>null};
 const out=process.env.LANDS_RENDER_OUT;
 if(out)fs.mkdirSync(out,{recursive:true});
@@ -37,10 +37,15 @@ if(r.loadBattlefieldArt){
     assert.ok(transparent>pixels.length/400&&painted>pixels.length/400,kind+' has a painted silhouette and a clear cutout');
   }
 }
+if(r.loadCartway&&fs.existsSync(asset('battlefield-slice/cartway.png')))await r.loadCartway(asset('battlefield-slice/cartway.png'));
+if(r.loadHighlandCrags)assert.equal(await r.loadHighlandCrags(asset('battlefield-slice/highland-crags.png')),6);
+if(r.loadRiverMaterials&&fs.existsSync(asset('battlefield-slice/river.png')))await r.loadRiverMaterials(asset('battlefield-slice/river.png'));
 if(r.loadBattlefieldProjectiles)await r.loadBattlefieldProjectiles(asset('battlefield-slice/projectiles.png'));
+if(r.loadPaintedBridge)await r.loadPaintedBridge(asset('battlefield-slice/river-bridge.png'),asset('battlefield-slice/broad-bridge.png'));
+if(r.loadCavalryCharge)await r.loadCavalryCharge(asset('battlefield-slice/cavalry-charge.png'),asset('battlefield-slice/cavalry-directions.png'));
 
 const width=800,height=440;
-r.resize(width,height,1);
+r.resize(width,height,2);
 for(const [landscape,name] of [['riverlands','Willow Bridge'],['riverlands','Willow Ford'],['highlands','High King Pass']]){
   const g=new Game({landscape,scale:'standard',house:HOUSES.findIndex(h=>h.sigil==='wolf'),enemies:1,seed:44277,fogOfWar:false});
   const mark=g.landmarks.find(m=>m.name===name);
@@ -66,16 +71,28 @@ for(const [landscape,name] of [['riverlands','Willow Bridge'],['riverlands','Wil
   assert.ok(g.units.some(u=>u.attackVisual||u.crossbowAim||u.reloading),'battle has started');
   const slug=name.toLowerCase().replaceAll(' ','-');
   for(const [label,zoom] of [['overview',.43],['normal',1],['close',1.8]]){
-    const view={x:(mark.x-mark.y)*28,y:(mark.x+mark.y)*14-12,w:width,h:height,dpr:1,zoom};
+    const view={x:(mark.x-mark.y)*28,y:(mark.x+mark.y)*14-12,w:width,h:height,dpr:2,zoom};
     for(const quality of ['auto','high','performance']){
       const ui={selected,selectedBuildings:new Set(),quality,lowDetail:quality==='performance',showGrid:false};
       r.draw(g,view,ui);
+      if(r.highlandCrags&&label==='normal'&&quality==='high'){
+        const rocks=r.decor.filter(d=>d.kind==='crag');
+        if(landscape==='highlands'){
+          assert.equal(new Set(rocks.map(d=>d.variant)).size,6);
+          assert.ok(rocks.every(d=>g.tileAt(d.x,d.y).terrain==='mountain'&&!g.isWalkable(d.x,d.y)),'Every crag stands on an impassable mountain tile');
+          assert.ok(r.decor.every(d=>d.kind!=='mountain'),'The old peak does not repeat under the new ridge');
+        }else assert.equal(rocks.length,0);
+      }
       if(r.sliceGround){
         const samples=g.tiles.filter(t=>t.feature===mark.kind);
         assert.ok(samples.length>0);
         if(mark.kind!=='bridge')assert.ok(r.battlefieldTile(g,samples[0]),'Painted material covers '+name);
       }
-      if(out)fs.writeFileSync(path.join(out,slug+'-'+label+'-'+quality+'.png'),r.canvas.toBuffer('image/png'));
+      if(out){
+        const frame=r.canvas.toBuffer('image/png');
+        fs.writeFileSync(path.join(out,slug+'-'+label+'-'+quality+'.png'),frame);
+        if(name==='Willow Bridge'&&label==='normal'&&quality==='high'&&r.bridgeArtwork?.spanReady)fs.writeFileSync(path.join(out,'willow-bridge-review.png'),frame);
+      }
     }
   }
   console.log('Captured '+name+' in three zooms and three quality settings; '+g.units.length+' combatants.');
@@ -91,7 +108,7 @@ if(out&&r.sliceDetails){
   const forest=r.decor.find(d=>d.kind==='forestShrubs'&&d.x>10&&d.y>10);
   for(const [label,point,offset] of [['keep',keep,-22],['field',field,0],['forest',forest,0]]){
     assert.ok(point,label+' present in generated scene');
-    const v={x:(point.x-point.y)*28,y:(point.x+point.y)*14+offset,w:width,h:height,dpr:1,zoom:1.55};
+    const v={x:(point.x-point.y)*28,y:(point.x+point.y)*14+offset,w:width,h:height,dpr:2,zoom:1.55};
     r.draw(g,v,{selected:new Set(),selectedBuildings:new Set(),quality:'high',showGrid:false});
     fs.writeFileSync(path.join(out,'detail-'+label+'.png'),r.canvas.toBuffer('image/png'));
   }

@@ -37,8 +37,12 @@ try{
     const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
     await page.goto(origin);await page.waitForFunction(()=>!document.getElementById('startButton').disabled,{timeout:60000});
     await page.evaluate(()=>{document.getElementById('scaleSelect').value='standard';document.getElementById('landscapeSelect').value='open';document.getElementById('enemySelect').value='1';window.__bannerlands.start();window.__bannerlands.game.paused=true;});
-    await page.waitForFunction(()=>!!window.__bannerlands.renderer.minimapTransform,{timeout:10000});
     assert.equal(await page.locator('#commandPanel').isVisible(),false);
+    if(touch){
+      assert.equal(await page.locator('#minimapDock').isVisible(),false);
+      await page.locator('#mobileMapToggle').click();
+    }
+    await page.waitForFunction(()=>!!window.__bannerlands.renderer.minimapTransform,null,{timeout:10000});
     assert.equal(await page.locator('#minimapDock').isVisible(),true,'The map must be visible without opening any drawer.');
     const initial=await mapGeometry(page);
     assert.equal(initial.outsidePanel,true,'The minimap must be independent of drawer visibility.');
@@ -46,28 +50,30 @@ try{
     assert.ok(initial.mapWidth>=100&&initial.mapHeight>=75,'The persistent map must remain readable.');assert.equal(initial.hit,true);
     for(const [pane,key]of Object.entries(shortcuts)){
       const button=page.locator(`[data-drawer="${pane}"]`),label=await button.innerText(),title=await button.getAttribute('title'),aria=await button.getAttribute('aria-keyshortcuts');
-      assert.match(label,new RegExp(`(?:^|[\\s(\\[])${key}(?:$|[\\s)\\]])`,'i'),`${pane} must display its opening hotkey.`);
+      if(!touch)assert.match(label,new RegExp(`(?:^|[\\s(\\[])${key}(?:$|[\\s)\\]])`,'i'),`${pane} must display its opening hotkey.`);
       assert.match(title||'',new RegExp(`\\b${key}\\b`,'i'),`${pane} tooltip must name its opening hotkey.`);
       assert.equal(aria?.toUpperCase(),key);
-      await button.click();assert.equal(await page.locator('#commandPanel').getAttribute('data-pane'),pane);
-      assert.match(await page.locator('#drawerTitle').innerText(),new RegExp(`\\b${key}\\b`,'i'),`${pane} must retain its opening hotkey in the selected panel title.`);
-      assert.equal(await page.locator('#minimapDock').isVisible(),true);
+      if(touch&&pane==='map')await page.locator('#touchMapDetails').click();else await button.click();
+      assert.equal(await page.locator('#commandPanel').getAttribute('data-pane'),pane);
+      if(!touch)assert.equal(await page.locator('#drawerKey').innerText(),key);
+      assert.equal(await page.locator('#minimapDock').isVisible(),!touch);
       const map=await mapGeometry(page),panel=await page.locator('#commandPanel').boundingBox();
-      assert.ok(panel.y+panel.height<=map.top+1,`${pane} overlaps the map at ${width}×${height}.`);
+      if(!touch)assert.ok(panel.y+panel.height<=map.top+1,`${pane} overlaps the map at ${width}×${height}.`);
       assert.ok(panel.y>=-1&&panel.x>=-1&&panel.x+panel.width<=width+1,`${pane} must stay inside the viewport.`);
-      assert.equal(map.hit,true,`${pane} must not cover minimap navigation.`);
+      if(!touch)assert.equal(map.hit,true,`${pane} must not cover minimap navigation.`);
       await page.locator('#closeDrawer').click();assert.equal(await page.locator('#minimapDock').isVisible(),true);
     }
-    passed(`Persistent map and all five labeled drawers fit ${width}×${height}${touch?' touch':''}.`);
-    await page.locator('[data-drawer="army"]').click();
+    passed(`Minimap and all five labeled drawers fit ${width}×${height}${touch?' touch':''}.`);
+    if(!touch)await page.locator('[data-drawer="army"]').click();
     const before=await page.evaluate(()=>({x:window.__bannerlands.view.x,y:window.__bannerlands.view.y,orders:JSON.stringify(window.__bannerlands.game.units.map(u=>u.order))}));
     const map=await page.locator('#minimap').boundingBox();await page.locator('#minimap').click({position:{x:map.width*.78,y:map.height*.36}});
     const after=await page.evaluate(()=>({x:window.__bannerlands.view.x,y:window.__bannerlands.view.y,orders:JSON.stringify(window.__bannerlands.game.units.map(u=>u.order))}));
     assert.ok(Math.abs(after.x-before.x)+Math.abs(after.y-before.y)>.01,'Clicking the persistent map must navigate.');
     assert.equal(after.orders,before.orders,'Map navigation cannot issue army orders.');
-    assert.equal(await page.locator('#commandPanel').isVisible(),true);assert.equal(await page.locator('#commandPanel').getAttribute('data-pane'),'army');
+    assert.equal(await page.locator('#commandPanel').isVisible(),!touch);
+    if(!touch)assert.equal(await page.locator('#commandPanel').getAttribute('data-pane'),'army');
     if(process.env.LANDS_RENDER_OUT&&(width===390||width===1440)){fs.mkdirSync(process.env.LANDS_RENDER_OUT,{recursive:true});await page.screenshot({path:path.join(process.env.LANDS_RENDER_OUT,`Persistent-minimap-${width}x${height}.png`)});}
-    await page.locator('#closeDrawer').click();
+    if(!touch)await page.locator('#closeDrawer').click();
     for(const [pane,key]of Object.entries(shortcuts)){await page.keyboard.press(key);assert.equal(await page.locator('#commandPanel').getAttribute('data-pane'),pane,`${key} must open ${pane}.`);assert.equal(await page.locator('#commandPanel').isVisible(),true);await page.keyboard.press('Escape');}
     passed(`Map navigation preserves Muster and B/U/O/M/C open their labeled panels at ${width}×${height}.`);
     await page.evaluate(()=>{const s=window.__bannerlands.game.teams[0];s.gold=10000;s.powerReadyAt=0;});

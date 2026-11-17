@@ -39,11 +39,40 @@ export const PAINTED_TROOPS=Object.freeze(Object.fromEntries(Object.entries({
 const troopIndex=new Map(Object.values(PAINTED_TROOPS).map(d=>[d.type+'|'+(d.house||''),d]));
 export function paintedTroopDefinition(type,house){return troopIndex.get(type+'|'+(house||''))||troopIndex.get(type+'|')||null;}
 const actionFrame=(actions,name,phase=0)=>{const v=actions[name];return Array.isArray(v)?v[Math.min(v.length-1,Math.max(0,Math.floor(phase*v.length)))]:v;};
-export function selectPaintedFrame(u,g,definition,moving=false,windup=0){
+function cavalryFrame(u,now,d,moving,screen){
+  // The screen projection uses a 2:1 diamond. Mirror left/right in the
+  // renderer; use a painted front/back view when travelling into its depth.
+  const fx=u.facingX??1,fy=u.facingY??0;
+  const x=screen?.x??(fx-fy),y=screen?.y??((fx+fy)*.5);
+  const diagonal=d.directionFrameStart!=null&&Math.abs(y)>.30*Math.abs(x);
+  const start=diagonal?d.directionFrameStart+(y>0?0:8):d.chargeFrameStart;
+  const strike=u.attackVisual,age=strike?(strike.elapsed??now-strike.at):Infinity;
+  const contact=strike?.action==='charge'&&age>=0&&age<.4;
+  if(contact&&age<.12&&!(u.knockT>0)&&!(u.chargeBlockedUntil>now))return start+5;
+  const hit=u.hitVisual&&now>=u.hitVisual.at&&now-u.hitVisual.at<.15;
+  if(hit)return diagonal?start+6:undefined;
+  if(contact)return start+(age<.25?6:7);
+  if(age>=0&&age<.32)return diagonal?start+(age<.10?5:age<.22?6:7):undefined;
+  if(!u.charging&&u.chargeCooldown>2.55)return start+(u.chargeCooldown>2.8?6:7);
+  if(moving&&(diagonal||!u.backpedaling&&(u.charging||u.chargeRunup>.1||(u.vx||0)**2+(u.vy||0)**2>1))){
+    // Continue the stride right up to lance range. Adjacent riders never
+    // freeze in a single shared attack pose during an ordinary approach.
+    if(!diagonal&&u.charging&&u.target&&Math.hypot(u.x-u.target.x,u.y-u.target.y)<1.15)return start+4;
+    const stride=(u.phase||0)/(Math.PI*3)+(u.id||0)*.61803398875;
+    const phase=Math.floor(((stride%1+1)%1)*4);
+    return start+(u.backpedaling?3-phase:phase);
+  }
+  return diagonal?start+4:undefined;
+}
+export function selectPaintedFrame(u,g,definition,moving=false,windup=0,screen=null){
   const a=definition.actions,now=g.time||0;
   if(u.hp<=0){const age=Math.max(0,now-(u.bornAt??now));return actionFrame(a,'death',Math.min(.999,age/.65));}
-  if(u.hitVisual&&now-u.hitVisual.at<.15&&now>=u.hitVisual.at)return u.hitVisual.blocked?(a.block??a.hit??a.ready):(a.hit??a.ready);
+  if(definition.chargeFrameStart!=null){
+    const frame=cavalryFrame(u,now,definition,moving,screen);
+    if(frame!=null)return frame;
+  }
   const strike=u.attackVisual,age=strike?(strike.elapsed??now-strike.at):Infinity;
+  if(u.hitVisual&&now-u.hitVisual.at<.15&&now>=u.hitVisual.at)return u.hitVisual.blocked?(a.block??a.hit??a.ready):(a.hit??a.ready);
   if(age>=0&&age<(definition.kind==='crossbow'?.10:.32))return age<.10?(a.fire??(strike.action==='swing'?a.swing:a.thrust)??a.thrust??a.ready):(a.recovery??a.ready);
   if(u.reloading&&u.reload&&!moving){
     const stage=u.reload.stage||'span',p=(u.reload.progress||0)/(u.reload.duration||1);

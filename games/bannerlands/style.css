@@ -76,207 +76,290 @@
 @media(max-width:900px){.menu-story{position:static}.terrain-readout{max-width:calc(100% - 190px);font-size:8px;left:18px}.map-heading{max-width:70%}.map-heading #objective{max-width:350px}.map-meta #landsStatus{display:none}}
 @media(max-width:650px){.landscape-preview{height:88px}.terrain-readout{bottom:130px;max-width:calc(100% - 125px);padding:6px 7px;font-size:7px}.map-meta #battleCount{display:none}.map-heading{max-width:78%}.map-heading #objective{font-size:8px}.terrain-legend{gap:4px 6px;font-size:6px}.menu-story h1{font-size:60px}.menu-story>p{font-size:16px}.lands-badge{padding:6px 9px}.landscape-description{font-size:9px}}
 
-/* Campaign setup has its own layout so battle controls keep their existing scale. */
-#menuOverlay{padding:16px;align-items:center;background:radial-gradient(ellipse at 12% 0,#28444099,transparent 55%),radial-gradient(ellipse at 100% 100%,#4b402733,transparent 48%),#0b181ef7;backdrop-filter:none}
-#menuOverlay .campaign-menu{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;gap:16px;width:min(1440px,100%);max-width:none;height:min(820px,calc(100dvh - 32px));min-height:0;margin:auto;padding:0}
-#menuOverlay .campaign-menu-header{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:60px;padding:0 3px 10px;border-bottom:1px solid #a08e583d}
-#menuOverlay .menu-brand{display:flex;align-items:center;gap:14px;color:#e6cc98}
-#menuOverlay .menu-brand>svg{width:35px;height:39px;fill:none;stroke:currentColor;stroke-width:1.1}
-#menuOverlay .menu-brand h1{font:400 30px/1 Georgia,serif;letter-spacing:4px;margin:0}
-#menuOverlay .menu-brand>div>span{display:block;margin-top:7px;font:9px 'Segoe UI',sans-serif;letter-spacing:3.7px;color:#92aaa1}
-#menuOverlay .menu-edition{text-align:right}
-#menuOverlay .menu-edition .eyebrow{font-size:9px;letter-spacing:2.4px}
-#menuOverlay .menu-edition b{display:block;margin-top:8px;font:400 14px Georgia,serif;color:#b7c1ad}
-#menuOverlay .campaign-menu-tabs{display:none}
-#menuOverlay .campaign-menu-body{display:grid;grid-template-columns:minmax(0,1.85fr) minmax(300px,1fr);gap:16px;min-height:0}
-#menuOverlay .menu-house-panel{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);gap:16px;min-width:0;min-height:0}
-#menuOverlay .menu-panel{display:flex;flex-direction:column;min-width:0;min-height:0;padding:18px;border:1px solid #61715a77;border-top-color:#a18b566e;border-radius:5px;background:linear-gradient(135deg,#243b3b5c,#14252cdd 65%);box-shadow:0 12px 35px #0002}
-#menuOverlay .house-selection-panel{overflow:auto;scrollbar-width:thin;scrollbar-color:#667458 transparent}
-#menuOverlay .menu-panel-heading{display:flex;align-items:center;gap:11px;flex-shrink:0}
-#menuOverlay .menu-step{display:flex;align-items:center;justify-content:center;width:29px;height:29px;flex:0 0 29px;border:1px solid #a18b5666;border-radius:50%;font:10px 'Segoe UI',sans-serif;color:#c3ad7b}
-#menuOverlay .menu-panel .eyebrow{display:block;font-size:8px;letter-spacing:1.8px;color:#99ac91}
-#menuOverlay .menu-panel h2{margin:5px 0 0;font:400 24px/1.1 Georgia,serif;color:#ebe5d1;letter-spacing:-.3px}
-#menuOverlay #houseChoices{flex:1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(4,minmax(64px,1fr));gap:8px;margin-top:17px;padding:0;max-height:none;overflow:visible}
-#menuOverlay .house-choice{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-width:0;min-height:0;padding:8px 3px;border-color:#52706466;background:#12252a99;font:11px/1.2 'Segoe UI',sans-serif;color:#b3c3b6;white-space:nowrap;transition:background .15s,border-color .15s}
-#menuOverlay .house-choice .house-sigil-art{display:block;flex:0 0 48px;width:48px;height:48px;margin:0;filter:none}
-#menuOverlay .house-choice:hover{border-color:#bdab78;background:#c1aa6910;color:#e5ddbf}
-#menuOverlay .house-choice.active{border-color:#d6b675;background:linear-gradient(145deg,#c6a56329,#c6a5630b);color:#f0d49a;box-shadow:inset 0 0 0 1px #c8ae6226}
-#menuOverlay .house-choice.active:after{content:'';position:absolute;top:5px;right:5px;width:4px;height:4px;background:#e6c583;transform:rotate(45deg)}
-#menuOverlay .house-selection-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;margin-top:13px;font:10px 'Segoe UI',sans-serif;color:#91a698}
-#menuOverlay .compare-houses-link{padding:5px 0;font:11px 'Segoe UI',sans-serif;white-space:nowrap;color:#d9bd83}
-#menuOverlay .compare-houses-link:after{content:' ↗';margin-left:3px}
-#menuOverlay .selected-house-profile{background:radial-gradient(ellipse at 50% 10%,#a5904d16,transparent 60%),linear-gradient(145deg,#1d3336,#12242b);overflow:auto;scrollbar-width:thin;scrollbar-color:#667458 transparent}
-#menuOverlay .selected-house-heading{display:flex;align-items:center;gap:11px;flex-shrink:0}
-#menuOverlay #chosenHouseEmblem{display:block;width:58px;height:58px;flex:0 0 58px;box-shadow:0 3px 15px #0002}
-#menuOverlay .selected-house-heading h2{font-size:25px;line-height:1.15}
-#menuOverlay #chosenTrait{margin:12px 0 8px;font:italic 12px/1.45 Georgia,serif;color:#aebda8}
-#menuOverlay #chosenPlaystyle{display:block;font:500 13px/1.4 'Segoe UI',sans-serif;color:#d9c18a}
-#menuOverlay .chosen-house-assets{gap:6px;padding:12px 0;margin:12px 0 0;border-top:1px solid #59685255;border-bottom:1px solid #59685255;flex-shrink:0}
-#menuOverlay .chosen-house-assets>div{padding:6px 2px;background:#ffffff03;border-color:#5b6e5944}
-#menuOverlay .chosen-house-assets canvas{width:54px;height:54px;max-width:100%}
-#menuOverlay .chosen-house-assets span{min-height:26px;margin-top:3px;font:9px/1.45 'Segoe UI',sans-serif;color:#bac5af}
-#menuOverlay .menu-power-label{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:15px 0 8px;font:8px 'Segoe UI',sans-serif;letter-spacing:1.6px;color:#a8ad8d}
-#menuOverlay .menu-power-label kbd{font:9px 'Segoe UI',sans-serif;padding:2px 5px;color:#d1bd8c;border-color:#766b4d;letter-spacing:0}
-#menuOverlay .chosen-house-power{padding:12px;border:1px solid #92805255;border-radius:3px;background:#c6aa6510}
-#menuOverlay .chosen-house-power b{font:15px/1.2 Georgia,serif;color:#e0ca99}
-#menuOverlay .chosen-house-power span{margin-top:7px;font:11px/1.5 'Segoe UI',sans-serif;color:#b4c1b3}
-#menuOverlay .chosen-house-power small{margin-top:9px;font:9px/1.45 'Segoe UI',sans-serif;color:#9eaf99}
-#menuOverlay .campaign-settings-panel{overflow:auto;scrollbar-width:thin;scrollbar-color:#667458 transparent}
-#menuOverlay .config-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;margin-top:17px}
-#menuOverlay .config-grid label{min-width:0;font:11px/1.25 'Segoe UI',sans-serif;color:#adbcac}
-#menuOverlay .config-grid select{display:block;height:33px;min-width:0;margin-top:5px;padding:6px 8px;border-color:#63745c99;border-radius:3px;background:#0d2026;color:#dedfcb;font:11px 'Segoe UI',sans-serif}
-#menuOverlay .config-grid .mode-config,#menuOverlay .config-grid .landscape-config{grid-column:1/-1}
-#menuOverlay .config-grid .fog-config{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) 134px;align-items:center;gap:7px 10px;padding:9px 10px;border:1px solid #a18b5688;border-radius:3px;background:#c6aa650c}
-#menuOverlay .fog-config strong{font-weight:600;color:#e6d3a7;font-size:12px}
-#menuOverlay .fog-config select{margin:0}
-#menuOverlay .fog-config small{grid-column:1/-1;font:10px/1.45 'Segoe UI',sans-serif;color:#b2c1ae}
-
-#menuOverlay .landscape-preview{flex-shrink:0;height:82px;margin:14px 0 8px;border-color:#89926a66;border-radius:3px}
-#menuOverlay .landscape-preview>span{font-size:18px;bottom:9px;left:11px}
-#menuOverlay .landscape-description{margin:0 0 12px;padding:0;font:11px/1.45 'Segoe UI',sans-serif;color:#abbca7}
-#menuOverlay .campaign-note-details{margin-top:auto;border-top:1px solid #5e71564d;font-family:'Segoe UI',sans-serif;flex-shrink:0}
-#menuOverlay .campaign-note-details>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;padding:11px 0 0;list-style:none;font-size:10px;color:#c0c4a8}
-#menuOverlay .campaign-note-details>summary::-webkit-details-marker{display:none}
-#menuOverlay .campaign-note-details>summary>span{font-size:15px;color:#cbb579}
-#menuOverlay .campaign-note-details[open]>summary>span{transform:rotate(45deg)}
-#menuOverlay .mode-note{margin:10px 0 0;padding:9px;font:11px/1.5 'Segoe UI',sans-serif}
-#menuOverlay .difficulty-note{margin:9px 0 0;font:11px/1.5 'Segoe UI',sans-serif}
-#menuOverlay .campaign-menu-footer{display:flex;align-items:center;justify-content:space-between;gap:20px;min-width:0;padding:14px 3px 0;border-top:1px solid #a08e583d}
-#menuOverlay .fair-start{min-width:0;gap:11px;margin:0;line-height:1.4}
-#menuOverlay .fair-start svg{width:25px;height:29px;flex:0 0 25px}
-#menuOverlay .fair-start strong{display:block;font:400 17px Georgia,serif;color:#d8cfac}
-#menuOverlay .fair-start small{display:block;margin-top:5px;font:10px/1.5 'Segoe UI',sans-serif;color:#9eb09e}
-#menuOverlay #houseCountPromise{font-weight:400;color:#c7bb91;white-space:nowrap;margin-left:5px}
-#menuOverlay .campaign-menu-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
-#menuOverlay #startButton{width:auto;min-width:231px;min-height:47px;gap:22px;padding:14px 17px;font-size:10px;letter-spacing:1.6px;white-space:nowrap;box-shadow:0 3px 12px #0002}
-#menuOverlay #startButton>span{font-size:16px;line-height:1}
-#menuOverlay #resumeButton{width:auto;min-height:47px;margin:0;padding:12px 16px;font:11px 'Segoe UI',sans-serif;color:#c6d3b8;border-color:#748366;background:#192e30;white-space:nowrap}
-@media(max-width:1150px){
- #menuOverlay .campaign-menu-body{grid-template-columns:minmax(0,1.85fr) minmax(300px,1fr);gap:12px}
- #menuOverlay .menu-house-panel{gap:12px;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr)}
- #menuOverlay .menu-panel{padding:14px}
- #menuOverlay .menu-panel h2{font-size:22px}
- #menuOverlay .menu-step{display:none}
- #menuOverlay #houseChoices{gap:6px}
- #menuOverlay .house-selection-footer>span{display:none}
- #menuOverlay .selected-house-heading{gap:8px}
- #menuOverlay #chosenHouseEmblem{width:50px;height:50px;flex-basis:50px}
- #menuOverlay .selected-house-heading h2{font-size:22px}
- #menuOverlay .chosen-house-assets canvas{width:48px;height:48px}
- #menuOverlay .chosen-house-power{padding:10px}
- #menuOverlay .fair-start small{max-width:320px}
- #menuOverlay #houseCountPromise{display:block;margin-left:0}
+/* The campaign frontispiece and setup share one scroll surface on compact displays. */
+#menuOverlay {
+  --menu-paper:#ebe3d3;
+  --menu-muted:#b5b5a6;
+  --menu-brass:#d5b77e;
+  --menu-rule:#ac9a744a;
+  --menu-width:1256px;
+  --menu-gutter:clamp(22px,5vw,84px);
+  padding:0;
+  display:block;
+  overflow:auto;
+  background:#1b201e;
+  color:var(--menu-paper);
+  backdrop-filter:none;
+  scrollbar-width:thin;
+  scrollbar-color:#6f7466 #1b201e;
 }
-@media(max-width:980px){
- #menuOverlay .campaign-menu{grid-template-rows:auto auto minmax(0,1fr) auto;gap:12px}
- #menuOverlay .campaign-menu-header{min-height:49px;padding-bottom:9px}
- #menuOverlay .menu-brand h1{font-size:25px}
- #menuOverlay .menu-brand>div>span{font-size:8px;letter-spacing:3px;margin-top:6px}
- #menuOverlay .menu-brand>svg{width:29px;height:33px}
- #menuOverlay .menu-edition b{font-size:12px;margin-top:6px}
- #menuOverlay .campaign-menu-tabs{display:flex;gap:8px}
- #menuOverlay .campaign-menu-tabs button{display:flex;align-items:center;gap:9px;flex:1;padding:9px 13px;border-color:#59705d88;font:10px 'Segoe UI',sans-serif;color:#8fa393;text-align:left;background:#192e3055}
- #menuOverlay .campaign-menu-tabs button span{font-size:12px;color:#b4c4b4}
- #menuOverlay .campaign-menu-tabs button[aria-selected="true"]{border-color:#b59e68;background:#bca06413;color:#dfc28a}
- #menuOverlay .campaign-menu-tabs button[aria-selected="true"] span{color:#ebd59f}
- #menuOverlay .campaign-menu-body{display:block}
- #menuOverlay .menu-house-panel{height:100%;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr)}
- #menuOverlay .campaign-settings-panel{height:100%}
- #menuOverlay[data-menu-tab="campaign"] #menuHousePanel{display:none}
- #menuOverlay:not([data-menu-tab="campaign"]) #menuCampaignPanel{display:none}
- #menuOverlay .menu-step{display:flex}
- #menuOverlay .menu-panel h2{font-size:24px}
- #menuOverlay .selected-house-heading h2{font-size:24px}
- #menuOverlay #houseChoices{margin-top:14px;gap:8px}
- #menuOverlay .house-selection-footer>span{display:inline}
- #menuOverlay .config-grid{grid-template-columns:repeat(3,minmax(0,1fr));margin-top:14px;gap:12px}
- #menuOverlay .config-grid .mode-config{grid-column:span 2}
- #menuOverlay .config-grid .landscape-config{grid-column:span 2}
- #menuOverlay .landscape-preview{height:105px;margin-top:15px}
- #menuOverlay .landscape-description{margin-bottom:12px}
- #menuOverlay .campaign-menu-footer{padding-top:12px;gap:12px}
- #menuOverlay .fair-start small{font-size:9px}
- #menuOverlay #startButton{min-width:215px}
- #menuOverlay #resumeButton{padding:12px;font-size:10px}
+#menuOverlay[hidden],#menuOverlay [hidden] { display:none!important; }
+#menuOverlay .campaign-menu {
+  display:block;
+  width:100%;
+  max-width:none;
+  height:100%;
+  min-height:0;
+  padding:0;
+  margin:0;
+  overflow:auto;
+  scrollbar-width:thin;
+  scrollbar-color:#6f7466 #1b201e;
+  background:linear-gradient(145deg,#242922,#1c211e 56%,#171c19);
 }
-@media(max-width:640px){
- #menuOverlay{padding:12px}
- #menuOverlay .campaign-menu{height:calc(100dvh - 24px);gap:10px}
- #menuOverlay .campaign-menu-header{min-height:51px;gap:10px}
- #menuOverlay .menu-brand{gap:9px}
- #menuOverlay .menu-brand h1{font-size:23px;letter-spacing:2px}
- #menuOverlay .menu-brand>div>span{font-size:7px;letter-spacing:2px}
- #menuOverlay .menu-brand>svg{width:24px;height:29px}
- #menuOverlay .menu-edition .eyebrow{font-size:8px;letter-spacing:1px}
- #menuOverlay .menu-edition b{display:none}
- #menuOverlay .campaign-menu-tabs button{padding:9px 11px}
- #menuOverlay .menu-house-panel{grid-template-columns:minmax(0,1fr)}
- #menuOverlay .selected-house-profile{display:none}
- #menuOverlay .menu-panel{padding:15px}
- #menuOverlay .menu-panel h2{font-size:25px}
- #menuOverlay #houseChoices{grid-template-rows:repeat(4,minmax(68px,1fr));margin-top:15px;gap:8px}
- #menuOverlay .house-choice{font-size:11px;padding:7px 3px;gap:5px}
- #menuOverlay .house-choice .house-sigil-art{width:48px;height:48px;flex-basis:48px}
- #menuOverlay .house-selection-footer{margin-top:12px}
- #menuOverlay .config-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 12px;margin-top:17px}
- #menuOverlay .config-grid .mode-config,#menuOverlay .config-grid .landscape-config{grid-column:1/-1}
- #menuOverlay .config-grid label{font-size:11px}
- #menuOverlay .config-grid select{font-size:12px;height:36px}
- #menuOverlay .landscape-preview{height:100px;margin-top:15px}
- #menuOverlay .landscape-description{font-size:11px;line-height:1.5}
- #menuOverlay .campaign-menu-footer{flex-direction:column;align-items:stretch;gap:10px;padding-top:10px}
- #menuOverlay .fair-start{gap:7px}
- #menuOverlay .fair-start svg{width:17px;height:21px;flex-basis:17px}
- #menuOverlay .fair-start strong{font-size:15px}
- #menuOverlay .fair-start small{display:none}
- #menuOverlay .campaign-menu-actions{width:100%;gap:8px}
- #menuOverlay #startButton{flex:1;justify-content:space-between;min-width:0;min-height:44px;padding:13px 14px;font-size:10px;letter-spacing:1.1px;gap:12px}
- #menuOverlay #resumeButton{flex:1;min-width:0;min-height:44px;padding:10px 8px;font-size:10px;white-space:normal;line-height:1.3}
+#menuOverlay .campaign-menu-header {
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  min-height:clamp(286px,40vh,430px);
+  background:#202926;
+  border-bottom:1px solid #9b8963;
 }
-@media(max-height:700px) and (min-width:641px){
- #menuOverlay{padding:12px}
- #menuOverlay .campaign-menu{height:calc(100dvh - 24px);gap:10px}
- #menuOverlay .campaign-menu-header{min-height:49px;padding-bottom:8px}
- #menuOverlay .menu-brand h1{font-size:25px}
- #menuOverlay .menu-brand>div>span{margin-top:5px;font-size:8px}
- #menuOverlay .menu-brand>svg{width:28px;height:32px}
- #menuOverlay .menu-panel{padding:13px}
- #menuOverlay .menu-panel h2{font-size:22px}
- #menuOverlay .menu-step{width:26px;height:26px;flex-basis:26px}
- #menuOverlay #houseChoices{margin-top:12px;gap:6px}
- #menuOverlay .house-selection-footer{margin-top:9px}
- #menuOverlay .house-selection-footer>span{font-size:9px}
- #menuOverlay #chosenHouseEmblem{width:47px;height:47px;flex-basis:47px}
- #menuOverlay #chosenTrait{margin:9px 0 6px;font-size:11px}
- #menuOverlay #chosenPlaystyle{font-size:12px}
- #menuOverlay .chosen-house-assets{padding:8px 0;margin-top:9px}
- #menuOverlay .chosen-house-assets canvas{width:45px;height:45px}
- #menuOverlay .chosen-house-assets>div{padding:4px 2px}
- #menuOverlay .menu-power-label{margin-top:11px}
- #menuOverlay .chosen-house-power{padding:10px}
- #menuOverlay .chosen-house-power span{font-size:11px;line-height:1.45}
- #menuOverlay .config-grid{margin-top:12px;gap:9px 10px}
- #menuOverlay .config-grid select{height:31px;margin-top:4px}
- #menuOverlay .landscape-preview{height:70px;margin-top:10px}
- #menuOverlay .landscape-description{margin-bottom:9px;font-size:10px}
- #menuOverlay .campaign-menu-footer{padding-top:10px}
- #menuOverlay #startButton,#menuOverlay #resumeButton{min-height:43px}
+#menuOverlay .campaign-painting {
+  pointer-events:none;
+  position:absolute;
+  inset:0 0 0 auto;
+  z-index:-2;
+  width:78%;
+  height:100%;
+  object-fit:cover;
+  object-position:50% 43%;
 }
-@media(max-height:700px) and (max-width:640px){
- #menuOverlay .campaign-menu-header{min-height:43px}
- #menuOverlay .menu-brand h1{font-size:21px}
- #menuOverlay .menu-panel{padding:12px}
- #menuOverlay .menu-panel h2{font-size:22px}
- #menuOverlay #houseChoices{margin-top:11px;gap:6px;grid-template-rows:repeat(4,minmax(59px,1fr))}
- #menuOverlay .house-choice{gap:3px;padding:5px 2px}
- #menuOverlay .house-choice .house-sigil-art{width:40px;height:40px;flex-basis:40px}
- #menuOverlay .house-selection-footer{margin-top:8px;font-size:9px}
- #menuOverlay .config-grid{gap:10px;margin-top:13px}
- #menuOverlay .config-grid select{height:32px;font-size:11px}
- #menuOverlay .landscape-preview{height:66px;margin-top:11px}
- #menuOverlay .landscape-description{font-size:10px;margin-bottom:9px}
+#menuOverlay .campaign-menu-header::before {
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  background:linear-gradient(90deg,#202926 16%,#202926 22%,#202926d4 32%,#1d241b45 55%,transparent 76%);
 }
-@media(max-width:360px){#menuOverlay .menu-edition{display:none}}
+#menuOverlay .campaign-frontispiece,#menuOverlay .campaign-setup-bar,#menuOverlay .campaign-menu-body {
+  width:min(var(--menu-width),calc(100% - 2 * var(--menu-gutter)));
+  margin-inline:auto;
+}
+#menuOverlay .campaign-frontispiece { padding:36px 0 27px; }
+#menuOverlay .campaign-subtitle {
+  margin:0 0 8px 4px;
+  font:600 10px/1.4 'Segoe UI',sans-serif;
+  letter-spacing:.35em;
+  text-transform:uppercase;
+  color:#e8d19c;
+}
+#menuOverlay h1 {
+  margin:0 0 26px -3px;
+  font:400 clamp(64px,7.3vw,108px)/.98 Georgia,serif;
+  letter-spacing:-.062em;
+  color:#fff1cf;
+  text-shadow:0 2px 12px #11190f60;
+}
+#menuOverlay .campaign-menu-actions,#menuOverlay .online-menu-actions { display:flex; align-items:center; flex-wrap:wrap; }
+#menuOverlay .campaign-menu-actions { gap:9px; }
+#menuOverlay .campaign-menu-actions button {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:24px;
+  width:auto;
+  min-height:45px;
+  margin:0;
+  padding:10px 22px;
+  border:1px solid #d1bd91a6;
+  border-radius:2px;
+  color:#f4e8ce;
+  background:#20271fe6;
+  font:500 15px/1.15 'Segoe UI',sans-serif;
+  letter-spacing:0;
+}
+#menuOverlay .campaign-menu-actions button:hover { border-color:#ffe1aa; background:#404237; }
+#menuOverlay #startButton { min-width:149px; border-color:#e4c798; background:#d8ba81; color:#271f15; font-weight:700; font-size:12px; letter-spacing:.07em; }
+#menuOverlay #startButton:hover { background:#e8ce9a; }
+#menuOverlay #startButton:disabled { opacity:1; color:#272218; background:#b7a783; cursor:wait; }
+#menuOverlay #startButton span { font-size:20px; }
+#menuOverlay .online-menu-actions { gap:16px; margin:6px 0 0; }
+#menuOverlay .online-menu-actions button,#menuOverlay .online-download,#menuOverlay .compare-houses-link {
+  min-height:36px;
+  margin:0;
+  padding:6px 0;
+  border:0;
+  border-radius:0;
+  color:#e6d2a7;
+  background:transparent;
+  font:500 13px/1.25 'Segoe UI',sans-serif;
+}
+#menuOverlay .online-menu-actions button:hover,#menuOverlay .online-download:hover,#menuOverlay .compare-houses-link:hover { color:#fff1cf; text-decoration:underline; text-underline-offset:3px; }
+#menuOverlay :is(button,a,select,summary):focus-visible { outline:2px solid #ffe1a4; outline-offset:3px; }
+#menuOverlay .campaign-setup-bar { display:flex; justify-content:space-between; align-items:center; gap:12px; border-bottom:1px solid var(--menu-rule); }
+#menuOverlay .campaign-menu-tabs { display:flex; gap:clamp(16px,2.3vw,34px); }
+#menuOverlay .campaign-menu-tabs button {
+  position:relative; padding:17px 0 16px; min-height:48px; border:0; border-radius:0;
+  background:transparent; color:var(--menu-muted); font:500 14px/1.2 'Segoe UI',sans-serif;
+}
+#menuOverlay .campaign-menu-tabs button[aria-selected="true"] { color:#f1d39a; box-shadow:inset 0 -2px #c9aa6e; }
+#menuOverlay .campaign-menu-tabs button:hover { color:#f8e9cb; }
+#menuOverlay .online-download { width:auto; gap:7px; font-size:12px; color:var(--menu-muted); }
+#menuOverlay .campaign-menu-body { padding:clamp(19px,2.5vw,36px) 0 32px; }
+#menuOverlay .menu-house-panel { display:grid; grid-template-columns:minmax(0,1.52fr) minmax(270px,1fr); gap:clamp(24px,4vw,65px); }
+#menuOverlay[data-menu-tab="campaign"] #menuHousePanel,#menuOverlay:not([data-menu-tab="campaign"]) #menuCampaignPanel { display:none; }
+#menuOverlay .menu-panel { min-width:0; }
+#menuOverlay .menu-panel-heading { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+#menuOverlay .menu-panel h2 { margin:0; color:var(--menu-paper); font:400 clamp(25px,2.5vw,36px)/1.05 Georgia,serif; letter-spacing:-.045em; }
+#menuOverlay #houseCountPromise { color:var(--menu-muted); white-space:nowrap; font:12px/1.3 'Segoe UI',sans-serif; }
+#menuOverlay #houseChoices { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; max-height:none; overflow:visible; padding:0; margin:19px 0 0; }
+#menuOverlay .house-choice {
+  display:flex; align-items:center; justify-content:flex-start; gap:8px;
+  min-width:0; min-height:57px; padding:5px 9px; text-align:left;
+  background:#242a25; border:1px solid #938b7242; border-radius:2px;
+  color:#deded1; font:13px/1.14 'Segoe UI',sans-serif;
+}
+#menuOverlay .house-choice .house-sigil-art { flex:0 0 auto; width:38px; height:38px; margin:0; }
+#menuOverlay .house-choice:hover { border-color:#beac81; background:#30352b; }
+#menuOverlay .house-choice.active { border-color:#d7b779; background:#424337; color:#fff0c8; }
+#menuOverlay .house-selection-footer { display:flex; align-items:center; justify-content:space-between; margin-top:8px; }
+#menuOverlay #menuHouseStyle { display:none; color:var(--menu-muted); font:14px/1.3 Georgia,serif; }
+#menuOverlay .compare-houses-link::after { content:" →"; }
+#menuOverlay .selected-house-profile { border-left:1px solid var(--menu-rule); padding-left:clamp(22px,3vw,44px); }
+#menuOverlay .selected-house-heading { display:flex; align-items:center; gap:13px; }
+#menuOverlay #chosenHouseEmblem { width:64px; height:64px; flex:0 0 64px; }
+#menuOverlay .selected-house-heading h2 { font-size:clamp(25px,2.3vw,34px); }
+#menuOverlay #chosenTrait { margin:4px 0 0; color:#c9c5ae; font:italic 15px/1.3 Georgia,serif; }
+#menuOverlay #chosenPlaystyle { display:block; margin:12px 0 5px; color:#e5d7b7; font:15px/1.4 Georgia,serif; }
+#menuOverlay .chosen-house-assets { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin:0; padding:3px 0 11px; border-bottom:1px solid var(--menu-rule); }
+#menuOverlay .chosen-house-assets>div { min-width:0; padding:0; background:none; border:0; }
+#menuOverlay .chosen-house-assets canvas { width:65px; height:65px; }
+#menuOverlay .chosen-house-assets span { min-height:0; color:#ccd0c1; font:12px/1.3 'Segoe UI',sans-serif; }
+#menuOverlay .menu-power-label { margin:15px 0 4px; color:var(--menu-brass); font:600 10px/1.3 'Segoe UI',sans-serif; text-transform:uppercase; letter-spacing:.12em; }
+#menuOverlay .chosen-house-power { border:0; padding:0; font:13px/1.4 'Segoe UI',sans-serif; }
+#menuOverlay .chosen-house-power b { font:17px/1.25 Georgia,serif; color:var(--menu-paper); }
+#menuOverlay .chosen-house-power span,#menuOverlay .chosen-house-power small { color:var(--menu-muted); }
+#menuOverlay .chosen-house-power small { font-size:12px; }
+#menuOverlay .campaign-settings-columns { display:grid; grid-template-columns:minmax(0,1.52fr) minmax(270px,1fr); gap:clamp(24px,4vw,65px); margin-top:18px; }
+#menuOverlay .config-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+#menuOverlay .config-grid label { min-width:0; color:#d4d4c6; font:13px/1.3 'Segoe UI',sans-serif; }
+#menuOverlay .config-grid .mode-config { grid-column:span 2; }
+#menuOverlay .config-grid .landscape-config { grid-column:1; grid-row:3; }
+#menuOverlay .config-grid .fog-config { grid-column:span 2; }
+#menuOverlay .config-grid select { min-height:37px; width:100%; margin-top:4px; padding:6px; background:#2b3029; color:#eee9d9; border-color:#87826a; font:13px 'Segoe UI',sans-serif; }
+#menuOverlay .fog-config strong { font-weight:400; }
+#menuOverlay .fog-config small { display:block; color:var(--menu-muted); font:12px/1.45 'Segoe UI',sans-serif; margin-top:6px; }
+#menuOverlay .landscape-preview { height:clamp(120px,15.5vw,220px); margin:0; border:1px solid var(--menu-rule); border-radius:2px; }
+#menuOverlay .landscape-preview canvas { object-fit:cover; }
+#menuOverlay .landscape-preview>span { font:24px/1.15 Georgia,serif; }
+#menuOverlay .landscape-description,#menuOverlay .difficulty-note { color:var(--menu-muted); padding:0; margin:10px 0; font:13px/1.5 'Segoe UI',sans-serif; }
+#menuOverlay .campaign-note-details summary { color:var(--menu-brass); cursor:pointer; padding:9px 0; font:13px/1.4 'Segoe UI',sans-serif; }
+@media(min-width:1550px) {
+  #menuOverlay .campaign-painting { width:max(76%,1500px); object-position:50% 44%; }
+  #menuOverlay .campaign-menu-header::before { background:linear-gradient(90deg,#202926 14%,#202926e8 27%,#17201b82 49%,transparent 70%); }
+}
+@media(max-width:1020px) {
+  #menuOverlay .menu-house-panel,#menuOverlay .campaign-settings-columns { grid-template-columns:minmax(0,1.35fr) minmax(245px,1fr); gap:23px; }
+  #menuOverlay .house-choice { flex-direction:column; justify-content:center; gap:3px; padding:6px 3px; min-height:64px; }
+  #menuOverlay .menu-panel-heading { align-items:flex-start; flex-direction:column; gap:6px; }
+  #menuOverlay .selected-house-profile { padding-left:22px; }
+  #menuOverlay #houseChoices { margin-top:12px; }
+}
+@media(max-width:690px) {
+  #menuOverlay { --menu-gutter:18px; }
+  #menuOverlay .campaign-menu-header { min-height:253px; }
+  #menuOverlay .campaign-frontispiece { padding:34px 0 16px; }
+  #menuOverlay .campaign-painting { width:100%; object-position:73% 44%; }
+  #menuOverlay .campaign-menu-header::before { background:linear-gradient(90deg,#12201b9e,transparent 93%),linear-gradient(0deg,#171d19d9,#171d1933 66%,transparent); }
+  #menuOverlay .campaign-subtitle { font-size:9px; margin-left:2px; }
+  #menuOverlay h1 { font-size:clamp(54px,12.4vw,72px); margin-bottom:20px; text-shadow:0 2px 10px #182019ab; }
+  #menuOverlay .campaign-menu-actions { gap:6px; }
+  #menuOverlay .campaign-menu-actions button { min-height:43px; padding:9px 13px; font-size:14px; gap:8px; }
+  #menuOverlay #startButton { min-width:117px; }
+  #menuOverlay .online-menu-actions { gap:15px; margin-top:0; }
+  #menuOverlay .online-menu-actions button { min-height:40px; }
+  #menuOverlay .campaign-menu-tabs { gap:18px; }
+  #menuOverlay .campaign-menu-tabs button { font-size:13px; min-height:48px; }
+  #menuOverlay .online-download { min-height:44px; font-size:12px; }
+  #menuOverlay .campaign-menu-body { padding:20px 0 28px; }
+  #menuOverlay .menu-house-panel,#menuOverlay .campaign-settings-columns { grid-template-columns:1fr; gap:17px; }
+  #menuOverlay .menu-panel-heading { flex-direction:row; align-items:baseline; }
+  #menuOverlay .menu-panel h2 { font-size:26px; }
+  #menuOverlay #houseCountPromise { font-size:11px; }
+  #menuOverlay #houseChoices { gap:5px; margin-top:13px; }
+  #menuOverlay .house-choice { font-size:12px; min-height:64px; }
+  #menuOverlay .house-choice .house-sigil-art { width:36px; height:36px; }
+  #menuOverlay .house-selection-footer { margin:3px 0 0; }
+  #menuOverlay #menuHouseStyle { display:block; }
+  #menuOverlay #chosenPlaystyle { display:none; }
+  #menuOverlay .compare-houses-link { min-height:44px; }
+  #menuOverlay .selected-house-profile { padding:16px 0 0; border-left:0; border-top:1px solid var(--menu-rule); }
+  #menuOverlay .config-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px 10px; }
+  #menuOverlay .config-grid .mode-config,#menuOverlay .config-grid .landscape-config { grid-column:1/-1; grid-row:auto; }
+  #menuOverlay .config-grid select { min-height:44px; }
+  #menuOverlay .landscape-preview { height:140px; }
+}
+@media(max-width:350px) {
+  #menuOverlay { --menu-gutter:13px; }
+  #menuOverlay .campaign-setup-bar { gap:5px; }
+  #menuOverlay .campaign-menu-tabs { gap:11px; }
+  #menuOverlay .menu-panel-heading { flex-direction:column; }
+}
+@media (orientation:landscape) and (pointer:coarse) and (max-height:500px) and (max-width:1024px) {
+  #menuOverlay {
+    padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);
+    overflow:hidden;
+  }
+  #menuOverlay .campaign-menu {
+    display:grid;
+    grid-template-columns:clamp(194px,32%,292px) minmax(0,1fr);
+    grid-template-rows:auto minmax(0,1fr);
+    gap:0;
+    overflow:hidden;
+  }
+  #menuOverlay .campaign-menu-header {
+    grid-area:1 / 1 / 3 / 2;
+    align-items:flex-end;
+    min-height:0;
+    border-bottom:0;
+    border-right:1px solid var(--menu-rule);
+  }
+  #menuOverlay .campaign-painting { width:100%; object-position:76% 50%; }
+  #menuOverlay .campaign-menu-header::before { background:linear-gradient(0deg,#17201df5 3%,#17201de0 29%,#17201d91 60%,#17201d20 100%); }
+  #menuOverlay .campaign-frontispiece { width:100%; padding:12px clamp(10px,2vw,20px) 9px; }
+  #menuOverlay .campaign-subtitle { margin:0 0 4px; font-size:9px; letter-spacing:.2em; }
+  #menuOverlay h1 { margin:0 0 15px -1px; font-size:clamp(35px,5.3vw,49px); }
+  #menuOverlay .campaign-menu-actions { display:grid; gap:5px; }
+  #menuOverlay .campaign-menu-actions button { width:100%; min-width:0; min-height:44px; padding:5px 8px; font-size:13px; white-space:normal; }
+  #menuOverlay #startButton { min-width:0; font-size:11px; }
+  #menuOverlay .online-menu-actions { justify-content:flex-start; gap:0 13px; margin-top:2px; }
+  #menuOverlay .online-menu-actions button { min-height:44px; padding:3px 0; font-size:12px; }
+  #menuOverlay .campaign-setup-bar { grid-area:1 / 2; width:100%; padding:0 13px; gap:6px; }
+  #menuOverlay .campaign-menu-tabs { gap:16px; }
+  #menuOverlay .campaign-menu-tabs button,#menuOverlay .online-download { min-height:44px; padding:8px 0; font-size:12px; white-space:nowrap; }
+  #menuOverlay .campaign-menu-body {
+    grid-area:2 / 2;
+    overflow:auto;
+    overscroll-behavior:contain;
+    width:100%;
+    min-height:0;
+    margin:0;
+    padding:12px 13px 16px;
+    scrollbar-width:thin;
+    scrollbar-color:#727563 transparent;
+  }
+  #menuOverlay .menu-house-panel,#menuOverlay .campaign-settings-columns { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; }
+  #menuOverlay[data-menu-tab="campaign"] #menuHousePanel { display:none; }
+  #menuOverlay .menu-panel-heading { flex-direction:row; align-items:baseline; }
+  #menuOverlay .menu-panel h2 { font-size:24px; }
+  #menuOverlay #houseCountPromise { font-size:11px; }
+  #menuOverlay #houseChoices { gap:4px; margin-top:8px; }
+  #menuOverlay .house-choice { flex-direction:row; justify-content:flex-start; gap:6px; min-height:45px; padding:3px 5px; font-size:12px; }
+  #menuOverlay .house-choice .house-sigil-art { width:27px; height:27px; }
+  #menuOverlay .house-selection-footer { margin-top:0; }
+  #menuOverlay #menuHouseStyle { display:block; }
+  #menuOverlay #chosenPlaystyle { display:none; }
+  #menuOverlay .compare-houses-link { min-height:44px; }
+  #menuOverlay .selected-house-profile { border-left:0; border-top:1px solid var(--menu-rule); padding:12px 0 0; }
+  #menuOverlay .campaign-settings-columns { margin-top:10px; }
+  #menuOverlay .config-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+  #menuOverlay .config-grid .mode-config,#menuOverlay .config-grid .landscape-config { grid-column:1/-1; grid-row:auto; }
+  #menuOverlay .config-grid select { min-height:44px; }
+  #menuOverlay .landscape-preview { height:135px; }
+}
 
 /* Formation facing and saved companies. */
 .face-order-button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px;margin:0 0 12px;color:#d9c797;border-color:#827447;background:#c9aa6110;font:11px 'Segoe UI',sans-serif;text-align:left}

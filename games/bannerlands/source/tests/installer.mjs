@@ -10,7 +10,7 @@ import {createReadStream} from 'node:fs';
 const option=name=>{const index=process.argv.indexOf('--'+name);return index<0?null:process.argv[index+1];};
 const installer=option('installer'),portable=option('portable'),work=option('work');if(!installer||!work)throw new Error('Provide --installer and an isolated --work directory.');
 const qa=path.resolve(work),extracted=path.join(qa,'extracted'),installed=path.join(qa,'installed'),desktop=path.join(qa,'desktop'),menu=path.join(qa,'start-menu'),data=path.join(qa,'user-data');await fs.mkdir(qa,{recursive:true});
-function run(executable,args){const result=spawnSync(executable,args,{windowsHide:true,encoding:'utf8',maxBuffer:1024*1024});if(result.status!==0)throw new Error(result.stderr||result.stdout||'Installer test process failed.');return result.stdout;}
+function run(executable,args,env=process.env){const result=spawnSync(executable,args,{env,windowsHide:true,encoding:'utf8',maxBuffer:1024*1024});if(result.status!==0)throw new Error(result.stderr||result.stdout||'Installer test process failed.');return result.stdout;}
 run(path.resolve(installer),['/extract',extracted]);
 run('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File',path.join(extracted,'install.ps1'),'-PayloadPath',path.join(extracted,'payload.zip'),'-Destination',installed,'-DesktopDirectory',desktop,'-StartMenuDirectory',menu,'-NoRegistry','-Quiet']);
 for(const file of [path.join(desktop,'Bannerlands.lnk'),path.join(menu,'Bannerlands.lnk'),path.join(menu,'Uninstall Bannerlands.lnk'),path.join(installed,'Bannerlands.ico')])await fs.access(file);
@@ -86,7 +86,9 @@ try{
   assert.equal(launcher.exitCode,0);assert.equal(unrelated.exitCode,null);
   await fs.access(path.join(data,'personal-settings.json'));await fs.access(path.join(data,'sessions','foreign.json'));
   for(const file of [installed,path.join(desktop,'Bannerlands.lnk'),menu])await assert.rejects(fs.access(file));
-  const result={testedAt:new Date().toISOString(),version:manifest.version,sourceCommit:manifest.sourceCommit,payloadFilesVerified:manifest.files.length,isolatedInstallation:true,desktopShortcut:true,startMenuShortcuts:true,paintedIcon:true,bundledRuntimeStartsFullGame:true,gracefulShutdownDuringUninstall:true,unrelatedProcessPreserved:true,foreignSessionPreserved:true,personalDataPreserved:true,installedFilesAndOwnShortcutsRemoved:true,limitations:['The live user-profile registry and desktop were not modified.','Installer is unsigned.']};
+  const signatureCheck='Import-Module (Join-Path $PSHOME "Modules/Microsoft.PowerShell.Security/Microsoft.PowerShell.Security.psd1") -ErrorAction Stop; (Get-AuthenticodeSignature -LiteralPath $env:BANNERLANDS_QA_INSTALLER).Status.ToString()';
+  const signature=run('powershell.exe',['-NoProfile','-Command',signatureCheck],{...process.env,BANNERLANDS_QA_INSTALLER:path.resolve(installer)}).trim();
+  const result={testedAt:new Date().toISOString(),version:manifest.version,sourceCommit:manifest.sourceCommit,payloadFilesVerified:manifest.files.length,installerSignatureStatus:signature,isolatedInstallation:true,desktopShortcut:true,startMenuShortcuts:true,paintedIcon:true,bundledRuntimeStartsFullGame:true,gracefulShutdownDuringUninstall:true,unrelatedProcessPreserved:true,foreignSessionPreserved:true,personalDataPreserved:true,installedFilesAndOwnShortcutsRemoved:true,limitations:['Used an isolated installation and temporary shortcuts.']};
   if(portable)Object.assign(result,{installedHostMenuVerified:true,portableHostMenuVerified:true,identicalPortablePayload:true,localOnly:true});
   await fs.writeFile(path.join(qa,'result.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));
 }finally{
