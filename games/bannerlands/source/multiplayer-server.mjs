@@ -41,7 +41,8 @@ export async function createMatchServer({config={},lobby={},hostToken=secret(),i
   let name=cleanName(lobby.name,'Bannerlands lobby'),hostName=cleanName(lobby.hostName,'Host'),publicLobby=!!lobby.public;
   let revision=1,status='waiting',origin='',reachable=false,authority=null,sequence=0,closed=false,lastPublished=0,latestSnapshotAt=0,fatalError=null,matchId=null,synchronizationDeadline=0;
   let directoryError=null,publication=Promise.resolve();
-  const id=randomBytes(12).toString('hex'),sessions=new Map(),snapshots=new Map(),rate=new Map();
+  let id=randomBytes(12).toString('hex');
+  const sessions=new Map(),snapshots=new Map(),rate=new Map();
   const hostSession={id:randomBytes(12).toString('hex'),token:secret(),team:0,name:hostName,host:true,ready:false,assetsReady:false,synchronized:false,lastSeen:clock(),lastSeq:0,history:new Map()};sessions.set(hostSession.token,hostSession);
   const metrics={requests:0,stateBytes:0,stateWireBytes:0,stateResponses:0,stateEncodeMs:0,stateGzipMs:0,commands:0,simulationSteps:0,simulationMs:0,maxSimulationMs:0,directoryOperations:0};
   const record=()=>{
@@ -68,7 +69,9 @@ export async function createMatchServer({config={},lobby={},hostToken=secret(),i
     if([...sessions.values()].every(s=>s.synchronized&&s.ready&&s.assetsReady&&clock()-s.lastSeen<disconnectMs)){status='in-progress';synchronizationDeadline=0;queuePublish(true);}
   }
   async function resetInstalledLobby(){
-    await desktop.stop(instance);authority=null;status='waiting';matchId=null;sequence=0;synchronizationDeadline=0;fatalError=null;invite=secret();publicLobby=false;
+    status='closed';publicLobby=false;
+    await desktop.stop(instance);
+    id=randomBytes(12).toString('hex');authority=null;status='waiting';matchId=null;sequence=0;synchronizationDeadline=0;fatalError=null;invite=secret();
     sessions.clear();hostSession.team=0;hostSession.lastSeq=0;hostSession.history.clear();hostSession.lastSeen=clock();sessions.set(hostSession.token,hostSession);changed();await publication;
   }
   function prune(){checkSynchronization();if(status!=='waiting')return;let removed=false;for(const [key,s]of sessions)if(!s.host&&clock()-s.lastSeen>reservationMs){sessions.delete(key);removed=true;}if(removed)changed();}
@@ -124,7 +127,12 @@ export async function createMatchServer({config={},lobby={},hostToken=secret(),i
       throw new RequestError(404,'not-found','Not found.');
     }
     if(url.pathname==='/api/join'&&req.method==='POST'){
-      const body=await readBody(req);validVersion(body);checkWaiting();
+      const body=await readBody(req);validVersion(body);
+      if(body.expectedRoomId!==undefined){
+        if(typeof body.expectedRoomId!=='string'||!/^[a-f0-9]{24}$/.test(body.expectedRoomId))throw new RequestError(400,'room','The selected room identifier is invalid.');
+        if(body.expectedRoomId!==id)throw new RequestError(410,'room-changed','The selected room has closed or changed. Choose another room from Live Lobbies.');
+      }
+      checkWaiting();
       if(!publicLobby&&!equal(body.invite,invite))throw new RequestError(403,'invite','This private lobby requires its invitation link.');
       // No await separates checking and inserting a seat: concurrent final-seat
       // requests cannot both succeed in the single authoritative process.

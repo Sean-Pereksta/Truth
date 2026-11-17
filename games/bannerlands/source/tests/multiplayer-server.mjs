@@ -18,7 +18,13 @@ async function synchronizeAll(f,tokens){for(const token of [f.host,...tokens]){c
 
 test('last seat is atomic; directory/lobby never contain control credentials',async()=>{
   const f=await fixture();try{
-    const results=await Promise.all([join(f.request),join(f.request)]);assert.deepEqual(results.map(r=>r.status).sort(),[201,409]);
+    const roomId=f.server.getLobby().id;
+    const other=await fixture();try{
+      assert.equal((await join(f.request,{expectedRoomId:other.server.getLobby().id})).status,410);
+      assert.equal((await join(f.request,{expectedRoomId:'invalid room'})).status,400);
+      assert.equal(f.server.getLobby().availableSeats,1);
+    }finally{await other.close();}
+    const results=await Promise.all([join(f.request,{expectedRoomId:roomId}),join(f.request,{expectedRoomId:roomId})]);assert.deepEqual(results.map(r=>r.status).sort(),[201,409]);
     const accepted=results.find(r=>r.status===201).body;assert.equal(accepted.team,1);
     const publicRecord=JSON.stringify((await f.request('/api/lobby')).body);for(const value of [f.host,f.server.invite,accepted.token])assert.ok(!publicRecord.includes(value));
     assert.equal((await f.request('/api/start',{token:accepted.token,body:{revision:2}})).status,403);
@@ -96,12 +102,14 @@ test('unrecognized bearer values cannot bypass per-address admission limits',asy
 test('installed host closes online service while keeping single-player and a new lobby usable',async()=>{
   let stopped=0,touched=0;const desktop={secret:'desktop-private-capability-000000000',touch:()=>{touched++;},status:()=>({stage:'idle'}),host:async instance=>({url:instance.url,hostToken:instance.hostToken,invite:instance.invite}),stop:async instance=>{stopped++;await instance.setReachable(false);}};
   const f=await fixture({desktop});try{
-    const guest=(await join(f.request)).body.token,oldInvite=f.server.invite;
+    const guest=(await join(f.request)).body.token,oldInvite=f.server.invite,oldRoom=f.server.getLobby().id;
     assert.equal((await f.request('/api/desktop/status')).status,401);
     assert.equal(touched,0);await f.request('/api/state',{token:guest});assert.equal(touched,0);
     assert.equal((await f.request('/api/desktop/status',{token:desktop.secret})).status,200);
     assert.equal(touched,1);
     await f.request('/api/close',{token:f.host,body:{}});assert.equal(stopped,1);assert.notEqual(f.server.invite,oldInvite);
+    assert.notEqual(f.server.getLobby().id,oldRoom);
+    assert.equal((await join(f.request,{expectedRoomId:oldRoom})).status,410);
     assert.equal((await f.request('/api/state',{token:guest})).status,401);assert.equal(f.server.getLobby().players.length,1);assert.equal(f.server.getLobby().public,false);
     assert.equal((await fetch(f.server.url+'/')).status,200);assert.equal((await f.request('/api/desktop/host',{token:desktop.secret,body:{config:{enemies:3},lobby:{maxHumans:4}}})).status,200);
   }finally{await f.close();}
