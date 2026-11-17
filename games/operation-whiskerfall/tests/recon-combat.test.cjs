@@ -72,6 +72,24 @@ test('shield counters and recovery damage multiplier',()=>{
   const {g,e,commit}=scene('rivet_guard',100);commit();g.damageEnemy(e,10,g.players[0]);assert.equal(e.hp,96.3);
   g.breakReconGuard(e,g.players[0],.8);g.damageEnemy(e,10,g.players[0]);assert.ok(Math.abs(e.hp-84.1)<.001);
 });
+test('each beat uses one effect for its locked floor and the heroes actually struck',()=>{
+  const {g,commit,tick}=scene('glasswind_sharpshot',160),effects=[];
+  g.effect=(type,x,y,radius,life,data)=>effects.push({type,x,y,radius,...data});
+  g.world.isBlocked=x=>x>306;
+  g.players.push({x:169,y:23,hp:200});
+  const shape=commit().beats[0].shape;
+  tick(73);
+  assert.equal(effects.length,1);
+  const first=effects[0];
+  assert.equal(first.shape,shape);
+  assert.deepEqual(first.hits,[{x:160,y:-20}]);
+  assert.equal(first.contact.x,shape.x+shape.length);
+  assert.ok(first.contact.x<=306);
+  g.players[0].y=80;
+  tick(36);
+  assert.deepEqual(effects[1].hits,[]);
+  assert.equal(effects[1].contact.x,first.contact.x);
+});
 test('roles commit distinct geometry with actionable recovery intervals',()=>{
   for(const [id,kind,count] of [
     ['hookclaw_skirmisher','sector',2],['rivet_guard','sector',1],['signal_sergeant','lane',1],

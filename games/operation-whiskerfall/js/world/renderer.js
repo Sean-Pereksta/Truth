@@ -42,6 +42,31 @@
   };
   const GUARDIAN_ART=[{w:170,h:142},{w:218,h:144},{w:214,h:137},{w:180,h:157}];
   function canvasOf(w,h) { const c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+  function overlaps(view,left,top,right,bottom) {
+    return right>=view.x && bottom>=view.y && left<=view.x+view.w && top<=view.y+view.h;
+  }
+  function pathInView(points,pad,view) {
+    // Test every segment so bends, wide banks and round endpoints survive at camera edges.
+    for(let i=1;i<(points?.length||0);i++){
+      const a=points[i-1],b=points[i];
+      if(overlaps(view,Math.min(a.x,b.x)-pad,Math.min(a.y,b.y)-pad,
+        Math.max(a.x,b.x)+pad,Math.max(a.y,b.y)+pad))return true;
+    }
+    return false;
+  }
+  function groundInView(d,v) {
+    // Aprons include stairs below the floor, yards have tire tracks, and shores tilt.
+    const extra=d.type==='coastalShore'?Math.max(d.w,d.h)*.09:42;
+    return overlaps(v,d.x-d.w/2-extra,d.y-d.h/2-extra,d.x+d.w/2+extra,d.y+d.h/2+extra);
+  }
+  function bridgeInView(b,v) {
+    // Includes rotated decking, both rails, the posts and the offset shadow.
+    const radius=Math.hypot((b.w||200)/2+6,(b.h||85)/2+17);
+    return overlaps(v,b.x-radius,b.y-radius,b.x+radius,b.y+radius);
+  }
+  const roadInView=(road,v)=>pathInView(road.points,(road.width||58)/2+7,v);
+  const riverInView=(river,v)=>pathInView(river.points,(river.width+38)/2,v);
+  const sceneryPaths=new WeakMap();
 
   class Renderer {
     constructor(canvas,game) {
@@ -73,9 +98,32 @@
     }
     resize() {
       const r=this.canvas.getBoundingClientRect(); this.width=Math.max(1,r.width||innerWidth); this.height=Math.max(1,r.height||innerHeight);
-      const quality=this.game?.settings?.quality||'high'; this.dpr=quality==='low'?1:Math.min(devicePixelRatio||1,quality==='medium'?1.5:2);
-      this.canvas.width=Math.round(this.width*this.dpr);this.canvas.height=Math.round(this.height*this.dpr);
+      const settings=this.game?.settings||{},quality=settings.quality||'high';
+      const native=quality==='low'?1:Math.min(devicePixelRatio||1,quality==='medium'?1.5:2);
+      const fixedWidth=Number(settings.resolution);
+      // Canvas coordinates stay in CSS pixels, including both players' aim and the camera.
+      // On Automatic a 720p viewport retains its full CSS resolution at the lowest step.
+      const automatic=Math.max(Math.min(1,1280/this.width),native*Math.pow(.86,this.detailStep||0));
+      this.dpr=Math.min(native,fixedWidth===1280||fixedWidth===1920?fixedWidth/this.width:automatic);
+      const width=Math.max(1,Math.round(this.width*this.dpr)),height=Math.max(1,Math.round(this.height*this.dpr));
+      if(this.canvas.width!==width)this.canvas.width=width;
+      if(this.canvas.height!==height)this.canvas.height=height;
       this.ctx.imageSmoothingEnabled=true; this.ctx.imageSmoothingQuality='high';
+    }
+    updateRenderScale(deltaMs,active) {
+      if(!active||this.game.settings.resolution!=='auto'||deltaMs<=0||deltaMs>150){
+        this.slowMs=0;this.quickMs=0;this.sampleMs=0;return;
+      }
+      this.sampleMs=this.sampleMs?this.sampleMs*.94+deltaMs*.06:deltaMs;
+      this.slowMs=this.sampleMs>24?(this.slowMs||0)+deltaMs:0;
+      this.quickMs=this.sampleMs<18.2?(this.quickMs||0)+deltaMs:0;
+      const step=this.detailStep||0;
+      if(this.slowMs>=2200&&step<12&&this.dpr>Math.min(1,1280/this.width)+.01){
+        this.detailStep=step+1;
+      }else if(this.quickMs>=12000&&step>0){
+        this.detailStep=step-1;
+      }else return;
+      this.slowMs=0;this.quickMs=0;this.resize();
     }
     visible(x,y,pad=100) { const v=this.view; return !v || (x>v.x-pad&&x<v.x+v.w+pad&&y>v.y-pad&&y<v.y+v.h+pad); }
     sprite(key,col,row,cols,rows,x,y,w,h,opts) {
@@ -98,44 +146,93 @@
       const key=cx+','+cy; if(this.chunks.has(key))return this.chunks.get(key);
       const size=640,c=canvasOf(size,size),ctx=c.getContext('2d');
       const colors=['#759b50','#527a48','#888e78','#c8af70','#d8e6e3','#5c8771','#7a8077','#3b879b'];
+      const usesRegionBiome=OW.World && world.terrainAt===OW.World.prototype.terrainAt;
       for(let y=0;y<size;y+=160)for(let x=0;x<size;x+=160){
-        const wx=cx*size+x,wy=cy*size+y,t=this.terrainType(world,wx+80,wy+80),tile=biomeTile[t]??0;
-        const regional=OW.ReconArt?.regionalGround(world.regionAt?.(wx+80,wy+80));
-        if(regional)ctx.drawImage(regional,x,y,160,160);
+        const wx=cx*size+x,wy=cy*size+y,region=world.regionAt?.(wx+80,wy+80);
+        const t=usesRegionBiome&&region?.biome?region.biome:this.terrainType(world,wx+80,wy+80),tile=biomeTile[t]??0;
+        const regional=OW.ReconArt?.regionalGround(region);
+        if(regional){
+          // Each terrain painting spans a whole chunk. Alternate orientation at
+          // neighboring edges so brushwork joins without visible square seams.
+          const flipX=(cx&1)!==0,flipY=(cy&1)!==0,sw=regional.width*160/size,sh=regional.height*160/size;
+          const sx=(flipX?size-160-x:x)/160*sw,sy=(flipY?size-160-y:y)/160*sh;
+          ctx.save();ctx.translate(x+(flipX?160:0),y+(flipY?160:0));ctx.scale(flipX?-1:1,flipY?-1:1);
+          ctx.drawImage(regional,sx,sy,sw,sh,0,0,160,160);ctx.restore();
+        }
         else if((t==='coast'||t==='isles')&&this.images.coastalTerrain){const im=this.images.coastalTerrain,n=t==='isles'?2:0;ctx.drawImage(im,(n%2)*im.width/2,Math.floor(n/2)*im.height/2,im.width/2,im.height/2,x,y,160,160);}
         else if(this.images.terrain){const im=this.images.terrain;ctx.drawImage(im,(tile%4)*im.width/4,Math.floor(tile/4)*im.height/2,im.width/4,im.height/2,x,y,160,160);}
         else {ctx.fillStyle=colors[tile];ctx.fillRect(x,y,160,160);}
-        ctx.fillStyle='rgba(26,48,25,'+(hash(wx,wy)*.055)+')';ctx.fillRect(x,y,160,160);
+        if(!regional){ctx.fillStyle='rgba(26,48,25,'+(hash(wx,wy)*.055)+')';ctx.fillRect(x,y,160,160);}
       }
       this.chunks.set(key,c); if(this.chunks.size>64)this.chunks.delete(this.chunks.keys().next().value); return c;
     }
     path(points,width,color) {
-      if(!points?.length)return;const c=this.ctx;c.beginPath();c.moveTo(points[0].x,points[0].y);
-      for(let i=1;i<points.length;i++)c.lineTo(points[i].x,points[i].y);
-      c.lineCap='round';c.lineJoin='round';c.strokeStyle=color;c.lineWidth=width;c.stroke();
+      if(!points?.length)return;const c=this.ctx;
+      c.lineCap='round';c.lineJoin='round';c.strokeStyle=color;c.lineWidth=width;
+      if(typeof Path2D==='undefined'){
+        c.beginPath();c.moveTo(points[0].x,points[0].y);
+        for(let i=1;i<points.length;i++)c.lineTo(points[i].x,points[i].y);
+        c.stroke();return;
+      }
+      // World generation owns immutable road and river point arrays. Stroke their
+      // geometry repeatedly while the widths, patterns and river dashes stay live.
+      let path=sceneryPaths.get(points);
+      if(!path){
+        path=new Path2D();path.moveTo(points[0].x,points[0].y);
+        for(let i=1;i<points.length;i++)path.lineTo(points[i].x,points[i].y);
+        sceneryPaths.set(points,path);
+      }
+      c.stroke(path);
+    }
+    surfacePattern(material) {
+      const patterns=this.surfacePatterns||(this.surfacePatterns=new Map());
+      if(patterns.has(material))return patterns.get(material);
+      const image=OW.ReconArt?.roadSurface?.(material);
+      if(!image)return null;
+      const pattern=this.ctx.createPattern(image,'repeat');
+      if(pattern)patterns.set(material,pattern);
+      return pattern;
+    }
+    nearbyTerrain(world,v) {
+      const last=this.terrainNeighborhood;
+      if(last && last.world===world && last.roadCount===world.roads?.length && last.riverCount===world.rivers?.length &&
+        last.groundCount===world.groundDetails?.length && last.bridgeCount===world.bridges?.length &&
+        v.x>=last.x && v.y>=last.y && v.x+v.w<=last.x+last.w && v.y+v.h<=last.y+last.h)return last;
+      // Generation fixes this geometry for the lifetime of a world. Keep source
+      // order and rebuild only after traveling, zooming out, or adding scenery.
+      const margin=320,area={world,x:v.x-margin,y:v.y-margin,w:v.w+margin*2,h:v.h+margin*2,
+        roadCount:world.roads?.length,riverCount:world.rivers?.length,groundCount:world.groundDetails?.length,bridgeCount:world.bridges?.length};
+      area.roads=(world.roads||[]).filter(r=>roadInView(r,area));
+      area.rivers=(world.rivers||[]).filter(r=>riverInView(r,area));
+      area.details=(world.groundDetails||[]).filter(d=>groundInView(d,area));
+      area.bridges=(world.bridges||[]).filter(b=>bridgeInView(b,area));
+      this.terrainNeighborhood=area;return area;
     }
     drawTerrain(world) {
-      const c=this.ctx,v=this.view,size=640;
+      const c=this.ctx,v=this.terrainView||this.view,size=640;
+      const nearby=this.nearbyTerrain(world,v);
       for(let cy=Math.floor(v.y/size);cy<=Math.floor((v.y+v.h)/size);cy++)for(let cx=Math.floor(v.x/size);cx<=Math.floor((v.x+v.w)/size);cx++){
         if(cx<0||cy<0||cx*size>=world.width||cy*size>=world.height)continue;
         c.drawImage(this.groundChunk(world,cx,cy),cx*size,cy*size);
       }
-      for(const river of world.rivers||[]) {
+      for(const river of nearby.rivers) {
+        if(!riverInView(river,v))continue;
         const pts=river.points||[];this.path(pts,river.width+38,'#6c8d64');this.path(pts,river.width+17,'#c1b487');
         this.path(pts,river.width,'#387e92'); this.path(pts,Math.max(8,river.width-25),(/stormglass|crown/.test(river.id||'')&&this.coastalWaterPattern())||this.patterns[7]||'#4697aa');
         c.save();c.globalAlpha=.15;c.setLineDash([30,80]);c.lineDashOffset=-this.clock*15;this.path(pts,3,'#e6f5e9');c.restore();
       }
-      for(const detail of world.groundDetails||[])if(this.visible(detail.x,detail.y,Math.max(detail.w,detail.h)))this.drawGroundDetail(detail);
-      const roads=(world.roads||[]).filter(r=>Math.max(r.x1,r.x2)>v.x-100&&Math.min(r.x1,r.x2)<v.x+v.w+100&&Math.max(r.y1,r.y2)>v.y-100&&Math.min(r.y1,r.y2)<v.y+v.h+100);
+      for(const detail of nearby.details)if(groundInView(detail,v))this.drawGroundDetail(detail);
+      const roads=this.visibleRoads||(this.visibleRoads=[]);roads.length=0;
+      for(const road of nearby.roads)if(roadInView(road,v))roads.push(road);
       // Paint all verges before the road surfaces, so junctions merge cleanly.
       for(const road of roads)this.path(road.points,(road.width||58)+(road.kind==='trail'?8:14),'rgba(48,65,39,.2)');
       for(const road of roads){
         const trail=road.kind==='trail',major=road.kind==='highway',width=road.width||58;
         this.path(road.points,width,trail?'#928961':major?'#b9ae86':'#aa9e76');
-        this.path(road.points,Math.max(8,width-10),trail?'#a69c73':major?'#c5b893':'#b9ac82');
+        this.path(road.points,Math.max(8,width-10),this.surfacePattern(trail?'trail':'gravel')||(trail?'#a69c73':major?'#c5b893':'#b9ac82'));
         if(major){c.save();c.globalAlpha=.3;c.setLineDash([18,42]);this.path(road.points,2,'#f2dfb5');c.restore();}
       }
-      for(const b of world.bridges||[])if(this.visible(b.x,b.y,Math.max(240,b.w)))this.drawBridge(b);
+      for(const b of nearby.bridges)if(bridgeInView(b,v))this.drawBridge(b);
       c.strokeStyle='rgba(25,48,50,.7)';c.lineWidth=18;c.strokeRect(0,0,world.width,world.height);
     }
     coastalWaterPattern(){
@@ -152,11 +249,10 @@
         else{c.fillStyle='#b9b49a';c.fillRect(-d.w/2,-d.h/2,d.w,d.h);}
       }else if(d.type==='plaza'){
         c.fillStyle='#65765455';c.beginPath();c.roundRect(-d.w/2-16,-d.h/2-14,d.w+32,d.h+28,95);c.fill();
-        c.fillStyle='#b2ab8a';c.beginPath();c.roundRect(-d.w/2,-d.h/2,d.w,d.h,85);c.fill();
-        c.strokeStyle='#7b806857';c.lineWidth=2;for(let y=-220;y<=240;y+=38){c.beginPath();c.moveTo(-270,y);c.lineTo(270,y);c.stroke();for(let x=-260;x<290;x+=75){c.beginPath();c.moveTo(x+(Math.round(y/38)%2)*34,y);c.lineTo(x+(Math.round(y/38)%2)*34,y+36);c.stroke();}}
+        c.fillStyle=this.surfacePattern('cobble')||'#b2ab8a';c.beginPath();c.roundRect(-d.w/2,-d.h/2,d.w,d.h,85);c.fill();
         c.strokeStyle='#d2c49b';c.lineWidth=8;c.beginPath();c.ellipse(0,10,108,66,0,0,TAU);c.stroke();
       }else if(d.type==='campYard'||d.type==='fortYard'){
-        c.fillStyle=d.type==='fortYard'?'#77766c':'#939176';c.beginPath();c.roundRect(-d.w/2,-d.h/2,d.w,d.h,38);c.fill();
+        c.fillStyle=this.surfacePattern(d.type==='fortYard'?'slate':'trail')||(d.type==='fortYard'?'#77766c':'#939176');c.beginPath();c.roundRect(-d.w/2,-d.h/2,d.w,d.h,38);c.fill();
         c.strokeStyle='#b4ac88';c.lineWidth=3;c.setLineDash([16,10]);c.strokeRect(-d.w/2+28,-d.h/2+28,d.w-56,d.h-56);c.setLineDash([]);
         c.strokeStyle='#494e482a';c.lineWidth=9;for(const x of [-35,35]){c.beginPath();c.moveTo(x,-d.h/2);c.lineTo(x,d.h/2+40);c.stroke();}
       }else if(d.type==='caveApron'){
@@ -587,6 +683,9 @@
       if(!world)return;
       const cam=g.camera||{x:1100,y:1100,zoom:1},zoom=cam.zoom||1;const shake=(cam.shake||0)*(g.settings?.screenShake===false?0:1);
       this.view={x:cam.x-this.width/(2*zoom)-150,y:cam.y-this.height/(2*zoom)-150,w:this.width/zoom+300,h:this.height/zoom+300};
+      const groundPad=(Math.abs(shake)*.5+2)/zoom;
+      this.terrainView={x:cam.x-this.width/(2*zoom)-groundPad,y:cam.y-this.height/(2*zoom)-groundPad,
+        w:this.width/zoom+2*groundPad,h:this.height/zoom+2*groundPad};
       c.save();c.translate(this.width/2+(hash(this.frame,1)-.5)*shake,this.height/2+(hash(this.frame,2)-.5)*shake);c.scale(zoom,zoom);c.translate(-cam.x,-cam.y);
       this.drawTerrain(world);
       this.drawCampaignBoundaries(world);
@@ -596,8 +695,17 @@
       }
       for(const e of g.effects||[])if(alive(e)&&this.visible(e.x,e.y,e.radius||100))this.drawEffect(e,false);
       for(const d of g.drops||[])if(alive(d)&&this.visible(d.x,d.y,60))this.drawDrop(d);
-      let objects=world.getVisibleObjects?world.getVisibleObjects(this.view.x,this.view.y,this.view.w,this.view.h):world.objects||[];
-      const stack=[];for(const o of objects)if(this.visible(o.x,o.y,260)&&o.type!=='bridge')stack.push({y:o.type==='friendlyCat'?this.friendlyPosition(o).y:o.y,object:o});
+      this.drawReconWarnings?.(world);
+      const buffer=this.sceneryBuffer||(this.sceneryBuffer={objects:[],ids:new Set(),stack:[],entries:new WeakMap()});
+      const objects=world.getVisibleObjects?world.getVisibleObjects(this.view.x,this.view.y,this.view.w,this.view.h,buffer.objects,buffer.ids):world.objects||[];
+      const stack=buffer.stack;stack.length=0;
+      for(const o of objects){
+        if(o.type==='bridge'||!this.visible(o.x,o.y,Math.max(260,o.w||0,o.h||0)))continue;
+        let entry=buffer.entries.get(o);
+        if(!entry){entry={y:o.y,object:o};buffer.entries.set(o,entry);}
+        entry.y=o.type==='friendlyCat'?this.friendlyPosition(o).y:o.y;
+        stack.push(entry);
+      }
       for(const run of missionRuns)if(run.state==='active'&&run.type==='escort'&&this.visible(run.x,run.y,120))stack.push({y:run.y,escort:run});
       for(const e of world.activeEnemies||[])if(alive(e)&&this.visible(e.x,e.y,160))stack.push({y:e.y,actor:e});
       for(const a of g.allies||[])if(alive(a)&&this.visible(a.x,a.y,160))stack.push({y:a.y,actor:a,ally:true});

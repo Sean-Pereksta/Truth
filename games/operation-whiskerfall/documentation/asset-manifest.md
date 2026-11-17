@@ -121,5 +121,8 @@ The new WebP exports live in `assets/recon/`. The **Reconnaissance** collection 
 | `assets/recon/paintings.json` | Original source crop, generation identifier, output dimensions, anchor and consumer | Six illustrated vistas, seamless mirrored floor tiles, wall segments and mechanisms, twelve contact portraits, nine commander posters, six exterior landmarks, three chapter plates, forge supplies, the forge interior and the courier camp |
 | `assets/recon/combat-frames.json` | Measured alpha bounds and shared sprite anchors | Enemy poses and painted warning textures clipped to the same paths used for attack resolution |
 | `assets/recon/gear-atlas.json` | Item keys, source rectangles and visual attachments | Weapon cards, field sprites and both hero suit variants |
+| `assets/recon/approaches.json` | Fourteen entrance paintings and six natural ground materials, with measured crops and anchors | Six authored field stations, regional cavern mouths and their outdoor forecourts |
 
 Regional images load on first use. The dungeon terrain cache rebuilds when a painting becomes available, a crossing changes or a shortcut opens. Collision is independent from the artwork. The living title and camp present the same original painting with an animated firelight layer.
+
+Eight painted emblems identify the camp destinations, and three illustrated station tabs identify the forge actions. Packed gravel, trail earth, limestone cobbles and slate form repeating surfaces for streets and settlements. Their runtime keys and source crops are in `paintings.json`. The forge tab images are in `gear-atlas.json`. Each new outdoor survey station has a documented effect inside its dungeon. [Dungeon approach guide](dungeon-approaches.md)

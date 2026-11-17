@@ -6,6 +6,8 @@ Open `index.html` with the entire game folder together. Choose a slot at the pai
 
 Existing slots open through **Continue**. To carry saves between browsers or installations, export the campaign from Settings and import the JSON file into the desired slot. See [field controls](documentation/controls.md), [save recovery](documentation/save-recovery.md) and the [acceptance report](documentation/acceptance-report.md).
 
+Open Camp with Escape or Start. Eight illustrated choices lead to gear, the map, the journal, bounties, skills, controls, settings and your partner. When a painted dungeon entrance comes into view, look for a marked path to its field station. A successful survey can change the next room. [Dungeon entrances and field stations](documentation/dungeon-approaches.md)
+
 ## Previous regional progression update
 
 Regular enemies gain health and damage much faster after Greenfields. Campaign health multipliers now rise through **1, 2.2, 4, 6.6, 10.2, 15.2, 22 and 31**; damage multipliers rise through **1, 1.8, 2.8, 4.2, 6, 8.4, 11.5 and 15.5**, in addition to existing enemy-level bonuses. Blackbanner patrols have about twice their previous health and 89% more damage. Stormglass Coast uses **8.9× health / 5.4× damage** and Sunken Crown uses **15.2× / 8.4×**, matching their level-12 and level-16 side routes.

@@ -119,7 +119,7 @@
       const roles=C.reconEnemyTypes||{},mix={10:[roles.sluice_warden,roles.rivet_guard,44],11:[roles.glasswind_sharpshot,roles.hookclaw_skirmisher,45],12:[roles.lantern_stalker,roles.signal_sergeant,47]}[r.index];
       for(let j=0;j<9;j++){
         const point={x:r.x+300+random()*(r.w-600),y:r.y+300+random()*(r.h-600)};
-        if(w.safeZoneAt(point.x,point.y,220))continue;
+        if(w.safeZoneAt(point.x,point.y,220)||sites.some(s=>s.region===r.index&&Math.hypot(point.x-s.x*scale,point.y-s.y*scale)<850))continue;
         for(const [k,t] of mix.entries()){
           const p=clear({x:point.x+k*80,y:point.y+k*65});w._spawn({id:'recon_patrol_'+r.index+'_'+j+'_'+k,type:t??24,...p,homeX:p.x,homeY:p.y,level:r.level,locationId:null,region:r.index,boss:false,patrol:j*.8});
         }

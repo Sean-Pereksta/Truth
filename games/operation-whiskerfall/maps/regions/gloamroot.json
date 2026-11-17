@@ -141,45 +141,6 @@
       "patrol": 0.8
     },
     {
-      "id": "recon_patrol_12_2_0",
-      "type": 56,
-      "x": 25351.406214348972,
-      "y": 12682.152551761828,
-      "homeX": 25351.406214348972,
-      "homeY": 12682.152551761828,
-      "level": 17,
-      "locationId": null,
-      "region": 12,
-      "boss": false,
-      "patrol": 1.6
-    },
-    {
-      "id": "recon_patrol_12_2_1",
-      "type": 53,
-      "x": 25431.406214348972,
-      "y": 12747.152551761828,
-      "homeX": 25431.406214348972,
-      "homeY": 12747.152551761828,
-      "level": 17,
-      "locationId": null,
-      "region": 12,
-      "boss": false,
-      "patrol": 1.6
-    },
-    {
-      "id": "recon_patrol_12_2_2",
-      "type": 47,
-      "x": 25511.406214348972,
-      "y": 12812.152551761828,
-      "homeX": 25511.406214348972,
-      "homeY": 12812.152551761828,
-      "level": 17,
-      "locationId": null,
-      "region": 12,
-      "boss": false,
-      "patrol": 1.6
-    },
-    {
       "id": "recon_patrol_12_3_0",
       "type": 56,
       "x": 25380.883327647887,
@@ -373,45 +334,6 @@
       "region": 12,
       "boss": false,
       "patrol": 5.6000000000000005
-    },
-    {
-      "id": "recon_patrol_12_8_0",
-      "type": 56,
-      "x": 25079.132125228643,
-      "y": 12426.931248712353,
-      "homeX": 25079.132125228643,
-      "homeY": 12426.931248712353,
-      "level": 17,
-      "locationId": null,
-      "region": 12,
-      "boss": false,
-      "patrol": 6.4
-    },
-    {
-      "id": "recon_patrol_12_8_1",
-      "type": 53,
-      "x": 25159.132125228643,
-      "y": 12491.931248712353,
-      "homeX": 25159.132125228643,
-      "homeY": 12491.931248712353,
-      "level": 17,
-      "locationId": null,
-      "region": 12,
-      "boss": false,
-      "patrol": 6.4
-    },
-    {
-      "id": "recon_patrol_12_8_2",
-      "type": 47,
-      "x": 25295.132125228643,
-      "y": 12556.931248712353,
-      "homeX": 25295.132125228643,
-      "homeY": 12556.931248712353,
-      "level": 17,
-      "locationId": null,
-      "region": 12,
-      "boss": false,
-      "patrol": 6.4
     }
   ],
   "objects": [

@@ -10,7 +10,7 @@
   const title=menu=>menu==='skills'?'Skills & abilities':'Inventory & equipment';
   const heroLabel=(ui,index)=>'Player '+(index+1)+' · '+(ui.game.players[index]?.skin?'Ash':'Clover');
   const key=(ui,owner,action)=>W.Input.keyName(ui.game.input?.bindings?.[(owner?'p2':'')+action]);
-  const personalActions=new Set(['close','menu','filter','item','equip','equip-secondary-firearm','equip-secondary','gear-loadout-inspect','ability-loadout-inspect','abilities','ability-primary','ability-secondary','ability-inspect','ability-unlock','ability-upgrade','ability-ranks-reset','skill-category','training-inspect','skill']);
+  const personalActions=new Set(['close','menu','filter','item','equip','equip-secondary-firearm','equip-secondary','gear-loadout-inspect','wardrobe-compare','ability-loadout-inspect','abilities','ability-primary','ability-secondary','ability-inspect','ability-unlock','ability-upgrade','ability-ranks-reset','skill-category','training-inspect','skill']);
   function paneValid(pane){const root=pane.coopRoot;return root&&pane.isOpen&&!root.personalSuspended&&root.menu==='coop-personal'&&root.personalMenus?.[pane.personalOwner]===pane&&root.game.players[pane.personalOwner]===pane.personalHero;}
   function scopedIds(html,owner){
     const prefix='coop-p'+owner+'-';

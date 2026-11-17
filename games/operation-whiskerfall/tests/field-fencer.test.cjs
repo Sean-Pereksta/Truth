@@ -49,4 +49,3 @@ check('extended warnings give a Fencer the matching 870 ms lane and windup',()=>
   advance(.78);assert.equal(p.hp,1000);assert.equal(e.x,2000);
 });
 console.log(checks+' readable Fencer combat checks passed.');
-

@@ -14,6 +14,9 @@
 .recon-pages cite { display:block; margin-top:.25em; font:600 .82rem system-ui,sans-serif; }
 .recon-pages hr { border:0; height:1px; background:#a4ac8f; margin:15px 0; }
 .recon-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+.recon-assignment-nav { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:8px 12px; background:#223630; }
+.recon-assignment-nav section { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.recon-assignment-nav button { padding:6px 12px; }
 .recon-pages button { background:#30423d; color:#fff2d0; border:1px solid #566a5f; padding:8px 12px; }
 .recon-pages button.primary { background:#72562b; color:#fff8de; }
 .recon-known,.recon-drills { background:#223330; }.recon-known p,.recon-drills p {color:#e2d8c0; margin:.45em 0;}

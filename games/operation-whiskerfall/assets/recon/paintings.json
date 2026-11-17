@@ -1473,5 +1473,305 @@
     ],
     "animation": "static",
     "consumer": "commander bounty poster"
+  },
+  {
+    "key": "menu-pause",
+    "path": "assets/recon/menu-pause.webp",
+    "generation": "04794554-1aa1-4ef0-bff2-b7b19d9e63a2",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      10,
+      22,
+      431,
+      427
+    ],
+    "exportSize": [
+      128,
+      123
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "field navigation"
+  },
+  {
+    "key": "menu-inventory",
+    "path": "assets/recon/menu-inventory.webp",
+    "generation": "04794554-1aa1-4ef0-bff2-b7b19d9e63a2",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      469,
+      22,
+      863,
+      422
+    ],
+    "exportSize": [
+      126,
+      128
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "field navigation"
+  },
+  {
+    "key": "menu-map",
+    "path": "assets/recon/menu-map.webp",
+    "generation": "04794554-1aa1-4ef0-bff2-b7b19d9e63a2",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      902,
+      58,
+      1316,
+      404
+    ],
+    "exportSize": [
+      128,
+      107
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "field navigation"
+  },
+  {
+    "key": "menu-journal",
+    "path": "assets/recon/menu-journal.webp",
+    "generation": "04794554-1aa1-4ef0-bff2-b7b19d9e63a2",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      1368,
+      44,
+      1750,
+      434
+    ],
+    "exportSize": [
+      125,
+      128
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "field navigation"
+  },
+  {
+    "key": "menu-bounty",
+    "path": "assets/recon/menu-bounty.webp",
+    "generation": "04794554-1aa1-4ef0-bff2-b7b19d9e63a2",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      28,
+      461,
+      423,
+      868
+    ],
+    "exportSize": [
+      124,
+      128
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "field navigation"
+  },
+  {
+    "key": "menu-skills",
+    "path": "assets/recon/menu-skills.webp",
+    "generation": "04794554-1aa1-4ef0-bff2-b7b19d9e63a2",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      464,
+      464,
+      866,
+      866
+    ],
+    "exportSize": [
+      128,
+      128
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "field navigation"
+  },
+  {
+    "key": "menu-controls",
+    "path": "assets/recon/menu-controls.webp",
+    "generation": "04794554-1aa1-4ef0-bff2-b7b19d9e63a2",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      897,
+      537,
+      1320,
+      820
+    ],
+    "exportSize": [
+      128,
+      86
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "field navigation"
+  },
+  {
+    "key": "menu-settings",
+    "path": "assets/recon/menu-settings.webp",
+    "generation": "04794554-1aa1-4ef0-bff2-b7b19d9e63a2",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      1357,
+      481,
+      1745,
+      860
+    ],
+    "exportSize": [
+      128,
+      125
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static",
+    "consumer": "field navigation"
+  },
+  {
+    "key": "surface-gravel",
+    "path": "assets/recon/surface-gravel.webp",
+    "generation": "3e4b9761-bce3-4b5c-8382-ebea8a3a4149",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      3,
+      3,
+      624,
+      624
+    ],
+    "exportSize": [
+      294,
+      294
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static mirrored repeat",
+    "consumer": "Surface road and settlement ground"
+  },
+  {
+    "key": "surface-cobble",
+    "path": "assets/recon/surface-cobble.webp",
+    "generation": "3e4b9761-bce3-4b5c-8382-ebea8a3a4149",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      630,
+      3,
+      1251,
+      624
+    ],
+    "exportSize": [
+      242,
+      242
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static mirrored repeat",
+    "consumer": "Surface road and settlement ground"
+  },
+  {
+    "key": "surface-trail",
+    "path": "assets/recon/surface-trail.webp",
+    "generation": "3e4b9761-bce3-4b5c-8382-ebea8a3a4149",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      3,
+      630,
+      624,
+      1251
+    ],
+    "exportSize": [
+      302,
+      302
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static mirrored repeat",
+    "consumer": "Surface road and settlement ground"
+  },
+  {
+    "key": "surface-slate",
+    "path": "assets/recon/surface-slate.webp",
+    "generation": "3e4b9761-bce3-4b5c-8382-ebea8a3a4149",
+    "sourceSize": [
+      1254,
+      1254
+    ],
+    "sourceCrop": [
+      630,
+      630,
+      1251,
+      1251
+    ],
+    "exportSize": [
+      292,
+      292
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "static mirrored repeat",
+    "consumer": "Surface road and settlement ground"
   }
 ]

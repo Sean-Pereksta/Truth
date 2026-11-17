@@ -13,7 +13,13 @@
   }
   ['The Missing Dispatches','The Hidden Network','The Berlin Dossier'].forEach((name,i)=>registry.set('chapter-'+(i+1),name));
   registry.set('courier-camp','Couriers at dusk');
+  for (const material of ['gravel','cobble','trail','slate']) registry.set('surface-'+material,'Field roads · '+material);
+  for(const id of ['upgrade','tune','craft'])registry.set('station-'+id,'Forge · '+id);
+  for(const id of ['pause','inventory','map','journal','bounty','skills','controls','settings'])registry.set('menu-'+id,'Field menu · '+id);
   const landmarks={rushlight:'Rushlight Landing',leeward:'Leeward Inn',lamplighter:'Lamplighter Refuge',gatehouse:'Eastern gatehouse',hatch:'Document lift',courtyard:'Courtyard field station'};
+  const approaches={archive:'Floodgate pump house',spire:'Glasswind cable station',court:'Lantern-root bridge',depot:'Cinder siding',cistern:'Heliostat court',vault:'Blackglass radio bunker',burrow:'Orchard burrow',moss:'Glowcap hollow',quarry:'Copper mine',glacier:'Ice tunnel',dune:'Buried dome',delta:'Reedwater landing',furnace:'Cinder adit',bastion:'Resistance postern'};
+  Object.entries(approaches).forEach(([id,label])=>registry.set('approach-'+id,label));
+  sites.forEach((site,i)=>registry.set('ground-'+site,names[i]+' · approach terrain'));
   Object.entries(landmarks).forEach(([id,label])=>registry.set('landmark-'+id,label));
   for(let i=0;i<9;i++)registry.set('commander-'+i,W.Content?.bosses?.[i]?.name||'Commander portrait '+(i+1));
   for(let i=1;i<=12;i++)registry.set('contact-'+i,'Dispatch contact '+i);
@@ -25,7 +31,7 @@
     if (!registry.has(key)) return null;
     if (!cache.has(key)) {
       const im=new Image(); cache.set(key, null);
-      im.onload=()=>{cache.set(key,im); if(kind==='floor') W.game?.renderer?.chunks.clear();};
+      im.onload=()=>{cache.set(key,im); if(kind==='floor'||kind==='ground') W.game?.renderer?.chunks.clear();};
       im.src=url(key);
     }
     return cache.get(key);
@@ -37,8 +43,11 @@
     floor:id=>image('floor',id),
     wall:id=>image('wall',id),
     landmark:id=>image('landmark',id),
+    approach:id=>image('approach',id),
     mechanism:id=>image('mechanism',id),
-    regionalGround:region=>terrain[region?.slug] ? image('floor',terrain[region.slug]) : null
+    approachGround:id=>image('ground',id),
+    roadSurface:id=>image('surface',id),
+    regionalGround:region=>terrain[region?.slug] ? image('ground',terrain[region.slug]) : null
   };
   if(!W.Renderer)return;
   const sitesByObject={town_10_house_0:'rushlight',town_11_house_0:'leeward',town_12_house_0:'lamplighter',recon_vault_entrance:'hatch',recon_vault_east_gatehouse:'gatehouse',recon_courtyard_station:'courtyard'};

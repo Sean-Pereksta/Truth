@@ -16,6 +16,16 @@
     return '<ol class="recon-archive">'+book.ops.filter(o=>d.evidence[o.id]).slice().reverse().map(o=>'<li><strong>'+esc(o.title)+'</strong><span>'+esc(d.evidence[o.id].source)+'</span><p>'+esc(o.clue)+' '+esc(o.result)+'</p></li>').join('')+'</ol>';
   }
   const journal=U.journalMenu;
+  function assignments(ui){
+    const g=ui.game,accepted=W.Content.quests.filter(q=>g.acceptedQuests.has(q.id)&&!g.completedQuests.has(q.id));
+    const ready=accepted.filter(q=>g.questProgress(q).readyForTurnIn);
+    return '<div class="recon-assignment-nav">'+button('recon-assignments','Assignments, contacts & expeditions'+(accepted.length?' · '+accepted.length+' active':''))+
+      (ready.length?'<section><small>READY TO FINISH</small>'+ready.map(q=>{
+        const npc=g.questTurnInContact(q),town=npc&&Q.surface(g).getLocation(npc.townId);
+        const destination=npc?[npc.name,town?.name].filter(Boolean).join(' · '):'Mission contact';
+        return button('recon-assignment',q.title+' → '+destination,q.id);
+      }).join('')+'</section>':'')+'</div>';
+  }
   U.journalMenu=function(){
     const g=this.game,d=g.reconDossier;if(!d)return journal.call(this);
     if(this.reconArchiveOpen)return button('recon-dossier','← Field dossier')+journal.call(this);
@@ -28,14 +38,14 @@
     else if(op)actions=button('recon-pin','Pin observation route','observed',d.route==='observed')+button('recon-pin','Pin recovery route','recovered',d.route==='recovered');
     if(target&&!ev)actions+=button('recon-map','View waypoint');
     const exercise=g.campaignWon?'<section class="recon-drills"><h3>Field exercises</h3>'+book.challenges.map(v=>'<article><strong>'+esc(v.title)+'</strong><p>'+esc(v.brief)+'</p>'+button('recon-exercise',d.scores[v.id]?'Deploy again · '+d.scores[v.id]+' clears':'Deploy',v.id)+'</article>').join('')+button('recon-practice','Practice the Whisker encounter · '+(d.scores.whisker||0)+' clears')+'</section>':'';
-    return '<div class="recon-journal"><header class="recon-chapter">'+(img?'<img src="'+esc(img)+'" alt="">':'')+'<div><span>RESISTANCE FIELD JOURNAL · ACT '+act+'</span><h3>'+esc(book.acts[act-1])+'</h3></div></header>'+
-      '<div class="recon-pages"><article><small>'+(c?'FIELD EXERCISE':'WHAT TO VERIFY')+'</small><h3>'+esc(c?.title||op?.title||'The Berlin relay')+'</h3>'+
+    return '<div class="recon-journal"><header class="recon-chapter">'+(img?'<img src="'+esc(img)+'" alt="">':'')+'<div><span>ACT '+act+'</span><h3>'+esc(book.acts[act-1])+'</h3></div></header>'+
+      assignments(this)+'<div class="recon-pages"><article><small>'+(c?'FIELD EXERCISE':'WHAT TO VERIFY')+'</small><h3>'+esc(c?.title||op?.title||'The Berlin relay')+'</h3>'+
       (op?'<blockquote><img class="recon-portrait" alt="" src="'+esc(W.ReconArt.url('contact-'+(book.ops.indexOf(op)+1)))+'">'+esc(op.brief)+'<cite>'+esc(op.contact)+'</cite></blockquote>':'')+'<p><strong>'+esc(activePrompt(g))+'</strong></p>'+
       (site?'<p>'+esc(site.lesson)+'</p>':'')+(ev?'<p>'+esc(ev.source)+' · '+esc(op.clue)+'</p><p>'+esc(op.result)+'</p><p>Debrief supplies per hero · 160 gold, 12 scrap, 1 core</p>':'')+
-      '<div class="recon-actions">'+actions+'</div></article><aside><small>WHERE TO GO NEXT</small><h4>'+esc(target?.label||'Willow Resistance Camp')+'</h4><p>'+esc(site?.name||w.regions[op?.region??7]?.name||'Berlin Sector')+' · '+(gap?gap.toLocaleString()+' m':'On site')+'</p><hr><small>BERLIN APPROACH</small><p>'+d.filed.length+' of 12 reports filed<br>'+(8-missing.length)+' of 8 commanders defeated</p><p>'+esc(missing.join(' · ')||'All regional commanders defeated.')+'</p></aside></div>'+
+      '<div class="recon-actions">'+actions+'</div></article><aside><small>WHERE TO GO NEXT</small><h4>'+esc(target?.label||'Willow Resistance Camp')+'</h4><p>'+esc(site?.name||w.regions[op?.region??7]?.name||'Berlin Sector')+' · '+(gap?gap.toLocaleString()+' m':'On site')+'</p><hr><small>BERLIN APPROACH</small><p>'+d.filed.length+' of 12 reports filed<br>'+(8-missing.length)+' of 8 commanders defeated</p><button data-action="recon-milestones" aria-expanded="'+!!this.reconShowMilestones+'">'+(this.reconShowMilestones?'Hide checklist':'See checklist')+'</button>'+(this.reconShowMilestones?'<p>'+esc(missing.join(' · ')||'All regional commanders defeated.')+'</p>':'')+'</aside></div>'+
       '<section class="recon-known"><small>WHAT WE KNOW</small><h3>'+esc(last?last.title:'The couriers are missing')+'</h3><p>'+esc(last?last.result:'Willow received signed receipts for dispatches that never arrived. Saffron marked the last handoff.')+'</p>'+
       (g.reconEvidenceCount()?button('recon-evidence',this.reconShowEvidence?'Close evidence index':'Read evidence index · '+g.reconEvidenceCount()):'')+(this.reconShowEvidence?archive(g):'')+'</section>'+
-      exercise+button('recon-assignments','Assignments, contacts & expeditions')+'</div>';
+      exercise+'</div>';
   };
   const campaignStatus=U.campaignStatus;U.campaignStatus=function(){
     const d=this.game.reconDossier;if(!d)return campaignStatus.call(this);
@@ -44,8 +54,8 @@
   const tabs=U.controllerTabs;
   U.controllerTabs=function(){
     if(this.menu!=='journal'||!this.game.reconDossier)return tabs.apply(this,arguments);
-    const selector=this.reconArchiveOpen?'[data-action="recon-dossier"],[data-action="journal-filter"]':'[data-action="recon-pin"],[data-action="recon-file"],[data-action="recon-assignments"]';
-    return Array.from(this.host.querySelectorAll('button')).filter(b=>b.matches(selector)&&!b.disabled&&b.offsetWidth>0);
+    const actions=this.reconArchiveOpen?['recon-dossier','journal-filter']:['recon-pin','recon-file','recon-assignments'];
+    return Array.from(this.host.querySelectorAll('button')).filter(b=>actions.includes(b.dataset.action)&&!b.disabled&&b.offsetWidth>0);
   };
   const victory=U.victory;
   U.victory=function(){
@@ -60,6 +70,8 @@
     switch(action){
       case 'recon-dossier':this.reconArchiveOpen=false;if(this.menu!=='journal')return this.showMenu('journal',this.playerIndex);break;
       case 'recon-assignments':this.reconArchiveOpen=true;break;
+      case 'recon-assignment':this.reconArchiveOpen=true;this.journalFilter='accepted';this.questId=b.dataset.value;break;
+      case 'recon-milestones':this.reconShowMilestones=!this.reconShowMilestones;break;
       case 'recon-evidence':this.reconShowEvidence=!this.reconShowEvidence;break;
       case 'recon-file':if(next(g)?.id===b.dataset.value)g.fileReconDebrief();break;
       case 'recon-pin':g.pinRecon(b.dataset.value);g.save(false);this.toast('Pinned · '+g.reconTarget().label);break;

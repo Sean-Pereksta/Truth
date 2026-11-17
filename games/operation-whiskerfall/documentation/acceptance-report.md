@@ -11,7 +11,21 @@ The playable expansion adds twelve investigation operations, six dungeon plans, 
 | Art and UI | Desktop Chrome 157.0.8103.52 on Windows, AMD Ryzen 7 5825U with Radeon Graphics opened the build directly from disk at 1280 × 720 and 1920 × 1080. Checks covered the title, field, forge, journal, Floodgate Archive and both heroes in the new suits. The [art library](../art-gallery.html) and [asset manifest](asset-manifest.md) include the exports. |
 | Load and pacing | One fresh browser session per sample, while other checks were running. At 720p the original title reached DOM content loaded in 1.08 s and the expanded build in 1.94 s. Field p50/p95 frame intervals were 16.7/16.8 ms and 16.7/17.0 ms respectively. The expanded 1080p sample measured 1.62 s and 16.7/33.6 ms. These timings describe the measured previews, not a hardware minimum. |
 
-**Open release checks.** A timed first clear with human players, the optional-content duration, physical USB/Bluetooth controllers and a listening test remain outstanding. The 10–14 hour campaign and 5–8 optional hours are design targets. The scripted checks establish functional coverage and do not establish those durations.
+The six new weapon families each cleared all four Berlin phases in the level-26 fixture. Across two seeded runs, times ranged from 18.08 s with the saber to 35.53 s with the scattergun. The fixture maintained hero health. The direct controller walkthrough found an exposed starting perch and a forge focus trap. The shipped route begins in Willow's protected perimeter, and Cancel returns to the selected recipe.
+
+The eight illustrated camp buttons, expandable journal milestones, three forge stations and independent co-op wardrobes were checked at 720p and 1080p. In Chrome, 46 exterior checks covered 26 survey sites, all six new field benefits, persistent rewards and visibility outside the camera. The low-water gauge, for example, primes the Floodgate Archive before the heroes descend. [Exterior mechanics](dungeon-approaches.md)
+
+Screens from the game show the [living title](media/courier-camp-title.webp), [camp menu](media/field-camp.webp), [field dossier](media/open-field-journal.webp), [forge comparison](media/forge-comparison.webp), [Floodgate approach](media/dungeon-approach.webp) and [archive interior](media/floodgate-archive.webp).
+
+The final two-hero, six-enemy Chrome benchmark sampled 180 frames per setting. At native 1080p the median frame interval went from 33.3 to 32.8 ms and the 95th percentile from 50.0 to 33.5 ms. The updated build at 1080p with Automatic enabled measured 16.7 ms median and 33.4 ms at the 95th percentile, finishing at an internal drawing resolution of 1651 × 929. At native 720p the two builds both measured 16.7 ms median. [Scene, settings, timings and combat footage](combat-playtest.md)
+
+The current offline release checks resolved all 93 local entry-point references and parsed 82 runtime scripts. The campaign suite passed 152 checks with an authentic baseline save. The portable-file, two-controller and six-family Berlin browser runs passed.
+
+After the painted surfaces were in place, the renderer changed to look up nearby scenery and reuse static paths. All five paired 720p scene captures matched their pre-optimization pixels, including partially visible shoreline and approach landmarks. Median terrain painting time fell from 7.55 to 3.07 ms in Willow, 5.23 to 3.67 ms at Floodgate Archive and 4.05 to 2.53 ms in Berlin. The shoreline measured 7.37 and 7.32 ms. [Scenery comparison harness](../tests/scenery-render-browser.cjs)
+
+All 72 archived regression suites passed against the original build. On this build 66 passed unchanged. Six required updated expectations for Fencer timing, the expanded catalogues, Berlin prerequisites, quest turn-in and the wardrobe's selection and equip controls. All six passed under the revised expectations. [Suite-by-suite comparison](legacy-suite-comparison.json)
+
+**Open release checks.** A timed first clear with human players, the optional-content duration, physical USB/Bluetooth controllers and a listening test remain outstanding. The 10–14 hour campaign and 5–8 optional hours are design targets. The playtime audit records the overlap between the campaign, the 134 optional assignments and the three post-credits exercises, along with how to time them separately. [Playtime evidence and test plan](playtime-validation.md)
 
 ## Previous release · 1.9 preview acceptance status
 

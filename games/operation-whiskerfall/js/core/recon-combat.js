@@ -175,6 +175,7 @@
   G.breakReconGuard=function(e,p,duration=.85){
     if(!e || role(e)!=='rivet_guard' || !living(e))return false;
     const r=current(this,e);r.guardDown=Math.max(.7,duration||0);expose(e,r,r.guardDown);
+    this.effect('reconImpact',e.x,e.y-28,32,.23,{motif:2,angle:e.angle||0});
     this.text('GUARD BROKEN',e.x,e.y-64,'#9ce5c2');return true;
   };
   function validTarget(g,p,e){
@@ -186,13 +187,22 @@
     if(b.source && (!living(b.source) || !g.world.activeEnemies.includes(b.source)))return;
     if (b.move && floor(g,b.move,final(e)?34:17)){e.x=b.move.x;e.y=b.move.y;}
     e.anim='shoot';
-    const hitOrigin={x:s.x,y:s.y};
+    const hitOrigin={x:s.x,y:s.y}, hits=[];
     for(const p of g.players){
       if(!validTarget(g,p,e) || !inside(s,p) || !g.lineOfSight(hitOrigin,p))continue;
+      const hp=p.hp;
       g.damagePlayer(p,a.damage*b.scale,e);
+      if(p.hp<hp)hits.push({x:p.x,y:p.y-20});
       if(b.push && !p.downed && !(p.dodgeTime>0))g.move(p,Math.cos(s.angle)*b.push,Math.sin(s.angle)*b.push,18);
     }
-    if(!g.settings?.reducedFlash)g.effect('reconImpact',s.x,s.y,Math.min(80,s.radius||35),.17,{angle:s.angle});
+    // Use one pooled object both for the spent footprint and the contacts.
+    // A missed volley terminates at the same cover-limited end of its tell.
+    const mid=s.kind==='lane'?offset(s,s.angle,s.length/2):s;
+    const coverage=s.kind==='lane'?s.length/2+s.halfWidth:s.radius;
+    const motif=role(e)==='sluice_warden'?5:role(e)==='lantern_stalker'?6:
+      b.move?4:s.inner||role(e)==='signal_sergeant'?7:s.kind==='lane'?1:3;
+    const contact=b.move|| (s.kind==='disc'?s:offset(s,s.angle,s.length??s.radius*.72));
+    g.effect('reconImpact',mid.x,mid.y,coverage+22,.21,{shape:s,motif,angle:s.angle,contact,hits});
     g.audio.play(s.kind==='lane'?'rifle':s.stamp===4?'leap':'melee');
   }
   function advance(g,e,r,dt){
@@ -311,7 +321,7 @@
   G.killEnemy=function(e,p){
     const relay=records.get(e)?.relay;if(living(relay)){relay.hp=0;relay.dead=true;}
     records.delete(e);
-    if(e.reconRelay){e.dead=true;e.hp=0;this.effect('reconImpact',e.x,e.y,38,.2);return;}
+    if(e.reconRelay){e.dead=true;e.hp=0;this.effect('reconImpact',e.x,e.y-22,38,.2,{motif:7});return;}
     if(!final(e))return kill.call(this,e,p);
     const previous=this._reconLastCommander;this._reconLastCommander=e;
     try{return kill.call(this,e,p);}finally{this._reconLastCommander=previous;}

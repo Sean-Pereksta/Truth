@@ -63,45 +63,6 @@
   ],
   "enemySpawns": [
     {
-      "id": "recon_patrol_10_0_0",
-      "type": 55,
-      "x": 25184.813275756314,
-      "y": 3261.567219453864,
-      "homeX": 25184.813275756314,
-      "homeY": 3261.567219453864,
-      "level": 7,
-      "locationId": null,
-      "region": 10,
-      "boss": false,
-      "patrol": 0
-    },
-    {
-      "id": "recon_patrol_10_0_1",
-      "type": 52,
-      "x": 25264.813275756314,
-      "y": 3326.567219453864,
-      "homeX": 25264.813275756314,
-      "homeY": 3326.567219453864,
-      "level": 7,
-      "locationId": null,
-      "region": 10,
-      "boss": false,
-      "patrol": 0
-    },
-    {
-      "id": "recon_patrol_10_0_2",
-      "type": 44,
-      "x": 25344.813275756314,
-      "y": 3391.567219453864,
-      "homeX": 25344.813275756314,
-      "homeY": 3391.567219453864,
-      "level": 7,
-      "locationId": null,
-      "region": 10,
-      "boss": false,
-      "patrol": 0
-    },
-    {
       "id": "recon_patrol_10_2_0",
       "type": 55,
       "x": 24125.74180671014,
@@ -180,45 +141,6 @@
       "patrol": 2.4000000000000004
     },
     {
-      "id": "recon_patrol_10_4_0",
-      "type": 55,
-      "x": 25956.83078758149,
-      "y": 2680.9011251275037,
-      "homeX": 25956.83078758149,
-      "homeY": 2680.9011251275037,
-      "level": 7,
-      "locationId": null,
-      "region": 10,
-      "boss": false,
-      "patrol": 3.2
-    },
-    {
-      "id": "recon_patrol_10_4_1",
-      "type": 52,
-      "x": 26026.115651475266,
-      "y": 2720.032498217188,
-      "homeX": 26026.115651475266,
-      "homeY": 2720.032498217188,
-      "level": 7,
-      "locationId": null,
-      "region": 10,
-      "boss": false,
-      "patrol": 3.2
-    },
-    {
-      "id": "recon_patrol_10_4_2",
-      "type": 44,
-      "x": 26106.115651475266,
-      "y": 2785.032498217188,
-      "homeX": 26106.115651475266,
-      "homeY": 2785.032498217188,
-      "level": 7,
-      "locationId": null,
-      "region": 10,
-      "boss": false,
-      "patrol": 3.2
-    },
-    {
       "id": "recon_patrol_10_5_0",
       "type": 55,
       "x": 23983.090652776882,
@@ -295,45 +217,6 @@
       "region": 10,
       "boss": false,
       "patrol": 4.800000000000001
-    },
-    {
-      "id": "recon_patrol_10_7_0",
-      "type": 55,
-      "x": 24974.447273528203,
-      "y": 2543.430186593905,
-      "homeX": 24974.447273528203,
-      "homeY": 2543.430186593905,
-      "level": 7,
-      "locationId": null,
-      "region": 10,
-      "boss": false,
-      "patrol": 5.6000000000000005
-    },
-    {
-      "id": "recon_patrol_10_7_1",
-      "type": 52,
-      "x": 25054.447273528203,
-      "y": 2608.430186593905,
-      "homeX": 25054.447273528203,
-      "homeY": 2608.430186593905,
-      "level": 7,
-      "locationId": null,
-      "region": 10,
-      "boss": false,
-      "patrol": 5.6000000000000005
-    },
-    {
-      "id": "recon_patrol_10_7_2",
-      "type": 44,
-      "x": 25134.447273528203,
-      "y": 2673.430186593905,
-      "homeX": 25134.447273528203,
-      "homeY": 2673.430186593905,
-      "level": 7,
-      "locationId": null,
-      "region": 10,
-      "boss": false,
-      "patrol": 5.6000000000000005
     }
   ],
   "objects": [

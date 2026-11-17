@@ -26,25 +26,56 @@
     if(list)list.scrollTop=v.scroll[v.tab]||0;
     if(action)focus(ui,action,id);
   }
+function station(ui,tab,active,pending){
+    const icon='assets/recon/station-'+tab.toLowerCase()+'.webp';
+    return '<button data-action="rf-tab" data-value="'+tab+'" aria-pressed="'+active+'" class="'+(active?'selected':'')+'" '+(pending?'disabled':'')+'><img src="'+escape(W.HeroArmorArt?.assetURL(icon)||icon)+'" width="40" height="40" alt="">'+tab+'</button>';
+  }
+  function status(q){
+    if(q.gate==='Equipped'||q.gate==='Installed')return q.gate;
+    if(q.owned)return 'Owned';
+    if(q.reason)return q.reason.startsWith('More supplies')?'Need supplies':'Locked';
+    return '';
+  }
+  function itemArt(ui,p,q,large){
+    if(q.item){
+      const art=ui.icon(q.item,large);
+      return q.item.reconArt==null&&W.clipGearPreview?W.clipGearPreview(art):art;
+    }
+    return ui.forgePortrait(p,q.id.startsWith('outfit.')?Number(q.id.slice(-1)):p.armorSet||0,q.name);
+  }
+  function comparison(q){
+    return '<dl class="rf-comparison"><div><dt>Now</dt><dd>'+escape(q.before)+'</dd></div><div><dt>After</dt><dd>'+escape(q.after)+'</dd></div></dl>';
+  }
   U.forgeMenu=function(){
     const p=this.player();
     if(!p)return '<p>Visit a resistance forge to work on your loadout.</p>';
-    const v=view(p),tab=v.tab,g=this.game;
+    const v=view(p),g=this.game,tab=v.tab;
     const records=F.choices(g,p,tab).map(key=>F.quote(g,this.playerIndex,tab,key));
     const q=records.find(r=>r.id===v.recipe[tab])||records[0];
     v.recipe[tab]=q.id;
-    const pending=v.pending,art=q.item?this.icon(q.item,true):this.forgePortrait(p,p.armorSet||0,q.name);
-    const state=q.gate==='Equipped'?'Equipped':q.gate==='Installed'?'Installed':q.owned?'Owned':q.reason?'Locked':'Available';
-    const craft=tab==='Craft',verb=craft?(q.owned?'Equip':'Craft'):tab==='Tune'?'Install tuning':'Reinforce';
-    const review=control('review',q.id,verb+'…','class="primary" '+(q.reason?'disabled':''));
-    const cost=price(p,q.cost);
-    const list=records.map(r=>'<button class="rf-recipe '+(q===r?'selected':'')+'" aria-pressed="'+(q===r)+'" data-action="rf-select" data-value="'+escape(r.id)+'"><b>'+escape(r.name)+'</b><small>'+escape(r.gate==='Equipped'||r.gate==='Installed'?r.gate:r.owned?'Owned':r.reason?'Locked':tab==='Craft'?r.item?.role||r.item?.reconFamily||'Pattern':'Ready')+'</small></button>').join('');
-    const hero=(p.skin%2?'Ash':'Clover')+' · Player '+(this.playerIndex+1);
-    const detail=pending?
-      '<section class="rf-confirm" role="group" aria-label="Confirm forge work"><h3>'+escape(verb+' '+q.name)+'?</h3><p>'+escape(hero)+' · '+escape(q.after)+'</p>'+cost+'<div class="rf-controls">'+(craft&&!q.owned?control('commit','store','Craft and store','class="primary"')+control('commit','equip','Craft and equip'):control('commit','equip','Confirm '+verb.toLowerCase(),'class="primary"'))+control('cancel',q.id,'Back')+'</div></section>':
-      '<aside class="rf-compare"><h4>Loadout comparison</h4><dl><dt>Current</dt><dd>'+escape(q.before)+'</dd><dt>Proposed</dt><dd>'+escape(q.after)+'</dd></dl><h4>Bench cost</h4>'+cost+'<p class="rf-status" role="status">'+escape(q.reason||v.message||'Ready at the bench.')+'</p><div class="rf-controls">'+review+'</div></aside>';
-    return this.playerTabs()+'<section class="recon-forge"><header class="rf-scene"><div><small>Resistance workshop</small><h3>Quartermaster’s forge</h3><p>'+escape(hero)+' · '+(g.reconEvidenceCount?.()||0)+' confirmed leads</p></div></header><nav aria-label="Forge stations" class="rf-tabs" data-nav-group="forge-stations">'+tabs.map(t=>control('tab',t,t,'class="'+(tab===t?'selected':'')+'" aria-pressed="'+(tab===t)+'" '+(pending?'disabled':''))).join('')+'</nav><div class="rf-layout"><div class="rf-recipes" data-nav-group="forge-recipes" '+(pending?'inert':'')+'>'+list+'</div><article class="rf-item"><div class="rf-art">'+art+'</div><small>'+escape(state)+' · '+escape(q.source)+'</small><h3>'+escape(q.name)+'</h3><p>'+escape(q.description)+'</p></article>'+detail+'</div></section>';
+    const pending=v.pending,inspect=v.inspect===q.id&&!pending,craft=tab==='Craft';
+    const verb=craft?(q.owned?'Equip':'Craft'):tab==='Tune'?'Install':'Upgrade';
+    const art=itemArt(this,p,q,true),hero=p.skin%2?'Ash':'Clover';
+    const stationBar='<header class="rf-workshop"><nav aria-label="Forge stations" class="rf-tabs" data-nav-group="forge-stations">'+tabs.map(t=>station(this,t,tab===t,!!pending)).join('')+'</nav><div class="rf-hero" aria-label="Acting hero">'+g.players.map((h,i)=>g.players.length===1?'<b>'+hero+'</b>':'<button class="'+(i===this.playerIndex?'selected':'')+'" data-action="player" data-value="'+i+'" aria-pressed="'+(i===this.playerIndex)+'" '+(pending?'disabled':'')+'>'+escape(h.skin%2?'Ash':'Clover')+' · P'+(i+1)+'</button>').join('')+'</div></header>';
+    const cards=records.map(r=>{
+      const state=status(r);
+      return '<button class="rf-recipe '+(q===r?'selected':'')+'" aria-pressed="'+(q===r)+'" aria-label="'+escape(r.name+(state?' · '+state:''))+'" data-action="rf-select" data-value="'+escape(r.id)+'"><span class="rf-thumbnail">'+itemArt(this,p,r,false)+'</span><b>'+escape(r.name)+'</b>'+(state?'<small>'+state+'</small>':'')+'</button>';
+    }).join('');
+    const costs=Object.values(q.cost).some(n=>n>0)?'<div class="rf-cost"><span>Cost / held</span>'+price(p,q.cost)+'</div>':'';
+    const caption=q.item?.reconSuit?q.item.role+' suit':q.item?.reconFamily||q.item?.slot||'Outfit';
+    const heading='<header class="rf-caption"><small>'+escape(caption)+'</small><h3>'+escape(q.name)+'</h3></header>';
+    let details;
+    if(pending){
+      details='<section class="rf-confirm" role="group" aria-label="Confirm forge work"><h3>'+escape(verb+' '+q.name)+'?</h3><p>'+escape(hero)+'</p>'+comparison(q)+costs+'<div class="rf-controls">'+(craft&&!q.owned?control('commit','equip','Craft & equip','class="primary"')+control('commit','store','Store in pack'):control('commit','equip','Confirm '+verb.toLowerCase(),'class="primary"'))+control('cancel',q.id,'Back')+'</div></section>';
+    }else{
+      const preview=inspect?'<div class="rf-inspection">'+comparison(q)+'<p>'+escape(q.description)+'</p><p class="rf-source">'+escape(q.source)+'</p></div>':'<div class="rf-art">'+art+'</div><p class="rf-effect">'+escape(q.description)+'</p>';
+      const unavailable=q.gate==='Equipped'||q.gate==='Installed'?q.gate:q.reason;
+      details='<article class="rf-selected">'+heading+preview+costs+(unavailable?'<p class="rf-status" role="status">'+escape(unavailable)+'</p>':'')+'<div class="rf-controls">'+control('review',q.id,verb,'class="primary" '+(q.reason?'disabled':''))+control('inspect',q.id,inspect?'Close details':'Compare','aria-expanded="'+inspect+'"')+'</div></article>';
+    }
+    return '<section class="recon-forge">'+stationBar+'<div class="rf-layout '+(records.length<7?'rf-short':'')+'"><div class="rf-recipes" data-nav-group="forge-recipes" '+(pending?'inert':'')+'>'+cards+'</div>'+details+'</div></section>';
   };
+
+
   const click=U.click;
   U.click=function(event){
     const b=event.target?.closest?.('button[data-action]'),action=b?.dataset.action,id=b?.dataset.value;
@@ -54,8 +85,9 @@
     v.scroll[tab]=this.host.querySelector('.rf-recipes')?.scrollTop||0;
     if(v.pending&&!['rf-commit','rf-cancel'].includes(action))return;
     this.sound();
-    if(action==='rf-tab'&&tabs.includes(id)){v.tab=id;v.message='';repaint(this,v,'tab',id);}
-    else if(action==='rf-select'){v.recipe[tab]=id;v.message='';repaint(this,v,'select',id);}
+    if(action==='rf-tab'&&tabs.includes(id)){v.tab=id;v.inspect=null;v.message='';repaint(this,v,'tab',id);}
+    else if(action==='rf-select'){v.recipe[tab]=id;v.inspect=null;v.message='';repaint(this,v,'select',id);}
+    else if(action==='rf-inspect'&&id===key){v.inspect=v.inspect===id?null:id;repaint(this,v,'inspect',id);}
     else if(action==='rf-review'&&id===key){
       const q=F.quote(this.game,this.playerIndex,tab,id);
       if(!q||q.reason)return;
@@ -86,6 +118,7 @@
       }
       const v=view(this.player());
       if(v.pending&&action==='back'){v.pending=null;repaint(this,v,'review',v.recipe[v.tab]);return;}
+      if(v.inspect&&!v.pending&&action==='back'){v.inspect=null;repaint(this,v,'inspect',v.recipe[v.tab]);return;}
       if(v.pending&&['next','previous'].includes(action))return;
     }
     return pad.call(this,action,owner);

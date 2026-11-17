@@ -84,11 +84,14 @@
       this.save(false);this.ui.update();
     }
     frame(t) {
-      const dt=Math.min(.04,Math.max(.001,(t-this.last)/1000));this.last=t;
+      const deltaMs=t-this.last,dt=Math.min(.04,Math.max(.001,deltaMs/1000));this.last=t;
       this.frameMs=this.frameMs*.95+dt*1000*.05;this.fps=Math.round(1000/this.frameMs);
       this.input.update(this);
-      if(this.state==='playing'&&!this.paused&&this.ready) this.update(dt);
-      this.renderer.draw(dt);this.ui.update();
+      const active=this.state==='playing'&&!this.paused&&this.ready;
+      this.renderer.updateRenderScale?.(deltaMs,active&&!document.hidden);
+      if(active)this.update(dt);
+      if(this.state!=='menu'||this.ui.menu!=='main')this.renderer.draw(dt);
+      this.ui.update();
       requestAnimationFrame(n=>this.frame(n));
     }
     update(dt) {

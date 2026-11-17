@@ -45,7 +45,7 @@
     const site=w.reconSite;if(!site)return null;
     const p=cell(site,'O'),cycle=(g.time%6)/6;
     if(site.id==='recon_court')p.x+=165+Math.sin(cycle*2*Math.PI)*205;
-    if(site.id==='recon_depot')p.x+=Math.sin(cycle*2*Math.PI)*195;
+    if(site.id==='recon_depot')p.x+=Math.sin((w.state.reconBrake?g.time%12/12:cycle)*2*Math.PI)*195;
     return p;
   }
   function points(g,op){
@@ -75,7 +75,8 @@
   function guardKeys(g,op){
     const run=g.reconDossier.run;
     const prefix='recon_watch_'+op.id+(run?'_practice_'+g.reconDossier.runSerial:'');
-    return Array.from({length:run?3:2},(_,i)=>prefix+'_'+i);
+    const hasDecoy=!run&&op.site==='recon_court'&&surface(g).opened.has('survey_recon_court');
+    return Array.from({length:run?3:hasDecoy?1:2},(_,i)=>prefix+'_'+i);
   }
   function guards(g,op,p){
     const w=g.world,keys=guardKeys(g,op),types=C.reconEnemyTypes||{};
@@ -257,7 +258,7 @@
   function updateMechanism(g,dt){
     const w=g.world,s=w.reconSite;if(!s)return;
     if(s.id==='recon_spire'&&g.time%5>3.65){
-      for(const p of g.players)if(living(p)&&symbol(w,p.x,p.y)==='A')g.move(p,95*dt,0,19);
+      for(const p of g.players)if(living(p)&&symbol(w,p.x,p.y)==='A')g.move(p,(w.state.reconWindbreak?42:95)*dt,0,19);
     }
     const beam=mirrorBeam(w,g.time);
     if(beam?.active){
@@ -384,6 +385,7 @@
       if(state===undefined)continue;
       if(!plain(state)||!Number.isInteger(state.reconSwitch)||state.reconSwitch<0||state.reconSwitch>(s.id==='recon_cistern'?2:1))return false;
       if(!['solved','claimed','bossDead'].every(key=>typeof state[key]==='boolean'))return false;
+      if(!['surveyApplied','reconWindbreak','reconBrake','reconSearch'].every(key=>state[key]===undefined||typeof state[key]==='boolean'))return false;
       if(!Array.isArray(state.enemies)||state.enemies.length>160||!state.enemies.every(e=>W.ExpeditionSave.enemy(e)&&e.id.startsWith('recon_watch_')))return false;
     }
     const s=siteById(data.activeDungeon?.id);

@@ -2202,5 +2202,68 @@
         "Renderer.drawPlayerArms"
       ]
     }
+  },
+  "forgeStations": {
+    "provenance": "Original generated watercolor workshop emblems, alpha-cropped and packed into 116px menu icons.",
+    "sourceDimensions": [
+      2172,
+      724
+    ],
+    "frames": [
+      {
+        "key": "station-upgrade",
+        "path": "assets/recon/station-upgrade.webp",
+        "source": [
+          78,
+          83,
+          557,
+          569
+        ],
+        "width": 116,
+        "height": 116,
+        "anchor": [
+          58,
+          58
+        ],
+        "consumer": "Forge station tab",
+        "animation": "static"
+      },
+      {
+        "key": "station-tune",
+        "path": "assets/recon/station-tune.webp",
+        "source": [
+          849,
+          83,
+          504,
+          558
+        ],
+        "width": 116,
+        "height": 116,
+        "anchor": [
+          58,
+          58
+        ],
+        "consumer": "Forge station tab",
+        "animation": "static"
+      },
+      {
+        "key": "station-craft",
+        "path": "assets/recon/station-craft.webp",
+        "source": [
+          1522,
+          100,
+          577,
+          542
+        ],
+        "width": 116,
+        "height": 116,
+        "anchor": [
+          58,
+          58
+        ],
+        "consumer": "Forge station tab",
+        "animation": "static"
+      }
+    ]
   }
 }

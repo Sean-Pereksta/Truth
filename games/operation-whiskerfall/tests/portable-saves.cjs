@@ -63,6 +63,8 @@ const {chromium}=require('playwright');
       Storage.prototype.setItem=function(k,v){if(this===localStorage)throw new DOMException('Full','QuotaExceededError');return orig.call(this,k,v);};
       const g=OW.game;g.players[0].gold=911;
       const ok=g.save(false);
+      g.ui.showMenu('pause');g.ui.slot=2;g.ui.render();
+      if(!document.querySelector('.save-warning button[data-action="export"]'))throw Error('Temporary session needs a visible backup action');
       return [ok,OW.Save.status(0).state,JSON.parse(OW.Save.export(0)).data.players[0].gold];
     });
     assert.deepEqual(temporary,[true,'temporary',911]);

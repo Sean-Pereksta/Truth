@@ -19,7 +19,8 @@ const {pathToFileURL}=require('node:url'),{chromium}=require('playwright');
       // edges. No control receives a synthetic click, focus or action call.
       window.padNavigate=async (selector,owner=0)=>{
         for(let attempt=0;attempt<65;attempt++){
-          const ui=OW.game.ui,buttons=ui.focusableControls(),target=ui.host.querySelector(selector);
+          const root=OW.game.ui,ui=root.menu==='coop-personal'?root.personalMenuFor(owner):root;
+          const buttons=ui.focusableControls(),target=ui.host.querySelector(selector);
           if(!target||!buttons.includes(target))throw Error('Control unavailable '+selector);
           const current=buttons.includes(ui.controllerFocus[owner])?ui.controllerFocus[owner]:buttons.includes(document.activeElement)?document.activeElement:ui.defaultControllerFocus(buttons);
           if(current===target)return;
@@ -71,6 +72,11 @@ const {pathToFileURL}=require('node:url'),{chromium}=require('playwright');
     const end=await pos();assert.ok(end[0].x>start[0].x&&end[1].y>start[1].y,'mixed keyboard and pad movement');
     await button(8,0);await button(3,1);
     assert.deepEqual(await page.evaluate(()=>OW.game.ui.personalMenus.map(p=>p.menu)),['inventory','skills']);
+    await pick('filter','armor');await pick('item','armor_recon_reedrunner');
+    await pick('wardrobe-compare','armor_recon_reedrunner');
+    assert.ok(await page.locator('[data-coop-owner="0"] .wardrobe-more').innerText().then(t=>t.includes('Walk 15% faster')));
+    assert.equal(await page.locator('[data-coop-owner="1"] .wardrobe-more').count(),0);
+    await button(1,0);assert.ok(await page.evaluate(()=>OW.game.ui.personalMenuFor(0).isOpen));
     await button(1,0);assert.ok(await page.evaluate(()=>OW.game.paused));
     await button(1,1);assert.equal(await page.evaluate(()=>OW.game.paused),false);
     await page.evaluate(async()=>{
@@ -96,7 +102,10 @@ const {pathToFileURL}=require('node:url'),{chromium}=require('playwright');
     await button(1);
     await page.evaluate(()=>{const g=OW.game,t=g.world.locations.find(l=>l.type==='forge');g.players.forEach((p,i)=>{p.x=t.x+i*45;p.y=t.y;});});
     await button(1);assert.equal(await page.evaluate(()=>OW.game.ui.menu),'forge');
-    await pick('rf-tab','Craft');await pick('rf-select','weapon_rushleaf');await pick('rf-review','weapon_rushleaf');
+    await pick('rf-tab','Craft');await pick('rf-select','weapon_rushleaf');await pick('rf-inspect','weapon_rushleaf');
+    assert.ok(await page.locator('.rf-inspection').innerText().then(text=>text.includes('range')&&text.includes('reload')));
+    await button(1);assert.equal(await page.evaluate(()=>document.activeElement?.dataset.action),'rf-inspect');
+    await pick('rf-review','weapon_rushleaf');
     await button(1);assert.equal(await page.evaluate(()=>document.activeElement?.dataset.action),'rf-review');
     await pick('rf-review','weapon_rushleaf');await pick('rf-commit','equip');
     assert.equal(await page.evaluate(()=>OW.game.weapon(OW.game.players[0]).id),'rushleaf');

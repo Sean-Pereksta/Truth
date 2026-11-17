@@ -440,8 +440,9 @@
       enemy._steer={mx:best.mx,my:best.my,angle:best.angle,side:best.side,time:.5+(enemy._navSalt%31)/100,tx:target.x,ty:target.y};
       return {mx:best.mx,my:best.my};
     }
-    getVisibleObjects(x,y,w,h) {
-      const list=[],seen=new Set(),x0=Math.floor((x-180)/CHUNK),x1=Math.floor((x+w+180)/CHUNK),y0=Math.floor((y-180)/CHUNK),y1=Math.floor((y+h+180)/CHUNK);
+    getVisibleObjects(x,y,w,h,list=[],seen=new Set()) {
+      list.length=0;seen.clear();
+      const x0=Math.floor((x-180)/CHUNK),x1=Math.floor((x+w+180)/CHUNK),y0=Math.floor((y-180)/CHUNK),y1=Math.floor((y+h+180)/CHUNK);
       for(let cy=y0;cy<=y1;cy++)for(let cx=x0;cx<=x1;cx++)for(const o of this._objectChunks.get(cx+','+cy)||[]){if(!seen.has(o.id)&&o.x+o.w>x&&o.y+o.h>y&&o.x-o.w<x+w&&o.y-o.h<y+h){seen.add(o.id);list.push(o);}}return list;
     }
     updateActive(players,dt,game) {

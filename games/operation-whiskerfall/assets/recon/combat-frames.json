@@ -1207,6 +1207,173 @@
         "false retreat",
         "last stand"
       ]
+    },
+    {
+      "key": "reconImpacts",
+      "path": "assets/recon/impacts.webp",
+      "source": "exec-5f3dfc62-d30e-4ce5-a9cc-e37acd0f64f5.png",
+      "sourceSize": [
+        1774,
+        887
+      ],
+      "cols": 4,
+      "rows": 2,
+      "width": 680,
+      "height": 340,
+      "frames": [
+        {
+          "sourceCrop": [
+            18,
+            89,
+            408,
+            277
+          ],
+          "crop": [
+            5,
+            30,
+            160,
+            109
+          ],
+          "anchor": [
+            85,
+            85
+          ],
+          "pose": "muzzle ignition"
+        },
+        {
+          "sourceCrop": [
+            481,
+            74,
+            369,
+            285
+          ],
+          "crop": [
+            175,
+            23,
+            160,
+            124
+          ],
+          "anchor": [
+            255,
+            85
+          ],
+          "pose": "copper strike"
+        },
+        {
+          "sourceCrop": [
+            926,
+            59,
+            352,
+            329
+          ],
+          "crop": [
+            345,
+            10,
+            160,
+            150
+          ],
+          "anchor": [
+            425,
+            85
+          ],
+          "pose": "guard fracture"
+        },
+        {
+          "sourceCrop": [
+            1349,
+            64,
+            407,
+            319
+          ],
+          "crop": [
+            515,
+            22,
+            160,
+            125
+          ],
+          "anchor": [
+            595,
+            85
+          ],
+          "pose": "crosscut"
+        },
+        {
+          "sourceCrop": [
+            16,
+            468,
+            410,
+            370
+          ],
+          "crop": [
+            5,
+            183,
+            160,
+            144
+          ],
+          "anchor": [
+            85,
+            255
+          ],
+          "pose": "landing dust"
+        },
+        {
+          "sourceCrop": [
+            451,
+            496,
+            418,
+            295
+          ],
+          "crop": [
+            175,
+            198,
+            160,
+            113
+          ],
+          "anchor": [
+            255,
+            255
+          ],
+          "pose": "water surge"
+        },
+        {
+          "sourceCrop": [
+            912,
+            471,
+            398,
+            360
+          ],
+          "crop": [
+            345,
+            182,
+            160,
+            145
+          ],
+          "anchor": [
+            425,
+            255
+          ],
+          "pose": "lantern discharge"
+        },
+        {
+          "sourceCrop": [
+            1342,
+            503,
+            411,
+            308
+          ],
+          "crop": [
+            515,
+            195,
+            160,
+            120
+          ],
+          "anchor": [
+            595,
+            255
+          ],
+          "pose": "signal discharge"
+        }
+      ]
     }
   ]
 }

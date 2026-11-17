@@ -6,6 +6,8 @@ Start a campaign and follow the pinned orchard lead outside Willow. At the obser
 
 Open Camp with Start or Escape. The camp card shows party health, location and the current lead. The title and camp have a painted campfire with moving embers. Settings includes a living-camp animation switch and honors the device's reduced-motion preference.
 
+Use the eight illustrated camp choices to reach Gear, Map, Journal, Bounties, Skills, Controls, Settings or your partner. Open **See checklist** in the Journal for the remaining Berlin milestones. At a dungeon mouth, follow the ground marks to an optional field station or walk to the entrance to descend. The tide gauge at Floodgate Archive, for example, lets you prime the intake before entering. [All six field stations](dungeon-approaches.md)
+
 In Controls, use the player tabs to choose each hero's stick deadzone, aim response, aim assistance, movement stick and button labels. **Twin-stick** resets that player's profile and **Steady aim** enables assistance. The shared button layout retains existing remaps. The right stick button triggers a heavy strike on press and can be remapped. A disconnected controller pauses the field and can reclaim its hero on reconnect. The assignment buttons in Controls also support a replacement device.
 
 At a forge, use the bumpers to move between **Upgrade**, **Tune** and **Craft**. Choose a recipe, compare its effects and costs, and confirm for the named hero. New gear can be equipped immediately or stored. Each recipe lists the evidence or expedition required. High-contrast warnings, longer recon windups, reduced impact flashes and camera shake are available in Settings.
@@ -112,6 +114,8 @@ At a forge, improve the equipped firearm to **+3** to unlock tuning. Power adds 
 Open **Controls** from the title or pause menu. Select **Player 1 keys** or **Player 2 keys**, choose a binding, and press a replacement key or mouse button. For a controller binding, press the replacement controller button. Escape cancels a pending remap. The controller layout applies to both controllers. A stick-swap button exchanges movement and aim sticks. **Restore default controls** restores both keyboard layouts and the standard controller mapping. Bindings are stored in this browser when browser storage is available.
 
 Open **Settings** for graphics quality, rendering resolution, fullscreen, damage numbers, minimap, and separate music, effect, and interface volume. Fullscreen availability depends on the browser and whether the game is embedded in a permitted frame.
+
+**Automatic** starts at the screen's render resolution for the chosen quality. After sustained slow frames it lowers the world's drawing resolution gradually. Once play is smooth again it restores detail. A 720p screen keeps its full width. The **1280 pixels** and **1920 pixels** options set a fixed maximum width for world art. Menus, text and camera coverage follow the display size.
 
 With a controller, move up or down to focus a setting. Left and right change selectors and volume sliders. For a checkbox, left turns it off and right turns it on; A also toggles it. Your setting changes apply immediately. Buttons used to close a menu must be released before they can trigger an in-world action.
 
