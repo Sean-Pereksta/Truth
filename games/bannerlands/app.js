@@ -7,6 +7,7 @@ import {createBattleHud} from './hud.js';
 import {FORMATION_PRESETS,formationSettings,formationPreview,formationRole,placeFormation,formationStatus,drawFormationGround} from './formation-placement.js';
 import {HERO_PROFILES,heroProfile} from './heroes.js';
 import {setupMultiplayer} from './multiplayer/menu.js';
+import {HOST_DOWNLOAD_MESSAGE} from './multiplayer/lobby-ui.js';
 import {createTroopSelectionFilter,troopFilterShortcut} from './troop-selection.js';
 
 const $=id=>document.getElementById(id),canvas=$('battleCanvas'),field=$('battlefield');
@@ -867,8 +868,14 @@ if(location.protocol!=='file:')online=setupMultiplayer({getConfig:multiplayerCon
 }});
 Object.defineProperty(window.__bannerlands,'online',{get:()=>online});
 if(location.protocol==='file:'){
- document.querySelector('.online-menu-actions').hidden=true;
+ document.querySelector('.online-menu-actions a').hidden=true;
  $('browseLobbiesButton').hidden=true;
+ $('joinInviteButton').hidden=true;
+ $('hostLobbyButton').addEventListener('click',()=>{
+  const error=$('offlineHostError');
+  error.hidden=false;
+  error.querySelector('span').textContent=HOST_DOWNLOAD_MESSAGE;
+ });
 }
 if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js',{type:'module'}).catch(()=>{});
 boot();

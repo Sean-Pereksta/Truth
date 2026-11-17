@@ -35,8 +35,17 @@ test('invitations reject host-control fragments, credentials and unsafe origins'
 function fixture({delayAuth=false}={}){
   let clock=now,resolveAuth;const stored=new Map(),writes=[],timers=new Map();let nextTimer=0;
   const authentication=delayAuth?new Promise(resolve=>{resolveAuth=resolve;}):Promise.resolve();
-  const sdk={app:{getApps:()=>[],initializeApp:()=>({})},auth:{getAuth:()=>({currentUser:{uid:'owner-1'},authStateReady:()=>authentication})},firestore:{getFirestore:()=>({}),doc:(_,collection,id)=>({collection,id}),collection:(_,collection)=>({collection}),orderBy:(field,direction)=>({field,direction}),limit:value=>({limit:value}),query:(...args)=>args,serverTimestamp:()=>{const at=clock;return {toMillis:()=>at};},setDoc:async(ref,data)=>{writes.push({type:'write',ref,data});stored.set(ref.id,data);},deleteDoc:async ref=>{writes.push({type:'delete',ref});stored.delete(ref.id);},getDocs:async query=>({docs:[...stored].map(([id,data])=>({id,data:()=>data})),query})}};
-  const directory=createFirebaseDirectory({loader:async()=>sdk,now:()=>clock,schedule:(fn,ms)=>{const id=++nextTimer;timers.set(id,{fn,ms});return id;},unschedule:id=>timers.delete(id)});
+  const sdk={app:{getApps:()=>[],initializeApp:()=>({})},auth:{getAuth:()=>({currentUser:{uid:'owner-1'},authStateReady:()=>authentication})},firestore:{getFirestore:()=>({}),doc:(_,collection,id)=>({collection,id}),serverTimestamp:()=>{const at=clock;return {toMillis:()=>at};},setDoc:async(ref,data)=>{writes.push({type:'write',ref,data});stored.set(ref.id,data);},deleteDoc:async ref=>{writes.push({type:'delete',ref});stored.delete(ref.id);}}};
+  const encode=(name,value)=>{
+    if(name==='updatedAt')return {timestampValue:new Date(value.toMillis()).toISOString()};
+    if(typeof value==='number')return {integerValue:String(value)};
+    return {[typeof value==='boolean'?'booleanValue':'stringValue']:value};
+  };
+  const fetchImpl=async()=>({ok:true,json:async()=>[...stored].map(([id,data])=>({document:{
+    name:'documents/'+LOBBY_COLLECTION+'/'+id,
+    fields:Object.fromEntries(Object.entries(data).map(([name,value])=>[name,encode(name,value)]))
+  }}))});
+  const directory=createFirebaseDirectory({loader:async()=>sdk,fetchImpl,now:()=>clock,schedule:(fn,ms)=>{const id=++nextTimer;timers.set(id,{fn,ms});return id;},unschedule:id=>timers.delete(id)});
   return {directory,writes,timers,stored,sdk,setTime:value=>{clock=value;},resolveAuth:()=>resolveAuth?.()};
 }
 
@@ -53,12 +62,21 @@ test('removal wins an in-flight anonymous sign-in and cannot resurrect a listing
   const f=fixture({delayAuth:true}),publishing=f.directory.publish(lobby());await Promise.resolve();await f.directory.remove();f.resolveAuth();await publishing;
   assert.equal(f.writes.length,0);assert.equal(f.stored.size,0);
 });
-test('public browsing does not create an anonymous Firebase account',async()=>{
-  const f=fixture();let authCalls=0;f.sdk.auth.getAuth=()=>{authCalls++;throw new Error('Browsing must not request authentication.');};
-  assert.deepEqual(await f.directory.list(),[]);assert.equal(authCalls,0);assert.equal(f.directory.usage().readQueries,1);await f.directory.close();
+test('public browsing only makes the bounded, unauthenticated Firestore query and retries failures',async()=>{
+  let sdkLoads=0,reads=0;
+  const directory=createFirebaseDirectory({loader:async()=>{sdkLoads++;throw new Error('CDN unavailable');},fetchImpl:async(url,request)=>{
+    assert.match(url,/^https:\/\/firestore\.googleapis\.com\/.*\/documents:runQuery$/);
+    assert.equal(request.method,'POST');assert.equal(request.credentials,'omit');assert.ok(!request.headers.Authorization);
+    assert.deepEqual(JSON.parse(request.body).structuredQuery,{from:[{collectionId:LOBBY_COLLECTION}],orderBy:[{field:{fieldPath:'updatedAt'},direction:'DESCENDING'}],limit:50});
+    if(++reads===1)throw new TypeError('Failed to fetch');
+    return {ok:true,json:async()=>[{readTime:new Date(now).toISOString()}]};
+  }});
+  await assert.rejects(directory.list(),/lobby discovery.*join by invitation/i);
+  assert.deepEqual(await directory.list(),[]);assert.equal(sdkLoads,0);assert.equal(reads,2);assert.equal(directory.usage().readQueries,1);await directory.close();
 });
 test('a stalled directory connection returns an actionable bounded failure',async()=>{
-  const directory=createFirebaseDirectory({loader:()=>new Promise(()=>{}),requestTimeoutMs:20});await assert.rejects(directory.list(),/timed out.*guest invitation/i);assert.equal(directory.usage().errors,1);await directory.close();
+  let signal;
+  const directory=createFirebaseDirectory({fetchImpl:(_,request)=>{signal=request.signal;return new Promise(()=>{});},requestTimeoutMs:20});await assert.rejects(directory.list(),/timed out.*guest invitation/i);assert.equal(signal.aborted,true);assert.equal(directory.usage().errors,1);await directory.close();
 });
 
 test('watch locally hides stale hosts even without a Firebase change',async()=>{

@@ -12,7 +12,8 @@ its existing `bannerlandsLobbies` collection and rules. The web configuration
 in `multiplayer/firebase-config.js` comes from that prototype. Its API key is
 public web configuration; anonymous Firebase Authentication and Firestore
 rules authorize writes. No service-account key is required or packaged.
-Public browser discovery does not sign in or create an anonymous account.
+Public browser discovery sends an unauthenticated Firestore REST query and
+works independently of the Firebase SDK download.
 
 ## Publication and joining
 
@@ -62,7 +63,7 @@ for hiding it.
 
 `createFirebaseDirectory().usage()` reports query count, estimated document
 reads, writes, deletions, errors and estimated metadata bytes. Its byte figure
-does not include SDK transport overhead. The Node publisher reports its actual
+does not include transport overhead. The Node publisher reports its actual
 JSON request/response bytes, authentication requests, writes and deletions.
 These counters are session measurements, not a Firebase billing statement.
 
@@ -107,7 +108,7 @@ older repository copy over currently deployed unrelated rules.
 metadata privacy, expiry, compatibility, malformed invitations, bounded reads
 and writes, publication/removal races and the Node host adapter's private
 authentication and server-time transform. Public browsing also verifies that
-no authentication request is made. A stalled SDK operation returns a bounded
+no SDK or authentication request is made. A stalled directory request returns a bounded
 failure, and a simulated hour-long host refresh verifies the documented form
 encoding, refresh-token rotation and recovery after a temporary service error.
 

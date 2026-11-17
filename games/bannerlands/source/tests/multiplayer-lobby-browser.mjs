@@ -63,8 +63,12 @@ try{
     const menu=await page.locator('.campaign-menu').evaluate(el=>({rect:{x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y,width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height},scrollWidth:el.scrollWidth,clientWidth:el.clientWidth}));
     assert.ok(menu.scrollWidth<=menu.clientWidth+1,'Original campaign menu has no horizontal overflow');assert.ok(menu.rect.y>=0&&menu.rect.y+menu.rect.height<=size.height+1,'Original campaign menu stays inside viewport');
     if(size.width<600){await page.locator('#menuCampaignTab').click();assert.equal(await page.locator('#menuOverlay').getAttribute('data-menu-tab'),'campaign');if(out)await page.screenshot({path:path.join(out,'bannerlands-mobile-campaign-before-return.png')});await page.locator('#menuHouseTab').click();}
-    assert.equal(await page.locator('#hostLobbyButton').isVisible(),false);
-    await page.locator('#joinInviteButton').click();assert.equal(await page.locator('[data-view="host"]').isVisible(),false);await page.locator('[data-action="close"]').click();
+    await page.locator('#hostLobbyButton').click();
+    assert.match(await page.locator('[data-pane="host-required"] [role="alert"]').innerText(),/download and launch Bannerlands for Windows/i);
+    assert.ok(await page.locator('[data-pane="host-required"] [data-download]').isVisible());
+    assert.equal(await page.locator('[data-pane="host"]').isVisible(),false);
+    await page.locator('[data-action="close"]').click();
+    await page.locator('#joinInviteButton').click();assert.ok(await page.locator('[data-view="host"]').isVisible());await page.locator('[data-action="close"]').click();
     if(out)await page.screenshot({path:path.join(out,'bannerlands-main-menu-'+size.width+'.png')});
     await page.locator('.online-download').click();await page.waitForURL('**/download.html');assert.equal(await page.title(),'Download Bannerlands');assert.ok(await page.locator('#publishedWindows').isVisible());
     const download=await page.evaluate(()=>({width:document.documentElement.scrollWidth,viewport:innerWidth}));assert.ok(download.width<=download.viewport+1,'Download page has no horizontal overflow');
@@ -85,6 +89,7 @@ try{
   await installed.goto(server.url);await installed.waitForFunction(()=>window.__bannerlands&&!document.getElementById('startButton').disabled,{timeout:120000});
   assert.equal(await installed.locator('.online-download').isVisible(),false,'Installed game does not offer a download on the main menu');
   await installed.locator('#hostLobbyButton').click();
+  assert.ok(await installed.locator('[data-pane="host"] button[type="submit"]').isEnabled());
   assert.equal(await installed.locator('[data-download]:visible').count(),0,'Installed game does not offer a download in the hosting view');
   await installed.close();
   assert.deepEqual(errors,[]);

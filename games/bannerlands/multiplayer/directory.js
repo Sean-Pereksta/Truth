@@ -74,9 +74,31 @@ async function loadFirebase(){
   return {app,auth,firestore};
 }
 
+async function readPublicLobbies(fetchImpl,signal){
+  const endpoint=`https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents:runQuery`;
+  try{
+    const response=await fetchImpl(endpoint,{
+      method:'POST',credentials:'omit',signal,headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({structuredQuery:{from:[{collectionId:LOBBY_COLLECTION}],orderBy:[{field:{fieldPath:'updatedAt'},direction:'DESCENDING'}],limit:MAX_LOBBIES}})
+    });
+    if(!response.ok)throw new Error(`Firestore returned HTTP ${response.status}.`);
+    const rows=await response.json();
+    return rows.slice(0,MAX_LOBBIES).flatMap(({document})=>{
+      const directoryId=document?.name?.split('/').at(-1);
+      if(!key(directoryId)||!document.fields)return [];
+      const fields=Object.fromEntries(Object.entries(document.fields).map(([name,value])=>[
+        name,value?.stringValue??value?.booleanValue??(value?.integerValue==null?undefined:Number(value.integerValue))
+      ]));
+      return [{...fields,directoryId,heartbeatAt:Date.parse(document.fields.updatedAt?.timestampValue)}];
+    });
+  }catch(error){
+    throw new Error('Lobby discovery is unavailable. You can still join by invitation.',{cause:error});
+  }
+}
+
 // Same Firebase project/auth foundation as the prototype; a separate collection
 // keeps its strict two-player records and existing deployed rules untouched.
-export function createFirebaseDirectory({loader=loadFirebase,now=Date.now,schedule=setInterval,unschedule=clearInterval,onUsage=()=>{},allowLocalOrigins=false,requestTimeoutMs=12_000}={}){
+export function createFirebaseDirectory({loader=loadFirebase,fetchImpl=globalThis.fetch,now=Date.now,schedule=setInterval,unschedule=clearInterval,onUsage=()=>{},allowLocalOrigins=false,requestTimeoutMs=12_000}={}){
   const metrics={readQueries:0,documentReads:0,writes:0,deletes:0,estimatedPayloadBytes:0,errors:0};
   let sdk,db,uid,connecting=null,authConnecting=null,cached=[],lastRead=-Infinity,reading=null,writeChain=Promise.resolve(),current=null,revision=0,heartbeatTimer=null,pollTimer=null,expiryTimer=null,closed=false,lastWrite=-Infinity;
   const report=()=>onUsage({...metrics});
@@ -106,13 +128,11 @@ export function createFirebaseDirectory({loader=loadFirebase,now=Date.now,schedu
     if(closed)return Promise.reject(new Error('The lobby directory has closed.'));
     if(reading)return reading.then(()=>filter(options));
     if(now()-lastRead<DIRECTORY_POLL_MS)return Promise.resolve(filter(options));
-    lastRead=now();
     reading=counted(async()=>{
-      await connect();
-      const q=sdk.firestore.query(sdk.firestore.collection(db,LOBBY_COLLECTION),sdk.firestore.orderBy('updatedAt','desc'),sdk.firestore.limit(MAX_LOBBIES));
-      const result=await bounded(sdk.firestore.getDocs(q));
-      metrics.readQueries++;metrics.documentReads+=Math.max(1,result.docs.length);
-      cached=result.docs.map(doc=>({...doc.data(),directoryId:doc.id}));
+      const controller=new AbortController();
+      cached=await bounded(readPublicLobbies(fetchImpl,controller.signal)).finally(()=>controller.abort());
+      lastRead=now();
+      metrics.readQueries++;metrics.documentReads+=Math.max(1,cached.length);
       metrics.estimatedPayloadBytes+=size(cached);
       return filter(options);
     }).finally(()=>{reading=null;});
