@@ -1,0 +1,21 @@
+name: Notify Catnmice Windows game library
+on:
+  push:
+    branches: [main]
+    paths: ['games/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request the corresponding Windows build from Magic
+        env:
+          GH_TOKEN: ${{ secrets.CATNMICE_MAGIC_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "No cross-repository dispatch token configured. Magic can build this revision by workflow dispatch."
+            exit 0
+          fi
+          gh api --method POST repos/Sean-Pereksta/Magic/dispatches -f event_type=catnmice-truth-release -f "client_payload[truth_sha]=$GITHUB_SHA"
