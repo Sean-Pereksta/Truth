@@ -29,7 +29,7 @@ class Element{
 function fixture(){
   const elements=new Map(),buttons=[];
   const element=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id);};
-  const context={console,Math,Map,Set,String,Array,HOUSES,heroProfile,UNIT_DEFS,BUILD_DEFS,HOUSE_CONTENT,
+  const context={console,Math,Map,Set,String,Array,HOUSES,heroProfile,UNIT_DEFS,BUILD_DEFS,HOUSE_CONTENT,troopFilter:{reset(){}},
     chosenHouse:0,started:false,menuOpen:true,wasPaused:false,edgeMouse:null,battleHud:{open(){},close(){}},
     ui:{selected:new Set(),selectedBuildings:new Set(),quality:'auto'},groups:new Map(),keys:new Set(),
     allSelected:false,allBuildingsSelected:false,lastResult:null,lastEvent:0,lastBattle:0,accumulator:0,speed:1,

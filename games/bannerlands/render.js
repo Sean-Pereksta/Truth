@@ -114,8 +114,11 @@ export class Renderer{
     // Actual RGBA sprite sheet: five unit classes, four walk and four attack frames.
     // Intrinsic dimensions are used because generated atlases need not be 1280 square.
     const types=['infantry','archer','cavalry','siege','hero'];
-    const heights={infantry:28,archer:28,cavalry:37,siege:37,hero:35};
-    const widths={infantry:20,archer:20,cavalry:31,siege:32,hero:24};
+    // The archer's atlas bounds include the bow and quiver, while the modern
+    // infantry art is normalized to a 35-pixel body. Allow room for that
+    // equipment so the archer's person remains comparable in size.
+    const heights={infantry:28,archer:40,cavalry:37,siege:37,hero:35};
+    const widths={infantry:20,archer:29,cavalry:31,siege:32,hero:24};
     this.troopFrames={};this.sprites.clear();
     for(let row=0;row<5;row++){
       const frames=[],type=types[row];let largestWidth=1,largestHeight=1;

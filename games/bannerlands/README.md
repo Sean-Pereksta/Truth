@@ -38,6 +38,9 @@ Line, Pike Block, Shield Wall, Wedge and Loose presets support a visible facing
 lock. W advances the ranks; A releases them to charge independently. A plain
 right-click moves immediately; right-drag chooses the final front. D opens
 Move & Face, Shift+D faces in place, H holds/braces, and V retreats.
+With a force selected on desktop, Shift+1 selects its infantry, Shift+2 its
+archers, Shift+3 its cavalry, and Shift+4 restores the whole force. An open
+Muster or Council panel retains its numbered action shortcuts.
 
 Stark Winter Pikemen and Tyrell Thornwall Pikemen replace their additional
 Shield Bearers. Painted troop actions keep the original screen-right artwork
