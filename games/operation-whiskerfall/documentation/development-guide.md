@@ -1,5 +1,13 @@
 # Development guide
 
+## Reconnaissance campaign
+
+`index.html` lists the production load order. The enemy, equipment and dossier data modules follow the existing catalogue data. Run `node tools/export-catalogues.cjs` after changing them. This generates the readable catalogues, region exports, interior plans and operation data using the production data order. New geography is appended after generating the shipped world from its original seed.
+
+The input profiles, regional art registry, combat and equipment extensions, forge, campaign, journal and living camp install before the existing deferred boot. Save slots retain their original keys and backup envelope. Runtime attack plans and menu focus stay outside campaign files. In-game backup restore stages any migration writes while the normal loader runs and commits the slot after successful hydration.
+
+Run `node tools/check-recon.cjs` to verify entry-point references, runtime syntax, measured artwork, attack geometry, resolution scaling, Fencer recovery and forge transactions. With Playwright available, `node tools/check-recon.cjs --browser` also exercises the campaign, dungeon approaches, two-controller sequence, real save-file transfer and six Berlin weapon families. Set `CHROME_PATH` to the browser executable if Playwright's own browser is unavailable. Set `MEOWQUEST_BASELINE` to the original 1.9 game directory to include a backup exported by that build after all eight commander victories. These suites use isolated browser storage.
+
 MeowQuest the Purr’d Reich is a complete static browser project. Its runtime uses JavaScript, Canvas 2D, DOM menus, the Gamepad API, Web Audio, and local storage. It has no package installation, build step, backend, database, or runtime CDN dependency. Optional Node commands below are developer tools; players do not need Node.
 
 ## Version 1.9 extension order

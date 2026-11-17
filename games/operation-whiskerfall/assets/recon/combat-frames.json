@@ -1,0 +1,1379 @@
+{
+  "provenance": "Original Codex ImageGen gouache sprite and warning atlases. Measured connected alpha components from the source canvases, aligned to shared floor pivots and fitted into 170 px cells.",
+  "consumer": "js/ui/recon-combat-art.js",
+  "textures": [
+    {
+      "key": "reconPatrol",
+      "path": "assets/recon/patrol.webp",
+      "source": "exec-5bbf6f79-3598-4fa0-aed7-662dc3679f23.png",
+      "sourceSize": [
+        1024,
+        1536
+      ],
+      "cols": 4,
+      "rows": 6,
+      "width": 680,
+      "height": 1020,
+      "frames": [
+        {
+          "sourceCrop": [
+            17,
+            24,
+            216,
+            212
+          ],
+          "crop": [
+            18,
+            34,
+            133,
+            130
+          ],
+          "anchor": [
+            85,
+            164
+          ],
+          "pose": "move"
+        },
+        {
+          "sourceCrop": [
+            270,
+            93,
+            212,
+            143
+          ],
+          "crop": [
+            190,
+            76,
+            130,
+            88
+          ],
+          "anchor": [
+            255,
+            164
+          ],
+          "pose": "anticipate"
+        },
+        {
+          "sourceCrop": [
+            530,
+            31,
+            257,
+            203
+          ],
+          "crop": [
+            346,
+            39,
+            158,
+            125
+          ],
+          "anchor": [
+            425,
+            164
+          ],
+          "pose": "commit"
+        },
+        {
+          "sourceCrop": [
+            785,
+            73,
+            199,
+            162
+          ],
+          "crop": [
+            534,
+            64,
+            122,
+            100
+          ],
+          "anchor": [
+            595,
+            164
+          ],
+          "pose": "recovery"
+        },
+        {
+          "sourceCrop": [
+            10,
+            274,
+            222,
+            215
+          ],
+          "crop": [
+            13,
+            194,
+            144,
+            140
+          ],
+          "anchor": [
+            85,
+            334
+          ],
+          "pose": "move"
+        },
+        {
+          "sourceCrop": [
+            266,
+            314,
+            226,
+            178
+          ],
+          "crop": [
+            181,
+            218,
+            147,
+            116
+          ],
+          "anchor": [
+            255,
+            334
+          ],
+          "pose": "anticipate"
+        },
+        {
+          "sourceCrop": [
+            519,
+            277,
+            243,
+            207
+          ],
+          "crop": [
+            346,
+            199,
+            158,
+            135
+          ],
+          "anchor": [
+            425,
+            334
+          ],
+          "pose": "commit"
+        },
+        {
+          "sourceCrop": [
+            789,
+            308,
+            217,
+            187
+          ],
+          "crop": [
+            524,
+            212,
+            141,
+            122
+          ],
+          "anchor": [
+            595,
+            334
+          ],
+          "pose": "recovery"
+        },
+        {
+          "sourceCrop": [
+            13,
+            531,
+            218,
+            212
+          ],
+          "crop": [
+            19,
+            377,
+            131,
+            127
+          ],
+          "anchor": [
+            85,
+            504
+          ],
+          "pose": "move"
+        },
+        {
+          "sourceCrop": [
+            261,
+            575,
+            201,
+            176
+          ],
+          "crop": [
+            194,
+            398,
+            121,
+            106
+          ],
+          "anchor": [
+            255,
+            504
+          ],
+          "pose": "anticipate"
+        },
+        {
+          "sourceCrop": [
+            497,
+            507,
+            263,
+            252
+          ],
+          "crop": [
+            346,
+            353,
+            158,
+            151
+          ],
+          "anchor": [
+            425,
+            504
+          ],
+          "pose": "commit"
+        },
+        {
+          "sourceCrop": [
+            776,
+            567,
+            209,
+            189
+          ],
+          "crop": [
+            532,
+            390,
+            126,
+            114
+          ],
+          "anchor": [
+            595,
+            504
+          ],
+          "pose": "recovery"
+        },
+        {
+          "sourceCrop": [
+            9,
+            781,
+            256,
+            224
+          ],
+          "crop": [
+            16,
+            554,
+            137,
+            120
+          ],
+          "anchor": [
+            85,
+            674
+          ],
+          "pose": "move"
+        },
+        {
+          "sourceCrop": [
+            260,
+            832,
+            247,
+            175
+          ],
+          "crop": [
+            189,
+            581,
+            132,
+            93
+          ],
+          "anchor": [
+            255,
+            674
+          ],
+          "pose": "anticipate"
+        },
+        {
+          "sourceCrop": [
+            516,
+            785,
+            296,
+            227
+          ],
+          "crop": [
+            346,
+            553,
+            158,
+            121
+          ],
+          "anchor": [
+            425,
+            674
+          ],
+          "pose": "commit"
+        },
+        {
+          "sourceCrop": [
+            780,
+            825,
+            230,
+            182
+          ],
+          "crop": [
+            533,
+            577,
+            123,
+            97
+          ],
+          "anchor": [
+            595,
+            674
+          ],
+          "pose": "recovery"
+        },
+        {
+          "sourceCrop": [
+            7,
+            1041,
+            233,
+            216
+          ],
+          "crop": [
+            17,
+            719,
+            135,
+            125
+          ],
+          "anchor": [
+            85,
+            844
+          ],
+          "pose": "move"
+        },
+        {
+          "sourceCrop": [
+            250,
+            1085,
+            251,
+            171
+          ],
+          "crop": [
+            182,
+            745,
+            145,
+            99
+          ],
+          "anchor": [
+            255,
+            844
+          ],
+          "pose": "anticipate"
+        },
+        {
+          "sourceCrop": [
+            519,
+            1027,
+            273,
+            241
+          ],
+          "crop": [
+            346,
+            705,
+            158,
+            139
+          ],
+          "anchor": [
+            425,
+            844
+          ],
+          "pose": "commit"
+        },
+        {
+          "sourceCrop": [
+            779,
+            1032,
+            236,
+            232
+          ],
+          "crop": [
+            526,
+            710,
+            137,
+            134
+          ],
+          "anchor": [
+            595,
+            844
+          ],
+          "pose": "recovery"
+        },
+        {
+          "sourceCrop": [
+            6,
+            1294,
+            208,
+            225
+          ],
+          "crop": [
+            26,
+            887,
+            117,
+            127
+          ],
+          "anchor": [
+            85,
+            1014
+          ],
+          "pose": "move"
+        },
+        {
+          "sourceCrop": [
+            252,
+            1352,
+            225,
+            165
+          ],
+          "crop": [
+            191,
+            921,
+            127,
+            93
+          ],
+          "anchor": [
+            255,
+            1014
+          ],
+          "pose": "anticipate"
+        },
+        {
+          "sourceCrop": [
+            503,
+            1301,
+            280,
+            220
+          ],
+          "crop": [
+            346,
+            890,
+            158,
+            124
+          ],
+          "anchor": [
+            425,
+            1014
+          ],
+          "pose": "commit"
+        },
+        {
+          "sourceCrop": [
+            781,
+            1355,
+            212,
+            164
+          ],
+          "crop": [
+            535,
+            921,
+            120,
+            93
+          ],
+          "anchor": [
+            595,
+            1014
+          ],
+          "pose": "recovery"
+        }
+      ]
+    },
+    {
+      "key": "reconThreats",
+      "path": "assets/recon/threats.webp",
+      "source": "exec-4a3ff7ef-2a98-4d44-a02f-2e747ef713b2.png",
+      "sourceSize": [
+        1774,
+        887
+      ],
+      "cols": 4,
+      "rows": 2,
+      "width": 680,
+      "height": 340,
+      "frames": [
+        {
+          "sourceCrop": [
+            40,
+            41,
+            389,
+            381
+          ],
+          "crop": [
+            6,
+            7,
+            158,
+            155
+          ],
+          "anchor": [
+            85,
+            85
+          ],
+          "pose": "slash"
+        },
+        {
+          "sourceCrop": [
+            470,
+            96,
+            282,
+            278
+          ],
+          "crop": [
+            176,
+            7,
+            158,
+            156
+          ],
+          "anchor": [
+            255,
+            85
+          ],
+          "pose": "chevron"
+        },
+        {
+          "sourceCrop": [
+            915,
+            34,
+            377,
+            267
+          ],
+          "crop": [
+            346,
+            29,
+            158,
+            112
+          ],
+          "anchor": [
+            425,
+            85
+          ],
+          "pose": "wedge"
+        },
+        {
+          "sourceCrop": [
+            1361,
+            37,
+            344,
+            179
+          ],
+          "crop": [
+            516,
+            44,
+            158,
+            82
+          ],
+          "anchor": [
+            595,
+            85
+          ],
+          "pose": "broken ring"
+        },
+        {
+          "sourceCrop": [
+            34,
+            654,
+            209,
+            196
+          ],
+          "crop": [
+            6,
+            181,
+            158,
+            148
+          ],
+          "anchor": [
+            85,
+            255
+          ],
+          "pose": "landing"
+        },
+        {
+          "sourceCrop": [
+            455,
+            584,
+            413,
+            159
+          ],
+          "crop": [
+            176,
+            224,
+            158,
+            61
+          ],
+          "anchor": [
+            255,
+            255
+          ],
+          "pose": "tether"
+        },
+        {
+          "sourceCrop": [
+            905,
+            512,
+            400,
+            311
+          ],
+          "crop": [
+            346,
+            193,
+            158,
+            123
+          ],
+          "anchor": [
+            425,
+            255
+          ],
+          "pose": "drain"
+        },
+        {
+          "sourceCrop": [
+            1343,
+            471,
+            400,
+            368
+          ],
+          "crop": [
+            516,
+            182,
+            158,
+            145
+          ],
+          "anchor": [
+            595,
+            255
+          ],
+          "pose": "impact"
+        }
+      ]
+    },
+    {
+      "key": "reconCasualties",
+      "path": "assets/recon/casualties.webp",
+      "source": "exec-57a2f7a3-7b1c-49d9-88f1-31960a69061b.png",
+      "sourceSize": [
+        1024,
+        1536
+      ],
+      "cols": 2,
+      "rows": 6,
+      "width": 340,
+      "height": 1020,
+      "frames": [
+        {
+          "sourceCrop": [
+            86,
+            12,
+            315,
+            241
+          ],
+          "crop": [
+            24,
+            71,
+            121,
+            93
+          ],
+          "anchor": [
+            85,
+            164
+          ],
+          "pose": "hurt"
+        },
+        {
+          "sourceCrop": [
+            509,
+            86,
+            411,
+            155
+          ],
+          "crop": [
+            176,
+            104,
+            158,
+            60
+          ],
+          "anchor": [
+            255,
+            164
+          ],
+          "pose": "defeat"
+        },
+        {
+          "sourceCrop": [
+            65,
+            259,
+            300,
+            237
+          ],
+          "crop": [
+            30,
+            248,
+            109,
+            86
+          ],
+          "anchor": [
+            85,
+            334
+          ],
+          "pose": "hurt"
+        },
+        {
+          "sourceCrop": [
+            518,
+            337,
+            435,
+            166
+          ],
+          "crop": [
+            176,
+            274,
+            158,
+            60
+          ],
+          "anchor": [
+            255,
+            334
+          ],
+          "pose": "defeat"
+        },
+        {
+          "sourceCrop": [
+            55,
+            512,
+            315,
+            235
+          ],
+          "crop": [
+            26,
+            416,
+            117,
+            88
+          ],
+          "anchor": [
+            85,
+            504
+          ],
+          "pose": "hurt"
+        },
+        {
+          "sourceCrop": [
+            515,
+            579,
+            424,
+            154
+          ],
+          "crop": [
+            176,
+            447,
+            158,
+            57
+          ],
+          "anchor": [
+            255,
+            504
+          ],
+          "pose": "defeat"
+        },
+        {
+          "sourceCrop": [
+            57,
+            761,
+            359,
+            236
+          ],
+          "crop": [
+            22,
+            592,
+            125,
+            82
+          ],
+          "anchor": [
+            85,
+            674
+          ],
+          "pose": "hurt"
+        },
+        {
+          "sourceCrop": [
+            507,
+            828,
+            455,
+            153
+          ],
+          "crop": [
+            176,
+            621,
+            158,
+            53
+          ],
+          "anchor": [
+            255,
+            674
+          ],
+          "pose": "defeat"
+        },
+        {
+          "sourceCrop": [
+            57,
+            1000,
+            329,
+            252
+          ],
+          "crop": [
+            29,
+            759,
+            112,
+            85
+          ],
+          "anchor": [
+            85,
+            844
+          ],
+          "pose": "hurt"
+        },
+        {
+          "sourceCrop": [
+            497,
+            1101,
+            466,
+            148
+          ],
+          "crop": [
+            176,
+            794,
+            158,
+            50
+          ],
+          "anchor": [
+            255,
+            844
+          ],
+          "pose": "defeat"
+        },
+        {
+          "sourceCrop": [
+            58,
+            1264,
+            310,
+            252
+          ],
+          "crop": [
+            28,
+            922,
+            113,
+            92
+          ],
+          "anchor": [
+            85,
+            1014
+          ],
+          "pose": "hurt"
+        },
+        {
+          "sourceCrop": [
+            505,
+            1370,
+            435,
+            144
+          ],
+          "crop": [
+            176,
+            962,
+            158,
+            52
+          ],
+          "anchor": [
+            255,
+            1014
+          ],
+          "pose": "defeat"
+        }
+      ]
+    },
+    {
+      "key": "reconCommander",
+      "path": "assets/recon/whisker.webp",
+      "source": "exec-e7d54ce2-10bd-4193-a6fa-0cb12bdabd3f.png",
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "cols": 4,
+      "rows": 4,
+      "width": 680,
+      "height": 680,
+      "frames": [
+        {
+          "sourceCrop": [
+            8,
+            14,
+            253,
+            288
+          ],
+          "crop": [
+            33,
+            46,
+            103,
+            118
+          ],
+          "anchor": [
+            85,
+            164
+          ],
+          "pose": "move"
+        },
+        {
+          "sourceCrop": [
+            316,
+            9,
+            266,
+            294
+          ],
+          "crop": [
+            200,
+            44,
+            109,
+            120
+          ],
+          "anchor": [
+            255,
+            164
+          ],
+          "pose": "anticipate"
+        },
+        {
+          "sourceCrop": [
+            628,
+            39,
+            387,
+            264
+          ],
+          "crop": [
+            346,
+            56,
+            158,
+            108
+          ],
+          "anchor": [
+            425,
+            164
+          ],
+          "pose": "commit"
+        },
+        {
+          "sourceCrop": [
+            947,
+            60,
+            275,
+            248
+          ],
+          "crop": [
+            539,
+            63,
+            112,
+            101
+          ],
+          "anchor": [
+            595,
+            164
+          ],
+          "pose": "recovery"
+        },
+        {
+          "sourceCrop": [
+            9,
+            325,
+            251,
+            292
+          ],
+          "crop": [
+            27,
+            199,
+            116,
+            135
+          ],
+          "anchor": [
+            85,
+            334
+          ],
+          "pose": "move"
+        },
+        {
+          "sourceCrop": [
+            316,
+            313,
+            273,
+            303
+          ],
+          "crop": [
+            192,
+            194,
+            126,
+            140
+          ],
+          "anchor": [
+            255,
+            334
+          ],
+          "pose": "anticipate"
+        },
+        {
+          "sourceCrop": [
+            623,
+            352,
+            341,
+            264
+          ],
+          "crop": [
+            346,
+            212,
+            158,
+            122
+          ],
+          "anchor": [
+            425,
+            334
+          ],
+          "pose": "commit"
+        },
+        {
+          "sourceCrop": [
+            948,
+            364,
+            276,
+            252
+          ],
+          "crop": [
+            531,
+            217,
+            128,
+            117
+          ],
+          "anchor": [
+            595,
+            334
+          ],
+          "pose": "recovery"
+        },
+        {
+          "sourceCrop": [
+            9,
+            640,
+            250,
+            293
+          ],
+          "crop": [
+            26,
+            367,
+            117,
+            137
+          ],
+          "anchor": [
+            85,
+            504
+          ],
+          "pose": "move"
+        },
+        {
+          "sourceCrop": [
+            303,
+            645,
+            287,
+            286
+          ],
+          "crop": [
+            188,
+            370,
+            134,
+            134
+          ],
+          "anchor": [
+            255,
+            504
+          ],
+          "pose": "anticipate"
+        },
+        {
+          "sourceCrop": [
+            614,
+            665,
+            338,
+            266
+          ],
+          "crop": [
+            346,
+            380,
+            158,
+            124
+          ],
+          "anchor": [
+            425,
+            504
+          ],
+          "pose": "commit"
+        },
+        {
+          "sourceCrop": [
+            946,
+            686,
+            277,
+            254
+          ],
+          "crop": [
+            530,
+            385,
+            129,
+            119
+          ],
+          "anchor": [
+            595,
+            504
+          ],
+          "pose": "recovery"
+        },
+        {
+          "sourceCrop": [
+            10,
+            954,
+            252,
+            292
+          ],
+          "crop": [
+            33,
+            555,
+            103,
+            119
+          ],
+          "anchor": [
+            85,
+            674
+          ],
+          "pose": "move"
+        },
+        {
+          "sourceCrop": [
+            315,
+            946,
+            278,
+            298
+          ],
+          "crop": [
+            198,
+            553,
+            113,
+            121
+          ],
+          "anchor": [
+            255,
+            674
+          ],
+          "pose": "anticipate"
+        },
+        {
+          "sourceCrop": [
+            627,
+            980,
+            388,
+            264
+          ],
+          "crop": [
+            346,
+            566,
+            158,
+            108
+          ],
+          "anchor": [
+            425,
+            674
+          ],
+          "pose": "commit"
+        },
+        {
+          "sourceCrop": [
+            948,
+            999,
+            275,
+            249
+          ],
+          "crop": [
+            539,
+            573,
+            112,
+            101
+          ],
+          "anchor": [
+            595,
+            674
+          ],
+          "pose": "recovery"
+        }
+      ],
+      "rowOrder": [
+        "command duel",
+        "signal network",
+        "false retreat",
+        "last stand"
+      ]
+    },
+    {
+      "key": "reconImpacts",
+      "path": "assets/recon/impacts.webp",
+      "source": "exec-5f3dfc62-d30e-4ce5-a9cc-e37acd0f64f5.png",
+      "sourceSize": [
+        1774,
+        887
+      ],
+      "cols": 4,
+      "rows": 2,
+      "width": 680,
+      "height": 340,
+      "frames": [
+        {
+          "sourceCrop": [
+            18,
+            89,
+            408,
+            277
+          ],
+          "crop": [
+            5,
+            30,
+            160,
+            109
+          ],
+          "anchor": [
+            85,
+            85
+          ],
+          "pose": "muzzle ignition"
+        },
+        {
+          "sourceCrop": [
+            481,
+            74,
+            369,
+            285
+          ],
+          "crop": [
+            175,
+            23,
+            160,
+            124
+          ],
+          "anchor": [
+            255,
+            85
+          ],
+          "pose": "copper strike"
+        },
+        {
+          "sourceCrop": [
+            926,
+            59,
+            352,
+            329
+          ],
+          "crop": [
+            345,
+            10,
+            160,
+            150
+          ],
+          "anchor": [
+            425,
+            85
+          ],
+          "pose": "guard fracture"
+        },
+        {
+          "sourceCrop": [
+            1349,
+            64,
+            407,
+            319
+          ],
+          "crop": [
+            515,
+            22,
+            160,
+            125
+          ],
+          "anchor": [
+            595,
+            85
+          ],
+          "pose": "crosscut"
+        },
+        {
+          "sourceCrop": [
+            16,
+            468,
+            410,
+            370
+          ],
+          "crop": [
+            5,
+            183,
+            160,
+            144
+          ],
+          "anchor": [
+            85,
+            255
+          ],
+          "pose": "landing dust"
+        },
+        {
+          "sourceCrop": [
+            451,
+            496,
+            418,
+            295
+          ],
+          "crop": [
+            175,
+            198,
+            160,
+            113
+          ],
+          "anchor": [
+            255,
+            255
+          ],
+          "pose": "water surge"
+        },
+        {
+          "sourceCrop": [
+            912,
+            471,
+            398,
+            360
+          ],
+          "crop": [
+            345,
+            182,
+            160,
+            145
+          ],
+          "anchor": [
+            425,
+            255
+          ],
+          "pose": "lantern discharge"
+        },
+        {
+          "sourceCrop": [
+            1342,
+            503,
+            411,
+            308
+          ],
+          "crop": [
+            515,
+            195,
+            160,
+            120
+          ],
+          "anchor": [
+            595,
+            255
+          ],
+          "pose": "signal discharge"
+        }
+      ]
+    }
+  ]
+}

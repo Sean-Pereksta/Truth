@@ -1,0 +1,390 @@
+{
+  "suites": 72,
+  "summary": {
+    "baseline": {
+      "passed": 72
+    },
+    "expansion": {
+      "failed": 6,
+      "passed": 66
+    },
+    "currentContract": {
+      "passed": 6
+    }
+  },
+  "runtime": "Windows, bundled Node.js v24.22.1. Isolated archived Node suites, with late entry-point and targeted UI checks rerun after fixes.",
+  "results": [
+    {
+      "suite": "ability-feedback",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "ability-upgrades",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "adventure-combat",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "animal-audio",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "armor-wardrobe",
+      "baseline": "passed",
+      "expansion": "failed",
+      "currentContract": "passed",
+      "adaptation": "Select a suit and open its Compare detail for its source and individual stats. The nine archived contracts pass with the new controls."
+    },
+    {
+      "suite": "art-assets",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "art-dungeons",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "art-rendering",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "blackglass-reaver",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "boot-lifecycle",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "branding",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "campaign-expansion",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "checkpoints",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "cinder-mortar",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "coastal-defense",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "coastal-enemies",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "coastal-rendering",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "combat-polish",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "combat-progression",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "controller-navigation",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "coop-menus",
+      "baseline": "passed",
+      "expansion": "failed",
+      "currentContract": "passed",
+      "adaptation": "The two heroes select a suit before equipping it and expand Compare to inspect individual stats. Fourteen archived contracts pass with the revised controls."
+    },
+    {
+      "suite": "deep-enemy-art",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "deep-enemy-integration",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "deep-enemy-placement",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "defense-clarity",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "dialogue-modern",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "difficulty-pressure",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "discoveries",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "distant-vault-scenery",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "distant-vaults",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "dungeon-wall-art",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "dungeons-combat",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "dungeons",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "encounters",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "equipment-modern",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "expedition-art",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "expedition-rewards",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "expedition-save",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "fullscreen",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "gameplay",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "guardian-movesets",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "guardian-progression-balance",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "guardian-progression",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "hero-armor-art",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "hero-armor",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "input-save",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "interface-expansion",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "kraken-effects",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "kraken",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "menus-conversations",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "prism-sentry",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "quest-flow",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "quest-turn-in",
+      "baseline": "passed",
+      "expansion": "failed",
+      "currentContract": "passed",
+      "adaptation": "Added migrated dossier and physical clearance flags to the existing Berlin fixture before starting the final quest. All turn-in and one-time rewards remain checked."
+    },
+    {
+      "suite": "rare-abilities",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "readable-combat",
+      "baseline": "passed",
+      "expansion": "failed",
+      "currentContract": "passed",
+      "adaptation": "Old 750ms Fencer windup replaced with 580ms or 870ms assist. Current suite also checks the same interrupt, freeze, impact, sidestep and recovery behaviours."
+    },
+    {
+      "suite": "regional-scaling",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "rendering",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "resistance-art",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "resistance-compatibility",
+      "baseline": "passed",
+      "expansion": "failed",
+      "currentContract": "passed",
+      "adaptation": "Added the three recon data modules before comparing complete runtime IDs with the exported catalogues. All pre-recon IDs and positions are also checked."
+    },
+    {
+      "suite": "resistance-invasions",
+      "baseline": "passed",
+      "expansion": "failed",
+      "currentContract": "passed",
+      "adaptation": "Added migrated dossier and courtyard clearance flags to the Berlin fixture. Ally arrivals, medic healing, engineer ward, support fire and campaign save behaviour remain checked."
+    },
+    {
+      "suite": "resistance-rewards",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "save-continue",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "save-reliability",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "save-ui",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "skills-loot",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "skills-ui",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "spell-visuals",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "stormglass-region",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "world-content",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "world-geography",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "world-navigation",
+      "baseline": "passed",
+      "expansion": "passed"
+    },
+    {
+      "suite": "world-steering",
+      "baseline": "passed",
+      "expansion": "passed"
+    }
+  ]
+}

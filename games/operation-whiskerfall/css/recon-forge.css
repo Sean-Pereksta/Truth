@@ -1,0 +1,36 @@
+.recon-forge{--rf-ink:#333127;--rf-line:#a69877;--rf-paper:#f2e7ca;color:var(--rf-ink);background:#e7d8b8;border:1px solid #9f8760;border-radius:13px;overflow:clip}
+.rf-workshop{display:flex;align-items:end;justify-content:space-between;gap:1rem;min-height:105px;padding:14px 18px;background:linear-gradient(90deg,#172622d9,#17262222 72%),url('../assets/recon/forge.webp') center 49%/cover}
+.rf-tabs,.rf-hero,.rf-controls{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}
+.rf-tabs button,.rf-hero button,.rf-hero>b,.rf-controls button{display:inline-flex;align-items:center;justify-content:center;gap:.38rem;border-radius:9px;color:#fff1cf;font-weight:700;line-height:1.1}
+.rf-tabs button,.rf-hero button,.rf-hero>b{background:#28382ff2;border:2px solid #b4a379;padding:5px 11px;min-height:46px}
+.rf-tabs button{font-size:1.04rem}.rf-tabs button.selected,.rf-hero button.selected{color:#352c19;background:#f3e3af;border-color:#f9c770}.rf-hero button,.rf-hero>b{font-size:.88rem;min-height:40px}
+.rf-tabs img{width:36px;height:36px;object-fit:contain;filter:drop-shadow(0 1px 1px #1d170d85)}
+.rf-layout{display:grid;grid-template-columns:minmax(265px,1.06fr) minmax(250px,1fr);min-height:280px}
+.rf-recipes{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));grid-auto-rows:minmax(110px,max-content);align-content:start;gap:.5rem;padding:12px;max-height:clamp(300px,46vh,490px);overflow:auto;scrollbar-color:#8f7e5b #d9caab}
+.rf-recipes .rf-recipe{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:0;text-align:center;border-radius:10px;padding:7px 5px;color:var(--rf-ink);background:linear-gradient(160deg,#f8f0d7,#e7d8b9);border:2px solid #bcab86;line-height:1.13}
+.rf-recipes .rf-recipe b{font-size:.92rem}.rf-recipe small,.rf-caption small{color:#685a3e;font-size:.75rem;font-weight:700;text-transform:capitalize}
+.rf-recipes .rf-recipe.selected{background:#fff3cd;border-color:#92703a;box-shadow:inset 0 -3px #ccb374}
+.rf-thumbnail,.rf-art{display:flex;align-items:center;justify-content:center;overflow:visible;position:relative}.rf-thumbnail{height:50px;width:100%}
+.rf-thumbnail .item-icon,.rf-art .item-icon{border:0!important;box-shadow:none!important;margin:0!important}
+.rf-thumbnail .item-icon:has(svg),.rf-art .item-icon:has(svg){position:absolute;inset:0;width:100%!important;height:100%!important;max-width:none}
+.rf-thumbnail .forge-portrait{width:50px;height:50px;margin:0}.rf-art .forge-portrait{width:105px;height:105px;margin:0}
+.rf-art{height:clamp(72px,13vh,145px);margin:3px 0 8px}.rf-art>img{width:auto;max-width:100%;height:100%;object-fit:contain}
+.rf-selected,.rf-confirm{min-width:0;padding:clamp(12px,1.6vw,22px);border-left:1px solid var(--rf-line);background:radial-gradient(ellipse at 55% 23%,#fbf3dc,var(--rf-paper) 63%,#e9dcb9)}
+.rf-caption{display:flex;align-items:start;justify-content:space-between;gap:.5rem;flex-direction:row-reverse}.rf-caption small{flex:none;padding:.22rem .5rem;margin-top:.2rem;border:1px solid #b7a477;border-radius:10px}.rf-caption h3,.rf-confirm h3{font-family:Georgia,serif;font-weight:500;font-size:clamp(1.45rem,2.2vw,1.95rem);line-height:1.08;color:var(--rf-ink);letter-spacing:-.025em;margin:0}
+.rf-effect,.rf-inspection p,.rf-confirm p,.rf-status{font-size:.94rem;line-height:1.34;margin:.45rem 0}.rf-effect{min-height:2.4em}
+.rf-cost{margin:8px 0 11px}.rf-cost>span,.rf-comparison dt{font-size:.75rem;font-weight:700;color:#67583c;letter-spacing:.03em}
+.rf-price{display:flex;flex-wrap:wrap;gap:5px;margin:4px 0 0}.rf-price div{display:flex;align-items:center;gap:4px;border:1px solid #bead85;border-radius:6px;background:#f7efd4;padding:4px 6px}.rf-price dt{display:inline-flex;align-items:center;gap:3px;font-size:.73rem}.rf-price dd,.rf-price dt,.rf-comparison dd{margin:0}.rf-price dd{font-size:.86rem;font-weight:700}.rf-price dt img{height:20px;width:20px;object-fit:contain}.rf-price small{font-weight:normal;color:#514a39;font-size:.76rem}.rf-price .short{color:#96392b;border-color:#bc7162}
+.rf-comparison{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}.rf-comparison div{border:1px solid #b7a782;border-radius:7px;padding:6px 8px}.rf-comparison dd{font-size:.9rem;line-height:1.23}
+.rf-inspection .rf-source,.rf-status{color:#654a32}.rf-controls button{min-height:44px;padding:7px 16px;color:#353024;background:#ebddb9;border:2px solid #96805c}.rf-controls button.primary{color:#fff4d8;background:#345343;border-color:#21392f}.rf-controls button:disabled{background:#c4bea9;color:#544f3e;opacity:.74}
+.recon-forge button:focus-visible,.recon-forge .controller-focus,.armor-wardrobe button:focus-visible,.armor-wardrobe .controller-focus{outline:3px solid #f7ae21!important;outline-offset:-3px;box-shadow:inset 0 0 0 5px #372e23!important}
+.rf-hud{font-size:.73rem;color:#e0d9b3}
+@media(max-height:780px) and (min-width:761px){.rf-workshop{min-height:82px;padding:9px 12px}.rf-recipes{max-height:clamp(290px,45vh,340px)}.rf-selected,.rf-confirm{padding:12px}.rf-art{height:80px}.rf-effect{min-height:0}}
+@media(max-width:760px){.rf-workshop{min-height:75px;padding:9px;gap:5px;align-items:start;flex-wrap:wrap}.rf-tabs button{min-height:44px;font-size:.9rem;padding:4px 8px}.rf-tabs img{width:27px;height:27px}.rf-hero button,.rf-hero>b{min-height:32px}.rf-layout{grid-template-columns:1fr}.rf-recipes{max-height:139px;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));padding:8px}.rf-selected,.rf-confirm{border-top:1px solid var(--rf-line);border-left:0}.rf-art{height:70px}.rf-controls{position:sticky;bottom:0;background:var(--rf-paper);padding:4px 0}}
+
+@media(min-width:761px){
+ .rf-layout.rf-short{grid-template-columns:minmax(205px,.58fr) minmax(330px,1.5fr)}
+ .rf-short .rf-recipes{grid-template-columns:1fr;grid-auto-rows:minmax(65px,max-content)}
+ .rf-short .rf-recipes .rf-recipe{display:grid;grid-template-columns:58px 1fr;grid-template-rows:1fr auto;text-align:left;align-content:center;gap:0 7px;padding:7px 8px}
+ .rf-short .rf-thumbnail{grid-row:1/3}.rf-short .rf-recipe small{grid-column:2}
+ .rf-art>.item-icon[style*="background-position"]{transform:scale(1.6)}
+}

@@ -1,0 +1,633 @@
+{
+  "locations": [
+    {
+      "id": "town_10",
+      "name": "Rushlight Landing",
+      "description": "Reed ferries meet at a brick pumping station.",
+      "type": "town",
+      "region": 10,
+      "x": 18800,
+      "y": 950,
+      "radius": 275,
+      "npc": "Field liaison"
+    },
+    {
+      "id": "town_11",
+      "name": "Leeward Inn",
+      "description": "The bell above the slate switchbacks rings before each gust.",
+      "type": "town",
+      "region": 11,
+      "x": 18800,
+      "y": 4650,
+      "radius": 275,
+      "npc": "Field liaison"
+    },
+    {
+      "id": "town_12",
+      "name": "Lamplighter Refuge",
+      "description": "Rope bridges hang between the roots of an ancient lantern tree.",
+      "type": "town",
+      "region": 12,
+      "x": 18800,
+      "y": 8350,
+      "radius": 275,
+      "npc": "Field liaison"
+    },
+    {
+      "id": "recon_archive",
+      "name": "Floodgate Archive",
+      "type": "cave",
+      "recon": true,
+      "region": 10,
+      "x": 19400,
+      "y": 2220,
+      "radius": 105
+    },
+    {
+      "id": "recon_spire",
+      "name": "Signal Spire",
+      "type": "cave",
+      "recon": true,
+      "region": 11,
+      "x": 19600,
+      "y": 6250,
+      "radius": 105
+    },
+    {
+      "id": "recon_court",
+      "name": "Lantern Court",
+      "type": "cave",
+      "recon": true,
+      "region": 12,
+      "x": 19650,
+      "y": 9450,
+      "radius": 105
+    },
+    {
+      "id": "recon_depot",
+      "name": "Cinder Rail Depot",
+      "type": "cave",
+      "recon": true,
+      "region": 6,
+      "x": 5750,
+      "y": 8650,
+      "radius": 105
+    },
+    {
+      "id": "recon_cistern",
+      "name": "Mirror Cistern",
+      "type": "cave",
+      "recon": true,
+      "region": 4,
+      "x": 12900,
+      "y": 8470,
+      "radius": 105
+    },
+    {
+      "id": "recon_vault",
+      "name": "Blackglass Command Vault",
+      "type": "cave",
+      "recon": true,
+      "region": 7,
+      "x": 2030,
+      "y": 6660,
+      "radius": 105
+    },
+    {
+      "id": "recon_courtyard",
+      "name": "Courtyard field station",
+      "type": "reconCheckpoint",
+      "x": 2400,
+      "y": 6610,
+      "region": 7,
+      "radius": 65
+    },
+    {
+      "id": "recon_vault_east",
+      "name": "Blackglass · Southern Gatehouse",
+      "type": "reconEntry",
+      "x": 2940,
+      "y": 7290,
+      "region": 7,
+      "radius": 105
+    },
+    {
+      "id": "missing_dispatches_perch",
+      "name": "Orchard stile",
+      "type": "reconLead",
+      "region": 0,
+      "x": 1350,
+      "y": 1035,
+      "radius": 75
+    },
+    {
+      "id": "missing_dispatches_cache",
+      "name": "Red satchel",
+      "type": "reconLead",
+      "region": 0,
+      "x": 1870,
+      "y": 1720,
+      "radius": 75
+    },
+    {
+      "id": "double_entry_perch",
+      "name": "Bridge tally",
+      "type": "reconLead",
+      "region": 0,
+      "x": 1580,
+      "y": 2640,
+      "radius": 75
+    },
+    {
+      "id": "double_entry_cache",
+      "name": "Toll collector’s chest",
+      "type": "reconLead",
+      "region": 0,
+      "x": 2250,
+      "y": 2580,
+      "radius": 75
+    },
+    {
+      "id": "relay_schedule_perch",
+      "name": "Fern Hollow aerial",
+      "type": "reconLead",
+      "region": 1,
+      "x": 4910,
+      "y": 3050,
+      "radius": 75
+    },
+    {
+      "id": "relay_schedule_cache",
+      "name": "Signal wagon",
+      "type": "reconLead",
+      "region": 1,
+      "x": 5200,
+      "y": 3570,
+      "radius": 75
+    },
+    {
+      "id": "convoy_marks_perch",
+      "name": "Quarry switchback",
+      "type": "reconLead",
+      "region": 2,
+      "x": 8110,
+      "y": 2400,
+      "radius": 75
+    },
+    {
+      "id": "convoy_marks_cache",
+      "name": "Axle marking station",
+      "type": "reconLead",
+      "region": 2,
+      "x": 8610,
+      "y": 2890,
+      "radius": 75
+    },
+    {
+      "id": "winter_calls_perch",
+      "name": "Snowline listening post",
+      "type": "reconLead",
+      "region": 3,
+      "x": 12150,
+      "y": 2210,
+      "radius": 75
+    },
+    {
+      "id": "winter_calls_cache",
+      "name": "Frozen signal hut",
+      "type": "reconLead",
+      "region": 3,
+      "x": 13130,
+      "y": 2430,
+      "radius": 75
+    },
+    {
+      "id": "berlin_dossier_perch",
+      "name": "Dawnbridge survey table",
+      "type": "reconLead",
+      "region": 7,
+      "x": 1260,
+      "y": 6860,
+      "radius": 75
+    },
+    {
+      "id": "berlin_dossier_cache",
+      "name": "Gate courier rendezvous",
+      "type": "reconLead",
+      "region": 7,
+      "x": 1710,
+      "y": 7350,
+      "radius": 75
+    }
+  ],
+  "sites": [
+    {
+      "id": "recon_archive",
+      "name": "Floodgate Archive",
+      "region": 10,
+      "x": 19400,
+      "y": 2220,
+      "level": 7,
+      "palette": "#77b4a4",
+      "machine": "Pump wheel",
+      "crossing": "Drained intake",
+      "shortcut": "Dry culvert",
+      "lesson": "Turn the pump wheel. The striped intake drains, joining the ledger room to the upper catwalk.",
+      "map": [
+        "###########",
+        "#O...##...#",
+        "#..#A##.R.#",
+        "#..#..#...#",
+        "####..#...#",
+        "#..KT...#.#",
+        "#.....#...#",
+        "#.S...#####",
+        "###########"
+      ]
+    },
+    {
+      "id": "recon_spire",
+      "name": "Signal Spire",
+      "region": 11,
+      "x": 19600,
+      "y": 6250,
+      "level": 12,
+      "palette": "#94adc9",
+      "machine": "Windbreak winch",
+      "crossing": "Lee passage",
+      "shortcut": "Cable lift",
+      "lesson": "Raise the windbreak. Cross the pale wind stripes between gusts, then watch the west perch or clear the east platform.",
+      "map": [
+        "###########",
+        "#O...#..R.#",
+        "###..#.#..#",
+        "#...##.#..#",
+        "#.####.#..#",
+        "#...A..#K.#",
+        "####T.....#",
+        "#..S...####",
+        "###########"
+      ]
+    },
+    {
+      "id": "recon_court",
+      "name": "Lantern Court",
+      "region": 12,
+      "x": 19650,
+      "y": 9450,
+      "level": 17,
+      "palette": "#b49ac4",
+      "machine": "Root gate latch",
+      "crossing": "High bridge",
+      "shortcut": "Inside bridge",
+      "lesson": "Unlatch the high bridge and follow the courier between the lanterns. A search party protects the low signet press.",
+      "map": [
+        "###########",
+        "#.O....#..#",
+        "#.####.#R.#",
+        "#....A.#..#",
+        "#.##.#.#..#",
+        "#.#..#.K..#",
+        "#.T####.#.#",
+        "#...S.....#",
+        "###########"
+      ]
+    },
+    {
+      "id": "recon_depot",
+      "name": "Cinder Rail Depot",
+      "region": 6,
+      "x": 5750,
+      "y": 8650,
+      "level": 18,
+      "palette": "#da9973",
+      "machine": "Siding switch",
+      "crossing": "Freight platform",
+      "shortcut": "Service tunnel",
+      "lesson": "Switch the siding, then board the freight platform at the striped track. The eastern booth holds a duplicate manifest.",
+      "map": [
+        "###########",
+        "#..O...####",
+        "#.####....#",
+        "#..A.##.R.#",
+        "###..##...#",
+        "#.T.......#",
+        "#.#.###K#.#",
+        "#.S.......#",
+        "###########"
+      ]
+    },
+    {
+      "id": "recon_cistern",
+      "name": "Mirror Cistern",
+      "region": 4,
+      "x": 12900,
+      "y": 8470,
+      "level": 20,
+      "palette": "#d7bd85",
+      "machine": "Heliostat",
+      "crossing": "Projected seal",
+      "shortcut": "Shaft ladder",
+      "lesson": "Rotate the heliostat until the beam opens the seal. Cross the shaft between sweeps, or use the guarded manual override.",
+      "map": [
+        "###########",
+        "#...O..#..#",
+        "#.###A.#R.#",
+        "#.#...##..#",
+        "#...T.....#",
+        "#.###.###.#",
+        "#.K...#...#",
+        "#...S...###",
+        "###########"
+      ]
+    },
+    {
+      "id": "recon_vault",
+      "name": "Blackglass Command Vault",
+      "region": 7,
+      "x": 2030,
+      "y": 6660,
+      "level": 25,
+      "palette": "#9bb3be",
+      "machine": "Maintenance relay",
+      "crossing": "Document lift",
+      "shortcut": "Courtyard hatch",
+      "lesson": "Cut the maintenance relay to reach document storage unseen. The east gatehouse leads to the same courtyard with its captured order.",
+      "map": [
+        "###########",
+        "#.O...#...#",
+        "#.###.#.R.#",
+        "#...A.#...#",
+        "###.#.#.#.#",
+        "#..T#...#X#",
+        "#.#####K#.#",
+        "#.S.......#",
+        "###########"
+      ]
+    }
+  ],
+  "ops": [
+    {
+      "id": "missing_dispatches",
+      "title": "The Missing Satchel",
+      "region": 0,
+      "contact": "Saffron",
+      "brief": "My sister signed for sacks that never reached Willow. Watch the handoff before you follow her signature.",
+      "lead": "Watch the orchard stile or intercept the red satchel.",
+      "a": [
+        1350,
+        1035,
+        "Orchard stile"
+      ],
+      "b": [
+        1870,
+        1720,
+        "Red satchel"
+      ],
+      "clue": "A violet wax seal covers an older Willow mark.",
+      "result": "Saffron recognizes the seal of the north mill. The courier was diverted, not lost.",
+      "act": 1
+    },
+    {
+      "id": "double_entry",
+      "title": "Two Names for One Road",
+      "region": 0,
+      "contact": "Miller Ada",
+      "brief": "Someone pays my mill twice for one load. My boy drove the second cart.",
+      "lead": "Read the bridge tally or recover the second toll slip.",
+      "a": [
+        1580,
+        2640,
+        "Bridge tally"
+      ],
+      "b": [
+        2250,
+        2580,
+        "Toll collector’s chest"
+      ],
+      "clue": "Both carts carry the same serial number.",
+      "result": "The mill copy records departures an hour early. Look for the false wagon at Fern Hollow.",
+      "act": 1
+    },
+    {
+      "id": "relay_schedule",
+      "title": "A Minute of Silence",
+      "region": 1,
+      "contact": "Juniper",
+      "bosses": [
+        0
+      ],
+      "brief": "Ironwhisker kept the mill witnesses apart. With the orchard fort free, their last report reached me.",
+      "lead": "Listen through the relay pause or seize the signal book.",
+      "a": [
+        4910,
+        3050,
+        "Fern Hollow aerial"
+      ],
+      "b": [
+        5200,
+        3570,
+        "Signal wagon"
+      ],
+      "clue": "The relay goes quiet before every eastbound convoy.",
+      "result": "That silent minute is a departure signal. Freight is travelling under flood-relief orders.",
+      "act": 1
+    },
+    {
+      "id": "convoy_marks",
+      "title": "White Chalk on the Axle",
+      "region": 2,
+      "contact": "Crag",
+      "bosses": [
+        1
+      ],
+      "brief": "After Bramble fell, the wheelwright brought me a rubbing from my missing crew’s axle.",
+      "lead": "Trace wheel marks at the pass or take the quartermaster’s stencil.",
+      "a": [
+        8110,
+        2400,
+        "Quarry switchback"
+      ],
+      "b": [
+        8610,
+        2890,
+        "Axle marking station"
+      ],
+      "clue": "A three-bar axle mark identifies empty relief wagons.",
+      "result": "Empty wagons visit Hushfen and leave riding low. The pumping archive keeps the real weights.",
+      "act": 2
+    },
+    {
+      "id": "flood_ledger",
+      "title": "The Weight of Water",
+      "site": "recon_archive",
+      "bosses": [
+        2
+      ],
+      "contact": "Keeper Edda",
+      "brief": "Flintfang seized my pump records. The archive key was in his battery. The men listed as cargo are still alive.",
+      "lead": "Drain the ledger intake or recover its duplicate from the lift guard.",
+      "clue": "The intake ledger lists people by the weight of their kit.",
+      "result": "The dry culvert opens. The prisoners’ route is being transmitted under a weather call sign.",
+      "act": 2,
+      "region": 10
+    },
+    {
+      "id": "winter_calls",
+      "title": "Someone Answers Snow",
+      "region": 3,
+      "contact": "Lumi",
+      "bosses": [
+        3
+      ],
+      "brief": "Whiteclaw’s operator survived. She begs us to answer the next transmission in her brother’s voice.",
+      "lead": "Monitor the snowline band or recover the operator’s acetate.",
+      "a": [
+        12150,
+        2210,
+        "Snowline listening post"
+      ],
+      "b": [
+        13130,
+        2430,
+        "Frozen signal hut"
+      ],
+      "clue": "Three low tones request a bearing from the Signal Spire.",
+      "result": "Glasswind hears the false weather calls. Read the echoes from opposite sides of its spire.",
+      "act": 2
+    },
+    {
+      "id": "spire_sequence",
+      "title": "Signals in the Lee",
+      "site": "recon_spire",
+      "contact": "Innkeeper Anwen",
+      "brief": "My roof bell rings in still weather. I kept the clapper for the climber who never came down.",
+      "lead": "Record the sheltered perch or seize the eastern strip chart.",
+      "clue": "A descending pair of flashes identifies the westbound relay.",
+      "result": "The cable lift runs again. The next signal is handed to a lantern courier under the canopy.",
+      "act": 2,
+      "region": 11
+    },
+    {
+      "id": "lantern_signet",
+      "title": "The Empty Signet",
+      "site": "recon_court",
+      "bosses": [
+        5
+      ],
+      "contact": "Lamplighter Rue",
+      "brief": "Miretooth had my seal, but his letters kept arriving after he fell. Someone took an impression.",
+      "lead": "Shadow the signet courier or recover wax at the low press.",
+      "clue": "The forged signet has a chip shaped like a moth.",
+      "result": "The inside bridge opens to resistance traffic. Moth-stamped bills travel to the Cinder yard.",
+      "act": 2,
+      "region": 12
+    },
+    {
+      "id": "cinder_manifest",
+      "title": "Last Car on the Siding",
+      "site": "recon_depot",
+      "bosses": [
+        6
+      ],
+      "contact": "Engineer Cinder",
+      "brief": "With Geargnash gone I can switch one train. My missing apprentices signed out that carriage.",
+      "lead": "Board the slow freight cart or raid the signal booth.",
+      "clue": "The last car carries mirror glass instead of munitions.",
+      "result": "The service tunnel bypasses the yard. The mirror shipment was rerouted toward Sunscar.",
+      "act": 2,
+      "region": 6
+    },
+    {
+      "id": "cistern_map",
+      "title": "A Map Made of Light",
+      "site": "recon_cistern",
+      "bosses": [
+        4
+      ],
+      "contact": "Sol",
+      "brief": "Sirocco used to hide dry wells on our maps. This time someone has hidden a city.",
+      "lead": "Project the seal pattern or force the hand-cranked override.",
+      "clue": "The projected seal exposes the missing Berlin map grid.",
+      "result": "A shaft ladder returns to daylight. The false grid and the relay schedule intersect at Dawnbridge.",
+      "act": 3,
+      "region": 4
+    },
+    {
+      "id": "berlin_dossier",
+      "title": "The Names Under the Map",
+      "region": 7,
+      "contact": "Agent Velvet",
+      "bosses": [
+        7
+      ],
+      "brief": "Blackbanner’s fall lets our witness travel. Give me one last confirmation before I send anyone through that gate.",
+      "lead": "Compare the witness’s overlay or intercept the sealed gate order.",
+      "a": [
+        1260,
+        6860,
+        "Dawnbridge survey table"
+      ],
+      "b": [
+        1710,
+        7350,
+        "Gate courier rendezvous"
+      ],
+      "clue": "The command relay has a document lift and an eastern gatehouse.",
+      "result": "Both entrances to Blackglass are marked. The document lift carries a relay shutdown code.",
+      "act": 3
+    },
+    {
+      "id": "command_vault",
+      "title": "Behind the Black Glass",
+      "site": "recon_vault",
+      "contact": "Agent Velvet",
+      "brief": "The dispatches were lists of witnesses. Whisker means to erase them at the last transmission.",
+      "lead": "Decode the maintenance relay or take the courtyard order by force.",
+      "clue": "The next transmission will come from Whisker’s own arena.",
+      "result": "The courtyard checkpoint is open. Take both heroes through the hatch and confront Adolph Whisker.",
+      "act": 3,
+      "region": 7
+    }
+  ],
+  "challenges": [
+    {
+      "id": "quiet",
+      "title": "Lantern census",
+      "site": "recon_court",
+      "brief": "Record both the high courier and low press without sounding the alarm. East patrol doubled.",
+      "route": [
+        "O",
+        "R"
+      ],
+      "quiet": true
+    },
+    {
+      "id": "intact",
+      "title": "Unbroken seal",
+      "site": "recon_depot",
+      "brief": "Recover the freight seal at the booth, then carry it aboard the cart without taking damage. Guards hold the siding.",
+      "route": [
+        "R",
+        "O"
+      ],
+      "intact": true
+    },
+    {
+      "id": "crossing",
+      "title": "Against the current",
+      "site": "recon_archive",
+      "brief": "Claim both ledger copies and extract through the dry culvert. Two guards cover the lower channel.",
+      "route": [
+        "R",
+        "O",
+        "K"
+      ]
+    }
+  ],
+  "acts": [
+    "The Missing Dispatches",
+    "The Hidden Network",
+    "The Berlin Dossier"
+  ]
+}

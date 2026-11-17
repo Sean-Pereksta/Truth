@@ -84,11 +84,14 @@
       this.save(false);this.ui.update();
     }
     frame(t) {
-      const dt=Math.min(.04,Math.max(.001,(t-this.last)/1000));this.last=t;
+      const deltaMs=t-this.last,dt=Math.min(.04,Math.max(.001,deltaMs/1000));this.last=t;
       this.frameMs=this.frameMs*.95+dt*1000*.05;this.fps=Math.round(1000/this.frameMs);
       this.input.update(this);
-      if(this.state==='playing'&&!this.paused&&this.ready) this.update(dt);
-      this.renderer.draw(dt);this.ui.update();
+      const active=this.state==='playing'&&!this.paused&&this.ready;
+      this.renderer.updateRenderScale?.(deltaMs,active&&!document.hidden);
+      if(active)this.update(dt);
+      if(this.state!=='menu'||this.ui.menu!=='main')this.renderer.draw(dt);
+      this.ui.update();
       requestAnimationFrame(n=>this.frame(n));
     }
     update(dt) {
@@ -125,6 +128,7 @@
       }
       const slow=(p.reloading>0?.85:1)*(p.slowTime>0?.62:1)*(committed?.42:1)*(gun.kind==='lmg'&&input.shoot?.73:1)*(gun.mechanic==='charge'&&(p.charge||0)>0?.72:1);let speed=(245+(p.skills.survival||0)*4)*slow;
       if(p.perks?.wayfarer)speed*=1.14;
+      if(W.ReconGear)speed*=W.ReconGear.walkScale(p);
       if(p.dodgeTime>0){p.dodgeTime-=dt;mx=p.dodgeX;my=p.dodgeY;speed=760;p.anim='dodge';}
       p.velocityX=mx*speed;p.velocityY=my*speed;
       if(Math.hypot(p.velocityX,p.velocityY)>8)p.moveTime=(p.moveTime||0)+dt;
@@ -179,7 +183,7 @@
       const gun=this.weapon(p),mechanic=gun.mechanic||'';p.ammo--;
       const tuning=p.weaponTunes?.[p.weapon]?.active;
       if(!fromBurst)p.fireTimer=1/(gun.fireRate||3)/(1+(p.skills.firearms||0)*.055)/(mechanic==='spinup'?.35+.65*(p.spin||0):1)/(tuning==='rapid'?1.25:1);
-      if(mechanic==='heat'){p.heat+=gun.heatPerShot||.085;if(p.heat>=1){p.overheat=gun.overheatTime||1.25;p.heat=.5;this.ui.toast('Weapon cooling · switch firearm or close in with your blade.');}}
+      if(mechanic==='heat'||mechanic==='spinup'&&gun.heatPerShot){p.heat+=gun.heatPerShot||.085;if(p.heat>=1){p.overheat=gun.overheatTime||1.25;p.heat=.5;this.ui.toast('Weapon cooling · switch firearm or close in with your blade.');}}
       if(mechanic==='burst'&&!fromBurst)p.burstQueue=Array.from({length:(gun.burstCount||3)-1},(_,i)=>({time:(i+1)*(gun.burstDelay||.075)}));
       const pellets=gun.pellets||1,kind=String(gun.kind||gun.id||'').toLowerCase();
       const moving=Math.hypot(p.velocityX||0,p.velocityY||0)>65,steady=kind==='sniper'&&!moving;
@@ -197,7 +201,7 @@
         const critical=Math.random()<(p.perks?.crit||p.perks?.critical?.15:0);
         this.bulletPool.take({x:p.x+Math.cos(a)*30,y:p.y+Math.sin(a)*30,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,
           life:(gun.range||700)/speed,damage:(gun.damage||15)*(1+p.level*.07+(p.skills.firearms||0)*.1+(p.damageBonus||0))*(1+(p.upgrade||0)*.12)*(p.rageTime>0?1.4:1)*(critical?1.6:1)*(steady?1.16:1)*(mechanic==='charge'?1+clamp(charge/(gun.chargeTime||.85),0,1):1)*(tuning==='power'?1.2:1),
-          owner:p.id,kind:rocket?'rocket':flame?'flame':electric?'plasma':'bullet',radius:rocket?11:flame?18:5,pierce:Math.max(gun.penetration||0,mechanic==='rail'?4:electric?2:p.perks?.pierce?1:0),bounces:mechanic==='ricochet'||p.perks?.ricochet?(gun.bounces||3):0,enemyBounces:gun.enemyBounces||0,homing:mechanic==='homing'||!!p.perks?.homing,turnRate:gun.homingStrength||4,knockback:gun.knockback||(pellets>1?12:0),explosive:!!(gun.explosive||p.perks?.explosive),blastRadius:gun.blastRadius||(rocket?135:65),burn:!!(gun.burn||p.perks?.burn),poison:!!gun.poison,freeze:!!gun.freeze,shatter:!!gun.shatter,chain:!!(gun.chain||p.perks?.chain),shock:!!(gun.shock||p.perks?.shock),critical,color:gun.color||(gun.poison?'#b5e77a':electric?'#8bf5ff':'#ffdf8a'),hitIds:[],travel:0,falloff:pellets>1?gun.range*.35:0,maxRange:gun.range||700});
+          owner:p.id,kind:rocket?'rocket':flame?'flame':electric?'plasma':'bullet',radius:rocket?11:flame?18:5,pierce:Math.max(gun.penetration||0,mechanic==='rail'?4:electric?2:p.perks?.pierce?1:0),bounces:mechanic==='ricochet'||p.perks?.ricochet?(gun.bounces||3):0,enemyBounces:gun.enemyBounces||0,homing:mechanic==='homing'||!!p.perks?.homing,turnRate:gun.homingStrength||4,knockback:gun.knockback||(pellets>1?12:0),explosive:!!(gun.explosive||p.perks?.explosive),blastRadius:gun.blastRadius||(rocket?135:65),burn:!!(gun.burn||p.perks?.burn),poison:!!gun.poison,freeze:!!gun.freeze,shatter:!!gun.shatter,chain:!!(gun.chain||p.perks?.chain),shock:!!(gun.shock||p.perks?.shock),critical,color:gun.color||(gun.poison?'#b5e77a':electric?'#8bf5ff':'#ffdf8a'),guardBreak:!!gun.guardBreak,hitIds:[],travel:0,falloff:pellets>1?gun.range*.35:0,maxRange:gun.range||700});
       }
       this.setAnim(p,'shoot');this.effect('muzzle',p.x+Math.cos(p.angle)*39,p.y+Math.sin(p.angle)*39,22,.08,{angle:p.angle,height:30,owner:p.id});
       this.audio.play(rocket?'rocket':pellets>1?'shotgun':gun.kind||'shoot');this.alertEnemies(p.x,p.y,700);
@@ -224,8 +228,8 @@
       p.meleeCommit=Math.max(0,(p.meleeCommit||0)-dt);
       const swing=p.meleeStrike;if(!swing)return;swing.windup-=dt;if(swing.windup>0)return;
       p.meleeStrike=null;if(p.downed)return;
-      const blade=W.Content.melee[swing.bladeIndex]||this.blade(p),finisher=swing.finisher,angle=swing.angle;
-      const range=(blade.range||75)+(finisher?15:0),arc=finisher?1.45:.95;
+      const blade=this.reconBladeAt?.(p,swing.bladeIndex)||W.Content.melee[swing.bladeIndex]||this.blade(p),finisher=swing.finisher,angle=swing.angle;
+      const range=(blade.range||75)+(finisher?15:0),arc=blade.arc?blade.arc+(finisher?.44:0):finisher?1.45:.95;
       this.effect('slash',p.x,p.y,range,.24,{angle,heavy:finisher,owner:p.id});this.audio.play('melee');
       const lunge=finisher?35:16;this.move(p,Math.cos(angle)*lunge,Math.sin(angle)*lunge);
       for(const e of this.grid.query(p.x,p.y,range+22)){
@@ -234,7 +238,8 @@
         const backstab=Math.abs(W.wrapAngle((e.angle||0)-angle))<.65;
         const crit=Math.random()<.1+(p.skills.melee||0)*.018+(p.perks?.critical||p.perks?.crit?.15:0);
         const dmg=(blade.damage||30)*1.7*(1+p.level*.08+(p.skills.melee||0)*.14+(p.damageBonus||0))*(finisher?2:1)*(backstab?1.8:1)*(crit?1.6:1);
-        this.damageEnemy(e,dmg,p,crit||backstab);e.stun=e.boss?Math.min(.12,finisher?.12:.04):finisher?.48:.18;
+        const impact=W.ReconGear?.bladeImpact(this,p,e,blade,swing)||1;
+        this.damageEnemy(e,dmg*impact,p,crit||backstab);e.stun=e.boss?Math.min(.12,finisher?.12:.04):(finisher?.48:.18)+(W.ReconGear?.extraStun(p,blade,swing)||0);
         if(finisher){e.bleed=2.4;e.bleedDamage=dmg*.12;e.bleedOwner=p.id;}if(p.perks?.burn){e.burn=2;e.burnDamage=dmg*.08;e.burnOwner=p.id;}
         if(!e.boss)this.move(e,Math.cos(angle)*(finisher?35:14),Math.sin(angle)*(finisher?35:14),18);
       }
@@ -324,7 +329,8 @@
               b.hitIds=b.hitIds||[];b.hitIds.push(e.id);
               const shatters=b.shatter&&(e.chillTime>0||e.freeze>0),impactDamage=b.damage*(shatters?2:1)*(b.falloff&&b.travel>b.falloff?clamp(1-(b.travel-b.falloff)/Math.max(1,b.maxRange-b.falloff)*.65,.35,1):1);
               if(b.kind==='rocket')this.detonateProjectile(b);
-              else {this.damageEnemy(e,impactDamage,this.players[b.owner],b.critical);if(b.knockback&&!e.boss){const a=Math.atan2(b.vy,b.vx);this.move(e,Math.cos(a)*b.knockback,Math.sin(a)*b.knockback,18);}if(b.explosive)this.explode(b.x,b.y,b.blastRadius||65,b.damage*.3,b.owner);this.applyEnemyStatus(e,b);if(shatters){e.chillTime=0;e.freeze=0;this.explode(e.x,e.y,110,b.damage*.55,b.owner,'shockwave');}
+              else {if(b.guardBreak){e.shieldTime=0;this.breakReconGuard?.(e,this.players[b.owner],.7);}
+                this.damageEnemy(e,impactDamage,this.players[b.owner],b.critical);if(b.knockback&&!e.boss){const a=Math.atan2(b.vy,b.vx);this.move(e,Math.cos(a)*b.knockback,Math.sin(a)*b.knockback,18);}if(b.explosive)this.explode(b.x,b.y,b.blastRadius||65,b.damage*.3,b.owner);this.applyEnemyStatus(e,b);if(shatters){e.chillTime=0;e.freeze=0;this.explode(e.x,e.y,110,b.damage*.55,b.owner,'shockwave');}
                 if(b.chain){const next=this.grid.query(e.x,e.y,160).find(n=>n!==e&&alive(n));if(next){this.effect('lightning',e.x,e.y,0,.2,{tx:next.x,ty:next.y});this.damageEnemy(next,b.damage*.45,this.players[b.owner]);}}
               }
               if(b.enemyBounces>0&&b.kind!=='rocket'){const next=this.grid.query(e.x,e.y,370).filter(n=>alive(n)&&!b.hitIds.includes(n.id)&&this.lineOfSight(e,n)).sort((a,c)=>dist(e,a)-dist(e,c))[0];if(next){const speed=Math.hypot(b.vx,b.vy),angle=Math.atan2(next.y-b.y,next.x-b.x);b.vx=Math.cos(angle)*speed;b.vy=Math.sin(angle)*speed;b.enemyBounces--;b.damage*=.83;b.life=Math.max(b.life,.4);b.lastHit=e.id;this.effect('lightning',e.x,e.y,0,.12,{tx:next.x,ty:next.y,color:b.color});continue;}}
@@ -1126,7 +1132,17 @@
       const data=W.Save.export(this.slot);if(!data){this.ui.toast('There is no valid campaign to export.','error');return '';}
       const blob=new Blob([data],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='MeowQuest-Campaign-'+(this.slot+1)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);return data;
     }
-    importSave(text){try{if(!W.Save.import(this.slot,text))throw Error('This is not a valid campaign backup, or it could not be saved.');if(!this.load(this.slot))throw Error('The imported campaign could not be restored.');return true;}catch(e){this.ui.toast('Could not import campaign: '+e.message,'error');return false;}}
+    importSave(text){
+      const previous={...this}, menu={isOpen:this.ui.isOpen,menu:this.ui.menu,playerIndex:this.ui.playerIndex};
+      const ok=W.Save.import(this.slot,text,()=>this.load(this.slot));
+      if(!ok){
+        Object.assign(this,previous);Object.assign(this.ui,menu);this.ui.render();
+        this.ui.toast('The backup could not be opened. Your previous campaign is still available.','error');
+        return false;
+      }
+      this.lastSaveStatus={...W.Save.status(this.slot),slot:this.slot};
+      return true;
+    }
     applySettings(){try{localStorage.setItem('whiskerfall.settings',JSON.stringify(this.settings));}catch(_){}this.audio.setVolumes(this.settings);this.renderer.resize();}
   }
   W.Game=Game;

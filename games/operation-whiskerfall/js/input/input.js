@@ -5,7 +5,7 @@
     up:'KeyW',down:'KeyS',left:'KeyA',right:'KeyD',shoot:'Mouse0',melee:'Mouse2',heavy:'ShiftLeft',dodge:'Space',interact:'KeyE',ability:'KeyQ',ability2:'KeyF',grenade:'KeyG',reload:'KeyR',switchWeapon:'Tab',consumable:'KeyC',inventory:'KeyI',map:'KeyM',journal:'KeyJ',skills:'KeyK',pause:'Escape',
     p2up:'ArrowUp',p2down:'ArrowDown',p2left:'ArrowLeft',p2right:'ArrowRight',p2shoot:'Numpad0',p2melee:'Numpad1',p2heavy:'NumpadAdd',p2dodge:'Numpad2',p2interact:'Numpad3',p2ability:'Numpad4',p2ability2:'Numpad5',p2grenade:'Numpad6',p2reload:'Numpad7',p2switchWeapon:'Numpad8',p2consumable:'Numpad9',p2inventory:'NumpadDivide',p2skills:'NumpadMultiply'
   };
-  const padDefaults = { shoot:7,melee:2,dodge:0,interact:1,ability:3,ability2:6,grenade:5,switchWeapon:4,reload:13,consumable:12,selectAbility:14,selectSecondaryAbility:15,inventory:8,pause:9,swapSticks:false };
+  const padDefaults = { heavy:11,shoot:7,melee:2,dodge:0,interact:1,ability:3,ability2:6,grenade:5,switchWeapon:4,reload:13,consumable:12,selectAbility:14,selectSecondaryAbility:15,inventory:8,pause:9,swapSticks:false };
   const actions = ['shoot','melee','dodge','interact','ability','ability2','grenade','reload','switchWeapon','consumable'];
   class Input {
     constructor(canvas) {
@@ -24,7 +24,17 @@
       canvas.addEventListener('pointerdown',e=>{if(this.capture&&this.capture.type==='key'){const c='Mouse'+e.button;this.bindings[this.capture.action]=c;this.persist();this.capture.callback(c);this.capture=null;return;}const key='Mouse'+e.button;if(!this.keys.has(key))this.pressed.add(key);this.keys.add(key);this.lastKeyboard=performance.now();canvas.focus();});
       window.addEventListener('pointerup',e=>this.keys.delete('Mouse'+e.button));
       canvas.addEventListener('contextmenu',e=>e.preventDefault());window.addEventListener('blur',()=>this.clear());document.addEventListener('visibilitychange',()=>{if(document.hidden){this.clear();if(OW.game&&OW.game.state==='playing'&&!OW.game.ui.isOpen)OW.game.ui.showMenu('pause');}});
-      window.addEventListener('gamepaddisconnected',e=>{this.padAssignments.delete(e.gamepad.index);this.padPrevious.delete(e.gamepad.index);if(OW.game&&OW.game.ui)OW.game.ui.toast('Controller disconnected. Keyboard controls remain available.');});
+      this.disconnectedPads=[];
+      window.addEventListener('gamepaddisconnected',({gamepad})=>{
+        const index=gamepad.index, owner=this.padAssignments.get(index);
+        if(owner==null)return;
+        this.disconnectedPads=this.disconnectedPads.filter(p=>p.owner!==owner);
+        this.disconnectedPads.push({id:gamepad.id,index,owner});
+        for(const map of [this.padAssignments,this.padPrevious,this.padEdges,this.padBlockedButtons,this.padMenuRepeat,this.padMeleeStart,this.padLastUse,this.padHasAimed])map.delete(index);
+        const game=OW.game;
+        if(game?.state==='playing' && !game.ui.isOpen)game.ui.showMenu('pause',owner);
+        game?.ui.toast('Player '+(owner+1)+' controller disconnected. Reconnect, or assign a controller in Controls.');
+      });
     }
     clear(){this.keys.clear();this.pressed.clear();this.snapshot.clear();}
     persist(){try{localStorage.setItem('whiskerfall.controls',JSON.stringify({keys:this.bindings,pad:this.padBindings}));}catch(_) {}}
@@ -39,7 +49,18 @@
         const blocked=this.padBlockedButtons.get(pad.index)||new Set();for(const button of blocked)if(!held[button])blocked.delete(button);if(menuWasOpen||ui?.isOpen)held.forEach((pressed,button)=>{if(pressed)blocked.add(button);});this.padBlockedButtons.set(pad.index,blocked);
         if(this.capture&&this.capture.type==='pad'){const b=edge.findIndex(Boolean);if(b>=0){this.padBindings[this.capture.action]=b;this.persist();this.capture.callback(b);this.capture=null;}continue;}
         if(!this.padAssignments.has(pad.index)){
-          const taken=new Set(this.padAssignments.values());const assign=taken.has(0)?1:0;this.padAssignments.set(pad.index,assign);
+          const taken=new Set(this.padAssignments.values());
+          const pending=this.disconnectedPads.filter(p=>!taken.has(p.owner));
+          const previousOwner=pending.find(p=>p.id===pad.id && p.index===pad.index)||pending.find(p=>p.id===pad.id);
+          const assign=previousOwner?.owner??[0,1].find(owner=>!taken.has(owner)&&!pending.some(p=>p.owner===owner))??[0,1].find(owner=>!taken.has(owner));
+          if(assign==null)continue;
+          this.padAssignments.set(pad.index,assign);
+          this.disconnectedPads=this.disconnectedPads.filter(p=>p.owner!==assign);
+          if(previousOwner){
+            held.forEach((pressed,i)=>{if(pressed)blocked.add(i);});
+            game.ui?.toast('Controller restored to Player '+(assign+1)+'.');
+            continue;
+          }
         }
         let playerIndex=this.padAssignments.get(pad.index);
         const moving=pad.axes.slice(0,4).some(axis=>Math.abs(axis||0)>.2)||held.some((v,i)=>v&&i!==9);
@@ -80,7 +101,17 @@
       if(index===0&&this.mouse.seen){const p=game.players[0];const r=this.canvas.getBoundingClientRect();const camera=game.camera;let ax=(this.mouse.x-r.width/2)/(camera.zoom||1)+camera.x-p.x,ay=(this.mouse.y-r.height/2)/(camera.zoom||1)+camera.y-p.y;const length=Math.hypot(ax,ay);if(length>1){result.aimX=ax/length;result.aimY=ay/length;this.keyboardAim[0]={x:result.aimX,y:result.aimY};}}
       else if(result.mx||result.my){const d=Math.hypot(result.mx,result.my);result.aimX=result.mx/d;result.aimY=result.my/d;this.keyboardAim[index]={x:result.aimX,y:result.aimY};}
       else {result.aimX=this.keyboardAim[index].x;result.aimY=this.keyboardAim[index].y;}
-      for(const pad of this.pads||[]){if(this.padAssignments.get(pad.index)!==index)continue;const edge=this.padEdges.get(pad.index)||[];const axis=v=>Math.abs(v||0)>.18?v:0;const moveOffset=this.padBindings.swapSticks?2:0,aimOffset=this.padBindings.swapSticks?0:2;const mx=axis(pad.axes[moveOffset]),my=axis(pad.axes[moveOffset+1]);if(mx||my){result.mx=mx;result.my=my;}const ax=axis(pad.axes[aimOffset]),ay=axis(pad.axes[aimOffset+1]);result.usingController=true;if(Math.hypot(ax,ay)>.2){const d=Math.hypot(ax,ay);this.padAim[index]={x:ax/d,y:ay/d};this.padHasAimed.set(pad.index,true);this.padAimDistance[index]=100+Math.min(1,d)*160;result.aiming=true;}else if((mx||my)&&!result.shoot&&!this.padHasAimed.get(pad.index)){const d=Math.hypot(mx,my);this.padAim[index]={x:mx/d,y:my/d};}if(index||(this.padLastUse.get(pad.index)||0)>=Math.max(this.lastKeyboard,this.mouse.lastMove)){result.aimX=this.padAim[index].x;result.aimY=this.padAim[index].y;}result.aimDistance=this.padAimDistance[index];if(this.padMeleeStart.has(pad.index)&&performance.now()-this.padMeleeStart.get(pad.index)>450)result.heavy=true;
+      for(const pad of this.pads||[]){if(this.padAssignments.get(pad.index)!==index)continue;const edge=this.padEdges.get(pad.index)||[];const profile=this.padProfile?.(index)||{deadzone:.18,sensitivity:1,assist:0,sticks:'inherit'};
+        const axis=v=>Math.abs(v||0)>profile.deadzone?v:0;
+        const swapped=profile.sticks==='inherit'?this.padBindings.swapSticks:profile.sticks==='swap';
+        const moveOffset=swapped?2:0,aimOffset=swapped?0:2;const mx=axis(pad.axes[moveOffset]),my=axis(pad.axes[moveOffset+1]);if(mx||my){result.mx=mx;result.my=my;}const ax=axis(pad.axes[aimOffset]),ay=axis(pad.axes[aimOffset+1]);result.usingController=true;if(Math.hypot(ax,ay)>profile.deadzone){
+          const d=Math.hypot(ax,ay);
+          const response=v=>Math.sign(v)*Math.pow(Math.abs(v),1/profile.sensitivity);
+          const raw=Math.atan2(response(ay),response(ax));
+          const angle=this.assistedAngle?.(game,index,raw,profile.assist)??raw;
+          this.padAim[index]={x:Math.cos(angle),y:Math.sin(angle)};this.padHasAimed.set(pad.index,true);this.padAimDistance[index]=100+Math.min(1,d*profile.sensitivity)*160;result.aiming=true;}else if((mx||my)&&!result.shoot&&!this.padHasAimed.get(pad.index)){const d=Math.hypot(mx,my);this.padAim[index]={x:mx/d,y:my/d};}if(index||(this.padLastUse.get(pad.index)||0)>=Math.max(this.lastKeyboard,this.mouse.lastMove)){result.aimX=this.padAim[index].x;result.aimY=this.padAim[index].y;}result.aimDistance=this.padAimDistance[index];const blocked=this.padBlockedButtons.get(pad.index);
+        if(!blocked?.has(this.padBindings.melee)&&this.padMeleeStart.has(pad.index)&&performance.now()-this.padMeleeStart.get(pad.index)>450)result.heavy=true;
+        if(!blocked?.has(this.padBindings.heavy)&&edge[this.padBindings.heavy]){result.melee=true;result.heavy=true;}
         for(const action of actions){const b=this.padBindings[action];if(b===undefined||this.padBlockedButtons.get(pad.index)?.has(b))continue;const held=pad.buttons[b]&&(pad.buttons[b].pressed||pad.buttons[b].value>.4);result[action]=result[action]||(action==='shoot'||action==='melee'?held:!!edge[b]);}
       }
       const d=Math.hypot(result.mx,result.my);if(d>1){result.mx/=d;result.my/=d;}return result;

@@ -700,10 +700,10 @@
           "questId": "main_berlin_final",
           "finalBoss": true,
           "attackHints": [
-            "Phase I · Tyrant’s Arsenal: teleport rings, marked artillery and rocket fans.",
-            "Phase II · Blink Assault: a wider arsenal joins the teleport and delayed strike combinations.",
-            "Phase III · Berlin Lockdown: lingering hazards, summoned elites and orbital strikes.",
-            "Phase IV · Last Whisker: chained teleports weave every attack together. Save dodge and healing for this phase."
+            "Command duel · cross the locked dash or double volley, then counter.",
+            "Signal network · shoot the relay to interrupt the broken ring. Its open wedge is safe.",
+            "False retreat · leave the marked landing and deal with the signal escort.",
+            "Last stand · anticipate the double shot and the following landing, then attack together."
           ]
         }
       ],
@@ -981,10 +981,10 @@
           "questId": "main_berlin_final",
           "finalBoss": true,
           "attackHints": [
-            "Phase I · Tyrant’s Arsenal: teleport rings, marked artillery and rocket fans.",
-            "Phase II · Blink Assault: a wider arsenal joins the teleport and delayed strike combinations.",
-            "Phase III · Berlin Lockdown: lingering hazards, summoned elites and orbital strikes.",
-            "Phase IV · Last Whisker: chained teleports weave every attack together. Save dodge and healing for this phase."
+            "Command duel · cross the locked dash or double volley, then counter.",
+            "Signal network · shoot the relay to interrupt the broken ring. Its open wedge is safe.",
+            "False retreat · leave the marked landing and deal with the signal escort.",
+            "Last stand · anticipate the double shot and the following landing, then attack together."
           ]
         }
       ],
@@ -1135,6 +1135,20 @@
       "cleared": false,
       "enemyIds": [],
       "index": 296
+    },
+    {
+      "id": "recon_cistern",
+      "name": "Mirror Cistern",
+      "type": "cave",
+      "recon": true,
+      "region": 4,
+      "x": 16770,
+      "y": 11011,
+      "radius": 105,
+      "cleared": false,
+      "enemyIds": [],
+      "index": 321,
+      "dungeonId": "recon_cistern"
     }
   ],
   "enemySpawns": [
@@ -7441,6 +7455,18 @@
       "label": "Sunscar Dunes · LV 13",
       "variant": 0,
       "region": 4
+    },
+    {
+      "id": "recon_cistern_entrance",
+      "type": "cave",
+      "x": 16770,
+      "y": 10976,
+      "w": 155,
+      "h": 130,
+      "solid": false,
+      "locationId": "recon_cistern",
+      "region": 4,
+      "variant": 0
     }
   ]
 }

@@ -7986,5 +7986,11 @@
       "frameDurationMs": 167,
       "loop": true
     }
+  },
+  "externalAtlases": {
+    "reconPaintings": "assets/recon/paintings.json",
+    "reconCombat": "assets/recon/combat-frames.json",
+    "reconEquipment": "assets/recon/gear-atlas.json",
+    "dungeonApproaches": "assets/recon/approaches.json"
   }
 }

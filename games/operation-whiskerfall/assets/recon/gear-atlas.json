@@ -1,0 +1,2269 @@
+{
+  "weapons": {
+    "sourceDimensions": [
+      1448,
+      1086
+    ],
+    "path": "assets/recon/recon-weapons.webp",
+    "width": 1024,
+    "height": 768,
+    "frames": [
+      {
+        "source": [
+          12,
+          139,
+          321,
+          141
+        ],
+        "crop": [
+          6,
+          74,
+          244,
+          107
+        ],
+        "key": "weapon_rushleaf",
+        "anchor": [
+          40.16,
+          130.71
+        ],
+        "animation": "Aimed from the shoulder, follows recoil, reload and melee swing."
+      },
+      {
+        "source": [
+          367,
+          149,
+          345,
+          113
+        ],
+        "crop": [
+          262,
+          88,
+          244,
+          80
+        ],
+        "key": "weapon_switchback",
+        "anchor": [
+          296.16,
+          130.4
+        ],
+        "animation": "Aimed from the shoulder, follows recoil, reload and melee swing."
+      },
+      {
+        "source": [
+          734,
+          135,
+          337,
+          138
+        ],
+        "crop": [
+          518,
+          78,
+          244,
+          100
+        ],
+        "key": "weapon_lockjaw",
+        "anchor": [
+          552.16,
+          131.0
+        ],
+        "animation": "Aimed from the shoulder, follows recoil, reload and melee swing."
+      },
+      {
+        "source": [
+          1099,
+          157,
+          339,
+          136
+        ],
+        "crop": [
+          774,
+          79,
+          244,
+          98
+        ],
+        "key": "weapon_rivetpunch",
+        "anchor": [
+          808.16,
+          130.94
+        ],
+        "animation": "Aimed from the shoulder, follows recoil, reload and melee swing."
+      },
+      {
+        "source": [
+          10,
+          483,
+          343,
+          110
+        ],
+        "crop": [
+          6,
+          345,
+          244,
+          78
+        ],
+        "key": "weapon_skyneedle",
+        "anchor": [
+          40.16,
+          386.34
+        ],
+        "animation": "Aimed from the shoulder, follows recoil, reload and melee swing."
+      },
+      {
+        "source": [
+          373,
+          478,
+          347,
+          117
+        ],
+        "crop": [
+          262,
+          343,
+          244,
+          82
+        ],
+        "key": "weapon_bellglass",
+        "anchor": [
+          296.16,
+          386.46
+        ],
+        "animation": "Aimed from the shoulder, follows recoil, reload and melee swing."
+      },
+      {
+        "source": [
+          733,
+          450,
+          332,
+          153
+        ],
+        "crop": [
+          518,
+          328,
+          244,
+          112
+        ],
+        "key": "weapon_wrenwheel",
+        "anchor": [
+          552.16,
+          387.36
+        ],
+        "animation": "Aimed from the shoulder, follows recoil, reload and melee swing."
+      },
+      {
+        "source": [
+          1092,
+          436,
+          349,
+          178
+        ],
+        "crop": [
+          774,
+          322,
+          244,
+          124
+        ],
+        "key": "weapon_redfoundry",
+        "anchor": [
+          808.16,
+          387.72
+        ],
+        "animation": "Aimed from the shoulder, follows recoil, reload and melee swing."
+      },
+      {
+        "source": [
+          14,
+          838,
+          337,
+          135
+        ],
+        "crop": [
+          6,
+          591,
+          244,
+          98
+        ],
+        "key": "melee_leafsaber",
+        "anchor": [
+          40.16,
+          642.94
+        ],
+        "animation": "Aimed from the shoulder, follows recoil, reload and melee swing."
+      },
+      {
+        "source": [
+          373,
+          838,
+          345,
+          95
+        ],
+        "crop": [
+          262,
+          606,
+          244,
+          67
+        ],
+        "key": "melee_bellfoil",
+        "anchor": [
+          296.16,
+          641.51
+        ],
+        "animation": "Aimed from the shoulder, follows recoil, reload and melee swing."
+      },
+      {
+        "source": [
+          760,
+          819,
+          257,
+          134
+        ],
+        "crop": [
+          518,
+          576,
+          244,
+          127
+        ],
+        "key": "melee_latchhammer",
+        "anchor": [
+          552.16,
+          643.31
+        ],
+        "animation": "Aimed from the shoulder, follows recoil, reload and melee swing."
+      },
+      {
+        "source": [
+          1074,
+          805,
+          354,
+          162
+        ],
+        "crop": [
+          774,
+          584,
+          244,
+          112
+        ],
+        "key": "melee_turnkey",
+        "anchor": [
+          808.16,
+          643.36
+        ],
+        "animation": "Aimed from the shoulder, follows recoil, reload and melee swing."
+      }
+    ],
+    "provenance": "Original generated gouache and ink illustrations for Operation Whiskerfall. Alpha-bearing source PNG was measured, cropped into cells and exported as WebP.",
+    "runtimeKey": "reconWeapons",
+    "consumers": [
+      "Renderer.drawPlayerArms",
+      "UI.icon",
+      "UI.forgeMenu"
+    ]
+  },
+  "suits": {
+    "sourceDimensions": [
+      1254,
+      1254
+    ],
+    "path": "assets/recon/recon-suits.webp",
+    "width": 1024,
+    "height": 1024,
+    "frames": [
+      {
+        "source": [
+          19,
+          2,
+          268,
+          310
+        ],
+        "crop": [
+          22,
+          6,
+          211,
+          244
+        ],
+        "key": "armor_recon_reedrunner_clover",
+        "anchor": [
+          135.94,
+          245.12
+        ],
+        "shoulder": [
+          154.93,
+          118.24
+        ],
+        "animation": "Idle and recoil recovery. See suitActions for run, strike, dodge and downed painted frames."
+      },
+      {
+        "source": [
+          332,
+          5,
+          268,
+          306
+        ],
+        "crop": [
+          277,
+          6,
+          214,
+          244
+        ],
+        "key": "armor_recon_sluice_clover",
+        "anchor": [
+          392.56,
+          245.12
+        ],
+        "shoulder": [
+          411.82,
+          118.24
+        ],
+        "animation": "Idle and recoil recovery. See suitActions for run, strike, dodge and downed painted frames."
+      },
+      {
+        "source": [
+          647,
+          2,
+          267,
+          310
+        ],
+        "crop": [
+          535,
+          6,
+          210,
+          244
+        ],
+        "key": "armor_recon_railcoat_clover",
+        "anchor": [
+          648.4,
+          245.12
+        ],
+        "shoulder": [
+          667.3,
+          118.24
+        ],
+        "animation": "Idle and recoil recovery. See suitActions for run, strike, dodge and downed painted frames."
+      },
+      {
+        "source": [
+          959,
+          6,
+          268,
+          306
+        ],
+        "crop": [
+          789,
+          6,
+          214,
+          244
+        ],
+        "key": "armor_recon_lantern_clover",
+        "anchor": [
+          904.56,
+          245.12
+        ],
+        "shoulder": [
+          923.82,
+          118.24
+        ],
+        "animation": "Idle and recoil recovery. See suitActions for run, strike, dodge and downed painted frames."
+      },
+      {
+        "source": [
+          20,
+          316,
+          266,
+          309
+        ],
+        "crop": [
+          23,
+          262,
+          210,
+          244
+        ],
+        "key": "armor_recon_reedrunner_ash",
+        "anchor": [
+          136.4,
+          501.12
+        ],
+        "shoulder": [
+          155.3,
+          374.24
+        ],
+        "animation": "Idle and recoil recovery. See suitActions for run, strike, dodge and downed painted frames."
+      },
+      {
+        "source": [
+          334,
+          319,
+          266,
+          306
+        ],
+        "crop": [
+          278,
+          262,
+          212,
+          244
+        ],
+        "key": "armor_recon_sluice_ash",
+        "anchor": [
+          392.48,
+          501.12
+        ],
+        "shoulder": [
+          411.56,
+          374.24
+        ],
+        "animation": "Idle and recoil recovery. See suitActions for run, strike, dodge and downed painted frames."
+      },
+      {
+        "source": [
+          647,
+          316,
+          266,
+          309
+        ],
+        "crop": [
+          535,
+          262,
+          210,
+          244
+        ],
+        "key": "armor_recon_railcoat_ash",
+        "anchor": [
+          648.4,
+          501.12
+        ],
+        "shoulder": [
+          667.3,
+          374.24
+        ],
+        "animation": "Idle and recoil recovery. See suitActions for run, strike, dodge and downed painted frames."
+      },
+      {
+        "source": [
+          960,
+          320,
+          267,
+          305
+        ],
+        "crop": [
+          789,
+          262,
+          214,
+          244
+        ],
+        "key": "armor_recon_lantern_ash",
+        "anchor": [
+          904.56,
+          501.12
+        ],
+        "shoulder": [
+          923.82,
+          374.24
+        ],
+        "animation": "Idle and recoil recovery. See suitActions for run, strike, dodge and downed painted frames."
+      },
+      {
+        "source": [
+          19,
+          629,
+          268,
+          309
+        ],
+        "crop": [
+          22,
+          518,
+          212,
+          244
+        ],
+        "key": "armor_recon_medic_clover",
+        "anchor": [
+          136.48,
+          757.12
+        ],
+        "shoulder": [
+          155.56,
+          630.24
+        ],
+        "animation": "Idle and recoil recovery. See suitActions for run, strike, dodge and downed painted frames."
+      },
+      {
+        "source": [
+          333,
+          631,
+          267,
+          308
+        ],
+        "crop": [
+          278,
+          518,
+          212,
+          244
+        ],
+        "key": "armor_recon_rigger_clover",
+        "anchor": [
+          392.48,
+          757.12
+        ],
+        "shoulder": [
+          411.56,
+          630.24
+        ],
+        "animation": "Idle and recoil recovery. See suitActions for run, strike, dodge and downed painted frames."
+      },
+      {
+        "source": [
+          647,
+          629,
+          267,
+          309
+        ],
+        "crop": [
+          534,
+          518,
+          211,
+          244
+        ],
+        "key": "armor_recon_riveter_clover",
+        "anchor": [
+          647.94,
+          757.12
+        ],
+        "shoulder": [
+          666.93,
+          630.24
+        ],
+        "animation": "Idle and recoil recovery. See suitActions for run, strike, dodge and downed painted frames."
+      },
+      {
+        "source": [
+          960,
+          630,
+          267,
+          310
+        ],
+        "crop": [
+          791,
+          518,
+          210,
+          244
+        ],
+        "key": "armor_recon_breakwater_clover",
+        "anchor": [
+          904.4,
+          757.12
+        ],
+        "shoulder": [
+          923.3,
+          630.24
+        ],
+        "animation": "Idle and recoil recovery. See suitActions for run, strike, dodge and downed painted frames."
+      },
+      {
+        "source": [
+          20,
+          944,
+          267,
+          307
+        ],
+        "crop": [
+          22,
+          774,
+          212,
+          244
+        ],
+        "key": "armor_recon_medic_ash",
+        "anchor": [
+          136.48,
+          1013.12
+        ],
+        "shoulder": [
+          155.56,
+          886.24
+        ],
+        "animation": "Idle and recoil recovery. See suitActions for run, strike, dodge and downed painted frames."
+      },
+      {
+        "source": [
+          334,
+          946,
+          266,
+          306
+        ],
+        "crop": [
+          278,
+          774,
+          212,
+          244
+        ],
+        "key": "armor_recon_rigger_ash",
+        "anchor": [
+          392.48,
+          1013.12
+        ],
+        "shoulder": [
+          411.56,
+          886.24
+        ],
+        "animation": "Idle and recoil recovery. See suitActions for run, strike, dodge and downed painted frames."
+      },
+      {
+        "source": [
+          647,
+          944,
+          266,
+          308
+        ],
+        "crop": [
+          534,
+          774,
+          211,
+          244
+        ],
+        "key": "armor_recon_riveter_ash",
+        "anchor": [
+          647.94,
+          1013.12
+        ],
+        "shoulder": [
+          666.93,
+          886.24
+        ],
+        "animation": "Idle and recoil recovery. See suitActions for run, strike, dodge and downed painted frames."
+      },
+      {
+        "source": [
+          961,
+          943,
+          266,
+          311
+        ],
+        "crop": [
+          791,
+          774,
+          209,
+          244
+        ],
+        "key": "armor_recon_breakwater_ash",
+        "anchor": [
+          903.86,
+          1013.12
+        ],
+        "shoulder": [
+          922.67,
+          886.24
+        ],
+        "animation": "Idle and recoil recovery. See suitActions for run, strike, dodge and downed painted frames."
+      }
+    ],
+    "provenance": "Original generated gouache and ink illustrations for Operation Whiskerfall. Alpha-bearing source PNG was measured, cropped into cells and exported as WebP.",
+    "runtimeKey": "reconSuits",
+    "consumers": [
+      "Renderer.actorFrame",
+      "Renderer.playerShoulder",
+      "UI.icon",
+      "UI.forgeMenu",
+      "UI.armorWardrobeMenu"
+    ]
+  },
+  "suitActions": {
+    "run": {
+      "path": "assets/recon/suit-actions.webp",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "width": 1536,
+      "height": 1536,
+      "frames": [
+        {
+          "key": "armor_recon_reedrunner_clover_run",
+          "source": [
+            9,
+            23,
+            280,
+            274
+          ],
+          "crop": [
+            6,
+            8,
+            180,
+            176
+          ],
+          "anchor": [
+            101.4,
+            178.72
+          ],
+          "shoulder": [
+            97.8,
+            97.76
+          ]
+        },
+        {
+          "key": "armor_recon_sluice_clover_run",
+          "source": [
+            322,
+            25,
+            279,
+            267
+          ],
+          "crop": [
+            198,
+            10,
+            180,
+            172
+          ],
+          "anchor": [
+            293.4,
+            176.84
+          ],
+          "shoulder": [
+            289.8,
+            97.72
+          ]
+        },
+        {
+          "key": "armor_recon_railcoat_clover_run",
+          "source": [
+            637,
+            23,
+            280,
+            272
+          ],
+          "crop": [
+            390,
+            8,
+            180,
+            175
+          ],
+          "anchor": [
+            485.4,
+            177.75
+          ],
+          "shoulder": [
+            481.8,
+            97.25
+          ]
+        },
+        {
+          "key": "armor_recon_lantern_clover_run",
+          "source": [
+            949,
+            25,
+            280,
+            272
+          ],
+          "crop": [
+            582,
+            8,
+            180,
+            175
+          ],
+          "anchor": [
+            677.4,
+            177.75
+          ],
+          "shoulder": [
+            673.8,
+            97.25
+          ]
+        },
+        {
+          "key": "armor_recon_reedrunner_ash_run",
+          "source": [
+            9,
+            336,
+            281,
+            274
+          ],
+          "crop": [
+            6,
+            200,
+            180,
+            176
+          ],
+          "anchor": [
+            101.4,
+            370.72
+          ],
+          "shoulder": [
+            97.8,
+            289.76
+          ]
+        },
+        {
+          "key": "armor_recon_sluice_ash_run",
+          "source": [
+            323,
+            338,
+            280,
+            267
+          ],
+          "crop": [
+            198,
+            202,
+            180,
+            172
+          ],
+          "anchor": [
+            293.4,
+            368.84
+          ],
+          "shoulder": [
+            289.8,
+            289.72
+          ]
+        },
+        {
+          "key": "armor_recon_railcoat_ash_run",
+          "source": [
+            638,
+            336,
+            279,
+            272
+          ],
+          "crop": [
+            390,
+            200,
+            180,
+            175
+          ],
+          "anchor": [
+            485.4,
+            369.75
+          ],
+          "shoulder": [
+            481.8,
+            289.25
+          ]
+        },
+        {
+          "key": "armor_recon_lantern_ash_run",
+          "source": [
+            948,
+            338,
+            284,
+            274
+          ],
+          "crop": [
+            582,
+            201,
+            180,
+            174
+          ],
+          "anchor": [
+            677.4,
+            369.78
+          ],
+          "shoulder": [
+            673.8,
+            289.74
+          ]
+        },
+        {
+          "key": "armor_recon_medic_clover_run",
+          "source": [
+            7,
+            650,
+            283,
+            274
+          ],
+          "crop": [
+            6,
+            393,
+            180,
+            174
+          ],
+          "anchor": [
+            101.4,
+            561.78
+          ],
+          "shoulder": [
+            97.8,
+            481.74
+          ]
+        },
+        {
+          "key": "armor_recon_rigger_clover_run",
+          "source": [
+            323,
+            651,
+            278,
+            273
+          ],
+          "crop": [
+            198,
+            391,
+            180,
+            177
+          ],
+          "anchor": [
+            293.4,
+            562.69
+          ],
+          "shoulder": [
+            289.8,
+            481.27
+          ]
+        },
+        {
+          "key": "armor_recon_riveter_clover_run",
+          "source": [
+            635,
+            650,
+            282,
+            273
+          ],
+          "crop": [
+            390,
+            393,
+            180,
+            174
+          ],
+          "anchor": [
+            485.4,
+            561.78
+          ],
+          "shoulder": [
+            481.8,
+            481.74
+          ]
+        },
+        {
+          "key": "armor_recon_breakwater_clover_run",
+          "source": [
+            947,
+            650,
+            283,
+            278
+          ],
+          "crop": [
+            582,
+            391,
+            180,
+            177
+          ],
+          "anchor": [
+            677.4,
+            562.69
+          ],
+          "shoulder": [
+            673.8,
+            481.27
+          ]
+        },
+        {
+          "key": "armor_recon_medic_ash_run",
+          "source": [
+            8,
+            963,
+            284,
+            276
+          ],
+          "crop": [
+            6,
+            584,
+            180,
+            175
+          ],
+          "anchor": [
+            101.4,
+            753.75
+          ],
+          "shoulder": [
+            97.8,
+            673.25
+          ]
+        },
+        {
+          "key": "armor_recon_rigger_ash_run",
+          "source": [
+            323,
+            965,
+            283,
+            274
+          ],
+          "crop": [
+            198,
+            585,
+            180,
+            174
+          ],
+          "anchor": [
+            293.4,
+            753.78
+          ],
+          "shoulder": [
+            289.8,
+            673.74
+          ]
+        },
+        {
+          "key": "armor_recon_riveter_ash_run",
+          "source": [
+            635,
+            963,
+            283,
+            274
+          ],
+          "crop": [
+            390,
+            585,
+            180,
+            174
+          ],
+          "anchor": [
+            485.4,
+            753.78
+          ],
+          "shoulder": [
+            481.8,
+            673.74
+          ]
+        },
+        {
+          "key": "armor_recon_breakwater_ash_run",
+          "source": [
+            948,
+            963,
+            285,
+            279
+          ],
+          "crop": [
+            582,
+            584,
+            180,
+            176
+          ],
+          "anchor": [
+            677.4,
+            754.72
+          ],
+          "shoulder": [
+            673.8,
+            673.76
+          ]
+        }
+      ],
+      "runtimeKey": "reconSuitActions",
+      "provenance": "Original painted action-pose variation generated from the supplied sixteen-character idle armor sheet. Transparent cells were fitted to the game camera.",
+      "consumers": [
+        "Renderer.actorFrame",
+        "Renderer.drawPlayerArms"
+      ]
+    },
+    "strike": {
+      "path": "assets/recon/suit-actions.webp",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "width": 1536,
+      "height": 1536,
+      "frames": [
+        {
+          "key": "armor_recon_reedrunner_clover_strike",
+          "source": [
+            9,
+            36,
+            294,
+            262
+          ],
+          "crop": [
+            774,
+            16,
+            180,
+            160
+          ],
+          "anchor": [
+            869.4,
+            171.2
+          ],
+          "shoulder": [
+            874.8,
+            97.6
+          ]
+        },
+        {
+          "key": "armor_recon_sluice_clover_strike",
+          "source": [
+            325,
+            36,
+            291,
+            262
+          ],
+          "crop": [
+            966,
+            15,
+            180,
+            162
+          ],
+          "anchor": [
+            1061.4,
+            172.14
+          ],
+          "shoulder": [
+            1066.8,
+            97.62
+          ]
+        },
+        {
+          "key": "armor_recon_railcoat_clover_strike",
+          "source": [
+            635,
+            36,
+            293,
+            263
+          ],
+          "crop": [
+            1158,
+            15,
+            180,
+            162
+          ],
+          "anchor": [
+            1253.4,
+            172.14
+          ],
+          "shoulder": [
+            1258.8,
+            97.62
+          ]
+        },
+        {
+          "key": "armor_recon_lantern_clover_strike",
+          "source": [
+            945,
+            36,
+            298,
+            262
+          ],
+          "crop": [
+            1350,
+            17,
+            180,
+            158
+          ],
+          "anchor": [
+            1445.4,
+            170.26
+          ],
+          "shoulder": [
+            1450.8,
+            97.58
+          ]
+        },
+        {
+          "key": "armor_recon_reedrunner_ash_strike",
+          "source": [
+            9,
+            349,
+            295,
+            263
+          ],
+          "crop": [
+            774,
+            208,
+            180,
+            160
+          ],
+          "anchor": [
+            869.4,
+            363.2
+          ],
+          "shoulder": [
+            874.8,
+            289.6
+          ]
+        },
+        {
+          "key": "armor_recon_sluice_ash_strike",
+          "source": [
+            325,
+            351,
+            292,
+            261
+          ],
+          "crop": [
+            966,
+            207,
+            180,
+            161
+          ],
+          "anchor": [
+            1061.4,
+            363.17
+          ],
+          "shoulder": [
+            1066.8,
+            289.11
+          ]
+        },
+        {
+          "key": "armor_recon_railcoat_ash_strike",
+          "source": [
+            638,
+            349,
+            290,
+            263
+          ],
+          "crop": [
+            1158,
+            206,
+            180,
+            163
+          ],
+          "anchor": [
+            1253.4,
+            364.11
+          ],
+          "shoulder": [
+            1258.8,
+            289.13
+          ]
+        },
+        {
+          "key": "armor_recon_lantern_ash_strike",
+          "source": [
+            945,
+            350,
+            297,
+            262
+          ],
+          "crop": [
+            1350,
+            208,
+            180,
+            159
+          ],
+          "anchor": [
+            1445.4,
+            362.23
+          ],
+          "shoulder": [
+            1450.8,
+            289.09
+          ]
+        },
+        {
+          "key": "armor_recon_medic_clover_strike",
+          "source": [
+            9,
+            662,
+            294,
+            263
+          ],
+          "crop": [
+            774,
+            399,
+            180,
+            161
+          ],
+          "anchor": [
+            869.4,
+            555.17
+          ],
+          "shoulder": [
+            874.8,
+            481.11
+          ]
+        },
+        {
+          "key": "armor_recon_rigger_clover_strike",
+          "source": [
+            322,
+            664,
+            293,
+            261
+          ],
+          "crop": [
+            966,
+            400,
+            180,
+            160
+          ],
+          "anchor": [
+            1061.4,
+            555.2
+          ],
+          "shoulder": [
+            1066.8,
+            481.6
+          ]
+        },
+        {
+          "key": "armor_recon_riveter_clover_strike",
+          "source": [
+            633,
+            662,
+            297,
+            264
+          ],
+          "crop": [
+            1158,
+            400,
+            180,
+            160
+          ],
+          "anchor": [
+            1253.4,
+            555.2
+          ],
+          "shoulder": [
+            1258.8,
+            481.6
+          ]
+        },
+        {
+          "key": "armor_recon_breakwater_clover_strike",
+          "source": [
+            947,
+            662,
+            295,
+            263
+          ],
+          "crop": [
+            1350,
+            400,
+            180,
+            160
+          ],
+          "anchor": [
+            1445.4,
+            555.2
+          ],
+          "shoulder": [
+            1450.8,
+            481.6
+          ]
+        },
+        {
+          "key": "armor_recon_medic_ash_strike",
+          "source": [
+            9,
+            976,
+            295,
+            263
+          ],
+          "crop": [
+            774,
+            592,
+            180,
+            160
+          ],
+          "anchor": [
+            869.4,
+            747.2
+          ],
+          "shoulder": [
+            874.8,
+            673.6
+          ]
+        },
+        {
+          "key": "armor_recon_rigger_ash_strike",
+          "source": [
+            322,
+            978,
+            294,
+            261
+          ],
+          "crop": [
+            966,
+            592,
+            180,
+            160
+          ],
+          "anchor": [
+            1061.4,
+            747.2
+          ],
+          "shoulder": [
+            1066.8,
+            673.6
+          ]
+        },
+        {
+          "key": "armor_recon_riveter_ash_strike",
+          "source": [
+            634,
+            976,
+            296,
+            263
+          ],
+          "crop": [
+            1158,
+            592,
+            180,
+            160
+          ],
+          "anchor": [
+            1253.4,
+            747.2
+          ],
+          "shoulder": [
+            1258.8,
+            673.6
+          ]
+        },
+        {
+          "key": "armor_recon_breakwater_ash_strike",
+          "source": [
+            947,
+            976,
+            296,
+            263
+          ],
+          "crop": [
+            1350,
+            592,
+            180,
+            160
+          ],
+          "anchor": [
+            1445.4,
+            747.2
+          ],
+          "shoulder": [
+            1450.8,
+            673.6
+          ]
+        }
+      ],
+      "runtimeKey": "reconSuitActions",
+      "provenance": "Original painted action-pose variation generated from the supplied sixteen-character idle armor sheet. Transparent cells were fitted to the game camera.",
+      "consumers": [
+        "Renderer.actorFrame",
+        "Renderer.drawPlayerArms"
+      ]
+    },
+    "dodge": {
+      "path": "assets/recon/suit-actions.webp",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "width": 1536,
+      "height": 1536,
+      "frames": [
+        {
+          "key": "armor_recon_reedrunner_clover_dodge",
+          "source": [
+            5,
+            88,
+            295,
+            179
+          ],
+          "crop": [
+            6,
+            809,
+            180,
+            109
+          ],
+          "anchor": [
+            99.6,
+            912.55
+          ],
+          "shoulder": [
+            103.2,
+            879.85
+          ]
+        },
+        {
+          "key": "armor_recon_sluice_clover_dodge",
+          "source": [
+            319,
+            92,
+            292,
+            175
+          ],
+          "crop": [
+            198,
+            810,
+            180,
+            108
+          ],
+          "anchor": [
+            291.6,
+            912.6
+          ],
+          "shoulder": [
+            295.2,
+            880.2
+          ]
+        },
+        {
+          "key": "armor_recon_railcoat_clover_dodge",
+          "source": [
+            628,
+            100,
+            292,
+            167
+          ],
+          "crop": [
+            390,
+            812,
+            180,
+            103
+          ],
+          "anchor": [
+            483.6,
+            909.85
+          ],
+          "shoulder": [
+            487.2,
+            878.95
+          ]
+        },
+        {
+          "key": "armor_recon_lantern_clover_dodge",
+          "source": [
+            942,
+            90,
+            300,
+            178
+          ],
+          "crop": [
+            582,
+            810,
+            180,
+            107
+          ],
+          "anchor": [
+            675.6,
+            911.65
+          ],
+          "shoulder": [
+            679.2,
+            879.55
+          ]
+        },
+        {
+          "key": "armor_recon_reedrunner_ash_dodge",
+          "source": [
+            6,
+            400,
+            294,
+            181
+          ],
+          "crop": [
+            6,
+            1000,
+            180,
+            111
+          ],
+          "anchor": [
+            99.6,
+            1105.45
+          ],
+          "shoulder": [
+            103.2,
+            1072.15
+          ]
+        },
+        {
+          "key": "armor_recon_sluice_ash_dodge",
+          "source": [
+            319,
+            405,
+            292,
+            176
+          ],
+          "crop": [
+            198,
+            1002,
+            180,
+            108
+          ],
+          "anchor": [
+            291.6,
+            1104.6
+          ],
+          "shoulder": [
+            295.2,
+            1072.2
+          ]
+        },
+        {
+          "key": "armor_recon_railcoat_ash_dodge",
+          "source": [
+            629,
+            414,
+            293,
+            167
+          ],
+          "crop": [
+            390,
+            1004,
+            180,
+            103
+          ],
+          "anchor": [
+            483.6,
+            1101.85
+          ],
+          "shoulder": [
+            487.2,
+            1070.95
+          ]
+        },
+        {
+          "key": "armor_recon_lantern_ash_dodge",
+          "source": [
+            942,
+            403,
+            300,
+            179
+          ],
+          "crop": [
+            582,
+            1002,
+            180,
+            107
+          ],
+          "anchor": [
+            675.6,
+            1103.65
+          ],
+          "shoulder": [
+            679.2,
+            1071.55
+          ]
+        },
+        {
+          "key": "armor_recon_medic_clover_dodge",
+          "source": [
+            5,
+            716,
+            295,
+            184
+          ],
+          "crop": [
+            6,
+            1192,
+            180,
+            112
+          ],
+          "anchor": [
+            99.6,
+            1298.4
+          ],
+          "shoulder": [
+            103.2,
+            1264.8
+          ]
+        },
+        {
+          "key": "armor_recon_rigger_clover_dodge",
+          "source": [
+            318,
+            714,
+            292,
+            186
+          ],
+          "crop": [
+            198,
+            1190,
+            180,
+            115
+          ],
+          "anchor": [
+            291.6,
+            1299.25
+          ],
+          "shoulder": [
+            295.2,
+            1264.75
+          ]
+        },
+        {
+          "key": "armor_recon_riveter_clover_dodge",
+          "source": [
+            631,
+            728,
+            295,
+            172
+          ],
+          "crop": [
+            390,
+            1195,
+            180,
+            105
+          ],
+          "anchor": [
+            483.6,
+            1294.75
+          ],
+          "shoulder": [
+            487.2,
+            1263.25
+          ]
+        },
+        {
+          "key": "armor_recon_breakwater_clover_dodge",
+          "source": [
+            943,
+            717,
+            299,
+            183
+          ],
+          "crop": [
+            582,
+            1193,
+            180,
+            110
+          ],
+          "anchor": [
+            675.6,
+            1297.5
+          ],
+          "shoulder": [
+            679.2,
+            1264.5
+          ]
+        },
+        {
+          "key": "armor_recon_medic_ash_dodge",
+          "source": [
+            5,
+            1031,
+            296,
+            182
+          ],
+          "crop": [
+            6,
+            1384,
+            180,
+            111
+          ],
+          "anchor": [
+            99.6,
+            1489.45
+          ],
+          "shoulder": [
+            103.2,
+            1456.15
+          ]
+        },
+        {
+          "key": "armor_recon_rigger_ash_dodge",
+          "source": [
+            320,
+            1027,
+            290,
+            186
+          ],
+          "crop": [
+            198,
+            1382,
+            180,
+            115
+          ],
+          "anchor": [
+            291.6,
+            1491.25
+          ],
+          "shoulder": [
+            295.2,
+            1456.75
+          ]
+        },
+        {
+          "key": "armor_recon_riveter_ash_dodge",
+          "source": [
+            632,
+            1042,
+            297,
+            171
+          ],
+          "crop": [
+            390,
+            1388,
+            180,
+            104
+          ],
+          "anchor": [
+            483.6,
+            1486.8
+          ],
+          "shoulder": [
+            487.2,
+            1455.6
+          ]
+        },
+        {
+          "key": "armor_recon_breakwater_ash_dodge",
+          "source": [
+            945,
+            1030,
+            300,
+            183
+          ],
+          "crop": [
+            582,
+            1385,
+            180,
+            110
+          ],
+          "anchor": [
+            675.6,
+            1489.5
+          ],
+          "shoulder": [
+            679.2,
+            1456.5
+          ]
+        }
+      ],
+      "runtimeKey": "reconSuitActions",
+      "provenance": "Original painted action-pose variation generated from the supplied sixteen-character idle armor sheet. Transparent cells were fitted to the game camera.",
+      "consumers": [
+        "Renderer.actorFrame",
+        "Renderer.drawPlayerArms"
+      ]
+    },
+    "down": {
+      "path": "assets/recon/suit-actions.webp",
+      "sourceDimensions": [
+        1254,
+        1254
+      ],
+      "width": 1536,
+      "height": 1536,
+      "frames": [
+        {
+          "key": "armor_recon_reedrunner_clover_down",
+          "source": [
+            6,
+            129,
+            305,
+            131
+          ],
+          "crop": [
+            774,
+            825,
+            180,
+            77
+          ],
+          "anchor": [
+            864.0,
+            894.3
+          ],
+          "shoulder": [
+            900.0,
+            871.97
+          ]
+        },
+        {
+          "key": "armor_recon_sluice_clover_down",
+          "source": [
+            321,
+            129,
+            305,
+            131
+          ],
+          "crop": [
+            966,
+            825,
+            180,
+            77
+          ],
+          "anchor": [
+            1056.0,
+            894.3
+          ],
+          "shoulder": [
+            1092.0,
+            871.97
+          ]
+        },
+        {
+          "key": "armor_recon_railcoat_clover_down",
+          "source": [
+            635,
+            133,
+            304,
+            127
+          ],
+          "crop": [
+            1158,
+            826,
+            180,
+            75
+          ],
+          "anchor": [
+            1248.0,
+            893.5
+          ],
+          "shoulder": [
+            1284.0,
+            871.75
+          ]
+        },
+        {
+          "key": "armor_recon_lantern_clover_down",
+          "source": [
+            949,
+            129,
+            304,
+            131
+          ],
+          "crop": [
+            1350,
+            825,
+            180,
+            78
+          ],
+          "anchor": [
+            1440.0,
+            895.2
+          ],
+          "shoulder": [
+            1476.0,
+            872.58
+          ]
+        },
+        {
+          "key": "armor_recon_reedrunner_ash_down",
+          "source": [
+            6,
+            444,
+            306,
+            130
+          ],
+          "crop": [
+            774,
+            1018,
+            180,
+            76
+          ],
+          "anchor": [
+            864.0,
+            1086.4
+          ],
+          "shoulder": [
+            900.0,
+            1064.36
+          ]
+        },
+        {
+          "key": "armor_recon_sluice_ash_down",
+          "source": [
+            321,
+            443,
+            305,
+            131
+          ],
+          "crop": [
+            966,
+            1017,
+            180,
+            77
+          ],
+          "anchor": [
+            1056.0,
+            1086.3
+          ],
+          "shoulder": [
+            1092.0,
+            1063.97
+          ]
+        },
+        {
+          "key": "armor_recon_railcoat_ash_down",
+          "source": [
+            635,
+            447,
+            304,
+            127
+          ],
+          "crop": [
+            1158,
+            1018,
+            180,
+            75
+          ],
+          "anchor": [
+            1248.0,
+            1085.5
+          ],
+          "shoulder": [
+            1284.0,
+            1063.75
+          ]
+        },
+        {
+          "key": "armor_recon_lantern_ash_down",
+          "source": [
+            949,
+            443,
+            304,
+            131
+          ],
+          "crop": [
+            1350,
+            1017,
+            180,
+            78
+          ],
+          "anchor": [
+            1440.0,
+            1087.2
+          ],
+          "shoulder": [
+            1476.0,
+            1064.58
+          ]
+        },
+        {
+          "key": "armor_recon_medic_clover_down",
+          "source": [
+            7,
+            761,
+            304,
+            126
+          ],
+          "crop": [
+            774,
+            1210,
+            180,
+            75
+          ],
+          "anchor": [
+            864.0,
+            1277.5
+          ],
+          "shoulder": [
+            900.0,
+            1255.75
+          ]
+        },
+        {
+          "key": "armor_recon_rigger_clover_down",
+          "source": [
+            321,
+            758,
+            300,
+            129
+          ],
+          "crop": [
+            966,
+            1209,
+            180,
+            77
+          ],
+          "anchor": [
+            1056.0,
+            1278.3
+          ],
+          "shoulder": [
+            1092.0,
+            1255.97
+          ]
+        },
+        {
+          "key": "armor_recon_riveter_clover_down",
+          "source": [
+            635,
+            758,
+            304,
+            130
+          ],
+          "crop": [
+            1158,
+            1209,
+            180,
+            77
+          ],
+          "anchor": [
+            1248.0,
+            1278.3
+          ],
+          "shoulder": [
+            1284.0,
+            1255.97
+          ]
+        },
+        {
+          "key": "armor_recon_breakwater_clover_down",
+          "source": [
+            949,
+            755,
+            304,
+            132
+          ],
+          "crop": [
+            1350,
+            1209,
+            180,
+            78
+          ],
+          "anchor": [
+            1440.0,
+            1279.2
+          ],
+          "shoulder": [
+            1476.0,
+            1256.58
+          ]
+        },
+        {
+          "key": "armor_recon_medic_ash_down",
+          "source": [
+            7,
+            1076,
+            305,
+            125
+          ],
+          "crop": [
+            774,
+            1403,
+            180,
+            74
+          ],
+          "anchor": [
+            864.0,
+            1469.6
+          ],
+          "shoulder": [
+            900.0,
+            1448.14
+          ]
+        },
+        {
+          "key": "armor_recon_rigger_ash_down",
+          "source": [
+            321,
+            1072,
+            301,
+            129
+          ],
+          "crop": [
+            966,
+            1401,
+            180,
+            77
+          ],
+          "anchor": [
+            1056.0,
+            1470.3
+          ],
+          "shoulder": [
+            1092.0,
+            1447.97
+          ]
+        },
+        {
+          "key": "armor_recon_riveter_ash_down",
+          "source": [
+            635,
+            1073,
+            304,
+            128
+          ],
+          "crop": [
+            1158,
+            1402,
+            180,
+            76
+          ],
+          "anchor": [
+            1248.0,
+            1470.4
+          ],
+          "shoulder": [
+            1284.0,
+            1448.36
+          ]
+        },
+        {
+          "key": "armor_recon_breakwater_ash_down",
+          "source": [
+            949,
+            1068,
+            304,
+            133
+          ],
+          "crop": [
+            1350,
+            1400,
+            180,
+            79
+          ],
+          "anchor": [
+            1440.0,
+            1471.1
+          ],
+          "shoulder": [
+            1476.0,
+            1448.19
+          ]
+        }
+      ],
+      "runtimeKey": "reconSuitActions",
+      "provenance": "Original painted action-pose variation generated from the supplied sixteen-character idle armor sheet. Transparent cells were fitted to the game camera.",
+      "consumers": [
+        "Renderer.actorFrame",
+        "Renderer.drawPlayerArms"
+      ]
+    }
+  },
+  "forgeStations": {
+    "provenance": "Original generated watercolor workshop emblems, alpha-cropped and packed into 116px menu icons.",
+    "sourceDimensions": [
+      2172,
+      724
+    ],
+    "frames": [
+      {
+        "key": "station-upgrade",
+        "path": "assets/recon/station-upgrade.webp",
+        "source": [
+          78,
+          83,
+          557,
+          569
+        ],
+        "width": 116,
+        "height": 116,
+        "anchor": [
+          58,
+          58
+        ],
+        "consumer": "Forge station tab",
+        "animation": "static"
+      },
+      {
+        "key": "station-tune",
+        "path": "assets/recon/station-tune.webp",
+        "source": [
+          849,
+          83,
+          504,
+          558
+        ],
+        "width": 116,
+        "height": 116,
+        "anchor": [
+          58,
+          58
+        ],
+        "consumer": "Forge station tab",
+        "animation": "static"
+      },
+      {
+        "key": "station-craft",
+        "path": "assets/recon/station-craft.webp",
+        "source": [
+          1522,
+          100,
+          577,
+          542
+        ],
+        "width": 116,
+        "height": 116,
+        "anchor": [
+          58,
+          58
+        ],
+        "consumer": "Forge station tab",
+        "animation": "static"
+      }
+    ]
+  }
+}

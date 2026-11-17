@@ -4,6 +4,9 @@
   const prefix = 'whiskerfall.save.v1.';
   const fallback = new Map();
   const attempts = new Map();
+  // During an in-game import every hydration layer reads the same candidate.
+  // Migration writes stay here until the complete load chain succeeds.
+  const opening = new Map();
   const validSlot = slot => Number.isInteger(Number(slot)) && Number(slot) >= 0 && Number(slot) <= 2;
   const parseRecord = raw => {
     try {
@@ -56,6 +59,10 @@
     static record(slot) {
       if (!validSlot(slot)) return {record:null, unreadable:false, unavailable:false};
       slot = Number(slot);
+      if (opening.has(slot)) {
+        const raw = opening.get(slot);
+        return {record:{...parseRecord(raw),source:'import',durable:false},unreadable:false,unavailable:false};
+      }
       const key = prefix + slot, candidates = [];
       let unreadable = false, unavailable = false;
       const add = (raw, source, durable) => {
@@ -99,6 +106,7 @@
         const savedAt = Math.max(Date.now(), (previous?.savedAt || 0) + 1);
         const raw = JSON.stringify({ format: 'operation-whiskerfall', version: 1, savedAt, data });
         if (!parseRecord(raw)) throw Error('Campaign data could not be restored after saving. The previous save has been kept.');
+        if (opening.has(slot)) { opening.set(slot,raw); return true; }
         let oldPrimary;
         try { oldPrimary = localStorage.getItem(key); } catch (_) {}
         fallback.set(slot, raw);
@@ -137,12 +145,21 @@
       const data = Save.read(slot);
       return data ? JSON.stringify({ format: 'operation-whiskerfall', version: 1, data }, null, 2) : '';
     }
-    static import(slot, text) {
+    static import(slot, text, open) {
       try {
-        if (typeof text !== 'string' || text.length > 10000000) return false;
+        if (!validSlot(slot) || typeof text !== 'string' || text.length > 10000000) return false;
+        slot = Number(slot);
+        if (opening.has(slot)) return false;
         const record = JSON.parse(text);
-        const data = record.format === 'operation-whiskerfall' && record.version === 1 ? record.data : record.version === 1 ? record : null;
+        let data = record.format === 'operation-whiskerfall' && record.version === 1 ? record.data : record.version === 1 ? record : null;
         if (!Save.validData(data)) return false;
+        if (open) {
+          opening.set(slot, JSON.stringify({format:'operation-whiskerfall',version:1,savedAt:Date.now(),data}));
+          try {
+            if (!open()) return false;
+            data = JSON.parse(opening.get(slot)).data;
+          } finally { opening.delete(slot); }
+        }
         return Save.write(slot, data);
       } catch (_) { return false; }
     }

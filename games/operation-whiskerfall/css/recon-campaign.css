@@ -1,0 +1,25 @@
+.recon-journal { max-width: 1080px; margin: 0 auto; color: #f4e7c9; }
+.recon-chapter { position: relative; isolation: isolate; min-height: 124px; padding: 22px 28px; display: flex; align-items: end; overflow: hidden; border-radius: 4px; background: #263e39; }
+.recon-chapter img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:-2; }
+.recon-chapter::after { content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(90deg,rgba(12,24,26,.9),rgba(15,28,26,.5),transparent); }
+.recon-chapter span,.recon-journal small,.recon-ending small { font: bold .76rem/1.5 system-ui,sans-serif; letter-spacing:.1em; color:#e8c78c; }
+.recon-journal h3,.recon-journal h4 { font-family: Georgia,serif; color:inherit; margin: .15em 0 .4em; line-height:1.13; }
+.recon-chapter h3 { font-size:clamp(1.6rem,3vw,2.7rem); margin: .14em 0 0; }
+.recon-pages { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(220px,1fr); background:#e5d8b7; color:#263a36; }
+.recon-pages article,.recon-pages aside,.recon-known,.recon-drills { padding:18px 24px; }
+.recon-pages aside { background:#ccd2b8; border-left:1px solid #aca990; }
+.recon-pages h3 { font-size:1.55rem; }.recon-pages h4 { font-size:1.2rem; }
+.recon-pages small { color:#635436; }.recon-pages p { color:#263a36; margin:.5em 0; line-height:1.45; }
+.recon-pages blockquote { margin: .5em 0 1em; padding-left:12px; border-left:3px solid #a58b59; font-family:Georgia,serif; }
+.recon-pages cite { display:block; margin-top:.25em; font:600 .82rem system-ui,sans-serif; }
+.recon-pages hr { border:0; height:1px; background:#a4ac8f; margin:15px 0; }
+.recon-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+.recon-assignment-nav { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:8px 12px; background:#223630; }
+.recon-assignment-nav section { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.recon-assignment-nav button { padding:6px 12px; }
+.recon-pages button { background:#30423d; color:#fff2d0; border:1px solid #566a5f; padding:8px 12px; }
+.recon-pages button.primary { background:#72562b; color:#fff8de; }
+.recon-known,.recon-drills { background:#223330; }.recon-known p,.recon-drills p {color:#e2d8c0; margin:.45em 0;}
+.recon-archive { padding-left:22px; }.recon-archive li { margin:12px 0; }.recon-archive span { display:block; color:#c8b88d; }
+.recon-drills article { margin-bottom:12px; padding:8px 0; border-bottom:1px solid #536056; }
+@media(max-width:720px){.recon-pages{grid-template-columns:1fr}.recon-pages aside{border:0;border-top:1px solid #aca990}.recon-pages article,.recon-pages aside,.recon-known,.recon-drills{padding:14px}.recon-chapter{padding:14px;min-height:90px}}

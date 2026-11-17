@@ -24,13 +24,13 @@
   class World {
     constructor(seed=763219) {
       prepareContentCoordinates();this.coordinateScale=SCALE;
-      this.seed=Number(seed)||763219;this.width=Math.max(WIDTH,...OW.Content.regions.map(r=>r.x+r.w));this.height=Math.max(HEIGHT,...OW.Content.regions.map(r=>r.y+r.h));this.chunkSize=CHUNK;
-      this.start={x:1100*SCALE,y:1100*SCALE};this.regions=OW.Content.regions.map(r=>Object.assign({},r));this.sectors=(OW.Content.sectors||[]).map(s=>Object.assign({},s));this.berlinSector=this.sectors.find(s=>s.id==='berlin');
+      const originalRegions=OW.Content.regions.filter(r=>!r.reconRegion);this.seed=Number(seed)||763219;this.width=Math.max(WIDTH,...originalRegions.map(r=>r.x+r.w));this.height=Math.max(HEIGHT,...originalRegions.map(r=>r.y+r.h));this.chunkSize=CHUNK;
+      this.start={x:1100*SCALE,y:1100*SCALE};this.regions=originalRegions.map(r=>Object.assign({},r));this.sectors=(OW.Content.sectors||[]).map(s=>Object.assign({},s));this.berlinSector=this.sectors.find(s=>s.id==='berlin');
       this.locations=[];this.objects=[];this.roads=[];this.rivers=[];this.bridges=[];this.groundDetails=[];this.frontierPasses=[];
       this.activeEnemies=[];this.chunks=new Map();this.discovered=new Set();this.liberated=new Set();this.dead=new Set();this.opened=new Set();
       this._objectChunks=new Map();this._spawnChunks=new Map();this._enemyGrid=new Map();this._waterChunks=new Map();this._roadChunks=new Map();this._safeZoneChunks=new Map();this.safeZones=[];this._riverSegments=[];this._spawns=new Map();this._dormant=new Map();this._active=new Map();this._locationMap=new Map();
       this._streamTimer=0;this._lastPlayerCells='';this.maxActiveEnemies=160;this.activeRadius=1450;
-      this._generating=true;this._buildLocations();this._buildSafeZoneIndex();this._buildGeography();this._buildStructures();this._buildScenery();this._buildEnemies();this._generating=false;
+      this._generating=true;this._buildLocations();this._buildSafeZoneIndex();this._buildGeography();this._buildStructures();this._buildScenery();this._buildEnemies();OW.Content.reconCampaign?.extendWorld(this,SCALE);this._generating=false;
       this.reveal(this.start.x,this.start.y);
     }
     _key(x,y) { return Math.floor(x/CHUNK)+','+Math.floor(y/CHUNK); }
@@ -369,7 +369,7 @@
     getLocation(id) {return this._locationMap.get(id)||null;}
     remainingMajorBosses() {return this.locations.filter(l=>l.type==='boss'&&!l.finalBoss&&!this.liberated.has(l.id)&&!this.dead.has(l.id+'_commander'));}
     majorBossesDefeated() {return 8-this.remainingMajorBosses().length;}
-    berlinUnlocked() {for(let i=0;i<8;i++)if(!this.liberated.has('boss_'+i)&&!this.dead.has('boss_'+i+'_commander'))return false;return true;}
+    berlinUnlocked() {if(this.opened.has('recon_network_active')&&!this.opened.has('recon_berlin_clearance'))return false;for(let i=0;i<8;i++)if(!this.liberated.has('boss_'+i)&&!this.dead.has('boss_'+i+'_commander'))return false;return true;}
     isFinalArena(x,y,margin=0) {const s=this.berlinSector;return !!s&&x>=s.x-margin&&x<=s.x+s.w+margin&&y>=s.y-margin&&y<=s.y+s.h+margin;}
     gateAt(x,y,margin=0) {return !this.berlinUnlocked()&&this.isFinalArena(x,y,margin)?this.berlinSector:null;}
     isLocationLocked(location) {const l=typeof location==='string'?this.getLocation(location):location;return !!l&&!!this.gateAt(l.x,l.y);}
@@ -440,8 +440,9 @@
       enemy._steer={mx:best.mx,my:best.my,angle:best.angle,side:best.side,time:.5+(enemy._navSalt%31)/100,tx:target.x,ty:target.y};
       return {mx:best.mx,my:best.my};
     }
-    getVisibleObjects(x,y,w,h) {
-      const list=[],seen=new Set(),x0=Math.floor((x-180)/CHUNK),x1=Math.floor((x+w+180)/CHUNK),y0=Math.floor((y-180)/CHUNK),y1=Math.floor((y+h+180)/CHUNK);
+    getVisibleObjects(x,y,w,h,list=[],seen=new Set()) {
+      list.length=0;seen.clear();
+      const x0=Math.floor((x-180)/CHUNK),x1=Math.floor((x+w+180)/CHUNK),y0=Math.floor((y-180)/CHUNK),y1=Math.floor((y+h+180)/CHUNK);
       for(let cy=y0;cy<=y1;cy++)for(let cx=x0;cx<=x1;cx++)for(const o of this._objectChunks.get(cx+','+cy)||[]){if(!seen.has(o.id)&&o.x+o.w>x&&o.y+o.h>y&&o.x-o.w<x+w&&o.y-o.h<y+h){seen.add(o.id);list.push(o);}}return list;
     }
     updateActive(players,dt,game) {

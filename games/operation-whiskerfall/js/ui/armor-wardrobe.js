@@ -11,10 +11,19 @@
   };
   const number=value=>Number.isFinite(Number(value))?Number(value):0;
   const percent=value=>Math.round(value*1000)/10;
-  const delta=value=>(value>0?'+':'')+value;
   const outfitName=p=>['Scout','Ranger','Vanguard'][p.armorSet||0]||'Scout';
   const wornId=p=>typeof p.equipment?.armor==='string'?p.equipment.armor:p.equipment?.armor?.id;
   const canonical=(ui,value)=>typeof value==='string'?ui.item(value):ui.item(value?.id)||value;
+  // The outer viewport can be much wider than the atlas crop. Clip the
+  // embedded sheet to the actual frame before centering it in that viewport.
+  W.clipGearPreview=function(html){
+    return html.replace(/<svg viewBox="([\d. -]+)"([^>]*)>([\s\S]*?)<\/svg>/g,(tag,view,attrs,body)=>{
+      if(!body.includes('<image')||body.includes('<svg'))return tag;
+      const [x,y,w,h]=view.split(/\s+/).map(Number);
+      if(![x,y,w,h].every(Number.isFinite)||w<=0||h<=0)return tag;
+      return '<svg viewBox="0 0 '+w+' '+h+'"'+attrs+'><svg width="'+w+'" height="'+h+'" overflow="hidden" viewBox="'+view+'">'+body+'</svg></svg>';
+    });
+  };
 
   // Discovery is an inspection list. It never adds an item to the hero's pack.
   U.armorWardrobeItems=function(){
@@ -32,7 +41,7 @@
   U.armorWardrobeArt=function(item,large=false){
     const skin=Math.abs(Math.floor(this.player()?.skin||0))%2;
     const art=(item.expeditionArt&&W.ExpeditionArt?.markup(item,{skin}))||(item.resistanceArt&&W.ResistanceArt?.markup(item,skin))||W.HeroArmorArt?.markup(item,{skin,pose:0,className:'wardrobe-suit-art',variant:'card'})||this.icon(item,true);
-    return `<span class="wardrobe-art ${large?'wardrobe-art-large':'wardrobe-art-card'}" data-preview-skin="${skin}">${art}</span>`;
+    return `<span class="wardrobe-art ${large?'wardrobe-art-large':'wardrobe-art-card'}" data-preview-skin="${skin}">${item.reconArt==null?W.clipGearPreview(art):art}</span>`;
   };
   // Match recalculate without mutating the player or invoking combat hooks.
   // All armor shares the hero's outfit and reinforcement rank; cap protection
@@ -46,32 +55,55 @@
     const health=140+(Math.max(1,number(p.level))-1)*14+set*34+rank*12+active.reduce((sum,entry)=>sum+number(entry?.health),0);
     return{protection:percent(Math.max(0,Math.min(.72,armor))),health:Math.round(health)};
   };
-  U.armorWardrobeCard=function(item){
-    const owned=!!this.owned(item),worn=wornId(this.player())===item.id,selected=this.itemId===item.id,source=this.armorWardrobeSource(item),requirement=owned?this.equipRequirement(item):'';
-    const state=worn?'Currently worn':owned?'Owned':source.kind==='quest'?'Locked · side quest reward':'Locked · forge pattern';
-    return `<article class="wardrobe-card ${selected?'selected':''} ${worn?'is-worn':''} ${owned?'is-owned':'is-locked'}" data-armor-id="${escape(item.id)}"><button class="wardrobe-inspect" data-action="item" data-value="${escape(item.id)}" aria-pressed="${selected}" aria-label="Inspect ${escape(item.name)} · ${escape(state)}">${this.armorWardrobeArt(item)}<span class="wardrobe-card-copy"><span class="wardrobe-state">${worn?'✓ ':''}${escape(state)}</span><strong>${escape(item.name)}</strong><small>${escape(source.kind==='quest'?source.label:source.kind==='forge'?'Resistance forge pattern':'Field equipment')} · Level ${item.level||1}</small><span class="wardrobe-base-stats">${percent(number(item.armor))}% protection · +${number(item.health)} health</span></span></button>${owned?`<button class="wardrobe-card-equip ${worn?'selected':'primary'}" data-action="equip" data-value="${escape(item.id)}" aria-label="${worn?'Currently worn: ':'Equip '}${escape(item.name)}" ${worn||requirement?'disabled':''}>${worn?'✓ Currently worn':requirement?escape(requirement):'Equip armor'}</button>`:`<p class="wardrobe-card-hint">${source.kind==='quest'?'Complete this side quest to earn the whole suit.':'Inspect for the pattern and crafting requirements.'}</p>`}</article>`;
+U.armorWardrobeCard=function(item){
+    const p=this.player(),owned=!!this.owned(item),worn=wornId(p)===item.id,selected=this.itemId===item.id;
+    const state=worn?'Equipped':owned?'Owned':'Locked';
+    return '<article class="wardrobe-card '+(selected?'selected':'')+' '+(worn?'is-worn':'')+'" data-armor-id="'+escape(item.id)+'"><button class="wardrobe-inspect" data-action="item" data-value="'+escape(item.id)+'" aria-pressed="'+selected+'" aria-label="'+escape(item.name+' · '+state)+'">'+this.armorWardrobeArt(item)+'<strong>'+escape(item.name)+'</strong><small>'+state+'</small></button></article>';
   };
   U.armorWardrobeDetail=function(item){
-    const p=this.player(),source=this.armorWardrobeSource(item),owned=!!this.owned(item),worn=wornId(p)===item.id,current=canonical(this,p.equipment?.armor),requirement=owned?this.equipRequirement(item):'',stats=this.armorWardrobeStats(item),previous=this.armorWardrobeStats(current);
-    const difference=(a,b,suffix='')=>{const change=Math.round((a-b)*10)/10;return `<span class="wardrobe-delta ${change<0?'negative':change>0?'positive':'neutral'}">${change===0?'No change':delta(change)+suffix}</span>`;};
-    const status=worn?'Currently worn':owned?(requirement?'Owned · '+requirement:'Owned · ready to equip'):source.kind==='quest'?'Locked · earned from a side quest':'Locked · craft at a resistance forge';
-    const acquisition=source.kind==='quest'?`<span class="wardrobe-source-kind">Exclusive side quest reward</span><strong>${escape(source.label)}</strong><p>${escape(source.detail)}</p><small>Recommended quest level ${source.level}. Earned by completing this quest; unavailable from shops, random loot or the forge.</small>`:source.kind==='forge'?`<span class="wardrobe-source-kind">Forge pattern</span><strong>${escape(source.label)}</strong><p>${escape(source.detail)}</p>`:`<span class="wardrobe-source-kind">Equipment source</span><strong>${escape(source.label)}</strong><p>${escape(source.detail)}</p>`;
-    return `<div class="wardrobe-preview-stage">${this.armorWardrobeArt(item,true)}<span class="wardrobe-preview-caption">Player ${this.playerIndex+1} · Suit preview</span></div><div class="wardrobe-detail-copy"><p class="wardrobe-selected-state" role="status" aria-live="polite">${escape(status)}</p><span class="rarity">${escape(this.rarityName(item))} · Level ${item.level||1}</span><h3>${escape(item.name)}</h3><p class="wardrobe-description">${escape(item.description||'Resistance field armor for the long road home.')}</p><div class="wardrobe-comparison"><h4>${worn?'Your current loadout':'Compare with '+escape(current?.name||outfitName(p)+' outfit')}</h4><p>Loadout totals · outfit and reinforcement included</p><dl><div><dt>Protection</dt><dd><span class="wardrobe-old">${previous.protection}%</span><span aria-hidden="true"> → </span><strong>${stats.protection}%</strong>${difference(stats.protection,previous.protection,' percentage points')}</dd></div><div><dt>Maximum health</dt><dd><span class="wardrobe-old">${previous.health}</span><span aria-hidden="true"> → </span><strong>${stats.health}</strong>${difference(stats.health,previous.health,' health')}</dd></div></dl><small>Protection caps at 72%. Temporary wards and conditional bonuses are described above.</small></div><div class="wardrobe-source" data-source-kind="${source.kind}" ${source.questId?'data-quest-id="'+escape(source.questId)+'"':''}>${acquisition}</div>${owned?`<button class="wardrobe-detail-equip ${worn?'selected':'primary'}" data-action="equip" data-value="${escape(item.id)}" aria-label="${worn?'Currently worn: ':'Equip '}${escape(item.name)}" ${worn||requirement?'disabled':''}>${worn?'✓ Currently worn':requirement?escape(requirement):'Equip '+escape(item.name)}</button>`:'<p class="wardrobe-locked-note">'+(source.kind==='quest'?'Follow the clue above to earn this suit.':'Visit a resistance forge when the pattern requirements are met.')+'</p>'}</div>`;
+    const p=this.player(),source=this.armorWardrobeSource(item),owned=!!this.owned(item),worn=wornId(p)===item.id;
+    const compare=this.wardrobeCompare===item.id,current=canonical(this,p.equipment?.armor);
+    const stats=this.armorWardrobeStats(item),now=this.armorWardrobeStats(current),requirement=owned?this.equipRequirement(item):'';
+    const label=current?.name||outfitName(p)+' outfit';
+    const numbers='<dl class="wardrobe-numbers"><div><dt>Protection</dt><dd>'+stats.protection+'%</dd></div><div><dt>Health</dt><dd>'+stats.health+'</dd></div></dl>';
+    const shown=compare?'<div class="wardrobe-more"><h4>Compared with '+escape(label)+'</h4><p>Protection '+now.protection+'% → '+stats.protection+'% · Health '+now.health+' → '+stats.health+'</p><p>'+escape(item.description||'Resistance field armor.')+'</p><h4>'+escape(source.label)+'</h4><p>'+escape(source.detail)+'</p></div>':
+      this.armorWardrobeArt(item,true)+numbers+'<p class="wardrobe-brief">'+escape((item.benefit||item.description||'Resistance field armor.').split(/(?<=[.!?])\s/)[0])+'</p>';
+    return '<div class="wardrobe-selected"><small>'+escape(worn?'Equipped':owned?'Owned':source.kind==='quest'?'Expedition reward':'Forge pattern')+'</small><h3>'+escape(item.name)+'</h3>'+shown+'<div class="wardrobe-actions">'+(owned?'<button class="primary" data-action="equip" data-value="'+escape(item.id)+'" '+(worn||requirement?'disabled':'')+'>'+escape(worn?'Equipped':requirement||'Equip')+'</button>':'')+'<button data-action="wardrobe-compare" data-value="'+escape(item.id)+'" aria-expanded="'+compare+'">'+(compare?'Close details':owned?'Compare':'Inspect pattern')+'</button></div></div>';
   };
   U.armorWardrobeMenu=function(){
-    const p=this.player();if(!p)return'<p class="empty-state">Begin a campaign to prepare your armor.</p>';
+    const p=this.player();if(!p)return '<p>Begin a campaign to open your wardrobe.</p>';
     const items=this.armorWardrobeItems(),owned=items.filter(item=>this.owned(item)),discover=items.filter(item=>!this.owned(item));
     const current=items.find(item=>item.id===this.itemId)||items.find(item=>item.id===wornId(p))||owned[0]||items[0];this.itemId=current?.id||null;
-    const worn=canonical(this,p.equipment?.armor);
-    return `<div class="modern-equipment armor-wardrobe">${this.playerTabs()}<div class="gear-screen-heading"><div><span class="wardrobe-eyebrow">Resistance wardrobe</span><h3>Choose how you face the fight</h3><p>Compare armor, try its look, and follow clues to your next suit.</p></div><span>${owned.length} owned · ${discover.length} to discover</span></div><div class="wardrobe-worn-summary"><span><small>Currently worn</small><strong>${escape(worn?.name||outfitName(p)+' outfit')}</strong></span><span>${escape(outfitName(p))} outfit · Reinforcement +${p.armorRank||0}<small>Your outfit and reinforcement carry across every suit.</small></span></div><nav class="catalog-filter" data-nav-group="gear-categories" aria-label="Equipment categories">${categories.map(([id,label])=>`<button class="${id==='armor'?'selected':''}" data-action="filter" data-value="${id}" aria-pressed="${id==='armor'}">${label}</button>`).join('')}</nav><div class="wardrobe-layout"><div class="inventory-grid modern-inventory-grid wardrobe-catalog" data-nav-group="gear-cards"><section class="wardrobe-group"><div class="wardrobe-group-heading"><h4>Your armor</h4><span>${owned.length}</span></div><div class="wardrobe-cards">${owned.length?owned.map(item=>this.armorWardrobeCard(item)).join(''):'<p class="empty-state">Your '+escape(outfitName(p))+' outfit is ready for the road. Recover armor or follow a suit’s clue to add it here.</p>'}</div></section>${discover.length?`<section class="wardrobe-group"><div class="wardrobe-group-heading"><h4>Suits to discover</h4><span>${discover.length}</span></div><div class="wardrobe-cards">${discover.map(item=>this.armorWardrobeCard(item)).join('')}</div></section>`:''}</div><aside class="wardrobe-detail" aria-label="Selected armor preview and comparison">${current?this.armorWardrobeDetail(current):'<p class="empty-state">Explore to discover your first suit.</p>'}</aside></div><p class="small-note wardrobe-footer">Select a suit to preview it. Each hero keeps their own armor; inspecting a locked suit never equips it.</p></div>`;
+    const categoriesNav='<nav class="catalog-filter" data-nav-group="gear-categories" aria-label="Equipment categories">'+categories.map(([id,label])=>'<button class="'+(id==='armor'?'selected':'')+'" data-action="filter" data-value="'+id+'" aria-pressed="'+(id==='armor')+'">'+label+'</button>').join('')+'</nav>';
+    const collection=(label,group)=>group.length?'<section class="wardrobe-group"><h4>'+label+'</h4><div class="wardrobe-cards">'+group.map(item=>this.armorWardrobeCard(item)).join('')+'</div></section>':'';
+    return '<div class="modern-equipment armor-wardrobe">'+this.playerTabs()+categoriesNav+'<div class="wardrobe-layout"><div class="inventory-grid modern-inventory-grid wardrobe-catalog" data-nav-group="gear-cards">'+collection('Your suits',owned)+collection('To discover',discover)+'</div><aside class="wardrobe-detail" aria-label="Selected suit">'+(current?this.armorWardrobeDetail(current):'')+'</aside></div></div>';
   };
+
+
   U.inventoryMenu=function(shop){return !shop&&this.filter==='armor'?this.armorWardrobeMenu():inventoryMenu.apply(this,arguments);};
   const click=U.click;
   U.click=function(event){
     const button=event.target?.closest?.('button[data-action]'),action=button?.dataset.action,id=button?.dataset.value;
+    if(this.menu==='inventory'&&this.filter==='armor'&&action==='wardrobe-compare'&&id===this.itemId){
+      this.wardrobeCompare=this.wardrobeCompare===id?null:id;
+      this.sound();this.render();
+      const target=this.focusableControls().find(b=>b.dataset.action==='wardrobe-compare'&&b.dataset.value===id);
+      if(target)this.setControllerFocus(target,this.activeController||0);
+      return;
+    }
+    if(this.menu==='inventory'&&(action==='filter'||action==='item'&&id!==this.itemId))this.wardrobeCompare=null;
     const preserve=this.menu==='inventory'&&this.filter==='armor'&&id===this.itemId&&['item','equip'].includes(action),top=preserve?this.host.querySelector?.('.wardrobe-detail')?.scrollTop||0:0;
     const result=click.call(this,event);
     if(preserve&&this.menu==='inventory'&&this.filter==='armor'&&this.itemId===id){const detail=this.host.querySelector?.('.wardrobe-detail');if(detail)detail.scrollTop=top;}
     return result;
+  };
+  const handlePad=U.handlePad;
+  U.handlePad=function(action,owner){
+    if(this.menu==='inventory'&&this.filter==='armor'&&this.wardrobeCompare&&action==='back'){
+      this.wardrobeCompare=null;this.render();
+      this.setControllerFocus(this.focusableControls().find(b=>b.dataset.action==='wardrobe-compare'),owner||0);
+      return;
+    }
+    return handlePad.apply(this,arguments);
   };
 }());

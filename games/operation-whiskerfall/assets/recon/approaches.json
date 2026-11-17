@@ -1,0 +1,502 @@
+[
+  {
+    "key": "approach-archive",
+    "path": "assets/recon/approach-archive.webp",
+    "source": "Original ImageGen gouache exterior atlas exec-b0a1f297-119c-4e2d-a743-accbad9128cc",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      10,
+      8,
+      502,
+      504
+    ],
+    "size": [
+      430,
+      432
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "animation": "Static landmark with in-world animated approach cues",
+    "consumer": "Renderer.drawObject in js/world/dungeon-approaches.js"
+  },
+  {
+    "key": "approach-spire",
+    "path": "assets/recon/approach-spire.webp",
+    "source": "Original ImageGen gouache exterior atlas exec-b0a1f297-119c-4e2d-a743-accbad9128cc",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      512,
+      5,
+      462,
+      500
+    ],
+    "size": [
+      399,
+      432
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "animation": "Static landmark with in-world animated approach cues",
+    "consumer": "Renderer.drawObject in js/world/dungeon-approaches.js"
+  },
+  {
+    "key": "approach-court",
+    "path": "assets/recon/approach-court.webp",
+    "source": "Original ImageGen gouache exterior atlas exec-b0a1f297-119c-4e2d-a743-accbad9128cc",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      1033,
+      9,
+      494,
+      503
+    ],
+    "size": [
+      424,
+      432
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "animation": "Static landmark with in-world animated approach cues",
+    "consumer": "Renderer.drawObject in js/world/dungeon-approaches.js"
+  },
+  {
+    "key": "approach-depot",
+    "path": "assets/recon/approach-depot.webp",
+    "source": "Original ImageGen gouache exterior atlas exec-b0a1f297-119c-4e2d-a743-accbad9128cc",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      8,
+      512,
+      492,
+      502
+    ],
+    "size": [
+      423,
+      432
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "animation": "Static landmark with in-world animated approach cues",
+    "consumer": "Renderer.drawObject in js/world/dungeon-approaches.js"
+  },
+  {
+    "key": "approach-cistern",
+    "path": "assets/recon/approach-cistern.webp",
+    "source": "Original ImageGen gouache exterior atlas exec-b0a1f297-119c-4e2d-a743-accbad9128cc",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      516,
+      523,
+      493,
+      488
+    ],
+    "size": [
+      432,
+      428
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "animation": "Static landmark with in-world animated approach cues",
+    "consumer": "Renderer.drawObject in js/world/dungeon-approaches.js"
+  },
+  {
+    "key": "approach-vault",
+    "path": "assets/recon/approach-vault.webp",
+    "source": "Original ImageGen gouache exterior atlas exec-b0a1f297-119c-4e2d-a743-accbad9128cc",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      1029,
+      512,
+      500,
+      488
+    ],
+    "size": [
+      432,
+      422
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "animation": "Static landmark with in-world animated approach cues",
+    "consumer": "Renderer.drawObject in js/world/dungeon-approaches.js"
+  },
+  {
+    "key": "approach-burrow",
+    "path": "assets/recon/approach-burrow.webp",
+    "source": "Original ImageGen gouache exterior atlas exec-36eae0d5-7a02-456e-8ef3-047107319c01",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      3,
+      89,
+      438,
+      342
+    ],
+    "size": [
+      432,
+      337
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "animation": "Static landmark with in-world animated approach cues",
+    "consumer": "Renderer.drawObject in js/world/dungeon-approaches.js"
+  },
+  {
+    "key": "approach-moss",
+    "path": "assets/recon/approach-moss.webp",
+    "source": "Original ImageGen gouache exterior atlas exec-36eae0d5-7a02-456e-8ef3-047107319c01",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      445,
+      5,
+      437,
+      429
+    ],
+    "size": [
+      432,
+      424
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "animation": "Static landmark with in-world animated approach cues",
+    "consumer": "Renderer.drawObject in js/world/dungeon-approaches.js"
+  },
+  {
+    "key": "approach-quarry",
+    "path": "assets/recon/approach-quarry.webp",
+    "source": "Original ImageGen gouache exterior atlas exec-36eae0d5-7a02-456e-8ef3-047107319c01",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      889,
+      47,
+      438,
+      378
+    ],
+    "size": [
+      432,
+      373
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "animation": "Static landmark with in-world animated approach cues",
+    "consumer": "Renderer.drawObject in js/world/dungeon-approaches.js"
+  },
+  {
+    "key": "approach-glacier",
+    "path": "assets/recon/approach-glacier.webp",
+    "source": "Original ImageGen gouache exterior atlas exec-36eae0d5-7a02-456e-8ef3-047107319c01",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      1332,
+      35,
+      442,
+      391
+    ],
+    "size": [
+      432,
+      382
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "animation": "Static landmark with in-world animated approach cues",
+    "consumer": "Renderer.drawObject in js/world/dungeon-approaches.js"
+  },
+  {
+    "key": "approach-dune",
+    "path": "assets/recon/approach-dune.webp",
+    "source": "Original ImageGen gouache exterior atlas exec-36eae0d5-7a02-456e-8ef3-047107319c01",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      2,
+      478,
+      438,
+      381
+    ],
+    "size": [
+      432,
+      376
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "animation": "Static landmark with in-world animated approach cues",
+    "consumer": "Renderer.drawObject in js/world/dungeon-approaches.js"
+  },
+  {
+    "key": "approach-delta",
+    "path": "assets/recon/approach-delta.webp",
+    "source": "Original ImageGen gouache exterior atlas exec-36eae0d5-7a02-456e-8ef3-047107319c01",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      445,
+      493,
+      440,
+      373
+    ],
+    "size": [
+      432,
+      366
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "animation": "Static landmark with in-world animated approach cues",
+    "consumer": "Renderer.drawObject in js/world/dungeon-approaches.js"
+  },
+  {
+    "key": "approach-furnace",
+    "path": "assets/recon/approach-furnace.webp",
+    "source": "Original ImageGen gouache exterior atlas exec-36eae0d5-7a02-456e-8ef3-047107319c01",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      888,
+      467,
+      442,
+      387
+    ],
+    "size": [
+      432,
+      378
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "animation": "Static landmark with in-world animated approach cues",
+    "consumer": "Renderer.drawObject in js/world/dungeon-approaches.js"
+  },
+  {
+    "key": "approach-bastion",
+    "path": "assets/recon/approach-bastion.webp",
+    "source": "Original ImageGen gouache exterior atlas exec-36eae0d5-7a02-456e-8ef3-047107319c01",
+    "sourceSize": [
+      1774,
+      887
+    ],
+    "sourceCrop": [
+      1334,
+      472,
+      440,
+      379
+    ],
+    "size": [
+      432,
+      372
+    ],
+    "anchor": [
+      0.5,
+      0.92
+    ],
+    "animation": "Static landmark with in-world animated approach cues",
+    "consumer": "Renderer.drawObject in js/world/dungeon-approaches.js"
+  },
+  {
+    "key": "ground-archive",
+    "path": "assets/recon/ground-archive.webp",
+    "source": "Original ImageGen overhead natural ground atlas exec-2c82c73e-b69a-4c93-a685-a17076d9d855",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      1,
+      1,
+      510,
+      510
+    ],
+    "size": [
+      384,
+      384
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "Alternating mirrored terrain and feathered apron",
+    "consumer": "Renderer.terrainChunk and dungeon approach foreground"
+  },
+  {
+    "key": "ground-spire",
+    "path": "assets/recon/ground-spire.webp",
+    "source": "Original ImageGen overhead natural ground atlas exec-2c82c73e-b69a-4c93-a685-a17076d9d855",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      513,
+      1,
+      510,
+      510
+    ],
+    "size": [
+      384,
+      384
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "Alternating mirrored terrain and feathered apron",
+    "consumer": "Renderer.terrainChunk and dungeon approach foreground"
+  },
+  {
+    "key": "ground-court",
+    "path": "assets/recon/ground-court.webp",
+    "source": "Original ImageGen overhead natural ground atlas exec-2c82c73e-b69a-4c93-a685-a17076d9d855",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      1025,
+      1,
+      510,
+      510
+    ],
+    "size": [
+      384,
+      384
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "Alternating mirrored terrain and feathered apron",
+    "consumer": "Renderer.terrainChunk and dungeon approach foreground"
+  },
+  {
+    "key": "ground-depot",
+    "path": "assets/recon/ground-depot.webp",
+    "source": "Original ImageGen overhead natural ground atlas exec-2c82c73e-b69a-4c93-a685-a17076d9d855",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      1,
+      513,
+      510,
+      510
+    ],
+    "size": [
+      384,
+      384
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "Alternating mirrored terrain and feathered apron",
+    "consumer": "Renderer.terrainChunk and dungeon approach foreground"
+  },
+  {
+    "key": "ground-cistern",
+    "path": "assets/recon/ground-cistern.webp",
+    "source": "Original ImageGen overhead natural ground atlas exec-2c82c73e-b69a-4c93-a685-a17076d9d855",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      513,
+      513,
+      510,
+      510
+    ],
+    "size": [
+      384,
+      384
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "Alternating mirrored terrain and feathered apron",
+    "consumer": "Renderer.terrainChunk and dungeon approach foreground"
+  },
+  {
+    "key": "ground-vault",
+    "path": "assets/recon/ground-vault.webp",
+    "source": "Original ImageGen overhead natural ground atlas exec-2c82c73e-b69a-4c93-a685-a17076d9d855",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "sourceCrop": [
+      1025,
+      513,
+      510,
+      510
+    ],
+    "size": [
+      384,
+      384
+    ],
+    "anchor": [
+      0,
+      0
+    ],
+    "animation": "Alternating mirrored terrain and feathered apron",
+    "consumer": "Renderer.terrainChunk and dungeon approach foreground"
+  }
+]
