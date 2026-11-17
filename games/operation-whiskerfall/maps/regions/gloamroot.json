@@ -348,6 +348,30 @@
       "region": 12,
       "boss": false,
       "patrol": 5.6000000000000005
+    },
+    {
+      "id": "trail_recon_court_0",
+      "type": 57,
+      "x": 26275,
+      "y": 12285,
+      "homeX": 26275,
+      "homeY": 12285,
+      "level": 17,
+      "region": 12,
+      "boss": false,
+      "patrol": 6.283185307179586
+    },
+    {
+      "id": "trail_recon_court_1",
+      "type": 58,
+      "x": 26275,
+      "y": 12376,
+      "homeX": 26275,
+      "homeY": 12376,
+      "level": 17,
+      "region": 12,
+      "boss": false,
+      "patrol": 6.283185307179586
     }
   ],
   "objects": [

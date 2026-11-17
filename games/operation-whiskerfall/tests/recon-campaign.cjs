@@ -32,6 +32,10 @@ const {chromium} = require('playwright');
       const g=OW.game,Q=OW.Recon,checks=[];
       function check(condition,message){if(!condition)throw Error(message);checks.push(message);}
       function place(p){g.players.forEach((hero,i)=>{hero.x=p.x+i*32;hero.y=p.y;});}
+      function finishComic(title){
+        check(g.comic?.book.title===title,'read '+title);
+        while(g.comic)document.querySelector('.comic-reader .primary').click();
+      }
       // Path search sweeps the same hero disk used by field movement across every
       // cell boundary. Relocation below isolates interact/save logic from input.
       function walk(grid,site,key,open,shortcut){
@@ -95,6 +99,10 @@ const {chromium} = require('playwright');
           for(const guard of job===2?[q.target+'_commander']:loc.enemyIds){
             if(world.dead.has(guard))continue;
             const enemy=world._active.get(guard)||world._dormant.get(guard)||world._createEnemy(world._spawns.get(guard));
+            if(enemy.boss){
+              g.updateAdvancedEnemy(enemy,p,OW.Content.bosses[region],1/60);
+              finishComic(enemy.name);
+            }
             g.killEnemy(enemy,p);
           }
           g.updateLocations(.1);g.checkQuests();check(g.questProgress(q).readyForTurnIn,'regional field objective '+id);
@@ -145,6 +153,8 @@ const {chromium} = require('playwright');
           check(g.reconDossier.evidence[op.id]?.route===route,'confirmed '+route+' · '+op.title);
         }
         const prev=p.materials;check(g.fileReconDebrief()&&!g.fileReconDebrief()&&p.materials===prev+12,'one debrief reward · '+op.title);
+        const act=Q.next(g)?.act;
+        if(act && act!==op.act)finishComic('Act '+(act===2?'II':'III')+' · '+Q.book.acts[act-1]);
         if(src){place(src.id==='recon_vault'?Q.cell(g.world.reconSite,'K'):g.world.start);g.interact(p);check(!g.world.isDungeon,'surface extraction · '+src.name);}
         check(g.reconDossier.filed.length===idx+1,'file order · '+op.title);
       }
@@ -158,6 +168,7 @@ const {chromium} = require('playwright');
       const boss=g.world._createEnemy(g.world._spawns.get('boss_berlin_commander'));
       place({x:boss.x,y:boss.y+80});g.camera.x=boss.x;g.camera.y=boss.y;
       boss.hp=boss.maxHp*.65;
+      g.updateAdvancedEnemy(boss,p,OW.Content.bosses[8],.04);finishComic(boss.name);
       for(let n=0;n<24;n++)g.updateAdvancedEnemy(boss,p,OW.Content.bosses[8],.04);
       check(OW.ReconCombat.record(boss)?.intelSpent===true,'observed document code silences first phase-two relay');
       g.killEnemy(boss,p);

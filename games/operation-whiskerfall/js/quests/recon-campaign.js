@@ -130,9 +130,13 @@
   G.fileReconDebrief=function(){
     const d=this.reconDossier,op=next(this);if(!op||!d.evidence[op.id]||d.filed.includes(op.id)||optional(this))return false;
     d.filed.push(op.id);d.pinned=true;d.route='observed';
+    const nextAct=next(this)?.act;
+    if(nextAct && nextAct!==op.act)this.questCounters['comic:pending-act']=nextAct;
     if(op.id==='cinder_manifest')surface(this).opened.add('ironveil_rail_pass');
     for(const p of [...this.players,this.reservePlayer].filter(Boolean)){p.gold+=160;p.materials=(p.materials||0)+12;p.cores=(p.cores||0)+1;}
-    this.ui.toast(op.contact+' · '+op.result,'quest');this.audio.play('quest');this.pinRecon();this.save(false);return true;
+    this.ui.toast(op.contact+' · '+op.result,'quest');this.audio.play('quest');this.pinRecon();this.save(false);
+    if(nextAct!==op.act)this.playActBreak?.();
+    return true;
   };
   G.reconTarget=function(){
     const w=this.world,op=operation(this),run=this.reconDossier?.run,c=currentChallenge(this);

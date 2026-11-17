@@ -1,5 +1,11 @@
 # MeowQuest the Purr’d Reich
 
+Choose **New Game** for the four-panel orchard dispatch and Saffron’s training yard. Advance the comic with Enter or A, or skip with Escape or B. Either partner can finish a drill. The open gate returns the party to Willow with the orchard stile marked. **Continue** resumes a saved panel or drill. Earlier campaigns resume in the field.
+
+Ask a town contact for witness reports about the Gallows Bell Rat and Seam Ripper. Approach a commander’s stronghold or enter a guardian chamber to hear the local account before the fight. Against the Bell Rat, get inside the ringing circle. Against the Ripper, leave the stitched lane and close in after its jaws snap shut. A rat that sees you outside town can follow you onto the streets. Break sight or defeat it to reopen town services.
+
+Combat performance is a release requirement. The matched browser comparison and the checks for input, collision, timing and warnings are recorded in the [opening performance report](documentation/opening-performance.md).
+
 ## Play the fieldwork expansion
 
 Open **index.html**. Both local players can use controllers. From a safe town, open **Camp → Town activities & coach routes** for the five venues or the Copper Minnow in Crownrest. At the bay, race the fisherman or a friend by catch count. At Mossbell, take a seat at the lantern board. The Copper Minnow has a walkable taproom, five-card draw at three stakes, darts and local conversations. Mastery awards give the wearer equipment with an actual field effect. [Activities](documentation/town-activities.md) · [Tavern](documentation/copper-minnow.md) · [Equipment and chambers](documentation/chambers-and-mastery.md)

@@ -173,8 +173,9 @@
   const drawActor=R.drawActor;
   R.drawActor=function(e,player,...rest){
     const result=drawActor.call(this,e,player,...rest);
-    if(!player && e.hp>0 && (e.reconRelay || ((e.bossIndex===8 || W.Content.enemies[e.type]?.reconRole) && e.combatState==='recovery'))){
-      this.worldLabel(e.reconRelay?'BREAK RELAY · CANCEL SWEEP':'EXPOSED',e.x,e.y+20,e.reconRelay?'#fbd875':'#b6f2c9',10);
+    if(!player && e.hp>0 && (e.reconRelay || ((Number.isInteger(e.bossIndex) || W.Content.enemies[e.type]?.reconRole) && e.combatState==='recovery'))){
+      const label=e.dynamo?'BREAK DYNAMO · CUT POWER':e.reconRelay?'BREAK RELAY · CANCEL SWEEP':'EXPOSED';
+      this.worldLabel(label,e.x,e.y+20,e.reconRelay?'#fbd875':'#b6f2c9',10);
     }
     return result;
   };

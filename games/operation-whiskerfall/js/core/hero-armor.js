@@ -46,7 +46,7 @@
   };
   const damagePlayer=G.damagePlayer;G.damagePlayer=function(p,amount,source){
     if(!active(this,p))return damagePlayer.call(this,p,amount,source);
-    const s=state(p),eligible=p.invuln<=0&&!(p.smokeTime>0)&&!this.safeZoneAt(p.x,p.y),hp=p.hp;
+    const s=state(p),eligible=p.invuln<=0&&!(p.smokeTime>0)&&!this.townProtects(p,source),hp=p.hp;
     const guarded=eligible&&s.style==='bastion'&&s.brace>=.35&&!(p.meleeCommit>0)&&!(p.dodgeTime>0)&&source&&Math.hypot(source.x-p.x,source.y-p.y)>.001&&Math.abs(W.wrapAngle(Math.atan2(source.y-p.y,source.x-p.x)-(p.angle||0)))<=Math.PI*.39;
     if(guarded)amount*=.7;
     if(eligible&&s.style==='spellweaver'&&s.wardUntil>this.time&&s.wardHp>0){const absorbed=Math.min(s.wardHp,amount);s.wardHp-=absorbed;amount-=absorbed;this.effect('shockwave',p.x,p.y,45,.2,{color:'#d8b8ff'});if(amount<=0)return;}

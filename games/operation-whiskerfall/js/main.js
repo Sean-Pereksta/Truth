@@ -19,7 +19,7 @@
       this.particlePool=new W.Pool(W.config.maxParticles);
       this.projectiles=this.bulletPool.items; this.effects=this.effectPool.items; this.particles=this.particlePool.items;
       this.grid=new W.SpatialGrid(180); this.drops=[]; this.allies=[]; this.itemReveals=[]; this.pendingReward=null;
-      this.world=new W.World(W.config.seed); this.completedQuests=new Set(); this.acceptedQuests=new Set();
+      this.completedQuests=new Set(); this.acceptedQuests=new Set();
       this.questStats={kills:0,explored:new Set(),caches:new Set(),rescued:new Set(),convoys:new Set()};
       this.questCounters={}; this.kills=0; this.trackedQuest=null; this.marker=null;
       this.missionRuns={};this.missionCompleted=new Set();
@@ -33,6 +33,10 @@
       this.renderer.load().then(()=>{this.ready=true;document.body.classList.add('assets-ready');this.ui.update();}).catch(e=>{console.error(e);this.ready=true;this.ui.toast('Artwork could not load. Keep the assets folder beside index.html.','error');});
       requestAnimationFrame(t=>this.frame(t));
     }
+    // Title screens need the save ledger and artwork. A tool or menu that
+    // explicitly inspects the world before launch can still request one.
+    get world(){this.world=new W.World(W.config.seed);return this.world;}
+    set world(value){Object.defineProperty(this,'world',{value,writable:true,configurable:true,enumerable:true});}
     weapon(p) { return W.Content.weapons[p.weapon]||W.Content.weapons[0]; }
     blade(p) { return W.Content.melee[p.melee]||W.Content.melee[0]; }
     newPlayer(id,skin=0) {
@@ -90,8 +94,10 @@
       const active=this.state==='playing'&&!this.paused&&this.ready;
       this.renderer.updateRenderScale?.(deltaMs,active&&!document.hidden);
       if(active)this.update(dt);
-      if(this.state!=='menu'||this.ui.menu!=='main')this.renderer.draw(dt);
-      this.ui.update();
+      if(!this.comic){
+        if(this.state!=='menu'||this.ui.menu!=='main')this.renderer.draw(dt);
+        this.ui.update();
+      }
       requestAnimationFrame(n=>this.frame(n));
     }
     update(dt) {
@@ -100,7 +106,10 @@
       this.world.updateActive(this.players,dt,this);
       this.grid.clear(); for(const e of this.world.activeEnemies)if(alive(e))this.grid.insert(e);
       for(let i=0;i<this.players.length;i++)this.updatePlayer(this.players[i],this.input.forPlayer(i,this)||{},dt);
-      this.updateEnemies(dt);this.updateProjectiles(dt);this.updateEffects(dt);this.updateAllies(dt);this.updateDrops(dt);
+      if(this.comic)return;
+      this.updateEnemies(dt);
+      if(this.comic)return;
+      this.updateProjectiles(dt);this.updateEffects(dt);this.updateAllies(dt);this.updateDrops(dt);
       this.updateMissions(dt);this.updateLocations(dt);this.updateCamera(dt);this.audio.update(dt,this);
       this.questTime+=dt;if(this.questTime>.6){this.questTime=0;this.checkQuests();}
       this.autosaveTime+=dt;if(this.autosaveTime>25){this.autosaveTime=0;this.save(false);}
@@ -314,7 +323,7 @@
         for(let i=0;i<steps&&b.alive;i++){
           const oldX=b.x,oldY=b.y;b.x+=b.vx*dt/steps;b.y+=b.vy*dt/steps;b.travel=(b.travel||0)+Math.hypot(b.x-oldX,b.y-oldY);
           if(W.Dungeons?.hitProjectile(this,b,oldX,oldY)){b.alive=false;break;}
-          if(b.owner<0&&this.safeZoneAt(b.x,b.y)){b.alive=false;break;}
+          if(b.owner<0&&b.pursuitTarget==null&&this.safeZoneAt(b.x,b.y)){b.alive=false;break;}
           const blocked=this.world.isBlocked(b.x,b.y,2);
           if(blocked&&b.bounces>0&&b.life>0){if(this.world.isBlocked(b.x,oldY,2))b.vx=-b.vx;else b.vy=-b.vy;b.x=oldX;b.y=oldY;b.bounces--;this.effect('impact',b.x,b.y,13,.18);continue;}
           if(b.life<=0||b.x<0||b.y<0||b.x>this.world.width||b.y>this.world.height||blocked){
@@ -407,7 +416,7 @@
       if(/shield|bulwark/.test(role)&&p&&Math.abs(W.wrapAngle(Math.atan2(p.y-e.y,p.x-e.x)-e.angle))<.8)amount*=.38;
       const damage=Math.max(1,Math.round(amount));e.hp-=damage;e.hit=.14;e.lastHit=this.time;e.state='chase';e.alert=6;
       this.setAnim(e,'hurt');this.text((critical?'CRIT ':'')+damage,e.x,e.y-45,critical?'#ffd86b':'#fff4cf');
-      if(p){p.stats.damage+=damage;e.target=p.id;}this.audio.play('hit');
+      if(p){p.stats.damage+=damage;e.target=p.id;if(this.canPursueTown?.(e)&&!this.safeZoneAt(p.x,p.y))e.pursuitTarget=p.id;}this.audio.play('hit');
       if(e.hp<=0)this.killEnemy(e,p);else this.audio.vocal?.('mouse_hurt',e,this);
     }
     killEnemy(e,p) {
@@ -426,7 +435,7 @@
       if(e.boss){this.completeBoss(e);this.camera.shake=13;this.audio.play('quest');}
     }
     damagePlayer(p,amount,source) {
-      if(p.invuln>0||p.downed||p.smokeTime>0||this.safeZoneAt(p.x,p.y))return;
+      if(p.invuln>0||p.downed||p.smokeTime>0||this.townProtects(p,source))return;
       let reduction=clamp((p.armorBonus||0)+(p.skills.survival||0)*.025,0,.72);if(p.shieldTime>0)reduction=.85;
       if(p.perks?.fireResist&&(source?.kind==='flame'||source?.fire))amount*=.5;
       if(p.perks?.cinderproof&&(source?.kind==='flame'||source?.fire))amount*=.3;
@@ -474,12 +483,27 @@
         if(e.stun>0){e.anim='hurt';continue;}
         if(e.cityWatch&&this.updateCityWatch){this.updateCityWatch(e,spec,dt);continue;}
         const role=String(spec.role||spec.id||spec.name||'').toLowerCase().replace(/[ _-]/g,'');
+        if(this.updateTownPursuit?.(e,spec,dt))continue;
         const safe=this.safeZoneAt(e.x,e.y);
         if(safe){const a=Math.atan2(e.y-safe.y,e.x-safe.x);e.x=safe.x+Math.cos(a)*((safe.safeRadius||500)+45);e.y=safe.y+Math.sin(a)*((safe.safeRadius||500)+45);e.alert=0;e.specialMove=null;e.jumpHeight=0;}
-        if(this.updateAdvancedEnemy(e,null,spec,dt))continue;
+        if(this.updateAdvancedEnemy(e,null,spec,dt)){
+          if(e.pursuitTarget==null&&e.state==='attack'&&this.canPursueTown?.(e))this.rememberRatTarget(e);
+          continue;
+        }
         if(this.updateSpecialMove(e,null,dt))continue;
-        const escorts=Object.values(this.missionRuns).filter(r=>r.type==='escort'&&r.state==='active'&&r.hp>0);
-        let target=[...this.players,...escorts].filter(p=>!p.downed&&!(p.smokeTime>0)&&p.hp>0&&!this.safeZoneAt(p.x,p.y)).sort((a,b)=>dist(e,a)-dist(e,b))[0];if(!target){this.patrol(e,spec,dt);continue;}
+        let target=this.players[e.pursuitTarget];
+        if(!target||target.downed||target.hp<=0||target.smokeTime>0){
+          target=null;let nearest=Infinity;
+          for(const p of this.players){
+            if(p.downed||p.hp<=0||p.smokeTime>0||this.safeZoneAt(p.x,p.y))continue;
+            const d=dist(e,p);if(d<nearest){target=p;nearest=d;}
+          }
+          for(const id in this.missionRuns){
+            const escort=this.missionRuns[id];if(escort.type!=='escort'||escort.state!=='active'||escort.hp<=0||this.safeZoneAt(escort.x,escort.y))continue;
+            const d=dist(e,escort);if(d<nearest){target=escort;nearest=d;}
+          }
+        }
+        if(!target){this.patrol(e,spec,dt);continue;}
         if(e.bossIndex===8&&this.world.isFinalArena&&!this.world.isFinalArena(target.x,target.y)){this.patrol(e,spec,dt);continue;}
         const d=dist(e,target),sight=/sniper/.test(role)?1100:800;
         if(d>sight&&!e.alert&&!e.boss){this.patrol(e,spec,dt);continue;}
@@ -487,6 +511,8 @@
         const visible=this.lineOfSight(e,target);
         if(!visible&&e.alert<=0&&d>230){this.patrol(e,spec,dt);continue;}
         e.state='attack';e.alert=Math.max(e.alert,4);e.angle=Math.atan2(target.y-e.y,target.x-e.x);
+        if(visible && target.id!=null && this.players.includes(target) && this.canPursueTown?.(e))e.pursuitTarget=target.id;
+        if(spec.trailEnemy){this.updateTrailEnemy(e,target,spec,dt,visible);continue;}
         const knife=/knife|melee|duelist|leaper|fencer|blinkstalker|burrowrat|voidknight/.test(role);
         let speed=(spec.speed||95)*(e.boss?1.3:knife?1.7:1.45);
         if(e.chillTime>0)speed*=e.boss?.86:.6;
@@ -536,6 +562,8 @@
       }
     }
     patrol(e,spec,dt) {
+      e.pursuitTarget=null;
+      if(e.trailAction){e.trailAction=null;e.combatState=null;e.fireTimer=.42;}
       e.state=e.alert>0?'investigate':'patrol';
       if(!e.patrolTime||e.patrolTime<=0){const a=(Math.sin((e.homeX||e.x)*.01+this.time*.15)+1)*Math.PI;e.patrolX=(e.homeX||e.x)+Math.cos(a)*145;e.patrolY=(e.homeY||e.y)+Math.sin(a)*145;e.patrolTime=3+Math.random()*4;}
       e.patrolTime-=dt;const tx=e.state==='investigate'?e.investigateX:e.patrolX,ty=e.state==='investigate'?e.investigateY:e.patrolY;
@@ -546,7 +574,7 @@
       const angle=Math.atan2(target.y+(target.velocityY||0)*lead-e.y,target.x+(target.velocityX||0)*lead-e.x)+(Math.random()-.5)*spread;
       const count=kind==='flame'?3:1;
       for(let i=0;i<count;i++){const a=angle+(i-(count-1)/2)*.12;
-        this.bulletPool.take({x:e.x+Math.cos(a)*30,y:e.y+Math.sin(a)*30,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,life:kind==='flame'?.65:3,damage,owner:-1,kind,radius:kind==='flame'?17:kind==='rocket'?11:6,color:'#ff997a'});
+        this.bulletPool.take({x:e.x+Math.cos(a)*30,y:e.y+Math.sin(a)*30,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,life:kind==='flame'?.65:3,damage,owner:-1,pursuitTarget:e.pursuitTarget,kind,radius:kind==='flame'?17:kind==='rocket'?11:6,color:'#ff997a'});
       }
       this.effect('muzzle',e.x+Math.cos(angle)*33,e.y+Math.sin(angle)*33,18,.07,{angle});
     }
@@ -666,6 +694,7 @@
       }
     }
     safeZoneAt(x,y){return this.world.safeZoneAt(x,y);}
+    townProtects(player,source){return (source?.pursuitTarget==null||source.pursuitTarget!==player.id)&&this.safeZoneAt(player.x,player.y);}
     planRoll(e,angle,length,radius){
       const blocked=(x,y)=>this.world.isBlocked(x,y,radius)||this.safeZoneAt(x,y)||this.pointLocked(x,y);
       const steps=Math.max(1,Math.ceil(length/8)),stride=length/steps,segments=[];
@@ -759,7 +788,9 @@
       }
       if(!target||e.fireTimer>0||e.specialMove)return false;
       const d=dist(e,target),damage=this.enemyDamage(e,spec);
-      if(role==='roller'&&d<780){const angle=Math.atan2(target.y-e.y,target.x-e.x),course=this.planRoll(e,angle,clamp(d*2.2,1450,1850),23);
+      // The shipped roll spent 87% of the original course before recovery.
+      // Apply the shorter travel budget before tracing the warning and every bounce.
+      if(role==='roller'&&d<780){const angle=Math.atan2(target.y-e.y,target.x-e.x),course=this.planRoll(e,angle,clamp(d*2.2,1450,1850)*.87*.70,23);
         if(!course.length){e.fireTimer=.28;return false;}
         const length=course.reduce((sum,seg)=>sum+seg.length,0),windup=this.settings?.longWarnings?.78:.52;
         e.combatState='windup';e.rollAngle=angle;e.combatAction={kind:'roll',phase:'windup',timer:windup,windup,angle,length,damage,course,leg:0,traversed:0,hitRadius:45};this.setAnim(e,'windup');return true;}
@@ -1115,10 +1146,15 @@
       const r=this.world.regionAt(l.x,l.y);if(!this.questStats.explored.has(r.id)&&this.venueCoachDestination!==id){this.ui.toast('Discover this region on foot first.');return false;}
       this.players.forEach((p,i)=>{p.x=l.x+i*55;p.y=l.y+100;p.hp=p.maxHp;p.downed=false;p.invuln=2;});this.camera.x=l.x;this.camera.y=l.y;this.ui.hideMenu();this.ui.toast('Travelled to '+l.name);this.save(false);return true;}
     dynamicEvent(){
-      const p=this.players[0],r=this.world.regionAt(p.x,p.y);if(this.nearTown(p)||this.world.activeEnemies.length>120)return;
+      const w=this.world,p=this.players[0],r=w.regionAt(p.x,p.y);
+      if(w.isTutorial||w.isDungeon||this.players.some(hero=>w.quietApproach?.(hero.x,hero.y))||this.nearTown(p)||w.activeEnemies.length+2>(w.maxActiveEnemies||120))return;
       const a=Math.random()*Math.PI*2,x=clamp(p.x+Math.cos(a)*670,150,this.world.width-150),y=clamp(p.y+Math.sin(a)*670,150,this.world.height-150);
       const convoy=Math.random()>.5;
-      const count=r.index===0?2:r.index<3?3:4,pool=r.index===0?[20,36]:r.index<3?[38,39,24]:r.index<5?[37,42,36]:r.index<7?[40,41,37]:[43,42,40,18];
+      const count=2,pool=r.index===0?[20,36]:r.index<3?[38,39,24]:r.index<5?[37,42,36]:r.index<7?[40,41,37]:[43,42,40,18];
+      for(let i=0;i<count;i++){
+        const ex=x+i*85,ey=y+i*55;
+        if(w.quietApproach?.(ex,ey)||w.isBlocked(ex,ey,20)||this.pointLocked(ex,ey)||this.players.some(hero=>Math.hypot(ex-hero.x,ey-hero.y)<450)||w.activeEnemies.some(e=>alive(e)&&Math.hypot(ex-e.x,ey-e.y)<660))return;
+      }
       for(let i=0;i<count;i++){const ex=x+i*85,ey=y+i*55;if(this.world.isBlocked(ex,ey,20)||this.pointLocked(ex,ey)||this.safeZoneAt(ex,ey))continue;const e={id:'event-'+Math.floor(this.time)+'-'+i,x:ex,y:ey,homeX:ex,homeY:ey,type:pool[i%pool.length],level:r.level||1,region:r.id,angle:a+Math.PI,anim:'run',animTime:0,state:'investigate',alert:8,investigateX:p.x,investigateY:p.y,ephemeral:true};const s=W.Content.enemies[e.type];e.hp=e.maxHp=s.hp*(1+e.level*.12);if(this.world.addEnemy)this.world.addEnemy(e);else this.world.activeEnemies.push(e);}
       this.ui.toast(convoy?'A mouse supply patrol is nearby. Defeat it for ammunition and scrap.':'Resistance radio: enemy reinforcements on the road.','event');
       this.effect('text',x,y-45,0,4,{text:convoy?'SUPPLY PATROL':'REINFORCEMENTS',color:'#ffcf89'});

@@ -135,7 +135,7 @@
     return result;
   };
   const damage=G.damagePlayer;G.damagePlayer=function(p,amount,...args){if(p.invasionProxy){p.hp-=amount;return;}
-    if(p.resistanceEngineeringWardUntil>this.time&&p.resistanceEngineeringWardHp>0&&alive(p)&&!(p.invuln>0)&&!(p.smokeTime>0)&&!this.safeZoneAt(p.x,p.y)){const absorbed=Math.min(amount,p.resistanceEngineeringWardHp);p.resistanceEngineeringWardHp-=absorbed;amount-=absorbed;this.effect('shield',p.x,p.y,38,.25);if(amount<=0)return;}
+    if(p.resistanceEngineeringWardUntil>this.time&&p.resistanceEngineeringWardHp>0&&alive(p)&&!(p.invuln>0)&&!(p.smokeTime>0)&&!this.townProtects(p,args[0])){const absorbed=Math.min(amount,p.resistanceEngineeringWardHp);p.resistanceEngineeringWardHp-=absorbed;amount-=absorbed;this.effect('shield',p.x,p.y,38,.25);if(amount<=0)return;}
     return damage.call(this,p,amount,...args);
   };
   const allies=G.updateAllies;G.updateAllies=function(dt){if(this.paused)return;this.updateResistanceFinale();const special=this.allies.filter(a=>a.invasionId||a.finaleAlly);this.allies=this.allies.filter(a=>!a.invasionId&&!a.finaleAlly);allies.call(this,dt);this.allies.push(...special.filter(alive));

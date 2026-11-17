@@ -7,7 +7,7 @@ global.window = global;
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 for (const [,src] of html.matchAll(/<script defer src="([^"]+)"/g)) {
   if (src === 'config.js' || src.startsWith('data/') ||
-      ['js/world/world.js','js/world/resistance-camps.js','js/world/deep-enemies.js','js/world/resistance-fronts.js'].includes(src)) {
+      ['js/world/world.js','js/world/resistance-camps.js','js/world/deep-enemies.js','js/world/resistance-fronts.js','js/world/trail-patrols.js'].includes(src)) {
     require(path.join(root,src));
   }
 }

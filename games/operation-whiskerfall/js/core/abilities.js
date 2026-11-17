@@ -55,7 +55,7 @@
     return updatePlayer.call(this,p,input,dt);
   };
   const damagePlayer=G.damagePlayer;G.damagePlayer=function(p,amount,source){
-    if(!p.campProxy&&p.aegisTime>0&&p.aegisHp>0&&!p.downed&&p.invuln<=0&&p.smokeTime<=0&&!this.safeZoneAt(p.x,p.y)){const absorbed=Math.min(p.aegisHp,amount);p.aegisHp-=absorbed;amount-=absorbed;this.effect('impact',p.x,p.y,24,.2);if(p.aegisHp<=0)p.aegisTime=0;if(amount<=0)return;}
+    if(!p.campProxy&&p.aegisTime>0&&p.aegisHp>0&&!p.downed&&p.invuln<=0&&p.smokeTime<=0&&!this.townProtects(p,source)){const absorbed=Math.min(p.aegisHp,amount);p.aegisHp-=absorbed;amount-=absorbed;this.effect('impact',p.x,p.y,24,.2);if(p.aegisHp<=0)p.aegisTime=0;if(amount<=0)return;}
     return damagePlayer.call(this,p,amount,source);
   };
   const shoot=G.shoot;G.shoot=function(p,...args){const ammo=p.ammo,result=shoot.call(this,p,...args);if(p.overdriveTime>0&&p.ammo<ammo)p.fireTimer*=.55;return result;};

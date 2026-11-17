@@ -86,12 +86,12 @@ async function measure() {
       function stats(values) {
         const sorted = [...values].sort((a,b)=>a-b);
         const quantile = n => Number(sorted[Math.floor((sorted.length-1)*n)].toFixed(2));
-        return {median:quantile(.5), p95:quantile(.95), max:quantile(1)};
+        return {median:quantile(.5), p95:quantile(.95), p99:quantile(.99), max:quantile(1)};
       }
       return {width, height:innerHeight, mode, initialBacking, finalBacking:backing(), warmup, frames,
         point, roles, living:g.world.activeEnemies.filter(e=>e.hp>0).length,
         elapsedFrameMs:stats(intervals), submissionMs:stats(submissions), objects:stats(activity),
-        over34ms:intervals.filter(ms=>ms>34).length};
+        over33ms:intervals.filter(ms=>ms>33).length,over34ms:intervals.filter(ms=>ms>34).length};
     }, {width, mode});
     if (errors.length) throw Error(errors.join('\n'));
     console.log(JSON.stringify({browser:browser.version(), sample}));

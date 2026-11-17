@@ -31,7 +31,14 @@
     if (!registry.has(key)) return null;
     if (!cache.has(key)) {
       const im=new Image(); cache.set(key, null);
-      im.onload=()=>{cache.set(key,im); if(kind==='floor'||kind==='ground') W.game?.renderer?.chunks.clear();};
+      im.onload=()=>{
+        cache.set(key,im);
+        const renderer=W.game?.renderer;
+        if(renderer&&['surface','floor','ground'].includes(kind)){
+          renderer.terrainArtRevision=(renderer.terrainArtRevision||0)+1;
+          if(kind!=='surface')renderer.chunks.clear();
+        }
+      };
       im.src=url(key);
     }
     return cache.get(key);

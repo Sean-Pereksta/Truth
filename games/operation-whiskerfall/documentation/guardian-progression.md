@@ -1,6 +1,6 @@
 # Shorter Ironhide rolls and regional cave guardians
 
-Ordinary **Ironhide Roller** travel is reduced by **13%**: the previous 1,450–1,850 world-unit run becomes 1,261.5–1,609.5. Its speed, 0.52-second warning, ricochets, swept collision and 0.7-second dizzy recovery are unchanged. This adjustment does not shorten Gravelback's guardian rolls.
+The ordinary **Ironhide Roller** now travels 70% of its previous 1,261.5–1,609.5 world-unit budget. The entire predicted path, including ricochets, fits within 883.05–1,126.65 units. Walls can cut a roll short. The windup lasts 0.52 seconds on standard warnings, the roll travels at 900 units per second, and the dizzy recovery lasts 0.7 seconds. Gravelback uses the guardian’s own roll settings.
 
 Guardians now learn a new technique every two regions. Each begins its rotation with its basic attacks, then introduces the techniques available at that depth. All three health phases remain, with the existing phase-specific variations.
 

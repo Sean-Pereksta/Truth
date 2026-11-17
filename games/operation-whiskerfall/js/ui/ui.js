@@ -228,9 +228,12 @@
       const occupied=!OW.Save.slots()[this.slot].empty||storageStatus?.state==='error';if(this.mainTab==='new'&&occupied&&!force){this.confirmOverwrite=true;this.render();return;}
       if(this.mainTab==='continue'&&!OW.Save.read(this.slot)){this.toast('This campaign is unavailable. Your existing save has not been replaced.','error');this.render();return false;}
       this.sound();const pads=this.game.input?.connectedPads()||[],wantCoop=this.mainTab==='continue'?(OW.Save.read(this.slot)?.players?.length||1)>1:this.coop;
-      let started;try{started=this.game.start({slot:this.slot,coop:this.coop,character:this.character,load:this.mainTab==='continue'});}catch(error){console.error(error);started=false;}
+      let started;try{
+        const options={slot:this.slot,coop:this.coop,character:this.character};
+        started=this.mainTab==='continue'?this.game.start({...options,load:true}):this.game.beginCampaign(options);
+      }catch(error){console.error(error);started=false;}
       if(started===false){this.game.state='menu';this.game.paused=true;this.menu='main';this.isOpen=true;this.confirmOverwrite=false;this.render();this.game.input?.clear();this.toast('The campaign could not be opened. No new campaign was started.','error');return false;}
-      this.game.input?.padAssignments.clear();if(this.game.input)this.game.input.disconnectedPads=[];pads.slice(0,2).forEach((pad,i)=>this.game.input.padAssignments.set(pad.index,wantCoop&&pads.length===1&&this.game.input.lastKeyboard>=this.game.input.lastPadUse?1:Math.min(i,1)));this.isOpen=false;this.host.innerHTML='';this.confirmOverwrite=false;this.game.paused=false;this.game.input?.clear();document.getElementById('game').focus();return true;
+      this.game.input?.padAssignments.clear();if(this.game.input)this.game.input.disconnectedPads=[];pads.slice(0,2).forEach((pad,i)=>this.game.input.padAssignments.set(pad.index,wantCoop&&pads.length===1&&this.game.input.lastKeyboard>=this.game.input.lastPadUse?1:Math.min(i,1)));this.isOpen=false;this.host.innerHTML='';this.confirmOverwrite=false;this.game.paused=!!this.game.comic;this.game.input?.clear();(this.game.comic?.element||document.getElementById('game')).focus();return true;
     }
     click(e){
       const map=e.target.closest('#world-map');if(map){this.mapClick(e,map);return;}
@@ -396,8 +399,25 @@
         const card=player?this.playerCard(player,index):'';
         if(slot.lastCard!==card){slot.innerHTML=card;slot.lastCard=card;}
       }
-      const p=g.players?.[0];if(!p||!g.world)return;const heading=this.hudRegionInfo(p);document.getElementById('hud-region').textContent=heading.title;document.getElementById('hud-region-sub').textContent=heading.subtitle;this.hud.classList.toggle('dungeon-hud',!!g.world.isDungeon);
-      const q=OW.Content.quests.find(q=>q.id===g.trackedQuest)||OW.Content.quests.find(q=>{const s=this.questState(q);return q.main&&s.available&&!s.complete;});document.getElementById('hud-mission').textContent=q?((this.questState(q).complete?'✓ ':this.questState(q).accepted||g.acceptedQuests?.has(q.id)?'⌛ ':'')+q.title):'Explore the animal kingdoms';document.getElementById('hud-mission-kind').textContent=q?this.questTypeLabel(q):'Resistance dispatch';if(q){const s=this.questState(q),target=this.targetInfo(q);document.getElementById('hud-mission-progress').textContent=this.objectiveText(q);document.getElementById('hud-mission-target').innerHTML=target?`<strong>${escape(target.text)}</strong><span>${escape(target.label)}</span>`:'';document.getElementById('hud-mission-run').innerHTML=this.missionRunHTML(q);}else{document.getElementById('hud-mission-progress').textContent='Speak with a friendly cat to find missions, supplies, and a nearby forge.';document.getElementById('hud-mission-target').innerHTML='';document.getElementById('hud-mission-run').innerHTML='';}
+      const p=g.players?.[0];if(!p||!g.world)return;
+      const text=(id,value)=>{
+        const node=document.getElementById(id);
+        if(node.textContent!==value)node.textContent=value;
+      };
+      const html=(id,value)=>{
+        const node=document.getElementById(id);
+        if(node.innerHTML!==value)node.innerHTML=value;
+      };
+      const heading=this.hudRegionInfo(p);
+      text('hud-region',heading.title);text('hud-region-sub',heading.subtitle);
+      this.hud.classList.toggle('dungeon-hud',!!g.world.isDungeon);
+      const q=OW.Content.quests.find(q=>q.id===g.trackedQuest)||OW.Content.quests.find(q=>{const s=this.questState(q);return q.main&&s.available&&!s.complete;});
+      const state=q&&this.questState(q),target=q&&this.targetInfo(q);
+      text('hud-mission',q?((state.complete?'✓ ':state.accepted||g.acceptedQuests?.has(q.id)?'⌛ ':'')+q.title):'Explore the animal kingdoms');
+      text('hud-mission-kind',q?this.questTypeLabel(q):'Resistance dispatch');
+      text('hud-mission-progress',q?this.objectiveText(q):'Speak with a friendly cat to find missions, supplies, and a nearby forge.');
+      html('hud-mission-target',target?`<strong>${escape(target.text)}</strong><span>${escape(target.label)}</span>`:'');
+      html('hud-mission-run',q?this.missionRunHTML(q):'');
       this.updateQuestIndicator(g.trackedQuest&&q?.id===g.trackedQuest&&!this.questState(q).complete?q:null);
       const nearby=g.world.locations?.filter(l=>Math.hypot(l.x-p.x,l.y-p.y)<(l.type==='town'?210:l.type==='npc'?110:l.type==='forge'?170:(l.radius||80)+65)).sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))[0];let prompt=g.interactionPrompt||'';if(!prompt&&nearby){if(nearby.type==='bounty')prompt='E / B · Read all nine commander bounty posters';else if(nearby.type==='npc')prompt='E / B · Speak with '+(nearby.npc?.name||nearby.npc||nearby.name);else if(nearby.type==='forge')prompt='E / B · Enter the resistance forge';else if(nearby.type==='town')prompt='E / B · Rest, heal & browse resistance supplies';else if(nearby.type==='cache'&&!nearby.cleared)prompt='E / B · Open supply cache';else if(nearby.type==='cave'||nearby.type==='dungeon')prompt='E / B · Enter '+nearby.name;}if(g.players.some(other=>other!==p&&other.downed&&Math.hypot(other.x-p.x,other.y-p.y)<110))prompt='Hold E / B near your teammate to revive them';document.getElementById('interaction-prompt').textContent=prompt.replace(/E \/ B/g,this.game.input?.actionLabel?.(0,'interact')||'E / B');
       const minimap=document.getElementById('minimap-frame');minimap.style.display=g.settings.minimap===false?'none':'';if(g.settings.minimap!==false)this.drawMinimap();
