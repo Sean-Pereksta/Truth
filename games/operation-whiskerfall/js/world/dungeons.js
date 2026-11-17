@@ -218,7 +218,19 @@
   G.bossDefeated=function(l){return this.overworld?!!l&&(this.overworld.liberated.has(l.id)||this.overworld.dead.has(l.id+'_commander')):bossDefeated.call(this,l);};
   const snapshot=G.snapshot;
   G.snapshot=function(){checkpoint(this);const data=snapshot.call(this);data.dungeonStates=copy(this.dungeonStates||{});if(this.world.isDungeon){data.activeDungeon={id:this.world.entry.id,players:this.players.map(p=>({x:p.x,y:p.y})),marker:this.dungeonMarker};data.rewardDrops=(this.overworldDrops||[]).filter(d=>d.reward);data.world=this.overworld.exportState();data.players=this.players.map((p,i)=>({...p,...this.dungeonReturn[i]}));data.marker=this.dungeonMarker;data.missionEnemies=this.overworld.activeEnemies.filter(e=>e.missionTarget&&e.hp>0&&!e.dead).map(e=>({...e}));data.region=this.overworld.regionAt(this.world.entry.x,this.world.entry.y).name;}return data;};
-  const load=G.load;G.load=function(slot=0){const data=W.Save.read(slot);if(!data)return false;const previous={overworld:this.overworld,overworldDrops:this.overworldDrops,overworldAllies:this.overworldAllies,dungeonStates:this.dungeonStates};let ok;this.overworld=null;this.overworldDrops=[];this.overworldAllies=[];this.dungeonStates=data.dungeonStates||{};try{ok=load.call(this,slot);}finally{if(!ok)Object.assign(this,previous);}if(ok&&data.activeDungeon){const entry=this.world.getLocation(data.activeDungeon.id);if(entry)this.enterDungeon(entry,true,data.activeDungeon.players);}return ok;};
+  const load=G.load;G.load=function(slot=0){
+    const data=W.Save.read(slot);if(!data)return false;
+    const previous={overworld:this.overworld,overworldDrops:this.overworldDrops,overworldAllies:this.overworldAllies,dungeonStates:this.dungeonStates};
+    this.overworld=null;this.overworldDrops=[];this.overworldAllies=[];this.dungeonStates=data.dungeonStates||{};
+    let ok;try{ok=load.call(this,slot);}finally{if(!ok)Object.assign(this,previous);}
+    // A pre-opening record already stores each hero's return point in players.
+    // Resume there on its first Continue. Its chamber ledger stays intact.
+    if(ok&&data.activeDungeon&&data.opening){
+      const entry=this.world.getLocation(data.activeDungeon.id);
+      if(entry)this.enterDungeon(entry,true,data.activeDungeon.players);
+    }
+    return ok;
+  };
   const start=G.start;G.start=function(opts={}){if(opts.load)return start.call(this,opts);this.dungeonStates={};this.overworld=null;this.overworldDrops=[];this.overworldAllies=[];return start.call(this,opts);};
   const guardianPhase=e=>e.hp/e.maxHp<.35?3:e.hp/e.maxHp<.68?2:1;
   const guardianPatterns=[

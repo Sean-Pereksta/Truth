@@ -143,6 +143,11 @@
   for(const method of ['start','load','defeat','enterDungeon','leaveDungeon','fastTravel'])if(G[method]){
     const original=G[method];G[method]=function(...args){const before=this.world,result=original.apply(this,args);if(method==='start'||method==='load'&&result||result||before!==this.world)this.clearCinderMortars();return result;};
   }
+  function shellBody(c,scale){
+    c.shadowColor='#ffb852';c.shadowBlur=15*scale;c.fillStyle='#a14e25';c.strokeStyle='#ffdc8f';
+    c.lineWidth=2;c.beginPath();c.ellipse(0,0,10,15,0,0,TAU);c.fill();c.stroke();
+    c.shadowBlur=0;c.fillStyle='#f6c66b';c.fillRect(-10,-4,20,5);
+  }
   const drawEffect=R.drawEffect;
   R.drawEffect=function(e,front=false){
     if(!['cinderMark','cinderShell','cinderCrater','cinderBurst'].includes(e.type))return drawEffect.call(this,e,front);
@@ -155,7 +160,17 @@
     }
     if(e.type==='cinderShell'){
       c.save();if(!front){c.fillStyle='rgba(34,20,21,.3)';c.beginPath();c.ellipse(e.x,e.y,12,6,0,0,TAU);c.fill();c.restore();return;}
-      c.translate(e.x,e.y-(e.height||0));c.rotate((e.age||0)*10);c.shadowColor='#ffb852';c.shadowBlur=15;c.fillStyle='#a14e25';c.strokeStyle='#ffdc8f';c.lineWidth=2;c.beginPath();c.ellipse(0,0,10,15,0,0,TAU);c.fill();c.stroke();c.shadowBlur=0;c.fillStyle='#f6c66b';c.fillRect(-10,-4,20,5);c.fillStyle='#fff1b5';c.beginPath();c.arc(0,-15,4+Math.sin(clock*28),0,TAU);c.fill();c.restore();return;
+      c.translate(e.x,e.y-(e.height||0));c.rotate((e.age||0)*10);
+      const backing=Math.max(1,Math.ceil(this.dpr||1));
+      if(typeof OffscreenCanvas!=='undefined'){
+        if(this.shellBacking!==backing){
+          const tile=new OffscreenCanvas(88*backing,88*backing),paint=tile.getContext('2d');
+          paint.scale(backing,backing);paint.translate(44,44);shellBody(paint,backing);
+          this.shellPainting?.close();this.shellPainting=tile.transferToImageBitmap();this.shellBacking=backing;
+        }
+        c.drawImage(this.shellPainting,-44,-44,88,88);
+      }else shellBody(c,1);
+      c.fillStyle='#fff1b5';c.beginPath();c.arc(0,-15,4+Math.sin(clock*28),0,TAU);c.fill();c.restore();return;
     }
     if(e.type==='cinderCrater'){
       c.save();c.globalAlpha=Math.min(1,e.life/.4);

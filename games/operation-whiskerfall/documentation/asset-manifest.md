@@ -142,3 +142,9 @@ The new WebP exports live in `assets/recon/`. The **Reconnaissance** collection 
 Regional images load on first use. The dungeon terrain cache rebuilds when a painting becomes available, a crossing changes or a shortcut opens. Collision is independent from the artwork. The living title and camp present the same original painting with an animated firelight layer.
 
 Eight painted emblems identify the camp destinations, and three illustrated station tabs identify the forge actions. Packed gravel, trail earth, limestone cobbles and slate form repeating surfaces for streets and settlements. Their runtime keys and source crops are in `paintings.json`. The forge tab images are in `gear-atlas.json`. Each new outdoor survey station has a documented effect inside its dungeon. [Dungeon approach guide](dungeon-approaches.md)
+
+## The orchard dispatch and trail patrols
+
+The four original panels in `assets/comics/orchard-dispatch.webp` use Willow’s existing arrival painting as the style reference. The art brief called for a courier disappearing in the apple rows, Saffron finding the dispatch, the torn map marked at the orchard stile, and Saffron raising a lantern at the training gate. Captions and controls are set separately so the writing stays legible as the screen size changes.
+
+The two enemy paintings were generated with OpenAI ImageGen for this game. The Gallows Bell Rat carries a cracked bronze bell under a tall wooden frame. The Seam Ripper runs low on springlike hind legs with a scissor jaw and a striped scarf. Their transparent WebP files in `assets/enemies/` appear in the field and in witness reports. Act breaks and commander reports use the campaign’s existing approach paintings, chapter plates and commander portraits.

@@ -128,6 +128,8 @@
       const tone=(f,d,v,type='sine',delay=0,end)=>this._tone(f,d,v,type,t+delay,pan,name==='ui'?this.uiBus:this.sfxBus,end);
       const noise=(d,v,c=1500,delay=0,hp=40)=>this._noise(d,v,c,t+delay,pan,this.sfxBus,hp);
       switch(name){
+        case 'crackedBell':tone(121,.60,.17,'sine',0,113);tone(306,.46,.09,'sine',.025,280);tone(489,.24,.045,'triangle');break;
+        case 'shearClick':noise(.045,.19,3500,0,900);noise(.05,.18,4200,.14,900);tone(710,.08,.06,'triangle',.14,155);break;
         case 'shoot':case 'pistol':tone(160,.085,.14,'triangle',0,48);noise(.095,.2,3300);break;
         case 'rifle':case 'smg':case 'lmg':tone(name==='lmg'?105:185,.07,.13,'triangle',0,40);noise(.08,.18,4700);break;
         case 'sniper':tone(95,.22,.23,'triangle',0,30);noise(.2,.31,6500);break;

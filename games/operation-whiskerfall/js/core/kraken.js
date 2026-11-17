@@ -46,6 +46,8 @@
       }
       e.krakenPose=3;
     }else return false;
+    const pace=this.settings?.longWarnings?1.35:phase===3?.8:phase===2?.92:1;
+    for(const event of events)event.at*=pace;
     const duration=Math.max(...events.map(v=>v.at+(v.kind==='ring'?1.35:0)))+.25;
     e.krakenAction={kind,elapsed:0,duration,events:events.map(v=>({...v,fired:false}))};e.lastAttack=kind;e.krakenRecovery=0;e.anim='windup';
     for(const event of events)if(!tell(this,e,event)){this.clearKrakenThreats(e);return false;}

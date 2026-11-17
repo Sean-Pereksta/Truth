@@ -66,6 +66,22 @@
   function extendWorld(w,scale){
     // Complete shipped generation before appending geography. Missions in old saves
     // can refer to any original spawn, scenery coordinate or numeric location index.
+    // These scouts flank the original posts without joining their clearance ledgers.
+    // Place them before the later trails check spacing against existing patrols.
+    const rosters=[
+      [0,'hookclaw_skirmisher','rivet_guard'],[2,'rivet_guard','signal_sergeant'],
+      [4,'glasswind_sharpshot','hookclaw_skirmisher'],[5,'sluice_warden','lantern_stalker'],
+      [6,'signal_sergeant','glasswind_sharpshot'],[7,'lantern_stalker','rivet_guard']
+    ];
+    for(const [region,...pair] of rosters){
+      const post=Array.from(w._spawns.values()).find(spawn=>spawn.id.startsWith('patrol_'+region+'_') && !spawn.boss);
+      if(!post)continue;
+      pair.forEach((id,i)=>{
+        const x=post.x+(i?85:-85),y=post.y+72;
+        w._spawn({id:'recon_patrol_'+region+'_'+i,type:C.reconEnemyTypes[id],x,y,homeX:x,homeY:y,
+          level:post.level,patrol:i*Math.PI,region,locationId:null,boss:false});
+      });
+    }
     const added=C.regions.filter(r=>r.reconRegion);
     w.regions.push(...added.map(r=>({...r})));
     w.width=Math.max(w.width,...added.map(r=>r.x+r.w));w.height=Math.max(w.height,...added.map(r=>r.y+r.h));

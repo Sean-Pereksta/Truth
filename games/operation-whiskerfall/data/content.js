@@ -82,14 +82,14 @@
   ];
   const bosses = bossRows.map((r,i)=>({id:r[0],name:r[1],pattern:r[2],hp:r[3],damage:r[4],speed:r[5],color:r[6],range:570,fireRate:.8,xp:240+i*130,level:4+i*3,phases:3}));
   const bossHints=[
-    ['Sidestep the marked charge line, then punish the recovery.','Rifle fans and marked artillery alternate with a ground slam.','In the third phase the charge chains into a return charge.'],
-    ['Bramble leaps to a new firing position and marks delayed sniper shots.','Artillery lanes are backed by summoned scouts and wire hunters.','Watch for a teleport followed by a spreading rifle fan.'],
-    ['Move out of the marked ground slam before Flintfang lands.','Seismic rings expand around the battery; leave a clear path between marks.','Full-circle bullets alternate with a line of delayed shells.'],
-    ['Find gaps in the full-circle ice fan while Whiteclaw skates aside.','Marked frost patches become slowing ground.','An aimed slam is followed by a narrower ice fan.'],
-    ['Dodge across the charge direction and keep clear of the marked sand strikes.','A rocket fan covers Sirocco’s sideways skate.','The final phase adds a leap to the surrounding artillery pattern.'],
-    ['Leave marked poison circles before Miretooth leaps toward you.','A line of venom patches is backed by spreading rifle fire.','A teleport to the floodgate is followed by reinforcements.'],
-    ['Geargnash shields up, deploys a turret and marks the ground around you.','The furnace slam leaves burning zones on both sides.','Rocket fans alternate with engineer or signal-jammer reinforcements.'],
-    ['Full-circle bullet rings cover Vex’s leap to a new position.','Delayed artillery crosses your route with an ice fan.','The final phase adds seismic rings and skirmisher reinforcements.']
+    ["Step across the locked bayonet lane.","Hold your counter until the return charge ends in phases two and three.","Stay outside the rifle cone for both volleys.","In the breach drill, clear the short sweep and the longer thrust."],
+    ["The sniper takes two shots down the same sightline.","When the camouflage shifts, watch the marked landing and the shot from the second nest.","Step out early on the final, faster double tap.","Leave the marked snare before the sniper round follows."],
+    ["Quarry shells land on marked stakes. Leave both circles in later phases.","Step back from the core impact, then close inside the outer shockwave.","The walking barrage marches through three circles in order."],
+    ["Cross the skate track, then move out of the following ice fan.","Leave the frost patch until the last pulse. A hit chills the fighter.","The last bloom strikes three times.","The split glacier leaves a central gap, then fires straight through it."],
+    ["Read both sections of the switchback before crossing.","Sandglass rockets stagger along two marked points.","Counter when the second dash stops.","The mirage cut begins at a new flank. Watch the track from its landing."],
+    ["The poison broadside hits port and starboard before the center.","Step clear of the purge cone and its follow-up drain.","The ebb tide sweeps the outer fan first. Move out before the inner fan fills."],
+    ["Hit the exposed igniter during the windup to defuse every mine.","The furnace vent has a hollow center. Leave it before the core flares.","Destroy the dynamo to cancel both beams, or stand outside their lane."],
+    ["The open wedge in the encirclement is safe. Keep moving past the next mark.","The firing order locks a double volley and then a shell. Counter after the shell.","Interrupt the execution order by hitting Vex, or take cover from each linked rifle."]
   ];
   bosses.forEach((b,i)=>{b.attackHints=bossHints[i];});
   bosses.push({id:'adolph_whisker',name:'Adolph Whisker',pattern:'whisker',hp:42000,damage:48,speed:135,color:'#c86174',range:820,fireRate:1.15,xp:4000,level:28,phases:4,finalBoss:true,attackHints:['Phase I · Tyrant’s Arsenal: teleport rings, marked artillery and rocket fans.','Phase II · Blink Assault: a wider arsenal joins the teleport and delayed strike combinations.','Phase III · Berlin Lockdown: lingering hazards, summoned elites and orbital strikes.','Phase IV · Last Whisker: chained teleports weave every attack together. Save dodge and healing for this phase.']});

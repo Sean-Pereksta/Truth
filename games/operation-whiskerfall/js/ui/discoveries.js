@@ -63,7 +63,7 @@
     const players=this.players||[];if(!players.length||players.some(p=>p.downed||p.hp<=0||p.harpoonPull||(this.time||0)-(p.lastHit??-100)<2))return false;
     if(Object.values(this.encounterRuns||{}).some(run=>run.state==='active'&&['fighting','between'].includes(run.phase)))return false;
     if(this.world.isDungeon&&!this.world.state?.solved&&['fighting','between'].includes(this.world.state?.survival?.phase))return false;
-    const near=(o,r)=>players.some(p=>W.dist(o,p)<r),refuge=players.every(p=>this.safeZoneAt?.(p.x,p.y));
+    const near=(o,r)=>players.some(p=>W.dist(o,p)<r),refuge=players.every(p=>this.safeZoneAt?.(p.x,p.y)&&!this.townUnderPursuit?.(p));
     if(!this.world.isDungeon&&Object.values(this.missionRuns||{}).some(run=>run.state==='active'&&run.type==='defend'&&near(run,650)))return false;
     if(!refuge&&(this.world.activeEnemies||[]).some(e=>e.hp>0&&!e.dead&&(near(e,650)||near(e,1250)&&(e.alert>0||['attack','chase','flank'].includes(e.state)))))return false;
     if(!refuge&&(this.projectiles||[]).some(b=>b.alive&&b.owner<0&&near(b,600)))return false;
@@ -71,7 +71,7 @@
     return true;
   };
   G.updateDiscoveries=function(){
-    if(!this.ui?.showDiscovery||!this.discoverySafe())return;
+    if(!this.discoveryState?.queue?.length||!this.ui?.showDiscovery||!this.discoverySafe())return;
     const s=state(this);s.queue=s.queue.filter(r=>owns(heroes(this).find(p=>p.id===r.playerId),r.itemId)&&celebrate(itemById(r.itemId)));
     const receipt=activeReceipt(this);if(receipt)this.ui.showDiscovery(receipt);
   };

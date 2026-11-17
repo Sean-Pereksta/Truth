@@ -362,9 +362,10 @@
           "questId": "main_0_2",
           "finalBoss": false,
           "attackHints": [
-            "Sidestep the marked charge line, then punish the recovery.",
-            "Rifle fans and marked artillery alternate with a ground slam.",
-            "In the third phase the charge chains into a return charge."
+            "Step across the locked bayonet lane.",
+            "Hold your counter until the return charge ends in phases two and three.",
+            "Stay outside the rifle cone for both volleys.",
+            "In the breach drill, clear the short sweep and the longer thrust."
           ]
         },
         {
@@ -377,9 +378,10 @@
           "questId": "main_1_2",
           "finalBoss": false,
           "attackHints": [
-            "Bramble leaps to a new firing position and marks delayed sniper shots.",
-            "Artillery lanes are backed by summoned scouts and wire hunters.",
-            "Watch for a teleport followed by a spreading rifle fan."
+            "The sniper takes two shots down the same sightline.",
+            "When the camouflage shifts, watch the marked landing and the shot from the second nest.",
+            "Step out early on the final, faster double tap.",
+            "Leave the marked snare before the sniper round follows."
           ]
         },
         {
@@ -392,9 +394,9 @@
           "questId": "main_2_2",
           "finalBoss": false,
           "attackHints": [
-            "Move out of the marked ground slam before Flintfang lands.",
-            "Seismic rings expand around the battery; leave a clear path between marks.",
-            "Full-circle bullets alternate with a line of delayed shells."
+            "Quarry shells land on marked stakes. Leave both circles in later phases.",
+            "Step back from the core impact, then close inside the outer shockwave.",
+            "The walking barrage marches through three circles in order."
           ]
         },
         {
@@ -407,9 +409,10 @@
           "questId": "main_3_2",
           "finalBoss": false,
           "attackHints": [
-            "Find gaps in the full-circle ice fan while Whiteclaw skates aside.",
-            "Marked frost patches become slowing ground.",
-            "An aimed slam is followed by a narrower ice fan."
+            "Cross the skate track, then move out of the following ice fan.",
+            "Leave the frost patch until the last pulse. A hit chills the fighter.",
+            "The last bloom strikes three times.",
+            "The split glacier leaves a central gap, then fires straight through it."
           ]
         },
         {
@@ -422,9 +425,10 @@
           "questId": "main_4_2",
           "finalBoss": false,
           "attackHints": [
-            "Dodge across the charge direction and keep clear of the marked sand strikes.",
-            "A rocket fan covers Sirocco’s sideways skate.",
-            "The final phase adds a leap to the surrounding artillery pattern."
+            "Read both sections of the switchback before crossing.",
+            "Sandglass rockets stagger along two marked points.",
+            "Counter when the second dash stops.",
+            "The mirage cut begins at a new flank. Watch the track from its landing."
           ]
         },
         {
@@ -437,9 +441,9 @@
           "questId": "main_5_2",
           "finalBoss": false,
           "attackHints": [
-            "Leave marked poison circles before Miretooth leaps toward you.",
-            "A line of venom patches is backed by spreading rifle fire.",
-            "A teleport to the floodgate is followed by reinforcements."
+            "The poison broadside hits port and starboard before the center.",
+            "Step clear of the purge cone and its follow-up drain.",
+            "The ebb tide sweeps the outer fan first. Move out before the inner fan fills."
           ]
         },
         {
@@ -452,9 +456,9 @@
           "questId": "main_6_2",
           "finalBoss": false,
           "attackHints": [
-            "Geargnash shields up, deploys a turret and marks the ground around you.",
-            "The furnace slam leaves burning zones on both sides.",
-            "Rocket fans alternate with engineer or signal-jammer reinforcements."
+            "Hit the exposed igniter during the windup to defuse every mine.",
+            "The furnace vent has a hollow center. Leave it before the core flares.",
+            "Destroy the dynamo to cancel both beams, or stand outside their lane."
           ]
         },
         {
@@ -467,9 +471,9 @@
           "questId": "main_7_2",
           "finalBoss": false,
           "attackHints": [
-            "Full-circle bullet rings cover Vex’s leap to a new position.",
-            "Delayed artillery crosses your route with an ice fan.",
-            "The final phase adds seismic rings and skirmisher reinforcements."
+            "The open wedge in the encirclement is safe. Keep moving past the next mark.",
+            "The firing order locks a double volley and then a shell. Counter after the shell.",
+            "Interrupt the execution order by hitting Vex, or take cover from each linked rifle."
           ]
         },
         {
@@ -701,9 +705,10 @@
           "questId": "main_0_2",
           "finalBoss": false,
           "attackHints": [
-            "Sidestep the marked charge line, then punish the recovery.",
-            "Rifle fans and marked artillery alternate with a ground slam.",
-            "In the third phase the charge chains into a return charge."
+            "Step across the locked bayonet lane.",
+            "Hold your counter until the return charge ends in phases two and three.",
+            "Stay outside the rifle cone for both volleys.",
+            "In the breach drill, clear the short sweep and the longer thrust."
           ]
         },
         {
@@ -716,9 +721,10 @@
           "questId": "main_1_2",
           "finalBoss": false,
           "attackHints": [
-            "Bramble leaps to a new firing position and marks delayed sniper shots.",
-            "Artillery lanes are backed by summoned scouts and wire hunters.",
-            "Watch for a teleport followed by a spreading rifle fan."
+            "The sniper takes two shots down the same sightline.",
+            "When the camouflage shifts, watch the marked landing and the shot from the second nest.",
+            "Step out early on the final, faster double tap.",
+            "Leave the marked snare before the sniper round follows."
           ]
         },
         {
@@ -731,9 +737,9 @@
           "questId": "main_2_2",
           "finalBoss": false,
           "attackHints": [
-            "Move out of the marked ground slam before Flintfang lands.",
-            "Seismic rings expand around the battery; leave a clear path between marks.",
-            "Full-circle bullets alternate with a line of delayed shells."
+            "Quarry shells land on marked stakes. Leave both circles in later phases.",
+            "Step back from the core impact, then close inside the outer shockwave.",
+            "The walking barrage marches through three circles in order."
           ]
         },
         {
@@ -746,9 +752,10 @@
           "questId": "main_3_2",
           "finalBoss": false,
           "attackHints": [
-            "Find gaps in the full-circle ice fan while Whiteclaw skates aside.",
-            "Marked frost patches become slowing ground.",
-            "An aimed slam is followed by a narrower ice fan."
+            "Cross the skate track, then move out of the following ice fan.",
+            "Leave the frost patch until the last pulse. A hit chills the fighter.",
+            "The last bloom strikes three times.",
+            "The split glacier leaves a central gap, then fires straight through it."
           ]
         },
         {
@@ -761,9 +768,10 @@
           "questId": "main_4_2",
           "finalBoss": false,
           "attackHints": [
-            "Dodge across the charge direction and keep clear of the marked sand strikes.",
-            "A rocket fan covers Sirocco’s sideways skate.",
-            "The final phase adds a leap to the surrounding artillery pattern."
+            "Read both sections of the switchback before crossing.",
+            "Sandglass rockets stagger along two marked points.",
+            "Counter when the second dash stops.",
+            "The mirage cut begins at a new flank. Watch the track from its landing."
           ]
         },
         {
@@ -776,9 +784,9 @@
           "questId": "main_5_2",
           "finalBoss": false,
           "attackHints": [
-            "Leave marked poison circles before Miretooth leaps toward you.",
-            "A line of venom patches is backed by spreading rifle fire.",
-            "A teleport to the floodgate is followed by reinforcements."
+            "The poison broadside hits port and starboard before the center.",
+            "Step clear of the purge cone and its follow-up drain.",
+            "The ebb tide sweeps the outer fan first. Move out before the inner fan fills."
           ]
         },
         {
@@ -791,9 +799,9 @@
           "questId": "main_6_2",
           "finalBoss": false,
           "attackHints": [
-            "Geargnash shields up, deploys a turret and marks the ground around you.",
-            "The furnace slam leaves burning zones on both sides.",
-            "Rocket fans alternate with engineer or signal-jammer reinforcements."
+            "Hit the exposed igniter during the windup to defuse every mine.",
+            "The furnace vent has a hollow center. Leave it before the core flares.",
+            "Destroy the dynamo to cancel both beams, or stand outside their lane."
           ]
         },
         {
@@ -806,9 +814,9 @@
           "questId": "main_7_2",
           "finalBoss": false,
           "attackHints": [
-            "Full-circle bullet rings cover Vex’s leap to a new position.",
-            "Delayed artillery crosses your route with an ice fan.",
-            "The final phase adds seismic rings and skirmisher reinforcements."
+            "The open wedge in the encirclement is safe. Keep moving past the next mark.",
+            "The firing order locks a double volley and then a shell. Counter after the shell.",
+            "Interrupt the execution order by hitting Vex, or take cover from each linked rifle."
           ]
         },
         {
@@ -1519,6 +1527,42 @@
       "boss": false,
       "patrol": 3.8835399215957107,
       "deepEnemy": true
+    },
+    {
+      "id": "trail_cache_stormglass_salvage_0",
+      "type": 57,
+      "x": 22245,
+      "y": 4420,
+      "homeX": 22245,
+      "homeY": 4420,
+      "level": 12,
+      "region": 8,
+      "boss": false,
+      "patrol": 3.141592653589793
+    },
+    {
+      "id": "trail_cache_stormglass_salvage_1",
+      "type": 58,
+      "x": 22245,
+      "y": 4329,
+      "homeX": 22245,
+      "homeY": 4329,
+      "level": 12,
+      "region": 8,
+      "boss": false,
+      "patrol": 3.141592653589793
+    },
+    {
+      "id": "trail_base_stormglass_0_0",
+      "type": 58,
+      "x": 21037.252783935044,
+      "y": 4729.41174519507,
+      "homeX": 21037.252783935044,
+      "homeY": 4729.41174519507,
+      "level": 12,
+      "region": 8,
+      "boss": false,
+      "patrol": 5.890486225480862
     }
   ],
   "objects": [

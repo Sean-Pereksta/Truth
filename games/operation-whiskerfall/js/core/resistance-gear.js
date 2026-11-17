@@ -30,7 +30,7 @@
   const reload=G.reload;
   G.reload=function(p){const before=p.reloading,result=reload.call(this,p),s=state(p);if(before<=0&&p.reloading>0&&s.armor==='blackglass'&&s.reloadUntil>this.time){p.reloading*=.8;s.reloadUntil=0;this.text('QUICK RELOAD',p.x,p.y-52,'#d2b0ff');}return result;};
   const damagePlayer=G.damagePlayer;
-  G.damagePlayer=function(p,amount,source){const s=state(p);if(s.armor==='lastwatch'&&s.wardUntil>this.time&&s.ward>0&&p.invuln<=0&&!p.downed&&!(p.smokeTime>0)&&!this.safeZoneAt(p.x,p.y)){const absorbed=Math.min(amount,s.ward);s.ward-=absorbed;amount-=absorbed;this.effect('shield',p.x,p.y,40,.2);if(amount<=0)return;}return damagePlayer.call(this,p,amount,source);};
+  G.damagePlayer=function(p,amount,source){const s=state(p);if(s.armor==='lastwatch'&&s.wardUntil>this.time&&s.ward>0&&p.invuln<=0&&!p.downed&&!(p.smokeTime>0)&&!this.townProtects(p,source)){const absorbed=Math.min(amount,s.ward);s.ward-=absorbed;amount-=absorbed;this.effect('shield',p.x,p.y,40,.2);if(amount<=0)return;}return damagePlayer.call(this,p,amount,source);};
   const checkQuests=G.checkQuests;
   G.checkQuests=function(){const before=completionSeen.get(this)||new Set(this.missionCompleted||[]),result=checkQuests.call(this);for(const id of this.missionCompleted||[])if(!before.has(id)&&/defend|camp|invasion|lastwatch/.test(id))for(const p of this.players){const s=state(p);if(s.armor==='lastwatch'){s.ward=35;s.wardUntil=this.time+2;s.wardReady=this.time+8;this.text('WATCH WARD',p.x,p.y-52,'#f1cd81');}}completionSeen.set(this,new Set(this.missionCompleted||[]));return result;};
   const clear=G.clearPlayerCombat;if(clear)G.clearPlayerCombat=function(p){states.delete(p);return clear.call(this,p);};

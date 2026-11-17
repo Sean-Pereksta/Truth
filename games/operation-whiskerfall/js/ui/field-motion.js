@@ -137,16 +137,16 @@
     const jump=Math.max(0,p.jumpHeight||0),pose=renderer.playerArmPose({...p,anim:'shoot',animTime:0,reloading:0},77,jump);
     let dx,dy;const height=30+jump;
     if(s.attachment==='recon'){
-      if(!W.ReconGearArt||!renderer.images.reconWeapons)return null;
+      if(!W.ReconGearArt)return null;
       const [,,sw,sh]=W.ReconGearArt.crops.weapons[weapon.reconArt];
       const [tx,ty]=[[244,24],[243,20],[243,34],[243,70]][(weapon.reconArt-1)/2];
       dx=(tx-sw*.14)*62/sw;dy=(ty-sh*.53)*62/sw;
     }else if(s.attachment==='energy'){
-      if(!renderer.images.arms)return null;
+      // Ballistics use measured attachment geometry even while its painting decodes.
       const [tx,ty]=[[240,43],[240,45],[240,43],[243,49],[239,45],[240,43]][pose.row];
       dx=(tx/pose.sw-pose.px)*pose.w;dy=(ty/140-pose.py)*pose.h;
     }else{
-      if(!ready(renderer,'gun'))return null;
+      // Shoulder and muzzle offsets are authored in sheet coordinates.
       const [tx,ty]=tips[s.row];dx=(tx-256*.18)*.278;dy=(ty-118*.37)*.278;
     }
     if(pose.flip)dx=-dx;

@@ -64,6 +64,16 @@ const {pathToFileURL}=require('node:url'),{chromium}=require('playwright');
     assert.equal(await page.evaluate(()=>document.activeElement?.dataset.value),'controls');
     await pick('mode','coop');await pick('launch');
     await page.waitForFunction(()=>OW.game.state==='playing'&&OW.game.players.length===2);
+    // The opening acceptance run plays every drill. Start this longer field
+    // traversal at its final checkpoint and use the partner's pad at the gate.
+    await button(1,1);
+    await page.waitForFunction(()=>OW.game.world.isTutorial);
+    await page.evaluate(()=>{
+      const g=OW.game;g.opening.step='exit';
+      g.players.forEach((p,i)=>Object.assign(p,{x:g.world.exit.x+i*34,y:g.world.exit.y}));
+    });
+    await button(1,1);
+    await page.waitForFunction(()=>OW.game.opening.phase==='complete');
     const pos=()=>page.evaluate(()=>OW.game.players.map(p=>({x:p.x,y:p.y})));
     const start=await pos();
     await page.keyboard.down('KeyD');

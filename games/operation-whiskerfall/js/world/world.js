@@ -3,6 +3,23 @@
   const OW = window.OW = window.OW || {};
   const CHUNK = 640, SCALE = 1.3, WIDTH = 14400*SCALE, HEIGHT = 11200*SCALE;
   const sq = n=>n*n;
+  // Index bounds rather than just centres. A point query then needs one bucket,
+  // including for large landmarks whose centres lie in the adjacent chunk.
+  function locationCoverage(locations, radiusFor) {
+    const buckets = new Map();
+    for (const place of locations) {
+      const radius = radiusFor(place);
+      for (let cy=Math.floor((place.y-radius)/CHUNK); cy<=Math.floor((place.y+radius)/CHUNK); cy++) {
+        for (let cx=Math.floor((place.x-radius)/CHUNK); cx<=Math.floor((place.x+radius)/CHUNK); cx++) {
+          const key=cx+','+cy;
+          let list=buckets.get(key);
+          if(!list) buckets.set(key,list=[]);
+          list.push(place);
+        }
+      }
+    }
+    return buckets;
+  }
   function distanceSegment(x,y,a,b) {
     const dx=b.x-a.x,dy=b.y-a.y,t=Math.max(0,Math.min(1,((x-a.x)*dx+(y-a.y)*dy)/(dx*dx+dy*dy||1)));
     return Math.hypot(x-a.x-t*dx,y-a.y-t*dy);
@@ -31,6 +48,7 @@
       this._objectChunks=new Map();this._spawnChunks=new Map();this._enemyGrid=new Map();this._waterChunks=new Map();this._roadChunks=new Map();this._safeZoneChunks=new Map();this.safeZones=[];this._riverSegments=[];this._spawns=new Map();this._dormant=new Map();this._active=new Map();this._locationMap=new Map();
       this._streamTimer=0;this._lastPlayerCells='';this.maxActiveEnemies=160;this.activeRadius=1450;
       this._generating=true;this._buildLocations();this._buildSafeZoneIndex();this._buildGeography();this._buildStructures();this._buildScenery();this._buildEnemies();OW.Content.reconCampaign?.extendWorld(this,SCALE);OW.Content.installTownStreets?.(this);OW.Content.installActivityVenues?.(this);OW.Content.installTavern?.(this);OW.Content.installOccupiedCities?.(this);this._generating=false;
+      this.installTrailPatrols?.();
       this.reveal(this.start.x,this.start.y);
     }
     _key(x,y) { return Math.floor(x/CHUNK)+','+Math.floor(y/CHUNK); }
@@ -223,9 +241,13 @@
     }
     _buildScenery() {
       const random=seeded(this.seed);
+      const exclusionRadius=l=>l.type==='town'?490:l.radius+95;
+      const footprints=locationCoverage(this.locations,exclusionRadius);
+      const nearLandmark=(x,y)=>(footprints.get(this._key(x,y))||[]).some(l=>
+        sq(x-l.x)+sq(y-l.y)<sq(exclusionRadius(l)));
       for(let y=120;y<HEIGHT-100;y+=125)for(let x=120;x<WIDTH-100;x+=125){
         const px=x+(random()-.5)*100,py=y+(random()-.5)*100,r=this.regionAt(px,py),n=random();
-        if(Math.hypot(px-this.start.x,py-this.start.y)<430||this.locations.some(l=>Math.hypot(px-l.x,py-l.y)<(l.type==='town'?490:l.radius+95))||this.isOnRoad(px,py,65)||this._waterDistance(px,py)<25)continue;
+        if(Math.hypot(px-this.start.x,py-this.start.y)<430||nearLandmark(px,py)||this.isOnRoad(px,py,65)||this._waterDistance(px,py)<25)continue;
         const densities={grass:.28,forest:.68,mountain:.37,snow:.33,desert:.18,marsh:.39,industrial:.25,fortress:.3};
         if(n>densities[r.biome])continue;
         let type='tree',w=92,h=123,solid=true;
@@ -246,7 +268,7 @@
         const coastRandom=seeded(this.seed+84293);
         for(let y=120;y<this.height-100;y+=125)for(let x=WIDTH+80;x<this.width-100;x+=125){
           const px=x+(coastRandom()-.5)*90,py=y+(coastRandom()-.5)*90,r=this.regionAt(px,py),n=coastRandom();
-          if(this.locations.some(l=>Math.hypot(px-l.x,py-l.y)<(l.type==='town'?490:l.radius+95))||this.isOnRoad(px,py,65)||this._waterDistance(px,py)<35||n>(r.index===8?.26:.34))continue;
+          if(nearLandmark(px,py)||this.isOnRoad(px,py,65)||this._waterDistance(px,py)<35||n>(r.index===8?.26:.34))continue;
           const roll=coastRandom(),variant=Math.floor(coastRandom()*4),type=r.index===8?(roll<.48?'rock':roll<.82?'bush':'pine'):(roll<.48?'bush':roll<.7?'palm':roll<.87?'rock':'ruin'),size={rock:[82,68],bush:[68,55],pine:[82,120],palm:[85,115],ruin:[105,88]}[type];
           this._addObject({type,x:px,y:py,w:size[0],h:size[1],solid:type!=='bush',variant,region:r.index});
         }
@@ -495,12 +517,16 @@
         this.reveal(p.x,p.y);
       }
       // Keep pursuing enemies alive while their current position is still close to either player.
-      for(const e of this._active.values())if(!this.dead.has(e.id)&&e.hp>0&&!this.gateAt(e.x,e.y)){let d=Infinity;for(const p of players)d=Math.min(d,sq(e.x-p.x)+sq(e.y-p.y));if(d<=sq(radius+160))desired.set(e.id,{def:this._spawns.get(e.id)||e,distance:d});}
-      const chosen=[...desired.entries()].sort((a,b)=>a[1].distance-b[1].distance).slice(0,this.maxActiveEnemies),keep=new Set(chosen.map(e=>e[0]));
+      for(const e of this._active.values())if(!this.dead.has(e.id)&&e.hp>0&&!this.gateAt(e.x,e.y)){
+        let d=Infinity;for(const p of players)d=Math.min(d,sq(e.x-p.x)+sq(e.y-p.y));
+        const retain=e.pursuitTarget!=null&&game?.pursuitRange?Math.max(radius+160,game.pursuitRange(e)):radius+160;
+        if(d<=sq(retain))desired.set(e.id,{def:this._spawns.get(e.id)||e,distance:d});
+      }
+      const ranked=[...desired.entries()].sort((a,b)=>Number(this._active.get(b[0])?.pursuitTarget!=null)-Number(this._active.get(a[0])?.pursuitTarget!=null)||a[1].distance-b[1].distance);
+      const chosen=(this.selectTrailPatrols?this.selectTrailPatrols(ranked,players):ranked).slice(0,this.maxActiveEnemies),keep=new Set(chosen.map(e=>e[0]));
       for(const [id,e]of this._active)if(!keep.has(id)||this.dead.has(id)||e.hp<=0){if(!this.dead.has(id)&&e.hp>0&&!e.ephemeral)this._dormant.set(id,e);else this._dormant.delete(id);this._active.delete(id);}
       for(const [id,item]of chosen)if(!this._active.has(id)&&!this.dead.has(id)){const e=this._dormant.get(id)||this._createEnemy(item.def);this._dormant.delete(id);this._active.set(id,e);}
       this.chunks=chunks;this.activeEnemies=[...this._active.values()];this._rebuildEnemyGrid();
-      // The `game` parameter is reserved for event integration. AI belongs to the game loop.
     }
     _rebuildEnemyGrid() {this._enemyGrid.clear();for(const e of this.activeEnemies)if(e.hp>0&&!this.dead.has(e.id))this._index(this._enemyGrid,e.x,e.y,e);}
     addEnemy(enemy) {enemy.ephemeral=true;this._active.set(enemy.id,enemy);if(!this.activeEnemies.some(e=>e.id===enemy.id))this.activeEnemies.push(enemy);this._rebuildEnemyGrid();return enemy;}
@@ -510,7 +536,12 @@
     }
     reveal(x,y) {
       const cx=Math.floor(x/CHUNK),cy=Math.floor(y/CHUNK);for(let yy=cy-1;yy<=cy+1;yy++)for(let xx=cx-1;xx<=cx+1;xx++)if(xx>=0&&yy>=0&&xx*CHUNK<this.width&&yy*CHUNK<this.height)this.discovered.add(xx+','+yy);
-      for(const l of this.locations)if(Math.hypot(x-l.x,y-l.y)<680)this.discovered.add(l.id);
+      if(!this.discoveryCoverage || this.discoveryCoverageCount!==this.locations.length) {
+        this.discoveryCoverage=locationCoverage(this.locations,()=>680);
+        this.discoveryCoverageCount=this.locations.length;
+      }
+      for(const l of this.discoveryCoverage.get(cx+','+cy)||[])
+        if(sq(x-l.x)+sq(y-l.y)<680*680)this.discovered.add(l.id);
     }
     exportState() {
       const persistent=[];for(const e of [...this._dormant.values(),...this._active.values()])if(e.hp>0&&!this.dead.has(e.id)&&!e.ephemeral)persistent.push({id:e.id,x:e.x,y:e.y,hp:e.hp,maxHp:e.maxHp,regionScaleApplied:e.regionScaleApplied,regionHealthScale:e.regionHealthScale,regionDamage:e.regionDamage,angle:e.angle,state:'patrol',attackTimer:e.attackTimer||1});

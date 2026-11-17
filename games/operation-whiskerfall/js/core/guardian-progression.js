@@ -28,10 +28,6 @@
   const add=W.DungeonWorld?.prototype.addEnemy;if(add)W.DungeonWorld.prototype.addEnemy=function(e){ensure(this.game,e,this);return add.call(this,e);};
   const scaleEnemy=G.ensureEnemyScaling;G.ensureEnemyScaling=function(e){if(e.guardianOwner&&this.world.isDungeon){ensure(this,e);return;}return scaleEnemy.call(this,e);};
   const damage=G.enemyDamage;G.enemyDamage=function(e,spec,multiplier=1){if(e.guardianOwner&&this.world.isDungeon){ensure(this,e);return(e.guardianBroodDamage||10)*multiplier;}return damage.call(this,e,spec,multiplier);};
-  const advanced=G.updateAdvancedEnemy;G.updateAdvancedEnemy=function(e,target,spec,dt){const before=e.combatAction,result=advanced.call(this,e,target,spec,dt),a=e.combatAction;
-    if(!e.boss&&spec.role==='roller'&&a&&a!==before&&a.kind==='roll'&&a.phase==='windup'){a.length*=.87;a.rollDistanceVersion=1;}
-    return result;
-  };
   function marker(g,e,p,radius,delay,amount,color,hazard){return g.effect('telegraph',p.x,p.y,radius,delay,{owner:-1,damage:amount,delay:true,guardianId:e.id,guardianColor:color,guardianHazard:hazard,progressionTell:true});}
   function fanTell(g,e,angle,delay,amount){return g.effect('guardianCrosswind',e.x,e.y,350,delay,{owner:-1,guardianId:e.id,angle,spread:1.05,count:5,damage:amount,color:'#b5edff'});}
   const begin=G.beginGuardianAttack;G.beginGuardianAttack=function(e,p,kind){
@@ -41,7 +37,13 @@
     if(kind!=='chainContinuation'&&!choices.includes(kind))kind=choices[0];
     if(!custom.has(kind)){
       const existing=new Set(this.effects.filter(f=>f.alive)),a=begin.call(this,e,p,kind);
-      if(a){a.time=Math.max(.75,a.time);a.duration=a.time;for(const f of this.effects)if(f.alive&&!existing.has(f)&&f.guardianId===e.id&&f.type==='telegraph'){f.life=Math.max(1,f.life);f.maxLife=f.life;}}
+      if(a){
+        const pace=this.settings?.longWarnings?1.35:e.phase===3?.84:1;
+        a.time=Math.max(.75,a.time)*pace;a.duration=a.time;
+        for(const f of this.effects)if(f.alive&&!existing.has(f)&&f.guardianId===e.id&&f.type==='telegraph'){
+          f.life=Math.max(1,f.life)*pace;f.maxLife=f.life;
+        }
+      }
       return a;
     }
     const point=bounds(p),angle=Math.atan2(p.y-e.y,p.x-e.x),power=e.damage*1.8*(1+((e.phase||1)-1)*.14),color=W.DungeonGuardians[e.guardian].color;

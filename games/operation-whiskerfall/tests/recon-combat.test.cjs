@@ -129,6 +129,54 @@ test('two heroes retain an exit when a second commitment would cover a narrow co
   const action=W.ReconCombat.record(second).action;assert.ok(action);
   assert.ok(action.beats[0].at>.8);assert.ok(action.beats[1].at>1.2);
 });
+
+test('each regional commander locks both base orders and a final-phase technique with a punish window',()=>{
+  const signatures=new Set();
+  for(let index=0;index<8;index++){
+    for(const fraction of [1,.60,.30]){
+      const {g,e,tick,commit,record}=scene();
+      Object.assign(e,{type:0,boss:true,bossIndex:index,hp:1000*fraction,maxHp:1000});
+      g.players[0].hp=2000;
+      g.players.push({x:160,y:0,hp:2000});
+      let a=commit();assert.equal(e.phase,fraction===1?1:fraction===.60?2:3);
+      signatures.add(a.name);
+      const first=a.beats[0],s=first.shape;
+      // Put one fighter inside the first locked footprint and one outside
+      // all beats, after commitment; neither player's movement retargets it.
+      const radial=s.kind==='lane'?Math.min(s.length,75):s.kind==='sector'?((s.inner||0)+s.radius)/2:0;
+      Object.assign(g.players[1],{x:s.x+Math.cos(s.angle)*radial,y:s.y+Math.sin(s.angle)*radial});
+      Object.assign(g.players[0],{x:850,y:550});
+      tick(Math.floor(first.at/frame)-1);
+      assert.equal(g.players[1].hp,2000);tick(3);
+      assert.ok(g.players[1].hp<2000,a.name);assert.equal(g.players[0].hp,2000);
+      while(record().action)tick();
+      assert.equal(e.combatState,'recovery',a.name);
+      const before=e.hp;g.damageEnemy(e,10,g.players[1]);assert.ok(Math.abs(before-e.hp-12.2)<1e-6);
+      Object.assign(g.players[1],{x:e.x+112,y:e.y});
+      a=commit();signatures.add(a.name);
+      assert.ok(a.beats.length>=2);assert.ok(a.beats.at(-1).at<2);
+      if(e.phase===3){
+        while(record().action)tick();
+        Object.assign(g.players[1],{x:e.x+100,y:e.y});
+        a=commit();signatures.add(a.name);
+        assert.ok(a.beats.length>=2 && a.beats[0].at>=.5 && a.rest>=.7,a.name);
+        if(index===6){
+          assert.ok(a.relay?.dynamo);
+          g.killEnemy(a.relay);tick();assert.equal(record().action,null);
+        }
+      }
+    }
+  }
+  assert.equal(signatures.size,24);
+});
+
+test('hitting Geargnash while the demolition rig is priming cancels its mines',()=>{
+  const {g,e,commit,tick,record}=scene();
+  Object.assign(e,{type:0,boss:true,bossIndex:6});
+  const action=commit();assert.ok(action.interruptible);
+  g.damageEnemy(e,4,g.players[0]);assert.equal(record().action,null);
+  const hp=g.players[0].hp;tick(85);assert.equal(g.players[0].hp,hp);
+});
 test('painted poses distinguish six enemy reactions, defeat, and four commander phases',()=>{
   class Renderer {}
   Renderer.prototype.illustratedEnemyFrame=()=>null;

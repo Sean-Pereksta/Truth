@@ -6,6 +6,9 @@
   const offset = (p,a,n) => ({x:p.x + Math.cos(a)*n, y:p.y + Math.sin(a)*n});
   const living = e => e && !e.dead && !e.downed && e.hp > 0;
   const final = e => e.boss && e.bossIndex === 8;
+  const commander = e => e.boss && !e.dungeonBoss && Number.isInteger(e.bossIndex);
+  const engagementDistance=[395,540,295,350,390,375,320,420,545];
+  const commanderCues=['reload','footstep','stomp','ice','dash','waterstep','mine','alarm','alarm'];
   const role = e => W.Content.enemies[e.type]?.id;
   let records = new WeakMap();
   const current = (g,e) => {
@@ -93,7 +96,7 @@
       dx=nav.mx;dy=nav.my;
     }
     const step=Math.min(d,speed*(e.chillTime>0?.6:1)*dt), x=e.x,y=e.y;
-    g.move(e,dx*step,dy*step,final(e)?34:17);
+    g.move(e,dx*step,dy*step,commander(e)?34:17);
     e.velocityX=(e.x-x)/dt;e.velocityY=(e.y-y)/dt;e.anim='run';e.moveTime=(e.moveTime||0)+dt;
   }
   function allies(g,e,p) {
@@ -130,15 +133,136 @@
       }
     }
   }
+  function regionalOrder(g,e,p,r) {
+    const a=angleTo(e,p), phase=r.phase, alternate=r.cycle%2===0;
+    const origin={x:e.x,y:e.y}, target={x:p.x,y:p.y};
+    const tell=phase===3?.51:phase===2?.59:.68;
+    const rest=phase===3?.75:.95;
+    const line=(from,angle,width,reach=640)=>lane(g,from,angle,reach,width);
+    const report=(name,beats,extra)=>({name,beats,rest,...extra});
+    function run(length,width){
+      const to=travelPoint(g,e,a,Math.min(length,distance(e,p)+50),34);
+      return beat(tell,line(e,a,width,distance(e,to)),1.45,{move:to});
+    }
+    if(phase===3 && r.cycle%3===0){
+      switch(e.bossIndex){
+        case 0:{
+          const thrust=run(370,34);thrust.at=.99;
+          return report('Breach drill',[beat(.51,sweep(origin,a,178,2.35),1.12),thrust]);
+        }
+        case 1:
+          return report('Briar snare',[beat(.57,disc(target,65,6),.72,{slow:true}),
+            beat(.94,line(e,a,21,730),1.36)]);
+        case 2:
+          return report('Walking barrage',[-105,0,105].map((step,i)=>
+            beat(.55+.24*i,disc(offset(target,a,step),72),1.15)));
+        case 3:
+          return report('Split glacier',[beat(.56,sweep(origin,a-.71,425,.8,2),.97,{slow:true}),
+            beat(.56,sweep(origin,a+.71,425,.8,2),.97,{slow:true}),beat(1.06,line(e,a,28,480),1.15)]);
+        case 4:{
+          const flank=travelPoint(g,e,a+1.2,115,34),cut=angleTo(flank,p);
+          const end=travelPoint(g,flank,cut,Math.min(460,distance(flank,p)+35),34);
+          return report('Mirage cut',[beat(.51,disc(flank,52),.67,{move:flank}),
+            beat(.93,line(flank,cut,31,distance(flank,end)),1.37,{move:end})]);
+        }
+        case 5:
+          return report('Ebb tide',[beat(.57,sweep(origin,a,390,2.25,6,150),1.05,{push:75}),
+            beat(1.03,sweep(origin,a,146,2.25,6),1.03,{venom:true})]);
+        case 6:{
+          const dynamo=placeRelay(g,e,p,r);
+          if(dynamo){
+            const beam=line(dynamo,angleTo(dynamo,p),31,540);
+            return report('Overload dynamo',[beat(.88,beam,1.24,{source:dynamo}),
+              beat(1.20,beam,1.06,{source:dynamo})],{links:[dynamo],relay:dynamo});
+          }
+          return report('Emergency exhaust',[beat(.62,sweep(origin,a,350,1.85),1.2),
+            beat(1.03,disc(target,65),.91)]);
+        }
+        case 7:{
+          const squad=allies(g,e,p),beats=[beat(.56,line(e,a,25),1.08)];
+          for(const [i,ally] of squad.entries())beats.push(beat(.85+i*.24,line(ally,angleTo(ally,p),19),.94,{source:ally}));
+          beats.push(beat(1.43,disc(target,86),1.25));
+          return report('Execution order',beats,{links:squad,interruptible:true});
+        }
+      }
+    }
+    switch(e.bossIndex){
+      case 0: { // A plated field colonel plants his bayonet before committing.
+        if(alternate){
+          const cone=sweep(origin,a,415,1.0,2);
+          return report('Trench volley', [beat(tell,cone,.93),beat(tell+.33,cone,.74)]);
+        }
+        const thrust=run(460,39), beats=[thrust];
+        if(phase>1)beats.push(beat(tell+.46,line(thrust.move,a+Math.PI,30,distance(origin,thrust.move)),1.05,{move:origin}));
+        return report('Bayonet charge',beats);
+      }
+      case 1: { // The camouflaged marksman covers a retreat with a fixed sightline.
+        const shot=line(e,a,17,730);
+        if(alternate){
+          const nest=travelPoint(g,e,a+(r.cycle%4===0?1:-1)*1.8,135,34);
+          return report('Bramble ambush',[beat(tell,disc(nest,52),.7,{move:nest}),
+            beat(tell+.40,line(nest,angleTo(nest,p),19,730),1.32)]);
+        }
+        return report('Sightline double tap',[beat(tell,shot,1.05),beat(tell+(phase===1?.48:.32),shot,1.05)]);
+      }
+      case 2: { // Heavy quarry artillery forces a choice between the center and outer ring.
+        if(alternate){
+          const core=disc(origin,134),rim=sweep(origin,a,335,TAU,3,144);
+          return report('Battery shockwave',[beat(tell,core,1.35),beat(tell+.50,rim,1.12)]);
+        }
+        const marks=[beat(tell,disc(target,88),1.28)];
+        if(phase>1)marks.push(beat(tell+.34,disc(offset(target,a,116),74),1.02));
+        return report('Quarry battery',marks);
+      }
+      case 3: {
+        if(alternate)return report('Glacier skate',[run(425,32),beat(tell+.44,sweep(origin,a,395,.85,2),.88,{slow:true})]);
+        const frost=disc(target,88,6),beats=[beat(tell,frost,.84,{slow:true}),beat(tell+.52,frost,.86,{slow:true})];
+        if(phase===3)beats.push(beat(tell+.88,frost,.78,{slow:true}));
+        return report('Hoarfrost bloom',beats);
+      }
+      case 4: {
+        const first=run(420,26),bearing=a+(r.cycle%4<2?1:-1)*1.2;
+        if(!alternate){
+          const end=travelPoint(g,first.move,bearing,210,34);
+          return report('Switchback dash',[first,beat(tell+.36,line(first.move,bearing,29,distance(first.move,end)),1.16,{move:end})]);
+        }
+        return report('Sandglass rockets',[beat(tell,disc(target,74),1.14),
+          beat(tell+.30,disc(offset(target,a,132),72),1.02)]);
+      }
+      case 5: {
+        const port=offset(target,a-Math.PI/2,142),starboard=offset(target,a+Math.PI/2,142);
+        if(alternate)return report('Floodgate purge',[beat(tell,sweep(origin,a,405,1.14,6),1.16,{push:65}),
+          beat(tell+.5,disc(target,72,6),.87,{venom:true})]);
+        return report('Poison broadside',[beat(tell,disc(port,79,6),.92,{venom:true}),
+          beat(tell,disc(starboard,79,6),.92,{venom:true}),beat(tell+.48,disc(target,75,6),1.03,{venom:true})]);
+      }
+      case 6: {
+        const fuse=disc(target,90),boiler=sweep(origin,a,345,TAU,3,110);
+        if(alternate)return report('Furnace vent',[beat(tell,boiler,1.35),beat(tell+.54,disc(origin,106),.9)]);
+        // A shot into the exposed igniter cuts power to every primed mine.
+        return report('Prime demolition rig',[beat(tell+.20,fuse,1.44),beat(tell+.64,fuse,1.1)],{interruptible:true});
+      }
+      case 7: {
+        if(alternate){
+          const cross=line(e,a,23,725);
+          return report('Citadel firing order',[beat(tell,cross,.94),beat(tell+.29,cross,.87),
+            beat(tell+.63,disc(target,81),1.14)]);
+        }
+        const gap=a+(r.cycle%4===1?.52:-.52);
+        return report('Blackbanner encirclement',[beat(tell+.10,sweep(origin,gap+Math.PI,465,TAU-1.4,3,57),1.35),
+          beat(tell+.58,disc(target,72),.98)]);
+      }
+    }
+  }
   function placeRelay(g,e,p,r) {
     if (living(r.relay) && g.world.activeEnemies.includes(r.relay)) return r.relay;
     const dir=angleTo(e,p);
     for (const turn of [1.24,-1.24,2.3,-2.3]) {
       const point=offset(e,dir+turn,140);
-      if (!floor(g,point,20) || !g.lineOfSight(e,point) || (g.world.isFinalArena && !g.world.isFinalArena(point.x,point.y))) continue;
+      if (!floor(g,point,20) || !g.lineOfSight(e,point) || (final(e) && g.world.isFinalArena && !g.world.isFinalArena(point.x,point.y))) continue;
       const relay={...point,homeX:point.x,homeY:point.y,id:'recon-relay-'+e.id+'-'+r.cycle,
         hp:Math.max(120,e.maxHp*.018),maxHp:Math.max(120,e.maxHp*.018),type:W.Content.reconEnemyTypes.signal_sergeant,
-        level:1,region:e.region,regionScaleApplied:true,reconRelay:true,ephemeral:true,summonerId:e.id,angle:dir,anim:'idle',animTime:0,state:'attack'};
+        level:1,region:e.region,regionScaleApplied:true,reconRelay:true,dynamo:e.bossIndex===6,ephemeral:true,summonerId:e.id,angle:dir,anim:'idle',animTime:0,state:'attack'};
       if (g.world.addEnemy) g.world.addEnemy(relay); else g.world.activeEnemies.push(relay);
       r.relay=relay;
       return relay;
@@ -188,20 +312,26 @@
     this.text('GUARD BROKEN',e.x,e.y-64,'#9ce5c2');return true;
   };
   function validTarget(g,p,e){
-    return living(p) && !(p.smokeTime>0) && !g.safeZoneAt(p.x,p.y) && !g.pointLocked(p.x,p.y) &&
+    if(!living(p))return false;
+    if(commander(e) && !final(e) && Number.isFinite(e.homeX) && Math.hypot(p.x-e.homeX,p.y-e.homeY)>820)return false;
+    return !(p.smokeTime>0) && !g.safeZoneAt(p.x,p.y) && !g.pointLocked(p.x,p.y) &&
       (!final(e) || !g.world.isFinalArena || g.world.isFinalArena(p.x,p.y));
   }
   function impact(g,e,b,a) {
     const s=b.shape;
     if(b.source && (!living(b.source) || !g.world.activeEnemies.includes(b.source)))return;
-    if (b.move && floor(g,b.move,final(e)?34:17)){e.x=b.move.x;e.y=b.move.y;}
+    if (b.move && floor(g,b.move,commander(e)?34:17)){e.x=b.move.x;e.y=b.move.y;}
     e.anim='shoot';
     const hitOrigin={x:s.x,y:s.y}, hits=[];
     for(const p of g.players){
       if(!validTarget(g,p,e) || !inside(s,p) || !g.lineOfSight(hitOrigin,p))continue;
       const hp=p.hp;
       g.damagePlayer(p,a.damage*b.scale,e);
-      if(p.hp<hp)hits.push({x:p.x,y:p.y-20});
+      if(p.hp<hp){
+        hits.push({x:p.x,y:p.y-20});
+        if(b.slow && !p.perks?.rimeheart)p.slowTime=Math.max(p.slowTime||0,1);
+        if(b.venom){p.poisonTime=2.1;p.poisonTick=.8;p.poisonDamage=a.damage*.12;}
+      }
       if(b.push && !p.downed && !(p.dodgeTime>0))g.move(p,Math.cos(s.angle)*b.push,Math.sin(s.angle)*b.push,18);
     }
     // Use one pooled object both for the spent footprint and the contacts.
@@ -236,37 +366,17 @@
       const mate=allies(g,e)[0];
       if(mate && distance(mate,p)<d && d>spec.range*1.6){walk(g,e,offset(mate,angleTo(mate,p),65),spec.speed,dt);return;}
     }
-    if(d>spec.range || (final(e)&&d>545)){walk(g,e,p,spec.speed*1.18,dt);return;}
+    if(d>(commander(e)?engagementDistance[e.bossIndex]:spec.range)){walk(g,e,p,spec.speed*1.18,dt);return;}
     if((key==='glasswind_sharpshot'||key==='signal_sergeant') && d<160 && r.cooldown>0){
       walk(g,e,offset(e,a+Math.PI,90),spec.speed,dt);return;
     }
     if((key==='hookclaw_skirmisher'||key==='lantern_stalker') && r.cooldown>0)
       walk(g,e,offset(e,a+(r.cycle%2?1:-1)*Math.PI/2,60),spec.speed*1.27,dt);
   }
-  // A couple of independent scouts flank established patrol posts. Do not add
-  // them to a base's clearance ledger or disturb the seeded spawn sequence.
-  const build=W.World.prototype._buildEnemies;
-  W.World.prototype._buildEnemies=function(){
-    build.call(this);
-    const rosters=[
-      [0,'hookclaw_skirmisher','rivet_guard'],[2,'rivet_guard','signal_sergeant'],
-      [4,'glasswind_sharpshot','hookclaw_skirmisher'],[5,'sluice_warden','lantern_stalker'],
-      [6,'signal_sergeant','glasswind_sharpshot'],[7,'lantern_stalker','rivet_guard']
-    ];
-    for(const [region,...pair] of rosters){
-      const post=Array.from(this._spawns.values()).find(spawn=>spawn.id.startsWith('patrol_'+region+'_') && !spawn.boss);
-      if(!post)continue;
-      pair.forEach((id,i)=>{
-        const x=post.x+(i?85:-85),y=post.y+72;
-        this._spawn({id:'recon_patrol_'+region+'_'+i,type:W.Content.reconEnemyTypes[id],x,y,homeX:x,homeY:y,
-          level:post.level,patrol:i*Math.PI,region,locationId:null,boss:false});
-      });
-    }
-  };
   const advanced=G.updateAdvancedEnemy;
   G.updateAdvancedEnemy=function(e,target,spec,dt){
     if(e.reconRelay){e.velocityX=e.velocityY=0;return true;}
-    if(!spec.reconRole && !final(e)){
+    if(!spec.reconRole && !commander(e)){
       // Legacy specialists share the initiation budget. In-progress moves
       // always finish through their existing handling.
       const legacy=['fencer','roller','blinkstalker','cindermortar','prismsentry'].includes(spec.role);
@@ -275,9 +385,15 @@
       return advanced.call(this,e,target,spec,dt);
     }
     if(this.paused || !(dt>0))return true;
+    if(commander(e) && this.awaitBossIntroduction?.(e))return true;
     const r=current(this,e), heroes=this.players.filter(p=>validTarget(this,p,e)).sort((a,b)=>distance(e,a)-distance(e,b));
     const p=heroes.find(p=>this.lineOfSight(e,p))||heroes[0];
-    if(!p || !floor(this,e,2) || distance(e,p)>960){r.action=null;r.seen=null;r.cooldown=.28;e.combatState=null;e.anim='idle';return true;}
+    if(!p || !floor(this,e,2) || distance(e,p)>960){
+      r.action=null;r.seen=null;r.cooldown=.28;e.combatState=null;e.anim='idle';
+      if(commander(e) && !final(e) && Number.isFinite(e.homeX) && Math.hypot(e.x-e.homeX,e.y-e.homeY)>8)
+        walk(this,e,{x:e.homeX,y:e.homeY},spec.speed,dt);
+      return true;
+    }
     if(final(e)){
       if(!e.reconPartySize){
         const ratio=W.clamp(e.hp/e.maxHp,0,1);e.reconPartySize=this.players.length;
@@ -290,6 +406,12 @@
         r.phase=e.phase=phase;r.action=null;r.cooldown=.62;r.cycle=0;r.seen=null;
         this.ui.toast(['Command duel','Signal network · destroy the relay','False retreat · watch the lantern','Last stand'][phase-1],'quest');
       }
+    }else if(commander(e)){
+      const fraction=e.hp/e.maxHp,phase=fraction<.35?3:fraction<.68?2:1;
+      if(r.phase!==phase){
+        r.phase=e.phase=phase;r.action=null;r.cooldown=.55;r.cycle=0;e.combatState=null;
+        this.effect('bossWarning',e.x,e.y,190,.78,{text:spec.name+' · PHASE '+phase});
+      }
     }
     r.guardDown=Math.max(0,r.guardDown-dt);
     if(r.action){advance(this,e,r,dt);return true;}
@@ -298,11 +420,12 @@
     e.combatState=null;
     const visible=this.lineOfSight(e,p);
     face(this,e,r,p,spec,dt,visible);
-    if(!visible || r.cooldown>0 || distance(e,p)>(final(e)?550:spec.range) || !onscreen(this,e) || !budget(this,e))return true;
+    if(!visible || r.cooldown>0 || distance(e,p)>(commander(e)?engagementDistance[e.bossIndex]+5:spec.range) || !onscreen(this,e) || !budget(this,e))return true;
     r.cycle++;
-    const a=final(e)?whiskerOrder(this,e,p,r):order(this,e,p,spec,r);
+    const a=final(e)?whiskerOrder(this,e,p,r):commander(e)?regionalOrder(this,e,p,r):order(this,e,p,spec,r);
     if(!escapeOpen(this,e,a.beats)){r.cooldown=.22;return true;}
     a.elapsed=0;a.damage=this.enemyDamage(e,spec,.72);
+    if(commander(e))this.audio.play(commanderCues[e.bossIndex]);
     // The two adaptive assists remain meaningful for every follow-up beat.
     if(this.settings?.longWarnings)for(const b of a.beats)b.at*=1.5;
     r.action=a;e.combatState='windup';e.anim='windup';e.velocityX=e.velocityY=0;
@@ -314,10 +437,10 @@
     const r=records.get(e),before=e.hp;
     const frontal=role(e)==='rivet_guard' && !e.reconRelay && p && Math.abs(W.wrapAngle(angleTo(e,p)-(e.angle||0)))<1.0;
     if(frontal && !(r?.guardDown>0) && e.combatState!=='recovery')amount*=.37;
-    if((W.Content.enemies[e.type]?.reconRole || final(e)) && e.combatState==='recovery')amount*=1.22;
+    if((W.Content.enemies[e.type]?.reconRole || commander(e)) && e.combatState==='recovery')amount*=1.22;
     const result=damage.call(this,e,amount,p,...args);
     if(living(e) && r?.action?.interruptible && e.hp<before){
-      expose(e,r,.86);this.text('SIGNAL CUT',e.x,e.y-64,'#a7edce');
+      expose(e,r,.86);this.text(e.bossIndex===6?'IGNITER BROKEN':'SIGNAL CUT',e.x,e.y-64,'#a7edce');
     }
     return result;
   };

@@ -42,6 +42,7 @@ for(const sheet of [...gear,...textures]){
 }
 console.log('PASS · '+references.length+' local entry references, '+references.filter(src=>src.endsWith('.js')).length+' scripts, '+paintings.length+' paintings, '+entrances.length+' exterior assets and '+(gear.length+textures.length)+' sheet records');
 const tests=['tests/render-scale.test.cjs','tests/scenery-visibility.cjs','tests/recon-combat.test.cjs','tests/field-fencer.test.cjs','tools/test-recon-forge.cjs'];
+if(process.argv.includes('--browser'))tests.push('tests/opening-browser.cjs','tests/field-comics-browser.cjs','tests/trail-patrols-browser.cjs');
 tests.push('tests/chambers.test.cjs','tests/locked-warnings.test.cjs','tests/town-activities.test.cjs','tests/activity-mastery.test.cjs','tests/tavern-rules.test.cjs','tests/fieldwork-art.test.cjs','tests/city-vision.test.cjs');
 if(process.argv.includes('--browser'))tests.push('tests/recon-campaign.cjs','tests/recon-pad-browser.cjs','tests/portable-saves.cjs','tests/dungeon-approaches.cjs','tests/berlin-loadouts.cjs');
 if(process.argv.includes('--browser'))tests.push('tests/chambers-browser.cjs','tests/town-streets-browser.cjs','tests/field-motion-browser.cjs','tests/activity-venues-browser.cjs','tests/controller-venue-browser.cjs','tests/tavern-browser.cjs','tests/city-watch-browser.cjs','tests/city-watch-controllers.cjs','tests/city-investigations.cjs','tests/field-assignments.cjs');

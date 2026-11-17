@@ -13,6 +13,8 @@ const {chromium}=require('playwright');
     await page.goto(pathToFileURL(path.resolve(__dirname,'../index.html')).href);
     await page.locator('[data-action="launch"]').click();
     await page.waitForFunction(()=>window.OW?.game?.state==='playing');
+    await page.getByRole('button',{name:'Skip strip'}).click();
+    await page.waitForFunction(()=>OW.game.world.isTutorial);
     // Make the slot identifiable; the reserve hero's pack must survive the transfer.
     const expected=await page.evaluate(()=>{
       const g=OW.game;g.toggleCoop();g.players[1].gold=731;g.toggleCoop();
