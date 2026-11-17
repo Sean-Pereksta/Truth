@@ -20,14 +20,14 @@ function fixture({speed=1,tickCost=0}={}){
     console,Math,Map,Set,WeakMap,performance:{now:()=>context.clock},clock:0,tickCost,
     lastNow:0,frameMs:16.7,fps:60,ui:{quality:'auto'},menuOpen:false,started:true,
     speed,accumulator:0,view:{x:0,y:0,w:1000,h:700,zoom:1},keys:new Set(),edgeMouse:null,
-    lastBattle:0,lastSfx:0,lastEvent:0,lastHud:0,lastMini:0,toastUntil:0,
+    sound:false,soundscape:null,lastBattle:0,lastSfx:0,lastEvent:0,lastHud:0,lastMini:0,toastUntil:0,
     game:{paused:false,winner:null,time:0,stats:{battles:0},units:[],events:[],teams:[{alive:true}],
       update(dt){calls.ticks.push(dt);this.time+=dt;context.clock+=context.tickCost;},allied:()=>true},
     renderer:{draw:()=>calls.draws++,drawMinimap:()=>calls.minimaps++},
     mousePan:()=>({x:0,y:0}),boundCamera:()=>{},screenToWorld:()=>({x:0,y:0}),
     tone:()=>{},toast:()=>{},checkResult:()=>{},updateHud:()=>calls.hud++,
     requestAnimationFrame:()=>calls.frames++,
-    $:id=>{if(!elements.has(id))elements.set(id,{textContent:'',hidden:id==='commandPanel',dataset:{pane:'map'},classList:{remove(){}}});return elements.get(id);}
+    $:id=>{if(!elements.has(id))elements.set(id,{textContent:'',offsetWidth:id==='minimapDock'?208:0,hidden:id==='commandPanel'||id==='battleAlert',dataset:{pane:'map'},classList:{remove(){}}});return elements.get(id);}
   };
   vm.createContext(context);vm.runInContext(frameSource,context,{filename:'app.js:frame'});
   return {context,calls,frame(now){context.clock=now;context.frame(now);}};
@@ -89,7 +89,9 @@ test('The persistent minimap refreshes at a bounded cadence regardless of comman
   const panel=f.context.$('commandPanel'),before=f.calls.minimaps;panel.hidden=false;panel.dataset.pane='build';f.frame(1200);assert.equal(f.calls.minimaps,before+1);
   panel.dataset.pane='map';f.frame(1400);assert.equal(f.calls.minimaps,before+2);
   panel.hidden=true;f.frame(1600);assert.equal(f.calls.minimaps,before+3);
-  f.context.menuOpen=true;f.frame(1800);assert.equal(f.calls.minimaps,before+3);
+  const dock=f.context.$('minimapDock');dock.offsetWidth=0;f.frame(1800);assert.equal(f.calls.minimaps,before+3);
+  dock.offsetWidth=208;f.frame(2000);assert.equal(f.calls.minimaps,before+4);
+  f.context.menuOpen=true;f.frame(2200);assert.equal(f.calls.minimaps,before+4);
 });
 
 function cachedElement(){

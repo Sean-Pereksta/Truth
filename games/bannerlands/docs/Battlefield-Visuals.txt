@@ -1,5 +1,40 @@
 BANNERLANDS — BATTLEFIELD VISUALS
 
+RIVERLANDS AND HIGHLAND MARCHES PREVIEW
+The two generated PNG sheets in assets/battlefield-slice provide painted ground
+and transparent detail sprites. Riverlands uses pasture, shallow ford gravel,
+reeds and ford stones. Highland Marches uses pasture, pass gravel and six painted
+outcrops. Broken ridges and fractured peaks mark impassable rock. Lower heather
+shoulders and scree border the navigable pass. Both landscapes use painted cart tracks,
+field-edge fences, forest shrubs and stone keep foundations. Roadside plots occupy continuous grassland.
+Their placement uses the generated road network and never reads hidden armies
+or the location of an occupied castle. The ground materials are baked into the
+overview and detailed ground chunks. Selected troops fade foreground canopies.
+
+Existing painted sprite sheets supply the complete bodies and weapons. Mounted troops lower their
+lances on the simulated run-up, present them at speed and recover when the
+charge ends. A blocked hit retains its painted deflection. Stationary bowmen
+draw when a visible target is in range, and painted projectiles start at the
+release frame. Windlass and belt strokes follow the completed spanning stage.
+The renderer coalesces visible impacts and draws at most 48 simultaneous bursts
+in High or 24 in low detail. Hoof dust has its own 24- or 10-patch limit.
+
+Short positional cues accompany visible blocks, volleys, hoofbeats and heavy
+impacts. Their horizontal position and level follow the camera. The six-voice
+mixer reserves two voices for orders. The existing sound control mutes the
+mix. Run node source/tests/battle-audio.mjs to check budget and fog behavior.
+
+Reproduce the scene review with node source/tests/battlefield-slice.mjs.
+Set LANDS_CANVAS_MODULE to an installation of @napi-rs/canvas. Set
+LANDS_RENDER_OUT to save the PNGs. Use LANDS_GAME_ROOT to render an earlier
+checkout with the same script. Seed 44277 places two mixed companies at
+Willow Bridge, Willow Ford and High King Pass and runs 20 real 30 Hz ticks.
+Each fight is captured at 0.43×, 1× and 1.8× in Adaptive, High and Performance.
+The baseline's Performance capture forces its pre-existing low-detail path.
+The updated capture also saves close views of the Highland keep foundation,
+roadside field and forest edge. The keep view isolates the building from its
+starting troops and adjacent production posts so the masonry is visible.
+
 ATTACK WEIGHT AND CONTACT
 Weapon contact frames now coincide with the simulation's actual damage or
 projectile release. Hammer windups lead into the downward contact pose and
@@ -34,6 +69,16 @@ Hidden troops cannot contribute to a crest or its position; fog loss removes
 the marker immediately, including while paused.
 
 BRIDGE GRAPHICS
+Short crossings use a broad painted stone bridge. Longer crossings use a narrow
+painting, with complete, rigid arch bays repeated on long lake causeways. Each
+painting contains the cobbles, ramps, parapets and stone piers. Its original
+proportions are preserved in both river directions. Units rise with the deck and pass behind the
+near parapet. Only open channels with dry banks and exposed water on both
+sides receive masonry. Willow Ford's shallow Rivermeet junction continues
+the ford surface. Its gameplay tiles and navigation remain intact.
+Use node source/tests/painted-crossings.mjs for topology and raster checks.
+
+The original edge atlas supplies the legacy fallback below.
 Bridge sidewalls use generated painted masonry, alpha-transparent arch spans
 and matching terminal/corner posts from assets/bridges/stone-edges.png.
 Pieces follow both isometric bridge directions and join at actual endpoints.

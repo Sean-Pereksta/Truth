@@ -4,9 +4,10 @@ import {mountLobbyUI} from './lobby-ui.js';
 import {createFirebaseDirectory,parseGuestInvite,safeHostOrigin} from './directory.js';
 import {GAME_VERSION,ASSET_VERSION,PROTOCOL_VERSION} from './protocol.js';
 
-export function setupMultiplayer({getConfig,onGame,onMessage,onOrderResult,onLeave,getAssetsReady=()=>false}={}){
+export function setupMultiplayer({getConfig,onGame,onOrderResult,onPending,onConnection,onLeave,getAssetsReady=()=>false}={}){
  initializeDesktopBridge();
  const downloaded=!!window.bannerlandsHost||document.body.dataset.standalone==='true';
+ document.getElementById('hostLobbyButton').hidden=!window.bannerlandsHost;
  const downloadLink=document.querySelector('.online-download');if(downloadLink)downloadLink.hidden=downloaded;
  let client=null,inviteUrl=null,stopBrowsing=null,directoryPublished=false,publishing=false,lastStatus='',wasBattle=false,activeGame=null,selectionEpoch=0,lastLobbyProblem=null;
  const directory=createFirebaseDirectory(),compatibility={gameVersion:GAME_VERSION,assetVersion:ASSET_VERSION,protocolVersion:PROTOCOL_VERSION};
@@ -32,13 +33,14 @@ export function setupMultiplayer({getConfig,onGame,onMessage,onOrderResult,onLea
   if(state.lobby?.status==='in-progress'&&state.game){
    if(!wasBattle||activeGame!==state.game){wasBattle=true;activeGame=state.game;ui.hide();onGame(state.game,client);}
   }else if(state.lobby){
+   const matchEnded=wasBattle;
    if(wasBattle){wasBattle=false;activeGame=null;onLeave?.();}
-   ui.renderSession({...state,isHost:!!client.session?.host,inviteUrl});ui.setAssetsReady(getAssetsReady());
+   ui.renderSession({...state,matchEnded,isHost:!!client.session?.host,inviteUrl});ui.setAssetsReady(getAssetsReady());
    if(state.lobby.status==='starting'){
     ui.setStatus('Synchronizing the world for every commander…',{loading:true});
     if(state.game&&getAssetsReady())void client.synchronize().catch(error=>ui.setStatus(error.message,{error:true}));
    }else{
-    const problem=lobbyProblem(state.lobby);if(problem)ui.setStatus(problem,{error:true});else if(lastLobbyProblem)ui.setStatus('Connected · waiting in the lobby');lastLobbyProblem=problem||null;
+    const problem=lobbyProblem(state.lobby);if(problem)ui.setStatus(problem,{error:true});else if(matchEnded)ui.setStatus('The host ended the match. Confirm the campaign settings and mark ready to play again.');else if(lastLobbyProblem)ui.setStatus('Connected · waiting in the lobby');lastLobbyProblem=problem||null;
    }
   }
  }
@@ -48,11 +50,11 @@ export function setupMultiplayer({getConfig,onGame,onMessage,onOrderResult,onLea
    if(client!==next)return;
    if(status==='connected'&&lobbyProblem(client.lobby))ui.setStatus(lobbyProblem(client.lobby),{error:true});
    else if(status!=='connected'||lastStatus!==status)ui.setStatus(message,{error:status==='closed',loading:status==='reconnecting'});
-   if(lastStatus!==status&&wasBattle)onMessage?.(message,status==='closed'||status==='reconnecting');lastStatus=status;
-  },onCommand:(result,envelope)=>{
+   if(lastStatus!==status&&wasBattle)onConnection?.(status,message);lastStatus=status;
+  },onPending:envelope=>{if(client===next)onPending?.(envelope);},onCommand:(result,envelope)=>{
    if(client!==next)return;
    onOrderResult?.(result,envelope);
-   onMessage?.(result.ok?'Host accepted your order.':result.message||'The host rejected this order.',!result.ok);
+
   }});client=next;return client;
  }
  async function join({origin=location.origin,invite,name='Guest',lobby}={}){

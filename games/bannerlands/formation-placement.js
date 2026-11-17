@@ -3,6 +3,14 @@
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 export const FORMATION_PRESETS=Object.freeze({line:'Line',pike:'Pike Block',shield:'Shield Wall',wedge:'Wedge',loose:'Loose'});
+export function marchSlot(index,count,columns,formation){
+  const spacing=formation==='spread'?.7:.43,rank=Math.floor(index/columns),rows=Math.ceil(count/columns);
+  if(formation==='wedge'&&count>1){
+    const side=(index%columns-(columns-1)/2)*spacing;
+    return {rank,side,back:Math.abs(side)*.7+rank*spacing-rows*spacing*.45};
+  }
+  return {rank,side:(index%columns-(Math.min(columns,count)-1)/2)*spacing,back:(rank-(rows-1)/2)*spacing};
+}
 export function formationSettings(count,options={}){
   const preset=FORMATION_PRESETS[options.preset]?options.preset:options.preset==='spread'?'loose':'line';
   const spacing=preset==='loose'?.75:.48,n=Math.max(1,count|0);
@@ -16,6 +24,63 @@ export function formationSettings(count,options={}){
 export function formationRole(g,u,defs){
   const d=defs[u.type]||{},kind=g.unitClass(u);
   return kind==='siege'?5:kind==='archer'||d.crossbow||d.ranged?4:kind==='cavalry'?3:d.spearBrace||d.spearWeapon?0:d.shieldBearer||d.shieldType?1:2;
+}
+// Slot indices and roles belong to the original footprint. A casualty only
+// frees that slot. A replacement order also releases the departing soldier.
+export function releaseFormationSlots(g,c,living){
+  if(living.length===c.members.length)return;
+  const present=new Set(living.map(u=>u.id));
+  c.members=[...present];
+  c.gaps??=[];
+  for(const slot of c.slots){
+    if(slot.unitId!=null&&!present.has(slot.unitId)){
+      slot.unitId=null;
+      c.gaps.push({slot,after:g.time+.25});
+    }
+  }
+}
+
+// Examine at most two holes per pass. A donor's old slot becomes a later
+// vacancy, so a single loss cannot make a whole file change goals at once.
+export function fillFormationGaps(g,c,members,slotKey){
+  if(!c.gaps?.length||g.time<(c.refillAt||0))return;
+  c.refillAt=g.time+.25;
+  const pending=c.gaps.splice(0,2);
+  const promoted=new Set();
+  for(const gap of pending){
+    const slot=gap.slot;
+    if(g.time<gap.after){c.gaps.push(gap);continue;}
+    if(slot.blocked)continue;
+    const fx=Math.cos(c.angle),fy=Math.sin(c.angle);
+    const goal=slotKey==='advanceIndex'?{x:c.x-fy*slot.side-fx*slot.back,y:c.y+fx*slot.side-fy*slot.back}:slot;
+    let next=null,best=Infinity,waiting=false;
+    for(const u of members){
+      const other=c.slots[u.order[slotKey]];
+      if(other.role!==slot.role||other.rank<=slot.rank)continue;
+      // A soldier out of position, fighting, or recovering from knockback
+      // keeps following its own orders; it can be considered on a later pass.
+      if(promoted.has(u.id)||distance(u,u.order)>.7||u.knockT>0||u.target&&distance(u,u.target)<=g.unitRange(u)+(u.target.radius||.2)){
+        waiting=true;continue;
+      }
+      const cost=(u.x-goal.x)**2+(u.y-goal.y)**2;
+      if(cost<best||cost===best&&u.id<next.id){
+        if(g.navigation.clearSegment(u,goal,u.radius)){next=u;best=cost;}
+        else waiting=true;
+      }
+    }
+    if(!next){if(waiting)c.gaps.push(gap);continue;}
+    promoted.add(next.id);
+    const order=next.order,previous=c.slots[order[slotKey]];
+    previous.unitId=null;slot.unitId=next.id;
+    c.gaps.push({slot:previous,after:g.time+.25});
+    order[slotKey]=slot.index;order.slotSide=slot.side;order.slotBack=slot.back;
+    if(slotKey==='advanceIndex'){
+      order.marchSide=slot.side;order.marchBack=slot.back;
+    }else{
+      Object.assign(order,{x:slot.x,y:slot.y,mode:'move',slotBlocked:slot.blocked});
+    }
+    next.braceTime=0;next.braceDir=null;
+  }
 }
 export function formationPreview(g,troops,options={},defs={}){
   const settings=formationSettings(troops.length,options),angle=Number.isFinite(options.angle)?options.angle:0,fx=Math.cos(angle),fy=Math.sin(angle);
@@ -62,7 +127,7 @@ export function placeFormation(g,ids,options,defs){
   g.placedFormations??=new Map();
   const formation=preview.preset==='loose'?'spread':preview.preset==='wedge'?'wedge':'line';
   g.command(troops.map(u=>u.id),preview.x,preview.y,'move',formation,{x:preview.faceX,y:preview.faceY});
-  const cohort={...preview,id,members:troops.map(u=>u.id),slots:preview.slots.map(s=>({...s,unitId:troops[s.index].id})),checkAt:0,faceInPlace:!!options.faceInPlace};
+  const cohort={...preview,id,members:troops.map(u=>u.id),slots:preview.slots.map(s=>({...s,unitId:troops[s.index].id,role:formationRole(g,troops[s.index],defs)})),checkAt:0,faceInPlace:!!options.faceInPlace};
   troops.forEach((u,i)=>{
     const s=cohort.slots[i],safe=s.blocked?g.navigation.nearestPassable(s)||u:s;
     Object.assign(u.order,{x:safe.x,y:safe.y,groupX:preview.x,groupY:preview.y,placementId:id,formationPreset:preview.preset,lockFacing:preview.lockFacing,slotIndex:i,slotSide:s.side,slotBack:s.back,slotBlocked:s.blocked});
@@ -76,19 +141,9 @@ export function updatePlacedFormations(g,dt,defs){
   for(const [id,c]of g.placedFormations){
     const living=c.members.map(id=>g.byId.get(id)).filter(u=>u?.hp>0&&u.order?.placementId===id&&['move','hold','idle'].includes(u.order.mode));
     if(!living.length){g.placedFormations.delete(id);continue;}
-    c.members=living.map(u=>u.id);
+    releaseFormationSlots(g,c,living);
     if(c.checkAt>g.time)continue;c.checkAt=g.time+.2;
-    // Only a rear soldier entering a vacant lane is reassigned. Neighbors that
-    // remain planted retain their readiness and all unrelated slot coordinates.
-    const occupied=new Map(living.map(u=>[u.order.slotIndex,u]));
-    for(const vacancy of c.slots){
-      if(occupied.has(vacancy.index))continue;
-      const candidates=living.filter(u=>u.order.slotBack>vacancy.back+.1&&formationRole(g,u,defs)<=2).sort((a,b)=>Math.abs(a.order.slotSide-vacancy.side)-Math.abs(b.order.slotSide-vacancy.side)||a.order.slotBack-b.order.slotBack||a.id-b.id);
-      const next=candidates[0];if(!next)continue;
-      const old=next.order.slotIndex;occupied.delete(old);occupied.set(vacancy.index,next);
-      Object.assign(next.order,{x:vacancy.x,y:vacancy.y,mode:'move',slotIndex:vacancy.index,slotSide:vacancy.side,slotBack:vacancy.back,slotBlocked:vacancy.blocked});
-      next.braceTime=0;next.braceDir=null;vacancy.unitId=next.id;
-    }
+    fillFormationGaps(g,c,living,'slotIndex');
     for(const u of living){
       const o=u.order;
       if(o.mode==='hold'&&!c.lockFacing){delete o.facingX;delete o.facingY;}
@@ -101,7 +156,9 @@ export function formationStatus(troops,defs){
   const spears=troops.filter(u=>defs[u.type]?.spearBrace||defs[u.type]?.spearWeapon);
   const braced=spears.filter(u=>u.spearState?u.spearState==='braced':u.spearReadiness==='braced'||(u.braceTime||0)>=.5&&Math.hypot(u.vx||0,u.vy||0)<.18&&!(u.knockT>0)).length;
   let primary;
-  if(spears.length&&braced)primary=`Braced: ${braced}/${spears.length}`;
+  const advancing=troops.find(u=>u.order?.mode==='advance'&&u.order.advanceStatus);
+  if(advancing)primary=advancing.order.advanceStatus;
+  else if(spears.length&&braced)primary=`Braced: ${braced}/${spears.length}`;
   else if(troops.some(u=>u.knockT>0||u.spearState==='disrupted'))primary='Disrupted';
   else if(troops.some(u=>Number.isFinite(u.order?.facingX)&&(u.facingX*u.order.facingX+u.facingY*u.order.facingY)<.985))primary='Turning';
   else if(troops.some(u=>u.order?.slotBlocked))primary='Forming: blocked ground';

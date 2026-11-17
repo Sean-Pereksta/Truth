@@ -10,6 +10,7 @@ import {WarVision} from './vision.js';
 import {evaluateRivals,observedStrength,campaignRoute} from './rival-intelligence.js';
 import {BattleAftermath} from './aftermath.js';
 import {startFormationAdvance,updateFormationAdvances} from './formation-advance.js';
+import {marchSlot} from './formation-placement.js';
 import {registerRegiments,regimentForHouse,regimentAllowed,regimentRequiredBuilding,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,houseCanRecruit,houseCanBuild,shieldFacingMultiplier,migrateLegacyRegiments} from './regiments.js';
 export const HOUSES = [
   {name:'House Stark',motto:'Winter is coming',sigil:'wolf',color:'#8ac9e8',dark:'#234c61',trait:'Steadfast in the North'},
@@ -188,9 +189,22 @@ class SpatialHash {
     // Large worlds are mostly empty. Reset only buckets populated on the last
     // pass, preserving insertion order for identical combat and separation.
     for(const b of this.occupied)b.length=0;this.occupied.length=0;
-    for(const u of units)if(u.hp>0){const x=clamp(Math.floor(u.x/this.size),0,this.w-1),y=clamp(Math.floor(u.y/this.size),0,this.h-1),bucket=this.buckets[y*this.w+x];if(!bucket.length)this.occupied.push(bucket);bucket.push(u);}
+    for(const u of units)if(u.hp>0){
+      const x=clamp(Math.floor(u.x/this.size),0,this.w-1),y=clamp(Math.floor(u.y/this.size),0,this.h-1),bucket=this.buckets[y*this.w+x];
+      if(!bucket.length){this.occupied.push(bucket);bucket.onlyTeam=u.team;}
+      else if(bucket.onlyTeam!==u.team)bucket.onlyTeam=null;
+      bucket.push(u);
+    }
   }
-  visit(x,y,r,fn){const x0=clamp(Math.floor((x-r)/this.size),0,this.w-1),x1=clamp(Math.floor((x+r)/this.size),0,this.w-1),y0=clamp(Math.floor((y-r)/this.size),0,this.h-1),y1=clamp(Math.floor((y+r)/this.size),0,this.h-1);for(let yy=y0;yy<=y1;yy++)for(let xx=x0;xx<=x1;xx++){const b=this.buckets[yy*this.w+xx];for(let i=0;i<b.length;i++)fn(b[i]);}}
+  visit(x,y,r,fn,excludedTeam=-1){
+    const x0=clamp(Math.floor((x-r)/this.size),0,this.w-1),x1=clamp(Math.floor((x+r)/this.size),0,this.w-1);
+    const y0=clamp(Math.floor((y-r)/this.size),0,this.h-1),y1=clamp(Math.floor((y+r)/this.size),0,this.h-1);
+    for(let yy=y0;yy<=y1;yy++)for(let xx=x0;xx<=x1;xx++){
+      const bucket=this.buckets[yy*this.w+xx];
+      if(bucket.onlyTeam===excludedTeam)continue;
+      for(let i=0;i<bucket.length;i++)fn(bucket[i]);
+    }
+  }
 }
 
 export class Game {
@@ -438,9 +452,9 @@ export class Game {
       if(ds(s.home,keep)<1){const home=[...remaining].sort((a,b)=>b.hp-a.hp||a.id-b.id)[0];s.home={x:home.x,y:home.y};if(s.rally&&ds(s.rally,keep)<4)s.rally={...s.home};}
       this.recount();this.event(`${s.name} still holds ${remaining.length} castle${remaining.length===1?'':'s'}. ${site.name} is now a recapturable ruin.`,s.id);
     }else if(this.mode.kingSurvival&&this.kingFor(keep.team)){this.recount();this.event(`${s.name}'s castle fell, but its king still commands the army.`,s.id);}
-    else this.eliminate(keep.team);
+    else this.eliminate(keep.team,'castle',keep);
   }
-  eliminate(team,reason='castle'){
+  eliminate(team,reason='castle',location=null){
     const s=this.teams[team];if(!s?.alive)return;s.alive=false;s.count=0;s.tiles=0;s.value=0;s.banners=0;s.keeps=0;s.income=0;s.heroTimer=0;s.rally=null;
     BattleStandards.eliminateStandards(this,team);
     for(const u of this.units)if(u.team===team){u.hp=0;u.target=null;u.order=null;}
@@ -449,7 +463,7 @@ export class Game {
     // faction directly, rather than damaging each of its keeps first.
     for(const site of this.castles)if(site.team===team){site.team=-1;site.buildingId=null;site.ruined=true;site.progress.fill(0);site.controller=null;site.contested=false;}
     for(const tile of this.tiles){if(tile.owner===team)tile.owner=-1;if(tile.claim===team){tile.claim=-1;tile.capture=0;}}
-    this.projectiles=this.projectiles.filter(p=>p.team!==team);this.fireZones=this.fireZones.filter(z=>z.team!==team);this.event(reason==='king'?`${s.name}'s king has fallen. Its army is eliminated.`:`${s.name}'s last castle has fallen. Its faction is wiped out.`,team);
+    this.projectiles=this.projectiles.filter(p=>p.team!==team);this.fireZones=this.fireZones.filter(z=>z.team!==team);this.event(reason==='king'?`${s.name}'s king has fallen. Its army is eliminated.`:`${s.name}'s last castle has fallen. Its faction is wiped out.`,team,location);
     this.checkVictory();
   }
 
@@ -513,7 +527,10 @@ export class Game {
   isWalkable(x,y){return Number.isFinite(x)&&Number.isFinite(y)&&isPassableTile(this.tileAt(x,y));}
   buildingGround(type,x,y){const radius=(BUILD_DEFS[type]?.radius||.5)+.12;for(const [dx,dy]of [[0,0],[-radius,0],[radius,0],[0,-radius],[0,radius],[-radius,-radius],[radius,radius],[-radius,radius],[radius,-radius]]){const tile=this.tileAt(x+dx,y+dy);if(!isPassableTile(tile)||['bridge','ford','pass','road'].includes(tile.feature))return false;}return true;}
   bound(p){p.x=clamp(p.x,1.22,this.W-1.22);p.y=clamp(p.y,1.22,this.H-1.22);return p;}
-  event(text,team=-1){this.events.push({id:++this.eventId,text,team,time:this.time});if(this.events.length>35)this.events.shift();}
+  event(text,team=-1,location=null){
+    const event={id:++this.eventId,text,team,time:this.time};
+    if(location){event.x=location.x;event.y=location.y;}
+    this.events.push(event);if(this.events.length>35)this.events.shift();}
   addUnit(team,type,x,y){
     if(type==='hero'){const existing=this.heroFor(team);if(existing)return existing;}
     const d=UNIT_DEFS[type],s=this.teams[team],armor=this.upgradeMultiplier('armor',s.upgrades.armor),angle=Math.atan2(this.H/2-y,this.W/2-x);const u={id:this.nextId++,team,type,x,y,radius:d.radius,hp:d.hp*armor,maxHp:d.hp*armor,vx:0,vy:0,facingX:Math.cos(angle),facingY:Math.sin(angle),backpedaling:false,attackAnim:0,phase:this.random()*6.28,cooldown:this.random()*d.rate,seek:this.random()*.2,target:null,order:null,charge:0,momentum:0,charging:false,chargeSpeed:0,chargeDir:{x:1,y:0},chargeRunup:0,chargeTravel:0,chargeCooldown:0,chargeElapsed:0,chargeHits:this.unitClass(type)==='cavalry'?new Map():null,knockT:0,knockVX:0,knockVY:0,alive:true,spawn:this.time,hit:0,shieldType:d.shieldType,shieldGuard:'lowered',shieldGuardTime:0,spearState:d.spearBrace?'moving':undefined};this.bound(u);if(!this.isWalkable(u.x,u.y))Object.assign(u,this.navigation.nearestPassable(u));this.units.push(u);this.byId.set(u.id,u);s.count++;if(d.setupSeconds){u.setupProgress=0;u.setupX=u.x;u.setupY=u.y;}if(type==='hero')BattleStandards.attachHero(this,u);return u;
@@ -573,9 +590,8 @@ export class Game {
     // Keep ranged fighters at the rear instead of collapsing the whole army onto one point.
     const rank=u=>this.unitClass(u)==='siege'?4:this.unitClass(u)==='archer'?3:UNIT_DEFS[u.type].spearBrace?0:UNIT_DEFS[u.type].shieldBearer?.5:1;
     arr.sort((a,b)=>rank(a)-rank(b)||a.id-b.id);
-    const spacing=formation==='spread'?.7:.43,cols=Math.max(3,Math.ceil(Math.sqrt(arr.length)*1.45)),rows=Math.ceil(arr.length/cols);
-    arr.forEach((u,i)=>{let side=(i%cols-(Math.min(cols,arr.length)-1)/2)*spacing,back=(Math.floor(i/cols)-(rows-1)/2)*spacing;
-      if(formation==='wedge'&&arr.length>1){side=(i%cols-(cols-1)/2)*spacing;back=Math.abs(side)*.7+Math.floor(i/cols)*spacing-rows*spacing*.45;}
+    const cols=Math.max(3,Math.ceil(Math.sqrt(arr.length)*1.45));
+    arr.forEach((u,i)=>{const {side,back}=marchSlot(i,arr.length,cols,formation);
       let goal=this.bound({x:x+sideX*side-fx*back,y:y+sideY*side-fy*back});if(!this.isWalkable(goal.x,goal.y))goal=this.navigation.nearestPassable(goal)||destination;if(!this.navigation.isClearPoint(goal.x,goal.y,u.radius))goal={x:Math.floor(goal.x)+.5,y:Math.floor(goal.y)+.5};if(this.unitClass(u)==='cavalry'&&(mode!=='attack'||u.charging&&((goal.x-u.x)*u.chargeDir.x+(goal.y-u.y)*u.chargeDir.y)<0||locked&&fx*u.chargeDir.x+fy*u.chargeDir.y<.5))this.stopCharge(u);u.championRegroup=null;u.championCyclePending=false;this.interruptAction(u);u.order={...goal,mode,formation,groupX:x,groupY:y,...(locked?{facingX:fx,facingY:fy}:{})};u.braceTime=0;u.braceDir=null;u.target=null;u.aggroAnchor=null;u.seek=0;u.sweepWait=0;if(UNIT_DEFS[u.type].setupSeconds&&Math.hypot(goal.x-u.x,goal.y-u.y)>.16)u.setupProgress=0;
     });
   }
@@ -633,6 +649,10 @@ export class Game {
       // H stops travel without discarding the stable lane, preset or facing
       // preference of a placed formation. Explicit attack targets are cancelled.
       u.order={...previous,x:u.x,y:u.y,mode:'hold',formation:previous.formation||'line',...facing};delete u.order.targetId;
+      if(previous.advanceId!=null){
+        delete u.order.advanceId;delete u.order.advanceIndex;delete u.order.advanceStatus;
+        delete u.order.advancePace;delete u.order.advanceSpeed;delete u.order.marchSide;delete u.order.marchBack;
+      }
       u.target=null;u.aggroAnchor=null;u.seek=0;stopped.add(id);
       if(previous.placementId!=null)placements.add(previous.placementId);
     }
@@ -995,7 +1015,7 @@ export class Game {
     }
     const attacker=this.teams[source.team],attackerUnit=this.sourceUnit(source);if(this.unitClass(source)==='infantry'&&attacker?.sigil==='flayed'&&attackerUnit?.hp>0){if(attackerUnit.harvestUntil>this.time)attackerUnit.hp=Math.min(attackerUnit.maxHp,attackerUnit.hp+dealt*.25);if(target.hp<=0&&UNIT_DEFS[target.type])attackerUnit.hp=Math.min(attackerUnit.maxHp,attackerUnit.hp+8);}
     this.specialistHit(target,amount,source);
-    if(target.hp<=0){const s=this.teams[source.team];if(s){s.kills++;s.gold+=heroKillReward(this,target,source);}this.stats.dead++;if(UNIT_DEFS[target.type]){if(target.type==='hero'){target.heroDeathMode=target.heroMode;BattleStandards.heroDied(this,target);}this.aftermath.record(target,this.teams[target.team],this.aftermath.time,this.unitClass(target));this.teams[target.team].count--;if(target.isKing&&this.mode.kingSurvival){this.eliminate(target.team,'king');return;}if(this.unitClass(target)==='hero'){this.teams[target.team].heroTimer=35;this.event(`${heroProfile(this.teams[target.team]).name} has fallen.`,target.team);}}else{this.event(`${this.teams[target.team].name} lost a ${BUILD_DEFS[target.type].label.toLowerCase()}.`,target.team);this.effects.push({x:target.x,y:target.y,type:'explosion',life:1.1,maxLife:1.1,team:target.team});if(target.type==='keep')this.ruinCastle(target);}}
+    if(target.hp<=0){const s=this.teams[source.team];if(s){s.kills++;s.gold+=heroKillReward(this,target,source);}this.stats.dead++;if(UNIT_DEFS[target.type]){if(target.type==='hero'){target.heroDeathMode=target.heroMode;BattleStandards.heroDied(this,target);}this.aftermath.record(target,this.teams[target.team],this.aftermath.time,this.unitClass(target));this.teams[target.team].count--;if(target.isKing&&this.mode.kingSurvival){this.eliminate(target.team,'king',target);return;}if(this.unitClass(target)==='hero'){this.teams[target.team].heroTimer=35;this.event(`${heroProfile(this.teams[target.team]).name} has fallen.`,target.team,target);}}else{this.event(`${this.teams[target.team].name} lost a ${BUILD_DEFS[target.type].label.toLowerCase()}.`,target.team,target);this.effects.push({x:target.x,y:target.y,type:'explosion',life:1.1,maxLife:1.1,team:target.team});if(target.type==='keep')this.ruinCastle(target);}}
   }
   findTarget(u){
     if(u.standardAction)return null;
@@ -1010,7 +1030,7 @@ export class Game {
       if(this.unitClass(u)==='archer'&&this.unitClass(e)==='infantry')score*=.78;
       if(this.unitClass(u)==='infantry'&&this.unitClass(e)==='cavalry')score*=.75;
       if(score<bestScore&&(!direct||this.combatTerrain.canShoot(u,e))&&(!autonomous||this.canAggro(u,e))){best=e;bestScore=score;}
-    });
+    },u.team);
     // Guards and patrols ignore forts; expanders defending an actual attack
     // may retaliate against nearby structures within the same pursuit leash.
     if(autonomous&&u.order?.mode!=='expand')return best;
@@ -1164,6 +1184,7 @@ export class Game {
       const firstLance=champion&&u.lanceFirstStrike,amount=(24+62*power)*this.upgradeMultiplier('weapons',this.teams[u.team].upgrades.weapons)*resistance*(UNIT_DEFS[e.type].shieldType?1:rear?1.45:flank?1.15:1)*(lancer?1.2:1)*(lancer&&braced?1.25:1)*(champion?(firstLance?1.8:.5):1);
       if(champion){u.lanceFirstStrike=false;u.championChargeHit=true;}
       u.chargeHits.set(e.id,this.time);this.damage(e,amount,{...this.unitSource(u,'charge'),originX:e.x-dir.x,originY:e.y-dir.y});this.stats.chargeImpacts++;
+      if(u.type==='cavalry')u.attackVisual={at:this.time,elapsed:0,cycle:.4,dx:dir.x,dy:dir.y,distance:Math.hypot(e.x-u.x,e.y-u.y),action:'charge'};
       if(u.type==='storm_rider'&&e.hp>0){e.shockUntil=this.time+.65;this.specialCue('shock',e,u.team);}
       const distance=(braced?.6+.5*power:this.unitClass(e)==='archer'?1.1+1.05*power:this.unitClass(e)==='infantry'?.8+.85*power:this.unitClass(e)==='hero'?.35+.3*power:this.unitClass(e)==='siege'?.3+.2*power:.7+.65*power)*this.knockbackFactor(e,frontal)*(this.teams[u.team].sigil==='stag'?1.2:1)*(lancer?1.3:1)*(firstLance?1.5:1)*(UNIT_DEFS[e.type].shieldType&&e.shieldGuard==='guard'&&frontal?(UNIT_DEFS[e.type].shieldType==='heavy'?.45:.8):1);
       const lateral=(e.x-u.x)*-dir.y+(e.y-u.y)*dir.x,side=Math.abs(lateral)>.04?Math.sign(lateral):e.id%2?1:-1,scatter=braced?.45:this.unitClass(e)==='archer'?.9:this.unitClass(e)==='infantry'?.72:.45;
@@ -1240,7 +1261,7 @@ export class Game {
       if(e.facingX*dx+e.facingY*dy>-Math.SQRT1_2)return;
       const contact=sweptWeaponContact(u,target,e,UNIT_DEFS[e.type].weaponReach||UNIT_DEFS[e.type].range,u.radius+.08);
       if(contact&&contact.t<best){best=contact.t;threat=e;}
-    });
+    },u.team);
     if(!threat&&UNIT_DEFS[target.type]?.shieldType&&target.shieldGuard==='guard'){
       const dx=u.x-target.x,dy=u.y-target.y,length=Math.hypot(dx,dy)||1;
       if((dx*target.facingX+dy*target.facingY)/length>.5)threat=target;
@@ -1250,7 +1271,7 @@ export class Game {
     for(const side of [-1,1]){
       const point=this.bound({x:threat.x-fy*side*offset+fx*.4,y:threat.y+fx*side*offset+fy*.4});
       if(!this.navigation.isClearPoint(point.x,point.y,u.radius)||!this.navigation.clearSegment(u,point,u.radius))continue;
-      let risk=0;this.hash.visit(point.x,point.y,2.6,e=>{if(e.hp>0&&this.hostile(e.team,u.team)&&this.isVisibleTo(u.team,e)){const d=UNIT_DEFS[e.type];risk+=d.spearBrace&&e.spearState==='braced'?3:1;}});
+      let risk=0;this.hash.visit(point.x,point.y,2.6,e=>{if(e.hp>0&&this.hostile(e.team,u.team)&&this.isVisibleTo(u.team,e)){const d=UNIT_DEFS[e.type];risk+=d.spearBrace&&e.spearState==='braced'?3:1;}},u.team);
       options.push({...point,score:Math.hypot(point.x-u.x,point.y-u.y)+risk*1.2,side});
     }
     options.sort((a,b)=>a.score-b.score||a.side-b.side);
@@ -1299,7 +1320,7 @@ export class Game {
     for(const b of this.buildings){if(b.hp<=0)continue;const d=BUILD_DEFS[b.type],s=this.teams[b.team];b.hit=Math.max(0,b.hit-dt);b.cooldown-=dt;if(b.musterCooldown>0)b.musterCooldown=Math.max(0,b.musterCooldown-dt);
       if(d.unit&&houseCanRecruit(d.unit,s.sigil)){const training=this.trainingRate(b);b.spawnTimer+=dt*training;if(b.spawnTimer>=d.interval){if(s.count<s.cap&&!(b.musterCooldown>0)){this.spawnBatch(b,d.unit,d.batch);b.spawnTimer=0;}else b.spawnTimer=d.interval;}}
       const defense=b.type==='keep'?HALL_LEVELS[b.level||1]:b.type==='tower'?TOWER_LEVELS[b.level||1]:null;const falcon=s.sigil==='falcon'&&b.type==='tower',guard=falcon&&s.buffs.falconUntil>this.time,towerRange=(defense?.range||d.range||0)+(falcon?.7:0)+(guard?1.2:0);
-      if(d.range&&b.cooldown<=0){let target=null,best=towerRange*towerRange;this.hash.visit(b.x,b.y,towerRange,u=>{if(this.hostile(u.team,b.team)&&u.hp>0&&this.isVisibleTo(b.team,u)){const dd=ds(b,u);if(dd<best&&this.combatTerrain.canShoot(b,u)){target=u;best=dd;}}});if(target){this.projectiles.push({sx:b.x,sy:b.y,x:b.x,y:b.y,tx:target.x,ty:target.y,t:0,duration:.34,type:'arrow',team:b.team,target:target.id,damage:(defense?.damage||d.damage)*this.upgradeMultiplier('weapons',s.upgrades.weapons),splash:0});b.cooldown=d.rate/(guard?1.4:1);}}
+      if(d.range&&b.cooldown<=0){let target=null,best=towerRange*towerRange;this.hash.visit(b.x,b.y,towerRange,u=>{if(this.hostile(u.team,b.team)&&u.hp>0&&this.isVisibleTo(b.team,u)){const dd=ds(b,u);if(dd<best&&this.combatTerrain.canShoot(b,u)){target=u;best=dd;}}},b.team);if(target){this.projectiles.push({sx:b.x,sy:b.y,x:b.x,y:b.y,tx:target.x,ty:target.y,t:0,duration:.34,type:'arrow',team:b.team,target:target.id,damage:(defense?.damage||d.damage)*this.upgradeMultiplier('weapons',s.upgrades.weapons),splash:0});b.cooldown=d.rate/(guard?1.4:1);}}
       if(b.type==='keep'&&b.hp<b.maxHp&&this.time%1<dt)b.hp=Math.min(b.maxHp,b.hp+2);
     }
   }
@@ -1340,7 +1361,7 @@ export class Game {
       if(d.spearBrace&&!this.isHuman(u.team)){
         // Rival spear factions prepare a line against an approaching gallop;
         // human spearmen follow the player's Hold order instead.
-        let threat=null,nearest=7.2**2;this.hash.visit(u.x,u.y,7.2,e=>{if(!this.hostile(e.team,u.team)||e.hp<=0||!this.isVisibleTo(u.team,e)||this.unitClass(e)!=='cavalry'||e.order?.mode!=='attack')return;const dx=u.x-e.x,dy=u.y-e.y,distance=dx*dx+dy*dy,speed=Math.hypot(e.vx||0,e.vy||0);if(distance<nearest&&speed>.5&&((e.vx||0)*dx+(e.vy||0)*dy)/(speed*Math.sqrt(distance)||1)>.7){threat=e;nearest=distance;}});
+        let threat=null,nearest=7.2**2;this.hash.visit(u.x,u.y,7.2,e=>{if(!this.hostile(e.team,u.team)||e.hp<=0||!this.isVisibleTo(u.team,e)||this.unitClass(e)!=='cavalry'||e.order?.mode!=='attack')return;const dx=u.x-e.x,dy=u.y-e.y,distance=dx*dx+dy*dy,speed=Math.hypot(e.vx||0,e.vy||0);if(distance<nearest&&speed>.5&&((e.vx||0)*dx+(e.vy||0)*dy)/(speed*Math.sqrt(distance)||1)>.7){threat=e;nearest=distance;}},u.team);
         if(threat){u.spearThreatAt=this.time;if(u.order?.mode!=='hold'&&u.order?.aiTask!=='spearBrace'){u.spearResumeOrder=u.order?{...u.order}:null;this.hold([u.id]);const dx=threat.x-u.x,dy=threat.y-u.y,length=Math.hypot(dx,dy)||1;u.braceDir={x:dx/length,y:dy/length};u.order.aiTask='spearBrace';}}
         else if(u.order?.aiTask==='spearBrace'&&this.time-(u.spearThreatAt||0)>2){u.order=u.spearResumeOrder||{x:u.x,y:u.y,mode:'hold'};u.spearResumeOrder=null;u.braceDir=null;u.braceTime=0;}
       }
@@ -1385,7 +1406,7 @@ export class Game {
       // A facing order is a deliberate formation march, never an invitation to
       // chase a flank target away from the ordered line or orderly withdrawal.
       if(locked&&order&&mode!=='hold'&&Math.hypot(order.x-u.x,order.y-u.y)>.16){tx=order.x;ty=order.y;moving=true;}
-      if(team.sigil==='sun'&&this.isRanged(u)&&mode==='attack'){let danger=null,nearest=1.7**2;this.hash.visit(u.x,u.y,1.7,e=>{if(this.hostile(e.team,u.team)&&e.hp>0&&this.isVisibleTo(u.team,e)&&this.unitClass(e)!=='archer'&&this.unitClass(e)!=='siege'){const dd=ds(u,e);if(dd<nearest){nearest=dd;danger=e;}}});if(danger){const away=Math.sqrt(nearest)||1;tx=u.x+(u.x-danger.x)/away;ty=u.y+(u.y-danger.y)/away;moving=true;}}
+      if(team.sigil==='sun'&&this.isRanged(u)&&mode==='attack'){let danger=null,nearest=1.7**2;this.hash.visit(u.x,u.y,1.7,e=>{if(this.hostile(e.team,u.team)&&e.hp>0&&this.isVisibleTo(u.team,e)&&this.unitClass(e)!=='archer'&&this.unitClass(e)!=='siege'){const dd=ds(u,e);if(dd<nearest){nearest=dd;danger=e;}}},u.team);if(danger){const away=Math.sqrt(nearest)||1;tx=u.x+(u.x-danger.x)/away;ty=u.y+(u.y-danger.y)/away;moving=true;}}
       if(u.disciplineUntil>this.time&&mode==='attack'&&order&&Math.hypot(order.x-u.x,order.y-u.y)>.16){tx=order.x;ty=order.y;moving=true;}
       if(u.charging){tx=u.x+u.chargeDir.x;ty=u.y+u.chargeDir.y;moving=true;}
       if(d.crossbow&&(u.reload||u.crossbowAim)&&!['move','advance','expand','patrol','retreat'].includes(mode)){moving=false;tx=u.x;ty=u.y;}

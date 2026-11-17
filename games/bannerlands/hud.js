@@ -1,12 +1,17 @@
 // Commands open above a persistent corner minimap; the battlefield stays full size.
 export function createBattleHud({navigate,onClose=()=>{}}){
  const $=id=>document.getElementById(id),panel=$('commandPanel');
- const titles={build:'Build (B)',army:'Muster (U)',orders:'Orders (O)',map:'Map (M)',council:'Council (C)',realm:'Realm & objectives',settings:'Settings'};
+ const titles={build:'Build',army:'Muster',orders:'Orders',map:'Map',council:'Council',realm:'Realm & objectives',settings:'Settings'};
+ const keys={build:'B',army:'U',orders:'O',map:'M',council:'C'};
  let pane=null,touchSelect=false;
  function sync(){
   panel.hidden=pane===null;
   document.body.classList.toggle('drawer-open',pane!==null);
-  if(pane){panel.dataset.pane=pane;$('drawerTitle').textContent=titles[pane];}
+  if(pane){
+   panel.dataset.pane=pane;$('drawerTitle').textContent=titles[pane];
+   $('drawerKey').hidden=!keys[pane];$('drawerKey').textContent=keys[pane]||'';
+   $('drawerArt').className='command-art art-'+(pane==='realm'?'map':pane==='settings'?'council':pane);
+  }
   for(const section of panel.querySelectorAll('[data-hud-pane]'))section.hidden=section.dataset.hudPane!==pane;
   $('drawerNav').hidden=!['council','realm','settings'].includes(pane);
   for(const button of document.querySelectorAll('[data-drawer]')){

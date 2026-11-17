@@ -1,26 +1,71 @@
-// Bound simultaneous artwork requests so several guests loading together stay
-// comfortably below the temporary tunnel's in-flight request limit.
-const waiting=[];
-let active=0;
-const limit=8;
+const requests=[];
+const decodes=[];
+let activeRequests=0;
+let activeDecodes=0;
+const timings={loaded:0,requestMs:0,decodeMs:0};
+
+export function artworkTimings(){return {...timings};}
+
 function drain(){
- while(active<limit&&waiting.length){active++;const {image,source}=waiting.shift();load(image,source);}
+  while(activeDecodes<2&&decodes.length){
+    activeDecodes++;
+    decodes.shift()();
+  }
+  // Keep backpressure on downloads while decoded frames are being prepared.
+  while(activeRequests+activeDecodes+decodes.length<8&&requests.length){
+    activeRequests++;
+    requests.shift()();
+  }
 }
-function load(image,source){
- const loaded=image.onload,failed=image.onerror;let attempt=0,timer=null,finished=false;
- function finish(callback,event){
-  if(finished)return;finished=true;clearTimeout(timer);image.onload=loaded;image.onerror=failed;active--;
-  try{callback?.call(image,event);}finally{drain();}
- }
- function retry(event){
-  clearTimeout(timer);if(attempt>=3){finish(failed,event);return;}
-  timer=setTimeout(begin,attempt*500);
- }
- function begin(){
-  attempt++;image.onload=event=>finish(loaded,event);image.onerror=retry;
-  timer=setTimeout(()=>retry(new Error('Artwork request timed out.')),30000);
-  try{image.src=source;}catch(error){retry(error);}
- }
- begin();
+
+export function queueArtwork(image,source){
+  const loaded=image.onload,failed=image.onerror;
+  let attempts=0;
+  function finish(callback,event){
+    image.onload=loaded;
+    image.onerror=failed;
+    try{callback?.call(image,event);}finally{drain();}
+  }
+  function retry(error){
+    if(attempts>=3){finish(failed,error);return;}
+    setTimeout(()=>{requests.push(request);drain();},attempts*500);
+    drain();
+  }
+  function request(){
+    attempts++;
+    const start=performance.now();
+    let pending=true;
+    const timer=setTimeout(()=>onError(new Error('Artwork request timed out.')),30000);
+    function endRequest(){
+      if(!pending)return false;
+      pending=false;
+      clearTimeout(timer);
+      image.onload=null;
+      image.onerror=null;
+      activeRequests--;
+      timings.requestMs+=performance.now()-start;
+      return true;
+    }
+    function onError(error){
+      if(endRequest())retry(error);
+    }
+    image.onerror=onError;
+    image.onload=event=>{
+      if(!endRequest())return;
+      decodes.push(async()=>{
+        const startDecode=performance.now();
+        let error;
+        try{await image.decode?.();}catch(reason){error=reason;}
+        timings.decodeMs+=performance.now()-startDecode;
+        activeDecodes--;
+        if(error){retry(error);return;}
+        timings.loaded++;
+        finish(loaded,event);
+      });
+      drain();
+    };
+    try{image.src=source;}catch(error){onError(error);}
+  }
+  requests.push(request);
+  drain();
 }
-export function queueArtwork(image,source){waiting.push({image,source});drain();}

@@ -27,7 +27,7 @@ test('HUD starts closed and each drawer exposes only its own controls',()=>{
  const f=fixture();assert.equal(f.hud.isOpen,false);assert.equal(f.element('commandPanel').hidden,true);assert.ok(f.panes.every(p=>p.hidden));
  for(const button of f.dock){
   button.click();assert.equal(f.hud.isOpen,true);assert.equal(f.element('commandPanel').dataset.pane,button.dataset.drawer);
-  const key={build:'B',army:'U',orders:'O',map:'M',council:'C'}[button.dataset.drawer];assert.ok(f.element('drawerTitle').textContent.includes('('+key+')'),'The selected panel title shows its opening key.');
+  const key={build:'B',army:'U',orders:'O',map:'M',council:'C'}[button.dataset.drawer];assert.equal(f.element('drawerKey').textContent,key,'The panel heading shows its opening key.');
   assert.ok(f.panes.every(p=>p.hidden===(p.dataset.hudPane!==button.dataset.drawer)));
   assert.equal(f.dock.filter(b=>b.getAttribute('aria-expanded')==='true').length,1);
   assert.equal(f.element('closeDrawer').focused,f.navigation.length);

@@ -1,0 +1,475 @@
+{
+  "date": "2026-11-17",
+  "baselineCommit": "72a979cc43fb2c5d4f37d3b06c0fbd4080460a04",
+  "reviewVersion": "0.3.0-battlefield-preview.1",
+  "reference": {
+    "cpu": "AMD Ryzen 7 5825U with Radeon Graphics",
+    "logicalProcessors": 16,
+    "memoryGiB": 13.841178894042969,
+    "os": "win32 10.0.26200",
+    "arch": "x64",
+    "node": "v24.19.0"
+  },
+  "browserVersion": "157.0.8103.52",
+  "browserMethod": {
+    "seed": 44277,
+    "landscape": "Riverlands",
+    "viewport": {
+      "width": 1400,
+      "height": 900,
+      "dpr": 1
+    },
+    "framesPerRow": 120,
+    "inputsPerRow": 3,
+    "units": "milliseconds",
+    "notes": "The paired baseline was the most recent reference run on the same machine and fixtures. An earlier pass over the same reference build shows measurement variability. Native animation frame scheduling can yield different elapsed game time in each fixed 120-interval sample. The baseline had no distinct Performance preset. Trusted keyboard H measures handler to next frame."
+  },
+  "browser": [
+    {
+      "scenario": "typical",
+      "troops": 280,
+      "preset": "high",
+      "earlierReference": {
+        "p95Ms": 49.9,
+        "p99Ms": 66.7,
+        "over100Ms": 0,
+        "intervals": 120,
+        "simulationP95Ms": 10.7,
+        "drawP95Ms": 16.7,
+        "endingGameClockSeconds": 3.6,
+        "inputToNextFrameP95Ms": 43.6,
+        "holdApplied": true
+      },
+      "before": {
+        "p95Ms": 16.8,
+        "p99Ms": 16.8,
+        "over100Ms": 0,
+        "intervals": 120,
+        "simulationP95Ms": 3,
+        "drawP95Ms": 5.7,
+        "endingGameClockSeconds": 2.6,
+        "inputToNextFrameP95Ms": 20,
+        "holdApplied": true
+      },
+      "after": {
+        "p95Ms": 16.8,
+        "p99Ms": 33.3,
+        "over100Ms": 0,
+        "intervals": 120,
+        "simulationP95Ms": 4,
+        "drawP95Ms": 8.6,
+        "endingGameClockSeconds": 2.767,
+        "inputToNextFrameP95Ms": 12.7,
+        "holdApplied": true
+      }
+    },
+    {
+      "scenario": "late-march",
+      "troops": 4480,
+      "preset": "high",
+      "earlierReference": {
+        "p95Ms": 116.7,
+        "p99Ms": 150,
+        "over100Ms": 32,
+        "intervals": 120,
+        "simulationP95Ms": 87.9,
+        "drawP95Ms": 16,
+        "endingGameClockSeconds": 484.833,
+        "inputToNextFrameP95Ms": 141.1,
+        "holdApplied": true
+      },
+      "before": {
+        "p95Ms": 50,
+        "p99Ms": 50.2,
+        "over100Ms": 0,
+        "intervals": 120,
+        "simulationP95Ms": 34.8,
+        "drawP95Ms": 7,
+        "endingGameClockSeconds": 484.833,
+        "inputToNextFrameP95Ms": 49.4,
+        "holdApplied": true
+      },
+      "after": {
+        "p95Ms": 50.2,
+        "p99Ms": 66.7,
+        "over100Ms": 0,
+        "intervals": 120,
+        "simulationP95Ms": 40.1,
+        "drawP95Ms": 9.8,
+        "endingGameClockSeconds": 484.833,
+        "inputToNextFrameP95Ms": 66.2,
+        "holdApplied": true
+      }
+    },
+    {
+      "scenario": "full-battle",
+      "troops": 4480,
+      "preset": "high",
+      "earlierReference": {
+        "p95Ms": 400,
+        "p99Ms": 450,
+        "over100Ms": 119,
+        "intervals": 120,
+        "simulationP95Ms": 224,
+        "drawP95Ms": 176.5,
+        "endingGameClockSeconds": 484.833,
+        "inputToNextFrameP95Ms": 460.9,
+        "holdApplied": true
+      },
+      "before": {
+        "p95Ms": 283.2,
+        "p99Ms": 316.8,
+        "over100Ms": 104,
+        "intervals": 120,
+        "simulationP95Ms": 143.8,
+        "drawP95Ms": 134.8,
+        "endingGameClockSeconds": 484.833,
+        "inputToNextFrameP95Ms": 180,
+        "holdApplied": true
+      },
+      "after": {
+        "p95Ms": 267.3,
+        "p99Ms": 300,
+        "over100Ms": 115,
+        "intervals": 120,
+        "simulationP95Ms": 125.1,
+        "drawP95Ms": 133.2,
+        "endingGameClockSeconds": 484.867,
+        "inputToNextFrameP95Ms": 260,
+        "holdApplied": true
+      }
+    },
+    {
+      "scenario": "fog-camera",
+      "troops": 1120,
+      "preset": "high",
+      "earlierReference": {
+        "p95Ms": 133.4,
+        "p99Ms": 183.2,
+        "over100Ms": 12,
+        "intervals": 120,
+        "simulationP95Ms": 75.4,
+        "drawP95Ms": 39,
+        "endingGameClockSeconds": 4.767,
+        "inputToNextFrameP95Ms": 46.5,
+        "holdApplied": true
+      },
+      "before": {
+        "p95Ms": 16.9,
+        "p99Ms": 33.3,
+        "over100Ms": 0,
+        "intervals": 120,
+        "simulationP95Ms": 19.6,
+        "drawP95Ms": 7.8,
+        "endingGameClockSeconds": 2.633,
+        "inputToNextFrameP95Ms": 36.1,
+        "holdApplied": true
+      },
+      "after": {
+        "p95Ms": 150.1,
+        "p99Ms": 166.8,
+        "over100Ms": 8,
+        "intervals": 120,
+        "simulationP95Ms": 53.4,
+        "drawP95Ms": 29.5,
+        "endingGameClockSeconds": 4.467,
+        "inputToNextFrameP95Ms": 37.5,
+        "holdApplied": true
+      }
+    },
+    {
+      "scenario": "typical",
+      "troops": 280,
+      "preset": "performance",
+      "earlierReference": {
+        "p95Ms": 50,
+        "p99Ms": 100,
+        "over100Ms": 1,
+        "intervals": 120,
+        "simulationP95Ms": 9.4,
+        "drawP95Ms": 14.5,
+        "endingGameClockSeconds": 3.6,
+        "inputToNextFrameP95Ms": 27.4,
+        "holdApplied": true
+      },
+      "before": {
+        "p95Ms": 16.8,
+        "p99Ms": 16.9,
+        "over100Ms": 0,
+        "intervals": 120,
+        "simulationP95Ms": 4.3,
+        "drawP95Ms": 6.9,
+        "endingGameClockSeconds": 2.633,
+        "inputToNextFrameP95Ms": 12.7,
+        "holdApplied": true
+      },
+      "after": {
+        "p95Ms": 16.8,
+        "p99Ms": 33.4,
+        "over100Ms": 0,
+        "intervals": 120,
+        "simulationP95Ms": 3.3,
+        "drawP95Ms": 7,
+        "endingGameClockSeconds": 2.733,
+        "inputToNextFrameP95Ms": 26,
+        "holdApplied": true
+      }
+    },
+    {
+      "scenario": "full-battle",
+      "troops": 4480,
+      "preset": "performance",
+      "earlierReference": {
+        "p95Ms": 433.4,
+        "p99Ms": 516.6,
+        "over100Ms": 119,
+        "intervals": 120,
+        "simulationP95Ms": 236.2,
+        "drawP95Ms": 193.4,
+        "endingGameClockSeconds": 484.867,
+        "inputToNextFrameP95Ms": 526.6,
+        "holdApplied": true
+      },
+      "before": {
+        "p95Ms": 316.7,
+        "p99Ms": 400,
+        "over100Ms": 116,
+        "intervals": 120,
+        "simulationP95Ms": 171.1,
+        "drawP95Ms": 139.9,
+        "endingGameClockSeconds": 484.833,
+        "inputToNextFrameP95Ms": 214.2,
+        "holdApplied": true
+      },
+      "after": {
+        "p95Ms": 216.6,
+        "p99Ms": 233.3,
+        "over100Ms": 115,
+        "intervals": 120,
+        "simulationP95Ms": 93.5,
+        "drawP95Ms": 130.9,
+        "endingGameClockSeconds": 484.8,
+        "inputToNextFrameP95Ms": 169.4,
+        "holdApplied": true
+      }
+    }
+  ],
+  "hostMethod": {
+    "seed": 44277,
+    "landscape": "Four Rivers",
+    "simulationHz": 30,
+    "snapshotsPerSecond": 10,
+    "warmupTicks": 90,
+    "sampleTicks": 180
+  },
+  "host": [
+    {
+      "scenario": "four-houses-two-humans",
+      "humans": 2,
+      "houses": 4,
+      "troops": 280,
+      "fog": false,
+      "sameGameplayChecksumAcrossRevisions": true,
+      "before": {
+        "p95Ms": 28.4,
+        "p99Ms": 39.9,
+        "over100Ms": 0,
+        "realTimeRatio": 2.863,
+        "simulationP95Ms": 8.3,
+        "snapshotPerGuestP95Ms": 8.9,
+        "deltaAndSerializePerGuestP95Ms": 4.9,
+        "gzipPerGuestP95Ms": 1.5,
+        "initialWorldAllGuestsMs": 57.8,
+        "heapPeakBytes": 59725232,
+        "replicationChecksumParity": true
+      },
+      "after": {
+        "p95Ms": 28.3,
+        "p99Ms": 39.1,
+        "over100Ms": 0,
+        "realTimeRatio": 3.175,
+        "simulationP95Ms": 9.5,
+        "snapshotPerGuestP95Ms": 9.1,
+        "deltaAndSerializePerGuestP95Ms": 5.6,
+        "gzipPerGuestP95Ms": 1.1,
+        "initialWorldAllGuestsMs": 31.2,
+        "heapPeakBytes": 60465928,
+        "replicationChecksumParity": true
+      }
+    },
+    {
+      "scenario": "sixteen-houses-four-humans-fog",
+      "humans": 4,
+      "houses": 16,
+      "troops": 1120,
+      "fog": true,
+      "sameGameplayChecksumAcrossRevisions": true,
+      "before": {
+        "p95Ms": 160.2,
+        "p99Ms": 252.8,
+        "over100Ms": 34,
+        "realTimeRatio": 0.521,
+        "simulationP95Ms": 111.7,
+        "snapshotPerGuestP95Ms": 31.5,
+        "deltaAndSerializePerGuestP95Ms": 3.1,
+        "gzipPerGuestP95Ms": 1.0,
+        "initialWorldAllGuestsMs": 162.9,
+        "heapPeakBytes": 143910944,
+        "replicationChecksumParity": true
+      },
+      "after": {
+        "p95Ms": 96.7,
+        "p99Ms": 148.1,
+        "over100Ms": 6,
+        "realTimeRatio": 0.802,
+        "simulationP95Ms": 88.8,
+        "snapshotPerGuestP95Ms": 9.4,
+        "deltaAndSerializePerGuestP95Ms": 2.3,
+        "gzipPerGuestP95Ms": 0.8,
+        "initialWorldAllGuestsMs": 121.1,
+        "heapPeakBytes": 149679688,
+        "replicationChecksumParity": true
+      }
+    },
+    {
+      "scenario": "sixteen-houses-four-humans-full-capacity",
+      "humans": 4,
+      "houses": 16,
+      "troops": 4480,
+      "fog": false,
+      "sameGameplayChecksumAcrossRevisions": true,
+      "before": {
+        "p95Ms": 542.0,
+        "p99Ms": 747.0,
+        "over100Ms": 128,
+        "realTimeRatio": 0.134,
+        "simulationP95Ms": 226.9,
+        "snapshotPerGuestP95Ms": 77.6,
+        "deltaAndSerializePerGuestP95Ms": 56.0,
+        "gzipPerGuestP95Ms": 9.5,
+        "initialWorldAllGuestsMs": 345.0,
+        "heapPeakBytes": 522235168,
+        "replicationChecksumParity": true
+      },
+      "after": {
+        "p95Ms": 380.4,
+        "p99Ms": 499.4,
+        "over100Ms": 78,
+        "realTimeRatio": 0.217,
+        "simulationP95Ms": 160.0,
+        "snapshotPerGuestP95Ms": 65.3,
+        "deltaAndSerializePerGuestP95Ms": 63.1,
+        "gzipPerGuestP95Ms": 6.0,
+        "initialWorldAllGuestsMs": 432.3,
+        "heapPeakBytes": 644312976,
+        "replicationChecksumParity": true
+      }
+    },
+    {
+      "scenario": "sixteen-houses-two-humans-full-capacity-fog",
+      "humans": 2,
+      "houses": 16,
+      "troops": 4480,
+      "fog": true,
+      "sameGameplayChecksumAcrossRevisions": true,
+      "before": {
+        "p95Ms": 376.2,
+        "p99Ms": 488.1,
+        "over100Ms": 141,
+        "realTimeRatio": 0.185,
+        "simulationP95Ms": 353.9,
+        "snapshotPerGuestP95Ms": 78.5,
+        "deltaAndSerializePerGuestP95Ms": 9.8,
+        "gzipPerGuestP95Ms": 2.5,
+        "initialWorldAllGuestsMs": 88.1,
+        "heapPeakBytes": 206217024,
+        "replicationChecksumParity": true
+      },
+      "after": {
+        "p95Ms": 160.6,
+        "p99Ms": 219.5,
+        "over100Ms": 36,
+        "realTimeRatio": 0.449,
+        "simulationP95Ms": 159.6,
+        "snapshotPerGuestP95Ms": 12.3,
+        "deltaAndSerializePerGuestP95Ms": 5.6,
+        "gzipPerGuestP95Ms": 1.2,
+        "initialWorldAllGuestsMs": 54.5,
+        "heapPeakBytes": 229179592,
+        "replicationChecksumParity": true
+      }
+    }
+  ],
+  "startup": [
+    {
+      "cache": "cold",
+      "earlierReference": {
+        "readyMs": 14558.9,
+        "imageTransferBytes": 46686825,
+        "imageResponseTotalMs": 22594.1,
+        "decodeTotalMs": null,
+        "readyClock": "first observed enabled button"
+      },
+      "before": {
+        "readyMs": 7048.1,
+        "imageTransferBytes": 22911944,
+        "imageResponseTotalMs": 10945.8,
+        "decodeTotalMs": null,
+        "readyClock": "first observed enabled button"
+      },
+      "after": {
+        "readyMs": 5360.7,
+        "imageTransferBytes": 16821903,
+        "imageResponseTotalMs": 7705.6,
+        "decodeTotalMs": 9058.5,
+        "readyClock": "critical-art mark"
+      }
+    },
+    {
+      "cache": "warm",
+      "earlierReference": {
+        "readyMs": 14275.9,
+        "imageTransferBytes": 0,
+        "imageResponseTotalMs": 6671.6,
+        "decodeTotalMs": null,
+        "readyClock": "first observed enabled button"
+      },
+      "before": {
+        "readyMs": 5402.2,
+        "imageTransferBytes": 0,
+        "imageResponseTotalMs": 2377.8,
+        "decodeTotalMs": null,
+        "readyClock": "first observed enabled button"
+      },
+      "after": {
+        "readyMs": 4213.5,
+        "imageTransferBytes": 0,
+        "imageResponseTotalMs": 1232.5,
+        "decodeTotalMs": 7094.2,
+        "readyClock": "critical-art mark"
+      }
+    }
+  ],
+  "hud": {
+    "closedDesktopPercent": {
+      "1366x768": 12.38,
+      "1920x1080": 6.26
+    },
+    "included": [
+      "mixed army selection",
+      "minimap",
+      "temporary order confirmation"
+    ],
+    "touchMethod": "Chrome device emulation",
+    "landscapeViewports": [
+      "667x375",
+      "740x320",
+      "844x390"
+    ],
+    "landscapeSideInsetsPx": 32,
+    "landscapeBottomInsetPx": 8,
+    "minimumCommandTargetPx": 44,
+    "selectedCommanderSurvivedRotation": true,
+    "drawerSurvivedRotation": true
+  }
+}

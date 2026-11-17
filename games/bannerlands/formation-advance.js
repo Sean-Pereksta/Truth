@@ -1,6 +1,6 @@
 // Cohorts share a destination, front and pace. Individual soldiers retain their
 // slot and may strike nearby enemies, but never choose where the cohort turns.
-import {formationPreview,formationRole,updatePlacedFormations} from './formation-placement.js';
+import {formationPreview,formationRole,marchSlot,releaseFormationSlots,fillFormationGaps,updatePlacedFormations} from './formation-placement.js';
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 
@@ -39,15 +39,43 @@ function chooseForce(cohort,forces){
   return previous&&distance(cohort,previous)<=distance(cohort,eligible[0])*1.2+1?previous:eligible[0];
 }
 
+function approachPoint(c,members,live,center){
+  if(members.length===c.count)return center;
+  let left=Infinity,right=-Infinity,front=Infinity,rear=-Infinity,nearestSlot=null,nearestSlotSquared=Infinity;
+  for(const {order} of members){
+    left=Math.min(left,order.marchSide);right=Math.max(right,order.marchSide);
+    front=Math.min(front,order.marchBack);rear=Math.max(rear,order.marchBack);
+    const squared=order.marchSide**2+order.marchBack**2;
+    if(squared<nearestSlotSquared){nearestSlot=order;nearestSlotSquared=squared;}
+  }
+  // Aim the surviving wing rather than its empty center at an enemy. The
+  // logical anchor and all slot offsets remain continuous during the approach.
+  let side=clamp(0,left,right),back=clamp(0,front,rear);
+  // If both outside files survive, their bounds can still enclose a large
+  // empty center. Follow the nearest occupied file across that gap.
+  if(!side&&!back&&nearestSlotSquared>.8**2){side=nearestSlot.marchSide;back=nearestSlot.marchBack;}
+  if(!side&&!back)return center;
+  const fx=Math.cos(c.angle),fy=Math.sin(c.angle);
+  const offsetX=-fy*side-fx*back,offsetY=fx*side-fy*back;
+  const occupied={x:c.x+offsetX,y:c.y+offsetY};
+  let enemy=null,nearest=Infinity;
+  for(const u of live){
+    const d=distance(occupied,u);
+    if(d<nearest){nearest=d;enemy=u;}
+  }
+  return {x:enemy.x-offsetX,y:enemy.y-offsetY,enemy};
+}
+
 function fitPassage(g,c,members){
   if((c.passageAt||0)>g.time)return;
   c.passageAt=g.time+.3;
-  const fx=Math.cos(c.angle),fy=Math.sin(c.angle),half=Math.max(.215,...members.map(u=>Math.abs(u.order.slotSide)));
-  const depth=Math.max(.215,...members.map(u=>Math.abs(u.order.marchBack??u.order.slotBack)));
-  let columns=c.columns;
+  const fx=Math.cos(c.angle),fy=Math.sin(c.angle),half=c.halfWidth;
+  const depth=Math.max(c.halfDepth,(Math.ceil(c.count/(c.passageColumns||c.columns))-1)*.215);
+  const normalColumns=Math.min(c.columns,c.count);
+  let columns=normalColumns;
   // Look ahead before the first rank reaches a choke, and retain the narrow
   // column until the rear clears it. Soldiers then regain their original slots.
-  for(let along=-depth-2;along<=depth+4;along+=.75){
+  for(let along=-depth-.4;along<=depth+4;along+=.75){
     const point={x:c.x+fx*along,y:c.y+fy*along};
     if(!g.isWalkable(point.x,point.y))continue;
     let left=0,right=0;
@@ -56,9 +84,11 @@ function fitPassage(g,c,members){
     columns=Math.min(columns,Math.max(1,Math.floor((left+right)/.43)+1));
   }
   const rows=Math.ceil(c.count/columns);
+  c.passageColumns=columns;
+  c.crossing=columns<normalColumns;
   for(const u of members){const o=u.order,i=o.advanceIndex;
-    o.marchSide=columns===c.columns?o.slotSide:(i%columns-(Math.min(columns,c.count)-1)/2)*.43;
-    o.marchBack=columns===c.columns?o.slotBack:(Math.floor(i/columns)-(rows-1)/2)*.43;
+    o.marchSide=c.crossing?(i%columns-(columns-1)/2)*.43:o.slotSide;
+    o.marchBack=c.crossing?(Math.floor(i/columns)-(rows-1)/2)*.43:o.slotBack;
   }
 }
 
@@ -76,14 +106,25 @@ export function startFormationAdvance(g,ids,formation,defs,options={}){
     const angle=Math.hypot(fx,fy)>.01?Math.atan2(fy,fx):0;
     const useSettings=Object.keys(options).length>0,previous=members.every(u=>u.order?.placementId===members[0].order?.placementId&&Number.isFinite(u.order?.slotIndex));
     const cohort={...center,id,team,angle,radius:.2,members:members.map(u=>u.id),seekAt:0,target:null,count:members.length,columns:Math.max(3,Math.ceil(Math.sqrt(members.length)*1.45)),lockFacing:options.lockFacing===true};
-    const assigned=useSettings?formationPreview(g,members,{...options,...center,angle,preset:formation},defs):null;
-    const slots=previous?new Map(members.map(u=>[u.id,{side:u.order.slotSide,back:u.order.slotBack}])):null;
     members.sort((a,b)=>formationRole(g,a,defs)-formationRole(g,b,defs)||(previous?a.order.slotIndex-b.order.slotIndex:a.id-b.id));
+    const placed=previous?g.placedFormations?.get(members[0].order.placementId):null;
+    const assigned=useSettings&&!placed?formationPreview(g,members,{...options,...center,angle,preset:formation},defs):null;
+    const layout=placed||assigned;
+    if(layout){cohort.columns=layout.columns;cohort.ranks=layout.ranks;cohort.width=layout.width;cohort.preset=layout.preset;}
+    const saved=placed?members.map(u=>placed.slots[u.order.slotIndex]):null;
     g.command(cohort.members,center.x,center.y,'advance',formation,{x:Math.cos(angle),y:Math.sin(angle)});
-    for(let i=0;i<members.length;i++){const u=members[i],o=u.order,dx=o.x-center.x,dy=o.y-center.y,saved=slots?.get(u.id),slot=assigned?.slots[i];o.advanceId=id;o.lockFacing=cohort.lockFacing;o.slotSide=saved?.side??slot?.side??(-Math.sin(angle)*dx+Math.cos(angle)*dy);o.slotBack=saved?.back??slot?.back??(-Math.cos(angle)*dx-Math.sin(angle)*dy);o.formationPreset=assigned?.preset||formation;}
-    if(assigned){cohort.columns=assigned.columns;cohort.ranks=assigned.ranks;cohort.width=assigned.width;cohort.preset=assigned.preset;}
-    [...members].sort((a,b)=>a.order.slotBack-b.order.slotBack||a.order.slotSide-b.order.slotSide).forEach((u,i)=>{u.order.advanceIndex=i;});
-    cohort.slots=members.map(u=>({index:u.order.advanceIndex,side:u.order.slotSide,back:u.order.slotBack})).sort((a,b)=>a.back-b.back||a.side-b.side);
+    cohort.slots=members.map((u,i)=>{
+      const {side,back,rank}=saved?.[i]||assigned?.slots[i]||marchSlot(i,cohort.count,cohort.columns,formation),order=u.order;
+      Object.assign(order,{advanceId:id,advanceIndex:i,lockFacing:cohort.lockFacing,slotSide:side,slotBack:back,formationPreset:layout?.preset||formation});
+      return {index:i,side,back,rank,unitId:u.id,role:formationRole(g,u,defs)};
+    });
+    // Passage width belongs to the commanded footprint. Losing its outside
+    // files must never make open ground look like a choke to the survivors.
+    cohort.halfWidth=Math.max(.215,(Math.min(cohort.count,cohort.columns)-1)*.215,...cohort.slots.map(s=>Math.abs(s.side)));
+    cohort.halfDepth=Math.max(.215,...cohort.slots.map(s=>Math.abs(s.back)));
+    // On the initial order only, give soldiers crossing over into their new
+    // files a short head start. Later losses never restart this interval.
+    cohort.formingUntil=g.time+1.2;
     g.formationAdvances.set(id,cohort);
   }
   updateFormationAdvances(g,0,defs);
@@ -97,14 +138,8 @@ export function updateFormationAdvances(g,dt,defs){
   for(const [id,c]of g.formationAdvances){
     const members=c.members.map(id=>g.byId.get(id)).filter(u=>u?.hp>0&&u.order?.advanceId===c.id&&u.order.mode==='advance');
     if(!members.length){g.formationAdvances.delete(id);continue;}
-    c.members=members.map(u=>u.id);
-    if(c.slots&&(c.gapCheckAt??-Infinity)<=g.time){
-      c.gapCheckAt=g.time+.25;const occupied=new Map(members.map(u=>[u.order.advanceIndex,u]));
-      for(const slot of c.slots){if(occupied.has(slot.index))continue;
-        const next=members.filter(u=>u.order.slotBack>slot.back+.1&&formationRole(g,u,defs)<=2).sort((a,b)=>Math.abs(a.order.slotSide-slot.side)-Math.abs(b.order.slotSide-slot.side)||a.order.slotBack-b.order.slotBack||a.id-b.id)[0];
-        if(!next)continue;occupied.delete(next.order.advanceIndex);occupied.set(slot.index,next);next.order.advanceIndex=slot.index;next.order.slotSide=slot.side;next.order.slotBack=slot.back;next.braceTime=0;next.braceDir=null;
-      }
-    }
+    if(members.length<c.members.length&&(c.status==='Advancing'||c.status==='Crossing'))c.wingTurnTarget=c.enemyId;
+    releaseFormationSlots(g,c,members);
     fitPassage(g,c,members);
     if(c.seekAt<=g.time){
       if(!forcesByTeam.has(c.team))forcesByTeam.set(c.team,enemyForces(g,c.team));
@@ -113,35 +148,50 @@ export function updateFormationAdvances(g,dt,defs){
     const target=c.target;
     const live=target?.units.filter(u=>u.hp>0&&(u.remembered||g.isVisibleTo(c.team,u)))||[];
     if(target&&!live.length){c.target=null;c.seekAt=0;}
-    let speed=0;
+    let speed=0,status='Seeking';
     if(live.length){
       const center=live.reduce((p,u)=>({x:p.x+u.x/live.length,y:p.y+u.y/live.length}),{x:0,y:0});
-      const desired=Math.atan2(center.y-c.y,center.x-c.x),delta=Math.atan2(Math.sin(desired-c.angle),Math.cos(desired-c.angle));
+      const aim=approachPoint(c,members,live,center);
+      const desired=Math.atan2(aim.y-c.y,aim.x-c.x),delta=Math.atan2(Math.sin(desired-c.angle),Math.cos(desired-c.angle));
       // A broad formation wheels more slowly so its outer ranks can keep up.
       const radius=Math.max(.6,...members.map(u=>Math.hypot(u.order.marchSide,u.order.marchBack)));
       const pace=Math.min(...members.map(u=>defs[u.type].speed*g.movementMultiplier(u)*g.specialistSpeed(u)))*.7;
       if(!c.lockFacing)c.angle+=clamp(delta,-Math.min(.65,pace/radius)*dt,Math.min(.65,pace/radius)*dt);
-      const fx=Math.cos(c.angle),fy=Math.sin(c.angle),front=Math.max(...members.map(u=>-u.order.marchBack));
-      const range=Math.min(...members.filter(u=>-u.order.marchBack>front-.3).map(u=>g.unitRange(u)));
-      const edge=Math.min(...live.map(u=>(u.x-c.x)*fx+(u.y-c.y)*fy-(u.radius||.2)));
-      const errors=members.map(u=>distance(u,u.order)).sort((a,b)=>a-b),cohesive=errors[Math.floor((errors.length-1)*.8)]<.5&&errors[errors.length-1]<1;
-      // A delayed soldier cannot veto the order forever. The majority sets the
-      // pace; detached stragglers continue walking toward their assigned slots.
-      c.regroupTime=cohesive?0:(c.regroupTime||0)+dt;
-      const canMarch=cohesive||c.regroupTime>1.2;
-      if(canMarch&&(c.lockFacing||Math.abs(delta)<.45)&&edge>front+range*.85){
-        const waypoint=g.navigation.steer(c,center,'infantry'),dx=waypoint.x-c.x,dy=waypoint.y-c.y,len=Math.hypot(dx,dy);
+      // Contact is judged along the approach. A locked front can travel sideways
+      // or backwards; a distant enemy behind it is not already in weapon range.
+      const dx=Math.cos(desired),dy=Math.sin(desired),sideProjection=Math.sin(desired-c.angle),backProjection=-Math.cos(desired-c.angle);
+      const along=u=>u.order.marchSide*sideProjection+u.order.marchBack*backProjection;
+      const front=Math.max(...members.map(along)),range=Math.min(...members.filter(u=>along(u)>front-.3).map(u=>g.unitRange(u)));
+      const edge=Math.min(...live.map(u=>(u.x-c.x)*dx+(u.y-c.y)*dy-(u.radius||.2)));
+      if(c.formingUntil){
+        let nearby=0,furthest=0;
+        for(const u of members){const error=distance(u,u.order);if(error<.5)nearby++;furthest=Math.max(furthest,error);}
+        if(g.time>=c.formingUntil||nearby>=Math.ceil(members.length*.8)&&furthest<1)c.formingUntil=0;
+      }
+      // A casualty may move the approach to an outside file. Continue its
+      // existing march through this corrective wheel. Fresh turns still form.
+      const wingTurn=aim.enemy&&c.wingTurnTarget===c.enemyId&&Math.abs(delta)>=.45;
+      if(!wingTurn)c.wingTurnTarget=null;
+      if(!c.lockFacing&&!wingTurn&&Math.abs(delta)>=.45)status='Turning';
+      else if(edge<=front+range*.85&&(!aim.enemy||members.some(u=>distance(u,aim.enemy)<=g.unitRange(u)+(defs[aim.enemy.type] ? .07 : g.buildingRadius(aim.enemy)))))status='Engaged';
+      else if(c.formingUntil)status='Forming';
+      else{
+        const waypoint=g.navigation.steer(c,aim,'infantry'),dx=waypoint.x-c.x,dy=waypoint.y-c.y,len=Math.hypot(dx,dy);
+        status='Blocked';
         if(!waypoint.blocked&&len>.01){
-          const tile=g.tileAt(c.x,c.y),step=Math.min(len,pace*(cohesive?1:.55)*dt/(tile?.terrain==='forest'?1.4:tile?.terrain==='hill'?1.2:1));
+          const tile=g.tileAt(c.x,c.y),step=Math.min(len,pace*dt/(tile?.terrain==='forest'?1.4:tile?.terrain==='hill'?1.2:1));
           c.x+=dx/len*step;c.y+=dy/len*step;speed=dt?step/dt:0;
+          status=c.crossing||['bridge','ford','pass'].includes(tile?.feature)?'Crossing':'Advancing';
         }
       }
     }
+    if(status==='Advancing')fillFormationGaps(g,c,members,'advanceIndex');
+    c.status=status;
     const fx=Math.cos(c.angle),fy=Math.sin(c.angle),marchPace=Math.min(...members.map(v=>defs[v.type].speed))*.9;
     for(const u of members){
       const o=u.order,goal=g.bound({x:c.x-fy*o.marchSide-fx*o.marchBack,y:c.y+fx*o.marchSide-fy*o.marchBack});
       const safe=g.isWalkable(goal.x,goal.y)?goal:g.navigation.nearestPassable(goal)||u;
-      o.x=safe.x;o.y=safe.y;o.groupX=c.x;o.groupY=c.y;o.facingX=fx;o.facingY=fy;o.advanceSpeed=speed;o.advancePace=marchPace;
+      o.x=safe.x;o.y=safe.y;o.groupX=c.x;o.groupY=c.y;o.facingX=fx;o.facingY=fy;o.advanceSpeed=speed;o.advancePace=marchPace;o.advanceStatus=status;
     }
   }
 }

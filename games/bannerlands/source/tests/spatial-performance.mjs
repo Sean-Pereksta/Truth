@@ -39,6 +39,19 @@ test('A sparse continent clears at most one bucket per previously living troop',
   for(const u of troops)u.hp=0;hash.rebuild(troops);resets=0;hash.rebuild(troops);assert.equal(resets,0,'An empty world needs no bucket clearing.');
 });
 
+test('Hostile queries skip friendly-only buckets and keep mixed bucket order',()=>{
+  const hash=new Hash(32,32);
+  const troops=[0,0,1,2,0].map((team,id)=>({id,team,hp:100,x:id<2?2:4,y:3}));
+  for(const foe of [0,1,2]){
+    hash.rebuild(troops);
+    const all=[],filtered=[];
+    hash.visit(3,3,4,u=>{if(u.team!==foe)all.push(u.id);});
+    hash.visit(3,3,4,u=>{if(u.team!==foe)filtered.push(u.id);},foe);
+    assert.deepEqual(filtered,all);
+    troops[2].x=2;troops[3].hp=0;
+  }
+});
+
 console.log(`${cases} spatial performance regression checks passed.`);
 if(process.argv.includes('--benchmark')){
   const troops=Array.from({length:1120},(_,id)=>({id,hp:100,x:10+id%40*.4,y:10+Math.floor(id/40)*.4}));

@@ -43,6 +43,17 @@ const ui={selected:new Set(),selectedBuildings:new Set(),quality:'high',showGrid
 const view=(x,y,w=1100,h=760,zoom=1.1)=>({x:(x-y)*28,y:(x+y)*14,w,h,zoom,dpr:1});
 let checks=0;
 const test=(name,fn)=>{fn();checks++;console.log('PASS '+name);};
+await r.loadBattlefieldProjectiles(asset('battlefield-slice/projectiles.png'));
+test('All six projectiles use painted pixels and respect fog and camera bounds',()=>{
+  const shots=[{type:'arrow'},{type:'arrow',crossbow:true},{type:'arrow',sourceType:'dune_skirmisher'},{type:'axe'},{type:'rock'},{type:'rock',sourceType:'dragonfire_acolyte'}];
+  const names=['arrow','bolt','javelin','axe','rock','firepot'];
+  const g={teams:[{sigil:'wolf'}],projectiles:shots.map(s=>({...s,x:2,y:2,sx:1,sy:1,tx:3,ty:3,t:.1,duration:.3,team:0})),config:{fogOfWar:true},isVisibleTo:()=>true};
+  const images=[],context={save(){},restore(){},translate(){},rotate(){},drawImage(image){images.push(image);}};
+  r.projectiles(context,g);
+  assert.deepEqual(images,names.map(name=>r.projectileFrames[name].image));
+  g.isVisibleTo=()=>false;r.projectiles(context,g);assert.equal(images.length,6);
+  g.isVisibleTo=()=>true;r.projectiles(context,g,{top:-500,bottom:-400,left:500,right:600});assert.equal(images.length,6);
+});
 function fixture(fogOfWar=false){
   const g=new Game({landscape:'riverlands',scale:'standard',house:3,enemies:2,seed:44277,fogOfWar});
   g.units=[];g.buildings=[];g.castles=[];g.objectives=[];g.byId.clear();g.projectiles=[];g.effects=[];g.fireZones=[];g.teamOrders=[];g.time=42;

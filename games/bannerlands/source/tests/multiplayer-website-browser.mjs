@@ -30,7 +30,20 @@ try{
   const revision=second.getLobby().revision;await post(second,'/api/ready',{ready:true,assetsReady:true,revision});await page.evaluate(revision=>window.__bannerlands.online.client.ready(true,revision,true),revision);await post(second,'/api/start',{revision});
   const response=await fetch(second.url+'/api/state?initial=1',{headers:{Authorization:'Bearer '+second.hostToken}}),hostState=await response.json();await post(second,'/api/synchronized',{matchId:hostState.lobby.matchId,sequence:hostState.snapshot.sequence});
   await page.waitForFunction(()=>window.__bannerlands.game.remote&&window.__bannerlands.game.playerTeam===1);assert.deepEqual([...artOrigins],[website.url]);checks.push('the full remote battle hydrates and renders using only website-origin artwork');
-  await post(second,'/api/end',{});await page.waitForFunction(()=>!window.__bannerlands.game.remote&&['waiting','full'].includes(window.__bannerlands.online.client.lobby?.status));await page.evaluate(()=>window.__bannerlands.online.leave());assert.equal(second.getLobby().players.length,1);checks.push('ending and leaving a remote match returns the website to its own menu');
+  // Hold the HTTP reply so immediate acknowledgement feedback is observable even on loopback.
+  let release;
+  const replyGate=new Promise(resolve=>{release=resolve;});
+  await page.route(second.url+'/api/command',async route=>{await replyGate;await route.continue();});
+  await page.evaluate(()=>window.__bannerlands.selectArmy());await page.locator('#quickHoldButton').click();
+  assert.match(await page.locator('#orderReceipt').textContent(),/pending/i);release();
+  await page.waitForFunction(()=>document.getElementById('orderReceipt').textContent.includes('confirmed'));
+  await page.evaluate(()=>{const game=window.__bannerlands.game;game.hold([game.units.find(u=>u.team!==game.playerTeam).id]);});
+  await page.waitForFunction(()=>document.getElementById('orderReceipt').textContent.includes('rejected'));
+  await page.route(second.url+'/api/state**',route=>route.abort());
+  await page.waitForSelector('#connectionStatus:visible');assert.match(await page.locator('#connectionStatus').textContent(),/Reconnecting/);
+  await page.unroute(second.url+'/api/state**');await page.waitForSelector('#connectionStatus',{state:'hidden'});
+  checks.push('pending, confirmed and rejected orders; persistent connection status while reconnecting');
+  await post(second,'/api/end',{});await page.waitForFunction(()=>!window.__bannerlands.game.remote&&['waiting','full'].includes(window.__bannerlands.online.client.lobby?.status));assert.match(await page.locator('.multiplayer-status').textContent(),/host ended the match/i);await page.evaluate(()=>window.__bannerlands.online.leave());assert.equal(second.getLobby().players.length,1);checks.push('ending and leaving a remote match returns the website to its own menu');
   await page.evaluate(()=>sessionStorage.setItem('bannerlands.active-host','http://192.168.1.1:1234'));await page.reload();await waitReady();assert.equal(await page.evaluate(()=>window.__bannerlands.online.client.origin),website.url);assert.equal(await page.evaluate(()=>sessionStorage.getItem('bannerlands.active-host')),null);checks.push('an unsafe stored remote address is discarded before restoration');
   await website.setPublicAddress('https://website-directory-check.trycloudflare.com');await page.evaluate(token=>window.__bannerlands.online.client.join({hostToken:token}),website.hostToken);await page.waitForFunction(()=>document.querySelector('.multiplayer-status').textContent.includes('guest invitation'));await page.waitForTimeout(350);assert.ok((await page.locator('.multiplayer-status').getAttribute('class')).includes('error'));checks.push('managed directory failure stays visible with a guest-invitation fallback');
   publishFails=false;await website.setPublicAddress('https://website-directory-check.trycloudflare.com');await page.waitForFunction(()=>!window.__bannerlands.online.client.lobby.directoryError&&!document.querySelector('.multiplayer-status').classList.contains('error'));checks.push('directory recovery clears the failure message after a metadata update');

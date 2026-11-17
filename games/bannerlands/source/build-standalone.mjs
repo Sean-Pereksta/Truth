@@ -77,10 +77,12 @@ for(const [name,module]of modules){
   compiled.push(`// ${name}\n__modules.${ids.get(name)}=${asyncEntry?'await (async':'('}()=>{\n${imports}\n${code}\nreturn {${module.exports.join(',')}};\n})();`);
 }
 
-const emblemAtlas=imageData('assets/house-emblems.png');
-const css=[read('style.css'),read('hud.css'),read('multiplayer/lobby.css')].join('\n').replaceAll('assets/house-emblems.png',emblemAtlas);
+const assetURL=/url\(\s*['"]?(?:\.{1,2}\/)?(assets\/[\w./-]+\.(?:png|webp|svg))['"]?\s*\)/g;
+const css=[read('style.css'),read('hud.css'),read('multiplayer/lobby.css')].join('\n')
+  .replace(assetURL,(_,name)=>'url("'+imageData(name)+'")');
 const script=('const __modules=Object.create(null);\n'+compiled.join('\n')).replaceAll('</script','<\\/script');
 const html=read('index.html')
+  .replace(/\bsrc="(assets\/[\w./-]+\.(?:png|webp|svg))"/g,(_,name)=>'src="'+imageData(name)+'"')
   .replace('<body>','<body data-standalone="true">')
   .replace('<link rel="stylesheet" href="style.css">',()=>`<style>${css}</style>`)
   .replace('<link rel="stylesheet" href="hud.css">','')

@@ -30,8 +30,8 @@ async function setup(context){
 async function capture(page,name){if(process.env.BANNERLANDS_SCREENSHOT_DIR){fs.mkdirSync(process.env.BANNERLANDS_SCREENSHOT_DIR,{recursive:true});await page.screenshot({path:path.join(process.env.BANNERLANDS_SCREENSHOT_DIR,name+'.png')});}}
 async function checkHeroBeacon(page){
  await page.evaluate(()=>window.__bannerlands.ui.selected.clear());await page.waitForTimeout(280);assert.equal(await page.locator('#quickStandardOrders').isVisible(),false);assert.equal(await page.locator('#heroHudButton').isVisible(),true);
- const hit=await page.locator('#heroHudButton').evaluate(e=>{const r=e.getBoundingClientRect(),top=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return {left:r.x,top:r.y,right:r.right,bottom:r.bottom,hit:top===e||e.contains(top)};});assert.ok(hit.left<20&&hit.top<128&&hit.hit);assert.match(await page.locator('#heroHudHealth').textContent(),/800 \/ 800 HP/);
- await page.locator('#heroHudButton').click();await page.waitForTimeout(280);assert.equal(await page.evaluate(()=>window.__bannerlands.ui.selected.has(window.__bannerlands.game.heroFor(0).id)),true);assert.equal(await page.locator('#quickStandardOrders').isVisible(),true);
+ const hit=await page.locator('#heroHudButton').evaluate(e=>{const r=e.getBoundingClientRect(),top=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return {left:r.x,top:r.y,right:r.right,bottom:r.bottom,hit:top===e||e.contains(top)};});assert.ok(hit.left>=0&&hit.top<64&&hit.hit);assert.match(await page.locator('#heroHudHealth').textContent(),/800 \/ 800 HP/);
+ await page.locator('#heroHudButton').click();await page.waitForTimeout(280);assert.equal(await page.evaluate(()=>window.__bannerlands.ui.selected.has(window.__bannerlands.game.heroFor(0).id)),true);if(await page.evaluate(()=>matchMedia('(pointer:coarse)').matches)){await page.locator('#mobileOptions').tap();assert.ok(await page.locator('#mobileStandard').isVisible());await page.locator('#mobileOptions').tap();}else assert.ok(await page.locator('#quickStandardOrders').isVisible());
 }
 async function paintedCalls(page,{unseen=false}={}){
  return page.evaluate(({unseen})=>{
@@ -80,10 +80,13 @@ try{
   const context=await browser.newContext({viewport:size,hasTouch:true,isMobile:true}),mobile=await setup(context);
   await checkHeroBeacon(mobile);
   await mobile.evaluate(()=>{window.__bannerlands.game.standardFor(0).hp=220;});await mobile.waitForTimeout(280);
-  for(const selector of ['#quickStandardButton','#quickRefitButton']){
+  await mobile.locator('[data-drawer="orders"]').tap();
+  for(const selector of ['#standardButton','#refitStandardButton']){
+   await mobile.locator(selector).scrollIntoViewIfNeeded();
    const hit=await mobile.locator(selector).evaluate(e=>{const r=e.getBoundingClientRect(),top=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return {visible:r.x>=0&&r.y>=0&&r.right<=innerWidth&&r.bottom<=innerHeight,hit:top===e||e.contains(top),height:r.height};});assert.ok(hit.visible&&hit.hit,selector+' reachable at '+JSON.stringify(size));assert.ok(hit.height>=(size.width>size.height?36:44));
   }
-  const camera=await mobile.evaluate(()=>({x:window.__bannerlands.view.x,y:window.__bannerlands.view.y}));await mobile.locator('#quickStandardButton').tap();assert.equal(await mobile.evaluate(()=>!!window.__bannerlands.ui.standardMode),true);
+  await mobile.locator('#closeDrawer').tap();await mobile.locator('#mobileOptions').tap();
+  const camera=await mobile.evaluate(()=>({x:window.__bannerlands.view.x,y:window.__bannerlands.view.y}));await mobile.locator('#mobileStandard').tap();assert.equal(await mobile.evaluate(()=>!!window.__bannerlands.ui.standardMode),true);
   const destination=await mobile.evaluate(()=>window.__point(30,30));await mobile.touchscreen.tap(destination.x,destination.y);assert.deepEqual(await mobile.evaluate(()=>({x:window.__bannerlands.view.x,y:window.__bannerlands.view.y})),camera);assert.equal(await mobile.evaluate(()=>window.__bannerlands.game.heroFor(0).standardAction.kind),'plant');
   await mobile.locator('[data-drawer="orders"]').tap();await mobile.waitForTimeout(260);await capture(mobile,'hero-controls-'+size.width+'x'+size.height);assert.equal(await mobile.locator('#heroPanel').isVisible(),true,JSON.stringify(await mobile.evaluate(()=>({selected:[...window.__bannerlands.ui.selected],clicks:window.__heroClicks,pane:document.getElementById('commandPanel').dataset.pane,hidden:document.getElementById('commandPanel').hidden,heroHidden:document.getElementById('heroPanel').hidden}))));assert.equal(await mobile.locator('#cancelStandardButton').isVisible(),true);await mobile.locator('#cancelStandardButton').tap();
   assert.equal(await mobile.evaluate(()=>window.__bannerlands.game.heroFor(0).standardAction),null);console.log('PASS Touch Standard/Refit reachability, no-pan placement and selected hero cancellation at '+size.width+'×'+size.height);await context.close();
