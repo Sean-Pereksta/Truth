@@ -8,7 +8,8 @@ const os = require('node:os');
 const { performance } = require('node:perf_hooks');
 
 const root = path.resolve(__dirname, '..');
-const names = ['Nib', 'Bristle', 'Clover', 'Tumble', 'Hazel', 'Ember', 'Flint', 'Mica'];
+const raceSim = require('../race-sim.js');
+const names = raceSim.drivers;
 const neutral = Object.freeze({ steer: 0, gas: 0, brake: 0, drift: false, item: false, ability: false, lookBack: false });
 const idleLimit = 15 * 60 * 1000;
 const stepSeconds = 1 / 60;
@@ -63,7 +64,7 @@ function newSeat(index, body, occupied = []) {
     kartIndex: index, driving: true, ready: false, stream: null, touched: Date.now(), seq: -1, inputAt: 0, input: { ...neutral }, pulses: {} };
 }
 
-function createRallyServer({ sim = require('../race-sim.js'), automatic = true } = {}) {
+function createRallyServer({ sim = raceSim, automatic = true } = {}) {
   const rooms = new Map();
   function members(room) { return room.seats.filter(Boolean); }
   function authenticate(room, token) {
@@ -223,7 +224,7 @@ function createRallyServer({ sim = require('../race-sim.js'), automatic = true }
         while (rooms.has(code));
         const seat = newSeat(0, body); seat.ready = true;
         const room = { code, host: 0, phase: 'lobby', round: 0, tick: 0, touched: Date.now(), seats: [seat],
-          trackIndex: integer(body.trackIndex, 0, 7, 0), cc: sim.normalizeCC(body.cc), difficulty: sim.normalizeDifficulty(body.difficulty),
+          trackIndex: integer(body.trackIndex, 0, sim.trackCount - 1, 0), cc: sim.normalizeCC(body.cc), difficulty: sim.normalizeDifficulty(body.difficulty),
           botFill: body.botFill !== false, laps: 3, state: null };
         rooms.set(code, room);
         return returnJson(res, { seat: 0, token: seat.token, room: lobby(room) }, 201);
@@ -297,7 +298,7 @@ function createRallyServer({ sim = require('../race-sim.js'), automatic = true }
       if (action === 'config' || action === 'start') {
         if (seat.index !== room.host) fail(403, 'Only the host can start or change this race.');
         if (action === 'config') {
-          room.trackIndex = integer(body.trackIndex, 0, 7, room.trackIndex);
+          room.trackIndex = integer(body.trackIndex, 0, sim.trackCount - 1, room.trackIndex);
           if (sim.engineClasses.includes(Number(body.cc))) room.cc = Number(body.cc);
           if (sim.difficulties.includes(body.difficulty)) room.difficulty = body.difficulty;
           if (typeof body.botFill === 'boolean') room.botFill = body.botFill;

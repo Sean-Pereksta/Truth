@@ -1,8 +1,8 @@
 (function(root,make){
-  const api=make();
+  const api=make(typeof module==='object'&&module.exports?require('./tracks-expansion.js'):root.AcornExpansion);
   if(typeof module==='object'&&module.exports)module.exports=api;
   else root.AcornHazards=api;
-})(typeof globalThis==='object'?globalThis:this,function(){
+})(typeof globalThis==='object'?globalThis:this,function(Expansion){
   'use strict';
   const cap=(x,a,b)=>Math.max(a,Math.min(b,x)),wrap=(x,p)=>((x%p)+p)%p;
   const smooth=x=>{const t=cap(x,0,1);return t*t*(3-2*t);};
@@ -26,8 +26,9 @@
     {name:'Cascade surge',u:.795,side:1,period:8.8,warn:2.15,live:3.80,offset:3.4,width:1.92,length:2.75,speed:.76,push:6.15,slip:.65},
     {name:'Surf wash',u:.410,side:-1,period:10.4,warn:2.70,live:4.50,offset:1.1,width:1.35,length:3.78,speed:.68,push:5.80,slip:.90,branch:true}
   ];
+  for(const course of Expansion.courses){routes.push(course.hazard);tips.push(course.tip);}
   function sample(c,time){
-    const id=c.index,cfg=routes[id],t=wrap(time+cfg.offset,cfg.period),end=cfg.warn+cfg.live;
+    const cfg=routes[c.index],id=cfg.style??c.index,t=wrap(time+cfg.offset,cfg.period),end=cfg.warn+cfg.live;
     const phase=t<cfg.warn?'warning':t<end?'active':t<end+.9?'receding':'clear';
     const progress=phase==='warning'?t/cfg.warn:phase==='active'?(t-cfg.warn)/cfg.live:
       phase==='receding'?(t-end)/.9:(t-end-.9)/(cfg.period-end-.9);
@@ -58,7 +59,7 @@
       x=side*(1.36+.53*Math.sin(p*Math.PI*2));
       bottom=.19+3.25*(1-strength);top=bottom+1.57;
     }
-    return {id,name:cfg.name,tip:tips[id],s,x,baseS,branch,halfWidth,halfLength,bottom,top,warning:phase==='warning',
+    return {id,name:cfg.name,tip:tips[c.index],s,x,baseS,branch,halfWidth,halfLength,bottom,top,warning:phase==='warning',
       active:phase==='active',phase,progress,strength,sourceSide:side,safeSide:-side,anchorX,mainX,tipX,period:cfg.period,
       shift:id===0?-side*4.85*6*p*(1-p)/cfg.live:id===3?-side*5.15*6*p*(1-p)/cfg.live:water?-side*cfg.push*strength:0};
   }
@@ -78,7 +79,7 @@
     const near=base+Math.round((previousS-base)/c.length)*c.length;
     if(Math.abs(r.s-previousS)>Math.max(3.6,Math.abs(r.v)*dt*3)||Math.abs(r.s-near)>cfg.length+5)return false;
     // One contact per crossing. A stopped kart can't be repeatedly hit by the same span.
-    if(r.hazardHit?.id===c.index&&r.hazardHit.cross===near&&!r.hazardHit.rearmed)return false;
+    if(r.hazardHit?.id===(cfg.style??c.index)&&r.hazardHit.cross===near&&!r.hazardHit.rearmed)return false;
     const x0=Number.isFinite(previousX)?previousX:r.x,liftNow=Number.isFinite(actualLift)?actualLift:lift(st,r);
     const buried=r.driverIndex===7&&r.active>0;
     for(const f of [.0,.5,1]){
@@ -114,14 +115,14 @@
     r.hazardPace=0;
     if(r.v<2||!!cfg.branch!==!!r.branch)return target;
     const lap=Math.floor(r.s/c.length),distance=cfg.u*c.length+lap*c.length-r.s;
-    const tier=st.difficulty==='easy'?0:st.difficulty==='hard'?2:1;
-    const horizon=[.98,1.55,2.05][tier],v=Math.max(6,r.v);
+    const tier=st.difficulty==='ultimate'?3:st.difficulty==='hard'?2:st.difficulty==='easy'?0:1;
+    const horizon=[.98,1.55,2.05,2.45][tier],v=Math.max(6,r.v);
     if(distance<-(cfg.length+1.35)||distance>v*horizon+cfg.length+2)return target;
     const live=sample(c,st.time);
     if(live.phase==='clear'||live.phase==='receding')return target;
-    const miss=decision(st.hazardSeed??0xace110,c.index,lap,r.seat)<[.42,.14,.027][tier];
+    const miss=decision(st.hazardSeed??0xace110,c.index,lap,r.seat)<[.42,.14,.027,.006][tier];
     const eta=Math.max(0,distance)/v;
-    if(miss&&eta>(tier===2?.29:.12))return target;
+    if(miss&&eta>(tier>=2?.29:.12))return target;
     // Look at the hazard during the time this kart would occupy its footprint.
     // A basket that will clear its roof or a withdrawn flood needs no detour.
     let danger=false;

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#151715">
-  <meta name="description" content="Drive handmade karts through eight miniature circuits in Acorn Rally.">
+  <meta name="description" content="Race handmade karts across three four-race cups and the standalone Prism Parade in Acorn Rally.">
   <title>Acorn Rally</title>
   <script type="module" data-catnmice-game="acornrally" data-confirmed="engine">
     if (location.protocol !== 'file:' && location.pathname.startsWith('/Truth/games/')) {
@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="rooms.css">
   <link rel="stylesheet" href="garage-view.css">
+  <link rel="stylesheet" href="cup-menu.css">
 </head>
 <body>
   <a class="skip" href="#main">Skip to race hub</a>
@@ -36,12 +37,13 @@
       </div>
     </div></header>
     <main id="main" class="main-wrap" tabindex="-1"></main>
-    <footer class="footer"><span class="tiny-brand"><img src="acorn.svg" alt="">ACORN RALLY</span><div><button id="itemGuideBtn"><i data-i="bolt"></i>Acorn items</button><span></span><button id="guideBtn"><i data-i="gamepad"></i>Controls</button><span></span><a href="assets/Acorn-Rally-PC.zip" download><i data-i="download"></i>PC edition</a></div></footer>
+    <footer class="footer"><span class="tiny-brand"><img src="acorn.svg" alt="">ACORN RALLY</span><div><button id="itemGuideBtn"><i data-i="bolt"></i>Acorn items</button><span></span><button id="guideBtn"><i data-i="gamepad"></i>Controls</button><span></span><a href="?download=pc"><i data-i="download"></i>PC edition</a></div></footer>
   </div>
   <div id="race" hidden></div>
   <dialog id="dialog"><div id="dialogContent"></div></dialog>
   <div id="toast" role="status" aria-live="polite"></div>
   <script src="data.js"></script>
+  <script src="tracks-expansion.js"></script>
   <script src="kart-rig.js"></script>
   <script src="signature-kit.js"></script>
   <script src="signature-art.js"></script>
@@ -54,10 +56,14 @@
   <script src="item-art.js"></script>
   <script src="item-feedback.js"></script>
   <script src="ramp-art.js"></script>
+  <script src="expansion-world.js"></script>
   <script src="race-world.js"></script>
   <script src="race.js"></script>
   <script src="network.js"></script>
+  <script src="solstice-kart.js"></script>
   <script src="garage-view.js"></script>
+  <script src="championship.js"></script>
   <script src="app.js"></script>
+  <script src="pc-download.js"></script>
 </body>
 </html>

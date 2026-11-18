@@ -8,6 +8,11 @@ const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem('acorn-ra
 const write=(key,value)=>{try{localStorage.setItem('acorn-rally-'+key,JSON.stringify(value))}catch{}};
 const opts=read('settings',{});
 const settings={...defaults,...opts,bindings:{...defaults.bindings,...opts.bindings}};
+const championship=window.AcornChampionship;
+const cups=championship.cups;
+const driverAvailable=championship.isDriverAvailable;
+const rewardName=()=>drivers[championship.rewardDriver].name;
+const skillLabel=level=>level[0].toUpperCase()+level.slice(1);
 const savedDriver=Number(read('driver',0));
 const simulation=window.AcornSim;
 const engineChoices=simulation.engineClasses.map(cc=>[cc,cc+' cc']);
@@ -15,13 +20,12 @@ const skillChoices=simulation.difficulties.map(level=>[level,level[0].toUpperCas
 const savedRules=read('race-rules',{});
 let engineClass=simulation.normalizeCC(savedRules.cc),cpuLevel=simulation.normalizeDifficulty(savedRules.difficulty);
 let recordsClass=engineClass;
-let driver=drivers[savedDriver]?savedDriver:0, track=0,page='hub',mode='race',players=1,laps=3,cupIndex=0,cup=null,modal=null,capture='',running=false;
+let driver=drivers[savedDriver]&&driverAvailable(savedDriver)?savedDriver:0, track=0,page='hub',mode='race',players=1,laps=3,cupIndex=0,cup=null,modal=null,capture='',running=false;
 let records=read('records',{}),seats=[driver,...drivers.map((_,i)=>i).filter(i=>i!==driver).slice(0,3)],lastRun=null,toastTimer,shelfPos=0,roomSession=null;
 let draftGrid=null;
 const modeLabels={race:'Single race',cup:'Cup series',trial:'Time trial',local:'Split-screen'};
 const keys={accelerate:'Accelerate',brake:'Brake / reverse',left:'Steer left',right:'Steer right',drift:'Drift',item:'Use acorn item',ability:'Species ability',lookBack:'Look back'};
 const padLabels={xbox:['RT','LT','Left stick','Left stick','RB','X','Y','B'],ps:['R2','L2','Left stick','Left stick','R1','Square','Triangle','Circle']};
-const cupNames=['Forest Cup','Horizon Cup'];
 function icon(name){return `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${icons[name]||''}</svg>`}
 function hydrateIcons(){all('[data-i]').forEach(el=>el.outerHTML=icon(el.dataset.i))}
 function mapIcon(t){
@@ -40,19 +44,19 @@ function notice(s){const t=one('#toast');clearTimeout(toastTimer);t.textContent=
 function pref(){write('settings',settings);soundIcon()}
 function soundIcon(){const b=one('#soundBtn');b.innerHTML=icon(settings.sound?'volume':'mute');b.title=b.ariaLabel=settings.sound?'Mute sound':'Enable sound'}
 function assignSeat(seat,index){const prior=seats[seat],other=seats.indexOf(index);if(other!==-1&&other!==seat)seats[other]=prior;seats[seat]=index}
-function updateDriver(){one('#profileName').textContent=drivers[driver].name;one('#profileImage').src=`art/driver-${driver}.webp`;write('driver',driver);assignSeat(0,driver)}
+function updateDriver(){if(!driverAvailable(driver))driver=0;one('#profileName').textContent=drivers[driver].name;one('#profileImage').src=`art/driver-${driver}.webp`;write('driver',driver);assignSeat(0,driver)}
 function nav(next){window.KartViewer?.stop();page=next;if(page!=='select')draftGrid=null;const activePage=page==='select'?'hub':page;all('.main-nav button').forEach(b=>{b.classList.toggle('active',b.dataset.page===activePage);b.setAttribute('aria-current',b.dataset.page===activePage?'page':'false')});if(page==='garage')garage();else if(page==='records')showRecords();else if(page==='select')driverSelect();else hub();window.scrollTo(0,0)}
 function hero(){const t=tracks[track];return `<div class="hero-image" style="background-image:url('art/${track===0?'hero':'course-'+track}.webp')"></div><div class="hero-shade"></div>
 <div class="hero-copy"><div class="hero-kicker eyebrow"><span class="checker"></span>${track===0?'Featured circuit':'Selected circuit'}</div>
 <h1 class="hero-title ${t.name.length>16?'long':''}"><span>${t.line[0]}</span><span>${t.line[1]}</span></h1>
 <p class="hero-location">${icon('pin')}${t.place}</p><div class="hero-tags"><span>${bars(t.level)}${t.level}</span><span>${icon('lap')}${laps} ${laps===1?'lap':'laps'}</span><span>${icon('road')}${t.surface}</span><span class="hero-class">${engineClass} cc</span></div>
-<div class="hero-actions"><button class="action primary" data-action="start">${icon('flag')}Choose race</button><button class="action secondary" data-action="setup">${icon('tune')}Race setup</button></div></div>
-<div class="hero-ident" aria-label="Circuit ${track+1} of eight">${pad2(track+1)}<span class="slash">/</span><span class="total">08</span></div>`}
-function cards(){return tracks.map((t,i)=>`<button class="course ${i===track?'chosen':''}" data-track="${i}" aria-pressed="${i===track}" aria-label="Select ${t.name}"><span class="course-photo"><img src="art/course-${i}.webp" alt="" draggable="false"><span class="track-no">${pad2(i+1)}</span>${i===track?`<span class="selected-icon">${icon('check')}</span>`:''}</span><span class="card-info"><strong>${t.name}</strong><span class="card-place">${t.region}</span><span class="course-foot"><span class="level ${t.level.toLowerCase()}">${bars(t.level)}${t.level}</span>${mapIcon(t)}</span></span></button>`).join('')}
+<div class="hero-actions"><button class="action primary" data-action="start">${icon('flag')}Single race</button><button class="action primary cup-shortcut" data-setup="cup">${icon('trophy')}Cup series</button><button class="action secondary" data-action="setup">${icon('tune')}Race setup</button></div></div>
+<div class="hero-ident" aria-label="Circuit ${track+1} of ${tracks.length}">${pad2(track+1)}<span class="slash">/</span><span class="total">${pad2(tracks.length)}</span></div>`}
+function cards(){return tracks.map((t,i)=>`<button class="course ${i===track?'chosen':''}" data-track="${i}" aria-pressed="${i===track}" aria-label="Select ${t.name}"><span class="course-photo"><img src="art/course-${i}.webp" alt="" draggable="false"><span class="track-no">${pad2(i+1)}</span>${i===track?`<span class="selected-icon">${icon('check')}</span>`:''}</span><span class="card-info"><strong>${t.name}</strong><span class="card-place">${i===12?'Special exhibition · ':''}${t.region}</span><span class="course-foot"><span class="level ${t.level.toLowerCase()}">${bars(t.level)}${t.level}</span>${mapIcon(t)}</span></span></button>`).join('')}
 function hub(){
  main.innerHTML=`<section class="hero" aria-label="Selected circuit">${hero()}</section>
- <section class="circuits" aria-labelledby="circuitsHeading"><div class="section-head"><span class="marks" aria-hidden="true"></span><h2 class="sec-title" id="circuitsHeading">Circuit select</h2><span class="count">8 circuits</span><div class="shelf-buttons"><button data-action="prev" aria-label="Previous circuits">${icon('left')}</button><button data-action="next" aria-label="Next circuits">${icon('right')}</button></div></div><div class="course-shelf">${cards()}</div></section>
- <section class="mode-strip" aria-label="More race modes"><h2>Race modes</h2>${[['cup','trophy','Cup series','Two four-circuit cups'],['trial','clock','Time trial','Chase your best lap'],['local','users','Multiplayer','Split-screen & private rooms']].map(([m,i,n,d])=>`<button class="mode-shortcut" data-setup="${m}">${icon(i)}<span><strong>${n}</strong><small>${d}</small></span>${icon('right')}</button>`).join('')}</section>`;
+ <section class="circuits" aria-labelledby="circuitsHeading"><div class="section-head"><span class="marks" aria-hidden="true"></span><h2 class="sec-title" id="circuitsHeading">Circuit select</h2><span class="count">${tracks.length} circuits</span><div class="shelf-buttons"><button data-action="prev" aria-label="Previous circuits">${icon('left')}</button><button data-action="next" aria-label="Next circuits">${icon('right')}</button></div></div><div class="course-shelf">${cards()}</div></section>
+ <section class="mode-strip" aria-label="More race modes"><h2>Race modes</h2>${[['cup','trophy','Cup series','Three four-circuit championships'],['trial','clock','Time trial','Chase your best lap'],['local','users','Multiplayer','Split-screen & private rooms']].map(([m,i,n,d])=>`<button class="mode-shortcut" data-setup="${m}">${icon(i)}<span><strong>${n}</strong><small>${d}</small></span>${icon('right')}</button>`).join('')}</section>`;
  const shelf=one('.course-shelf');shelf.scrollLeft=shelfPos;shelf.addEventListener('scroll',()=>{shelfPos=shelf.scrollLeft;arrowState()},{passive:true});arrowState();
 }
 function arrowState(){const shelf=one('.course-shelf');if(!shelf)return;one('[data-action=prev]').disabled=shelf.scrollLeft<3;one('[data-action=next]').disabled=shelf.scrollLeft+shelf.clientWidth>=shelf.scrollWidth-3}
@@ -67,21 +71,21 @@ function beginDriverSelect(raceMode,fromSetup=false){
  window.KartViewer?.loadModels().catch(()=>{});
 }
 function driverSelect(){
- const {choices,seat,count}=draftGrid,i=choices[seat],d=drivers[i],course=mode==='cup'?cupIndex*4:track;
- const eventName=mode==='cup'?cupNames[cupIndex]:tracks[course].name;
+ const {choices,seat,count}=draftGrid,i=choices[seat],d=drivers[i],course=mode==='cup'?cups[cupIndex].tracks[0]:track;
+ const eventName=mode==='cup'?cups[cupIndex].name:tracks[course].name;
  const courseHazard=window.AcornHazards.routes[course];
  const eventDetails=mode==='cup'?'4 circuits':(mode==='trial'?3:laps)+' '+((mode==='trial'?3:laps)===1?'lap':'laps');
  const remaining=seat+1<count;
  const portraits=drivers.map((r,n)=>{
    const reserved=choices.slice(0,seat).indexOf(n);
-   const taken=reserved!==-1;
-   return `<button type="button" class="driver-card grid-pick ${n===i?'active':''}" data-pick-driver="${n}" aria-label="${r.name} the ${r.species.toLowerCase()}${taken?' · Player '+(reserved+1):''}" aria-pressed="${n===i}" ${taken?'disabled':''}><span class="driver-img"><img src="art/driver-${n}.webp" alt="">${n===i?`<span class="selected-icon">${icon('check')}</span>`:taken?`<span class="seat-number">P${reserved+1}</span>`:''}</span><span class="driver-copy"><strong>${r.name}</strong><small>${r.species}</small></span></button>`;
+   const taken=reserved!==-1,locked=!driverAvailable(n);
+   return `<button type="button" class="driver-card grid-pick ${n===i?'active':''}" data-pick-driver="${n}" aria-label="${r.name} the ${r.species.toLowerCase()}${taken?' · Player '+(reserved+1):locked?' · Win all three cups on Hard or Ultimate to unlock':''}" aria-pressed="${n===i}" ${taken||locked?'disabled':''}><span class="driver-img"><img src="art/driver-${n}.webp" alt="">${n===i?`<span class="selected-icon">${icon('check')}</span>`:taken?`<span class="seat-number">P${reserved+1}</span>`:''}</span><span class="driver-copy"><strong>${r.name}</strong><small>${locked?lockProgress():r.species}</small></span></button>`;
  }).join('');
- main.innerHTML=`<section class="grid-select"><div class="select-top"><div><button class="select-back" data-action="selectBack">${icon('left')}${seat?'Previous player':draftGrid.fromSetup?'Race setup':'Circuit select'}</button><h1>${count>1?'Player '+(seat+1)+' · ':''}Choose your driver</h1></div><div class="entry-rules">${raceRules(mode)}</div></div><div class="select-layout"><div class="select-roster" aria-label="Choose a character">${portraits}</div><aside class="grid-entry" aria-label="Race entry"><div class="entry-course" style="background-image:linear-gradient(0deg,#10180ef5,transparent 100%),url('art/course-${course}.webp')"><span class="label">${modeLabels[mode]} &nbsp;·&nbsp; ${eventDetails}</span><h2>${eventName}</h2></div><div class="course-hazard"><b>${courseHazard.name}</b><small>${window.AcornHazards.tips[course]}</small></div><div class="entry-driver" style="--driver-color:${d.color}"><strong class="entry-name">${d.name}</strong><span class="entry-kart">${d.kart}</span><div class="entry-skill">${icon('bolt')}${d.ability}</div><p>${d.abilityText}</p><div class="entry-stats">${['Agility','Acceleration','Stability'].map((v,k)=>`<div class="stat">${v}<span class="segments" aria-label="${d.stats[k]} out of five">${[1,2,3,4,5].map(j=>`<i class="${j<=d.stats[k]?'on':''}"></i>`).join('')}</span></div>`).join('')}</div><button class="action primary confirm-driver" data-action="confirmDriver">${icon(remaining?'arrow':'play')}${remaining?'Choose player '+(seat+2):mode==='cup'?'Start cup':mode==='trial'?'Start time trial':'Start race'}</button></div></aside></div></section>`;
+ main.innerHTML=`<section class="grid-select"><div class="select-top"><div><button class="select-back" data-action="selectBack">${icon('left')}${seat?'Previous player':draftGrid.fromSetup?'Race setup':'Circuit select'}</button><h1>${count>1?'Player '+(seat+1)+' · ':''}Choose your driver</h1></div><div class="entry-rules">${raceRules(mode)}</div></div><div class="select-layout"><div class="select-roster" aria-label="Choose a character">${portraits}</div><aside class="grid-entry" aria-label="Race entry"><div class="entry-course" style="background-image:linear-gradient(0deg,#10180ef5,transparent 100%),url('art/course-${course}.webp')"><span class="label">${modeLabels[mode]} &nbsp;·&nbsp; ${eventDetails}</span><h2>${eventName}</h2></div>${mode==='cup'?cupItinerary(cupIndex):`<div class="course-hazard"><b>${courseHazard.name}</b><small>${window.AcornHazards.tips[course]}</small></div>`}<div class="entry-driver" style="--driver-color:${d.color}"><strong class="entry-name">${d.name}</strong><span class="entry-kart">${d.kart}</span><div class="entry-skill">${icon('bolt')}${d.ability}</div><p>${d.abilityText}</p><div class="entry-stats">${['Agility','Acceleration','Stability'].map((v,k)=>`<div class="stat">${v}<span class="segments" aria-label="${d.stats[k]} out of five">${[1,2,3,4,5].map(j=>`<i class="${j<=d.stats[k]?'on':''}"></i>`).join('')}</span></div>`).join('')}</div><button class="action primary confirm-driver" data-action="confirmDriver">${icon(remaining?'arrow':'play')}${remaining?'Choose player '+(seat+2):mode==='cup'?(championship.activeRun(cupIndex)?'Replace saved cup and start':'Start cup'):mode==='trial'?'Start time trial':'Start race'}</button></div></aside></div></section>`;
 }
 function pickGridDriver(i){
  const {choices,seat}=draftGrid;
- if(!drivers[i]||choices.slice(0,seat).includes(i))return;
+ if(!drivers[i]||!driverAvailable(i)||choices.slice(0,seat).includes(i))return;
  const other=choices.indexOf(i);
  if(other>=0)choices[other]=choices[seat];
  choices[seat]=i;
@@ -94,17 +98,18 @@ function driverSelectBack(){
  if(fromSetup)setup(mode);else one(`[data-track="${track}"]`)?.focus({preventScroll:true});
 }
 function confirmGridDriver(){
- if(!draftGrid||running)return;
+ if(!draftGrid||running||!driverAvailable(draftGrid.choices[draftGrid.seat]))return;
  if(draftGrid.seat+1<draftGrid.count){draftGrid.seat++;driverSelect();one('[data-pick-driver][aria-pressed="true"]').focus({preventScroll:true});return}
  seats=[...draftGrid.choices];driver=seats[0];updateDriver();startSelection();
 }
+function lockProgress(){return `Locked · ${championship.qualifyingWins()}/${cups.length} Hard cup wins`}
 function garage(){
  window.KartViewer?.stop();
  const d=drivers[driver];
  main.innerHTML=`<div class="page-top"><div><h1>Driver garage</h1><p>Choose your racer for the next grid.</p></div><button class="action primary" data-page="hub">${icon('flag')}Race hub</button></div>
  <div class="garage-bench"><section id="kartViewer" aria-label="Inspect the ${d.kart} in 3D"></section><section class="driver-detail"><div><span class="label">${d.name}’s kart</span><h2>${d.kart}</h2><p>${d.description}</p><div class="ability">${icon('bolt')}${d.ability}</div><p>${d.abilityText}</p></div><div><span class="label">Handling</span>${['Agility','Acceleration','Stability'].map((v,i)=>`<div class="stat">${v}<span class="segments" aria-label="${d.stats[i]} out of five">${[1,2,3,4,5].map(j=>`<i class="${j<=d.stats[i]?'on':''}"></i>`).join('')}</span></div>`).join('')}</div></section></div>
  <div class="section-head"><span class="marks"></span><h2 class="sec-title">Select driver</h2></div>
- <section class="garage-grid" aria-label="Choose driver">${drivers.map((a,i)=>`<button class="driver-card ${i===driver?'active':''}" aria-pressed="${i===driver}" data-driver="${i}"><span class="driver-img"><img src="art/driver-${i}.webp" alt="${a.name} the ${a.species.toLowerCase()}">${i===driver?`<span class="selected-icon">${icon('check')}</span>`:''}</span><span class="driver-copy"><strong>${a.name}</strong><small>${a.species} · ${a.kart}</small></span></button>`).join('')}</section>`;
+ <section class="garage-grid" aria-label="Choose driver">${drivers.map((a,i)=>`<button class="driver-card ${i===driver?'active':''}" aria-pressed="${i===driver}" data-driver="${i}" ${driverAvailable(i)?'':'disabled title="Win all three cups on Hard or Ultimate"'}><span class="driver-img"><img src="art/driver-${i}.webp" alt="${a.name} the ${a.species.toLowerCase()}">${i===driver?`<span class="selected-icon">${icon('check')}</span>`:''}</span><span class="driver-copy"><strong>${a.name}</strong><small>${driverAvailable(i)?a.species+' · '+a.kart:lockProgress()}</small></span></button>`).join('')}</section>`;
  window.KartViewer?.mount(one('#kartViewer'),driver);
 }
 function recordKey(trackIndex,cc){return cc===100?String(trackIndex):cc+'-'+trackIndex}
@@ -135,16 +140,34 @@ function refreshRuleControls(key){
  if(modal==='setup'){if(page==='hub')one('.hero').innerHTML=hero();setup(mode);return}
  if(page==='select'){driverSelect();one(`[data-focus-id="${key}"]`)?.focus({preventScroll:true})}
 }
+function cupItinerary(index){
+ const cup=cups[index];
+ return `<ol class="cup-itinerary" aria-label="${cup.name} race order">${cup.tracks.map((id,n)=>`<li><img src="art/course-${id}.webp" alt=""><span><small>Race ${n+1}</small><b>${tracks[id].name}</b></span></li>`).join('')}</ol>`;
+}
+function cupSetup(){
+ const c=cups[cupIndex],gold=championship.goldLevel(cupIndex);
+ return segments('Championship','cup',cups.map((entry,i)=>[i,entry.name]),cupIndex)+
+   `<section class="cup-brief"><div class="cup-title"><strong>${c.name}</strong>${gold?`<span>${icon('trophy')}${skillLabel(gold)} gold</span>`:''}</div><p>${c.theme}</p>${cupItinerary(cupIndex)}</section>`;
+}
+function cupScoring(){
+ return `<details class="cup-scoring"><summary>How cup points work</summary><p>First through eighth earn ${championship.points.join(', ')} points. The highest total after four races wins. Ties go to the most firsts, then seconds and so on, then the better finish in the last race.</p></details>`;
+}
+function cupReward(){
+ const unlocked=driverAvailable(championship.rewardDriver),count=championship.qualifyingWins();
+ return `<div class="cup-reward"><img src="art/driver-${championship.rewardDriver}.webp" alt=""><div><strong>${rewardName()} · ${unlocked?'Unlocked':'Cup reward'}</strong><span>${unlocked?'Available in the driver garage.':`Win all three cups on Hard or Ultimate · ${count}/${cups.length}`}</span></div></div>`;
+}
 function setup(m=mode){mode=m;
- const cupMode=m==='cup',local=m==='local';
- modalView('setup','Race setup',`${summaryCard(cupMode?cupIndex*4:track)}${segments('Race mode','mode',Object.entries(modeLabels),m)}
+ const cupMode=m==='cup',local=m==='local',saved=cupMode&&championship.activeRun(cupIndex);
+ modalView('setup','Race setup',`${cupMode?'':summaryCard(track)}${segments('Race mode','mode',Object.entries(modeLabels),m)}
  ${cupMode?'':`<label class="field"><span>Circuit</span><select data-setup-track data-focus-id="setup-track">${tracks.map((t,i)=>`<option value="${i}" ${i===track?'selected':''}>${t.name}</option>`).join('')}</select></label>`}
+ ${cupMode?cupSetup():''}
  ${raceRules(m)}
- ${cupMode?segments('Championship','cup',[[0,'Forest Cup'],[1,'Horizon Cup']],cupIndex):''}
  ${local?segments('Local players','players',[[2,'2 players'],[3,'3 players'],[4,'4 players']],Math.max(2,players)):''}
  ${m==='race'||local?segments('Laps','laps',[[1,'1 lap'],[3,'3 laps'],[5,'5 laps']],laps):''}
- <p class="form-note">${({race:'Eight karts on the grid. Collect acorns and hold drift through corners to charge an exit boost.',trial:'Three laps, a clear track, and your personal-best ghost. Acorn items are disabled.',cup:`${cupNames[cupIndex]} runs from ${tracks[cupIndex*4].name} to ${tracks[cupIndex*4+3].name}. Your finishing position earns points in each round.`,local:'Player 1 can use the keyboard. Connect gamepads for additional drivers and press a button on each pad before the start.'})[m]}</p>
- <div class="modal-bottom">${local?`<button class="action secondary" data-action="rooms">${icon('globe')}Private room</button>`:''}<button class="action primary" data-action="go">Choose ${local?'drivers':'driver'}${icon('arrow')}</button></div>`);
+ <p class="form-note">${({race:'Eight karts on the grid. Collect acorns and hold drift through corners to charge an exit boost.',trial:'Three laps, a clear track, and your personal-best ghost. Acorn items are disabled.',cup:'Four races, three laps each. The driver with the most points wins the cup.',local:'Player 1 can use the keyboard. Connect gamepads for additional drivers and press a button on each pad before the start.'})[m]}</p>
+ ${cupMode?cupScoring()+cupReward():''}
+ ${saved?`<div class="cup-resume"><div><strong>Continue ${cups[cupIndex].name}</strong><small>Race ${saved.rounds.length+1} of 4 · ${drivers[saved.driver].name} · ${saved.cc} cc · ${skillLabel(saved.difficulty)}</small></div><button type="button" class="action primary" data-action="resumeCup">Resume${icon('arrow')}</button></div>`:''}
+ <div class="modal-bottom">${local?`<button class="action secondary" data-action="rooms">${icon('globe')}Private room</button>`:''}<button class="action ${saved?'secondary':'primary'}" data-action="go">${saved?'Start a new cup':local?'Choose drivers':'Choose driver'}${icon('arrow')}</button></div>`);
 }
 function settingsPanel(){modalView('settings','Settings',`<label class="settings-row">Game audio<input type="checkbox" class="switch" data-pref="sound" ${settings.sound?'checked':''}></label><label class="settings-row">Auto-accelerate<input type="checkbox" class="switch" data-pref="autoAccel" ${settings.autoAccel?'checked':''}></label><label class="settings-row">Stick dead zone <span><output id="dz">${Math.round(settings.deadzone*100)}%</output> <input type="range" min="0" max="75" value="${Math.round(settings.deadzone*100)}" data-pref="deadzone"></span></label><label class="settings-row">Controller prompts<select data-pref="padStyle" class="control"><option value="xbox" ${settings.padStyle==='xbox'?'selected':''}>Xbox</option><option value="ps" ${settings.padStyle==='ps'?'selected':''}>PlayStation</option></select></label>
  <div class="modal-bottom"><button class="action secondary" data-action="bindings">${icon('keyboard')}Controls</button><button class="action primary" data-action="close">Done</button></div>
@@ -158,34 +181,73 @@ function openRooms(){
 }
 function itemGuide(){modalView('items','Acorn items',`<p class="form-note">Leaders draw tactical items. The farther you fall behind the leader, the more likely you are to draw a catch-up boost.</p>`+window.AcornSim.items.map((name,i)=>`<div class="item-guide-row"><img src="art/item-${i}.webp" alt=""><div><small class="item-role">${window.AcornFeedback.roles[i]}</small><b style="color:${window.AcornItemArt.colors[i]}">${name}</b><p>${window.AcornItemArt.descriptions[i]}</p></div></div>`).join('')+'<div class="modal-bottom"><button class="action primary" data-action="close">Done</button></div>')}
 function startSelection(){
- if(mode==='cup'){cup={index:cupIndex,round:0,points:{}};track=cupIndex*4}else cup=null;
  roomSession=null;
- launch({trackIndex:track,cc:engineClass,difficulty:cpuLevel,driverIndex:driver,driverIndices:seats.slice(),mode:mode==='local'?'race':mode,players:mode==='local'?Math.max(2,players):1,laps:mode==='cup'||mode==='trial'?3:laps});
+ if(mode==='cup'){
+   cup=championship.start(cupIndex,driver,engineClass,cpuLevel);
+   nextCupRace();
+   return;
+ }
+ cup=null;
+ launch({trackIndex:track,cc:engineClass,difficulty:cpuLevel,driverIndex:driver,driverIndices:seats.slice(),mode:mode==='local'?'race':mode,players:mode==='local'?Math.max(2,players):1,laps:mode==='trial'?3:laps});
+}
+function resumeCup(){
+ const saved=championship.activeRun(cupIndex);
+ if(!saved||!driverAvailable(saved.driver)){setup('cup');return}
+ mode='cup';roomSession=null;cup=saved;driver=cup.driver;updateDriver();nextCupRace();
+}
+function nextCupRace(){
+ const c=cups[cup.index],round=cup.rounds.length;
+ track=c.tracks[round];
+ launch({mode:'cup',trackIndex:track,cc:cup.cc,difficulty:cup.difficulty,driverIndex:cup.driver,players:1,laps:3,cupRoundLabel:`${c.name} · ${round+1}/4`});
 }
 async function launch(options){
  if(!window.AcornRace){notice('The race engine could not load. Refresh to try again.');return}
- if(running)return;lastRun=options;running=true;closeModal();race.hidden=false;app.inert=true;document.body.style.overflow='hidden';
- race.innerHTML=`<div class="grid-loading" style="background-image:linear-gradient(0deg,#121712ec,#12171233),url(art/course-${options.trackIndex}.webp)"><div><span class="hero-kicker eyebrow"><span class="checker"></span>Preparing starting grid</span><h2>${tracks[options.trackIndex].name}</h2><div class="load-progress"></div></div></div>`;
+ if(running)return;
+ if(!options.network&&!driverAvailable(options.driverIndex)){notice('Win all three cups on Hard or Ultimate to unlock this driver.');return}
+ lastRun=options;running=true;closeModal();race.hidden=false;app.inert=true;document.body.style.overflow='hidden';
+ race.innerHTML=`<div class="grid-loading" style="background-image:linear-gradient(0deg,#121712ec,#12171233),url(art/course-${options.trackIndex}.webp)"><div><span class="hero-kicker eyebrow"><span class="checker"></span>${options.cupRoundLabel||'Preparing starting grid'}</span><h2>${tracks[options.trackIndex].name}</h2><div class="load-progress"></div></div></div>`;
  try{await window.KartViewer.loadModels();race.replaceChildren();window.AcornRace.start({...options,container:race,settings:{...settings,bindings:{...settings.bindings}},onExit:leaveRace,onFinish:finish})}catch(err){console.error(err);leaveRace();notice('The race could not start. Refresh the game and try again.')}
 }
 function detachRace(){running=false;window.AcornRace?.stop();race.hidden=true;app.inert=false;document.body.style.overflow=''}
 function returnRoom(){const net=roomSession;roomSession=null;closeModal();modal='rooms';net.returnToLobby();document.body.style.overflow='hidden'}
-function leaveRace(){detachRace();if(roomSession){returnRoom();return}cup=null;nav('hub')}
+function leaveRace(){detachRace();if(roomSession){returnRoom();return}const pausedCup=cup;cup=null;nav('hub');if(pausedCup)notice(`${cups[pausedCup.index].name} saved · Resume race ${pausedCup.rounds.length+1} in Cup series`)}
 function updateResults(r){const idx=recordKey(r.trackIndex??lastRun.trackIndex,simulation.normalizeCC(r.cc??lastRun.cc)),rec=records[idx]||{};if(r.bestLap>0&&(!rec.lap||r.bestLap<rec.lap))rec.lap=r.bestLap;if(lastRun.mode==='trial'&&lastRun.laps===3&&r.time>0&&(!rec.trial||r.time<rec.trial))rec.trial=r.time;records[idx]=rec;write('records',records)}
+function finishCup(result){
+ const round=championship.record(cup,result);
+ cup=round.run;
+ const c=cups[cup.index],number=cup.rounds.length,board=championship.standings(cup);
+ const player=board.find(row=>row.driver===cup.driver),place=board.indexOf(player)+1;
+ const winner=drivers[board[0].driver].name,course=tracks[result.trackIndex].name;
+ const title=round.complete?c.name+' results':c.name+' · '+number+' / 4';
+ const next=round.complete?'Choose cup':`Race ${number+1} · ${tracks[c.tracks[number]].name}`;
+ const podium=round.complete?(round.won?'Cup champion':ordinal(place)+' overall'):ordinal(result.position)+' in '+course;
+ const subhead=round.complete?`${winner} wins with ${board[0].total} points · ${cup.cc} cc · ${skillLabel(cup.difficulty)}`:`${drivers[cup.driver].name} · +${championship.points[player.last-1]} pts · ${cup.cc} cc · ${skillLabel(cup.difficulty)}`;
+ modalView('results',title,`<div class="result-podium"><img src="art/driver-${cup.driver}.webp" alt=""><div><strong>${podium}</strong><span>${subhead}</span></div></div>
+ <div class="result-stats"><div><small>Race time</small><b>${time(result.time)}</b></div><div><small>Best lap</small><b>${time(result.bestLap)}</b></div><div><small>Your points</small><b>${player.total}</b></div></div>
+ <table class="cup-table"><caption>${round.complete?'Final standings':'Cup standings'}</caption><thead><tr><th scope="col">Pos</th><th scope="col">Driver</th><th scope="col">Race ${number}</th><th scope="col">Points</th></tr></thead><tbody>${board.map((s,i)=>`<tr class="${s.driver===cup.driver?'human':''}"><td>${i+1}</td><th scope="row">${drivers[s.driver].name}${s.driver===cup.driver?' · You':''}</th><td>${ordinal(s.last)} <small>+${championship.points[s.last-1]}</small></td><td><b>${s.total}</b></td></tr>`).join('')}</tbody></table>
+ ${round.unlocked?`<div class="cup-unlocked" role="status"><img src="art/driver-${championship.rewardDriver}.webp" alt=""><div><small>Driver unlocked</small><strong>${rewardName()}</strong><span>${drivers[championship.rewardDriver].kart} · Available in the garage</span></div></div>`:round.complete?cupReward():''}
+ <div class="modal-bottom"><button class="action secondary" data-action="resultHub">${round.complete?'Race hub':'Save and exit'}</button><button class="action primary" data-action="rematch">${next}${icon('arrow')}</button></div>`);
+}
 function finish(r){
  if(!running)return;
  updateResults(r);detachRace();
- const idx=r.trackIndex??lastRun.trackIndex,d=drivers[r.driverIndex??driver],stand=r.standings||[];
- if(cup){for(const s of stand){const id=s.seat??s.id??s.name;const p=cup.points[id]??{name:s.name,points:0,human:s.human};p.points+=[12,9,7,5,4,3,2,1][s.position-1]||0;cup.points[id]=p}}
- const cupEnd=cup&&cup.round===3;
- const board=cupEnd?Object.values(cup.points).sort((a,b)=>b.points-a.points).map((s,i)=>({...s,position:i+1})):stand;
- const title=cupEnd?cupNames[cup.index]:lastRun.mode==='trial'?'Trial complete':'Race results';
- const next=cup&&!cupEnd?'Next circuit':roomSession?'Room lobby':'Race again';
- modalView('results',title,`<div class="result-podium"><img src="art/driver-${r.driverIndex??driver}.webp" alt=""><div><strong>${lastRun.mode==='trial'?'Finish':ordinal(r.position||1)+' place'}</strong><span>${d.name} · ${tracks[idx].name} · ${simulation.normalizeCC(r.cc??lastRun.cc)} cc</span></div></div><div class="result-stats"><div><small>Race time</small><b>${time(r.time)}</b></div><div><small>Best lap</small><b>${time(r.bestLap)}</b></div>${cup?`<div><small>Cup round</small><b>${cup.round+1} / 4</b></div>`:''}</div>
- ${board.map(s=>`<div class="finish-row ${s.human?'human':''}"><span>${pad2(s.position)}</span><b>${safeName(s.name)}</b><span>${cupEnd?`${s.points} pts`:time(s.time)}</span></div>`).join('')}
+ if(cup){
+   try{finishCup(r)}catch(err){console.error(err);notice('The round could not be scored. Resume the cup to retry this circuit.');resultHub()}
+   return;
+ }
+ const idx=r.trackIndex??lastRun.trackIndex,d=drivers[r.driverIndex??driver],board=r.standings||[];
+ const title=lastRun.mode==='trial'?'Trial complete':'Race results';
+ const next=roomSession?'Room lobby':'Race again';
+ modalView('results',title,`<div class="result-podium"><img src="art/driver-${r.driverIndex??driver}.webp" alt=""><div><strong>${lastRun.mode==='trial'?'Finish':ordinal(r.position||1)+' place'}</strong><span>${d.name} · ${tracks[idx].name} · ${simulation.normalizeCC(r.cc??lastRun.cc)} cc</span></div></div><div class="result-stats"><div><small>Race time</small><b>${time(r.time)}</b></div><div><small>Best lap</small><b>${time(r.bestLap)}</b></div></div>
+ ${board.map(s=>`<div class="finish-row ${s.human?'human':''}"><span>${pad2(s.position)}</span><b>${safeName(s.name)}</b><span>${time(s.time)}</span></div>`).join('')}
  <div class="modal-bottom"><button class="action secondary" data-action="resultHub">Race hub</button><button class="action primary" data-action="rematch">${next}${icon('arrow')}</button></div>`);
 }
-function rematch(){if(roomSession){returnRoom();return}if(cup&&cup.round<3){cup.round++;track=cup.index*4+cup.round;launch({...lastRun,trackIndex:track})}else beginDriverSelect(mode)}
+function rematch(){
+ if(roomSession){returnRoom();return}
+ if(!cup){beginDriverSelect(mode);return}
+ if(cup.rounds.length<cups[cup.index].tracks.length){nextCupRace();return}
+ cup=null;closeModal();nav('hub');setup('cup');
+}
 function resultHub(){roomSession?.leave();roomSession=null;cup=null;closeModal();nav('hub')}
 function closeAction(){if(modal==='results'){resultHub();return}if(modal==='rooms'){dc.querySelector('[data-rr="close"]')?.click();return}closeModal()}
 document.addEventListener('click',e=>{
@@ -196,14 +258,14 @@ document.addEventListener('click',e=>{
  if(b.dataset.recordCc){recordsClass=simulation.normalizeCC(b.dataset.recordCc);showRecords();one(`[data-record-cc="${recordsClass}"]`)?.focus({preventScroll:true});return}
  if(b.hasAttribute('data-track')){chooseTrack(+b.dataset.track);return}
  if(b.hasAttribute('data-pick-driver')){pickGridDriver(+b.dataset.pickDriver);return}
- if(b.hasAttribute('data-driver')){driver=+b.dataset.driver;updateDriver();garage();one(`[data-driver="${driver}"]`).focus({preventScroll:true});return}
+ if(b.hasAttribute('data-driver')){if(!driverAvailable(+b.dataset.driver))return;driver=+b.dataset.driver;updateDriver();garage();one(`[data-driver="${driver}"]`).focus({preventScroll:true});return}
  if(b.dataset.setup){setup(b.dataset.setup);return}
  if(b.dataset.mode){setup(b.dataset.mode);return}
  if(b.hasAttribute('data-cup')){cupIndex=+b.dataset.cup;setup();return}
  if(b.dataset.players){players=+b.dataset.players;setup();return}
  if(b.dataset.laps){laps=+b.dataset.laps;if(page==='hub')one('.hero').innerHTML=hero();setup();return}
  if(b.dataset.bind){capture=b.dataset.bind;controlsPanel();return}
- ({recordTrial:()=>{engineClass=recordsClass;saveRaceRules();setup('trial')},start:()=>beginDriverSelect('race'),setup:()=>setup(),go:()=>beginDriverSelect(mode,true),selectBack:driverSelectBack,confirmDriver:confirmGridDriver,prev:()=>shiftShelf(-1),next:()=>shiftShelf(1),close:closeAction,bindings:controlsPanel,rooms:openRooms,resetKeys:()=>{capture='';settings.bindings={...defaults.bindings};pref();controlsPanel()},rematch,resultHub})[b.dataset.action]?.();
+ ({recordTrial:()=>{engineClass=recordsClass;saveRaceRules();setup('trial')},start:()=>beginDriverSelect('race'),setup:()=>setup(),go:()=>beginDriverSelect(mode,true),selectBack:driverSelectBack,confirmDriver:confirmGridDriver,prev:()=>shiftShelf(-1),next:()=>shiftShelf(1),close:closeAction,bindings:controlsPanel,rooms:openRooms,resetKeys:()=>{capture='';settings.bindings={...defaults.bindings};pref();controlsPanel()},rematch,resultHub,resumeCup})[b.dataset.action]?.();
 });
 document.addEventListener('change',e=>{const a=e.target;if(a.hasAttribute('data-setup-track')){track=+a.value;if(page==='hub')hub();setup(mode);return}if(a.dataset.pref){const p=a.dataset.pref;settings[p]=p==='deadzone'?+a.value/100:a.type==='checkbox'?a.checked:a.value;pref()}});
 document.addEventListener('keydown',e=>{if(e.code==='Escape'&&page==='select'&&!dialog.open&&!running){e.preventDefault();driverSelectBack()}});
