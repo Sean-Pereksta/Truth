@@ -10,7 +10,8 @@
 .local-seat small,.local-tip { font:500 12px/1.4 var(--body); color:var(--muted); }
 .local-seat em { color:var(--seat); font:700 12px var(--body); }
 .local-tip { margin:5px 0; }
-.local-grid .local-pick { overflow:hidden; position:relative; }
+.local-grid .local-pick { overflow:hidden; position:relative; scroll-margin-block:8px; }
+.local-grid[data-host-actions] > .local-tip { margin:-5px 0 12px; color:var(--light); }
 .local-grid .local-pick:has([data-cursor])::after { content:""; position:absolute; inset:0; z-index:2; padding:4px; pointer-events:none; border-radius:inherit; background:var(--cursor-ring); -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0); mask-composite:exclude; }
 html[data-pad-nav] .local-grid .local-pick:focus { outline:none; box-shadow:none; }
 .local-cursors { position:absolute; inset:5px auto auto 5px; display:flex; flex-wrap:wrap; gap:3px; }

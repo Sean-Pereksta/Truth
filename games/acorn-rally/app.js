@@ -138,7 +138,9 @@ function showRecords(){
  main.innerHTML=`<div class="page-top"><div><h1>Track records</h1><p>Your fastest laps and Time Trials in each engine class.</p></div><button class="action primary" data-action="recordTrial">${icon('clock')}Time trial</button></div><div class="record-classes">${segments('Engine class','record-cc',engineChoices,recordsClass)}</div><section class="records" aria-label="${recordsClass} cc track records"><div class="record-row record-heading"><span>Track</span><span>Circuit</span><span>Best lap</span><span>3-lap trial</span></div>${rows}</section>`;
 }
 function closeModal(){capture='';modal=null;if(dialog.open)dialog.close();document.body.style.overflow=running?'hidden':''}
+let bindingsFromSettings=false;
 function modalView(kind,title,content){
+ if(kind==='bindings'&&modal!=='bindings')bindingsFromSettings=modal==='settings';
  const already=dialog.open,focus=already&&document.activeElement?.dataset?.focusId;modal=kind;
  dc.innerHTML=`<div class="modal-head"><h2>${title}</h2><button class="close-btn" ${kind==='results'?'data-action="resultHub"':'data-action="close"'} aria-label="Close">${icon('close')}</button></div>${content}`;
  if(!already)dialog.showModal();document.body.style.overflow='hidden';
@@ -181,7 +183,7 @@ function setup(m=mode){mode=m;
  ${raceRules(m)}
  ${local?segments('Local players','players',[[2,'2 players'],[3,'3 players'],[4,'4 players']],Math.max(2,players))+'<div id="localDevices">'+localDevicesMarkup(Math.max(2,players))+'</div>':''}
  ${m==='race'||local?segments('Laps','laps',[[1,'1 lap'],[3,'3 laps'],[5,'5 laps']],laps):''}
- <p class="form-note">${({race:'Eight karts on the grid. Collect acorns and hold drift through corners to charge an exit boost.',trial:'Three laps, a clear track, and your personal-best ghost. Acorn items are disabled.',cup:'Four races, three laps each. The driver with the most points wins the cup.',local:'Player 1 can use the keyboard. Connect gamepads for additional drivers and press a button on each pad before the start.'})[m]}</p>
+ <p class="form-note">${({race:'Eight karts on the grid. Collect acorns and hold drift through corners to charge an exit boost.',trial:'Three laps, a clear track, and your personal-best ghost. Acorn items are disabled.',cup:'Four races, three laps each. The driver with the most points wins the cup.',local:'Press a button on each controller to show it here. Choose a controller or keyboard for each player.'})[m]}</p>
  ${cupMode?cupScoring()+cupReward():''}
  ${saved?`<div class="cup-resume"><div><strong>Continue ${cups[cupIndex].name}</strong><small>Race ${saved.rounds.length+1} of 4 · ${drivers[saved.driver].name} · ${saved.cc} cc · ${skillLabel(saved.difficulty)}</small></div><button type="button" class="action primary" data-action="resumeCup">Resume${icon('arrow')}</button></div>`:''}
  <div class="modal-bottom">${local?`<button class="action secondary" data-action="rooms">${icon('globe')}Private room</button>`:''}<button class="action ${saved?'secondary':'primary'}" data-action="go">${saved?'Start a new cup':local?'Choose drivers':'Choose driver'}${icon('arrow')}</button></div>`);
@@ -267,6 +269,12 @@ function rematch(){
 }
 function resultHub(){roomSession?.leave();roomSession=null;cup=null;closeModal();nav('hub')}
 function closeAction(){if(modal==='results'){resultHub();return}if(modal==='rooms'){dc.querySelector('[data-rr="close"]')?.click();return}closeModal()}
+function backFromDialog(){
+ if(modal==='bindings'&&bindingsFromSettings){
+   capture='';settingsPanel();dc.querySelector('[data-action="bindings"]')?.focus({preventScroll:true});return;
+ }
+ closeAction();
+}
 document.addEventListener('click',e=>{
  const b=e.target.closest('button');if(!b)return;
  if(b.dataset.page){if(b.dataset.page==='records')recordsClass=engineClass;nav(b.dataset.page);return}
@@ -289,15 +297,16 @@ document.addEventListener('change',e=>{const a=e.target;if(a.hasAttribute('data-
 document.addEventListener('keydown',e=>{if(e.code==='Escape'&&page==='select'&&!dialog.open&&!running){e.preventDefault();driverSelectBack()}});
 document.addEventListener('input',e=>{if(e.target.dataset.pref==='deadzone')one('#dz').textContent=e.target.value+'%'});
 document.addEventListener('keydown',e=>{if(!capture)return;e.preventDefault();e.stopImmediatePropagation();if(e.code==='Escape'){capture='';controlsPanel();return}if(['Tab','Enter','F5','MetaLeft','MetaRight'].includes(e.code))return;const prior=Object.keys(settings.bindings).find(k=>settings.bindings[k]===e.code);if(prior)settings.bindings[prior]=settings.bindings[capture];settings.bindings[capture]=e.code;capture='';pref();controlsPanel()},true);
-dialog.addEventListener('cancel',e=>{e.preventDefault();if(modal!=='rooms')closeAction()});
+dialog.addEventListener('cancel',e=>{e.preventDefault();if(modal!=='rooms')backFromDialog()});
 dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeAction()}});
 one('#settingsBtn').onclick=settingsPanel;one('#guideBtn').onclick=controlsPanel;one('#itemGuideBtn').onclick=itemGuide;one('#soundBtn').onclick=()=>{settings.sound=!settings.sound;pref();activateAudio();notice(settings.sound?'Sound on':'Sound muted')};
 document.addEventListener('pointerup',activateAudio,true);
 document.addEventListener('keydown',activateAudio,true);
 document.addEventListener('visibilitychange',syncMusic);
 window.addEventListener('resize',arrowState);
-let previousPads=[],navHeld='',nextMove=0,connectedPads='',focusOwner=null;
-const focusable='button:not(:disabled),a[href],select:not(:disabled),input:not(:disabled):not([type="hidden"])';
+let previousPads=[],navHeld='',nextMove=0,connectedPads='',focusView=null;
+const focusable='button:not(:disabled),a[href],select:not(:disabled),input:not(:disabled):not([type="hidden"]),details > summary:first-of-type';
+const dialogEntry={setup:'[data-mode][aria-pressed="true"]',settings:'[data-pref="sound"]',bindings:'[data-pref="padPreset"]',results:'.modal-bottom .primary'};
 const padHint=document.createElement('span');
 padHint.className='pad-nav-hint';padHint.hidden=true;
 one('footer').prepend(padHint);
@@ -310,7 +319,9 @@ function adjustControl(el,step){
  if(el.tagName==='SELECT'){
    const options=Array.from(el.options).filter(o=>!o.disabled);
    if(!options.length)return false;
-   const i=options.indexOf(el.selectedOptions[0]);el.value=options[(i+step+options.length)%options.length].value;
+   const i=options.indexOf(el.selectedOptions[0]);
+   const next=i<0 ? (step>0?0:options.length-1) : (i+step+options.length)%options.length;
+   el.value=options[next].value;
  }else if(el.matches('input[type=range]')){
    const n=+(el.step||1)*step*5;
    el.value=String(Math.min(+el.max,Math.max(+el.min,+el.value+n)));
@@ -337,29 +348,30 @@ function menuGamepad(ts){
  let pads=[];try{pads=Array.from(navigator.getGamepads?.()||[]);}catch{return;}
  const earlier=previousPads;
  previousPads=pads.map(p=>p?.buttons.map(b=>b.pressed)||[]);
- const devices=pads.filter(Boolean),ids=devices.map(p=>p.index+'-'+p.id).join('|'),connected=ids!==connectedPads;
+ const devices=pads.filter(p=>p&&p.connected!==false),ids=devices.map(p=>p.index+'-'+p.id).join('|'),connected=ids!==connectedPads;
  connectedPads=ids;
- if(!devices.length){if(!padHint.hidden)padHint.hidden=true;if(connected)delete document.documentElement.dataset.padNav;focusOwner=null;navHeld='';if(!running)handleLocalPads(pads,earlier,ts);return;}
+ if(!devices.length){if(!padHint.hidden)padHint.hidden=true;if(connected)delete document.documentElement.dataset.padNav;focusView=null;navHeld='';if(!running)handleLocalPads(pads,earlier,ts);return;}
  const ps=settings.padStyle==='ps';
  const hint=ps?'D-pad · Move　 Cross · Select　 Circle · Back　 L1/R1 · Cycle':'D-pad · Move　 A · Select　 B · Back　 LB/RB · Cycle';
  if(padHint.textContent!==hint)padHint.textContent=hint;
- if(padHint.hidden)padHint.hidden=false;
+ const hideHint=running||(!dialog.open&&page==='select'&&mode==='local');
+ if(padHint.hidden!==hideHint)padHint.hidden=hideHint;
  if(connected)document.documentElement.dataset.padNav='on';
  if(running)return;
  const press=(p,i)=>p.buttons[i]?.pressed&&!earlier[p.index]?.[i];
  const controller=devices.find(p=>p.buttons.some((_,i)=>press(p,i)))||devices.find(p=>p.buttons.some(b=>b.pressed)||p.axes.some(v=>Math.abs(v)>.56));
  if(controller)document.documentElement.dataset.padNav='on';
- if(handleLocalPads(pads,earlier,ts)){focusOwner=null;navHeld='';return;}
+ if(handleLocalPads(pads,earlier,ts)){focusView=null;navHeld='';return;}
  const owner=dialog.open?dc:app;
  if(document.documentElement.dataset.padNav!=='on')return;
- const changedOwner=focusOwner!==owner;
- if(!controller){navHeld='';if(!connected&&!changedOwner&&owner.contains(document.activeElement))return;}
- focusOwner=owner;
+ const view=dialog.open?modal:page,changedView=focusView!==view;
+ let active=document.activeElement;
+ if(!controller){navHeld='';if(!connected&&!changedView&&owner.contains(active)&&active.matches(focusable))return;}
+ focusView=view;
  const candidates=Array.from(owner.querySelectorAll(focusable)).filter(el=>el.getClientRects().length);
  if(!candidates.length)return;
- let active=document.activeElement;
- if(!candidates.includes(active)||changedOwner&&dialog.open&&active.matches('.close-btn')){
-   const initial=dialog.open?(owner.querySelector('[aria-pressed=true],.modal-bottom .primary')||candidates[0]):
+ if(!candidates.includes(active)||changedView&&dialog.open&&active.matches('.close-btn')){
+   const initial=dialog.open?owner.querySelector(dialogEntry[modal]||'.modal-bottom .primary'):
      (page==='hub'?one('[data-action=start]'):page==='select'?one('[data-pick-driver][aria-pressed=true]'):one('.main-nav [aria-current=page]'));
    active=candidates.includes(initial)?initial:candidates[0];focusWithPad(active);
  }
@@ -367,7 +379,7 @@ function menuGamepad(ts){
  const p=controller;
  if(p.buttons.some((_,i)=>press(p,i)))activateAudio();
  if(press(p,1)){
-   if(capture){capture='';controlsPanel();}else if(dialog.open)closeAction();else if(page==='select')driverSelectBack();else if(page!=='hub')nav('hub');
+   if(capture){capture='';controlsPanel();}else if(dialog.open)backFromDialog();else if(page==='select')driverSelectBack();else if(page!=='hub')nav('hub');
    return;
  }
  if(press(p,4)||press(p,5)){

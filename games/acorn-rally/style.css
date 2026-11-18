@@ -38,7 +38,7 @@ dialog{width:min(540px,calc(100% - 26px));max-height:90dvh;border:1px solid #565
 @media(min-width:761px) and (max-width:870px){.top-inner{gap:20px}.main-nav{gap:12px}.brand span{font-size:27px}.brand img{width:36px}.header-tools{gap:4px}}
 
 /* Controller focus stays visible on image cards, dark panels and unit-coloured buttons. */
-html[data-pad-nav="on"] :is(button,a[href],select,input):focus {
+html[data-pad-nav="on"] :is(button,a[href],select,input,summary):not(.local-pick):focus {
  outline:3px solid #fff3ad !important;
  outline-offset:2px;
  box-shadow:0 0 0 5px #302417,0 0 14px 4px #f2ac4560;
