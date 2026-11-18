@@ -1,0 +1,29 @@
+.local-devices { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:8px; margin:8px 0 15px; }
+.local-devices label,.local-seat { display:flex; align-items:center; gap:8px; padding:7px 9px; border:1px solid var(--line); border-left:3px solid var(--seat); border-radius:6px; background:var(--panel); }
+.local-devices b,.local-seat>b { color:var(--seat); font:800 15px var(--body); }
+.local-devices select { flex:1; width:0; min-width:0; padding:4px; color:inherit; background:var(--panel); border:0; font:600 12px var(--body); }
+.local-team { display:grid; gap:6px; padding:15px; }
+.local-seat { width:100%; text-align:left; cursor:pointer; color:inherit; }
+.local-seat[aria-pressed=true] { outline:1px solid var(--seat); outline-offset:-1px; }
+.local-seat>span { display:grid; flex:1; }
+.local-seat strong { font:700 16px var(--body); }
+.local-seat small,.local-tip { font:500 12px/1.4 var(--body); color:var(--muted); }
+.local-seat em { color:var(--seat); font:700 12px var(--body); }
+.local-tip { margin:5px 0; }
+.local-grid .local-pick { overflow:hidden; position:relative; scroll-margin-block:8px; }
+.local-grid[data-host-actions] > .local-tip { margin:-5px 0 12px; color:var(--light); }
+.local-grid .local-pick:has([data-cursor])::after { content:""; position:absolute; inset:0; z-index:2; padding:4px; pointer-events:none; border-radius:inherit; background:var(--cursor-ring); -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0); mask-composite:exclude; }
+html[data-pad-nav] .local-grid .local-pick:focus { outline:none; box-shadow:none; }
+.local-cursors { position:absolute; inset:5px auto auto 5px; display:flex; flex-wrap:wrap; gap:3px; }
+.local-cursors b { background:var(--seat); color:#151821; border:1px solid #ffffff99; border-radius:4px; box-shadow:0 2px 4px #0007; padding:3px 5px; font:900 clamp(10px,1.3vw,15px)/1 var(--body); }
+.local-cursors b[data-locked=true] { border:2px solid #fff; }
+.local-stripe { display:flex; height:4px; position:absolute; bottom:0; left:0; width:100%; }
+.local-stripe i { flex:1; }
+@media(max-width:640px) {
+  .local-grid .grid-entry { grid-template-columns:1fr; }
+  .local-grid .entry-course { display:none; }
+  .local-team { grid-template-columns:repeat(2,minmax(0,1fr)); padding:9px; }
+  .local-tip,.local-team .confirm-driver { grid-column:1 / -1; }
+  .local-seat { gap:4px; padding:5px; }
+  .local-seat small,.local-seat em { font-size:10px; }
+}

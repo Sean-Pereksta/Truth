@@ -63,12 +63,12 @@
   }
   function render(st,r,emit,courseLength){
     const hit=r.signatureHit,hitAge=hit?st.time-hit.at:2;
-    if(hitAge>=0&&hitAge<.52){
-      const t=hitAge/.52;
-      emit('sigRing'+hit.id,r.s,r.x,.2+t*.48,0,.54+t*.75,(1-t)*.88);
-      for(let j=0;j<5;j++){const a=(j*.178-.36)*Math.PI;
+    if(hitAge>=0&&hitAge<.58){
+      const t=hitAge/.58;
+      emit('sigRing'+hit.id,r.s,r.x,.2+t*.48,0,.6+t*1.0,(1-t)*.92);
+      if(!hit.blocked)for(let j=0;j<6;j++){const a=(j*.145-.36)*Math.PI;
         const kind=hit.id===4?'sigSpine':hit.id===7||hit.id===6?'sigDirt':'sigLeaf';
-        emit(kind,r.s+Math.sin(a)*t*1.4,r.x+hit.side*Math.cos(a)*(.5+t*1.2),.56+Math.sin(t*Math.PI)*.6,a,.28+(1-t)*.32,1-t);}
+        emit(kind,r.s+Math.sin(a)*t*1.7,r.x+hit.side*Math.cos(a)*(.6+t*1.6),.55+Math.sin(t*Math.PI)*.8,a,.36+(1-t)*.40,1-t);}
     }
     const s=r.signature;if(!s)return;
     const id=r.driverIndex,time=st.time,age=Math.max(0,time-s.since),beat=Math.max(0,time-s.beat),phase=age/root.AcornSignatures.durations[id];
@@ -94,7 +94,7 @@
       if(s.stage==='active'&&phase<=1){
         if(phase<.76){at('sigRing2',0,0,.075,0,.66+phase*1.6,1-phase);for(const side of [-1,1])at('sigPaw',0,side*.43,.095,side*.14,.95,.95-phase*.6);}
         const height=Math.sin(Math.PI*clamp(phase));
-        for(const side of [-1,1])here('sigSpring',-.31,side*.53,.15,0,.72, .49+height*.38,[1,.45+height,1]);
+        for(const side of [-1,1])here('sigSpring',-.31,side*.53,.15,0,.72, .49+height*.38,[1,.45+height*1.55,1]);
       }
       if((s.stage==='release'||s.stage==='land')&&beat<.55){const t=beat/.55;at('sigRing2',0,0,.07,0,.65+t*2.4,1-t);
         for(const side of [-1,1])at('sigPaw',.32,side*.37,.095,side*.19,1,.84*(1-t));}
@@ -106,7 +106,7 @@
       if(s.stage==='release'&&beat<1.04){wake('sigBerm',6,1.7);if(beat<.38)here('sigRing3',-.68,0,.15,0,.62+beat*3,1-beat/.38);}
     }
     if(id===4&&age<.67){
-      const t=clamp(age/.215),rad=2.65+4.35*t;
+      const fan=root.AcornSignatures.quillFan,t=clamp(age/fan.travel),rad=fan.core+(fan.radius-fan.core)*t;
       at('sigRing4',0,0,.09,0,rad,Math.max(0,.62-age*.84));
       for(let j=0;j<15;j++){const a=j/15*tau;at('sigSpine',Math.cos(a)*rad,Math.sin(a)*rad,.23+Math.sin(t*Math.PI)*.35,a,.94,clamp((.67-age)/.22));}
     }
@@ -126,6 +126,7 @@
       if(s.stage==='wave'&&beat<.92){const wave=root.AcornSignatures.groundPound,t=clamp(beat/wave.travel),rad=wave.core+t*(wave.radius-wave.core),fade=clamp((.92-beat)/.43);
         at('sigFault',0,0,.05,0,rad,fade*.82);
         at('sigRing6',0,0,.09,0,rad,fade*.85);
+        if(beat<.35)at('sigRing6',0,0,.16+beat*.8,0,wave.core*(.50+beat*1.3),1-beat/.35);
         for(let j=0;j<12;j++){const a=tau*j/12;at('sigDirt',Math.cos(a)*rad*.87,Math.sin(a)*rad*.87,.13+Math.sin(t*Math.PI)*1.24,a+t,1.0+(j%3)*.28,fade);}
       }
     }
@@ -137,6 +138,12 @@
       for(const side of [-1,1])for(let j=0;j<4;j++){
         const t=(beat*2.8+j/4)%1;here('sigSunMark',-.6-t*2.6,side*(.4+t*.26),.23+t*.12,0,.63,1-t);
       }
+    }
+    if(id===8&&s.stage==='release'&&r.guard>0&&beat<3){
+      const glow=.66+Math.sin(time*7)*.13;
+      here('sigRing8',0,0,.32,0,1.10,glow,[1,1,1.36]);
+      for(let j=0;j<3;j++){const a=time*2.3+j*tau/3;
+        here('sigSunMark',1.34*Math.cos(a),1.10*Math.sin(a),.34+.20*Math.sin(a),a,.6,glow);}
     }
     if(id===7){
       if(r.active>0){here('sigLamp',.77,0,.15,0,1.42,.98);here('sigRing7',.25,0,.08,0,.75,.55,[1,1,1.46]);

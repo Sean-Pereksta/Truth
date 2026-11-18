@@ -58,6 +58,15 @@
   float h(vec2 p){return fract(sin(dot(mod(p,256.),vec2(12.9898,78.233)))*437.58);}
   float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+1.),f.x),f.y);}
   void main(){float mat=encodedMaterial>=30.?encodedMaterial-30.:encodedMaterial;
+    if(abs(encodedMaterial-20.)<.01){
+      // Skid vertices carry their birth time, signed tread coordinate and tire load.
+      float age=clock-col.r,fade=1.-smoothstep(15.,20.,age);
+      float edge=1.-smoothstep(.70,1.,abs(col.g));
+      float groove=1.-.23*smoothstep(.76,1.,cos(col.g*17.));
+      float ink=(.46+.36*col.b)*edge*fade*groove*(.82+.18*noise(wp.xz*12.));
+      if(ink<.015)discard;
+      gl_FragColor=vec4(mix(vec3(.096,.078,.065),fog,smoothstep(48.,130.,depth)),ink);return;
+    }
     vec3 norm=normalize(normal);vec3 sun=normalize(vec3(-.54,.91,-.43));vec3 tint=col;float highlight=0.;
     if(depth<7.6&&(encodedMaterial>=30.||(mat>2.5&&mat<3.5)||(mat>1.5&&mat<2.5&&abs(norm.y)<.66)||(mat>5.5&&mat<6.5))){
       vec3 ray=driverPoint-eye,fromEye=wp-eye;float along=clamp(dot(fromEye,ray)/max(.1,dot(ray,ray)),0.,.97);
@@ -316,7 +325,7 @@
     meshes.nut=nut;const shadow=new Mesh();for(let i=0;i<18;i++){const a=i*tau/18,b=(i+1)*tau/18;shadow.tri([0,0,0],[Math.cos(a)*.91,0,Math.sin(a)*1.26],[Math.cos(b)*.91,0,Math.sin(b)*1.26],'#33392c',0,[0,1,0]);}meshes.shadow=shadow;
     const spark=new Mesh();spark.blob(0,0,0,.084,.12,.084,'#ffd988',5,5);meshes.spark=spark;
     const sail=new Mesh();for(let j=0;j<4;j++){const a=j*tau/4,c=Math.cos(a),s=Math.sin(a),p=(h,w)=>[c*h-s*w,s*h+c*w,.02];sail.ring([0,0,0],p(7,0),.18,.12,'#704a34',7,2);sail.quad(p(2,0),p(6.9,0),p(6.9,1.16),p(2,.8),'#e0ca9b',2);for(let k=2.6;k<7;k+=.8)sail.ring(p(k,-.1),p(k,1.15),.06,.06,'#8a7352',4,2);}meshes.sail=sail;
-    return Object.assign(meshes,root.AcornItemArt.meshes(Mesh));
+    return Object.assign(meshes,root.AcornItemArt.meshes(Mesh),root.AcornDriftArt.meshes(Mesh));
   }
   function bakeRegions(geometry,bake){
     const triangles=geometry.data,regions=new Map();
@@ -389,6 +398,9 @@
       load(root.AcornKartTexture,0,[255,255,255,255],()=>{this.atlasReady=true;});load(root.AcornKartSurface,1,[128,128,200,255]);
       if(root.AcornSurfaces)this.textures.push(root.AcornSurfaces.load(gl));if(root.AcornHorizon)this.textures.push(root.AcornHorizon.load(gl,course.index));gl.activeTexture(gl.TEXTURE0);
       this.id=matrix();this.cameras={};this.canvas=canvas;this.poseFrame=0;this.poseCache=new Map();
+      this.skids=new root.AcornDriftArt.SkidMarks(course);
+      this.skidMesh={b:gl.createBuffer(),n:0};this.buffers.push(this.skidMesh.b);
+      gl.bindBuffer(gl.ARRAY_BUFFER,this.skidMesh.b);gl.bufferData(gl.ARRAY_BUFFER,this.skids.vertices.byteLength,gl.DYNAMIC_DRAW);
     }
     beginFrame(){this.poseFrame++;}
     render(st,seat,rect,scale,back,ghost,dt,postFinishTime=0){
@@ -415,6 +427,12 @@
       const split=rect.w*rect.h*scale*scale<this.canvas.width*this.canvas.height*.74;
       for(const reg of this.regions.draws){const dx=reg.x-smooth.eye[0],dz=reg.z-smooth.eye[2],d=dx*fx+dz*fz,side=Math.abs(dx*fz-dz*fx);
         if(reg.ground||(d+reg.r>-.4&&d-reg.r<(split?135:215)&&side<Math.max(0,d)*.65*rect.w/rect.h+reg.r*1.6))draw(this.regions.mesh,this.id,reg.first,reg.count);}
+      this.skids.update(st);this.skids.upload(gl,this.skidMesh);
+      if(this.skidMesh.n){
+        gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
+        draw(this.skidMesh,this.id);
+        gl.depthMask(true);gl.disable(gl.BLEND);
+      }
       for(const a of this.moving)draw(this.parts.sail,matrix(a.x,a.y,a.z,0,1,st.time*.46));
       for(const a of st.pickups){if(a.cooldown>0)continue;const t=sim.sample(c,a.s,a.x);if(Math.hypot(t.x-cam.eye[0],t.z-cam.eye[2])>110)continue;
         draw(this.parts.nut,matrix(t.x,t.y+1.1+.12*Math.sin(st.time*3+a.x),t.z,st.time*2+a.x,1.12,.17));}
@@ -474,7 +492,8 @@
           itemEffects.stamp(name,[q.x,q.y+height+.03,q.z],Math.atan2(q.tx,q.tz)+angle,size,alpha,0,0,stretch);
         },c.length);
         const itemBoost=k.boost>0&&(k.boostStyle==='seed'||k.boostStyle==='tailwind');
-        if(!g&&!itemBoost&&(k.boost>0||k.drift>.3))for(let h=0;h<5;h++){
+        if(!g)root.AcornDriftArt.sparks(k,pos,floor,st.time,itemEffects.stamp);
+        if(!g&&!itemBoost&&k.boost>0&&k.boostStyle!=='drift')for(let h=0;h<5;h++){
           const direction=h%2?1:-1,phase=(st.time*(k.boost>0?3.8:2.5)+h*.193)%1,px=k.x+direction*(.56+phase*.38),q=sim.sample(c,k.s-.75-phase*(k.boost>0?2.5:1.05),px,k.branch);
           draw(this.parts.spark,matrix(q.x,q.y+.17+Math.sin(phase*Math.PI)*.25,q.z,yaw+phase*1.7,1.2-phase));}
         if(!g){root.AcornItemArt.drawRacer(itemEffects,k,pos,yaw,jump,pitch);root.AcornCourseArt.reaction(st,k,roadStamp);}
