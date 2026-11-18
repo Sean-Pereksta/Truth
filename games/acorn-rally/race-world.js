@@ -10,7 +10,7 @@
     {sky:'#91c3d7',mist:'#ebc5a3',soil:'#caa288',edge:'#b08a70',land:'#c3a087',wood:'#866347',accent:'#d75a32',leaf:['#737e56','#879165','#a49c65'],water:'#8d9593'},
     {sky:'#80c0cc',mist:'#a6cdb9',soil:'#928772',edge:'#477f55',land:'#3b7251',wood:'#74533b',accent:'#f2af46',leaf:['#226947','#388052','#70a55a'],water:'#418e96'},
     {sky:'#9cb9c6',mist:'#bcc6c7',soil:'#545c5d',edge:'#5f724a',land:'#63734d',wood:'#786b57',accent:'#fbbb49',leaf:['#557249','#778553','#91a364'],water:'#668c99'}
-  ];
+  ].concat(root.AcornExpansionWorld?.palettes || []);
   function rgb(hex){return typeof hex==='string'?[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255):hex;}
   function tone(col,f){return rgb(col).map(a=>Math.min(1,a*f));}
   function dir(a,b){const x=b[0]-a[0],y=b[1]-a[1],z=b[2]-a[2],k=Math.hypot(x,y,z)||1;return [x/k,y/k,z/k];}
@@ -36,7 +36,7 @@
     }
   }
   const vp=`attribute vec3 p;attribute vec3 n;attribute vec3 c;attribute float m;attribute vec2 texCoord,skin;
-  uniform mat4 proj,view,model,bones[16];uniform float articulated;varying vec3 wp,normal,col;varying float mat,depth;varying vec2 uv;
+  uniform mat4 proj,view,model,bones[16];uniform float articulated;varying vec3 wp,normal,col;varying float encodedMaterial,depth;varying vec2 uv;
   ${root.AcornRig.wheelVertex}
   void main(){
     bindTire(p,articulated*skin.x);
@@ -49,16 +49,17 @@
       }
       point=transform*point;norm=mat3(transform)*exposedNormal(norm);
     }
-    vec4 world=model*point;wp=world.xyz;normal=mat3(model)*norm;col=c;mat=m;uv=m<7.8?texCoord:(m>=12.&&m<13.?vec2(p.z,p.y):p.xz);
+    vec4 world=model*point;wp=world.xyz;normal=mat3(model)*norm;col=c;encodedMaterial=m;uv=m<7.8?texCoord:(m>=12.&&m<13.?vec2(p.z,p.y):p.xz);
     vec4 camera=view*world;depth=-camera.z;gl_Position=proj*camera;
   }`;
-  const fp=`precision highp float;varying vec3 wp,normal,col;varying float mat,depth;varying vec2 uv;uniform vec3 fog,eye,driverPoint;uniform float clock,alpha,usingAtlas,trackId;uniform sampler2D kartAtlas,kartSurface;
+  const fp=`precision highp float;varying vec3 wp,normal,col;varying float encodedMaterial,depth;varying vec2 uv;uniform vec3 fog,eye,driverPoint;uniform float clock,alpha,usingAtlas,trackId;uniform sampler2D kartAtlas,kartSurface;
   ${root.AcornRig.wheelFragment}
   ${root.AcornSurfaces?.glsl||'vec3 materialGrain(vec3 wp,vec3 normal,float mat,float trackId){return vec3(1.);}'}
   float h(vec2 p){return fract(sin(dot(mod(p,256.),vec2(12.9898,78.233)))*437.58);}
   float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+1.),f.x),f.y);}
-  void main(){vec3 norm=normalize(normal);vec3 sun=normalize(vec3(-.54,.91,-.43));vec3 tint=col;float highlight=0.;
-    if(depth<7.6&&((mat>2.5&&mat<3.5)||(mat>1.5&&mat<2.5&&abs(norm.y)<.66)||(mat>5.5&&mat<6.5))){
+  void main(){float mat=encodedMaterial>=30.?encodedMaterial-30.:encodedMaterial;
+    vec3 norm=normalize(normal);vec3 sun=normalize(vec3(-.54,.91,-.43));vec3 tint=col;float highlight=0.;
+    if(depth<7.6&&(encodedMaterial>=30.||(mat>2.5&&mat<3.5)||(mat>1.5&&mat<2.5&&abs(norm.y)<.66)||(mat>5.5&&mat<6.5))){
       vec3 ray=driverPoint-eye,fromEye=wp-eye;float along=clamp(dot(fromEye,ray)/max(.1,dot(ray,ray)),0.,.97);
       if(length(fromEye-ray*along)<mix(2.15,.82,along))discard;
     }
@@ -81,7 +82,7 @@
       tint+=vec3(.30,.18,.042)*rim+vec3(.23,.16,.08)*skyReflection;highlight=shine*.84;light=.87+.17*max(0.,dot(norm,sun));
     }
     float opacity=alpha;
-    if(mat>=7.98){
+    if(mat>=7.98 && mat<19.5){
       float kind=floor(mat+.001),coverage=clamp((mat-kind)*3.704,0.,1.);
       vec2 current=vec2(uv.x*3.9-clock*(kind>9.5?.83:1.4),uv.y*7.7);
       if(kind==12.)current=vec2(uv.x*8.2,uv.y*2.4+clock*2.1);
@@ -96,6 +97,7 @@
       if(kind==11.){tint=mix(vec3(.74,.84,.81),vec3(.96,.96,.86),fine);opacity*=.70+.22*ripple;}
       if(kind==12.){tint=mix(tint,vec3(.88,.94,.83),smoothstep(.45,.8,ripple)*.47);opacity*=.78;}
     }
+    ${root.AcornExpansionWorld?.materials || ''}
     float canopy=1.;if((trackId<1.5||abs(trackId-6.)<.3)&&mat<3.5){vec2 ground=wp.xz+vec2(.5,.35)*wp.y;canopy=mix(.78,1.075,smoothstep(.32,.69,noise(ground*.105)*.79+noise(ground*.88)*.21));}
     vec3 color=tint*(light*tex*canopy);color+=vec3(.035,.024,.007)*max(0.,dot(norm,sun))+vec3(highlight);float haze=1.-exp(-depth*depth*.000031);gl_FragColor=vec4(mix(color,fog,clamp(haze,0.,.94)),opacity);}`;
   const sv=`attribute vec2 p;varying vec2 uv;void main(){uv=p*.5+.5;gl_Position=vec4(p,.9999,1.);}`;
@@ -171,6 +173,7 @@
     if(index===7){for(let j=0;j<4;j++){const d=size*.2,h=size*(.4+r()*.49),a=j*tau/4;m.ring([x+Math.cos(a)*d,y,z+Math.sin(a)*d],[x+Math.cos(a)*d,y+h,z+Math.sin(a)*d],d*.85,d*.79,['#4d5556','#5f6767','#656d6a','#535d60'][j],6,6);}}
   }
   function worldMeshes(course){
+    if(course.index>=8)return root.AcornExpansionWorld.build(Mesh,course,sim);
     const index=course.index,pal=palettes[index],r=seeded(830483+index*143),m=new Mesh(),mov=[],p=course.points,count=p.length;
     const local=(a,x,y=0,forward=0)=>[a.x+a.nx*x+a.tx*forward,a.y+y,a.z+a.nz*x+a.tz*forward];
     const roadP=(s,x=0,br=false)=>sim.sample(course,s,x,br);
@@ -374,7 +377,9 @@
         return {b,n:m.data.length/10,uv,skin};};
       const scene=worldMeshes(course);this.regions=bakeRegions(scene.mesh,bake);this.moving=scene.mov;
       const model=(i,lod=false)=>{const a=root.AcornKartModels?.[i],groups=lod&&a?.lod?.length?a.lod:a?.groups;return (groups&&bakeDriver(gl,groups,this.buffers))||bake(kartMesh(i,lod));};
-      this.karts=sim.drivers.map((_,i)=>model(i));this.kartLOD=sim.drivers.map((_,i)=>root.AcornKartModels?.[i]?.lod?.length?model(i,true):this.karts[i]);this.parts=Object.fromEntries(Object.entries({...extras(),...root.AcornSignatureArt.meshes(Mesh),...root.AcornCourseArt.meshes(Mesh)}).map(([key,m])=>[key,bake(m)]));
+      const courseParts=root.AcornCourseArt.meshes(Mesh);
+      if(course.index>=8)root.AcornExpansionWorld.themeHazards(courseParts,course.index);
+      this.karts=sim.drivers.map((_,i)=>model(i));this.kartLOD=sim.drivers.map((_,i)=>root.AcornKartModels?.[i]?.lod?.length?model(i,true):this.karts[i]);this.parts=Object.fromEntries(Object.entries({...extras(),...root.AcornSignatureArt.meshes(Mesh),...courseParts}).map(([key,m])=>[key,bake(m)]));
       this.textures=[];this.atlasReady=false;
       const load=(url,unit,pixel,onload)=>{const tex=gl.createTexture();this.textures.push(tex);gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,tex);
         gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(pixel));gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
@@ -452,7 +457,8 @@
         const shadow=sim.sample(c,k.s-height*.095,k.x+height*.08,k.branch);
         gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
         gl.uniform1f(this.un.alpha,(g?.13:.43)/(1+height*.53));
-        draw(this.parts.shadow,matrix(shadow.x,shadow.y+floor+.056,shadow.z,yaw,1-height*.025,0,shadowPitch));gl.depthMask(true);
+        if(!k.fall)draw(this.parts.shadow,matrix(shadow.x,shadow.y+floor+.056,shadow.z,yaw,1-height*.025,0,shadowPitch));
+        gl.depthMask(true);
         gl.uniform1f(this.un.alpha,g?.36:1);if(!g)gl.disable(gl.BLEND);
         const mesh=((split&&rect.h<480)||k.seat!==seat&&(split||cameraDist>8.0)?this.kartLOD:this.karts)[k.driverIndex];
         if(mesh.skin){

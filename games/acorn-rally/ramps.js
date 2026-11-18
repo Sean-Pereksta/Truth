@@ -1,8 +1,8 @@
 (function(root,make){
-  const ramps=make();
+  const ramps=make(typeof module==='object'&&module.exports?require('./tracks-expansion.js'):root.AcornExpansion);
   if(typeof module==='object'&&module.exports)module.exports=ramps;
   else root.AcornRamps=ramps;
-})(typeof globalThis==='object'?globalThis:this,function(){
+})(typeof globalThis==='object'?globalThis:this,function(Expansion){
   'use strict';
   // All distances are in the same world units as course progress. The center
   // lane belongs to the selected route (main or shortcut), even on an overpass.
@@ -20,6 +20,9 @@
     {id:'ravine-trestle',name:'Ravine trestle',style:'trestle',courseIndex:6,branch:true,u:.398,lane:0,halfWidth:2.12,landingWidth:2.36,
       runup:8.25,rise:2.60,gap:4.0,landingRise:1.58,landingLength:44.8,minSpeed:8}
   ];
+  for(const course of Expansion.courses){
+    for(const ramp of course.ramps||[])profiles.push({...ramp,courseIndex:course.index});
+  }
   const cap=x=>Math.max(0,Math.min(1,x)),smooth=x=>x*x*(3-2*x);
   const cache=new WeakMap();
   function list(c){

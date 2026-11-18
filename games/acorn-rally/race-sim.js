@@ -1,14 +1,14 @@
 (function(root, factory) {
   const server=typeof module==='object'&&module.exports;
-  const api=factory(server?require('./kart-rig.js'):root.AcornRig,server?require('./signature-kit.js'):root.AcornSignatures,server?require('./hazards.js'):root.AcornHazards,server?require('./ramps.js'):root.AcornRamps);
+  const api=factory(server?require('./kart-rig.js'):root.AcornRig,server?require('./signature-kit.js'):root.AcornSignatures,server?require('./hazards.js'):root.AcornHazards,server?require('./ramps.js'):root.AcornRamps,server?require('./tracks-expansion.js'):root.AcornExpansion);
   if (server) module.exports = api;
   else root.AcornSim = api;
-})(typeof globalThis === 'object' ? globalThis : this, function(Rig,Signatures,Hazards,Ramps) {
+})(typeof globalThis === 'object' ? globalThis : this, function(Rig,Signatures,Hazards,Ramps,Expansion) {
   'use strict';
   const TAU = Math.PI * 2;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const mod = (v, n) => ((v % n) + n) % n;
-  const engineClasses=[50,100,150,200],difficulties=['easy','normal','hard'];
+  const engineClasses=[50,100,150,200],difficulties=['easy','normal','hard','ultimate'];
   const normalizeCC=value=>engineClasses.includes(Number(value))?Number(value):100;
   const normalizeDifficulty=value=>difficulties.includes(value)?value:'normal';
   const motors={
@@ -17,14 +17,15 @@
     150:{speed:1.21,acceleration:1.23,brakes:1.055},
     200:{speed:1.43,acceleration:1.49,brakes:1.11}
   };
-  const drivers = ['Nib','Bristle','Clover','Tumble','Hazel','Ember','Flint','Mica'];
+  const drivers = ['Nib','Bristle','Clover','Tumble','Hazel','Ember','Flint','Mica','Solstice'];
   const abilities = Signatures.names, durations=Signatures.durations;
   // Steering, acceleration, corner-load, transition speed, off-road resistance and bump weight.
   const handling=[
-    [1.14,10.65,1.04,8.25,1.02,.79],[.91,10.4,.93,5.9,.94,1.26],
+    [1.14,10.65,1.04,8.25,1.02,.79],[.91,10.4,.93,5.9,.94,1.62],
     [1.02,12.0,1.01,7.2,1.03,.88],[1.00,10.75,.84,6.15,.97,1.06],
     [1.055,10.15,.96,7.85,.80,1.10],[1.085,11.3,1.085,7.1,1.15,.89],
-    [.85,9.95,.83,5.55,.73,1.40],[.995,11.0,.975,7.0,.65,1.03]
+    [.85,9.95,.83,5.55,.73,1.40],[.995,11.0,.975,7.0,.65,1.03],
+    [1.08,11.35,.99,7.65,1.0,1.04]
   ];
   const items = ['Seed Kick', 'Sap Sling', 'Burr Patch', 'Bark Guard', 'Thistle Puff', 'Pinecone Skip', 'Tailwind'];
   const itemTimes={seed:.91,sap:3.05,burr:1.72,guard:6.0,puff:.74,pine:.79,tailwind:4.15};
@@ -40,10 +41,19 @@
   ];
   const surfaces = ['Forest soil','Wet timber','Dry brick','Slickrock','Salt crust','Chalkstone','River stone','Basalt gravel'];
   const cache = [];
+  function orientRoad(points,length){
+    const n=points.length;
+    for(let j=0;j<n;j++){
+      const p=points[j],a=points[mod(j-1,n)],b=points[(j+1)%n],dist=Math.hypot(b.x-a.x,b.z-a.z);
+      p.tx=(b.x-a.x)/dist;p.tz=(b.z-a.z)/dist;p.nx=p.tz;p.nz=-p.tx;
+    }
+    for(let j=0;j<n;j++){const p=points[j],b=points[(j+1)%n];p.curve=Math.asin(clamp(p.tz*b.tx-p.tx*b.tz,-1,1))/(length/n);}
+  }
   function track(index=0) {
-    index = clamp(index | 0,0,7);
+    index = clamp(index | 0,0,definitions.length+Expansion.courses.length-1);
     if (cache[index]) return cache[index];
-    const [name,length,anchors] = definitions[index], count = anchors.length, raw = [];
+    const extra=Expansion.courses[index-definitions.length];
+    const [name,length,anchors] = extra?[extra.name,extra.length,extra.anchors]:definitions[index], count = anchors.length, raw = [];
     let arc = 0;
     function sample(t, axis) {
       const k = Math.floor(t), f = t-k;
@@ -55,34 +65,53 @@
       if(j) arc+=Math.hypot(x-raw[j-1].x,z-raw[j-1].z);
       raw.push({x,z,t,arc});
     }
-    const points=[], n=640, scale=length/arc, elev=[1.9,2.2,2.2,4,.35,6,5,4][index];
+    const points=[], n=extra?960:640, scale=length/arc, elev=[1.9,2.2,2.2,4,.35,6,5,4][index];
     const bridgeAnchor=[4,6,11,8,4,8,4,11][index];
-    const bridgeS=raw[bridgeAnchor*40].arc/arc;
-    const branchA=[.47,.46,.31,.48,.32,.42,.31,.34][index],branchB=branchA+.16;
+    const bridgeS=extra?extra.bridge:raw[bridgeAnchor*40].arc/arc;
+    const branchA=extra?extra.fork[0]:[.47,.46,.31,.48,.32,.42,.31,.34][index],branchB=extra?extra.fork[1]:branchA+.16;
     for(let j=0, k=0;j<n;j++){
       const s=arc*j/n;
       while(raw[k+1].arc<s) k++;
       const a=raw[k],b=raw[k+1],f=(s-a.arc)/(b.arc-a.arc),u=j/n;
       const x=(a.x+(b.x-a.x)*f)*scale,z=(a.z+(b.z-a.z)*f)*scale;
+      if(extra){
+        const [y,w]=Expansion.section(extra,u);
+        points.push({x,y,z,w,exposed:Expansion.exposed(index,u)});
+        continue;
+      }
       const bridge=Math.exp(-Math.pow((u-bridgeS)/(.045+(index===5?.018:0)),2));
       const y=1.8+elev*(1+.63*Math.sin(TAU*u-.7)+.28*Math.sin(2*TAU*u+1))+bridge*([8.5,4.2,4,3,0,7,6,4][index]);
       points.push({x,y,z,w:5.4+Math.max(0,1-Math.min(u,1-u)*18)*1.15});
     }
-    for(let j=0;j<n;j++){
-      const p=points[j],a=points[mod(j-1,n)],b=points[(j+1)%n],dist=Math.hypot(b.x-a.x,b.z-a.z);
-      p.tx=(b.x-a.x)/dist;p.tz=(b.z-a.z)/dist;p.nx=p.tz;p.nz=-p.tx;
+    orientRoad(points,length);
+    let branchPoints=null;
+    if(extra){
+      // Give each fork its own rail normals, so the route mesh, kart, camera
+      // and collider all turn through the bypass rather than face the main road.
+      const [, ,spread,rise,narrowWidth]=extra.fork;
+      branchPoints=points.map((p,j)=>{
+        const u=j/n,inside=u>branchA&&u<branchB;
+        const peak=inside?Math.sin(Math.PI*(u-branchA)/(branchB-branchA))**2:0;
+        const offset=peak*spread,w=p.w+(narrowWidth-p.w)*peak;
+        const edgeGap=offset-p.w-w,clearance=clamp(edgeGap/Math.max(1,spread-p.w-w),0,1);
+        if(inside&&edgeGap<0)p.exposed=false;
+        // Keep the two ribbons level while touching at the split and merge.
+        const grade=clearance*clearance*(3-2*clearance);
+        return {x:p.x+p.nx*offset,y:p.y+rise*grade,z:p.z+p.nz*offset,w,exposed:p.exposed};
+      });
+      orientRoad(branchPoints,length);
     }
-    for(let j=0;j<n;j++){const p=points[j],b=points[(j+1)%n];p.curve=Math.asin(clamp(p.tz*b.tx-p.tx*b.tz,-1,1))/(length/n);}
-    return cache[index]={index,name,length,points,branchA,branchB,bridgeS,surface:surfaces[index]};
+    return cache[index]={index,name,length,points,branchPoints,branchA,branchB,bridgeS,surface:extra?extra.surface:surfaces[index]};
   }
   function sample(course,distance,lane=0,branch=false) {
     const u=mod(distance,course.length)/course.length, a=u*course.points.length, i=Math.floor(a),f=a-i;
-    const p=course.points[i],q=course.points[(i+1)%course.points.length];
+    const road=branch&&course.branchPoints?course.branchPoints:course.points;
+    const p=road[i],q=road[(i+1)%road.length];
     const mix=k=>p[k]+(q[k]-p[k])*f;
     const b=clamp((u-course.branchA)/(course.branchB-course.branchA),0,1), peak=Math.sin(Math.PI*b)**2;
-    const offset=branch?peak*12:0;
-    const nx=mix('nx'),nz=mix('nz'),w=branch?mix('w')-peak*2.7:mix('w');
-    return {x:mix('x')+nx*(offset+lane),y:mix('y')+(branch?peak*([2,-.25,-1.4,3,-.3,-.6,3.5,-1][course.index]):0),z:mix('z')+nz*(offset+lane),tx:mix('tx'),tz:mix('tz'),nx,nz,curve:mix('curve'),w,u,peak};
+    const legacyFork=branch&&!course.branchPoints,offset=legacyFork?peak*12:0;
+    const nx=mix('nx'),nz=mix('nz'),w=legacyFork?mix('w')-peak*2.7:mix('w');
+    return {x:mix('x')+nx*(offset+lane),y:mix('y')+(legacyFork?peak*([2,-.25,-1.4,3,-.3,-.6,3.5,-1][course.index]):0),z:mix('z')+nz*(offset+lane),tx:mix('tx'),tz:mix('tz'),nx,nz,curve:mix('curve'),w,u,peak,exposed:!!p.exposed};
   }
   function groundSample(c,s,x=0,branch=false){
     const p=sample(c,s,x,branch);p.y+=Ramps.surface(c,s,x,branch);return p;
@@ -93,11 +122,11 @@
   }
   function lift(st,r){
     if(Number.isFinite(r.ghostLift))return r.ghostLift;
+    if(r.fall)return r.fall.initialLift-13.5*r.fall.age*r.fall.age;
     if(r.flight)return Math.max(0,r.flight.y-sample(track(st.trackIndex),r.s,r.x,r.branch).y);
     return groundLift(st,r)+Hazards.lift(st,r);
   }
   function rampPitch(st,r){return Number.isFinite(r.ghostPitch)?r.ghostPitch:r.rampAngle||0;}
-  const gravity=21.2;
   function rampEntry(c,s,x,branch){
     for(const ramp of Ramps.list(c)){
       if(ramp.branch!==!!branch)continue;
@@ -112,6 +141,7 @@
   function rampStep(st,r,c,dt,prev,predict=false){
     const ramps=Ramps.list(c);
     if(!ramps.length)return;
+    const gravity=c.index===10?14.4:21.2;
     const moved=r.s-prev.progress,speed=moved/Math.max(.0001,dt),ground=sample(c,r.s,r.x,r.branch);
     if(r.catchShelf&&(r.branch!==r.catchShelf.branch||r.s>r.catchShelf.end||r.s<r.catchShelf.start-.06))r.catchShelf=null;
     if((r.ghost||0)>prev.recovery+.1||r.driverIndex===7&&r.active>0){
@@ -209,7 +239,8 @@
         branch:false,drift:0,boost:0,boostPower:0,boostStyle:'',item:-1,reveal:0,meter:trial?1:.3,active:0,guard:0,protect:0,slow:0,slip:0,air:0,bank:0,fx:0,stomp:false,
         lapTimes:[],splitTime:0,finish:0,prevItem:false,prevAbility:false,prevDrift:false,rank:i+1,hit:0,usedItem:-1,itemFx:0,itemHitKind:-1,itemHitFx:0,itemBlocked:false,itemHitSide:1,
         sap:0,sapSide:1,burr:0,burrSide:1,puff:0,puffSide:1,pine:0,confirmFx:0,confirmSeq:0,confirmedItem:-1,confirmedName:'',confirmedBlocked:false,lastValid:0,runoff:0,ghost:0,steer:0,
-        contactSeq:0,contactFx:0,contactKind:'',contactSide:0,contactForce:0,contactOther:-1,contactSpeed:0,contactCarry:0,
+        contactSeq:0,contactFx:0,contactKind:'',contactSide:0,contactForce:0,contactOther:-1,contactSpeed:0,contactCarry:0,grind:0,
+        fall:null,safeS:trial?0:-5,safeBranch:false,
         flight:null,launchSeq:0,landingSeq:0,landingFx:0,landingForce:0,landingKind:'',landedRamp:'',rampAngle:0,catchShelf:null,
         speedSkill:.82+.12*random(st),linePhase:random(st)*TAU,notice:'',noticeTime:0});
     }
@@ -277,22 +308,44 @@
         bouncePeriod,armed:it!==2,nextLandingS:r.s+1.7+(r.v+21)*bouncePeriod,edge:road.w});
     }
   }
+  const aiProfiles={
+    easy:     {look:9,  wander:2.12, correction:.39, pace:.81, itemBeat:2,   itemWait:.80},
+    normal:   {look:12, wander:1.65, correction:.48, pace:.95, itemBeat:2.4, itemWait:.70},
+    hard:     {look:15, wander:1.16, correction:.55, pace:1.05,itemBeat:2.9, itemWait:.50},
+    ultimate: {look:19, wander:.52,  correction:.68, pace:1.15,itemBeat:3.8, itemWait:.30}
+  };
   function ai(st,r,c,motor){
-    const easy=st.difficulty==='easy',hard=st.difficulty==='hard',faster=Math.max(0,motor.speed-1);
-    const look=sample(c,r.s+(easy?9:hard?15:12)*(1+faster)),here=sample(c,r.s,0,r.branch);
-    let target=clamp(-look.curve*60,-2,2)+(easy?2.12:hard?1.16:1.65)*Math.sin(r.s*.019+r.linePhase);
+    const skill=aiProfiles[st.difficulty]||aiProfiles.normal,faster=Math.max(0,motor.speed-1);
+    const look=sample(c,r.s+skill.look*(1+faster),0,r.branch),here=sample(c,r.s,0,r.branch);
+    let target=clamp(-look.curve*60,-2,2)+skill.wander*Math.sin(r.s*.019+r.linePhase);
     if(here.u>c.branchA-.035&&here.u<c.branchA+.014)target=(r.seat%3===1?2.9:-1.3);
-    for(const other of st.racers)if(other!==r&&other.branch===r.branch&&other.s-r.s>0&&other.s-r.s<5&&Math.abs(r.x-other.x)<1.65)target+=r.x>other.x?1.8:-1.8;
+    let nearRival=false;
+    for(const other of st.racers){
+      if(other===r||other.fall||other.finish||other.branch!==r.branch||other.s-r.s<=0||other.s-r.s>=5||Math.abs(r.x-other.x)>=1.65)continue;
+      nearRival=true;
+      if(r.driverIndex!==1||r.active<=0)target+=r.x>other.x?1.8:-1.8;
+    }
     target=Ramps.aim(c,r,target);
     target=Hazards.avoid(st,r,c,target);
-    const steer=clamp((target-r.x)*(easy?.39:hard?.55:.48)-r.vx*.13+here.curve*r.v*r.v*.056,-1,1);
-    const speedSkill=easy?r.speedSkill*.83:hard?Math.min(1.04,r.speedSkill*1.11):r.speedSkill;
-    const desired=Math.min((22.8-clamp(Math.abs(look.curve)*(40+faster*180),0,4+faster*12))*speedSkill*motor.speed,r.hazardPace||Infinity,r.rampPace||Infinity);
+    const exposed=here.exposed||look.exposed;
+    if(exposed){
+      const margin=Math.max(.6,Math.min(here.w,look.w)-1.05);
+      target=clamp(target,-margin,margin);
+    }
+    const drift=Math.max(Math.abs(look.curve),Math.abs(here.curve))>.025&&r.v>10*motor.speed;
+    const car=handling[r.driverIndex],counterSteer=here.curve*r.v*r.v*car[2]*(drift?.28:.43)/((drift?10.3:8.85)*car[0]);
+    const steer=clamp((target-r.x)*skill.correction-r.vx*.12+counterSteer,-1,1);
+    const speedSkill=Math.min(1.08,r.speedSkill*skill.pace);
+    const bend=Math.max(Math.abs(look.curve),Math.abs(here.curve));
+    const edgePace=exposed?Math.sqrt(24*car[0]/Math.max(.012,bend*car[2])):Infinity;
+    const desired=Math.min((22.8-clamp(bend*(40+faster*180),0,4+faster*12))*speedSkill*motor.speed,edgePace,r.hazardPace||Infinity,r.rampPace||Infinity);
     const over=r.v-desired;
-    return {gas:over<0?1:easy?.18:.38,brake:over>1?Math.min(.84,.27+faster*over*.09):0,steer,drift:Math.abs(look.curve)>.025&&r.v>12*motor.speed,
-      item:r.item>=0&&r.reveal<=0&&Math.sin(st.time*2.4+r.linePhase)>.7,ability:r.meter>=1&&Math.abs(look.curve)>.014};
+    return {gas:over<0?1:.28,brake:over>1?Math.min(.84,.27+faster*over*.09):0,steer,drift,
+      item:r.item>=0&&r.reveal<=0&&Math.sin(st.time*skill.itemBeat+r.linePhase)>skill.itemWait,
+      ability:r.meter>=1&&(r.driverIndex===1?nearRival:Math.abs(look.curve)>.014)};
   }
   const halfWidth=.66,halfLength=1.01,cornerCut=.19;
+  const grindPace=load=>1-.065*(load||0);
   function contactBody(course,r,start,st){
     const p=wheelPosition(course,r,st),fx=Math.sin(p.heading),fz=Math.cos(p.heading);
     const forward=sample(course,r.s+.28,r.x,r.branch),behind=sample(course,r.s-.28,r.x,r.branch);
@@ -353,13 +406,13 @@
     r.contactSeq=(r.contactSeq||0)+1;r.contactFx=.58;r.contactOther=other.seat;
     r.contactKind=brace?'brace':scrape?'glance':Math.abs(fore)>.88?(fore>0?'front':'rear'):Math.abs(side)>.89?'side':'glance';
     r.contactSide=-Math.sign(side)||Math.sign(r.x-other.x)||1;r.contactSpeed=closing;
-    r.contactForce=clamp(.12+closing*.077+(scrape?Math.min(.14,Math.abs(tangent)*.012):0),.12,1);
+    r.contactForce=clamp((brace?.76:.26)+closing*.092+(scrape?Math.min(.17,Math.abs(tangent)*.015):0),.26,1);
   }
-  function contacts(st,c,starts){
+  function contacts(st,c,starts,dt){
     if(st.racers.length<2)return;
-    const memory=st.contacts||(st.contacts={});
-    for(const key in memory)if(st.time-memory[key]>.24)delete memory[key];
-    const bodies=st.racers.map((r,i)=>r.finish||r.ghost>0||r.driverIndex===7&&r.active>0?null:contactBody(c,r,starts[i],st));
+    const memory=st.contacts||(st.contacts={}),grinding=new Set();
+    for(const key in memory)if(st.time-memory[key].last>.30)delete memory[key];
+    const bodies=st.racers.map((r,i)=>r.finish||r.fall||r.ghost>0||r.driverIndex===7&&r.active>0?null:contactBody(c,r,starts[i],st));
     // The second pass resolves a kart pushed into its neighbour in a tight pack.
     for(let pass=0;pass<3;pass++){
       let resolved=false;
@@ -367,29 +420,72 @@
         const a=bodies[i],b=bodies[j];if(!a||!b)continue;
         const n=contactNormal(a,b,pass===0);if(!n)continue;
         const A=a.r,B=b.r,key=A.seat*8+B.seat,fresh=memory[key]===undefined;
+        const pair=memory[key]||(memory[key]={start:st.time,last:st.time});
+        if(st.time-pair.last>.075)pair.start=st.time;
+        pair.last=st.time;
         const rvx=a.vx-b.vx,rvz=a.vz-b.vz,closing=rvx*n.x+rvz*n.z,tx=-n.z,tz=n.x,tangent=rvx*tx+rvz*tz;
         const engaged=closing>.66||Math.abs(tangent)>3.7&&(closing>.18||n.depth>.045&&closing>-.20);
-        const bracer=fresh&&engaged&&(A.driverIndex===1&&A.active>0?A:B.driverIndex===1&&B.active>0?B:null);
+        const siding=Math.abs(n.x*a.rx+n.z*a.rz)>.56;
+        if(siding&&st.time-pair.start>.25&&(A.v>4||B.v>4)){
+          grinding.add(A);grinding.add(B);
+        }
+        const bracer=(engaged||siding&&st.time-pair.start>.1)&&(A.driverIndex===1&&A.active>0?A:B.driverIndex===1&&B.active>0?B:null);
         const brace=bracer&&Signatures.brace(st,A,B);
         const invA=(brace&&bracer===A?.10:1)/a.mass,invB=(brace&&bracer===B?.10:1)/b.mass,sum=invA+invB;
-        if(engaged&&fresh){feedback(A,a,B,n.x,n.z,closing,tangent,brace&&bracer===A);feedback(B,b,A,-n.x,-n.z,closing,tangent,brace&&bracer===B);}
-        memory[key]=st.time;
-        if(n.depth<.0001&&closing<=.0001)continue;
+        const impact=!!brace||engaged&&fresh;
+        if(impact){feedback(A,a,B,n.x,n.z,closing,tangent,brace&&bracer===A);feedback(B,b,A,-n.x,-n.z,closing,tangent,brace&&bracer===B);}
+        if(n.depth<.0001&&closing<=.0001&&!impact)continue;
         if(n.depth>.0001){
           const move=n.depth+.0003;shift(a,-n.x*move*invA/sum,-n.z*move*invA/sum);shift(b,n.x*move*invB/sum,n.z*move*invB/sum);
         }
-        if(closing>0){
-          const rail=Math.abs(n.x*a.rx+n.z*a.rz);
-          const bounce=fresh&&closing>1?.10+.15*rail:0,jolt=closing*(1+bounce)/sum;
+        if(closing>0||impact){
+          // A first strike separates the hulls. Continued contact only resolves overlap.
+          const heavyBumper=A.driverIndex===1||B.driverIndex===1;
+          const strike=impact?(brace?6.2:heavyBumper?4.6:2.6)+Math.min(2.6,Math.abs(tangent)*.1):0;
+          // Nose-to-tail momentum already carries the struck kart forward. A smaller
+          // rebound leaves a drafting kart enough speed to steer out and pass.
+          const kick=strike*(siding||brace?1:.60);
+          const rebound=impact?(siding?.49:.22):0,jolt=(Math.max(0,closing)*(1+rebound)+kick)/sum;
           const rub=clamp(tangent*.17/sum,-jolt*.22,jolt*.22);
           const ix=n.x*jolt+tx*rub,iz=n.z*jolt+tz*rub;
           impulse(a,-ix*invA,-iz*invA);impulse(b,ix*invB,iz*invB);
-          if(fresh&&engaged){A.yaw=clamp(A.yaw-(n.x*a.rx+n.z*a.rz)*.013*closing,-.48,.48);B.yaw=clamp(B.yaw+(n.x*b.rx+n.z*b.rz)*.013*closing,-.48,.48);}
+          if(impact){
+            const twist=Math.min(.28,.04+.023*Math.max(0,closing)+.012*kick);
+            A.yaw=clamp(A.yaw-(n.x*a.rx+n.z*a.rz)*twist,-.48,.48);
+            B.yaw=clamp(B.yaw+(n.x*b.rx+n.z*b.rz)*twist,-.48,.48);
+          }
         }
         bodies[i]=contactBody(c,A,starts[i],st);bodies[j]=contactBody(c,B,starts[j],st);resolved=true;
       }
       if(!resolved)break;
     }
+    for(const r of st.racers){
+      const previous=r.grind||0;
+      r.grind=clamp(previous+dt*(grinding.has(r)?2:-4),0,1);
+      // Apply each increment once, even if three karts are leaning on one another.
+      if(r.grind>previous&&r.v>0)r.v*=grindPace(r.grind)/grindPace(previous);
+    }
+  }
+  function leaveDeck(st,r){
+    const duration=1.12,initialLift=lift(st,r);
+    r.fall={age:0,duration,initialLift,side:Math.sign(r.x)||1};
+    r.flight=null;r.catchShelf=null;r.hazardHop=null;r.air=0;r.rampAngle=0;
+    r.ghost=duration+.5;r.protect=duration+.5;r.boostSources=[];r.boost=0;r.active=0;
+    r.signature=null;r.stomp=false;r.drift=0;r.prevDrift=false;r.v=0;r.contactCarry=0;r.grind=0;
+    notify(r,'Over the edge!');
+  }
+  function recoverFall(r,c,dt){
+    const f=r.fall;f.age+=dt;
+    r.x+=f.side*(.85+Math.min(3,Math.abs(r.vx)))*dt;
+    r.rampAngle=Math.min(.60,f.age*.67);
+    if(f.age<f.duration)return;
+    // Rejoin the same route behind the departure. A fall can never advance a lap.
+    const lapFloor=r.lapTimes.length?r.lapTimes.length*c.length:-10;
+    r.s=Math.max(lapFloor,clamp(r.safeS??r.s-5,r.s-9,r.s-2));
+    const u=mod(r.s,c.length)/c.length;
+    r.branch=r.safeBranch&&u>c.branchA&&u<c.branchB;
+    r.fall=null;r.x=0;r.v=5.5;r.vx=0;r.yaw=0;r.rampAngle=0;r.runoff=0;
+    r.ghost=1.35;r.protect=1.35;r.lastValid=r.s;notify(r,'Back on course');
   }
   function step(st,dt,inputs={}) {
     if(st.done)return st;
@@ -410,6 +506,7 @@
       r.contactCarry=Math.max(0,(r.contactCarry||0)-dt*9.8);
       Signatures.advanceBoost(r,dt);
       if(r.finish){r.v=Math.max(0,r.v-dt*5);continue;}
+      if(r.fall){recoverFall(r,c,dt);continue;}
       const input=r.human?(inputs[r.seat]||{}):ai(st,r,c,motor),prevS=r.s;
       const road=sample(c,r.s,0,r.branch);
       const sgn=Math.sign(r.v||1), steer=clamp(+input.steer||0,-1,1),gas=clamp(+input.gas||0,0,1),brake=clamp(+input.brake||0,0,1);
@@ -427,7 +524,7 @@
       const slick=r.branch&&road.peak>.28&&[1,2,4,7].includes(c.index);
       const sapLoad=clamp(r.sap/.74,0,1),pineLoad=clamp(r.pine/.45,0,1);
       const governor=((c.index===4?20.1:19.0)*(1-.47*sapLoad)+(r.boost>0?r.boostPower*(1-sapLoad):0))*motor.speed;
-      const top=r.sap>0?governor:Math.max(governor,r.contactCarry);
+      const top=(r.sap>0?governor:Math.max(governor,r.contactCarry))*grindPace(r.grind);
       const accel=car[1]*motor.acceleration*(r.slow>0?.5:1)*(1-.68*sapLoad)*(1-.25*pineLoad);
       const snagLoad=r.slip>0?clamp(r.burr/.4,0,1):0;
       const drag=1.1+.012*r.v*r.v+(verge&&r.air===0?5.5*car[4]:0)+(drifting&&r.active===0?1.1*Math.abs(steer):0)+4.3*snagLoad;
@@ -440,9 +537,11 @@
       const needle=r.driverIndex===0&&r.active>0,grip=slick&&!burrowing&&!needle?.8:1;
       const targetX=steer*(drifting?10.3:8.85)*car[0]*(needle?1.46:1)*grip*clamp(Math.abs(r.v)/5,0,1)*sgn
         -road.curve*r.v*r.v*(needle?.11:drifting?.28:.43)*car[2]+(r.puffSide||1)*8.25*clamp(r.puff/itemTimes.puff,0,1)**.74;
-      r.vx+=(targetX-r.vx)*Math.min(1,dt*(airborne?.91:needle?car[3]*1.55:r.slip>0?1.35:drifting?car[3]*.56:car[3])*grip);
+      const impactGrip=r.contactFx>.23?1-.48*r.contactForce:1;
+      r.vx+=(targetX-r.vx)*Math.min(1,dt*(airborne?.91:needle?car[3]*1.55:r.slip>0?1.35:drifting?car[3]*.56:car[3])*grip*impactGrip);
       if(r.burr>0&&r.slip>0)r.vx+=r.burrSide*Math.sin((itemTimes.burr-r.burr)*12)*2.9*dt;
       r.x+=r.vx*dt;
+      if(road.exposed&&Math.abs(r.x)>road.w+.24){leaveDeck(st,r);continue;}
       const lim=road.w+1.25;
       if(Math.abs(r.x)>lim){r.x=clamp(r.x,-lim,lim);r.vx*=-.16;r.v=Math.min(r.v,14.3);}
       r.yaw+=(steer*(drifting?.43:.19)-r.yaw)*Math.min(1,dt*8);
@@ -451,6 +550,7 @@
       const newU=mod(r.s,c.length)/c.length;
       if(road.u<c.branchA&&newU>=c.branchA&&r.v>0){r.branch=r.x>1.0;}
       if(r.branch&&(newU>c.branchB||newU<c.branchA-.003))r.branch=false;
+      if(!r.flight&&Math.abs(r.x)<road.w-.62){r.safeS=r.s;r.safeBranch=r.branch;}
       if(Math.abs(r.x)<road.w+.12){r.lastValid=r.s;r.runoff=0;}
       else if(Math.abs(r.x)>road.w+1.12&&r.v>4&&Math.sign(steer)===Math.sign(r.x)&&Math.abs(steer)>.78)r.runoff+=dt;
       else r.runoff=Math.max(0,r.runoff-dt*.45);
@@ -470,7 +570,7 @@
       }
     }
     if(st.mode!=='trial'){
-      contacts(st,c,wheelStarts);
+      contacts(st,c,wheelStarts,dt);
       for(const o of st.objects){
         o.age+=dt;o.life-=dt;o.s+=o.v*dt;o.x+=o.vx*dt;
         if(o.kind===2)o.armed=o.age>=.55;
@@ -482,7 +582,7 @@
           o.height=.29+4*f*(1-f)*(.66+.16*(period>.45));o.nextLandingS=o.s+o.v*period*(1-f);
         }
         for(const r of st.racers){
-          if(r.seat===o.owner||r.finish||r.branch!==o.branch||(o.kind===2&&!o.armed)||(r.flight?lift(st,r)>(o.height??.68)+.30:r.air>.22)||(r.driverIndex===7&&r.active>0)||o.hitSeats?.includes(r.seat))continue;
+          if(r.seat===o.owner||r.finish||r.fall||r.branch!==o.branch||(o.kind===2&&!o.armed)||(r.flight?lift(st,r)>(o.height??.68)+.30:r.air>.22)||(r.driverIndex===7&&r.active>0)||o.hitSeats?.includes(r.seat))continue;
           const delta=mod(r.s-o.s+c.length*.5,c.length)-c.length*.5;
           if(Math.abs(delta)<1.28&&Math.abs(r.x-o.x)<(o.radius??.78)+.43){
             if(!damage(r,o.kind,Math.sign(r.x-o.x)||Math.sign(o.vx)||1))continue;
@@ -497,7 +597,7 @@
     }
     for(let i=0;i<st.racers.length;i++){
       const r=st.racers[i],line=(r.lapTimes.length+1)*c.length;
-      if(!r.finish&&r.s>=line){
+      if(!r.finish&&!r.fall&&r.s>=line){
         const delta=r.s-wheelStarts[i].progress,remaining=r.s-line;
         const cross=st.time-(delta>0?clamp(remaining/delta,0,1)*dt:0);
         r.lapTimes.push(cross-r.splitTime);r.splitTime=cross;
@@ -508,7 +608,11 @@
     }
     const order=st.racers.slice().sort((a,b)=>a.finish&&b.finish?a.finish-b.finish:a.finish?-1:b.finish?1:b.s-a.s);
     order.forEach((r,j)=>r.rank=j+1);
-    st.done=st.racers.some(r=>r.finish)&&st.racers.filter(r=>r.human).every(r=>r.finish);
+    const humansFinished=st.racers.some(r=>r.finish)&&st.racers.every(r=>!r.human||r.finish);
+    if(st.mode==='cup'&&humansFinished){
+      st.classificationStart??=st.time;
+      st.done=st.racers.every(r=>r.finish)||st.time-st.classificationStart>=45;
+    }else st.done=humansFinished;
     return st;
   }
   function result(st,seat=0){
@@ -516,6 +620,6 @@
     return {trackIndex:st.trackIndex,cc:normalizeCC(st.cc),difficulty:normalizeDifficulty(st.difficulty),driverIndex:r.driverIndex,mode:st.mode,position:r.rank,time:r.finish||st.time,bestLap:r.lapTimes.length?Math.min(...r.lapTimes):0,
       laps:r.lapTimes.slice(),standings:st.racers.slice().sort((a,b)=>a.rank-b.rank).map(a=>({name:a.name,driverIndex:a.driverIndex,position:a.rank,time:a.finish||null,human:a.human,seat:a.seat}))};
   }
-  return {create,step,result,track,sample,baseSample:sample,groundSample,groundLift,lift,rampPitch,predictRamps:(st,r,c,dt,prev)=>rampStep(st,r,c,dt,prev,true),
+  return {create,step,result,track,trackCount:definitions.length+Expansion.courses.length,sample,baseSample:sample,groundSample,groundLift,lift,rampPitch,predictRamps:(st,r,c,dt,prev)=>rampStep(st,r,c,dt,prev,true),
     wheelPosition,roll,drivers,abilities,items,itemTimes,durations,engineClasses,normalizeCC,difficulties,normalizeDifficulty,rollWeights,drawItem};
 });

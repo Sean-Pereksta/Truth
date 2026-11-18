@@ -86,7 +86,7 @@
       if (support === null) {
         root.innerHTML = top('PRIVATE ROOMS') + '<p class="rr-explain">Connecting to the race host…</p>' + statusBox();
       } else if (!support) {
-        root.innerHTML = top('PRIVATE ROOMS') + '<div class="rr-callout"><strong>Host a race on your PC</strong><p>Download the PC edition and run <b>Start Acorn Rally</b>. Your friends can join from a browser on the same network or through your shared host address.</p><a class="rr-primary" href="assets/Acorn-Rally-PC.zip" download>' + icon('download') + 'Download PC edition</a></div>' +
+        root.innerHTML = top('PRIVATE ROOMS') + '<div class="rr-callout"><strong>Host a race on your PC</strong><p>Download the PC edition and run <b>Start Acorn Rally</b>. Your friends can join from a browser on the same network or through your shared host address.</p><a class="rr-primary" href="?download=pc">' + icon('download') + 'Download PC edition</a></div>' +
           '<form data-form="remote"><h3>Join a host</h3><label>Host address or invite link<input name="remote" placeholder="http://192.168.1.20:8791" required spellcheck="false" autocomplete="off"></label><button type="submit" class="rr-secondary">Open host ' + icon('arrow') + '</button></form>' + statusBox();
       } else {
         root.innerHTML = top('PRIVATE ROOMS') + '<div class="rr-callout"><strong>Start a private race</strong><p>Invite up to seven friends and fill the remaining grid with AI racers.</p><button type="button" class="rr-primary" data-rr="create">' + icon('flag') + 'Create room</button></div>' +
@@ -109,6 +109,8 @@
       const owner = seat === room.host, locked = room.phase === 'racing';
       const reserved = new Set(room.seats.filter(s => s.index !== seat).map(s => s.driverIndex));
       const portraits = drivers.map((driver,i) => {
+        if(!window.AcornChampionship.isDriverAvailable(i))
+          return '<button type="button" class="rr-pick" disabled title="Win all three cups on Hard or Ultimate"><img src="art/driver-'+i+'.webp" alt=""><b>'+escape(driver.name)+'</b><small>Locked</small></button>';
         const taken=reserved.has(i), selected=me.driverIndex===i;
         return '<button type="button" class="rr-pick" data-rr="pick" data-driver-id="'+i+'" aria-pressed="'+selected+'" aria-label="'+escape(driver.name+' the '+driver.species.toLowerCase()+(taken?' · Taken':''))+'" '+(locked||taken?'disabled':'')+'><img src="art/driver-'+i+'.webp" alt=""><b>'+escape(driver.name)+'</b>'+(selected?'<span>✓</span>':'')+'</button>';
       }).join('');
