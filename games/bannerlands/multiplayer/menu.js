@@ -1,6 +1,6 @@
 import {initializeDesktopBridge} from './desktop-bridge.js';
 import {MultiplayerClient} from './client.js';
-import {HOST_DOWNLOAD_MESSAGE,mountLobbyUI} from './lobby-ui.js';
+import {HOST_CONNECTION_MESSAGE,mountLobbyUI} from './lobby-ui.js';
 import {createFirebaseDirectory,parseGuestInvite,safeHostOrigin} from './directory.js';
 import {GAME_VERSION,ASSET_VERSION,PROTOCOL_VERSION} from './protocol.js';
 
@@ -67,16 +67,18 @@ export function setupMultiplayer({getConfig,onGame,onOrderResult,onPending,onCon
  }
  async function host(config,metadata){
   selectionEpoch++;
-  if(!window.bannerlandsHost)throw new Error(HOST_DOWNLOAD_MESSAGE);
+  if(!window.bannerlandsHost)throw new Error(HOST_CONNECTION_MESSAGE);
   if(client?.session)await leave({showHome:false});
-  stopWatch();let progress=null;const epoch=selectionEpoch;
+  stopWatch();let progress=null,pending=true;const epoch=selectionEpoch;
   try{
-   progress=setInterval(()=>window.bannerlandsHost.status().then(status=>ui.setStatus(status.message||status.status||'Opening your temporary connection…',{loading:true})).catch(()=>{}),1000);
+   progress=setInterval(()=>window.bannerlandsHost.status().then(status=>{
+    if(pending&&epoch===selectionEpoch)ui.setStatus(status.message||status.status||'Opening your temporary connection…',{loading:true});
+   }).catch(()=>{}),1000);
    const hosted=await window.bannerlandsHost.host(config,metadata);inviteUrl=hosted.inviteUrl;
    if(epoch!==selectionEpoch)return;
    if(new URL(hosted.url).origin!==location.origin)throw new Error('The local hosting service changed address. Restart Bannerlands.');
    const next=makeClient({origin:location.origin});await next.join({hostToken:hosted.hostToken,name:metadata.hostName});if(client===next&&epoch===selectionEpoch)rememberHost(location.origin);
-  }finally{clearInterval(progress);}
+  }finally{pending=false;clearInterval(progress);}
  }
  async function leave({showHome=true}={}){
   selectionEpoch++;
@@ -97,6 +99,7 @@ export function setupMultiplayer({getConfig,onGame,onOrderResult,onPending,onCon
   const epoch=selectionEpoch;
   const fragment=new URLSearchParams(location.hash.slice(1)),invite=fragment.get('invite'),auto=fragment.has('join')||!!invite;
   if(fragment.get('view')==='browse'){history.replaceState(null,'',location.pathname+location.search);ui.show('browse');}
+  else if(!auto&&new URLSearchParams(location.search).get('host')==='1')ui.show('host');
   if(auto){parseGuestInvite(location.href,{allowLocalOrigins:local});history.replaceState(null,'',location.pathname+location.search);ui.show('session');}
   const c=makeClient({origin:auto?location.origin:selectedHost()});
   const restored=await c.restore();if(epoch!==selectionEpoch||client!==c)return;if(restored)return;

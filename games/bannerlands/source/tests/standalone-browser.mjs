@@ -22,7 +22,7 @@ try{
   assert.equal(await page.locator('.online-download').isVisible(),false,'Downloaded offline game does not ask to download again');
   assert.equal(await page.locator('#browseLobbiesButton').isVisible(),false,'The offline campaign does not browse the lobby directory');
   await page.locator('#hostLobbyButton').click();
-  assert.match(await page.locator('#offlineHostError').innerText(),/download and launch Bannerlands for Windows/i);
+  assert.match(await page.locator('#offlineHostError').innerText(),/could not connect.*Bannerlands Local Edition/i);
   const painting=await page.locator('#menuOverlay .campaign-painting').evaluate(async img=>{
     await img.decode();return [img.naturalWidth,img.naturalHeight,img.currentSrc.startsWith('data:image/webp;')];
   });
