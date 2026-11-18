@@ -1,0 +1,44 @@
+ACORN RALLY — PC EDITION
+
+Playing on Windows
+
+1. Extract the full ZIP to a folder.
+2. For solo races, cups, Time Trials or local split screen, open index.html
+   in a desktop browser. For private rooms, start the PC host below.
+
+Starting the PC host
+
+1. Open the server folder and double-click "Start Acorn Rally.cmd".
+   The launcher uses a bundled runtime if present, or Node.js 18 or newer
+   installed on your computer. Node is available from https://nodejs.org.
+   The host uses built-in Node modules and requires no package installation.
+2. Keep the host window open. The game opens at http://localhost:8791.
+   On macOS or Linux with Node installed, run "node server/host.cjs"
+   from the extracted game folder, then open that address in a browser.
+3. Select Private room in the game, then Create room. Choose a course,
+   choose your driver, and set whether empty seats are filled by AI.
+4. Copy the invite link and send it to your friends. On the same network,
+   guests can also open the Local network address printed by the host,
+   choose Private room, then enter the five-character room code.
+5. Each guest selects a racer and chooses Ready to race. The host starts
+   the race when everyone is ready. Up to eight people can join.
+6. At the finish, return to the room and ready up for a rematch. Changing
+   the course or AI setting resets guest readiness.
+
+Sharing across networks
+
+The host listens on TCP port 8791. Players need a network route to its
+address. A private VPN shared with your friends works across home networks.
+A publicly reachable reverse proxy can also forward HTTP and the live
+event stream to this port. Enable streaming without response buffering.
+On a different computer, use the host's network address rather than
+localhost. If Windows asks, allow the host on your private network.
+To change the port, set ACORN_RALLY_PORT before starting the host.
+
+Connection recovery
+
+If a browser loses its connection, an AI takes its place. The same browser
+tab reconnects with its saved seat automatically. Refreshing the tab
+restores the invite and seat as long as the host is still running. Use
+Leave room when you are finished. Empty rooms expire after 15 minutes.
+Stopping the host window closes its rooms.
