@@ -82,6 +82,7 @@ const css=[read('style.css'),read('hud.css'),read('multiplayer/lobby.css')].join
   .replace(assetURL,(_,name)=>'url("'+imageData(name)+'")');
 const script=('const __modules=Object.create(null);\n'+compiled.join('\n')).replaceAll('</script','<\\/script');
 const html=read('index.html')
+  .replace(/<script\b[^>]*src="\/Truth\/hub\/play-signal\.mjs"[^>]*><\/script>\s*/,'')
   .replace(/\bsrc="(assets\/[\w./-]+\.(?:png|webp|svg))"/g,(_,name)=>'src="'+imageData(name)+'"')
   .replace('<body>','<body data-standalone="true">')
   .replace('<link rel="stylesheet" href="style.css">',()=>`<style>${css}</style>`)
