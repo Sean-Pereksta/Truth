@@ -493,7 +493,7 @@
       }
       return playback;
     }
-    let playSignalled=false;
+    let playSignalled=false,finalLapMusic=false;
     function run(now){
       if(!alive)return;const frame=clamp((now-prev)/1000,0,.115);prev=now;const pads=gamepads();
       if(!paused&&!document.hidden&&st.time>1&&renderer.gl){frameMean+=(frame-frameMean)*.032;budgetClock+=frame;
@@ -542,6 +542,12 @@
           const deadline=performance.now()+6;
           for(let i=0;i<32&&!st.done&&performance.now()<deadline;i++)Sim.step(st,1/60,inputs);
         }
+      }
+      if(!finalLapMusic&&st.totalLaps>1&&st.countdown<=0&&!st.done){
+        // Use the first local player to start the final lap in split-screen.
+        finalLapMusic=st.racers.some((driver,i)=>
+          (net?i===seat:i<players)&&!driver.finish&&driver.lapTimes.length===st.totalLaps-1);
+        if(finalLapMusic)music?.enterFinalLap();
       }
       const r=st.racers[seat]||st.racers[0],sounds=!paused&&sound.enabled;
       const obstacle=root.AcornHazards.sample(c,st.time);
