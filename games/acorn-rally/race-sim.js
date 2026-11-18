@@ -27,7 +27,8 @@
     [.85,9.95,.83,5.55,.73,1.40],[.995,11.0,.975,7.0,.65,1.03],
     [1.08,11.35,.99,7.65,1.0,1.04]
   ];
-  const items = ['Seed Kick', 'Sap Sling', 'Burr Patch', 'Bark Guard', 'Thistle Puff', 'Pinecone Skip', 'Tailwind'];
+  const items = ['Seed Kick', 'Sap Sling', 'Burr Patch', 'Bark Guard', 'Thistle Puff', 'Pinecone Skip', 'Tailwind', 'Hawk'];
+  const hawkItem=7, hawkDistance=.15;
   const itemTimes={seed:.91,sap:3.05,burr:1.72,guard:6.0,puff:1.05,pine:1.23,tailwind:4.15};
   const definitions = [
     ['Hoh Root Run',840,[[-86,-52],[-81,-15],[-53,18],[-23,18],[0,0],[28,-31],[58,-40],[91,-21],[91,4],[58,34],[24,28],[0,0],[-15,-30],[-35,-58],[-65,-70]]],
@@ -138,6 +139,7 @@
   }
   function lift(st,r){
     if(Number.isFinite(r.ghostLift))return r.ghostLift;
+    if(r.hawk)return groundLift(st,r)+2.2*Math.min(1,r.hawk.age/.32,(r.hawk.duration-r.hawk.age)/.30);
     if(r.fall)return r.fall.initialLift-13.5*r.fall.age*r.fall.age;
     if(r.flight){
       const clearance=r.flight.y-sample(track(st.trackIndex),r.s,r.x,r.branch).y;
@@ -347,6 +349,11 @@
       }
       notify(r,'Pinecone launched you');
     }
+    if(type===hawkItem){
+      clearDrift(r);r.slow=Math.max(r.slow,.9);r.v*=.48;
+      r.vx=r.itemHitSide*10.5;r.yaw+=r.itemHitSide*.22;
+      notify(r,'Hawk sideswipe');
+    }
     return true;
   }
   function rollWeights(st,r){
@@ -364,7 +371,9 @@
   }
   function drawItem(st,r) {
     const weights=rollWeights(st,r);
-    let n=random(st)*weights.reduce((v,a)=>v+a,0);
+    const roll=random(st);
+    if(r.rank===8&&roll<.5)return hawkItem;
+    let n=(r.rank===8?roll*2-1:roll)*weights.reduce((v,a)=>v+a,0);
     for(let i=0;i<weights.length;i++){n-=weights[i];if(n<0)return i;}
     return 0;
   }
@@ -373,6 +382,14 @@
     r.item=-1;r.usedItem=it;r.itemFx=1.1;notify(r,items[it]);
     if(it===0){r.slip=0;r.burr=0;r.vx*=.38;r.v=Math.max(0,r.v)+4.6;boost(r,itemTimes.seed,8.7,'seed');}
     else if(it===6)boost(r,itemTimes.tailwind,5.7,'tailwind');
+    else if(it===hawkItem){
+      const c=track(st.trackIndex),cruise=(c.index===4?20.1:19)*motors[st.cc].speed;
+      const distance=c.length*hawkDistance;
+      r.hawk={start:r.s,end:Math.min(r.s+distance,c.length*st.totalLaps),age:0,duration:distance/(cruise*2.75),lane:r.x,cruise,hitSeats:[]};
+      r.flight=null;r.air=0;r.rampAngle=0;r.catchShelf=null;r.hazardHop=null;
+      r.sap=r.burr=r.slip=r.pine=r.puff=r.slow=r.grind=0;
+      clearDrift(r);
+    }
     else if(it===3)r.guard=itemTimes.guard;
     else {
       const road=sample(track(st.trackIndex),r.s,0,r.branch),hard=[2,3,4,5,7].includes(st.trackIndex)&&!r.branch;
@@ -393,6 +410,21 @@
         life:it===2?9:it===5?(hard?3.7:2.6):it===4?2.25:2.0,v:it===2?0:r.v+(it===4?12:it===5?21:28),
         vx:lateral,radius:it===4?.58:it===2?.92:.73,height:it===2?.22:.66,hitSeats:[],
         bouncePeriod,armed:it!==2,nextLandingS:r.s+1.7+(r.v+21)*bouncePeriod,edge:road.w});
+    }
+  }
+  function flyHawk(r,c,dt){
+    const flight=r.hawk;
+    flight.age=Math.min(flight.duration,flight.age+dt);
+    r.v=(c.length*hawkDistance)/flight.duration;
+    r.s=Math.min(flight.end,flight.start+r.v*flight.age);
+    if(r.branch&&(r.s>flight.start+mod(c.branchB*c.length-flight.start,c.length)))r.branch=false;
+    const center=clamp(flight.age/.32,0,1);
+    r.x=flight.lane*(1-center)**2;
+    r.vx=0;r.yaw=0;r.steer=0;
+    if(r.s>=flight.end-1e-6||flight.age>=flight.duration){
+      r.hawk=null;r.x=0;r.v=flight.cruise;
+      r.safeS=r.lastValid=r.s;r.safeBranch=r.branch;r.runoff=0;
+      r.ghost=Math.max(r.ghost,.4);r.protect=Math.max(r.protect,.4);
     }
   }
   const aiProfiles={
@@ -423,6 +455,7 @@
     // Empty an unwanted slot before the next box. Keep a shot until a racer is in its line.
     if(pickup)return true;
     switch(r.item){
+      case hawkItem:return true;
       case 0:case 6:return (!edge||bend<.035)&&r.boost<.35;
       case 1:case 4:case 5:return traffic.shot;
       case 2:return traffic.chaser||bend>.026;
@@ -608,7 +641,7 @@
     if(st.racers.length<2)return;
     const memory=st.contacts||(st.contacts={}),grinding=new Set();
     for(const key in memory)if(st.time-memory[key].last>.30)delete memory[key];
-    const bodies=st.racers.map((r,i)=>r.finish||r.fall||r.ghost>0||r.driverIndex===7&&r.active>0?null:contactBody(c,r,starts[i],st));
+    const bodies=st.racers.map((r,i)=>r.finish||r.fall||r.hawk||r.ghost>0||r.driverIndex===7&&r.active>0?null:contactBody(c,r,starts[i],st));
     // The second pass resolves a kart pushed into its neighbour in a tight pack.
     for(let pass=0;pass<3;pass++){
       let resolved=false;
@@ -771,6 +804,7 @@
     st.time+=dt;
     const c=track(st.trackIndex),motor=motors[st.cc]||motors[100];
     const wheelStarts=st.racers.map(r=>wheelPosition(c,r,st));
+    const hawkPasses=[];
     for(const p of st.pickups)p.cooldown=Math.max(0,p.cooldown-dt);
     for(const r of st.racers){
       for(const key of ['active','guard','protect','slow','slip','reveal','noticeTime','hit','fx','itemFx','itemHitFx','ghost'])r[key]=Math.max(0,r[key]-dt);
@@ -784,7 +818,13 @@
       const road=sample(c,r.s,0,r.branch);
       const sgn=Math.sign(r.v||1), steer=clamp(+input.steer||0,-1,1),gas=clamp(+input.gas||0,0,1),brake=clamp(+input.brake||0,0,1);
       r.steer=steer;
-      if(input.item&&!r.prevItem)use(st,r);
+      if(input.item&&!r.prevItem&&!r.hawk)use(st,r);
+      if(r.hawk){
+        hawkPasses.push({r,flight:r.hawk});
+        r.prevItem=!!input.item;r.prevAbility=!!input.ability;
+        flyHawk(r,c,dt);
+        continue;
+      }
       r.bank=clamp(r.bank+dt*(r.v>6&&(Math.abs(steer)>.27||Math.abs(road.curve)>.018)?1:-2.5),0,1);
       if(input.ability&&!r.prevAbility&&r.meter>=.998&&r.air<=0)Signatures.start(st,r,c.length);
       Signatures.tick(st,r,dt,c.length,road,input);
@@ -834,11 +874,26 @@
       for(const p of st.pickups){
         const gap=mod(p.s-mod(r.s,c.length)+c.length*.5,c.length)-c.length*.5;
         if(p.cooldown<=0&&r.item<0&&!r.branch&&!burrowing&&Math.abs(gap)<1.25&&Math.abs(p.x-r.x)<1.2){
+          r.rank=1+st.racers.filter(other=>other!==r&&(other.finish||other.s>r.s||(other.s===r.s&&other.seat<r.seat))).length;
           p.cooldown=2;r.item=drawItem(st,r);r.reveal=.5;notify(r,items[r.item]);
         }
       }
     }
     if(st.mode!=='trial'){
+      for(const {r,flight} of hawkPasses){
+        const start=wheelStarts[r.seat];
+        for(const target of st.racers){
+          if(target===r||target.finish||target.fall||target.hawk||target.branch!==r.branch||flight.hitSeats.includes(target.seat))continue;
+          const before=wheelStarts[target.seat];
+          const gap=mod(before.progress-start.progress+c.length*.5,c.length)-c.length*.5;
+          const endGap=gap+(target.s-before.progress)-(r.s-start.progress);
+          if(Math.min(gap,endGap)>1.5||Math.max(gap,endGap)<-1.5)continue;
+          const fraction=gap===endGap?1:clamp(gap/(gap-endGap),0,1);
+          const lane=before.lane-start.lane+fraction*(target.x-r.x-before.lane+start.lane);
+          if(Math.abs(lane)>2.3||Math.abs(wheelPosition(c,target,st).contactY-sample(c,r.s,r.x,r.branch).y)>3.4)continue;
+          if(damage(st,target,hawkItem,Math.sign(lane)||(target.seat%2?1:-1)))flight.hitSeats.push(target.seat);
+        }
+      }
       contacts(st,c,wheelStarts,dt);
       for(const o of st.objects){
         o.age+=dt;o.life-=dt;o.s+=o.v*dt;o.x+=o.vx*dt;
@@ -857,7 +912,7 @@
           }
         }
         for(const r of st.racers){
-          if(r.seat===o.owner||r.finish||r.fall||r.branch!==o.branch||(o.kind===2&&!o.armed)||(!r.flight&&r.air>.22)||(r.driverIndex===7&&r.active>0)||o.hitSeats?.includes(r.seat))continue;
+          if(r.seat===o.owner||r.finish||r.fall||r.hawk||r.branch!==o.branch||(o.kind===2&&!o.armed)||(!r.flight&&r.air>.22)||(r.driverIndex===7&&r.active>0)||o.hitSeats?.includes(r.seat))continue;
           const delta=mod(r.s-o.s+c.length*.5,c.length)-c.length*.5;
           const direct=Math.abs(delta)<1.28&&Math.abs(r.x-o.x)<(o.radius??.78)+.43;
           const onBounce=bounce&&Math.hypot(delta+o.s-bounce.s,r.x-bounce.x)<bounce.radius;
@@ -900,5 +955,5 @@
       laps:r.lapTimes.slice(),standings:st.racers.slice().sort((a,b)=>a.rank-b.rank).map(a=>({name:a.name,driverIndex:a.driverIndex,position:a.rank,time:a.finish||null,human:a.human,seat:a.seat}))};
   }
   return {create,step,result,track,trackCount:definitions.length+Expansion.courses.length,sample,baseSample:sample,groundSample,groundLift,lift,rampPitch,predictRamps:(st,r,c,dt,prev)=>rampStep(st,r,c,dt,prev,true),
-    projectRoute,resolveRoute,wheelPosition,roll,driftTier,steeringYaw,drivers,abilities,items,itemTimes,durations,engineClasses,normalizeCC,difficulties,normalizeDifficulty,rollWeights,drawItem};
+    projectRoute,resolveRoute,wheelPosition,roll,flyHawk,hawkItem,driftTier,steeringYaw,drivers,abilities,items,itemTimes,durations,engineClasses,normalizeCC,difficulties,normalizeDifficulty,rollWeights,drawItem};
 });

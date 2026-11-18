@@ -309,10 +309,11 @@
     if(!compact){txt(ctx,opt.keyAbility,inset+cardW-9,yb+15,10,gold,'700','DM','right');}
     if(st.mode!=='trial'){
       const x=inset+(small||compact?0:cardW+7),iy=(small||compact)?yb-cardH-5:yb;
-      const slot=r.item<0?7:r.reveal>0?Math.floor(st.time*20)%7:r.item;
-      const itemIcon=art('art/item-'+slot+'.webp'),accent=r.item<0?'#9b927d':root.AcornItemArt.colors[slot],size=compact?25:40;
+      const slot=r.item<0?7:r.reveal>0?Math.floor(st.time*20)%(r.item===Sim.hawkItem?Sim.items.length:Sim.hawkItem):r.item;
+      const itemIcon=r.item>=0&&slot===Sim.hawkItem?null:art('art/item-'+slot+'.webp'),accent=r.item<0?'#9b927d':root.AcornItemArt.colors[slot],size=compact?25:40;
       roundBox(ctx,x,iy,cardW,cardH,5,panel,r.item<0?line:accent);
-      if(itemIcon.complete&&itemIcon.naturalWidth){
+      if(!itemIcon)root.AcornItemArt.drawHawk(ctx,x+4+size*.5,iy+cardH*.5,size*.49);
+      else if(itemIcon.complete&&itemIcon.naturalWidth){
         ctx.save();ctx.globalAlpha=r.item<0?.58:1;ctx.drawImage(itemIcon,x+4,iy+(cardH-size)/2,size,size);ctx.restore();
       }
       const tx=x+size+7;txt(ctx,'ACORN ITEM',tx,iy+(compact?11:15),compact?7:8,muted,'700','DM');
@@ -503,7 +504,7 @@
         if(now-lastSend>36){net.sendInput(inputs[seat]);lastSend=now;}
         const snap=net.getState();
         if(snap&&snap!==lastSnap){const old=st;st=JSON.parse(JSON.stringify(snap));lastSnap=snap;snapshotTime=now;
-          if(old&&old.time>0&&!st.done){for(const r of st.racers){const a=old.racers[r.seat];if(!a||!!a.fall!==!!r.fall)continue;
+          if(old&&old.time>0&&!st.done){for(const r of st.racers){const a=old.racers[r.seat];if(!a||a.hawk||r.hawk||!!a.fall!==!!r.fall)continue;
             let previous=a;
             if(a.branch!==r.branch){
               const from=Sim.sample(c,a.s,a.x,a.branch),to=Sim.sample(c,r.s,r.x,r.branch);
@@ -522,6 +523,7 @@
             const previous=Sim.wheelPosition(c,r,st);
             if(r.seat===seat)r.steer=inputs[seat].steer||0;
             if(r.fall){r.fall.age=Math.min(r.fall.duration,r.fall.age+dt);continue;}
+            if(r.hawk&&!r.finish){Sim.flyHawk(r,c,dt);Sim.roll(c,r,dt,previous,st);continue;}
             if(!r.finish&&st.countdown<=0){
               const runoff=Math.abs(r.x)>previous.w-.38&&!(r.driverIndex===7&&r.active>0),speed=r.v*(runoff?.925:1)*(r.branch?1+.17*previous.peak:1);
               r.s+=speed*dt;r.x+=r.vx*dt;
@@ -562,8 +564,11 @@
       if(sounds){const count=Math.ceil(st.countdown);if(count!==lastCount&&count<4){sound.tone(count?420:780,count?.12:.38,.06,'sine',count?315:1100);}lastCount=count;
         if(r.item>=0&&lastItem<0){sound.tone(780,.18,.04,'triangle',1320);}if(r.boost>0&&lastBoost<=0)sound.tone(180,.2,.024,'sawtooth',440);
         if(r.hit>0&&lastHit<=0&&!(r.contactFx>.33)&&!(r.hazardHit&&st.time-r.hazardHit.at<.40)){sound.tone(112,.18,.045,'triangle',48);try{padMap[0]?.vibrationActuator?.playEffect('dual-rumble',{duration:130,strongMagnitude:.28,weakMagnitude:.45})?.catch(()=>{});}catch{}}
-        if(r.itemFx>lastUseFx+.2)root.AcornFeedback.cue(sound,r.usedItem);
-        if(r.itemHitFx>lastHitFx+.15)root.AcornFeedback.impactCue(sound,r.itemHitKind,r.itemBlocked);
+        if(r.itemFx>lastUseFx+.2){
+          if(r.usedItem===Sim.hawkItem)sound.tone(940,.34,.048,'triangle',1610);
+          else root.AcornFeedback.cue(sound,r.usedItem);
+        }
+        if(r.itemHitFx>lastHitFx+.15)root.AcornFeedback.impactCue(sound,r.itemHitKind===Sim.hawkItem?4:r.itemHitKind,r.itemBlocked);
         if(r.confirmSeq>lastConfirm){root.AcornFeedback.confirmCue(sound,r.confirmedBlocked);lastConfirm=r.confirmSeq;}
         if(r.fx>lastSkill+.09)sound.tone([490,170,540,285,660,310,120,185,580][r.driverIndex],.23,.038,'triangle',[830,85,1030,640,1050,890,66,410,990][r.driverIndex]);
         lastItem=r.item;lastBoost=r.boost;lastHit=r.hit;lastUseFx=r.itemFx||0;lastHitFx=r.itemHitFx||0;lastSkill=r.fx||0;}
