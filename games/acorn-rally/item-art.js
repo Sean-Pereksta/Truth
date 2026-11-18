@@ -1,6 +1,6 @@
 'use strict';
-const colors=['#ffad3f','#eab14d','#97cf42','#d9ac60','#cba9f0','#db9158','#61dece'];
-const descriptions=['Break free of a burr, regain grip and launch with a short blast from the rear wheels.','Aim down a rival’s lane. Sticky amber sap cuts their speed in half and drags on their motor for three seconds.','Plant a prickly burr behind you. Once it opens, it snags a wheel and makes steering sluggish.','Raise a six-second bark shield. Its plates shatter to absorb one incoming item.','Send a widening crosswind through the pack. It shoves each kart out of its lane. Steer into the gust to recover.','Each skip strikes a circle on the road. Catch a rival there or hit them directly to launch them and cut their speed. The strike is wider on stone.','Ride a four-second tailwind. The sustained speed boost helps you close a gap.'];
+const colors=['#ffad3f','#eab14d','#97cf42','#d9ac60','#cba9f0','#db9158','#61dece','#ffc36c'];
+const descriptions=['Break free of a burr, regain grip and launch with a short blast from the rear wheels.','Aim down a rival’s lane. Sticky amber sap cuts their speed in half and drags on their motor for three seconds.','Plant a prickly burr behind you. Once it opens, it snags a wheel and makes steering sluggish.','Raise a six-second bark shield. Its plates shatter to absorb one incoming item.','Send a widening crosswind through the pack. It shoves each kart out of its lane. Steer into the gust to recover.','Each skip strikes a circle on the road. Catch a rival there or hit them directly to launch them and cut their speed. The strike is wider on stone.','Ride a four-second tailwind. The sustained speed boost helps you close a gap.','Draw in eighth place. Ride a hawk for 15% of a lap, sideswipe nearby rivals, and land at full speed.'];
 const TAU=Math.PI*2;
 const itemArtTimes=window.AcornSim?.itemTimes||{puff:1.05,pine:1.23};
 function meshes(Mesh){
@@ -115,6 +115,22 @@ function meshes(Mesh){
    const c=p=>[p[0],p[1]+.025,p[2]];
    mesh.quad(l(a,ra),l(b,rb),c(b),c(a),edge,5);mesh.quad(c(a),c(b),r(b,rb),r(a,ra),core,5);
   }
+ }
+ const hawk=make('hawkBody'),hawkWing=make('hawkWing');
+ hawk.blob(0,0,0,.29,.32,.70,'#84502f',12);
+ hawk.blob(0,-.12,.24,.24,.23,.43,'#e9c797',10);
+ hawk.blob(0,.12,.55,.22,.24,.30,'#a66c3c',10);
+ hawk.ring([0,.09,.73],[0,-.04,.98],.12,.025,'#edb44b',8,2);
+ for(const side of [-1,1]){
+  hawk.blob(side*.16,.17,.69,.066,.055,.061,'#241a17',8);
+  hawk.ring([side*.15,-.19,.15],[side*.26,-.57,.14],.074,.041,'#c7893b',6,2);
+ }
+ hawk.tri([-.15,.03,-.44],[.43,.06,-1.24],[-.43,.06,-1.24],'#73452f',5);
+ hawkWing.quad([0,0,.32],[1.10,.10,.18],[2.05,.04,-.43],[.16,0,-.46],'#a87343',5);
+ for(let i=0;i<7;i++){
+  const x=.35+i*.24,z=.04-i*.057;
+  hawkWing.tri([x,0,z],[x+.29,.02,z-.16],[x+.51,-.03,z-.71],
+   ['#75462f','#915a36','#a56c40'][i%3],5);
  }
  const jets=make('kickJets'),wings=make('kickWings'),air=make('airStream');
  for(const side of [-1,1]){
@@ -261,6 +277,13 @@ function drawRacer(ctx,k,p,yaw,jump,pitch) {
  const kartYaw=yaw+(k.yaw||0),sn=Math.sin(kartYaw),cs=Math.cos(kartYaw),si=Math.sin(pitch),co=Math.cos(pitch);
  // Offsets are in the kart's sprung-road frame. A hit on a drifting rival stays on that rival.
  function mounted(side,up,forward){const length=si*up+co*forward;return [p.x+cs*side+sn*length,p.y+jump+.037+co*up-si*forward,p.z-sn*side+cs*length];}
+ if(k.hawk){
+  const {age,duration}=k.hawk,flap=.34*Math.sin(age*17),swoop=3.5*(1-clamp01(age/.31))**2;
+  const height=.95+swoop+1.7*clamp01((age-duration+.23)/.23);
+  stamp('hawkBody',mounted(0,height,0),kartYaw,1.28);
+  stamp('hawkWing',mounted(.21,height+.07,0),kartYaw,1.28,1,flap);
+  stamp('hawkWing',mounted(-.21,height+.07,0),kartYaw,1.28,1,-flap,0,[-1,1,1]);
+ }
  if(k.guard>0) {
   const edge=k.guard<.7?.79+.16*Math.sin(k.guard*22):.96,open=clamp01((6-k.guard)/.22);
   stamp('guard',mounted(0,.42+.08*open,0),kartYaw,1.46+.73*Math.sin(open*Math.PI*.5),edge,0,pitch);
@@ -334,7 +357,7 @@ function drawRacer(ctx,k,p,yaw,jump,pitch) {
  if(!(k.itemHitFx>0))return;
  const hit=clamp01((.8-k.itemHitFx)/.8),fade=1-hit,kind=k.itemHitKind,blocked=k.itemBlocked;
  const side=Math.sign(k.itemHitSide||k.vx||((seat%2)?-1:1)),direction=side*(.18+hit*.71);
- const burst=blocked?'guardBurst':({1:'sapBurst',2:'burrBurst',4:'puffBurst',5:'pineBurst'})[kind];
+ const burst=blocked?'guardBurst':({1:'sapBurst',2:'burrBurst',4:'puffBurst',5:'pineBurst',7:'puffBurst'})[kind];
  if(burst&&hit<.43){
   const t=hit/.43;
   stamp(burst,local(p,0,.47+jump),yaw+seat*.48,.68+t*.93,1-t*t);
@@ -375,8 +398,25 @@ function burr2d(g,x,y,r){
  for(let j=0;j<30;j++){const a=j*TAU/30,l=j%2?r*.76:r*(1.05+.13*Math.sin(j*3));const px=x+l*Math.cos(a),py=y+l*Math.sin(a);if(j)g.lineTo(px,py);else g.moveTo(px,py);}
  g.closePath();g.stroke();g.fill();g.fillStyle='#d2d879';g.beginPath();g.ellipse(x-r*.18,y-r*.10,r*.49,r*.38,-.5,0,TAU);g.fill();
 }
+function drawHawk(g,x,y,size,flap=0){
+ g.save();g.translate(x,y);g.scale(size,size);
+ g.fillStyle='#865332';
+ for(const side of [-1,1]){
+  g.beginPath();g.moveTo(0,.07);g.quadraticCurveTo(side*.31,-.28-flap,side*.94,-.15-flap);
+  g.lineTo(side*.68,.13-flap);g.lineTo(side*.52,.12-flap);g.lineTo(side*.39,.29-flap);
+  g.lineTo(side*.26,.22-flap);g.lineTo(0,.33);g.fill();
+ }
+ g.beginPath();g.ellipse(0,.11,.22,.34,0,0,TAU);g.fill();
+ g.fillStyle='#f1d4a4';g.beginPath();g.ellipse(0,-.09,.16,.17,0,0,TAU);g.fill();
+ g.fillStyle='#efac39';g.beginPath();g.moveTo(-.082,-.09);g.lineTo(.082,-.09);g.lineTo(0,.075);g.fill();
+ g.restore();
+}
 function drawKart2d(g,k,point,dim,time,foreground){
  if(dim<4)return;
+ if(k.hawk&&foreground){
+  const swoop=1-clamp01(k.hawk.age/.31);
+  drawHawk(g,point.x,point.y-dim*(1.07+2*swoop*swoop),dim*.85,.12*Math.sin(k.hawk.age*17));
+ }
  const sap=k.sap>0,burr=k.burr>0&&k.slip>0,puff=k.puff>0,cone=k.pine>0,boost=k.boost>0&&['seed','tailwind'].includes(k.boostStyle),guard=k.guard>0;
  if(!sap&&!burr&&!puff&&!cone&&!boost&&!guard&&!(k.itemHitFx>0&&k.itemBlocked))return;
  g.save();g.translate(point.x,point.y);g.scale(dim/100,dim/100);g.lineCap='round';g.lineJoin='round';
@@ -416,4 +456,4 @@ function drawObject2d(g,o,pt){
  if(o.kind===5){g.rotate(o.age*9);g.fillStyle='#8d552d';g.beginPath();g.ellipse(0,0,11,16,0,0,TAU);g.fill();for(let i=0;i<9;i++){g.fillStyle=i%2?'#da9e5f':'#ab764b';g.beginPath();const x=(i%3-1)*5,y=(Math.floor(i/3)-1)*8;g.ellipse(x,y,4.6,3.1,-.4,0,TAU);g.fill();}}
  g.restore();
 }
-window.AcornItemArt={colors,descriptions,meshes,drawObject,drawRacer,drawKart2d,drawObject2d};
+window.AcornItemArt={colors,descriptions,drawHawk,meshes,drawObject,drawRacer,drawKart2d,drawObject2d};
