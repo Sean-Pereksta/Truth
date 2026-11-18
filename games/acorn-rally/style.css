@@ -36,3 +36,13 @@ dialog{width:min(540px,calc(100% - 26px));max-height:90dvh;border:1px solid #565
 @media(max-width:840px){.select-layout{grid-template-columns:minmax(0,1fr) 222px;gap:14px}.grid-pick .driver-img{aspect-ratio:.95}.grid-pick .driver-copy{padding:7px}.entry-driver{padding:12px}.entry-course{min-height:84px}}
 @media(max-width:640px){.select-layout{display:flex;flex-direction:column;gap:14px}.select-roster,.grid-entry{width:100%}.select-roster{gap:7px}.grid-pick .driver-img{aspect-ratio:1}.grid-pick .driver-copy strong{font-size:clamp(18px,5.4vw,27px)}.grid-pick .driver-copy small{font-size:9px}.grid-pick .selected-icon{width:17px;height:17px;top:4px;right:4px}.grid-entry{display:grid;grid-template-columns:.9fr 1.25fr}.entry-course{min-height:100%;padding:12px}.entry-driver p{margin:4px 0}.entry-skill{margin-top:8px}.entry-stats{display:none}.entry-name{font-size:29px}.confirm-driver{margin-top:9px}.select-top{margin-bottom:13px}}
 @media(min-width:761px) and (max-width:870px){.top-inner{gap:20px}.main-nav{gap:12px}.brand span{font-size:27px}.brand img{width:36px}.header-tools{gap:4px}}
+
+/* Controller focus stays visible on image cards, dark panels and unit-coloured buttons. */
+html[data-pad-nav="on"] :is(button,a[href],select,input):focus {
+ outline:3px solid #fff3ad !important;
+ outline-offset:2px;
+ box-shadow:0 0 0 5px #302417,0 0 14px 4px #f2ac4560;
+}
+.pad-nav-hint {font:600 11px/1.5 DM,Arial,sans-serif;color:#d8d1b9}
+.pad-nav-hint[hidden] {display:none}
+@media(max-width:850px){footer:has(.pad-nav-hint:not([hidden])){flex-wrap:wrap;row-gap:6px}.pad-nav-hint{order:3;flex-basis:100%;text-align:center}}

@@ -5,9 +5,10 @@
 })(typeof globalThis==='object'?globalThis:this,function(){
   'use strict';
   const names=['Needle Turn','Shoulder Through','Springstep','Berm Burst','Quill Fan','Slipstream Dash','Ground Pound','Tunnel Dash','Golden Hour'];
-  const durations=[1.1,3,.86,2.7,1.05,1.25,1.15,1.12,1.5];
+  const durations=[1.45,3,.86,2.7,1.05,1.25,1.15,1.12,1.5];
   const colors=['#90e6ed','#f0ac59','#d5a2ff','#65eab5','#ffe16c','#ff775e','#b3df6d','#69d9ff','#ffcd70'];
-  const groundPound={core:3.7,radius:10.4,travel:.36};
+  const groundPound={core:3.9,radius:11.4,travel:.27};
+  const quillFan={core:2.75,radius:8.8,travel:.18};
   const cap=(v,low,high)=>Math.max(low,Math.min(high,v));
   function gap(from,to,length){const n=(to-from+length*.5)%length;return (n<0?n+length:n)-length*.5;}
   function selectBoost(r){
@@ -28,30 +29,48 @@
   }
   function tell(r,text){r.notice=text;r.noticeTime=1.45;}
   function beat(r,st,label,stage){Object.assign(r.signature,{stage,label,beat:st.time});tell(r,label);}
-  function grounded(r){return !r.finish&&!r.ghost&&!r.fall&&r.air<.14&&!(r.driverIndex===7&&r.active>0);}
+  function grounded(r){return !r.finish&&!r.ghost&&!r.fall&&!r.flight&&r.air<.14&&!(r.driverIndex===7&&r.active>0);}
   function nearby(st,r,s,x,branch,length,radius){
     return st.racers.filter(a=>a!==r&&a.branch===branch&&grounded(a)&&Math.hypot(gap(s,a.s,length),a.x-x)<=radius);
   }
-  function impact(st,source,victim,power,time,slow,sourceX=source.x){
+  function impact(st,source,victim,power,time,slow,sourceX=source.x,shove=0){
     if(victim.protect>0)return false;
     const side=Math.sign(victim.x-sourceX)||((source.seat+victim.seat)%2?1:-1);
     victim.signatureHit={id:source.driverIndex,at:st.time,side,blocked:!!victim.guard};
     if(victim.guard>0){victim.guard=0;victim.protect=.72;tell(victim,'Bark guard absorbed the impact');return false;}
+    victim.signatureHit.shove=shove;
     victim.protect=time;victim.hit=.31;victim.vx+=side*power;victim.x+=side*Math.min(.28,power*.034);
     victim.slow=Math.max(victim.slow,slow);
     if(slow)victim.v*=source.driverIndex===1?.96:source.driverIndex===6?.93:.84;
     tell(victim,({1:'Shoulder checked',4:'Caught by quills',6:'Shockwave impact',7:'Tunnel eruption'})[source.driverIndex]||'Hit');
+    if(shove){
+      const hitCount=source.signature.hits+1;
+      const target=hitCount===1?victim.name:hitCount+' rivals';
+      tell(source,({1:'Checked ',4:'Quills hit ',6:'Shockwave hit '})[source.driverIndex]+target);
+    }
     return true;
   }
-  function wave(st,r,length,radius,power,time,slow,inner=0){
+  function wave(st,r,length,radius,power,time,slow,inner=0,shove=0){
     const sig=r.signature;
     for(const rival of nearby(st,r,sig.s,sig.x,sig.branch,length,radius)){
       const bit=1<<rival.seat;if(sig.mask&bit||Math.hypot(gap(sig.s,rival.s,length),rival.x-sig.x)<inner)continue;
       sig.mask|=bit;
-      if(impact(st,r,rival,power,time,slow,sig.x))sig.hits++;
+      if(impact(st,r,rival,power,time,slow,sig.x,shove))sig.hits++;
     }
   }
   function anchor(r){Object.assign(r.signature,{s:r.s,x:r.x,branch:r.branch});}
+  function quills(st,r,length,radius){
+    const sig=r.signature,inner=Math.max(0,(sig.waveRadius||0)-1);
+    wave(st,r,length,radius,10.5,1.05,.52,inner,34);
+    // Sweep the same annulus as the visible quills. Retire a cleared patch
+    // before the projectile/contact pass later in this simulation tick.
+    if(st.objects?.length)st.objects=st.objects.filter(o=>{
+      if(o.kind!==2||o.owner===r.seat||o.branch!==sig.branch)return true;
+      const dist=Math.hypot(gap(sig.s,o.s,length),o.x-sig.x);
+      return dist>radius||dist<inner;
+    });
+    sig.waveRadius=radius;
+  }
   function groundWave(st,r,length,radius){
     const sig=r.signature;
     for(const rival of nearby(st,r,sig.s,sig.x,sig.branch,length,radius)){
@@ -60,7 +79,12 @@
       if(sig.mask&bit||distance+.75<(sig.waveRadius||0))continue;
       sig.mask|=bit;
       const strength=1-cap((distance-groundPound.core)/(groundPound.radius-groundPound.core),0,1);
-      if(impact(st,r,rival,8+6*strength,.95,.20+.16*strength,sig.x))sig.hits++;
+      if(impact(st,r,rival,9+7*strength,1.05,.20+.20*strength,sig.x,18+24*strength)){
+        sig.hits++;
+        if(distance<=groundPound.core){
+          rival.air=.34;rival.hazardHop={at:st.time,duration:.34,height:.72};
+        }
+      }
     }
     sig.waveRadius=radius;
   }
@@ -69,11 +93,11 @@
     if(id===3&&r.bank<.15){tell(r,'Hold a turn to arm');return;}
     const sig=r.signature={stage:'active',label:names[id],since:st.time,until:st.time+duration,beat:st.time,s:r.s,x:r.x,branch:r.branch,mask:0,hits:0,charge:0,side:Math.abs(r.steer)>.22?Math.sign(r.steer):0,target:-1};
     r.meter=0;r.active=duration;r.fx=duration;tell(r,names[id]);
-    if(id===0){sig.label='Reverse your turn';r.slip=0;r.burr=0;}
+    if(id===0){sig.label='Reverse your turn';r.slip=0;r.burr=0;r.puff=0;}
     if(id===1){sig.label='Bumpers braced';}
     if(id===2){r.air=duration;sig.label='Level for landing';}
     if(id===3){sig.charge=cap(r.bank*.48,.17,.48);sig.label='Banking boost';}
-    if(id===4){sig.label='Quills away';const pack=nearby(st,r,r.s,r.x,r.branch,length,7);wave(st,r,length,2.65,7.7,.95,.19);if(!pack.length)boost(r,.48,4.1);}
+    if(id===4){sig.label='Quills away';const pack=nearby(st,r,r.s,r.x,r.branch,length,quillFan.radius);quills(st,r,length,quillFan.core);if(!pack.length)boost(r,.48,4.1);}
     if(id===5){
       let nearest=18;
       for(const rival of st.racers){
@@ -88,29 +112,37 @@
     if(id===8){sig.label='Follow the gold line';tell(r,sig.label);}
   }
   function tick(st,r,dt,length,road,input){
-    if(r.signatureHit&&st.time-r.signatureHit.at>.56)delete r.signatureHit;
+    const hit=r.signatureHit;
+    if(hit){
+      const age=st.time-hit.at;
+      // A brief, fading lateral force makes a check travel across the lane.
+      // Steering remains active, so a quick countersteer can shorten the skid.
+      if(hit.shove&&age>=0&&age<.42&&!r.ghost&&!r.fall)r.vx+=hit.side*hit.shove*(1-age/.42)*dt;
+      if(age>.60)delete r.signatureHit;
+    }
     const sig=r.signature;if(!sig)return;
     const age=st.time-sig.since, sinceBeat=st.time-sig.beat, id=r.driverIndex;
-    if(st.time>sig.until+1.25){delete r.signature;return;}
+    const linger=id===8&&sig.stage==='release'&&r.guard>0?3:1.25;
+    if(st.time>sig.until+linger){delete r.signature;return;}
     if(id===0&&r.active>0&&sig.stage==='active'){
       if(Math.abs(r.steer)>.34){
         if(!sig.side)sig.side=Math.sign(r.steer);
-        else if(r.steer*sig.side<-.4&&age>.13){beat(r,st,'Switchback boost','release');boost(r,.58,5.3);}
+        else if(r.steer*sig.side<-.4&&age>.13){beat(r,st,'Switchback boost','release');boost(r,.96,7.8);}
       }
     }
     if(id===2&&sig.stage==='active'&&r.air<=0){
       anchor(r);
-      if(Math.abs(r.steer)<.52&&Math.abs(r.x)<road.w-.35&&input.gas>.1){beat(r,st,'Clean landing','release');boost(r,.72,6.4);}
+      if(!r.fall&&!r.ghost&&Math.abs(r.steer)<.52&&Math.abs(r.x)<road.w-.35&&input.gas>.1){beat(r,st,'Clean landing','release');boost(r,1.08,8.6);}
       else beat(r,st,'Touchdown','land');
     }
     if(id===3&&sig.stage==='active'){
       if(Math.abs(r.steer)>.27)sig.charge=cap(sig.charge+dt*(.58+Math.abs(r.steer)*.30),0,1);
       if(age>.20&&(Math.abs(r.steer)<.25||r.active<=0)){
         beat(r,st,sig.charge>.78?'Perfect berm exit':'Berm release','release');
-        boost(r,.47+sig.charge*.88,4.2+sig.charge*5.1);r.active=0;r.fx=.72;
+        boost(r,.47+sig.charge*1.35,4.2+sig.charge*6.8);r.active=0;r.fx=.72;
       }
     }
-    if(id===4&&age<=.25){const rad=2.65+Math.min(1,age/.215)*4.35;wave(st,r,length,rad,7.7,.95,.19,Math.max(0,rad-1.1));}
+    if(id===4&&(sig.waveRadius||0)<quillFan.radius&&age<=quillFan.travel+.03)quills(st,r,length,quillFan.core+Math.min(1,age/quillFan.travel)*(quillFan.radius-quillFan.core));
     if(id===5&&r.active>0&&sig.stage==='active'&&sig.target>=0){
       const rival=st.racers[sig.target];
       if(rival&&rival.branch===r.branch&&gap(r.s,rival.s,length)<-.35){
@@ -118,7 +150,7 @@
       }
     }
     if(id===6&&r.stomp&&r.air<=0){
-      anchor(r);r.slip=0;r.burr=0;r.slow=0;r.sap=0;r.vx*=.32;r.stomp=false;
+      anchor(r);r.slip=0;r.burr=0;r.slow=0;r.sap=0;r.puff=0;r.vx*=.32;r.stomp=false;
       beat(r,st,'Seismic impact','wave');groundWave(st,r,length,groundPound.core);
     }else if(id===6&&sig.stage==='wave'&&sig.waveRadius<groundPound.radius){
       groundWave(st,r,length,groundPound.core+Math.min(1,sinceBeat/groundPound.travel)*(groundPound.radius-groundPound.core));
@@ -131,7 +163,9 @@
       const onLine=Math.abs(r.x)<=road.w*.34&&r.v>3&&!r.ghost&&!r.hit&&!r.fall;
       if(onLine)sig.charge+=dt;
       if(r.active<=0){
-        if(sig.charge>=durations[id]*.92){beat(r,st,'Sunburst boost','release');boost(r,.98,7.8);}
+        if(sig.charge>=durations[id]*.92){
+          beat(r,st,'Sunburst shield','release');boost(r,1.25,8.8);r.guard=Math.max(r.guard,3);
+        }
         else beat(r,st,'Gold line missed','miss');
       }
     }
@@ -143,8 +177,8 @@
     if(rival.protect>0)return false;
     r.active=0;r.fx=.78;
     beat(r,st,'Shoulder check','release');
-    if(impact(st,r,rival,16,.95,.12))r.signature.hits++;
+    if(impact(st,r,rival,17.5,1.05,.16,r.x,36))r.signature.hits++;
     boost(r,.72,6.8);return true;
   }
-  return {names,durations,colors,groundPound,gap,start,tick,brace,boost,advanceBoost};
+  return {names,durations,colors,groundPound,quillFan,gap,start,tick,brace,boost,advanceBoost};
 });

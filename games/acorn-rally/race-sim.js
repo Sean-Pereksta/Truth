@@ -28,7 +28,7 @@
     [1.08,11.35,.99,7.65,1.0,1.04]
   ];
   const items = ['Seed Kick', 'Sap Sling', 'Burr Patch', 'Bark Guard', 'Thistle Puff', 'Pinecone Skip', 'Tailwind'];
-  const itemTimes={seed:.91,sap:3.05,burr:1.72,guard:6.0,puff:.74,pine:.79,tailwind:4.15};
+  const itemTimes={seed:.91,sap:3.05,burr:1.72,guard:6.0,puff:1.05,pine:1.23,tailwind:4.15};
   const definitions = [
     ['Hoh Root Run',840,[[-86,-52],[-81,-15],[-53,18],[-23,18],[0,0],[28,-31],[58,-40],[91,-21],[91,4],[58,34],[24,28],[0,0],[-15,-30],[-35,-58],[-65,-70]]],
     ['Bamboo Bell Run',900,[[-75,-48],[-72,-8],[-49,14],[-60,40],[-38,62],[-5,62],[45,38],[77,13],[64,-10],[33,-14],[48,-38],[18,-63],[-25,-47],[-52,-66]]],
@@ -271,7 +271,7 @@
     for(let i=0;i<count;i++){
       const human=humanSeats.includes(i),d=selection.get(i)??remaining.shift()??i;
       st.racers.push({seat:i,driverIndex:d,name:drivers[d],human,s:trial?0:-3.8*(1-Math.floor(i/4))-1.7, x:trial?0:(i%4-1.5)*2.25, v:0, vx:0, yaw:0,
-        branch:false,drift:0,boost:0,boostPower:0,boostStyle:'',item:-1,reveal:0,meter:trial?1:.3,active:0,guard:0,protect:0,slow:0,slip:0,air:0,bank:0,fx:0,stomp:false,
+        branch:false,drift:0,driftSide:0,driftSlip:0,driftReleaseTier:0,driftReleaseSeq:0,boost:0,boostPower:0,boostStyle:'',item:-1,reveal:0,meter:trial?1:.3,active:0,guard:0,protect:0,slow:0,slip:0,air:0,bank:0,fx:0,stomp:false,
         lapTimes:[],splitTime:0,finish:0,prevItem:false,prevAbility:false,prevDrift:false,rank:i+1,hit:0,usedItem:-1,itemFx:0,itemHitKind:-1,itemHitFx:0,itemBlocked:false,itemHitSide:1,
         sap:0,sapSide:1,burr:0,burrSide:1,puff:0,puffSide:1,pine:0,confirmFx:0,confirmSeq:0,confirmedItem:-1,confirmedName:'',confirmedBlocked:false,lastValid:0,runoff:0,ghost:0,steer:0,
         contactSeq:0,contactFx:0,contactKind:'',contactSide:0,contactForce:0,contactOther:-1,contactSpeed:0,contactCarry:0,grind:0,
@@ -286,15 +286,67 @@
   }
   function notify(r,msg){r.notice=msg;r.noticeTime=1.5;}
   function boost(r,time,power,style=''){Signatures.boost(r,time,power,style);}
-  function damage(r,type,side=1){
+  const driftRewards=[
+    {charge:.42,time:.66,power:6.1,label:'Mini-turbo'},
+    {charge:1.15,time:1.15,power:7.8,label:'Super mini-turbo'},
+    {charge:2.05,time:1.70,power:9.3,label:'Ultra mini-turbo'}
+  ];
+  function driftTier(charge){
+    return charge>=driftRewards[2].charge?3:charge>=driftRewards[1].charge?2:charge>=driftRewards[0].charge?1:0;
+  }
+  function clearDrift(r){r.drift=0;r.driftSlip=0;r.driftSide=0;r.prevDrift=false;}
+  function slide(r,input,road,dt,time){
+    const steer=r.steer,grounded=!r.flight&&r.air<=0&&!(r.driverIndex===7&&r.active>0);
+    const eligible=grounded&&r.v>7;
+    const engaged=eligible&&input.drift&&(r.prevDrift||Math.abs(steer)>.18);
+    if(!engaged){
+      const tier=driftTier(r.drift);
+      if(r.prevDrift&&!input.drift&&eligible&&tier){
+        const reward=driftRewards[tier-1];
+        boost(r,reward.time,reward.power,'drift');
+        r.driftReleaseTier=tier;r.driftReleaseSeq=(r.driftReleaseSeq||0)+1;r.driftReleaseAt=time;
+        r.meter+=.035+.014*tier;notify(r,reward.label);
+      }
+      clearDrift(r);return false;
+    }
+    if(!r.driftSide){
+      r.driftSide=Math.sign(steer)||Math.sign(road.curve)||1;
+      // Break rear traction on turn-in. Lateral momentum persists as the front wheels bite.
+      r.vx-=r.driftSide*(.85+.8*clamp(r.v/24,0,1));
+    }
+    const speed=clamp((r.v-6)/10,.20,1),bend=road.curve*r.v*1.9*r.driftSide;
+    const load=clamp(Math.max(0,steer*r.driftSide,bend)*speed,0,1);
+    const oldSlip=r.driftSlip||0;
+    r.driftSlip=oldSlip+(load-oldSlip)*Math.min(1,dt*(load>oldSlip?8.5:5.3));
+    if(load>.15&&Math.abs(r.x)<road.w-.15)r.drift=Math.min(2.4,r.drift+dt*(.23+1.12*r.driftSlip));
+    r.prevDrift=true;return true;
+  }
+  function steeringYaw(r,steer){
+    if(!r.prevDrift)return steer*.19;
+    const slip=r.driftSlip||0;
+    const travel=Math.atan2(r.vx,Math.max(8,r.v));
+    return clamp(travel*.83+steer*.11+(r.driftSide||0)*(.15+.49*slip),-.95,.95);
+  }
+  function damage(st,r,type,side=1){
     if(r.protect>0||(r.active>0&&(r.driverIndex===7||(r.driverIndex===4&&type===2)))) return false;
     r.itemHitKind=type;r.itemHitFx=.8;r.itemBlocked=r.guard>0;r.itemHitSide=Math.sign(side)||1;
     if(r.guard>0){r.guard=0;r.protect=.9;notify(r,'Bark guard shattered');return true;}
     r.protect=1.65;r.hit=.5;
     if(type===1){r.sap=itemTimes.sap;r.sapSide=r.itemHitSide;r.v*=.48;notify(r,'Sap stuck');}
     if(type===2){r.burr=itemTimes.burr;r.slip=itemTimes.burr;r.burrSide=r.itemHitSide;r.v*=.82;r.vx+=r.burrSide*2.25;notify(r,'Burr snag');}
-    if(type===4){r.puff=itemTimes.puff;r.puffSide=r.itemHitSide;r.vx+=side*7.4;r.x+=side*.17;notify(r,'Thistle shove');}
-    if(type===5){r.pine=itemTimes.pine;r.v*=.66;r.air=.42;notify(r,'Pinecone strike');}
+    if(type===4){
+      r.puff=itemTimes.puff;r.puffSide=r.itemHitSide;
+      r.vx=r.vx*.64+r.puffSide*10.5;r.yaw+=r.puffSide*.18;
+      notify(r,'Thistle crosswind');
+    }
+    if(type===5){
+      clearDrift(r);r.pine=itemTimes.pine;r.v*=.44;
+      if(r.flight)r.flight.vy=Math.max(6.4,r.flight.vy);
+      else{
+        r.air=.64;r.hazardHop={at:st.time,duration:r.air,height:1.75};
+      }
+      notify(r,'Pinecone launched you');
+    }
     return true;
   }
   function rollWeights(st,r){
@@ -325,7 +377,7 @@
     else {
       const road=sample(track(st.trackIndex),r.s,0,r.branch),hard=[2,3,4,5,7].includes(st.trackIndex)&&!r.branch;
       const bouncePeriod=hard?.48:.365;
-      let lateral=it===2?0:r.yaw*(it===5?17:it===1?14:7);
+      let lateral=it===2?0:clamp(r.yaw,-.48,.48)*(it===5?17:it===1?14:7);
       if(it===1){
         // A release assists the driver's line once. Targets can leave that line after firing.
         const c=track(st.trackIndex),aim=lateral;let best=Infinity;
@@ -346,7 +398,7 @@
   const aiProfiles={
     easy:     {look:9,  wander:2.12, correction:.39, pace:.81, itemBeat:2,   itemWait:.80},
     normal:   {look:12, wander:1.65, correction:.48, pace:.95, itemBeat:2.4, itemWait:.70},
-    hard:     {look:.62, correction:.53, charge:.71, release:.08, link:1.55, rhythm:2.12},
+    hard:     {look:.62, correction:.53, charge:.71, release:.08, link:1.0, rhythm:1.65},
     ultimate: {look:.83, correction:.65, charge:.46, release:.13, link:1.90, rhythm:2.48}
   };
   function raceTraffic(st,r,c){
@@ -436,12 +488,17 @@
     }
     target=Hazards.avoid(st,r,c,Ramps.aim(c,r,target));
     target=clamp(target,-room,room);
-    const charge=skill.charge+(r.speedSkill-.82)*.55;
-    const release=r.drift>=charge&&r.boost<=skill.release;
-    const drift=r.v>8&&!release;
+    const holdingCorner=r.driftSide*exit.curve>.018&&r.driftSlip>.43;
+    const charge=holdingCorner?(st.difficulty==='ultimate'&&bend>.028?driftRewards[2].charge:driftRewards[1].charge):skill.charge+(r.speedSkill-.82)*.55;
+    const counterSlide=r.prevDrift&&(target-r.x)*r.driftSide<-.90&&r.driftSide*entry.curve<.013;
+    const release=counterSlide||r.drift>=charge&&r.boost<=skill.release;
+    // Hard opponents plan their slides around bends. Ultimate links short slides
+    // between bends when the road has enough room for another racing line.
+    const winding=bend>.014||Math.abs(exit.curve)>.018;
+    const drift=r.v>8&&!release&&(winding||st.difficulty==='ultimate'&&!edge);
     const slick=r.branch&&here.peak>.28&&[1,2,4,7].includes(c.index);
     const grip=slick?.80:1;
-    const counter=here.curve*r.v*r.v*car[2]*(drift?.28:.43)/((drift?10.3:8.85)*car[0]*grip);
+    const counter=here.curve*r.v*r.v*car[2]*(drift?.24:.43)/((drift?11.7:8.85)*car[0]*grip);
     const steer=clamp((target-r.x)*skill.correction-r.vx*.075+counter,-1,1);
     // Only scrub speed for a real restriction. The kart governor already accounts for CC and earned boosts.
     const brakingBend=Math.max(bend,Math.abs(exit.curve)*.65);
@@ -470,7 +527,7 @@
       target=clamp(target,-margin,margin);
     }
     const drift=Math.max(Math.abs(look.curve),Math.abs(here.curve))>.025&&r.v>10*motor.speed;
-    const car=handling[r.driverIndex],counterSteer=here.curve*r.v*r.v*car[2]*(drift?.28:.43)/((drift?10.3:8.85)*car[0]);
+    const car=handling[r.driverIndex],counterSteer=here.curve*r.v*r.v*car[2]*(drift?.24:.43)/((drift?11.7:8.85)*car[0]);
     const steer=clamp((target-r.x)*skill.correction-r.vx*.12+counterSteer,-1,1);
     const speedSkill=Math.min(1.08,r.speedSkill*skill.pace);
     const bend=Math.max(Math.abs(look.curve),Math.abs(here.curve));
@@ -610,7 +667,7 @@
     r.fall={age:0,duration,initialLift,side:Math.sign(r.x)||1};
     r.flight=null;r.catchShelf=null;r.hazardHop=null;r.air=0;r.rampAngle=0;
     r.ghost=duration+.5;r.protect=duration+.5;r.boostSources=[];r.boost=0;r.active=0;
-    r.signature=null;r.stomp=false;r.drift=0;r.prevDrift=false;r.v=0;r.contactCarry=0;r.grind=0;
+    r.signature=null;r.stomp=false;clearDrift(r);r.v=0;r.contactCarry=0;r.grind=0;
     notify(r,'Over the edge!');
   }
   function transferFlight(st,r,c,previous,edgeHop){
@@ -727,37 +784,35 @@
       const road=sample(c,r.s,0,r.branch);
       const sgn=Math.sign(r.v||1), steer=clamp(+input.steer||0,-1,1),gas=clamp(+input.gas||0,0,1),brake=clamp(+input.brake||0,0,1);
       r.steer=steer;
-      const drifting=!!input.drift&&r.v>7&&r.air<=0;
       if(input.item&&!r.prevItem)use(st,r);
       r.bank=clamp(r.bank+dt*(r.v>6&&(Math.abs(steer)>.27||Math.abs(road.curve)>.018)?1:-2.5),0,1);
       if(input.ability&&!r.prevAbility&&r.meter>=.998&&r.air<=0)Signatures.start(st,r,c.length);
       Signatures.tick(st,r,dt,c.length,road,input);
       r.prevItem=!!input.item;r.prevAbility=!!input.ability;
-      if(drifting&&Math.abs(steer)>.16)r.drift=clamp(r.drift+dt*(.67+Math.abs(steer)*.2),0,2);
-      if(!drifting&&r.prevDrift&&r.drift>.42){boost(r,.3+Math.min(r.drift,1.5)*.49,5.6);r.meter+=.045;notify(r,'Drift boost');}
-      if(!drifting)r.drift=0;r.prevDrift=drifting;
+      const drifting=slide(r,input,road,dt,st.time);
       const burrowing=r.driverIndex===7&&r.active>0,verge=Math.abs(r.x)>road.w-.38&&!burrowing,car=handling[r.driverIndex];
       const slick=r.branch&&road.peak>.28&&[1,2,4,7].includes(c.index);
-      const sapLoad=clamp(r.sap/.74,0,1),pineLoad=clamp(r.pine/.45,0,1);
-      const governor=((c.index===4?20.1:19.0)*(1-.47*sapLoad)+(r.boost>0?r.boostPower*(1-sapLoad):0))*motor.speed;
-      const top=(r.sap>0?governor:Math.max(governor,r.contactCarry))*grindPace(r.grind);
-      const accel=car[1]*motor.acceleration*(r.slow>0?.5:1)*(1-.68*sapLoad)*(1-.25*pineLoad);
+      const sapLoad=clamp(r.sap/.74,0,1),pineLoad=clamp((r.pine||0)/.64,0,1);
+      const engineLoad=Math.max(sapLoad,pineLoad);
+      const governor=((c.index===4?20.1:19.0)*(1-Math.max(.47*sapLoad,.49*pineLoad))+(r.boost>0?r.boostPower*(1-engineLoad):0))*motor.speed;
+      const top=(engineLoad>0?governor:Math.max(governor,r.contactCarry))*grindPace(r.grind);
+      const accel=car[1]*motor.acceleration*(r.slow>0?.5:1)*(1-.68*sapLoad)*(1-.67*pineLoad);
       const snagLoad=r.slip>0?clamp(r.burr/.4,0,1):0;
       const drag=1.1+.012*r.v*r.v+(verge&&r.air===0?5.5*car[4]:0)+(drifting&&r.active===0?1.1*Math.abs(steer):0)+4.3*snagLoad;
       const thrust=r.boost>0?(r.boostStyle==='seed'?12:r.boostStyle==='tailwind'?7.4:9):0;
       const airborne=!!r.flight;
-      r.v+=(thrust*motor.acceleration*(1-.96*sapLoad)+(gas*accel-brake*(r.v>0?23*motor.brakes:4.1))*(airborne?.075:1)-sgn*((airborne?.38:drag)+1.45*sapLoad))*dt;
+      r.v+=(thrust*motor.acceleration*(1-.96*engineLoad)+(gas*accel-brake*(r.v>0?23*motor.brakes:4.1))*(airborne?.075:1)-sgn*((airborne?.38:drag)+1.45*sapLoad))*dt;
       if(!gas&&!brake&&r.boost===0&&Math.abs(r.v)<.22)r.v=0;
       r.v=clamp(r.v,-3.8,top);
       if(r.v>top-.2)r.v=top;
       const needle=r.driverIndex===0&&r.active>0,grip=slick&&!burrowing&&!needle?.8:1;
-      const targetX=steer*(drifting?10.3:8.85)*car[0]*(needle?1.46:1)*grip*clamp(Math.abs(r.v)/5,0,1)*sgn
-        -road.curve*r.v*r.v*(needle?.11:drifting?.28:.43)*car[2]+(r.puffSide||1)*8.25*clamp(r.puff/itemTimes.puff,0,1)**.74;
+      const targetX=steer*(drifting?11.7:8.85)*car[0]*(needle?1.46:1)*grip*clamp(Math.abs(r.v)/5,0,1)*sgn
+        -road.curve*r.v*r.v*(needle?.11:drifting?.24:.43)*car[2]+(r.puffSide||1)*12.8*clamp((r.puff||0)/.80,0,1)**1.35;
       const impactGrip=r.contactFx>.23?1-.48*r.contactForce:1;
-      r.vx+=(targetX-r.vx)*Math.min(1,dt*(airborne?.91:needle?car[3]*1.55:r.slip>0?1.35:drifting?car[3]*.56:car[3])*grip*impactGrip);
+      r.vx+=(targetX-r.vx)*Math.min(1,dt*(airborne?.91:needle?car[3]*1.55:r.slip>0?1.35:drifting?car[3]*.47:car[3])*grip*impactGrip);
       if(r.burr>0&&r.slip>0)r.vx+=r.burrSide*Math.sin((itemTimes.burr-r.burr)*12)*2.9*dt;
       r.x+=r.vx*dt;
-      r.yaw+=(steer*(drifting?.43:.19)-r.yaw)*Math.min(1,dt*8);
+      r.yaw+=(steeringYaw(r,steer)-r.yaw)*Math.min(1,dt*(drifting?9.5:8));
       const adv=r.v*(1-(verge?.075:0))*(r.branch?1+.17*road.peak:1);
       r.s=Math.max(-10,r.s+adv*dt);
       const previous=wheelStarts[r.seat],arrival=resolveRoute(st,r,c,dt,previous);
@@ -768,7 +823,7 @@
       else r.runoff=Math.max(0,r.runoff-dt*.45);
       if(r.runoff>(r.branch?.65:1.25)){
         r.s=Math.max(r.lapTimes.length*c.length,r.lastValid);r.x=clamp(r.x,-2.15,2.15);r.v=clamp(r.v*.65,5.5,11);r.vx=0;r.yaw=0;r.air=0;
-        r.ghost=1.35;r.protect=1.35;r.runoff=0;r.drift=0;r.prevDrift=false;notify(r,'Back on course');
+        r.ghost=1.35;r.protect=1.35;r.runoff=0;clearDrift(r);notify(r,'Back on course');
       }
       rampStep(st,r,c,dt,previous);
       if(r.fall)continue;
@@ -788,18 +843,28 @@
       for(const o of st.objects){
         o.age+=dt;o.life-=dt;o.s+=o.v*dt;o.x+=o.vx*dt;
         if(o.kind===2)o.armed=o.age>=.55;
-        if(o.kind===4){o.radius=.58+o.age*.93;o.height=.68+.12*Math.sin(o.age*4);}
+        if(o.kind===4){o.radius=.68+o.age*1.28;o.height=.68+.12*Math.sin(o.age*4);}
+        let bounce=null;
         if(o.kind===5){
           const lane=sample(c,o.s,0,o.branch);o.edge=lane.w-.43;
           if(Math.abs(o.x)>o.edge){const side=Math.sign(o.x);o.x=side*o.edge;o.vx=-side*Math.max(.8,Math.abs(o.vx)*.91);o.v*=.96;}
           const period=o.bouncePeriod||.42,f=mod(o.age,period)/period;
           o.height=.29+4*f*(1-f)*(.66+.16*(period>.45));o.nextLandingS=o.s+o.v*period*(1-f);
+          o.landingRadius=period>.45?1.95:1.55;
+          if(Math.floor(o.age/period)>Math.floor((o.age-dt)/period)){
+            const ageSinceBounce=f*period;
+            bounce={s:o.s-o.v*ageSinceBounce,x:o.x-o.vx*ageSinceBounce,radius:o.landingRadius};
+          }
         }
         for(const r of st.racers){
-          if(r.seat===o.owner||r.finish||r.fall||r.branch!==o.branch||(o.kind===2&&!o.armed)||(r.flight?lift(st,r)>(o.height??.68)+.30:r.air>.22)||(r.driverIndex===7&&r.active>0)||o.hitSeats?.includes(r.seat))continue;
+          if(r.seat===o.owner||r.finish||r.fall||r.branch!==o.branch||(o.kind===2&&!o.armed)||(!r.flight&&r.air>.22)||(r.driverIndex===7&&r.active>0)||o.hitSeats?.includes(r.seat))continue;
           const delta=mod(r.s-o.s+c.length*.5,c.length)-c.length*.5;
-          if(Math.abs(delta)<1.28&&Math.abs(r.x-o.x)<(o.radius??.78)+.43){
-            if(!damage(r,o.kind,Math.sign(r.x-o.x)||Math.sign(o.vx)||1))continue;
+          const direct=Math.abs(delta)<1.28&&Math.abs(r.x-o.x)<(o.radius??.78)+.43;
+          const onBounce=bounce&&Math.hypot(delta+o.s-bounce.s,r.x-bounce.x)<bounce.radius;
+          if(direct||onBounce){
+            const height=lift(st,r);
+            if(!(direct&&height<=(o.height??.68)+.30)&&!(onBounce&&height<.45))continue;
+            if(!damage(st,r,o.kind,Math.sign(r.x-o.x)||Math.sign(o.vx)||1))continue;
             const shooter=st.racers[o.owner];
             if(shooter){shooter.confirmFx=1.68;shooter.confirmSeq=(shooter.confirmSeq||0)+1;shooter.confirmedItem=o.kind;shooter.confirmedName=r.name;shooter.confirmedBlocked=r.itemBlocked;}
             if(o.kind===4){(o.hitSeats||(o.hitSeats=[])).push(r.seat);continue;}
@@ -835,5 +900,5 @@
       laps:r.lapTimes.slice(),standings:st.racers.slice().sort((a,b)=>a.rank-b.rank).map(a=>({name:a.name,driverIndex:a.driverIndex,position:a.rank,time:a.finish||null,human:a.human,seat:a.seat}))};
   }
   return {create,step,result,track,trackCount:definitions.length+Expansion.courses.length,sample,baseSample:sample,groundSample,groundLift,lift,rampPitch,predictRamps:(st,r,c,dt,prev)=>rampStep(st,r,c,dt,prev,true),
-    projectRoute,resolveRoute,wheelPosition,roll,drivers,abilities,items,itemTimes,durations,engineClasses,normalizeCC,difficulties,normalizeDifficulty,rollWeights,drawItem};
+    projectRoute,resolveRoute,wheelPosition,roll,driftTier,steeringYaw,drivers,abilities,items,itemTimes,durations,engineClasses,normalizeCC,difficulties,normalizeDifficulty,rollWeights,drawItem};
 });

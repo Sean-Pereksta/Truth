@@ -1,7 +1,8 @@
 'use strict';
 const colors=['#ffad3f','#eab14d','#97cf42','#d9ac60','#cba9f0','#db9158','#61dece'];
-const descriptions=['Break free of a burr, regain grip and launch with a short blast from the rear wheels.','Aim down a rival’s lane. Sticky amber sap cuts their speed in half and drags on their motor for three seconds.','Plant a prickly burr behind you. Once it opens, it snags a wheel and makes steering sluggish.','Raise a six-second bark shield. Its plates shatter to absorb one incoming item.','Sweep a widening gust through a group. Thistledown carries every kart it touches sideways.','Skip a pinecone off the road edge. It knocks a rival into the air and carries farther on stone.','Ride a four-second tailwind. The sustained speed boost helps you close a gap.'];
+const descriptions=['Break free of a burr, regain grip and launch with a short blast from the rear wheels.','Aim down a rival’s lane. Sticky amber sap cuts their speed in half and drags on their motor for three seconds.','Plant a prickly burr behind you. Once it opens, it snags a wheel and makes steering sluggish.','Raise a six-second bark shield. Its plates shatter to absorb one incoming item.','Send a widening crosswind through the pack. It shoves each kart out of its lane. Steer into the gust to recover.','Each skip strikes a circle on the road. Catch a rival there or hit them directly to launch them and cut their speed. The strike is wider on stone.','Ride a four-second tailwind. The sustained speed boost helps you close a gap.'];
 const TAU=Math.PI*2;
+const itemArtTimes=window.AcornSim?.itemTimes||{puff:1.05,pine:1.23};
 function meshes(Mesh){
  const nut=new Mesh(),glob=new Mesh(),trap=new Mesh(),puff=new Mesh(),cone=new Mesh(),guard=new Mesh(),wind=new Mesh(),seed=new Mesh(),bounce=new Mesh();
  function hoop(mesh,cy,rx,rz,width,col,count=20){
@@ -97,8 +98,11 @@ function meshes(Mesh){
  }
  const gust=make('lateralGust'),impact=make('pineSplinters');
  for(let n=0;n<3;n++){
-  const start=[-.30,.21+n*.16,-.15+n*.16],end=[.86+.16*n,.38+n*.15,-.12+n*.22],tip=[end[0]+.33,end[1]-.035,end[2]+.04];
-  gust.ring(start,end,.012,.040,n===1?'#c48add':'#f8e7fb',5,5);gust.ring(end,tip,.041,.002,'#fff2ff',5,5);
+  const strand=t=>[-1.32+2.84*t,.37+.15*n+.17*Math.sin(t*6+n),-.37+n*.29+.22*Math.sin(t*5.2+n)];
+  for(let j=0;j<8;j++){
+   const thickness=t=>.006+.05*Math.sin(t*Math.PI)**1.6;
+   gust.ring(strand(j/8),strand((j+1)/8),thickness(j/8),thickness((j+1)/8),n===1?'#d6a0ed':'#faedfc',5,5);
+  }
  }
  for(let n=0;n<7;n++){
   const a=n*2.3999,root=[Math.cos(a)*.27,.18,Math.sin(a)*.27],end=[Math.cos(a)*(.63+.13*(n%3)),.34+.24*(n%3),Math.sin(a)*.68];
@@ -220,7 +224,7 @@ function drawObject(ctx,o) {
   const swell=1+.22*Math.exp(-Math.pow((age-.59)/.105,2));
   stamp('trap',local(p,0,.25),yaw+phase+(armed?0:age*4),swell,1,0,0,armed?[1,1,1]:[.62+.35*opening,.72, .62+.35*opening]);
  } else if(key===4) {
-  const radius=o.radius??.58+age*.93,h=o.height??.71,span=Math.max(.64,radius);
+  const radius=o.radius??.68+age*1.28,h=o.height??.71,span=Math.max(.64,radius);
   // A solid seed core anchors the translucent, lateral cotton wisps.
   stamp('puff',local(p,0,h),yaw+spin,.69+.10*Math.sin(spin),1);
   const count=near?5:3;
@@ -239,9 +243,11 @@ function drawObject(ctx,o) {
   const nextX=projected>edge?2*edge-projected:projected< -edge?-2*edge-projected:projected;
   const ns=o.nextLandingS??o.s+predictedTime*o.v;
   const next=ctx.sample(ns,nextX,o.branch);
-  stamp('pineRing',local(next,0,.046),Math.atan2(next.tx,next.tz),1.21-.23*t,.52+.30*t,0,tilt(ctx,ns,nextX,o.branch));
+  const strikeRadius=o.landingRadius??(hard?1.95:1.55);
+  stamp('pineRing',local(next,0,.046),Math.atan2(next.tx,next.tz),strikeRadius/.54,.34+.46*t,0,tilt(ctx,ns,nextX,o.branch));
   if(near&&age>period&&t<.55){
    const touched=o.s-o.v*period*t,base=ctx.sample(touched,o.x-(o.vx||0)*period*t,o.branch);
+   stamp('pineRing',local(base,0,.075),Math.atan2(base.tx,base.tz),strikeRadius/.54*(.6+.73*t),.9*(1-t/.55),0,tilt(ctx,touched,o.x,o.branch));
    for(let j=0;j<(ctx.split?3:5);j++){
     const a=phase+j*2.399,r=(.20+t*.98);
     stamp(hard?'stoneSpark':'soilClod',local(base,Math.sin(a)*r,.09+.44*Math.sin(t*Math.PI*1.8),Math.cos(a)*r),yaw+a,.92-t*.56,1-t*1.7,a*.43);
@@ -301,12 +307,17 @@ function drawRacer(ctx,k,p,yaw,jump,pitch) {
   }
  }
  if(k.puff>0){
-  const side=k.puffSide||1,t=1-k.puff/.74;
-  stamp('lateralGust',mounted(side*(.13+t*.65),.33,-.41),kartYaw+(side<0?Math.PI:0),1.16+.19*t,clamp01(k.puff/.21),0,pitch);
+  const side=k.puffSide||1,t=clamp01(1-k.puff/itemArtTimes.puff);
+  stamp('lateralGust',mounted(side*(-.51+t*.95),.15,-.20),kartYaw+(side<0?Math.PI:0),1.25+.24*Math.sin(t*Math.PI),clamp01(k.puff/.25),0,pitch);
  }
  if(k.pine>0){
-  const t=clamp01(1-k.pine/.79);
+  const t=clamp01(1-k.pine/itemArtTimes.pine);
   stamp('pineSplinters',mounted(0,.09,-.56),kartYaw,1+t*.58,(1-t)**1.8,0,pitch);
+  if(k.air<=0&&!k.fall&&t>.52&&t<.78){
+   const landing=(t-.52)/.26;
+   const at=k.s-k.v*(t-.52)*itemArtTimes.pine,ground=ctx.sample(at,k.x,k.branch);
+   stamp('pineRing',local(ground,0,.065),yaw,1+landing*2.75,(1-landing)*.8,0,tilt(ctx,at,k.x,k.branch));
+  }
  }
  if(launchBurst && [1,2,3,4,5].includes(k.usedItem)) {
   const t=launch/.54;
@@ -390,9 +401,9 @@ function drawKart2d(g,k,point,dim,time,foreground){
   if(guard){g.strokeStyle='#8e6037';g.lineWidth=6;g.beginPath();g.ellipse(0,-19,47,12,0,0,Math.PI);g.stroke();g.strokeStyle='#efc47f';g.lineWidth=1.3;g.stroke();}
   if(k.itemBlocked&&k.itemHitFx>0){const t=1-k.itemHitFx/.8;g.globalAlpha=1-t;for(let i=0;i<7;i++){
    const a=i*2.399,r=33+t*26;g.save();g.translate(Math.cos(a)*r,-19+Math.sin(a)*r*.43-8*Math.sin(Math.PI*t));g.rotate(a+t*5);g.fillStyle=i%2?'#a97541':'#e4b16c';g.fillRect(-1.8,-3.1,3.6,6.2);g.restore();}g.globalAlpha=1;}
-  if(puff){const s=-(k.puffSide||1),t=1-k.puff/.74;g.globalAlpha=clamp01(k.puff/.25);g.lineWidth=1.8;g.strokeStyle='#e5c3f4';
+  if(puff){const s=-(k.puffSide||1),t=clamp01(1-k.puff/itemArtTimes.puff);g.globalAlpha=clamp01(k.puff/.25);g.lineWidth=2.6;g.strokeStyle='#e5c3f4';
    for(let i=0;i<5;i++){const x=s*(21+t*23+i*2);g.beginPath();g.moveTo(x-s*12,-18-i*3);g.quadraticCurveTo(x,-19-i*4,x+s*8,-17-i*4);g.stroke();}g.globalAlpha=1;}
-  if(cone){const t=1-k.pine/.79;g.globalAlpha=1-t;for(let i=0;i<7;i++){const a=i*2.399;g.save();g.translate(Math.cos(a)*(24+t*38),-10-Math.abs(Math.sin(a))*(9+t*27));g.rotate(a+t*5);g.fillStyle=i%2?'#e7b47b':'#a76f3e';g.fillRect(-1,-3,2,6);g.restore();}}
+  if(cone){const t=clamp01(1-k.pine/itemArtTimes.pine);g.globalAlpha=1-t;for(let i=0;i<7;i++){const a=i*2.399;g.save();g.translate(Math.cos(a)*(24+t*38),-10-Math.abs(Math.sin(a))*(9+t*27));g.rotate(a+t*5);g.fillStyle=i%2?'#e7b47b':'#a76f3e';g.fillRect(-1,-3,2,6);g.restore();}}
  }
  g.restore();
 }

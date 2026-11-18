@@ -1,9 +1,10 @@
 (() => {
 'use strict';
-const roles=['Grip + burst','Sticky slowdown','Wheel snag','One-hit shield','Sideways gust','Skipping strike','Sustained boost'];
+const roles=['Grip + burst','Sticky slowdown','Wheel snag','One-hit shield','Pack crosswind','Bouncing launcher','Sustained boost'];
 const actions=['Grip restored','Sap fired','Burr planted','Shield raised','Lane swept','Pinecone skipping','Tailwind caught'];
-const hits={1:'Sapped · motor slowed',2:'Burr snag · grip lost',4:'Blown sideways',5:'Pinecone strike'};
-const confirms={1:'Sapped',2:'Snagged',4:'Swept',5:'Struck'};
+const hits={1:'Sapped · motor slowed',2:'Burr snag · grip lost',4:'Thistle crosswind',5:'Pinecone impact'};
+const confirms={1:'Sapped',2:'Snagged',4:'Swept',5:'Launched'};
+const durations=window.AcornSim?.itemTimes||{sap:3.05,burr:1.72,puff:1.05,pine:1.23};
 const voice=[
  [[200,.10,'triangle',390,0],[415,.21,'sawtooth',740,.06]],
  [[680,.09,'triangle',265,0],[260,.18,'sine',115,.09]],
@@ -20,7 +21,8 @@ function cue(sound,item){const notes=voice[item];if(notes)for(const [hz,sec,shap
 function impactCue(sound,id,blocked){
  const chords=blocked?[[188,.08,'square',66,0],[410,.15,'triangle',102,.04],[265,.12,'triangle',84,.09]]:
   ({1:[[140,.18,'sine',57,0],[485,.11,'triangle',165,.035]],2:[[402,.055,'square',178,0],[328,.075,'triangle',112,.046],[263,.08,'triangle',70,.103]],
-    4:[[598,.22,'sine',333,0],[746,.31,'sine',465,.048]],5:[[194,.07,'triangle',60,0],[420,.10,'triangle',188,.085]]})[id];
+    4:[[270,.18,'triangle',570,0],[774,.39,'sine',326,.05],[510,.37,'sine',185,.15]],
+    5:[[162,.16,'triangle',42,0],[545,.085,'square',118,.014],[91,.28,'sine',40,.052]]})[id];
  for(const [hz,sec,shape,end,delay] of chords||[])sound.tone(hz,sec,.035,shape,end,delay);
 }
 function edgeImpact(ctx,w,h,id,timeLeft,blocked,compact){
@@ -51,7 +53,7 @@ function tintEdges(ctx,w,h,color,alpha){
 }
 function draw(ctx,w,h,r,time,compact){
  const fresh=r.itemFx>0,impact=r.itemHitFx>0,boost=r.boost>0&&(r.boostStyle==='seed'||r.boostStyle==='tailwind');
- const status=r.sap>0?1:r.burr>0&&r.slip>0?2:r.puff>0?4:r.pine>0?5:-1,remaining=({1:r.sap/3.05,2:r.burr/1.72,4:r.puff/.74,5:r.pine/.79})[status]||0;
+ const status=r.sap>0?1:r.burr>0&&r.slip>0?2:r.puff>0?4:r.pine>0?5:-1,remaining=({1:r.sap/durations.sap,2:r.burr/durations.burr,4:r.puff/durations.puff,5:r.pine/durations.pine})[status]||0;
  const confirmed=r.confirmFx>0;
  if(!fresh&&!impact&&!boost&&!confirmed&&status<0)return;
  const id=impact?(r.itemBlocked?3:r.itemHitKind):status>=0?status:fresh?r.usedItem:confirmed?r.confirmedItem:r.boostStyle==='seed'?0:6;
@@ -74,7 +76,9 @@ function draw(ctx,w,h,r,time,compact){
  }
  ctx.globalAlpha=1;
  if(fresh||impact||status>=0){
-  const label=impact?(r.itemBlocked?'Hit absorbed':hits[id]):status>=0?hits[status]:actions[id];
+  let label=impact?(r.itemBlocked?'Hit absorbed':hits[id]):status>=0?hits[status]:actions[id];
+  if(status===4&&id===4)label='Crosswind · steer '+(r.puffSide>0?'left':'right');
+  if(status===5&&id===5)label=r.air>0?'Launched by pinecone':'Regaining speed';
   if(label){
    const size=compact?19:28;font(ctx,compact?13:17);const tw=ctx.measureText(label).width,boxw=tw+size+(compact?18:22),boxh=compact?24:35;
    const x=(w-boxw)/2,y=h*(compact?.22:.235);

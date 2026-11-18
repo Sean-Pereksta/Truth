@@ -70,7 +70,8 @@
         Math.abs((hop.at+hop.duration-st.time)-r.air)<.065)
       return Math.max(0,Math.sin(Math.PI*(st.time-hop.at)/hop.duration))*hop.height;
     const duration=r.driverIndex===2?.86:r.driverIndex===6?.29:.62;
-    return Math.sin(Math.PI*cap(r.air/duration,0,1))*(r.driverIndex===6?.48:1.12);
+    const height=r.driverIndex===6?.48:r.driverIndex===2&&r.signature?.stage==='active'?1.58:1.12;
+    return Math.sin(Math.PI*cap(r.air/duration,0,1))*height;
   }
   function contact(st,r,c,previousS,previousX,dt,actualLift){
     const cfg=routes[c.index],base=cfg.u*c.length;
