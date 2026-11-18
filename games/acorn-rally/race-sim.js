@@ -28,7 +28,7 @@
     [1.08,11.35,.99,7.65,1.0,1.04]
   ];
   const items = ['Seed Kick', 'Sap Sling', 'Burr Patch', 'Bark Guard', 'Thistle Puff', 'Pinecone Skip', 'Tailwind', 'Hawk'];
-  const hawkItem=7, hawkDistance=.15;
+  const hawkItem=7, hawkDistance=.10;
   const itemTimes={seed:.91,sap:3.05,burr:1.72,guard:6.0,puff:1.05,pine:1.23,tailwind:4.15};
   const definitions = [
     ['Hoh Root Run',840,[[-86,-52],[-81,-15],[-53,18],[-23,18],[0,0],[28,-31],[58,-40],[91,-21],[91,4],[58,34],[24,28],[0,0],[-15,-30],[-35,-58],[-65,-70]]],
