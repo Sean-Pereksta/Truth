@@ -52,14 +52,14 @@
     vec4 world=model*point;wp=world.xyz;normal=mat3(model)*norm;col=c;encodedMaterial=m;uv=m<7.8?texCoord:(m>=12.&&m<13.?vec2(p.z,p.y):p.xz);
     vec4 camera=view*world;depth=-camera.z;gl_Position=proj*camera;
   }`;
-  const fp=`precision highp float;varying vec3 wp,normal,col;varying float encodedMaterial,depth;varying vec2 uv;uniform vec3 fog,eye,driverPoint;uniform float clock,alpha,usingAtlas,trackId;uniform sampler2D kartAtlas,kartSurface;
+  const fp=`precision highp float;varying vec3 wp,normal,col;varying float encodedMaterial,depth;varying vec2 uv;uniform vec3 fog,eye,driverPoint;uniform float clock,alpha,usingAtlas,trackId;uniform sampler2D kartAtlas,kartSurface;uniform bool skidPass;
   ${root.AcornRig.wheelFragment}
   ${root.AcornSurfaces?.glsl||'vec3 materialGrain(vec3 wp,vec3 normal,float mat,float trackId){return vec3(1.);}'}
   float h(vec2 p){return fract(sin(dot(mod(p,256.),vec2(12.9898,78.233)))*437.58);}
   float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+1.),f.x),f.y);}
   void main(){float mat=encodedMaterial>=30.?encodedMaterial-30.:encodedMaterial;
-    if(abs(encodedMaterial-20.)<.01){
-      // Skid vertices carry their birth time, signed tread coordinate and tire load.
+    if(skidPass){
+      // Only the skid pass interprets vertex colors as birth time, tread and load.
       float age=clock-col.r,fade=1.-smoothstep(15.,20.,age);
       float edge=1.-smoothstep(.70,1.,abs(col.g));
       float groove=1.-.23*smoothstep(.76,1.,cos(col.g*17.));
@@ -377,7 +377,7 @@
       this.pr=shader(gl,vp,fp);this.sk=shader(gl,sv,sf);
       const attrs=(p,ns)=>Object.fromEntries(ns.map(n=>[n,gl.getAttribLocation(p,n)]));
       const uniforms=(p,ns)=>Object.fromEntries(ns.map(n=>[n,gl.getUniformLocation(p,n)]));
-      this.at=attrs(this.pr,['p','n','c','m','texCoord','skin']);this.un=uniforms(this.pr,['proj','view','model','fog','clock','alpha','eye','driverPoint','trackId','groundAtlas','kartAtlas','kartSurface','usingAtlas','articulated','bones[0]','wheelExposure']);
+      this.at=attrs(this.pr,['p','n','c','m','texCoord','skin']);this.un=uniforms(this.pr,['proj','view','model','fog','clock','alpha','eye','driverPoint','trackId','groundAtlas','kartAtlas','kartSurface','usingAtlas','articulated','bones[0]','wheelExposure','skidPass']);
       this.sa=attrs(this.sk,['p']);this.su=uniforms(this.sk,['sky','fog','dir','aspect','viewHorizon']);
       this.screen=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,this.screen);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
       const bake=m=>{const b=gl.createBuffer();this.buffers.push(b);gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,m.data instanceof Float32Array?m.data:new Float32Array(m.data),gl.STATIC_DRAW);let uv=null;
@@ -430,7 +430,9 @@
       this.skids.update(st);this.skids.upload(gl,this.skidMesh);
       if(this.skidMesh.n){
         gl.enable(gl.BLEND);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);gl.depthMask(false);
+        gl.uniform1i(this.un.skidPass,1);
         draw(this.skidMesh,this.id);
+        gl.uniform1i(this.un.skidPass,0);
         gl.depthMask(true);gl.disable(gl.BLEND);
       }
       for(const a of this.moving)draw(this.parts.sail,matrix(a.x,a.y,a.z,0,1,st.time*.46));
