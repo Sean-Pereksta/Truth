@@ -420,6 +420,20 @@
       if(poseFields.length&&b.length>=a.length)playback.motion=Object.fromEntries(poseFields.map((key,i)=>[key,mix(6+i)]));
       const liftAt=6+poseFields.length;
       if(ghost.version===2&&a.length>=liftAt+2&&b.length>=liftAt+2){playback.ghostLift=mix(liftAt);playback.ghostPitch=mix(liftAt+1);}
+      if(!!a[3]!==!!b[3]){
+        // Across a fork each recorded lane is relative to a different centerline.
+        const from=Sim.sample(c,a[1],a[2],!!a[3]),to=Sim.sample(c,b[1],b[2],!!b[3]);
+        playback.branch=f<.5?!!a[3]:!!b[3];
+        const projected=Sim.projectRoute(c,playback.s,from.x+(to.x-from.x)*f,from.z+(to.z-from.z)*f,playback.branch);
+        playback.s=projected.s;playback.x=projected.x;
+        const heading=Math.atan2(from.tx,from.tz)+a[4],turn=Math.atan2(to.tx,to.tz)+b[4]-heading;
+        const yaw=heading+Math.atan2(Math.sin(turn),Math.cos(turn))*f-Math.atan2(projected.road.tx,projected.road.tz);
+        playback.yaw=Math.atan2(Math.sin(yaw),Math.cos(yaw));
+        if(Number.isFinite(playback.ghostLift)){
+          const base=Sim.sample(c,playback.s,playback.x,playback.branch);
+          playback.ghostLift+=from.y+(to.y-from.y)*f-base.y;
+        }
+      }
       return playback;
     }
     let playSignalled=false;
@@ -433,8 +447,14 @@
         if(now-lastSend>36){net.sendInput(inputs[seat]);lastSend=now;}
         const snap=net.getState();
         if(snap&&snap!==lastSnap){const old=st;st=JSON.parse(JSON.stringify(snap));lastSnap=snap;snapshotTime=now;
-          if(old&&old.time>0&&!st.done){for(const r of st.racers){const a=old.racers[r.seat];if(!a||Math.abs(a.s-r.s)>3.3||a.branch!==r.branch||!!a.fall!==!!r.fall)continue;
-            const v=(r.seat===seat?.43:.6)*(!!a.flight!==!!r.flight?.28:1);r.x+=(a.x-r.x)*v;r.s+=(a.s-r.s)*v;
+          if(old&&old.time>0&&!st.done){for(const r of st.racers){const a=old.racers[r.seat];if(!a||!!a.fall!==!!r.fall)continue;
+            let previous=a;
+            if(a.branch!==r.branch){
+              const from=Sim.sample(c,a.s,a.x,a.branch),to=Sim.sample(c,r.s,r.x,r.branch);
+              if(Math.abs(a.s-r.s)>16||Math.hypot(from.x-to.x,from.z-to.z)>3.3)continue;
+              previous=Sim.projectRoute(c,r.s,from.x,from.z,r.branch);
+            }else if(Math.abs(a.s-r.s)>3.3)continue;
+            const v=(r.seat===seat?.43:.6)*(!!a.flight!==!!r.flight?.28:1);r.x+=(previous.x-r.x)*v;r.s+=(previous.s-r.s)*v;
             if(a.flight&&r.flight&&a.flight.id===r.flight.id&&Math.abs(a.flight.lipS-r.flight.lipS)<.5){
               r.flight.y+=(a.flight.y-r.flight.y)*v;r.flight.vy+=(a.flight.vy-r.flight.vy)*v;
             }
@@ -451,6 +471,7 @@
               r.s+=speed*dt;r.x+=r.vx*dt;
               if(!r.flight)r.air=Math.max(0,r.air-dt);
               if(r.seat===seat){r.yaw+=(r.steer*(inputs[seat].drift?.43:.19)-r.yaw)*Math.min(1,dt*12);r.x+=r.steer*.48*dt;}
+              if(!Sim.resolveRoute(st,r,c,dt,previous))continue;
               Sim.predictRamps(st,r,c,dt,previous);
             }
             Sim.roll(c,r,dt,previous,st);}
