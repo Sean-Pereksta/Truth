@@ -59,12 +59,12 @@ try{
   const mainMenus=[];
   for(const size of [{width:1440,height:960},{width:390,height:844}]){
     await page.setViewportSize(size);await page.goto(server.url);await page.waitForFunction(()=>window.__bannerlands&&!document.getElementById('startButton').disabled,{timeout:120000});
-    for(const selector of ['#startButton','#browseLobbiesButton','#joinInviteButton','.online-download'])assert.ok(await page.locator(selector).isVisible());
+    for(const selector of ['#startButton','#hostLobbyButton','#browseLobbiesButton','#joinInviteButton','.online-download'])assert.ok(await page.locator(selector).isVisible());
     const menu=await page.locator('.campaign-menu').evaluate(el=>({rect:{x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y,width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height},scrollWidth:el.scrollWidth,clientWidth:el.clientWidth}));
     assert.ok(menu.scrollWidth<=menu.clientWidth+1,'Original campaign menu has no horizontal overflow');assert.ok(menu.rect.y>=0&&menu.rect.y+menu.rect.height<=size.height+1,'Original campaign menu stays inside viewport');
     if(size.width<600){await page.locator('#menuCampaignTab').click();assert.equal(await page.locator('#menuOverlay').getAttribute('data-menu-tab'),'campaign');if(out)await page.screenshot({path:path.join(out,'bannerlands-mobile-campaign-before-return.png')});await page.locator('#menuHouseTab').click();}
     await page.locator('#hostLobbyButton').click();
-    assert.match(await page.locator('[data-pane="host-required"] [role="alert"]').innerText(),/download and launch Bannerlands for Windows/i);
+    assert.match(await page.locator('[data-pane="host-required"] [role="alert"]').innerText(),/could not connect.*Bannerlands Local Edition/i);
     assert.ok(await page.locator('[data-pane="host-required"] [data-download]').isVisible());
     assert.equal(await page.locator('[data-pane="host"]').isVisible(),false);
     await page.locator('[data-action="close"]').click();
@@ -85,12 +85,17 @@ try{
   await page.reload();await page.waitForFunction(()=>document.querySelector('#releaseState').textContent.includes('have not been posted'));
   assert.equal(await page.locator('#downloadOffline').isVisible(),false);
   const installed=await browser.newPage({viewport:{width:1440,height:960}});
-  await installed.addInitScript(()=>{window.bannerlandsHost={status:async()=>({status:'ready'}),host:async()=>({}),stop:async()=>({})};});
-  await installed.goto(server.url);await installed.waitForFunction(()=>window.__bannerlands&&!document.getElementById('startButton').disabled,{timeout:120000});
+  await installed.addInitScript(()=>{window.__hostAttempts=0;window.bannerlandsHost={status:async()=>({status:'ready'}),host:async()=>{window.__hostAttempts++;throw Error('The hosting connection timed out.');},stop:async()=>({})};});
+  await installed.goto(server.url+'/?host=1');await installed.waitForFunction(()=>window.__bannerlands&&!document.getElementById('startButton').disabled,{timeout:120000});
   assert.equal(await installed.locator('.online-download').isVisible(),false,'Installed game does not offer a download on the main menu');
-  await installed.locator('#hostLobbyButton').click();
   assert.ok(await installed.locator('[data-pane="host"] button[type="submit"]').isEnabled());
+  assert.equal(await installed.evaluate(()=>window.__hostAttempts),0,'Opening Host Lobby does not create a lobby');
   assert.equal(await installed.locator('[data-download]:visible').count(),0,'Installed game does not offer a download in the hosting view');
+  await installed.locator('[data-pane="host"] button[type="submit"]').click();
+  await installed.locator('.multiplayer-status.error').waitFor();
+  assert.match(await installed.locator('.multiplayer-status.error').innerText(),/connection timed out.*Bannerlands Local Edition/i);
+  assert.ok(await installed.locator('[data-host-recovery]').isVisible());
+  assert.equal(await installed.evaluate(()=>window.__hostAttempts),1,'The game attempted its normal host connection');
   await installed.close();
   assert.deepEqual(errors,[]);
   const report={cases:['four-player sixteen-house lobby','host-house roster ordering','human capacity capped at four','ready/start revision','synchronization progress and cancellation','modal keyboard isolation and Tab navigation','visibility changes','reconfiguration consent text','end match control','roster count validation','mobile bounds','original menu links and tabs','download page','no browser runtime errors'],desktop:{width:1440,height:960},mobile:{width:390,height:844,layout},mainMenus,errors};

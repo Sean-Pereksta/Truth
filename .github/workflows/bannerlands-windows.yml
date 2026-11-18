@@ -1,0 +1,40 @@
+name: Bannerlands on Windows
+
+on:
+  pull_request:
+    paths:
+      - 'games/bannerlands/**'
+      - '.github/workflows/bannerlands-windows.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-2025
+    defaults:
+      run:
+        working-directory: games/bannerlands
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.19.0'
+      - name: Check code and multiplayer services
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          npm run check
+          npm run test:multiplayer
+      - name: Install browser test dependencies
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          npm install --no-save --no-package-lock --ignore-scripts playwright@1.62.1
+          npx playwright install chromium
+      - name: Test the host form and Windows offline pack
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          node source/build-standalone.mjs "$env:RUNNER_TEMP/bannerlands-pack"
+          npm run test:multiplayer-lobby-browser
+          npm run test:standalone-browser -- "$env:RUNNER_TEMP/bannerlands-pack/Bannerlands.html"
