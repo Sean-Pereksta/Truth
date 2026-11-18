@@ -50,11 +50,12 @@ function playerInput(race, kart, course) {
   };
 }
 
-function playerLeadAtFinish(trackIndex, cc, difficulty) {
+function playerLeadAtFinish(trackIndex, cc, difficulty, {items = true} = {}) {
   const course = sim.track(trackIndex);
   const race = sim.create({ trackIndex, cc, difficulty, mode: 'cup', laps: 3, gridSize: 8, driverIndex: 5, seed: 4439 });
   const [player, ...bots] = race.racers;
   race.countdown = 0;
+  if (!items) race.pickups.length = 0;
   let input;
   for (let i = 0; i < 300 / tick; i++) {
     if (i % 6 === 0) input = playerInput(race, player, course);
@@ -69,9 +70,12 @@ for (const id of [1, 9, 12]) {
   testLateEntry(id, true);
 }
 for (const [id, cc] of [[0, 100], [3, 150]]) {
-  const hard = playerLeadAtFinish(id, cc, 'hard');
-  const ultimate = playerLeadAtFinish(id, cc, 'ultimate');
-  assert.ok(hard < .06, sim.track(id).name + ' Hard rivals dropped off the pace');
+  const hardRace = playerLeadAtFinish(id, cc, 'hard');
+  assert.ok(hardRace < .06, sim.track(id).name + ' Hard rivals dropped off the pace');
+  // Compare driving difficulty with the race conditions held constant. Item
+  // rolls can flip the outcome when the last-place kart gains a Hawk.
+  const hard = playerLeadAtFinish(id, cc, 'hard', {items: false});
+  const ultimate = playerLeadAtFinish(id, cc, 'ultimate', {items: false});
   assert.ok(ultimate < hard, sim.track(id).name + ' Ultimate rivals should challenge this driver more than Hard');
 }
-console.log('Six late route transfers and four three-lap rival benchmarks passed.');
+console.log('Six late route transfers and six three-lap rival benchmarks passed.');

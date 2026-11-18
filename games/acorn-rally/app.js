@@ -198,7 +198,7 @@ function openRooms(){
  modal='rooms';dc.replaceChildren();if(!dialog.open)dialog.showModal();document.body.style.overflow='hidden';
  window.RallyRooms.open({container:dc,trackIndex:track,driverIndex:driver,cc:engineClass,difficulty:cpuLevel,settings,startRace:o=>{roomSession=o.network;launch({...o,mode:'race'})},onClose:()=>{roomSession=null;closeModal()}});
 }
-function itemGuide(){modalView('items','Acorn items',`<p class="form-note">Leaders draw tactical items. The farther you fall behind the leader, the more likely you are to draw a catch-up boost.</p>`+window.AcornSim.items.map((name,i)=>`<div class="item-guide-row"><img src="art/item-${i}.webp" alt=""><div><small class="item-role">${window.AcornFeedback.roles[i]}</small><b style="color:${window.AcornItemArt.colors[i]}">${name}</b><p>${window.AcornItemArt.descriptions[i]}</p></div></div>`).join('')+'<div class="modal-bottom"><button class="action primary" data-action="close">Done</button></div>')}
+function itemGuide(){const art=window.AcornItemArt;modalView('items','Acorn items',`<p class="form-note">Leaders draw tactical items. The farther you fall behind the leader, the more likely you are to draw a catch-up boost.</p>`+window.AcornSim.items.map((name,i)=>`<div class="item-guide-row"><img src="${art.iconSrc(i)}" alt=""><div><small class="item-role">${window.AcornFeedback.roles[i]}</small><b style="color:${art.colors[i]}">${name}</b><p>${art.descriptions[i]}</p></div></div>`).join('')+'<div class="modal-bottom"><button class="action primary" data-action="close">Done</button></div>')}
 function startSelection(){
  roomSession=null;
  if(mode==='cup'){

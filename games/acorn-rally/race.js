@@ -207,6 +207,12 @@
           ctx.restore();
         }
         ctx.restore();root.AcornItemArt.drawKart2d(ctx,a,point,dim,st.time,true);
+        const hawk=root.AcornItemArt.hawkPose(a,st.time);
+        if(hawk){
+          const base=P(a.s,a.x,0,a.branch),q=P(a.s+hawk.ahead,a.x+hawk.side,lift(a)+hawk.height,a.branch);
+          const factor=dim/(1.53*base.k);
+          if(q.z>1)root.AcornItemArt.drawHawk2d(ctx,hawk,ground.x+(q.x-base.x)*factor,ground.y+(q.y-base.y)*factor,q.k*factor,direction);
+        }
       };
       for(let i=72;i>=-3;i--){const s=r.s+i*1.35*direction,e=s+1.35*direction,main=Sim.sample(c,s);
         const split=main.u>c.branchA&&main.u<c.branchB,branch=Boolean(split&&r.branch),a=branch?Sim.sample(c,s,0,true):main;
@@ -309,8 +315,9 @@
     if(!compact){txt(ctx,opt.keyAbility,inset+cardW-9,yb+15,10,gold,'700','DM','right');}
     if(st.mode!=='trial'){
       const x=inset+(small||compact?0:cardW+7),iy=(small||compact)?yb-cardH-5:yb;
-      const slot=r.item<0?7:r.reveal>0?Math.floor(st.time*20)%7:r.item;
-      const itemIcon=art('art/item-'+slot+'.webp'),accent=r.item<0?'#9b927d':root.AcornItemArt.colors[slot],size=compact?25:40;
+      const itemArt=root.AcornItemArt;
+      const slot=r.item<0?-1:r.reveal>0?Math.floor(st.time*20)%(r.item===itemArt.hawkItem?Sim.items.length:itemArt.hawkItem):r.item;
+      const itemIcon=art(itemArt.iconSrc(slot)),accent=r.item<0?'#9b927d':itemArt.colors[slot],size=compact?25:40;
       roundBox(ctx,x,iy,cardW,cardH,5,panel,r.item<0?line:accent);
       if(itemIcon.complete&&itemIcon.naturalWidth){
         ctx.save();ctx.globalAlpha=r.item<0?.58:1;ctx.drawImage(itemIcon,x+4,iy+(cardH-size)/2,size,size);ctx.restore();
@@ -383,7 +390,7 @@
     const seat=net?.seat??0;let alive=true,paused=false,help=false,endDelay=0,raf=0,prev=performance.now(),timeBank=0,lastSnap=null,lastSend=-1,trace=[],lastTrace=-1,oldLap=0,ghost=loadedGhost,trialBest=loadedGhost?.time||Infinity,snapshotTime=0;
     let lastCount=4,lastItem=-1,lastBoost=0,lastHit=0,lastUseFx=0,lastHitFx=0,lastSkill=0,lastConfirm=0,previousPad=[],padMap=[],lastDims={},drawScale=1,hudScale=1;
     const padReservations=Array.from({length:players},(_,i)=>options.padSeats?.[i]?{...options.padSeats[i]}:null);
-    const driverCues=new Map(),approachCues=new Map();let lastApproach=-2;
+    const driverCues=new Map(),approachCues=new Map(),hawkCues=new Map();let lastApproach=-2;
     let quality=1,frameMean=1/60,budgetClock=0;
     const on=(obj,type,fn,opts)=>{obj.addEventListener(type,fn,opts);listeners.push(()=>obj.removeEventListener(type,fn,opts));};
     const readPads=root.AcornLocalPads.read;
@@ -503,7 +510,7 @@
         if(now-lastSend>36){net.sendInput(inputs[seat]);lastSend=now;}
         const snap=net.getState();
         if(snap&&snap!==lastSnap){const old=st;st=JSON.parse(JSON.stringify(snap));lastSnap=snap;snapshotTime=now;
-          if(old&&old.time>0&&!st.done){for(const r of st.racers){const a=old.racers[r.seat];if(!a||!!a.fall!==!!r.fall)continue;
+          if(old&&old.time>0&&!st.done){for(const r of st.racers){const a=old.racers[r.seat];if(!a||!!a.fall!==!!r.fall||a.hawkPhase||r.hawkPhase)continue;
             let previous=a;
             if(a.branch!==r.branch){
               const from=Sim.sample(c,a.s,a.x,a.branch),to=Sim.sample(c,r.s,r.x,r.branch);
@@ -523,6 +530,11 @@
             if(r.seat===seat)r.steer=inputs[seat].steer||0;
             if(r.fall){r.fall.age=Math.min(r.fall.duration,r.fall.age+dt);continue;}
             if(!r.finish&&st.countdown<=0){
+              if(r.hawkPhase){
+                Sim.predictHawk(st,r,c,dt);
+                Sim.roll(c,r,dt,previous,st);
+                continue;
+              }
               const runoff=Math.abs(r.x)>previous.w-.38&&!(r.driverIndex===7&&r.active>0),speed=r.v*(runoff?.925:1)*(r.branch?1+.17*previous.peak:1);
               r.s+=speed*dt;r.x+=r.vx*dt;
               if(!r.flight)r.air=Math.max(0,r.air-dt);
@@ -545,6 +557,11 @@
       const obstacle=root.AcornHazards.sample(c,st.time);
       for(let i=0;i<players;i++){
         const driver=st.racers[net?seat:i];if(!driver)continue;
+        const [lastPhase,lastHawkHit]=hawkCues.get(driver.seat)||[];
+        const hawkHit=driver.itemHitKind===root.AcornItemArt.hawkItem?driver.itemHitFx:0;
+        if(sounds&&driver.hawkPhase&&driver.hawkPhase!==lastPhase)root.AcornFeedback.hawkCue(sound,driver.hawkPhase);
+        if(sounds&&i>0&&hawkHit>(lastHawkHit||0)+.15)root.AcornFeedback.impactCue(sound,root.AcornItemArt.hawkItem,driver.itemBlocked);
+        hawkCues.set(driver.seat,[driver.hawkPhase,hawkHit]);
         const b=driver.contactSeq||0,h=driver.hazardHit,hit=h?.count||0,landing=driver.landingSeq||0,last=driverCues.get(driver.seat)||[0,0,0];
         if(!paused&&b!==last[0]&&driver.contactFx>.24)root.AcornCourseArt.feedback(sound,padMap[i],driver.contactKind,driver.contactForce,i>0);
         if(!paused&&hit!==last[1]&&h&&st.time-h.at<.4)root.AcornCourseArt.feedback(sound,padMap[i],[2,6,7].includes(h.id)?'water':'stone',h.blocked?.24:.62,i>0);
@@ -562,7 +579,7 @@
       if(sounds){const count=Math.ceil(st.countdown);if(count!==lastCount&&count<4){sound.tone(count?420:780,count?.12:.38,.06,'sine',count?315:1100);}lastCount=count;
         if(r.item>=0&&lastItem<0){sound.tone(780,.18,.04,'triangle',1320);}if(r.boost>0&&lastBoost<=0)sound.tone(180,.2,.024,'sawtooth',440);
         if(r.hit>0&&lastHit<=0&&!(r.contactFx>.33)&&!(r.hazardHit&&st.time-r.hazardHit.at<.40)){sound.tone(112,.18,.045,'triangle',48);try{padMap[0]?.vibrationActuator?.playEffect('dual-rumble',{duration:130,strongMagnitude:.28,weakMagnitude:.45})?.catch(()=>{});}catch{}}
-        if(r.itemFx>lastUseFx+.2)root.AcornFeedback.cue(sound,r.usedItem);
+        if(r.itemFx>lastUseFx+.2&&r.usedItem!==root.AcornItemArt.hawkItem)root.AcornFeedback.cue(sound,r.usedItem);
         if(r.itemHitFx>lastHitFx+.15)root.AcornFeedback.impactCue(sound,r.itemHitKind,r.itemBlocked);
         if(r.confirmSeq>lastConfirm){root.AcornFeedback.confirmCue(sound,r.confirmedBlocked);lastConfirm=r.confirmSeq;}
         if(r.fx>lastSkill+.09)sound.tone([490,170,540,285,660,310,120,185,580][r.driverIndex],.23,.038,'triangle',[830,85,1030,640,1050,890,66,410,990][r.driverIndex]);
