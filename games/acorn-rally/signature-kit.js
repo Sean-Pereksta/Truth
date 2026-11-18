@@ -29,7 +29,7 @@
   }
   function tell(r,text){r.notice=text;r.noticeTime=1.45;}
   function beat(r,st,label,stage){Object.assign(r.signature,{stage,label,beat:st.time});tell(r,label);}
-  function grounded(r){return !r.finish&&!r.ghost&&!r.fall&&!r.flight&&r.air<.14&&!(r.driverIndex===7&&r.active>0);}
+  function grounded(r){return !r.finish&&!r.ghost&&!r.fall&&!r.flight&&!r.hawkPhase&&r.air<.14&&!(r.driverIndex===7&&r.active>0);}
   function nearby(st,r,s,x,branch,length,radius){
     return st.racers.filter(a=>a!==r&&a.branch===branch&&grounded(a)&&Math.hypot(gap(s,a.s,length),a.x-x)<=radius);
   }
@@ -101,7 +101,7 @@
     if(id===5){
       let nearest=18;
       for(const rival of st.racers){
-        if(rival===r||rival.finish||rival.ghost||rival.branch!==r.branch||Math.abs(rival.x-r.x)>2.55)continue;
+        if(rival===r||rival.finish||rival.ghost||rival.hawkPhase||rival.branch!==r.branch||Math.abs(rival.x-r.x)>2.55)continue;
         const ds=gap(r.s,rival.s,length);if(ds>.5&&ds<nearest){nearest=ds;sig.target=rival.seat;}
       }
       if(sig.target>=0){sig.label='Draft locked';boost(r,1.34,9.1);tell(r,'Draft locked · pass for a slingshot');}

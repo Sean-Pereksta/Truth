@@ -27,7 +27,8 @@
     [.85,9.95,.83,5.55,.73,1.40],[.995,11.0,.975,7.0,.65,1.03],
     [1.08,11.35,.99,7.65,1.0,1.04]
   ];
-  const items = ['Seed Kick', 'Sap Sling', 'Burr Patch', 'Bark Guard', 'Thistle Puff', 'Pinecone Skip', 'Tailwind'];
+  const HAWK=7, hawkLapShare=.15, hawkChance=50, hawkLift=1.55, hawkBoost=5.2;
+  const items = ['Seed Kick', 'Sap Sling', 'Burr Patch', 'Bark Guard', 'Thistle Puff', 'Pinecone Skip', 'Tailwind', 'Hawk'];
   const itemTimes={seed:.91,sap:3.05,burr:1.72,guard:6.0,puff:1.05,pine:1.23,tailwind:4.15};
   const definitions = [
     ['Hoh Root Run',840,[[-86,-52],[-81,-15],[-53,18],[-23,18],[0,0],[28,-31],[58,-40],[91,-21],[91,4],[58,34],[24,28],[0,0],[-15,-30],[-35,-58],[-65,-70]]],
@@ -138,6 +139,7 @@
   }
   function lift(st,r){
     if(Number.isFinite(r.ghostLift))return r.ghostLift;
+    if(r.hawkPhase)return r.airZ;
     if(r.fall)return r.fall.initialLift-13.5*r.fall.age*r.fall.age;
     if(r.flight){
       const clearance=r.flight.y-sample(track(st.trackIndex),r.s,r.x,r.branch).y;
@@ -327,6 +329,61 @@
     const travel=Math.atan2(r.vx,Math.max(8,r.v));
     return clamp(travel*.83+steer*.11+(r.driftSide||0)*(.15+.49*slip),-.95,.95);
   }
+  function startHawk(st,r){
+    const c=track(st.trackIndex),motor=motors[st.cc]||motors[100];
+    const finish=st.totalLaps*c.length, end=Math.min(r.s+c.length*hawkLapShare,finish), distance=end-r.s;
+    const swoop=.34, release=.48;
+    const carry=Math.max(.20,distance/(56*motor.speed)-(swoop+release)*.5);
+    const initialV=clamp(r.v,0,distance*1.8), releaseV=Math.min(((c.index===4?20.1:19)+hawkBoost)*motor.speed,distance*1.8);
+    const cruiseV=(distance-(initialV*swoop+releaseV*release)*.5)/(carry+(swoop+release)*.5);
+    const initialLift=lift(st,r),rise=initialLift-Ramps.surface(c,r.s,r.x,r.branch);
+    r.hawk={start:r.s,end,lane:r.x,branch:r.branch,rise,yaw:r.yaw,pitch:r.rampAngle,
+      age:0,swoop,carry,release,initialV,cruiseV,releaseV,hits:[]};
+    r.hawkPhase='swoop';r.hawkPhaseT=0;r.airZ=initialLift;
+    r.flight=null;r.catchShelf=null;r.hazardHop=null;r.air=0;r.vx=0;
+    r.active=0;r.signature=null;r.stomp=false;r.bank=0;r.steer=0;r.grind=0;r.contactCarry=0;
+    r.slow=0;r.sap=0;r.burr=0;r.puff=0;r.pine=0;r.slip=0;clearDrift(r);
+  }
+  function advanceHawk(st,r,c,dt){
+    const h=r.hawk, releaseAt=h.swoop+h.carry, duration=releaseAt+h.release;
+    h.age=Math.min(duration,h.age+dt);
+    const smooth=t=>t*t*(3-2*t);
+    const liftOff=(h.initialV+h.cruiseV)*h.swoop*.5;
+    // Integrate acceleration, cruise and release independently of simulation tick rate.
+    let traveled, rise;
+    if(h.age<h.swoop){
+      const t=h.age/h.swoop, blend=smooth(t);
+      r.hawkPhase='swoop';r.hawkPhaseT=t;
+      r.v=h.initialV+(h.cruiseV-h.initialV)*t;
+      traveled=(h.initialV+r.v)*h.age*.5;
+      r.x=h.lane*(1-blend);r.yaw=h.yaw*(1-blend);r.rampAngle=h.pitch*(1-blend);
+      rise=h.rise+(hawkLift-h.rise)*blend;
+    }else if(h.age<releaseAt){
+      const t=(h.age-h.swoop)/h.carry;
+      r.hawkPhase='carry';r.hawkPhaseT=t;r.v=h.cruiseV;
+      traveled=liftOff+r.v*(h.age-h.swoop);
+      r.x=0;r.yaw=0;r.rampAngle=0;
+      rise=hawkLift+.13*Math.sin(t*2*TAU)**2;
+    }else{
+      const elapsed=h.age-releaseAt, t=clamp(elapsed/h.release,0,1);
+      r.hawkPhase='release';r.hawkPhaseT=t;
+      r.v=h.cruiseV+(h.releaseV-h.cruiseV)*t;
+      traveled=liftOff+h.cruiseV*h.carry+(h.cruiseV+r.v)*elapsed*.5;
+      r.x=0;r.yaw=0;r.rampAngle=0;
+      rise=hawkLift*(1-smooth(t));
+    }
+    r.s=Math.min(h.end,h.start+traveled);
+    const u=mod(r.s,c.length)/c.length;
+    r.branch=h.branch&&u>=c.branchA&&u<c.branchB;
+    r.airZ=Ramps.surface(c,r.s,r.x,r.branch)+rise;
+    if(h.age<duration)return;
+    r.s=h.end;r.hawk=null;r.hawkPhase=null;r.hawkPhaseT=0;r.airZ=0;
+    r.safeS=r.lastValid=r.s;r.safeBranch=r.branch;r.runoff=0;
+    r.ghost=0;r.protect=Math.max(r.protect,.40);
+    boost(r,1,hawkBoost,'hawk');
+    r.v=h.releaseV;
+    notify(r,'Hawk drop · full speed');
+  }
   function damage(st,r,type,side=1){
     if(r.protect>0||(r.active>0&&(r.driverIndex===7||(r.driverIndex===4&&type===2)))) return false;
     r.itemHitKind=type;r.itemHitFx=.8;r.itemBlocked=r.guard>0;r.itemHitSide=Math.sign(side)||1;
@@ -347,7 +404,34 @@
       }
       notify(r,'Pinecone launched you');
     }
+    if(type===HAWK){
+      clearDrift(r);r.v*=.53;r.slow=Math.max(r.slow,1.15);
+      r.vx=r.vx*.52+r.itemHitSide*12.5;r.yaw+=r.itemHitSide*.23;
+      notify(r,'Knocked aside by Hawk');
+    }
     return true;
+  }
+  function hawkStrikes(st,c,flights,starts){
+    for(const [r,h] of flights){
+      if(r.hawkPhase==='swoop')continue;
+      const from=starts[r.seat],to=wheelPosition(c,r,st);
+      for(const target of st.racers){
+        if(target===r||target.finish||target.fall||target.ghost>0||flights.has(target)||h.hits.includes(target.seat))continue;
+        const gap=mod(target.s-from.progress+c.length*.5,c.length)-c.length*.5;
+        if(gap<-2.6||gap>r.s-from.progress+2.6)continue;
+        const before=starts[target.seat],after=wheelPosition(c,target,st);
+        const x=before.x-from.x,z=before.z-from.z;
+        const dx=after.x-to.x-x,dz=after.z-to.z-z;
+        const t=clamp(-(x*dx+z*dz)/Math.max(.0001,dx*dx+dz*dz),0,1);
+        const sx=x+t*dx,sz=z+t*dz;
+        const y=before.contactY-from.contactY,dy=after.contactY-to.contactY-y;
+        if(sx*sx+sz*sz>2.4**2||Math.abs(y+t*dy)>2.35)continue;
+        h.hits.push(target.seat);
+        if(!damage(st,target,HAWK,Math.sign(sx*to.nx+sz*to.nz)||((r.seat+target.seat)%2?1:-1)))continue;
+        r.confirmFx=1.68;r.confirmSeq=(r.confirmSeq||0)+1;r.confirmedItem=HAWK;
+        r.confirmedName=target.name;r.confirmedBlocked=target.itemBlocked;
+      }
+    }
   }
   function rollWeights(st,r){
     const rank=clamp(r.rank,1,st.racers.length),rear=(rank-1)/Math.max(1,st.racers.length-1);
@@ -360,7 +444,8 @@
     const tail=rank===1?0:.05+1.35*rear*rear+6.8*rear**3+deficit*(5+28*rear);
     const combat=[16+8*rear,26-20*rear,27-12*rear,13+9*rear,18+5*rear];
     const total=combat.reduce((a,b)=>a+b,0),remaining=100-seed-tail;
-    return [seed,...combat.map(w=>w/total*remaining),tail];
+    const standard=[seed,...combat.map(w=>w/total*remaining),tail];
+    return rank===8?[...standard.map(w=>w*(100-hawkChance)/100),hawkChance]:[...standard,0];
   }
   function drawItem(st,r) {
     const weights=rollWeights(st,r);
@@ -374,6 +459,7 @@
     if(it===0){r.slip=0;r.burr=0;r.vx*=.38;r.v=Math.max(0,r.v)+4.6;boost(r,itemTimes.seed,8.7,'seed');}
     else if(it===6)boost(r,itemTimes.tailwind,5.7,'tailwind');
     else if(it===3)r.guard=itemTimes.guard;
+    else if(it===HAWK)startHawk(st,r);
     else {
       const road=sample(track(st.trackIndex),r.s,0,r.branch),hard=[2,3,4,5,7].includes(st.trackIndex)&&!r.branch;
       const bouncePeriod=hard?.48:.365;
@@ -382,7 +468,7 @@
         // A release assists the driver's line once. Targets can leave that line after firing.
         const c=track(st.trackIndex),aim=lateral;let best=Infinity;
         for(const target of st.racers){
-          if(target===r||target.finish||target.branch!==r.branch)continue;
+           if(target===r||target.finish||target.hawkPhase||target.branch!==r.branch)continue;
           const gap=mod(target.s-r.s+c.length/2,c.length)-c.length/2,flight=(gap-1.7)/Math.max(12,r.v+28-target.v);
           if(gap<2.5||gap>32||Math.abs(target.x-r.x-aim*flight)>1.5+gap*.068)continue;
           const miss=Math.abs(target.x-r.x-aim*flight),score=gap*.10+miss*1.4;
@@ -427,6 +513,7 @@
       case 1:case 4:case 5:return traffic.shot;
       case 2:return traffic.chaser||bend>.026;
       case 3:return r.guard<=0&&(traffic.chaser||traffic.close);
+      case HAWK:return true;
       default:return false;
     }
   }
@@ -535,7 +622,7 @@
     const desired=Math.min((22.8-clamp(bend*(40+faster*180),0,4+faster*12))*speedSkill*motor.speed,edgePace,r.hazardPace||Infinity,r.rampPace||Infinity);
     const over=r.v-desired;
     return {gas:over<0?1:.28,brake:over>1?Math.min(.84,.27+faster*over*.09):0,steer,drift,
-      item:r.item>=0&&r.reveal<=0&&Math.sin(st.time*skill.itemBeat+r.linePhase)>skill.itemWait,
+      item:r.item>=0&&r.reveal<=0&&(r.item===HAWK||Math.sin(st.time*skill.itemBeat+r.linePhase)>skill.itemWait),
       ability:r.meter>=1&&(r.driverIndex===1?nearRival:Math.abs(look.curve)>.014)};
   }
   const halfWidth=.66,halfLength=1.01,cornerCut=.19;
@@ -604,11 +691,11 @@
     r.contactSide=-Math.sign(side)||Math.sign(r.x-other.x)||1;r.contactSpeed=closing;
     r.contactForce=clamp((brace?.76:.26)+closing*.092+(scrape?Math.min(.17,Math.abs(tangent)*.015):0),.26,1);
   }
-  function contacts(st,c,starts,dt){
+  function contacts(st,c,starts,dt,hawks){
     if(st.racers.length<2)return;
     const memory=st.contacts||(st.contacts={}),grinding=new Set();
     for(const key in memory)if(st.time-memory[key].last>.30)delete memory[key];
-    const bodies=st.racers.map((r,i)=>r.finish||r.fall||r.ghost>0||r.driverIndex===7&&r.active>0?null:contactBody(c,r,starts[i],st));
+    const bodies=st.racers.map((r,i)=>r.finish||r.fall||r.ghost>0||hawks.has(r)||r.driverIndex===7&&r.active>0?null:contactBody(c,r,starts[i],st));
     // The second pass resolves a kart pushed into its neighbour in a tight pack.
     for(let pass=0;pass<3;pass++){
       let resolved=false;
@@ -770,7 +857,7 @@
     }
     st.time+=dt;
     const c=track(st.trackIndex),motor=motors[st.cc]||motors[100];
-    const wheelStarts=st.racers.map(r=>wheelPosition(c,r,st));
+    const wheelStarts=st.racers.map(r=>wheelPosition(c,r,st)),hawks=new Map(),pendingDraws=[];
     for(const p of st.pickups)p.cooldown=Math.max(0,p.cooldown-dt);
     for(const r of st.racers){
       for(const key of ['active','guard','protect','slow','slip','reveal','noticeTime','hit','fx','itemFx','itemHitFx','ghost'])r[key]=Math.max(0,r[key]-dt);
@@ -780,11 +867,16 @@
       Signatures.advanceBoost(r,dt);
       if(r.finish){r.v=Math.max(0,r.v-dt*5);continue;}
       if(r.fall){recoverFall(r,c,dt);continue;}
-      const input=r.human?(inputs[r.seat]||{}):ai(st,r,c,motor),prevS=r.s;
+      const input=r.human?(inputs[r.seat]||{}):r.hawk?{}:ai(st,r,c,motor),prevS=r.s;
       const road=sample(c,r.s,0,r.branch);
       const sgn=Math.sign(r.v||1), steer=clamp(+input.steer||0,-1,1),gas=clamp(+input.gas||0,0,1),brake=clamp(+input.brake||0,0,1);
       r.steer=steer;
-      if(input.item&&!r.prevItem)use(st,r);
+      if(!r.hawk&&input.item&&!r.prevItem)use(st,r);
+      if(r.hawk){
+        hawks.set(r,r.hawk);
+        r.prevItem=!!input.item;r.prevAbility=!!input.ability;
+        advanceHawk(st,r,c,dt);continue;
+      }
       r.bank=clamp(r.bank+dt*(r.v>6&&(Math.abs(steer)>.27||Math.abs(road.curve)>.018)?1:-2.5),0,1);
       if(input.ability&&!r.prevAbility&&r.meter>=.998&&r.air<=0)Signatures.start(st,r,c.length);
       Signatures.tick(st,r,dt,c.length,road,input);
@@ -834,12 +926,13 @@
       for(const p of st.pickups){
         const gap=mod(p.s-mod(r.s,c.length)+c.length*.5,c.length)-c.length*.5;
         if(p.cooldown<=0&&r.item<0&&!r.branch&&!burrowing&&Math.abs(gap)<1.25&&Math.abs(p.x-r.x)<1.2){
-          p.cooldown=2;r.item=drawItem(st,r);r.reveal=.5;notify(r,items[r.item]);
+          p.cooldown=2;pendingDraws.push(r);break;
         }
       }
     }
     if(st.mode!=='trial'){
-      contacts(st,c,wheelStarts,dt);
+      hawkStrikes(st,c,hawks,wheelStarts);
+      contacts(st,c,wheelStarts,dt,hawks);
       for(const o of st.objects){
         o.age+=dt;o.life-=dt;o.s+=o.v*dt;o.x+=o.vx*dt;
         if(o.kind===2)o.armed=o.age>=.55;
@@ -857,7 +950,7 @@
           }
         }
         for(const r of st.racers){
-          if(r.seat===o.owner||r.finish||r.fall||r.branch!==o.branch||(o.kind===2&&!o.armed)||(!r.flight&&r.air>.22)||(r.driverIndex===7&&r.active>0)||o.hitSeats?.includes(r.seat))continue;
+          if(r.seat===o.owner||r.finish||r.fall||hawks.has(r)||r.branch!==o.branch||(o.kind===2&&!o.armed)||(!r.flight&&r.air>.22)||(r.driverIndex===7&&r.active>0)||o.hitSeats?.includes(r.seat))continue;
           const delta=mod(r.s-o.s+c.length*.5,c.length)-c.length*.5;
           const direct=Math.abs(delta)<1.28&&Math.abs(r.x-o.x)<(o.radius??.78)+.43;
           const onBounce=bounce&&Math.hypot(delta+o.s-bounce.s,r.x-bounce.x)<bounce.radius;
@@ -887,6 +980,8 @@
     }
     const order=st.racers.slice().sort((a,b)=>a.finish&&b.finish?a.finish-b.finish:a.finish?-1:b.finish?1:b.s-a.s);
     order.forEach((r,j)=>r.rank=j+1);
+    // Roll after establishing the pickup tick's order, including same-tick passes.
+    for(const r of pendingDraws){r.item=drawItem(st,r);r.reveal=.5;notify(r,items[r.item]);}
     const humansFinished=st.racers.some(r=>r.finish)&&st.racers.every(r=>!r.human||r.finish);
     if(st.mode==='cup'&&humansFinished){
       st.classificationStart??=st.time;
@@ -900,5 +995,6 @@
       laps:r.lapTimes.slice(),standings:st.racers.slice().sort((a,b)=>a.rank-b.rank).map(a=>({name:a.name,driverIndex:a.driverIndex,position:a.rank,time:a.finish||null,human:a.human,seat:a.seat}))};
   }
   return {create,step,result,track,trackCount:definitions.length+Expansion.courses.length,sample,baseSample:sample,groundSample,groundLift,lift,rampPitch,predictRamps:(st,r,c,dt,prev)=>rampStep(st,r,c,dt,prev,true),
-    projectRoute,resolveRoute,wheelPosition,roll,driftTier,steeringYaw,drivers,abilities,items,itemTimes,durations,engineClasses,normalizeCC,difficulties,normalizeDifficulty,rollWeights,drawItem};
+     projectRoute,resolveRoute,wheelPosition,roll,driftTier,steeringYaw,drivers,abilities,items,itemTimes,durations,engineClasses,normalizeCC,difficulties,normalizeDifficulty,rollWeights,drawItem,
+     predictHawk:advanceHawk};
 });

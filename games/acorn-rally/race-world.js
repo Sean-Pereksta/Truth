@@ -358,10 +358,14 @@
     function upload(target,array){const b=gl.createBuffer();buffers.push(b);gl.bindBuffer(target,b);gl.bufferData(target,array,gl.STATIC_DRAW);return b;}
     return {b:upload(gl.ARRAY_BUFFER,data),uv:hasUV?upload(gl.ARRAY_BUFFER,uvs):null,skin:hasRig?upload(gl.ARRAY_BUFFER,skin):null,ix:upload(gl.ELEMENT_ARRAY_BUFFER,indices),indexType:wide?gl.UNSIGNED_INT:gl.UNSIGNED_SHORT,n:ni};
   }
+  function hawkCamera(r){
+    const t=r.hawkPhaseT||0;
+    return r.hawkPhase==='carry'?1:r.hawkPhase==='swoop'?t:r.hawkPhase==='release'?1-t:0;
+  }
   function camera(course,r,back,st={trackIndex:course.index,time:0}){
     const road=sim.sample(course,r.s,r.x,r.branch),future=sim.sample(course,r.s+1.8,r.x,r.branch),past=sim.sample(course,r.s-1.8,r.x,r.branch);
     const v=dir([past.x,0,past.z],[future.x,0,future.z]),sign=back?-1:1;
-    const distance=6.0+Math.min(1,Math.abs(r.v)/20)*.35,forward=sim.sample(course,r.s+7.5*sign,r.x,r.branch);
+    const distance=6.0+Math.min(1,Math.abs(r.v)/20)*.35+hawkCamera(r)*1.7,forward=sim.sample(course,r.s+7.5*sign,r.x,r.branch);
     const slope=clampValue((future.y-past.y)/3.6,-.30,.30);
     const floor=sim.groundLift(st,r),follow=capAir(sim.lift(st,r)-floor);
     const ahead=root.AcornRamps.surface(course,r.s+7.5*sign,r.x,r.branch);
@@ -413,7 +417,8 @@
       gl.disable(gl.DEPTH_TEST);gl.disable(gl.BLEND);gl.useProgram(this.sk);gl.bindBuffer(gl.ARRAY_BUFFER,this.screen);
       Object.values(this.at).forEach(i=>gl.disableVertexAttribArray(i));gl.enableVertexAttribArray(this.sa.p);gl.vertexAttribPointer(this.sa.p,2,gl.FLOAT,false,0,0);
       gl.uniform3fv(this.su.sky,rgb(p.sky));gl.uniform3fv(this.su.fog,rgb(p.mist));gl.uniform1f(this.su.dir,cam.angle);gl.uniform1f(this.su.aspect,rect.w/rect.h);gl.uniform1i(this.su.viewHorizon,4);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
-      gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.useProgram(this.pr);gl.uniformMatrix4fv(this.un.proj,false,project(rect.w/rect.h,Math.max(.88,Math.min(1.2,.95+(.12*(r.boost>0?1:0))+(rect.w/rect.h<1?.22:0)))));gl.uniformMatrix4fv(this.un.view,false,view(smooth.eye,smooth.target));gl.uniform3fv(this.un.fog,rgb(p.mist));gl.uniform1f(this.un.clock,st.time);gl.uniform1f(this.un.alpha,1);
+      const fov=Math.min(1.2,.95+Math.max(r.boost>0?.12:0,hawkCamera(r)*.17)+(rect.w/rect.h<1?.22:0));
+      gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.useProgram(this.pr);gl.uniformMatrix4fv(this.un.proj,false,project(rect.w/rect.h,fov));gl.uniformMatrix4fv(this.un.view,false,view(smooth.eye,smooth.target));gl.uniform3fv(this.un.fog,rgb(p.mist));gl.uniform1f(this.un.clock,st.time);gl.uniform1f(this.un.alpha,1);
       gl.uniform1i(this.un.kartAtlas,0);gl.uniform1i(this.un.kartSurface,1);gl.uniform1i(this.un.groundAtlas,3);gl.uniform1f(this.un.trackId,c.index);gl.uniform3fv(this.un.eye,smooth.eye);
       const focus=sim.sample(c,r.s,r.x,r.branch);gl.uniform3f(this.un.driverPoint,focus.x,focus.y+sim.lift(st,r)+.86,focus.z);
       let bound=null,previousModel=null;const draw=(mesh,model,first=0,count=mesh.n)=>{if(mesh!==bound){gl.bindBuffer(gl.ARRAY_BUFFER,mesh.b);
