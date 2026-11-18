@@ -3,7 +3,7 @@ const {tracks,drivers,icons}=window.RallyData;
 const one=s=>document.querySelector(s);
 const all=s=>Array.from(document.querySelectorAll(s));
 const app=one('#app'),main=one('#main'),dialog=one('#dialog'),dc=one('#dialogContent'),race=one('#race');
-const defaults={sound:true,autoAccel:false,deadzone:0.15,padStyle:'xbox',bindings:{accelerate:'KeyW',brake:'KeyS',left:'KeyA',right:'KeyD',drift:'Space',item:'KeyE',ability:'KeyQ',lookBack:'KeyC'}};
+const defaults={sound:true,music:true,autoAccel:false,deadzone:0.15,padStyle:'xbox',bindings:{accelerate:'KeyW',brake:'KeyS',left:'KeyA',right:'KeyD',drift:'Space',item:'KeyE',ability:'KeyQ',lookBack:'KeyC'}};
 const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem('acorn-rally-'+key))??fallback}catch{return fallback}};
 const write=(key,value)=>{try{localStorage.setItem('acorn-rally-'+key,JSON.stringify(value))}catch{}};
 const opts=read('settings',{});
@@ -41,7 +41,13 @@ function time(v){if(!Number.isFinite(v)||v<=0)return '—';const ms=Math.round(v
 function ordinal(n){return n+((n>=11&&n<=13)?'th':({1:'st',2:'nd',3:'rd'})[n%10]||'th')}
 function safeName(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function notice(s){const t=one('#toast');clearTimeout(toastTimer);t.textContent=s;t.classList.add('show');toastTimer=setTimeout(()=>t.classList.remove('show'),2400)}
-function pref(){write('settings',settings);soundIcon()}
+function syncMusic(){
+ window.AcornMusic?.setEnabled(settings.sound && settings.music && !document.hidden);
+}
+function activateAudio(){
+ if(settings.sound && !document.hidden)window.AcornRace?.unlockAudio();
+}
+function pref(){write('settings',settings);soundIcon();syncMusic()}
 function soundIcon(){const b=one('#soundBtn');b.innerHTML=icon(settings.sound?'volume':'mute');b.title=b.ariaLabel=settings.sound?'Mute sound':'Enable sound'}
 function assignSeat(seat,index){const prior=seats[seat],other=seats.indexOf(index);if(other!==-1&&other!==seat)seats[other]=prior;seats[seat]=index}
 function updateDriver(){if(!driverAvailable(driver))driver=0;one('#profileName').textContent=drivers[driver].name;one('#profileImage').src=`art/driver-${driver}.webp`;write('driver',driver);assignSeat(0,driver)}
@@ -169,7 +175,7 @@ function setup(m=mode){mode=m;
  ${saved?`<div class="cup-resume"><div><strong>Continue ${cups[cupIndex].name}</strong><small>Race ${saved.rounds.length+1} of 4 · ${drivers[saved.driver].name} · ${saved.cc} cc · ${skillLabel(saved.difficulty)}</small></div><button type="button" class="action primary" data-action="resumeCup">Resume${icon('arrow')}</button></div>`:''}
  <div class="modal-bottom">${local?`<button class="action secondary" data-action="rooms">${icon('globe')}Private room</button>`:''}<button class="action ${saved?'secondary':'primary'}" data-action="go">${saved?'Start a new cup':local?'Choose drivers':'Choose driver'}${icon('arrow')}</button></div>`);
 }
-function settingsPanel(){modalView('settings','Settings',`<label class="settings-row">Game audio<input type="checkbox" class="switch" data-pref="sound" ${settings.sound?'checked':''}></label><label class="settings-row">Auto-accelerate<input type="checkbox" class="switch" data-pref="autoAccel" ${settings.autoAccel?'checked':''}></label><label class="settings-row">Stick dead zone <span><output id="dz">${Math.round(settings.deadzone*100)}%</output> <input type="range" min="0" max="75" value="${Math.round(settings.deadzone*100)}" data-pref="deadzone"></span></label><label class="settings-row">Controller prompts<select data-pref="padStyle" class="control"><option value="xbox" ${settings.padStyle==='xbox'?'selected':''}>Xbox</option><option value="ps" ${settings.padStyle==='ps'?'selected':''}>PlayStation</option></select></label>
+function settingsPanel(){modalView('settings','Settings',`<label class="settings-row">Game audio<input type="checkbox" class="switch" data-pref="sound" ${settings.sound?'checked':''}></label><label class="settings-row">Music<input type="checkbox" class="switch" data-pref="music" ${settings.music?'checked':''}></label><label class="settings-row">Auto-accelerate<input type="checkbox" class="switch" data-pref="autoAccel" ${settings.autoAccel?'checked':''}></label><label class="settings-row">Stick dead zone <span><output id="dz">${Math.round(settings.deadzone*100)}%</output> <input type="range" min="0" max="75" value="${Math.round(settings.deadzone*100)}" data-pref="deadzone"></span></label><label class="settings-row">Controller prompts<select data-pref="padStyle" class="control"><option value="xbox" ${settings.padStyle==='xbox'?'selected':''}>Xbox</option><option value="ps" ${settings.padStyle==='ps'?'selected':''}>PlayStation</option></select></label>
  <div class="modal-bottom"><button class="action secondary" data-action="bindings">${icon('keyboard')}Controls</button><button class="action primary" data-action="close">Done</button></div>
  <p class="form-note"><a class="kit-link" href="assets/Acorn-Rally-Models.zip" download>${icon('download')}Download editable 3D models</a></p>`)}
 function keyName(k){return (k||'').replace(/^Key/,'').replace(/^Digit/,'').replace(/^Arrow/,'Arrow ').replace(/Left$/,' Left').replace(/Right$/,' Right').trim()}
@@ -206,7 +212,7 @@ async function launch(options){
  if(!options.network&&!driverAvailable(options.driverIndex)){notice('Win all three cups on Hard or Ultimate to unlock this driver.');return}
  lastRun=options;running=true;closeModal();race.hidden=false;app.inert=true;document.body.style.overflow='hidden';
  race.innerHTML=`<div class="grid-loading" style="background-image:linear-gradient(0deg,#121712ec,#12171233),url(art/course-${options.trackIndex}.webp)"><div><span class="hero-kicker eyebrow"><span class="checker"></span>${options.cupRoundLabel||'Preparing starting grid'}</span><h2>${tracks[options.trackIndex].name}</h2><div class="load-progress"></div></div></div>`;
- try{await window.KartViewer.loadModels();race.replaceChildren();window.AcornRace.start({...options,container:race,settings:{...settings,bindings:{...settings.bindings}},onExit:leaveRace,onFinish:finish})}catch(err){console.error(err);leaveRace();notice('The race could not start. Refresh the game and try again.')}
+ try{await window.KartViewer.loadModels();race.replaceChildren();window.AcornRace.start({...options,container:race,settings:{...settings,bindings:{...settings.bindings}},onExit:leaveRace,onFinish:finish,onSoundChange:enabled=>{settings.sound=enabled;pref()}})}catch(err){console.error(err);leaveRace();notice('The race could not start. Refresh the game and try again.')}
 }
 function detachRace(){running=false;window.AcornRace?.stop();race.hidden=true;app.inert=false;document.body.style.overflow=''}
 function returnRoom(){const net=roomSession;roomSession=null;closeModal();modal='rooms';net.returnToLobby();document.body.style.overflow='hidden'}
@@ -267,19 +273,23 @@ document.addEventListener('click',e=>{
  if(b.dataset.bind){capture=b.dataset.bind;controlsPanel();return}
  ({recordTrial:()=>{engineClass=recordsClass;saveRaceRules();setup('trial')},start:()=>beginDriverSelect('race'),setup:()=>setup(),go:()=>beginDriverSelect(mode,true),selectBack:driverSelectBack,confirmDriver:confirmGridDriver,prev:()=>shiftShelf(-1),next:()=>shiftShelf(1),close:closeAction,bindings:controlsPanel,rooms:openRooms,resetKeys:()=>{capture='';settings.bindings={...defaults.bindings};pref();controlsPanel()},rematch,resultHub,resumeCup})[b.dataset.action]?.();
 });
-document.addEventListener('change',e=>{const a=e.target;if(a.hasAttribute('data-setup-track')){track=+a.value;if(page==='hub')hub();setup(mode);return}if(a.dataset.pref){const p=a.dataset.pref;settings[p]=p==='deadzone'?+a.value/100:a.type==='checkbox'?a.checked:a.value;pref()}});
+document.addEventListener('change',e=>{const a=e.target;if(a.hasAttribute('data-setup-track')){track=+a.value;if(page==='hub')hub();setup(mode);return}if(a.dataset.pref){const p=a.dataset.pref;settings[p]=p==='deadzone'?+a.value/100:a.type==='checkbox'?a.checked:a.value;pref();if(p==='sound'||p==='music')activateAudio()}});
 document.addEventListener('keydown',e=>{if(e.code==='Escape'&&page==='select'&&!dialog.open&&!running){e.preventDefault();driverSelectBack()}});
 document.addEventListener('input',e=>{if(e.target.dataset.pref==='deadzone')one('#dz').textContent=e.target.value+'%'});
 document.addEventListener('keydown',e=>{if(!capture)return;e.preventDefault();e.stopImmediatePropagation();if(e.code==='Escape'){capture='';controlsPanel();return}if(['Tab','Enter','F5','MetaLeft','MetaRight'].includes(e.code))return;const prior=Object.keys(settings.bindings).find(k=>settings.bindings[k]===e.code);if(prior)settings.bindings[prior]=settings.bindings[capture];settings.bindings[capture]=e.code;capture='';pref();controlsPanel()},true);
 dialog.addEventListener('cancel',e=>{e.preventDefault();if(modal!=='rooms')closeAction()});
 dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeAction()}});
-one('#settingsBtn').onclick=settingsPanel;one('#guideBtn').onclick=controlsPanel;one('#itemGuideBtn').onclick=itemGuide;one('#soundBtn').onclick=()=>{settings.sound=!settings.sound;pref();notice(settings.sound?'Sound on':'Sound muted')};
+one('#settingsBtn').onclick=settingsPanel;one('#guideBtn').onclick=controlsPanel;one('#itemGuideBtn').onclick=itemGuide;one('#soundBtn').onclick=()=>{settings.sound=!settings.sound;pref();activateAudio();notice(settings.sound?'Sound on':'Sound muted')};
+document.addEventListener('pointerup',activateAudio,true);
+document.addEventListener('keydown',activateAudio,true);
+document.addEventListener('visibilitychange',syncMusic);
 window.addEventListener('resize',arrowState);
 let previousPads=[],nextMove=0;
 function menuGamepad(ts){
  const pads=Array.from(navigator.getGamepads?.()||[]);let seen=[];
  pads.forEach((p,i)=>{if(!p)return;const b=p.buttons.map(v=>v.pressed),last=previousPads[i]||[];seen[i]=b;
  if(running||(!b.some(Boolean)&&!p.axes.some(v=>Math.abs(v)>.65)))return;
+ if(b.some((pressed,index)=>pressed&&!last[index]))activateAudio();
  let active=document.activeElement;const root=dialog.open?dialog:app;
  const candidates=Array.from(root.querySelectorAll('button:not(:disabled),a[href],select,input')).filter(e=>e.getClientRects().length);
  if(!candidates.includes(active)){active=candidates[0];active?.focus({preventScroll:true})}
@@ -296,5 +306,5 @@ function menuGamepad(ts){
  if(winner){winner.focus({preventScroll:true});winner.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'})}
  });previousPads=seen;requestAnimationFrame(menuGamepad)
 }
-hydrateIcons();soundIcon();updateDriver();if(location.hash==='#garage')nav('garage');else if(location.hash==='#records')nav('records');else hub();requestAnimationFrame(menuGamepad);
+hydrateIcons();soundIcon();syncMusic();window.AcornMusic?.setScene('menu');updateDriver();if(location.hash==='#garage')nav('garage');else if(location.hash==='#records')nav('records');else hub();requestAnimationFrame(menuGamepad);
 if(new URLSearchParams(location.search).has('room'))openRooms();
