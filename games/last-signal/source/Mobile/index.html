@@ -16,8 +16,17 @@
       <form id="join" autocomplete="off">
         <label for="name">Contestant name</label>
         <input id="name" name="name" maxlength="20" autocomplete="nickname" enterkeyhint="go" placeholder="Contestant">
+        <div id="solo-settings" class="solo-settings" hidden>
+          <label for="solo-map">Arena</label>
+          <select id="solo-map" name="arena">
+            <option value="0">Crownwood Basin</option>
+            <option value="1">Redstone Gorge</option>
+            <option value="2">Frostveil Pass</option>
+          </select>
+        </div>
         <button type="submit" class="primary">Join room</button>
       </form>
+      <a id="browse-rooms" class="browse-rooms" href="../../#lobbies" hidden>Join an online room</a>
       <div id="lobby" hidden>
         <div class="lobby-heading">
           <h2>Room lobby</h2>
@@ -110,6 +119,7 @@
     <div id="outcome" class="outcome" hidden>
       <strong id="outcome-title"></strong>
       <p id="outcome-detail"></p>
+      <button id="replay" type="button" class="primary" hidden>Play again</button>
     </div>
     <div id="drawer-backdrop" class="drawer-backdrop" hidden>
       <section id="drawer" class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">

@@ -1,6 +1,6 @@
 # Last Signal
 
-Last Signal is a first-person survival arena for 24 contestants. Play solo on Windows x64, or host a match with up to eight human players on Windows, iOS and Android. Bots fill the remaining places.
+Last Signal is a first-person survival arena for 24 contestants. Play solo in a browser or on Windows, or join a hosted match with up to eight human players. Bots fill the remaining places.
 
 ## Play on Windows
 
@@ -8,9 +8,9 @@ Download [Last-Signal-Windows-x64.zip](https://github.com/Sean-Pereksta/Truth/re
 
 In the Catnmice mini launcher on Windows, install **Last Signal** and choose **Host Lobby**, or start the game and choose **Multiplayer**. Sharing a room opens a Cloudflare tunnel from the host’s PC. The host copies the invite, keeps the game running and starts the round after guests ready up. Windows guests can paste the invite into **Multiplayer → Join with an invite**.
 
-## Join in a browser
+## Play in a browser
 
-Open [Last Signal in your browser](https://sean-pereksta.github.io/Truth/games/last-signal/), choose a public arena or paste the host’s full HTTPS invite. You can also open the invite directly. Enter a name and select **Ready** in the room lobby. Browser and Windows players share the same match and eight-player limit. Hosting and solo play run on the Windows game.
+Open [Last Signal in your browser](https://sean-pereksta.github.io/Truth/games/last-signal/). Choose **Single-player** for a local match against 23 bots, or browse public rooms and join by invite. You can also open the host's invite directly. Enter a name and select **Ready** in the room lobby. Browser and Windows players share the same online match and eight-player limit. Hosts open rooms from the Windows game.
 
 **Keyboard and mouse:** Click the arena to capture the mouse. Move with WASD, attack with left click, guard with right click, and interact with E. I, C and B open the pack, crafting and building. Escape releases the mouse.
 

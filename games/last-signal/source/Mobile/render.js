@@ -496,8 +496,10 @@ function skyConditions(frame, arena, camera) {
 }
 
 export class ArenaRenderer {
-  constructor(canvas) {
+  constructor(canvas, browserAssets = false) {
     this.canvas = canvas;
+    this.assetRoot = new URL(browserAssets ? "../../browser-assets/" : "./assets/", import.meta.url);
+    this.modelFiles = browserAssets ? ["landmarks.bin.gz", "survivors.bin.gz", "field.bin.gz"] : ["models.bin"];
     this.gl = canvas.getContext("webgl2", {
       alpha: false, depth: true, antialias: false, powerPreference: "high-performance",
     });
@@ -577,7 +579,7 @@ export class ArenaRenderer {
     const signal = this.assets.signal;
     const load = async (name, names, arenaAsset = false) => {
       for (const path of names) {
-        const url = new URL("./assets/" + path, import.meta.url);
+        const url = new URL(path, this.assetRoot);
         try {
           const response = await fetch(url, { signal });
           if (!response.ok) continue;
@@ -592,19 +594,27 @@ export class ArenaRenderer {
         }
       }
     };
-    const loadModels = async () => {
+    const loadModels = async (path) => {
       try {
-        const response = await fetch(new URL("./assets/models.bin", import.meta.url), { signal });
+        const response = await fetch(new URL(path, this.assetRoot), { signal });
         if (!response.ok) return;
-        const bytes = await response.arrayBuffer();
-        if (!signal.aborted) this.models = readModels(bytes);
+        let bytes = await response.arrayBuffer();
+        const header = new Uint8Array(bytes, 0, Math.min(2, bytes.byteLength));
+        if (header[0] === 31 && header[1] === 139) {
+          if (typeof DecompressionStream !== "function") return;
+          const decoded = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
+          bytes = await new Response(decoded).arrayBuffer();
+        }
+        if (!signal.aborted) {
+          for (const [id, model] of readModels(bytes)) this.models.set(id, model);
+        }
       } catch {
         // The arena can still render with its compact scene meshes while art is unavailable.
       }
     };
     if (!this.modelRequest) {
       this.modelRequest = true;
-      void loadModels();
+      for (const path of this.modelFiles) void loadModels(path);
     }
     const prefix = arena === 1 ? "gorge_" : arena === 2 ? "frost_" : "";
     await load("ground", prefix ? [prefix + "floor.png", "ground.png"] : ["ground.png"], true);

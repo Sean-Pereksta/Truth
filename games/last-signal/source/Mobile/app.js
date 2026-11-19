@@ -20,6 +20,7 @@ const backdrop = $("drawer-backdrop");
 const roster = $("roster");
 const key = location.hash.slice(1);
 const validKey = /^[a-zA-Z0-9_-]{24}$/.test(key);
+const soloMode = !validKey && new URLSearchParams(location.search).get("mode") === "solo";
 const storageKey = "last-signal:seat:" + key;
 const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
 const holdStops = new Set();
@@ -47,6 +48,8 @@ const weaponNames = {
 };
 
 let socket;
+let solo;
+let soloFrameAt = 0;
 let renderer;
 let phase = "join";
 let playerName = "";
@@ -121,10 +124,10 @@ function setMode(next, message, error = false) {
     arena.hidden = true;
     room.hidden = false;
   }
-  join.hidden = !validKey || next === "lobby" || next === "playing";
+  join.hidden = (!validKey && !soloMode) || next === "lobby" || next === "playing";
   nameInput.disabled = next === "connecting";
   joinButton.disabled = next === "connecting";
-  joinButton.textContent = resume ? "Reconnect" : "Join room";
+  joinButton.textContent = soloMode ? "Start solo match" : resume ? "Reconnect" : "Join room";
   $("lobby").hidden = next !== "lobby";
   if (message !== undefined) setStatus(message, error);
 }
@@ -141,6 +144,12 @@ function clearBinary() {
 }
 
 function leave() {
+  if (soloMode) {
+    solo = null;
+    resetRound();
+    setMode("join", "Play a new match against 23 bots.");
+    return;
+  }
   if (retry !== null) clearTimeout(retry);
   retry = null;
   retryUntil = 0;
@@ -211,6 +220,29 @@ function connect() {
     socket = null;
     connectionLost();
   });
+}
+
+async function startSolo() {
+  setMode("connecting", "Loading the solo arena…");
+  $("replay").disabled = true;
+  solo = null;
+  resetRound();
+  try {
+    const { SoloArena } = await import("./solo.js");
+    round = 1;
+    solo = new SoloArena({ name: playerName, round, arena: Number($("solo-map").value) });
+    soloFrameAt = performance.now();
+    setMode("playing");
+    handleFrame(solo.world);
+    handleFrame(solo.frame());
+  } catch (error) {
+    console.error(error);
+    solo = null;
+    resetRound();
+    setMode("join", "The solo arena could not load. Try starting a new match.", true);
+  } finally {
+    $("replay").disabled = false;
+  }
 }
 
 function renderRoster(parts) {
@@ -405,7 +437,8 @@ function renderHud() {
   setText($("outcome-title"), frame.winner && player.alive ? "Last survivor" :
     !player.alive ? "Eliminated" : "");
   setText($("outcome-detail"), frame.winner ? (frame.winner + " won the round.") :
-    player.placement ? "Placed #" + player.placement + ". Waiting for a winner." : "Waiting for a winner.");
+    soloMode ? "Placed #" + player.placement + " of 24." :
+      player.placement ? "Placed #" + player.placement + ". Waiting for a winner." : "Waiting for a winner.");
   renderDrawer();
 }
 
@@ -420,24 +453,32 @@ function queue(action) {
 }
 
 function sendInput() {
-  if (phase !== "playing" || !frame || !frame.player.alive || frame.winner || socket?.readyState !== WebSocket.OPEN) return;
-  if (socket.bufferedAmount > 2048) return;
+  if (phase !== "playing" || !frame || !frame.player.alive || frame.winner) return;
+  if (!solo && (socket?.readyState !== WebSocket.OPEN || socket.bufferedAmount > 2048)) return;
+  const keyRight = Number(desktopKeys.has("KeyD")) - Number(desktopKeys.has("KeyA"));
+  const keyForward = Number(desktopKeys.has("KeyW")) - Number(desktopKeys.has("KeyS"));
+  const keyScale = Math.max(1, Math.hypot(keyRight, keyForward));
+  const moveRight = stickPointer === null ? keyRight / keyScale : right;
+  const moveForward = stickPointer === null ? keyForward / keyScale : forward;
+  const lean = Number(desktopKeys.has("KeyX")) - Number(desktopKeys.has("KeyZ"));
+  const running = sprint || desktopKeys.has("ShiftLeft") || desktopKeys.has("ShiftRight");
+  const crouching = crouch || desktopKeys.has("ControlLeft") || desktopKeys.has("ControlRight");
+  if (solo) {
+    solo.setInput({ right: moveRight, forward: moveForward, lean, yaw, pitch, sprint: running, crouch: crouching, actions });
+    actions = [];
+    return;
+  }
   const fragments = actions.map((action) => encoder.encode(action));
   const bytes = new Uint8Array(31 + fragments.reduce((size, part) => size + 1 + part.length, 0));
   const header = new DataView(bytes.buffer);
   header.setUint8(0, 1);
   header.setInt32(1, round, true);
   header.setInt32(5, ++sequence, true);
-  const keyRight = Number(desktopKeys.has("KeyD")) - Number(desktopKeys.has("KeyA"));
-  const keyForward = Number(desktopKeys.has("KeyW")) - Number(desktopKeys.has("KeyS"));
-  const keyScale = Math.max(1, Math.hypot(keyRight, keyForward));
-  header.setFloat32(9, stickPointer === null ? keyRight / keyScale : right, true);
-  header.setFloat32(13, stickPointer === null ? keyForward / keyScale : forward, true);
-  header.setFloat32(17, Number(desktopKeys.has("KeyX")) - Number(desktopKeys.has("KeyZ")), true);
+  header.setFloat32(9, moveRight, true);
+  header.setFloat32(13, moveForward, true);
+  header.setFloat32(17, lean, true);
   header.setFloat32(21, yaw, true);
   header.setFloat32(25, pitch, true);
-  const running = sprint || desktopKeys.has("ShiftLeft") || desktopKeys.has("ShiftRight");
-  const crouching = crouch || desktopKeys.has("ControlLeft") || desktopKeys.has("ControlRight");
   header.setUint8(29, (running ? 1 : 0) | (crouching ? 2 : 0));
   header.setUint8(30, fragments.length);
   let offset = 31;
@@ -756,9 +797,9 @@ $("gear-tabs").addEventListener("click", (event) => {
 
 join.addEventListener("submit", (event) => {
   event.preventDefault();
-  if (!validKey || phase !== "join") return;
+  if ((!validKey && !soloMode) || phase !== "join") return;
   try {
-    renderer ||= new ArenaRenderer($("view"));
+    renderer ||= new ArenaRenderer($("view"), soloMode);
   } catch (error) {
     console.error(error);
     setStatus("This browser couldn’t start the 3D arena. Try an updated browser.", true);
@@ -766,9 +807,13 @@ join.addEventListener("submit", (event) => {
   }
   playerName = nameInput.value.replace(/[^\p{L}\p{N} _.\-]/gu, "").trim().slice(0, 20) || "Contestant";
   nameInput.value = playerName;
-  connect();
+  if (soloMode) void startSolo();
+  else connect();
 });
 
+$("replay").addEventListener("click", () => {
+  if (solo && (!frame?.player.alive || frame.winner)) void startSolo();
+});
 readyButton.addEventListener("click", () => {
   if (socketSend(ready ? "READY|0" : "READY|1")) readyButton.disabled = true;
 });
@@ -831,7 +876,15 @@ document.addEventListener("keydown", (event) => {
 });
 
 setInterval(() => {
-  if (phase === "playing" && performance.now() - frameAt > 12000) socket?.close();
+  if (solo) {
+    const now = performance.now();
+    const dt = Math.min(0.1, (now - soloFrameAt) / 1000);
+    soloFrameAt = now;
+    if (document.hidden || !frame?.player.alive || frame.winner) return;
+    sendInput();
+    solo.step(dt);
+    handleFrame(solo.frame());
+  } else if (phase === "playing" && performance.now() - frameAt > 12000) socket?.close();
   else sendInput();
 }, 40);
 
@@ -854,4 +907,11 @@ function draw(now) {
   requestAnimationFrame(draw);
 }
 requestAnimationFrame(draw);
-setMode("join", validKey ? "Join the host’s arena." : "Open the full room invite from the host.", !validKey);
+if (soloMode) {
+  $("solo-settings").hidden = false;
+  $("browse-rooms").hidden = false;
+  $("replay").hidden = false;
+  $("leave").textContent = "End solo match";
+}
+setMode("join", soloMode ? "Play against 23 bots." : validKey ? "Join the host’s arena." :
+  "Open the full room invite from the host.", !soloMode && !validKey);

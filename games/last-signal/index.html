@@ -9,11 +9,15 @@
   <script type="module" src="./web.mjs"></script>
 </head>
 <body>
-  <header class="hero">
+  <header class="hero" id="play">
     <div class="wrap">
       <a class="back" href="https://catnmice.com/lobby/lobby.html">← Catnmice Lobby</a>
       <h1>Last Signal</h1>
-      <p>Join a first-person survival arena with up to eight human players.</p>
+      <p>Survive a first-person arena against bots or join an online match with up to eight players.</p>
+      <nav class="play-modes" aria-label="Play modes">
+        <a class="mode-link primary" href="./source/Mobile/?mode=solo">Single-player</a>
+        <a class="mode-link" href="#lobbies">Play online</a>
+      </nav>
     </div>
   </header>
   <main class="wrap">
@@ -23,7 +27,7 @@
           <h2 id="lobbies-title">Public arenas</h2>
           <button type="button" id="refresh">Refresh</button>
         </div>
-        <p id="directory-status" class="status" role="status">Refresh to find an open arena.</p>
+        <p id="directory-status" class="status" role="status">Choose Play online or Refresh to find an open arena.</p>
         <ul id="rooms" hidden></ul>
       </section>
       <section class="panel" aria-labelledby="invite-title">
@@ -38,8 +42,8 @@
         </form>
       </section>
     </div>
-    <p class="download">To play solo or host an arena, <a href="https://github.com/Sean-Pereksta/Truth/releases/download/last-signal-windows/Last-Signal-Windows-x64.zip">download Last Signal for Windows</a>.</p>
-    <noscript><p>Enable JavaScript to browse arenas or open the full invite from your host.</p></noscript>
+    <p class="download">To host an online arena, <a href="https://github.com/Sean-Pereksta/Truth/releases/download/last-signal-windows/Last-Signal-Windows-x64.zip">download Last Signal for Windows</a>.</p>
+    <noscript><p>Enable JavaScript to play Last Signal in your browser.</p></noscript>
   </main>
 </body>
 </html>

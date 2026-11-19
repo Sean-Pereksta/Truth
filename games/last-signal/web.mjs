@@ -179,7 +179,15 @@ function init() {
       render();
     }
   });
-  if (location.hash === '#lobbies') void load();
+  function loadOnlineSection() {
+    if (location.hash === '#lobbies') void load();
+  }
+
+  window.addEventListener('hashchange', loadOnlineSection);
+  window.addEventListener('pageshow', event => {
+    if (event.persisted) loadOnlineSection();
+  });
+  loadOnlineSection();
 }
 
 if (typeof document !== 'undefined') init();

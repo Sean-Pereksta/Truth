@@ -78,9 +78,9 @@ button.primary[aria-pressed="true"] { background: var(--veil); color: var(--acce
 }
 
 .room h2, .drawer h2 { margin: 0; font-size: 1.12rem; }
-.room form { display: grid; gap: 9px; }
+.room form, .solo-settings { display: grid; gap: 9px; }
 .room label { color: var(--muted); font-size: 0.85rem; }
-.room input {
+.room input, .room select {
   width: 100%;
   min-height: 46px;
   padding: 0 12px;
@@ -92,6 +92,7 @@ button.primary[aria-pressed="true"] { background: var(--veil); color: var(--acce
 }
 
 .room form button { margin-top: 5px; }
+.browse-rooms { display: inline-block; margin-top: 1rem; color: var(--accent); }
 .room-status, .muted { color: var(--muted); font-size: 0.88rem; }
 .room-status { min-height: 1.25rem; margin: 0.8rem 0 0; }
 .room-status[data-error="true"] { color: #ffb696; }
@@ -288,6 +289,7 @@ progress::-moz-progress-bar { background: var(--fill, var(--accent)); border-rad
 }
 .outcome strong { color: var(--accent); font-family: Georgia, serif; font-size: clamp(1.6rem, 6vw, 2.35rem); }
 .outcome p { margin: 6px 0 0; }
+.outcome button { margin-top: 12px; pointer-events: auto; }
 
 .drawer-backdrop {
   position: absolute;
