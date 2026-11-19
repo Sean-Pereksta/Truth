@@ -78,7 +78,10 @@ class RoomJourney {
                 Until(()=>Seen("depart"),"leave signal",50);session.Leave();return;
             }
             Until(()=>game.Winner!=null&&game.Mode=="results","shared winner",75);
-            Check(game.Winner.Id==0&&game.Player.Placement>1,"Wrong winner or placement");Mark(label+"-result");
+            Until(()=>Seen("expected-result"),"authority publishes placements",20);
+            var result=File.ReadAllLines(FileAt("expected-result"));
+            Check(game.Winner.Id==int.Parse(result[0])&&game.Player.Placement==int.Parse(result[1+seat]),"Guest result differs from the authoritative winner or placement");
+            Mark(label+"-result");
             Until(()=>session.Phase=="lobby","return to lobby",24);
             Check(!session.IsReady,"Ready check must reset for replay");Mark(label+"-lobby");
             Until(()=>Seen("finished"),"end of test",25);
@@ -116,7 +119,15 @@ class RoomJourney {
             Until(()=>game.HumanCount==7,"bot takeover",35);
             Check(game.Actors.Count==24,"Departure changed the size of the arena");
             var eliminate=typeof(Game).GetMethod("Eliminate",Hidden);
-            foreach(var a in game.Actors.Skip(1).ToArray())if(a.Alive)eliminate.Invoke(game,new object[]{a,null," left the trial"});
+            // A network delay can give a bot enough time to eliminate the host.
+            // Compare every client with the actual authoritative finish.
+            var survivor=game.Winner??game.Actors.First(a=>a.Alive);
+            foreach(var a in game.Actors.Where(a=>a!=survivor&&a.Alive).ToArray())eliminate.Invoke(game,new object[]{a,null," left the trial"});
+            Check(game.Winner!=null,"Authority did not declare a winner");
+            var result=new List<string>{game.Winner.Id.ToString()};
+            result.AddRange(game.Actors.OrderBy(a=>a.Id).Select(a=>a.Placement.ToString()));
+            File.WriteAllLines(FileAt("expected-result.tmp"),result.ToArray());
+            File.Move(FileAt("expected-result.tmp"),FileAt("expected-result"));
             Until(()=>Enumerable.Range(1,6).All(i=>Seen("Guest"+i+"-result")),"same winner and independent placements",30);
             session.Replay();
             Until(()=>Enumerable.Range(1,6).All(i=>Seen("Guest"+i+"-lobby")),"shared replay lobby",25);
