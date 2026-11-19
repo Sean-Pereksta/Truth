@@ -13,7 +13,7 @@ namespace LastSignal {
         }
         void Icon(string id,float x,float y,float w) {
             string clean=CleanId(id);Image im;
-            if(!icons.TryGetValue(clean,out im)){try {string file=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"Assets","icons",clean+".png");if(File.Exists(file))im=Image.FromFile(file);}catch(IOException){}catch(OutOfMemoryException){}icons[clean]=im;}
+            if(!icons.TryGetValue(clean,out im)){try {string file=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"Assets","icons",clean+".png");if(File.Exists(file))im=Image.FromFile(file);}catch(IOException){}catch(OutOfMemoryException){}if(im==null)im=WeaponIcon(clean);icons[clean]=im;}
             if(im!=null){pen.DrawImage(im,new RectangleF(x,y,w,w));return;}
             Ring(x+w/2,y+w/2,w*.22f,A(Brass,120));T((clean.Length>0?clean.Substring(0,1):"·").ToUpperInvariant(),x+w*.4f,y+w*.26f,w*.31f,Gold,true,true);
         }
@@ -38,7 +38,7 @@ namespace LastSignal {
                         g.BuildId=="wall"?"Aim at a floor edge to start an upstairs wall.": "";
                     fortTipUntil=g.Time+7;
                 }
-                if(!sawDefense&&g.Panel==""&&g.BuildId==""&&a.Weapon!="bow"&&a.Weapon!="sling"&&(a.Guard||a.DodgeTime>0||a.Hurt>0)){
+                if(!sawDefense&&g.Panel==""&&g.BuildId==""&&!Game.Ranged(a)&&(a.Guard||a.DodgeTime>0||a.Hurt>0)){
                     sawDefense=true;defenseTipUntil=g.Time+7;
                 }
                 string next=Game.PeekWeapon(a,1);
@@ -85,13 +85,21 @@ namespace LastSignal {
             Vital("FOOD",a.Hunger,28,sh-47,97,Gold);
             Vital("WATER",a.Hydration,137,sh-47,97,WaterBlue);
             string weapon=a.Weapon=="fists"?"Unarmed":Survival.Label(a.Weapon);
+            if(Game.CarriesShield(a))weapon+=" + shield";
             string ammo=a.Weapon=="sling"?"   "+a.Count("stone")+" stones":a.Weapon=="bow"?"   "+a.Count("arrows")+" arrows":"";
+            if(a.Weapon=="crossbow")ammo="   "+a.Count("bolts")+" bolts";
             float rx=sw-23;float ww=Width(weapon,16,true)+Width(ammo,13,false,true)+(a.Weapon=="fists"?23:53);
             Box(rx-ww,sh-52,ww,31,A(Ink,190));
             if(a.Weapon!="fists")Icon(a.Weapon,rx-ww+4,sh-52,31);
             T(weapon,rx-ww+(a.Weapon=="fists"?11:39),sh-46,16,Ivory,true);
             if(ammo!="")Right(ammo,rx-11,sh-44,13,Gold,false,true);
-            if(!g.Dismissed&&g.Time<weaponTipUntil&&g.Panel==""){
+            if(a.Weapon=="crossbow"&&a.CrossbowReload>0){
+                float remaining=Math.Max(0,Actor.CrossbowReloadTime-a.CrossbowReload);
+                string copy="Reloading   "+remaining.ToString("0.0")+"s";
+                float tw=Math.Max(ww,Width(copy,12,false,true)+18);
+                Box(rx-tw,sh-77,tw,23,A(Ink,210));Right(copy,rx-8,sh-74,12,Ivory,false,true);
+                Box(rx-tw,sh-56,tw*Clamp(a.CrossbowReload/Actor.CrossbowReloadTime,0,1),2,Gold);
+            }else if(!g.Dismissed&&g.Time<weaponTipUntil&&g.Panel==""){
                 string next=Game.PeekWeapon(a,1);
                 if(!string.IsNullOrEmpty(next)&&next!="fists"&&next!=a.Weapon){
                     string key=g.PadActive?g.InputLabel("Next weapon"):K(g,"Next weapon")+" / wheel";
@@ -122,7 +130,8 @@ namespace LastSignal {
             if(!string.IsNullOrEmpty(notice)){
                 float w=Math.Min(sw-110,Width(notice,15,true)+31);Box(cx-w/2,sh-92,w,29,A(Ink,212));Mid(notice,cx,sh-87,15,Gold,true);
             }else if(!g.Dismissed&&g.Time<defenseTipUntil&&g.BuildId==""){
-                string tip="Face the strike. Tap "+K(g,"Guard")+" just before impact. Move + "+K(g,"Dodge")+" to dodge.";
+                string tip=Game.CarriesShield(a)?"Hold "+K(g,"Guard")+" and face the attack to cover yourself with the shield.":
+                    "Face the strike. Tap "+K(g,"Guard")+" just before impact. Move + "+K(g,"Dodge")+" to dodge.";
                 float w=Width(tip,14)+26;Box(cx-w/2,sh-70,w,26,A(Ink,202));Mid(tip,cx,sh-65,14,Ivory);
             }else if(!g.Dismissed&&g.Time<spearTipUntil&&a.Weapon=="spear"&&g.BuildId==""){
                 string tip="Hold "+K(g,"Throw")+" to aim a throw  ·  Release to throw  ·  Recover your spear";
@@ -135,6 +144,7 @@ namespace LastSignal {
         }
         static Color ReticleColor(Actor a){
             if(!a.Guard)return A(Ivory,220);
+            if(Game.CarriesShield(a))return Game.ShieldRaised(a)?Gold:A(Muted,165);
             if(a.GuardSpent||a.GuardTime<Game.GuardStart||a.GuardTime>Game.BlockEnd)return A(Muted,165);
             return a.GuardTime<=Game.ParryEnd?Ivory:Gold;
         }
@@ -238,13 +248,17 @@ namespace LastSignal {
         }
         static string PackAction(Actor a,string id) {
             if(Armor.IsArmor(id))return a.WornArmor==id?"Remove armor":"Wear armor";
-            switch(id){case "knife":case "spear":case "sling":case "bow":case "hatchet":return "Equip";case "meal":return "Eat meal";case "waterskin":return "Drink";case "bandage":return "Apply bandage";case "firekit":return "Place fire";case "meat":case "arrows":return "";default:return "View recipes";}
+            switch(id){case "knife":case "spear":case "sling":case "bow":case "hatchet":case "sword":case "crossbow":return "Equip";case "meal":return "Eat meal";case "waterskin":return "Drink";case "bandage":return "Apply bandage";case "firekit":return "Place fire";case "shield":case "bolts":case "meat":case "arrows":return "";default:return "View recipes";}
         }
         static string PackDetail(Actor a,string id) {
             if(Armor.IsArmor(id))return Armor.Detail(a,id);
             switch(id){
                 case "knife":return "A quick cutting weapon for close quarters.";
                 case "spear":return "A reach weapon. Recover thrown spears from the arena floor.";
+                case "sword":return "A one-handed blade. Carry it with a shield.";
+                case "shield":return "Raise it with Guard while wielding a spear or sword to intercept incoming hits.";
+                case "crossbow":return "Fires long-range bolts. Keep it equipped to reload between shots.";
+                case "bolts":return "Ammunition for a crossbow.";
                 case "hatchet":return "Heavy strikes split timber structures.";
                 case "sling":return "Uses loose stone as ammunition.";
                 case "bow":return "Uses arrows. Hold aim for a steadier shot.";

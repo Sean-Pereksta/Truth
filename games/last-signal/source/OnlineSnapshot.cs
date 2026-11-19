@@ -9,7 +9,7 @@ namespace LastSignal
 {
     public static partial class OnlineSnapshot
     {
-        public const int Version=1;
+        public const int Version=2;
         const int Magic=0x4E53534C; // LSSN
         const int Limit=4194304;
         static int nextRound=Environment.TickCount;

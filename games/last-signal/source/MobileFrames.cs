@@ -104,13 +104,16 @@ namespace LastSignal {
                 g.RefreshOnlineCamera(0);
                 Actor player=g.Player;
                 if(player==null)return;
+                float extendedSight=player.Weapon=="crossbow"&&player.Aiming?75f:0f;
                 var actors=new List<object[]>();
                 foreach(Actor actor in g.Actors) {
                     if(actor==g.CameraTarget)continue;
                     if(!InRange(g,actor.X,actor.Z,actor.Alive?100f:65f))continue;
-                    if(actor.Alive&&!Perception.ActorVisible(g,g.CamX,g.CamY,g.CamZ,g.CamYaw,actor))continue;
+                    if(actor.Alive&&!Perception.ActorVisible(g,g.CamX,g.CamY,g.CamZ,g.CamYaw,actor,extendedSight))continue;
                     actors.Add(new object[]{Value(actor.X),Value(actor.Y),Value(actor.Z),Value(actor.Yaw),
-                        actor.Alive,actor.Crouch,actor.Style,actor.Name,Value(actor.FallYaw),Value(actor.Anim),Value(actor.Speed)});
+                        actor.Alive,actor.Crouch,actor.Style,actor.Name,Value(actor.FallYaw),Value(actor.Anim),Value(actor.Speed),
+                        actor.Weapon,Game.CarriesShield(actor),Game.ShieldRaised(actor),Value(actor.GuardBlend),
+                        Value(actor.CrossbowReload/Actor.CrossbowReloadTime),actor.CrossbowLoaded,Value(actor.Swing)});
                 }
                 var wildlife=new List<object[]>();
                 foreach(Animal animal in g.Animals) {
@@ -143,10 +146,15 @@ namespace LastSignal {
                         health=Value(player.Health),stamina=Value(player.Stamina),hunger=Value(player.Hunger),
                         hydration=Value(player.Hydration),water=Value(player.WaterCarried),weapon=player.Weapon,
                         armor=player.WornArmor,aim=player.Aiming,hurt=Value(player.Hurt),swing=Value(player.Swing),
+                        shield=Game.CarriesShield(player),guard=player.Guard,shieldRaised=Game.ShieldRaised(player),guardBlend=Value(player.GuardBlend),
+                        crossbowLoaded=player.CrossbowLoaded,reload=Value(player.CrossbowReload/Actor.CrossbowReloadTime),
+                        reloadSeconds=Actor.CrossbowReloadTime,
                         speed=Value(player.Speed),alive=player.Alive,placement=player.Placement},
                     alive=g.AliveCount,countdown=Value(g.Countdown),winner=g.Winner==null?"":g.Winner.Name,
                     hud=new {hint=g.Hint,notice=g.NoticeTime>0?g.Notice:"",@event=g.EventTime>0?g.EventText:"",
                         feed=g.FeedTime>0?g.KillFeed:"",progress=Value(g.UseProgress),charge=Value(g.Charge),zone=g.Zone,
+                        impact=Value(g.IncomingImpact),impactAngle=Value(g.IncomingAngle),impactStrength=Value(g.IncomingStrength),
+                        confirmed=Value(g.ConfirmedImpact),
                         buildId=g.BuildId,buildProblem=g.BuildProblem,useAction=g.ActionId,focusOptions=g.FocusOptions,focusChoice=g.FocusChoice},
                     pack,craft=Recipes(player,Survival.Crafts),build=Recipes(player,Survival.Builds)
                 });

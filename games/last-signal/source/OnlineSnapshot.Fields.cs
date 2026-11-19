@@ -78,6 +78,7 @@ namespace LastSignal
             Field(ref data.MeleeStroke); Field(ref data.ShoveStroke); Field(ref data.TruceAccepted); Field(ref data.Alive);
             Field(ref data.Guard); Field(ref data.Crouch); Field(ref data.Sprint); Field(ref data.Heavy);
             Field(ref data.Aiming); Field(ref data.Winded);
+            Field(ref data.CrossbowLoaded); Field(ref data.CrossbowReload);
         }
         internal static void Copy(Actor src,Actor dst)
         {
@@ -99,6 +100,7 @@ namespace LastSignal
             dst.MeleeStroke=src.MeleeStroke; dst.ShoveStroke=src.ShoveStroke; dst.TruceAccepted=src.TruceAccepted; dst.Alive=src.Alive;
             dst.Guard=src.Guard; dst.Crouch=src.Crouch; dst.Sprint=src.Sprint; dst.Heavy=src.Heavy;
             dst.Aiming=src.Aiming; dst.Winded=src.Winded;
+            dst.CrossbowLoaded=src.CrossbowLoaded; dst.CrossbowReload=src.CrossbowReload;
         }
         internal void Body(Prop data)
         {

@@ -20,15 +20,17 @@ namespace LastSignal {
         }
         MeleePose currentMelee;
         static JointPoint J(float x,float y,float z){return new JointPoint(x,y,z);}
-        static bool ShortMelee(Actor a){return a.Weapon=="knife"||a.Weapon=="hatchet"||a.Weapon=="fists";}
+        static bool ShortMelee(Actor a){return a.Weapon=="knife"||a.Weapon=="hatchet"||a.Weapon=="fists"||a.Weapon=="sword";}
         static bool Shoving(Actor a){return a.ShoveStroke&&a.Swing>0;}
         static MeleePose MixPose(MeleePose a,MeleePose b,float w){return a+(b-a)*w;}
         static MeleePose ReadyPose(string id){
+            if(id=="sword")return new MeleePose(J(-.318f,-.323f,.65f),J(.275f,-.285f,.59f),J(46,-24,3),J(0,0,0),0);
             bool bare=id=="fists";
             return new MeleePose(J(-.278f,bare?-.235f:-.285f,bare?.59f:.675f),J(.282f,bare?-.235f:-.327f,bare?.615f:.59f),
                 id=="hatchet"?J(17,-17,-12):J(35,-10,-16),J(0,0,0),0);
         }
         static MeleePose GuardPose(string id){
+            if(id=="sword")return new MeleePose(J(-.203f,-.225f,.59f),J(.16f,-.13f,.60f),J(37,-12,-24),J(-4,8,1),-.02f);
             return new MeleePose(J(-.157f,-.133f,.56f),J(.158f,-.128f,.60f),
                 id=="hatchet"?J(25,6,-53):J(39,10,-67),J(-4,8,1),-.02f);
         }
@@ -63,6 +65,17 @@ namespace LastSignal {
                 prepare.body=J(-3,s*(13+6*h),s*3);
                 contact.body=J(5+3*h,-s*9,-s*2);
                 carry.body=J(7+3*h,-s*(20+6*h),-s*5);
+            }else if(weapon=="sword"){
+                bool fore=side<0;
+                prepare.right=fore?J(-.408f,-.126f+.098f*h,.52f):J(.106f,-.115f+.086f*h,.55f);
+                prepare.tool=fore?J(-11-24*h,-34,32+24*h):J(7-15*h,29,-48-18*h);
+                contact.right=J(-.105f,-.104f,.96f+.08f*h);
+                contact.tool=fore?J(61,9,-8):J(75,-8,10);
+                carry.right=fore?J(.205f,-.195f,.89f):J(-.321f,-.19f,.89f);
+                carry.tool=fore?J(105,34,-48):J(101,-35,43);
+                prepare.body=J(-5,s*(16+9*h),s*4);
+                contact.body=J(6+4*h,-s*12,-s*3);
+                carry.body=J(9+4*h,-s*(24+7*h),-s*6);
             }else{
                 // The head travels down through a forehand chop or across the
                 // shorter backhand path. The free hand braces near the chest.
@@ -82,7 +95,7 @@ namespace LastSignal {
                 contact.left=J(.238f,-.21f,.51f);carry.left=J(.223f,-.24f,.54f);
             }
             prepare.step=-.025f-.023f*h;
-            contact.step=(weapon=="knife"?.26f:weapon=="hatchet"?.28f:.29f)+.064f*h;
+            contact.step=(weapon=="knife"?.26f:weapon=="hatchet"?.28f:weapon=="sword"?.33f:.29f)+.064f*h;
             carry.step=contact.step+.017f;
         }
         static MeleePose MeleeMovement(Actor a){
@@ -163,8 +176,13 @@ namespace LastSignal {
         void ShortWeapon(Actor a,bool first){
             if(a.Weapon=="fists")return;
             JointPoint grip=MeleeHand(a,false,first);
-            if(!first)grip=GloveCenter(grip,false);
-            glPushMatrix();PointTranslate(grip);ToolRotation(currentMelee.tool);
+            JointPoint tool=currentMelee.tool;
+            if(!first){
+                bool mirror=Game.CarriesShield(a);
+                if(mirror){grip.X=-grip.X;tool.Y=-tool.Y;tool.Z=-tool.Z;}
+                grip=GloveCenter(grip,mirror);
+            }
+            glPushMatrix();PointTranslate(grip);ToolRotation(tool);
             if(a.Weapon=="hatchet")glTranslatef(0,.081f,0);Mesh(a.Weapon);glPopMatrix();
         }
     }

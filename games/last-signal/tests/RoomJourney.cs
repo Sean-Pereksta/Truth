@@ -87,7 +87,28 @@ class RoomJourney {
             Until(()=>Seen("finished"),"end of test",25);
         }
     }
+    static void CheckWeaponReplica(){
+        var host=new Game();
+        var guest=new Game();
+        host.StartOnlineRound(new[]{"Host","Guest"},73119,0,1,1,true);
+        Actor defender=host.Actors[0],archer=host.Actors[1];
+        defender.Add("shield",1);defender.Add("spear",1);defender.Weapon="spear";
+        defender.Guard=true;defender.GuardBlend=1;defender.GuardTime=1;
+        archer.Weapon="crossbow";archer.Add("crossbow",1);archer.Add("bolts",3);
+        archer.CrossbowReload=Actor.CrossbowReloadTime*.5f;
+        Check(OnlineSnapshot.Apply(guest,OnlineSnapshot.Capture(host),1),"Weapon frame did not decode.");
+        Check(guest.Player.Weapon=="crossbow"&&guest.Player.Count("bolts")==3&&guest.Player.CrossbowReload==archer.CrossbowReload,
+              "Guest lost its reload animation or bolt count.");
+        Check(Game.ShieldRaised(guest.Actors[0]),"Guest lost the other contestant's raised shield.");
+        OnlineSnapshot.Present(guest,.05f);
+        Check(guest.Player.CrossbowReload>archer.CrossbowReload,"Reload animation froze between snapshots.");
+        archer.CrossbowReload=0;archer.CrossbowLoaded=true;defender.Guard=false;defender.Weapon="sword";
+        Check(OnlineSnapshot.Apply(guest,OnlineSnapshot.Capture(host),1),"Second weapon frame did not decode.");
+        Check(guest.Player.CrossbowReload==0&&guest.Player.CrossbowLoaded&&guest.Actors[0].Weapon=="sword"&&!Game.ShieldRaised(guest.Actors[0]),
+              "Loaded crossbow, lowered shield or sword did not replicate.");
+    }
     static void Host(){
+        CheckWeaponReplica();
         session=new OnlineSession(game);game.Online=session;game.ForcedSeed=73119;
         session.Host("Host",kind=="public");IDisposable pipeServer=null;
         try{

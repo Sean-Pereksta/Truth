@@ -56,7 +56,7 @@ namespace LastSignal
             ground=LoadTexture("ground.png",true);soil=LoadTexture("soil.png",true);stone=LoadTexture("pavers.png",true);
             sky=LoadTexture("sky.png",false);paint=LoadTexture(File.Exists(Path.Combine(assets,"modelpaint.png"))?"modelpaint.png":"paint.png",true);
             flames=LoadTexture("flame.png",true);smoke=LoadTexture("smoke.png",true);
-            LoadModels();BuildBowPoses();
+            LoadModels();BuildGearModels();BuildBowPoses();
             BuildSky();BindArenaMap(Arena.Variant);
             glGenTextures(1,out overlayTex);glBindTexture(Texture,overlayTex);Filter(false);
             glTexImage2D(Texture,0,4,Math.Min(512,maxTex),Math.Min(512,maxTex),0,0x80E1,0x1401,IntPtr.Zero);
@@ -379,7 +379,10 @@ namespace LastSignal
             glColor4f(.15f,.18f,.17f,0);
             for(int i=0;i<13;i++){float xx=x+rx*diskX[i],zz=z+rz*diskZ[i];glVertex3f(xx,Arena.Height(xx,zz)+.026f,zz);}glEnd();
         }
-        static bool LongGear(string id) { return id=="arrows"||id=="spear"||id=="hatchet"||id=="knife"||id=="bow"||id=="sling"; }
+        static bool LongGear(string id) {
+            return id=="arrows"||id=="spear"||id=="hatchet"||id=="knife"||id=="bow"||id=="sling"||
+                id=="sword"||id=="crossbow"||id=="bolt"||id=="bolts";
+        }
         string Stage(Prop p){
             string id=p.Model;
             if(p.Kind=="structure" && p.MaxHP>0 && p.HP<p.MaxHP*.74f){
@@ -399,6 +402,7 @@ namespace LastSignal
             if(p.Model=="")return;glPushMatrix();glTranslatef(p.X,p.Y,p.Z);glRotatef(p.Yaw*Deg,0,1,0);
             
             if(p.Kind=="pickup" && LongGear(p.Model)){glTranslatef(0,p.Model=="spear"?.074f:.13f,0);glRotatef(86,1,0,0);}
+            if(p.Kind=="pickup" && p.Model=="shield"){glTranslatef(0,.115f,0);glRotatef(-90,1,0,0);}
             glScalef(p.Scale,p.Scale,p.Scale);
             bool metal=p.Model=="cornucopia"||p.Model=="platform"||p.Model=="knife";
             if(metal){glMaterialfv(0x0408,0x1202,polished);glMaterialf(0x0408,0x1601,22);}
@@ -434,7 +438,9 @@ namespace LastSignal
             float signalAge=g.Time-a.TruceGestureAt;
             signaling=signalAge>=0&&signalAge<1.1f&&!a.Guard&&!a.Aiming&&!Lifting(a)&&a.Swing<=0&&a.Windup<=0&&a.DodgeTime<=0;
             signalWeight=signaling?Ease(signalAge/.19f)*Ease((1.1f-signalAge)/.37f):0;
-            glPushMatrix();glTranslatef(a.X,a.Y+(a.Crouch?-.30f:0),a.Z);glRotatef(a.Yaw*Deg,0,1,0);
+            glPushMatrix();glTranslatef(a.X,a.Y,a.Z);glRotatef(a.Yaw*Deg,0,1,0);
+            DrawShield(a,false);
+            if(a.Crouch)glTranslatef(0,-.30f,0);
             DodgeLean(a,false);
             if(a.SpearThrust&&a.Weapon=="spear"&&(a.Swing>0||a.Windup>0)){
                 SpearStroke step=SpearMelee(a,false);
@@ -559,7 +565,7 @@ namespace LastSignal
             }
         }
         void DrawShot(Shot shot){
-            if(shot.Model=="arrow")DrawFletchingTrail(shot);
+            if(shot.Model=="arrow"||shot.Model=="bolt")DrawFletchingTrail(shot);
             glPushMatrix();glTranslatef(shot.X,shot.Y,shot.Z);
             if(shot.Model=="stone"){glScalef(.38f,.38f,.38f);Mesh("stone");}
             else{
@@ -567,8 +573,8 @@ namespace LastSignal
                 glRotatef((float)Math.Atan2(shot.DX,shot.DZ)*Deg,0,1,0);
                 glRotatef(90-(float)Math.Atan2(shot.DY,d)*Deg,1,0,0);
                 // Actor shot positions trace the leading point of the projectile.
-                bool spear=shot.Model=="spear";glTranslatef(0,spear?-1.355f:-.432f,0);
-                Mesh(spear?"spear":"arrow");
+                glTranslatef(0,shot.Model=="spear"?-1.355f:shot.Model=="bolt"?-.260f:-.432f,0);
+                Mesh(shot.Model);
             }glPopMatrix();
         }
         void DrawAtmosphere(Game g){

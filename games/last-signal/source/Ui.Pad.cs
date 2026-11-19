@@ -54,7 +54,7 @@ namespace LastSignal {
             T("Hold View + D-pad left / right to peek.",x,t+251,15,Muted);
             T(PadReadable(g.Settings.PadButton("Previous weapon"))+" / "+PadReadable(g.Settings.PadButton("Next weapon"))+" switch carried weapons.",x,t+274,14,Muted);
             T("Build with A, rotate with LB / RB, keep building with LT + A, or cancel with B.",x,t+296,14,Muted);
-            T("Face the strike and tap "+PadReadable(g.Settings.PadButton("Guard"))+". Dodge with "+PadReadable(g.Settings.PadButton("Dodge"))+" and the left stick.",x,t+318,14,Muted);
+            T("Hold "+PadReadable(g.Settings.PadButton("Guard"))+" to raise a shield. Tap to parry with a weapon. Dodge with "+PadReadable(g.Settings.PadButton("Dodge"))+".",x,t+318,14,Muted);
             Action("back","Back",x,t+351,150,42);PadHelp(g,"D-pad  Navigate      A  Select      B  Back");
         }
         void PadBindings(Game g){

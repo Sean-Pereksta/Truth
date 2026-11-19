@@ -57,9 +57,11 @@
       <strong id="storm"></strong>
       <span id="event"></span>
     </div>
+    <div id="impact" class="impact" aria-hidden="true" hidden></div>
     <div id="aim" class="aim">
       <div class="reticle" aria-hidden="true"></div>
       <progress id="progress" max="1" value="0" aria-label="Current action progress" hidden></progress>
+      <span id="gear-status"></span>
       <span id="hint"></span>
     </div>
     <div id="countdown" class="countdown" hidden>
@@ -86,7 +88,6 @@
           <button type="button" data-command="cancel">Cancel</button>
         </div>
         <div id="extra-actions" class="extra-actions" hidden>
-          <button type="button" data-hold="Guard">Guard / aim</button>
           <button id="throw" type="button" data-hold="Throw" hidden>Throw</button>
           <button type="button" data-command="+Dodge">Dodge</button>
           <button type="button" data-command="+Shove">Shove</button>
@@ -94,6 +95,7 @@
         </div>
         <div class="main-actions">
           <button id="cycle" type="button" data-command="cycle:1" aria-label="Cycle interaction" hidden>Cycle</button>
+          <button id="guard" type="button" data-hold="Guard" hidden>Guard</button>
           <button id="use" type="button" data-command="+Use">Use</button>
           <button id="attack" type="button" class="attack primary">Attack</button>
         </div>

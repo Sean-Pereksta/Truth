@@ -58,7 +58,10 @@ namespace LastSignal
             new Recipe("waterskin","Waterskin","Holds 42 water. Fill at springs or along a stream bank.",1,"cloth",2,"fiber",1),
             new Recipe("bow","Field bow","Hold Attack to draw. Aim to steady. Release to loose.",1,"branch",3,"fiber",3,"cloth",1),
             new Recipe(Armor.Woven,"Woven vest","Padded torso armor. Absorbs 24% of damage to the vest.",1,"cloth",2,"fiber",2),
-            new Recipe(Armor.Scrap,"Scrap cuirass","Plated torso armor. Absorbs 40% of damage to the cuirass.",1,"scrap",3,"cloth",1,"fiber",2)
+            new Recipe(Armor.Scrap,"Scrap cuirass","Plated torso armor. Absorbs 40% of damage to the cuirass.",1,"scrap",3,"cloth",1,"fiber",2),
+            new Recipe("shield","Round shield","Carried with a spear or sword. Hold Guard to cover the space in front of you.",1,"branch",3,"scrap",1,"fiber",2),
+            new Recipe("sword","Arena sword","A one-handed blade for close combat. Pairs with a shield.",1,"scrap",4,"branch",1,"cloth",1),
+            new Recipe("bolts","Bolts x3","Ammunition for the arena crossbow.",3,"scrap",1,"branch",1)
         };
 
         public static readonly Recipe[] Builds = {
@@ -134,11 +137,12 @@ namespace LastSignal
         }
         private static bool Weapon(string id)
         {
-            return id=="sling" || id=="spear" || id=="hatchet" || id=="knife" || id=="bow" || id=="fists";
+            return id=="sling" || id=="spear" || id=="hatchet" || id=="knife" || id=="bow" || id=="fists" || id=="sword" || id=="crossbow";
         }
         public static void EquipActor(Actor a,string id)
         {
             if (a==null || !Weapon(id) || (id!="fists" && a.Count(id)<=0))return;
+            if(a.Weapon=="crossbow" && id!=a.Weapon)a.CrossbowReload=0;
             if(a.Weapon!=id && a.PickupSource!=null && a.LiftedWeapon==id)a.LiftWeapon(a.PickupSource,id);
             a.Weapon=id;
         }
@@ -219,7 +223,7 @@ namespace LastSignal
             if (p.Kind!="pickup" || String.IsNullOrEmpty(p.Item)) return false;
             if(Armor.IsArmor(p.Item)) Armor.Collect(a,p,p.Item,Math.Max(1,p.Amount));
             else a.Add(p.Item,Math.Max(1,p.Amount));
-              string suppliedAmmo=p.Item=="bow"?"arrows":p.Item=="sling"?"stone":null;
+              string suppliedAmmo=p.Item=="bow"?"arrows":p.Item=="crossbow"?"bolts":p.Item=="sling"?"stone":null;
               int rounds=0;
               if(suppliedAmmo!=null && p.Bag.TryGetValue(suppliedAmmo,out rounds) && rounds>0){
                   a.Add(suppliedAmmo,rounds);
@@ -305,6 +309,8 @@ namespace LastSignal
             }
             if (id=="meat") g.Say("Cook game meat on a lit fire or an arena stove");
             else if (id=="arrows") g.Say("Equip a bow to use arrows");
+            else if (id=="bolts") g.Say("Equip a crossbow to load bolts");
+            else if (id=="shield") g.Say("Equip a spear or sword, then hold "+g.InputLabel("Guard")+" to raise your shield");
             else if (id=="stone") g.Say("Sling ammunition and crafting material");
             else g.Say("Use this material in the craft or build wheel");
             return false;
@@ -450,6 +456,9 @@ namespace LastSignal
             {
                 case "spear":min=-.74f;max=1.32f;return true;
                 case "bow":min=-.64f;max=.70f;return true;
+                case "sword":min=-.18f;max=.94f;return true;
+                case "crossbow":min=-.42f;max=.58f;return true;
+                case "shield":min=-.35f;max=.35f;return true;
                 case "hatchet":min=-.18f;max=.31f;return true;
                 case "knife":min=-.08f;max=.39f;return true;
                 case "sling":min=-.035f;max=.49f;return true;

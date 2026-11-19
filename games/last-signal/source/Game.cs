@@ -88,7 +88,7 @@ namespace LastSignal {
             if(action=="Dismiss"){Dismissed=true;NoticeTime=0;return;}
             if(Countdown>0)return;
             if(action=="Next weapon"||action=="Previous weapon"){CycleWeapon(action=="Next weapon"?1:-1);return;}
-            if(action.Length==8&&action.StartsWith("Weapon ",StringComparison.Ordinal)&&action[7]>='1'&&action[7]<='5'){
+            if(action.Length==8&&action.StartsWith("Weapon ",StringComparison.Ordinal)&&action[7]>='1'&&action[7]<='7'){
                 RequestWeapon(belt[action[7]-'1']);return;
             }
             switch(action){
@@ -103,6 +103,7 @@ namespace LastSignal {
             case "Shove":Shove(Player);break;
             case "Attack":
                 if(!String.IsNullOrEmpty(BuildId)){Survival.Place(this);break;}
+                if(Player.Weapon=="crossbow"){if(switchTo.Length==0)FireCrossbow(Player,Pitch);break;}
                 if(!Charging&&switchTo.Length==0&&Player.NextAttack<=(Ranged(Player)?0:.23f)&&!Player.Guard&&Player.Windup<=0){
                     Charge=0;Charging=true;Player.DrawPower=0;Player.Throwing=false;Player.LastThrow=false;
                 }break;
@@ -138,8 +139,8 @@ namespace LastSignal {
             if(a.Stamina<3)a.Winded=true;else if(a.Stamina>23)a.Winded=false;
             bool crouch=PadActive?PadCrouch:Down("Crouch");
             a.Crouch=crouch||(a.Crouch&&!Arena.CanStand(this,a.X,a.Y+.01f,a.Z));
-            a.Sprint=(PadActive?PadSprint:Down("Sprint"))&&!a.Crouch&&fw>0&&!a.Winded&&a.Stamina>3&&!a.Guard&&!a.Aiming;
-            float speed=(a.Sprint?6.6f:a.Crouch?1.85f:4.25f)*(a.Guard?.66f:1)*(Charging?.8f:1)*(a.Aiming?.68f:1);
+            a.Sprint=(PadActive?PadSprint:Down("Sprint"))&&!a.Crouch&&fw>0&&!a.Winded&&a.Stamina>3&&!a.Guard&&!a.Aiming&&a.CrossbowReload<=0;
+            float speed=(a.Sprint?6.6f:a.Crouch?1.85f:4.25f)*(a.Guard?.66f:1)*(Charging?.8f:1)*(a.Aiming?.68f:1)*(a.CrossbowReload>0?.72f:1);
             speed*=Mobility(a);
             float water=Arena.WetDepth(this,a.X,a.Z,a.Y);if(water>.08f)speed*=Flood?.63f:.82f;
             float x=a.X,z=a.Z;if(!DodgeMoving(a))Arena.Move(this,a,MoveX*speed*dt,MoveZ*speed*dt);
@@ -197,9 +198,10 @@ namespace LastSignal {
                 Arena.StepVertical(this,a,dt);
                 float was=a.Windup; a.Windup=Math.Max(0,a.Windup-dt);a.Swing=Math.Max(0,a.Swing-dt);a.Hurt=Math.Max(0,a.Hurt-dt);a.NextAttack=Math.Max(0,a.NextAttack-dt);
                 if(!PlayerDriven(a)&&was>0&&a.ProjectileId!="")a.DrawPower=a.ProjectilePower*(1-a.Windup/Math.Max(.001f,a.WindupSpan));
-                bool defending=a.Guard&&!a.GuardSpent&&a.GuardTime<=BlockEnd;
+                bool defending=GuardPoseActive(a);
                 a.GuardBlend=Math.Max(0,Math.Min(1,a.GuardBlend+(defending?10f:-8.3f)*dt));
                 if(was>0&&a.Windup<=0){float p;attackPitch.TryGetValue(a,out p);Strike(a,p);}
+                StepCrossbow(a,dt);
                 if(a.Windup<=0&&!a.Throwing&&!PlayerCharging(a))a.DrawPower=Math.Max(0,a.DrawPower-5.5f*dt);
                 if(Winner!=null)break;
                 string loss=AdvanceNeeds(a,dt);

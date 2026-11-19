@@ -82,7 +82,8 @@ namespace LastSignal {
             if(a==Player)Say(perfect?"Timed guard  ·  Opening":"Deflected");
             return perfect?GuardOutcome.Parry:GuardOutcome.Deflect;
         }
-        GuardOutcome GuardStrike(Actor defender,Actor attacker,ImpactSite hit,bool ranged,ref float damage){
+        GuardOutcome GuardStrike(Actor defender,Actor attacker,ImpactSite hit,bool ranged,bool shieldHit,ref float damage){
+            if(CarriesShield(defender))return shieldHit?BlockShield(defender,hit,ranged,ref damage):GuardOutcome.Miss;
             if(!defender.Guard)return GuardOutcome.Miss;
             float yaw,pitch;
             if(ranged){
@@ -96,7 +97,7 @@ namespace LastSignal {
                 float eye=defender.Y+(defender.Crouch?1.03f:1.58f);
                 pitch=(float)Math.Atan2(hand-eye,distance);
                 // A cut approaches from the loading shoulder. A spear's point is central.
-                if(hit.Implement=="hatchet"||hit.Implement=="knife"){
+                if(hit.Implement=="hatchet"||hit.Implement=="knife"||hit.Implement=="sword"){
                     yaw+=attacker.MeleeSide*(float)Math.Atan2(.22f,distance);
                     if(hit.Implement=="hatchet")pitch+=.065f;
                 }

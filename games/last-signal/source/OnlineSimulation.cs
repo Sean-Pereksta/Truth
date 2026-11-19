@@ -166,7 +166,7 @@ namespace LastSignal {
                 switch(key) {
                 case "Attack":case "Guard":case "Throw":case "Dodge":case "Shove":case "Jump":case "Use":
                 case "Dismiss":case "Next weapon":case "Previous weapon":
-                case "Weapon 1":case "Weapon 2":case "Weapon 3":case "Weapon 4":case "Weapon 5":
+                case "Weapon 1":case "Weapon 2":case "Weapon 3":case "Weapon 4":case "Weapon 5":case "Weapon 6":case "Weapon 7":
                     if(action[0]=='+')Press(key);else Release(key);break;
                 }
                 return;

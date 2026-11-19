@@ -13,6 +13,9 @@ const stick = $("stick");
 const thumb = $("stick-thumb");
 const look = $("look");
 const attack = $("attack");
+const guard = $("guard");
+const reticle = document.querySelector(".reticle");
+const impact = $("impact");
 const backdrop = $("drawer-backdrop");
 const roster = $("roster");
 const key = location.hash.slice(1);
@@ -29,7 +32,9 @@ const weaponNames = {
   spear: "Spear",
   sling: "Sling",
   bow: "Field bow",
-  hatchet: "Hatchet"
+  hatchet: "Hatchet",
+  sword: "Sword",
+  crossbow: "Crossbow"
 };
 
 let socket;
@@ -45,6 +50,7 @@ let sequence = 0;
 let retry = null;
 let retryUntil = 0;
 let frameAt = 0;
+let renderedFrameAt = 0;
 let binaryEpoch = 0;
 let pendingBinary = [];
 let decodingBinary = false;
@@ -181,7 +187,7 @@ function connect() {
     if (socket === client && phase === "connecting") client.close();
   }, retryUntil ? Math.max(1, Math.min(4000, retryUntil - performance.now())) : 16000);
   client.addEventListener("open", () => {
-    if (socket === client) socketSend(["JOIN", "LS1", key, playerName, resume].join("|"));
+    if (socket === client) socketSend(["JOIN", "LS2", key, playerName, resume].join("|"));
   });
   client.addEventListener("message", (event) => {
     if (socket !== client) return;
@@ -313,7 +319,7 @@ function handleFrame(packet) {
   const first = frame === null;
   const wasAlive = frame?.player.alive && !frame.winner;
   frame = packet;
-  frameAt = performance.now();
+  renderedFrameAt = frameAt = performance.now();
   if (first) {
     yaw = frame.player.yaw;
     pitch = frame.player.pitch;
@@ -348,7 +354,9 @@ function renderHud() {
     .replace(/\s*\[[^\]]+\]\s*(?:Next action|Place|Rotate|Cancel)\b/g, "")
     .replace(/\[[^\]]+\]\s*/g, "").trim();
   setText($("hint"), touchHint || hud.buildProblem);
-  const currentProgress = Math.max(hud.progress || 0, hud.charge || 0);
+  const crossbow = player.weapon === "crossbow";
+  const reload = crossbow ? player.reload || 0 : 0;
+  const currentProgress = Math.max(hud.progress || 0, hud.charge || 0, reload);
   $("progress").hidden = currentProgress <= 0;
   $("progress").value = currentProgress;
 
@@ -365,10 +373,20 @@ function renderHud() {
   $("throw").hidden = player.weapon !== "spear";
   $("cycle").hidden = !Array.isArray(hud.focusOptions) || hud.focusOptions.length < 2 || building;
   $("use").hidden = building;
-  setText(attack, building ? "Place" : "Attack");
-  attack.disabled = countdown || (building && !frame.ghostFits);
-  const ammoId = player.weapon === "bow" ? "arrows" : player.weapon === "sling" ? "stone" : "";
+  const ammoId = crossbow ? "bolts" : player.weapon === "bow" ? "arrows" : player.weapon === "sling" ? "stone" : "";
   const ammo = ammoId ? frame.pack.find(([id]) => id === ammoId)?.[2] || 0 : null;
+  setText(attack, building ? "Place" : !crossbow ? "Attack" : !player.crossbowLoaded && ammo ? "Loading…" : "Fire");
+  attack.disabled = countdown || (building && !frame.ghostFits) || (!building && crossbow && !player.crossbowLoaded && !ammo);
+  const ranged = crossbow || player.weapon === "bow" || player.weapon === "sling";
+  guard.hidden = building || !(player.shield || ranged || extra);
+  setText(guard, player.shield ? "Shield" : ranged ? "Aim" : "Guard");
+  guard.setAttribute("aria-pressed", String(player.guard || player.aim || false));
+  let gear = "";
+  if (reload > 0) gear = reload < 0.22 ? "Lowering crossbow" : reload < 0.54 ? "Cocking string" :
+    reload < 0.79 ? "Seating bolt" : "Setting crossbow";
+  else if (crossbow && !player.crossbowLoaded && !ammo) gear = "Out of bolts";
+  else if (player.shieldRaised) gear = "Shield raised";
+  setText($("gear-status"), gear);
   const weapon = weaponNames[player.weapon] || player.weapon;
   setText($("weapon"), (ammo === null ? weapon : weapon + " · " + ammo) + " ↻");
   $("outcome").hidden = playing;
@@ -498,9 +516,10 @@ function bindHold(button, command) {
   holdStops.add(clear);
   button.addEventListener("pointerdown", (event) => {
     if (!canPlay() || button.disabled || pointer !== null || event.button !== 0) return;
+    const action = command();
+    if (!action) return;
     pointer = event.pointerId;
     button.setPointerCapture(pointer);
-    const action = command();
     if (action.startsWith("+")) {
       held = action.slice(1);
       button.dataset.held = "true";
@@ -516,12 +535,16 @@ function bindHold(button, command) {
   button.addEventListener("click", (event) => {
     if (event.detail === 0 && !event.pointerType && canPlay()) {
       const action = command();
+      if (!action) return;
       queue(action);
       if (action.startsWith("+")) queue("-" + action.slice(1));
     }
   });
 }
-bindHold(attack, () => frame.hud.buildId ? "place" : "+Attack");
+bindHold(attack, () => {
+  if (frame.hud.buildId) return "place";
+  return frame.player.weapon === "crossbow" && !frame.player.crossbowLoaded ? "" : "+Attack";
+});
 for (const button of document.querySelectorAll("[data-hold]")) bindHold(button, () => "+" + button.dataset.hold);
 
 controls.addEventListener("click", (event) => {
@@ -547,6 +570,7 @@ $("more").addEventListener("click", () => {
   extra = !extra;
   $("extra-actions").hidden = !extra;
   $("more").setAttribute("aria-expanded", String(extra));
+  if (frame) renderHud();
 });
 
 function openDrawer(section, trigger) {
@@ -605,7 +629,8 @@ function gearRow(title, description) {
 function packRow([id, name, count], player, usable) {
   const selected = id === player.weapon;
   const water = id === "waterskin" ? Math.floor(player.water || 0) + " water" : "";
-  const row = gearRow(name + (count > 1 ? " ×" + count : ""), water || (selected ? "Equipped" : ""));
+  const detail = id === "shield" ? (player.shield ? "Off hand · hold Shield to raise" : "Off hand · equip a sword or spear") : "";
+  const row = gearRow(name + (count > 1 ? " ×" + count : ""), water || detail || (selected ? "Equipped" : ""));
   let action = "";
   if (id in weaponNames && id !== "fists" && !selected) action = "Equip";
   if (id === "bandage") action = "Apply";
@@ -623,7 +648,7 @@ function packRow([id, name, count], player, usable) {
 
 function renderDrawer() {
   if (drawer !== "gear" || !frame) return;
-  const guide = tab === "pack" ? [frame.player.weapon, frame.player.armor, Math.floor(frame.player.water || 0)] : [];
+  const guide = tab === "pack" ? [frame.player.weapon, frame.player.armor, frame.player.shield, Math.floor(frame.player.water || 0)] : [];
   const usable = frame.countdown <= 0;
   const entries = frame[tab];
   const refresh = JSON.stringify([tab, usable, guide, entries]);
@@ -710,6 +735,16 @@ setInterval(() => {
 function draw(now) {
   if (!arena.hidden && frame) {
     const heading = frame.player.alive && !frame.winner ? yaw : frame.camera.yaw;
+    const elapsed = (now - renderedFrameAt) / 1000;
+    const incoming = Math.max(0, (frame.hud.impact || 0) - elapsed);
+    impact.hidden = !incoming || Boolean(drawer);
+    if (incoming) {
+      const angle = frame.hud.impactAngle - heading;
+      impact.style.transform = "translate(-50%,-50%) rotate(" + angle + "rad)";
+      impact.style.opacity = String(Math.min(1, incoming / 0.36) * (frame.hud.impactStrength || 0.55));
+    }
+    const hit = (frame.hud.confirmed || 0) > elapsed;
+    if (reticle && reticle.dataset.hit !== String(hit)) reticle.dataset.hit = String(hit);
     setText($("compass"), directions[((Math.round(heading * 4 / Math.PI) % 8) + 8) % 8]);
     renderer.render(now);
   }

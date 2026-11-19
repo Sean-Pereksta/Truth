@@ -227,7 +227,7 @@ namespace LastSignal
 
         static bool CombatReady(Actor a)
         {
-            return a.Weapon!="fists" && (!Ranged(a) || a.Count(a.Weapon=="bow"?"arrows":"stone")>0);
+            return a.Weapon!="fists" && (!Ranged(a) || HasRanged(a,a.Weapon));
         }
         static bool Claimed(Game g,Actor a,Prop p)
         {
@@ -251,12 +251,14 @@ namespace LastSignal
                 if(p.Removed || p==m.AvoidPrize || Claimed(g,a,p))continue;
                 int rank=RankWeapon(p.Item);
                 bool ammo=(p.Item=="arrows" && a.Count("bow")>0 && a.Count("arrows")==0) ||
+                          (p.Item=="bolts" && a.Count("crossbow")>0 && a.Count("bolts")==0) ||
                           (p.Item=="stone" && a.Count("sling")>0 && a.Count("stone")==0);
                 if(rank==0 && !ammo)continue;
                 float score=ammo?34f:21f;
-                if(p.Item=="bow" || p.Item=="sling")
+                string projectile=Game.RangedProjectile(p.Item);
+                if(projectile.Length>0)
                 {
-                    string round=p.Item=="bow"?"arrows":"stone";
+                    string round=Game.ShotAmmo(projectile);
                     int packed=0;p.Bag.TryGetValue(round,out packed);
                     if(a.Count(round)+packed<=0)
                     {
@@ -268,13 +270,13 @@ namespace LastSignal
                     }
                     if(m.Style==Style.Hunter)score+=4;
                 }
-                else if(p.Item=="spear" || p.Item=="hatchet")score+=m.Style==Style.Raider?3.5f:1.7f;
+                else if(p.Item=="spear" || p.Item=="hatchet" || p.Item=="sword")score+=m.Style==Style.Raider?3.5f:1.7f;
                 if(m.Vault && Interior(p))
                 {
                     score+=95f;
                     bool sameSide=p.X*m.VaultLane>.10f;
                     if(sameSide)score+=3.5f;
-                    if(p.Item=="spear" || p.Item=="hatchet" || p.Item=="bow")score+=3f;
+                    if(p.Item=="spear" || p.Item=="hatchet" || p.Item=="bow" || p.Item=="sword" || p.Item=="crossbow")score+=3f;
                 }
                 float d=Dist(a.X,a.Z,p.X,p.Z);
                 bool seen=PrizeVisible(g,a,p);
@@ -532,18 +534,30 @@ namespace LastSignal
         }
         static int RankWeapon(string id)
         {
-            switch(id){case "bow":return 7;case "spear":return 6;case "hatchet":return 5;case "knife":return 4;case "sling":return 3;default:return 0;}
+            switch(id){case "crossbow":return 9;case "bow":return 8;case "sword":return 7;case "spear":return 6;case "hatchet":return 5;case "knife":return 4;case "sling":return 3;default:return 0;}
+        }
+        static bool HasRanged(Actor a,string weapon)
+        {
+            string projectile=Game.RangedProjectile(weapon);
+            return projectile.Length>0&&a.Count(weapon)>0&&a.Count(Game.ShotAmmo(projectile))>0;
+        }
+        static string BestMelee(Actor a)
+        {
+            if(a.Count("sword")>0)return "sword";
+            if(a.Count("spear")>0)return "spear";
+            if(a.Count("hatchet")>0)return "hatchet";
+            return a.Count("knife")>0?"knife":"fists";
         }
         static void Arm(Actor a)
         {
-            if(a.Count("bow")>0 && a.Count("arrows")>0) Survival.EquipActor(a,"bow");
-            else if(a.Count("spear")>0) Survival.EquipActor(a,"spear");
-            else if(a.Count("hatchet")>0) Survival.EquipActor(a,"hatchet");
-            else if(a.Count("knife")>0) Survival.EquipActor(a,"knife");
-            else if(a.Count("sling")>0 && a.Count("stone")>0) Survival.EquipActor(a,"sling");
-            else Survival.EquipActor(a,"fists");
+            if(HasRanged(a,"crossbow"))Survival.EquipActor(a,"crossbow");
+            else if(HasRanged(a,"bow"))Survival.EquipActor(a,"bow");
+            else {
+                string melee=BestMelee(a);
+                Survival.EquipActor(a,melee=="fists"&&HasRanged(a,"sling")?"sling":melee);
+            }
         }
-        static bool Ranged(Actor a) { return a.Weapon=="sling"||a.Weapon=="bow"; }
+        static bool Ranged(Actor a) { return Game.Ranged(a); }
         static void Prepare(Game g,Actor a,Mind m)
         {
             if(a.Hunger<78f) Survival.Eat(g,a);
@@ -585,6 +599,8 @@ namespace LastSignal
                     case "cloth":quality=cnt<2?17:cnt<4?7:0;break;
                     case "scrap":quality=cnt<3?13:0;break;
                     case "arrows":quality=a.Count("bow")>0 && cnt<12?26:cnt<4?8:0;break;
+                    case "bolts":quality=a.Count("crossbow")>0 && cnt<8?29:cnt<3?8:0;break;
+                    case "shield":quality=cnt==0&&(a.Count("sword")+a.Count("spear")>0)?28:0;break;
                     case "bandage":quality=cnt<2?20:0;break;
                     default: int rank=RankWeapon(p.Item);quality=rank>RankWeapon(a.Weapon)?25+rank*2:0;break;
                 }
@@ -1021,7 +1037,7 @@ namespace LastSignal
         };
         static float Reach(string weapon)
         {
-            switch(weapon){case "spear":return 3.18f;case "hatchet":return 2.12f;case "knife":return 1.80f;default:return 1.58f;}
+            switch(weapon){case "spear":return 3.18f;case "sword":return 2.48f;case "hatchet":return 2.12f;case "knife":return 1.80f;default:return 1.58f;}
         }
         static void ReadFighter(Game g,Actor a,Actor b,Mind m,FighterSkill skill)
         {
@@ -1110,17 +1126,21 @@ namespace LastSignal
                 && !Arena.Clear(g,a.X,Eye(a),a.Z,b.X,b.Y+1.13f,b.Z) && Arena.Clear(g,a.X,Eye(a),a.Z,peekX,peekY-.08f,peekZ);
             if(a.Windup<=0 && a.Swing<=0 && a.NextAttack<=.22f)
             {
-                if(Ranged(a) && d<3.3f && a.Count("spear")+a.Count("knife")+a.Count("hatchet")>0)
-                    Survival.EquipActor(a,a.Count("spear")>0?"spear":a.Count("hatchet")>0?"hatchet":"knife");
-                else if(level>=2 && d>9f && !Ranged(a) && a.Count("bow")>0 && a.Count("arrows")>0)
-                    Survival.EquipActor(a,"bow");
+                if(Ranged(a)&&!HasRanged(a,a.Weapon))Arm(a);
+                string melee=BestMelee(a);
+                if(Ranged(a)&&d<3.3f&&melee!="fists")Survival.EquipActor(a,melee);
+                else if(d>9f&&!Ranged(a)) {
+                    if(HasRanged(a,"crossbow"))Survival.EquipActor(a,"crossbow");
+                    else if(level>=2&&HasRanged(a,"bow"))Survival.EquipActor(a,"bow");
+                }
             }
-            bool ranged=Ranged(a), bow=a.Weapon=="bow";
+            bool ranged=Ranged(a),bow=a.Weapon=="bow",crossbow=a.Weapon=="crossbow";
             float reach=Reach(a.Weapon), enemyReach=Reach(b.Weapon);
             float h=leaning?peekY-.08f:b.Y+(b.Crouch?.77f:1.05f);
             float power=Math.Max(.33f,Math.Min(.96f,.34f+d*.024f+(level<2?0:.05f)));
-            string projectile=bow?"arrow":"stone";float velocity=Game.ShotSpeed(projectile,power);
-            float lead=ranged?(d/velocity+.24f+.43f*power)*skill.Lead:(a.Windup>0?a.Windup:a.Weapon=="knife"?.16f:.23f)*skill.Lead;
+            string projectile=Game.RangedProjectile(a.Weapon);
+            float velocity=Game.ShotSpeed(projectile,power);
+            float lead=ranged?(d/velocity+Game.ShotWindup(projectile,power,false))*skill.Lead:(a.Windup>0?a.Windup:a.Weapon=="knife"?.16f:.23f)*skill.Lead;
             // The lead is estimated from sequential visual fixes. It remains fallible
             // against a direction change after release or a movement behind a corner.
             float tx=leaning?peekX:m.LastSeen.X+lead*m.ReadVX;
@@ -1141,7 +1161,7 @@ namespace LastSignal
                 if(level==0 || !releasedPose || b.Windup<=guardLead ||
                     (level>=2 && m.ReadRanged && d>7 && a.Stamina>34))
                 {
-                    bool lateral=m.ReadRanged || ranged || (m.LargeWind && a.Stamina>50 && m.Dice.NextDouble()<.21);
+                    bool lateral=(m.ReadRanged&&!Game.CarriesShield(a)) || ranged || (m.LargeWind && a.Stamina>50 && m.Dice.NextDouble()<.21);
                     if(level>=1 && lateral && a.Stamina>skill.Reserve+20 && a.DodgeTime<=0)
                     {
                         g.Dodge(a,-dz*m.Side,dx*m.Side);m.Side=-m.Side;
@@ -1160,7 +1180,7 @@ namespace LastSignal
             Guard(a,m.GuardFor>0 && !ranged && a.Windup<=0 && a.Swing<=0);
             a.Aiming=ranged;
             bool tired=a.Stamina<skill.Reserve+7 && !counter;
-            float near=ranged?bow?15.5f:11.5f:reach*(level==0?.60f:level==1?.80f:.90f);
+            float near=ranged?(crossbow?23f:bow?15.5f:11.5f):reach*(level==0?.60f:level==1?.80f:.90f);
             if(ranged && m.Vault && g.Time<m.VaultUntil)near=5.1f;
             if(!ranged && tired)near=enemyReach+1.35f;
             if(level>=2 && !ranged && react && m.LargeWind && !a.Guard)near=enemyReach+.8f;
@@ -1183,11 +1203,11 @@ namespace LastSignal
             bool laneBlocked=PackFootwork(g,a,m,dx,dz,d,ranged,ref advance,ref side);
             bool bearing=Math.Abs(Angle(a.Yaw-ideal))<(ranged?.13f:.46f);
             bool guardOpen=m.ReadGuard && g.Time-m.GuardSeenAt>(level==3?.095f:.20f) && m.CanRead;
-            bool canCommit=!laneBlocked && a.Windup<=0 && a.Swing<=0 && a.NextAttack<=0 && a.DodgeTime<=.12f && !a.Guard && bearing && m.CanRead;
+            bool canCommit=!laneBlocked && a.Windup<=0 && a.Swing<=0 && a.NextAttack<=0 && a.DodgeTime<=.12f && !a.Guard && bearing && m.CanRead && (!crossbow||a.CrossbowLoaded);
             float away=dx*m.ReadVX+dz*m.ReadVZ;
             bool castLane=m.CanRead && !m.Opening && !laneBlocked && a.Weapon=="spear" &&
                 d>7 && d<16 && away>2.3f && m.Style!=Style.Shadow && a.Health>40 &&
-                (a.Count("spear")>1 || a.Count("knife")+a.Count("hatchet")+a.Count("sling")+a.Count("bow")>0 ||
+                (a.Count("spear")>1 || a.Count("knife")+a.Count("hatchet")+a.Count("sling")+a.Count("bow")+a.Count("sword")+a.Count("crossbow")>0 ||
                  (m.Style!=Style.Builder && d<14));
             if(!castLane)m.RunnerSince=0;
             else if(m.RunnerSince==0)m.RunnerSince=g.Time;
@@ -1217,7 +1237,7 @@ namespace LastSignal
             else if(canCommit && (counter || m.HitCooldown<=0) && !tired && (!impending || counter || level==0))
             {
                 float tolerance=level==0?.20f:.05f;
-                bool inRange=ranged?d<(bow?30f:22f):d<reach+tolerance;
+                bool inRange=ranged?d<(crossbow?48f:bow?30f:22f):d<reach+tolerance;
                 // A guarded opponent can hold the block. Get off its front or close
                 // enough to shove instead of feeding repeated light hits into it.
                 if(inRange && !(level>=2 && guardOpen && !backOpen && !ranged && g.Time-m.GuardSeenAt<.9f))
@@ -1240,6 +1260,7 @@ namespace LastSignal
                 Go(g,a,m,m.TacticalCover.X-a.X,m.TacticalCover.Z-a.Z,a.Crouch?1.45f:3.65f,dt,false);return;
             }
             float speed=a.Guard?1.27f:(ranged?2.5f:3.35f);
+            if(crossbow&&a.CrossbowReload>0)speed*=.72f;
             if(flanking && !tired)speed=4.05f;
             if(a.Windup>0 || a.Swing>0)speed*=level==3 && !ranged?(flanking?1f:.82f):.42f;
             a.Sprint=false;
@@ -1284,26 +1305,29 @@ namespace LastSignal
 
             if(v.Alive && a.Windup<=0)
             {
-                if(a.Count("bow")>0 && a.Count("arrows")>0)Survival.EquipActor(a,"bow");
+                if(HasRanged(a,"crossbow")&&(d>=6||BestMelee(a)=="fists"))Survival.EquipActor(a,"crossbow");
+                else if(HasRanged(a,"bow"))Survival.EquipActor(a,"bow");
                 else if(a.Count("spear")>0 && (d<6 || (d<=16 && (m.Style==Style.Hunter || a.Count("stone")<2 || a.Count("sling")==0))))
                     Survival.EquipActor(a,"spear");
+                else if(d<6&&BestMelee(a)!="fists")Survival.EquipActor(a,BestMelee(a));
                 else if(a.Count("sling")>0 && a.Count("stone")>0)Survival.EquipActor(a,"sling");
                 else Arm(a);
             }
             bool throwing=v.Alive && a.Weapon=="spear" && d>=6 && d<=16 && a.Count("spear")>0;
             bool ranged=v.Alive && (Ranged(a)||throwing);
+            bool crossbow=a.Weapon=="crossbow";
             a.Crouch=v.Alive && d<24 && (ranged || v.Alert<=0);
             a.Aiming=ranged && d<28;
-            float reach=throwing?16:a.Weapon=="bow"?28:a.Weapon=="sling"?19:a.Weapon=="spear"?2.8f:1.65f;
+            float reach=throwing?16:crossbow?43:a.Weapon=="bow"?28:a.Weapon=="sling"?19:Reach(a.Weapon)-.15f;
             float yaw=Heading(dx,dz);
             if(v.Alive && d<reach && Arena.Clear(g,a.X,Eye(a),a.Z,v.X,v.Y+Wildlife.Height(v),v.Z))
             {
                 float body=Wildlife.Height(v);
                 float power=Math.Min(.97f,Math.Max(.35f,(throwing?.46f:.32f)+d*.023f+(Wildlife.Large(v)||Wildlife.Predator(v)?.12f:0)));
-                string projectile=throwing?"spear":a.Weapon=="bow"?"arrow":"stone";
+                string projectile=throwing?"spear":Game.RangedProjectile(a.Weapon);
                 float velocity=Game.ShotSpeed(projectile,power);
                 float gravity=Game.ShotGravity(projectile);
-                float wind=throwing?.25f+.38f*power:.24f+.43f*power;
+                float wind=Game.ShotWindup(projectile,power,false);
                 float tx=v.X,tz=v.Z;
                 CreatureMind observation;
                 if(ranged && wildlife.TryGetValue(v,out observation))
@@ -1314,7 +1338,7 @@ namespace LastSignal
                 float flight=Dist(a.X,a.Z,tx,tz);
                 yaw=Heading(tx-a.X,tz-a.Z);
                 if(a.Windup<=0)a.Yaw=ApproachAngle(a.Yaw,yaw,dt*5f);
-                if(Math.Abs(Angle(a.Yaw-yaw))<.13f && a.NextAttack<=0 && a.Windup<=0 && a.Swing<=0 && m.HitCooldown<=0)
+                if(Math.Abs(Angle(a.Yaw-yaw))<.13f && a.NextAttack<=0 && a.Windup<=0 && a.Swing<=0 && m.HitCooldown<=0 && (!crossbow||a.CrossbowLoaded))
                 {
                     float h=Arena.Height(tx,tz)+body-Eye(a);
                     float pitch=ranged?AimPitch(flight,h,velocity,gravity):(float)Math.Atan2(h,Math.Max(.4f,d));
@@ -1332,7 +1356,7 @@ namespace LastSignal
                 return;
             }
             a.Sprint=v.Alive && v.Alert>0 && d>6 && !ranged && a.Stamina>35;
-            Go(g,a,m,dx,dz,a.Sprint?4.6f:(a.Crouch?1.62f:2.8f),dt,true);
+            Go(g,a,m,dx,dz,(a.Sprint?4.6f:a.Crouch?1.62f:2.8f)*(crossbow&&a.CrossbowReload>0?.72f:1),dt,true);
         }
         static void Camp(Game g,Actor a,Mind m,float dt)
         {

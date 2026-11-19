@@ -5,6 +5,7 @@ const clamp = (n, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, n));
 const mix = (a, b, t) => a + (b - a) * t;
 const solid = [1, 1, 1, 1];
 const nativeGear = new Set(["arrows", "arrow", "spear", "hatchet", "knife", "bow", "sling"]);
+const fieldGear = new Set(["sword", "shield", "crossbow", "bolt", "bolts"]);
 const tallLandmarks = new Set(["cornucopia", "watchtower", "aqueduct", "signal_lodge", "sand_arch"]);
 const trees = new Set(["tree", "oak", "pine", "birch", "pinon", "snow_fir"]);
 const rocks = new Set(["rock", "boulder", "snow_boulder", "ice_teeth", "mesa_rock", "sand_hoodoo", "shore_rocks"]);
@@ -265,6 +266,132 @@ function boxVertices() {
   return new Float32Array(vertices);
 }
 
+function transformedPoint(matrix, x, y, z, direction = 0) {
+  return [matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12] * direction,
+    matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13] * direction,
+    matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14] * direction];
+}
+
+function fitBox(vertices, x, y, z, w, h, d, color, yaw = 0) {
+  const shape = boxVertices();
+  const matrix = pose(x, y - h / 2, z, yaw, 0, w, h, d);
+  const rotation = pose(0, 0, 0, yaw);
+  for (let i = 0; i < shape.length; i += 11) {
+    appendVertex(vertices, transformedPoint(matrix, shape[i], shape[i + 1], shape[i + 2], 1),
+      transformedPoint(rotation, shape[i + 3], shape[i + 4], shape[i + 5]), [0, 0], color);
+  }
+}
+
+function bladeFace(vertices, a, b, c, color) {
+  const u = b.map((n, i) => n - a[i]);
+  const v = c.map((n, i) => n - a[i]);
+  const normal = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+  for (const point of [a, b, c]) appendVertex(vertices, point, normal, [0, 0], color);
+}
+
+function swordVertices() {
+  const vertices = [];
+  fitBox(vertices, 0, -0.065, 0, 0.059, 0.19, 0.053, [0.27, 0.16, 0.10]);
+  fitBox(vertices, 0, -0.17, 0, 0.086, 0.051, 0.075, [0.44, 0.42, 0.34]);
+  fitBox(vertices, 0, 0.03, 0, 0.242, 0.041, 0.073, [0.55, 0.49, 0.36]);
+  for (const face of [1, -1]) {
+    const center = [0, 0.052, face * 0.015];
+    const ridge = [0, 0.66, face * 0.013];
+    const top = [0, 0.84, 0];
+    for (const side of [-1, 1]) {
+      const base = [side * 0.054, 0.052, 0];
+      const edge = [side * 0.041, 0.66, 0];
+      const tint = face * side > 0 ? [0.72, 0.77, 0.77] : [0.46, 0.51, 0.51];
+      if (face * side > 0) {
+        bladeFace(vertices, center, base, ridge, tint);
+        bladeFace(vertices, base, edge, ridge, tint);
+        bladeFace(vertices, ridge, edge, top, tint);
+      } else {
+        bladeFace(vertices, center, ridge, base, tint);
+        bladeFace(vertices, base, ridge, edge, tint);
+        bladeFace(vertices, ridge, top, edge, tint);
+      }
+    }
+  }
+  return new Float32Array(vertices);
+}
+
+function shieldVertices() {
+  const vertices = [];
+  const edges = 12;
+  for (let i = 0; i < edges; i++) {
+    const a = i * TAU / edges;
+    const b = (i + 1) * TAU / edges;
+    const rim = (angle, inset, z) => {
+      const y = Math.cos(angle);
+      return [Math.sin(angle) * (0.36 + 0.042 * y) * inset, y * 0.465 * inset, z];
+    };
+    bladeFace(vertices, [0, 0, 0.079], rim(b, 0.89, 0.053), rim(a, 0.89, 0.053),
+      i % 2 ? [0.42, 0.28, 0.14] : [0.48, 0.32, 0.17]);
+    bladeFace(vertices, [0, 0, -0.038], rim(a, 1, -0.04), rim(b, 1, -0.04), [0.35, 0.23, 0.13]);
+    appendFace(vertices, [rim(b, 0.89, 0.053), rim(b, 1, 0.032), rim(a, 1, 0.032), rim(a, 0.89, 0.053)],
+      [0, 0, 1], [0, 0], [0.43, 0.47, 0.47]);
+    appendFace(vertices, [rim(a, 1, 0.032), rim(b, 1, 0.032), rim(b, 1, -0.04), rim(a, 1, -0.04)],
+      [Math.sin((a + b) / 2), Math.cos((a + b) / 2), 0], [0, 0], [0.29, 0.32, 0.31]);
+    bladeFace(vertices, [0, 0, 0.135], [Math.sin(b) * 0.115, Math.cos(b) * 0.115, 0.078],
+      [Math.sin(a) * 0.115, Math.cos(a) * 0.115, 0.078], [0.58, 0.62, 0.59]);
+  }
+  for (const y of [-0.18, 0.16]) fitBox(vertices, 0, y, -0.062, 0.51, 0.058, 0.042, [0.25, 0.15, 0.08]);
+  fitBox(vertices, -0.10, 0, -0.07, 0.082, 0.27, 0.074, [0.18, 0.14, 0.11]);
+  return new Float32Array(vertices);
+}
+
+function crossbowVertices() {
+  const vertices = [];
+  const walnut = [0.39, 0.22, 0.12];
+  const dark = [0.22, 0.23, 0.23];
+  const steel = [0.46, 0.50, 0.49];
+  fitBox(vertices, 0, -0.028, 0.105, 0.115, 0.079, 0.71, walnut);
+  fitBox(vertices, 0, -0.093, -0.24, 0.11, 0.095, 0.42, walnut);
+  fitBox(vertices, 0, -0.087, -0.445, 0.125, 0.118, 0.045, dark);
+  fitBox(vertices, 0, 0.017, 0.132, 0.083, 0.021, 0.66, steel);
+  fitBox(vertices, 0, -0.10, 0.045, 0.057, 0.13, 0.053, dark);
+  for (const side of [-1, 1]) {
+    fitBox(vertices, side * 0.11, -0.006, 0.318, 0.059, 0.033, 0.245, dark, side * 1.44);
+    fitBox(vertices, side * 0.257, 0.001, 0.298, 0.048, 0.027, 0.116, steel, side * 2.03);
+    fitBox(vertices, side * 0.332, 0.01, 0.269, 0.038, 0.038, 0.072, steel, side * 1.9);
+    fitBox(vertices, side * 0.066, -0.012, 0.48, 0.026, 0.035, 0.13, dark);
+  }
+  fitBox(vertices, 0, -0.012, 0.55, 0.15, 0.034, 0.032, dark);
+  return new Float32Array(vertices);
+}
+
+function boltVertices() {
+  const vertices = [];
+  const steel = [0.56, 0.60, 0.59];
+  fitBox(vertices, 0, 0, -0.225, 0.014, 0.014, 0.39, [0.42, 0.30, 0.18]);
+  fitBox(vertices, 0, 0, -0.38, 0.057, 0.003, 0.07, [0.31, 0.20, 0.19]);
+  fitBox(vertices, 0, 0.015, -0.38, 0.003, 0.034, 0.07, [0.31, 0.20, 0.19]);
+  const top = [0, 0.007, -0.045];
+  const bottom = [0, -0.007, -0.045];
+  const left = [-0.022, 0, -0.062];
+  const right = [0.022, 0, -0.062];
+  const tip = [0, 0, 0.014];
+  bladeFace(vertices, top, left, tip, steel);
+  bladeFace(vertices, top, tip, right, steel);
+  bladeFace(vertices, bottom, tip, left, steel);
+  bladeFace(vertices, bottom, right, tip, steel);
+  return new Float32Array(vertices);
+}
+
+function smooth(t) {
+  const amount = clamp(t);
+  return amount * amount * (3 - 2 * amount);
+}
+
+function reloadMotion(progress) {
+  return {
+    lower: smooth(progress / 0.22) * (1 - smooth((progress - 0.79) / 0.21)),
+    cock: smooth((progress - 0.22) / 0.32),
+    seat: smooth((progress - 0.54) / 0.25)
+  };
+}
+
 function coneVertices(sides, taper) {
   const vertices = [];
   for (let j = 0; j < sides; j++) {
@@ -426,6 +553,10 @@ export class ArenaRenderer {
     this.canopy = this.makeMesh(coneVertices(8, 0.04));
     this.rock = this.makeMesh(coneVertices(6, 0.47));
     this.flame = this.makeMesh(coneVertices(6, 0));
+    this.sword = this.makeMesh(swordVertices());
+    this.shield = this.makeMesh(shieldVertices());
+    this.crossbow = this.makeMesh(crossbowVertices());
+    this.bolt = this.makeMesh(boltVertices());
     this.textures = new Map();
     this.painted = false;
     this.modelRequest = false;
@@ -849,6 +980,20 @@ export class ArenaRenderer {
       const tilt = Math.PI * 0.4833 * clamp(age / 1.18) ** 2;
       const root = pose(x, y - Math.max(0, age - 1.24) * 2.3, z, fallYaw, tilt);
       matrix = multiply(root, pose(0, 0, 0, yaw - fallYaw, 0, size));
+    } else if (kind === "pickup" && fieldGear.has(id)) {
+      if (id === "crossbow") {
+        this.drawCrossbow(batch, pose(x, y + 0.11, z, yaw, 0, size), 0, false);
+      } else if (id === "sword") {
+        this.queue(batch, this.sword, pose(x, y + 0.15, z, yaw, 1.50, size));
+      } else if (id === "shield") {
+        this.queue(batch, this.shield, pose(x, y + 0.15, z, yaw, -1.35, size));
+      } else {
+        const count = id === "bolts" ? 3 : 1;
+        for (let i = 0; i < count; i++) {
+          this.queue(batch, this.bolt, pose(x + i * 0.045, y + 0.15 + i * 0.015, z, yaw + i * 0.075, 0, size));
+        }
+      }
+      return;
     } else if (kind === "pickup" && nativeGear.has(id)) {
       matrix = pose(x, y + (id === "spear" ? 0.074 : 0.13), z, yaw, 1.50, size);
     }
@@ -903,13 +1048,31 @@ export class ArenaRenderer {
   }
 
   actor(batch, a, clock, nearby) {
-    const [x, y, z, yaw, alive, crouch, style, , fallYaw, anim, speed] = a;
+    const [x, y, z, yaw, alive, crouch, style, , fallYaw, anim, speed, weapon, shield, guard, guardBlend, reload, loaded, striking] = a;
     const tint = costume[style] ?? solid;
     const gait = alive ? Math.sin(anim ?? clock * 5) * clamp((speed ?? 0) * 0.25) : 0;
     const matrix = alive ? pose(x, y - (crouch ? 0.20 : 0), z, yaw, 0, 1, crouch ? 0.86 : 1, 1)
       : pose(x, y + 0.18, z, fallYaw ?? yaw, -Math.PI / 2);
+    if (alive && nearby) {
+      const advance = shield ? clamp(Math.max(guard ? 0.85 : 0, guardBlend || 0)) : 0;
+      if (shield) this.queue(batch, this.shield, multiply(matrix,
+        pose(-0.30 + advance * 0.09, 0.77 + advance * 0.42, 0.14 + advance * 0.42, -0.58 * (1 - advance), 0.05, 0.98)));
+      if (weapon === "sword") {
+        const swing = Math.sin(clamp((striking || 0) / 0.36) * Math.PI);
+        this.queue(batch, this.sword, multiply(matrix, pose(0.31 - 0.28 * swing, 0.85 + swing * 0.28, 0.23,
+          0.28 - swing * 0.81, 0.43 + swing * 0.76)));
+      } else if (weapon === "crossbow") {
+        const movement = reloadMotion(reload || 0);
+        this.drawCrossbow(batch, multiply(matrix, pose(0.21, 1.0 - movement.lower * 0.27, 0.27,
+          0.3 * movement.lower, 0.2 + movement.lower * 0.45)), reload || 0, loaded);
+      }
+    }
     if (nearby && this.rig(batch, "contestant", matrix, tint, part => {
       if (!alive) return null;
+      if (part.name === "upperarmL" && (shield || weapon === "crossbow")) {
+        return pose(part.x, part.y, part.z, 0, guard || weapon === "crossbow" ? 0.82 : 0.26);
+      }
+      if (part.name === "upperarmR" && weapon === "crossbow") return pose(part.x, part.y, part.z, 0, 0.87);
       const move = part.name === "thighL" || part.name === "upperarmR" ? 0.4 * gait
         : part.name === "thighR" || part.name === "upperarmL" ? -0.4 * gait
         : crouch && part.name === "torso" ? 0.24 : 0;
@@ -950,6 +1113,68 @@ export class ArenaRenderer {
       [0.42, 0.34, 0.26, 1]);
   }
 
+  drawCrossbow(batch, matrix, reload, loaded) {
+    this.queue(batch, this.crossbow, matrix);
+    const center = loaded ? -0.12 : mix(0.27, -0.12, reloadMotion(reload).cock);
+    for (const side of [-1, 1]) {
+      const dx = side * 0.333;
+      const dz = 0.27 - center;
+      this.queue(batch, this.box, multiply(matrix,
+        pose(dx / 2, 0.026, center + dz / 2, Math.atan2(dx, dz), 0, 0.009, 0.009, Math.hypot(dx, dz) + 0.01)),
+      [0.71, 0.63, 0.48, 1]);
+    }
+    if (loaded || reload >= 0.79) this.queue(batch, this.bolt, multiply(matrix, pose(0, 0.047, 0.42)));
+  }
+
+  forearm(batch, shoulder, hand, cloth, skin) {
+    const [x, y, z] = hand.map((n, i) => n - shoulder[i]);
+    const length = Math.hypot(x, y, z);
+    if (length > 0.001) {
+      const horizontal = Math.hypot(x, z);
+      const axis = [x / length, y / length, z / length];
+      const side = horizontal < 0.01 ? [1, 0, 0] : [z / horizontal, 0, -x / horizontal];
+      const depth = [side[1] * axis[2] - side[2] * axis[1], side[2] * axis[0] - side[0] * axis[2],
+        side[0] * axis[1] - side[1] * axis[0]];
+      const matrix = [...side.map(n => n * 0.14), 0, x, y, z, 0, ...depth.map(n => n * 0.13), 0, ...shoulder, 1];
+      this.queue(batch, this.trunk, matrix, cloth);
+    }
+    this.queue(batch, this.rock, pose(hand[0], hand[1] - 0.042, hand[2], 0, 0.18, 0.105, 0.12, 0.098), skin);
+  }
+
+  crossbowHands(batch, frame, clock, bob, cloth, skin) {
+    const { player } = frame;
+    const reload = player.reload ? clamp(player.reload + (clock - frame.clock) / (player.reloadSeconds || 4)) : 0;
+    const motion = reloadMotion(reload);
+    const aim = player.aim ? 1 - motion.lower : 0;
+    const recoil = Math.sin(clamp((player.swing || 0) / 0.36) * Math.PI);
+    const matrix = pose(0.16 - 0.14 * aim + motion.lower * 0.10,
+      -0.24 + bob + 0.15 * aim - 0.22 * motion.lower,
+      0.58 - 0.09 * motion.lower - 0.075 * recoil, 0.07 + 0.20 * motion.lower, motion.lower * 0.32 - recoil * 0.12, 0.77);
+    const right = transformedPoint(matrix, 0, -0.09, -0.015, 1);
+    this.forearm(batch, [0.27, -0.46, 0.08], right, cloth, skin);
+
+    const grip = [-0.086, -0.075, 0.28];
+    let left = transformedPoint(matrix, ...grip, 1);
+    if (reload > 0) {
+      const fingertips = [-0.025, 0.054, mix(0.26, -0.12, motion.cock)];
+      const start = smooth(reload / 0.22);
+      const withdraw = smooth((reload - 0.79) / 0.21);
+      const motionWeight = start * (1 - withdraw);
+      if (reload >= 0.54 && reload < 0.79) {
+        const boltX = mix(-0.34, 0, motion.seat);
+        const boltY = mix(0.20, 0.047, motion.seat);
+        const boltZ = mix(0.12, 0.42, motion.seat);
+        const grabbing = pose(boltX, boltY, boltZ, (1 - motion.seat) * -0.63);
+        this.queue(batch, this.bolt, multiply(matrix, grabbing));
+        left = transformedPoint(multiply(matrix, grabbing), -0.016, -0.04, -0.15, 1);
+      } else {
+        left = transformedPoint(matrix, ...grip.map((n, i) => mix(n, fingertips[i], motionWeight)), 1);
+      }
+    }
+    this.forearm(batch, [-0.28, -0.43, 0.10], left, cloth, skin);
+    this.drawCrossbow(batch, matrix, reload, player.crossbowLoaded);
+  }
+
   hand(batch, frame, clock) {
     const player = frame.player;
     if (!player || player.alive === false) return;
@@ -962,17 +1187,28 @@ export class ArenaRenderer {
     const right = 0.24 - aiming * 0.13 - swing * 0.21;
     const cloth = [0.30, 0.35, 0.28, 1];
     const skin = [0.53, 0.40, 0.30, 1];
+    if (weapon === "crossbow") {
+      this.crossbowHands(batch, frame, clock, bob, cloth, skin);
+      return;
+    }
     const armY = -0.31 + bob + swing * 0.15 + aiming * 0.10;
     this.queue(batch, this.trunk, pose(right, armY - 0.08, 0.17, -0.63 + swing, 1.32, 0.13, 0.44, 0.11), cloth);
     this.queue(batch, this.rock, pose(right - 0.03, armY + 0.03, 0.50, 0, 0.28, 0.12, 0.14, 0.13), skin);
-    if (!weapon || weapon === "fists" || weapon === "bow") {
+    if (player.shield) {
+      const raised = clamp(Math.max(player.shieldRaised ? 0.84 : 0, player.guardBlend || 0));
+      const shield = pose(-0.39 + 0.12 * raised, -0.52 + 0.33 * raised + bob, 0.59 - 0.025 * raised,
+        -0.52 * (1 - raised), -0.25 + 0.18 * raised, 0.73);
+      this.forearm(batch, [-0.28, -0.46, 0.10], transformedPoint(shield, -0.1, 0, -0.105, 1), cloth, skin);
+      this.queue(batch, this.shield, shield);
+    } else if (!weapon || weapon === "fists" || weapon === "bow") {
       this.queue(batch, this.trunk, pose(left, armY - 0.10, 0.13, 0.6, 1.36, 0.13, 0.42, 0.11), cloth);
       this.queue(batch, this.rock, pose(left + 0.03, armY + 0.02, 0.46, 0, 0.28, 0.12, 0.14, 0.13), skin);
     }
     if (!weapon || weapon === "fists") return;
     const tilt = weapon === "spear" ? 1.12 : weapon === "bow" ? 0.12 : 0.29;
     const position = pose(right - 0.04, armY + 0.03, 0.49, -0.04 - swing * 0.74, tilt - swing * 0.76, 0.77);
-    const mesh = this.flatModel(player.aim && weapon === "bow" ? "bow_draw1" : weapon) ?? this.flatModel(weapon);
+    const mesh = weapon === "sword" ? this.sword
+      : this.flatModel(player.aim && weapon === "bow" ? "bow_draw1" : weapon) ?? this.flatModel(weapon);
     if (mesh) this.queue(batch, mesh, position);
     else this.queue(batch, this.box, multiply(position, pose(0, 0.03, 0, 0, 0, 0.06, 0.35, 0.055)), [0.57, 0.54, 0.44, 1]);
   }
@@ -1030,6 +1266,10 @@ export class ArenaRenderer {
     }
     for (const [id, x, y, z, yaw = 0, pitch] of frame.shots ?? []) {
       if (!this.visible(camera, x, z, 120, horizontal, 2)) continue;
+      if (id === "bolt") {
+        this.queue(nearby, this.bolt, pose(x, y, z, yaw, (pitch ?? Math.PI / 2) - Math.PI / 2));
+        continue;
+      }
       const mesh = this.flatModel(id) ?? this.rock;
       const scale = id === "stone" ? 0.38 : mesh === this.rock ? 0.12 : 1;
       let transform = pose(x, y, z, yaw, pitch ?? 0, scale);

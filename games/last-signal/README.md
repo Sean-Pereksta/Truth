@@ -12,6 +12,12 @@ In the Catnmice mini launcher on Windows, install **Last Signal** and choose **H
 
 Open the host’s HTTPS invite in Safari or Chrome, enter a name and tap **Ready** from the lobby. Use the left thumb area to move and drag the right side to look. The touch HUD keeps attack and interaction within reach, with pack, crafting and building available from the action menu. Phone players share the same match and eight-player limit as Windows players. Hosting and solo play run on the Windows game.
 
+## Arena equipment
+
+Swords and round shields are available at the Cornucopia and in the crafting menu. Carry a shield with a spear or sword and hold right click (Guard) to raise it. Attacks that pass beside, above or below the shield can still hit you.
+
+One in three rounds rolls a crossbow at a field supply site away from the Cornucopia. It comes with four bolts. Equip it to start loading. A bolt flies farther than a bow shot, and the next shot takes four seconds to reload. Switching weapons interrupts an unfinished reload.
+
 ## Build from source
 
 On Windows, run `.\Build-Windows.ps1` from this folder. The script unpacks the original assets and hosting components into `build/windows`, includes the browser client and compiles the checked-in C# using the .NET Framework 4.x x64 compiler.

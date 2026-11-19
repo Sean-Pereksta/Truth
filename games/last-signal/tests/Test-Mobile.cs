@@ -158,7 +158,7 @@ class TestMobile {
     }
     static float Number(Dictionary<string,object> data,string name) { return Convert.ToSingle(data[name]); }
     static string Join(WebSocket socket,bool compressed,string name,string resume,int seat) {
-        Text(socket,"JOIN|LS1|"+roomKey+"|"+name+"|"+resume);
+        Text(socket,"JOIN|LS2|"+roomKey+"|"+name+"|"+resume);
         string[] reply=Reply(socket,compressed,"SEAT").Split('|');
         Check(reply.Length==3&&int.Parse(reply[1])==seat&&reply[2].Length==24,"Wrong mobile seat.");
         return reply[2];
@@ -189,6 +189,8 @@ class TestMobile {
     static void VerifyFrame(Dictionary<string,object> frame,int seat,string name) {
         var player=Field(frame,"player");
         Check(Number(player,"id")==seat&&(string)player["name"]==name,"Frame exposes another seat's perspective.");
+        Check(player["shield"] is bool && player["shieldRaised"] is bool && player["crossbowLoaded"] is bool &&
+            Number(player,"reload")>=0 && Number(player,"reload")<=1, "Incomplete mobile equipment state.");
         Check(Number(frame,"alive")>0&&Number(frame,"alive")<=24&&frame.ContainsKey("propChanges")&&((object[])frame["craft"]).Length>0,
             "Frame is missing arena contestants, prop changes, or recipes.");
     }

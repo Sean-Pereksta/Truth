@@ -9,6 +9,9 @@ namespace LastSignal {
         public float X,Y,Z,Yaw,Health=100,Stamina=100,Hunger=90,Speed, GuardTime, DodgeTime, Swing, Windup, Hurt, NextAttack, Anim, Vertical, Cooked;
         public float Hydration=92,WaterCarried,NeedStrain,EmptyFoodTime,EmptyWaterTime;
         public float DrawPower,ProjectilePower,WindupSpan,ActionPitch;
+        public const float CrossbowReloadTime=4f;
+        public bool CrossbowLoaded;
+        public float CrossbowReload;
         public bool Throwing,LastThrow,SpearThrust;
         public float SwingSpan=.36f,AttackCharge,GuardBlend;
         public float GuardRecovery,GuardPitch,DodgeDX,DodgeDZ;
@@ -44,7 +47,14 @@ namespace LastSignal {
         public int Count(string item) { int v; return Bag.TryGetValue(item,out v)?v:0; }
         public void Add(string item,int amount) {
             if(Armor.IsArmor(item))Armor.Adjust(this,item,amount);
-            else Bag[item]=Math.Max(0,Count(item)+amount);
+            else {
+                int remaining=Math.Max(0,Count(item)+amount);
+                Bag[item]=remaining;
+                if(remaining==0&&(item=="crossbow"||item=="bolts")) {
+                    CrossbowLoaded=false;
+                    CrossbowReload=0;
+                }
+            }
         }
     }
     public class Prop {
@@ -85,7 +95,7 @@ namespace LastSignal {
             for(int i=0;i<names.Length;i++) KeysMap[names[i]]=keys[i];
             KeysMap["Throw"]=Keys.T;
             KeysMap["Previous weapon"]=Keys.OemOpenBrackets;KeysMap["Next weapon"]=Keys.OemCloseBrackets;
-            for(int i=0;i<5;i++)KeysMap["Weapon "+(i+1)]=(Keys)((int)Keys.D1+i);
+            for(int i=0;i<7;i++)KeysMap["Weapon "+(i+1)]=(Keys)((int)Keys.D1+i);
         }
     }
     public partial class Game {

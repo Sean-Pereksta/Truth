@@ -24,7 +24,7 @@ namespace LastSignal
         }
         static float DrawStrength(Actor a){return Bound(a.DrawPower,0,1);}
         static bool ThrowPose(Actor a){return a.Throwing||(a.LastThrow&&a.Swing>0);}
-        static bool AimedWeaponPose(Actor a){return a.Weapon=="spear"||a.Weapon=="bow"||ThrowPose(a);}
+        static bool AimedWeaponPose(Actor a){return a.Weapon=="spear"||a.Weapon=="bow"||a.Weapon=="crossbow"||ThrowPose(a);}
         static bool PosedHands(Actor a){return AimedWeaponPose(a)||ShortMelee(a)||Shoving(a);}
         static bool Lifting(Actor a){
             return a.PickupLift>0&&a.PickupSource!=null&&a.Weapon==a.LiftedWeapon&&
@@ -47,7 +47,8 @@ namespace LastSignal
         }
         void DrawPickupItem(Actor a){
             float t=LiftPhase(a),reach=LiftReach(a),raised=Ease((t-.23f)/.69f);
-            bool left=a.Weapon=="bow";JointPoint source=PickupLocal(a),hand=ArmGoal(a,left,false);
+            bool left=a.Weapon=="bow"||Game.CarriesShield(a);
+            JointPoint source=PickupLocal(a),hand=ArmGoal(a,left,false);
             hand=GloveCenter(hand,left);
             float dip=PickupDip(a),tilt=(a.Crouch?18:0)+22*reach;
             float co=C(tilt/Deg),sn=S(tilt/Deg);
@@ -66,9 +67,12 @@ namespace LastSignal
                     Align(normal,axis);glTranslatef(0,stroke.slide*raised,0);
                 }
             }else if(ShortMelee(a)){
-                glRotatef(86*(1-raised),1,0,0);ToolRotation(currentMelee.tool*raised);
+                JointPoint tool=currentMelee.tool;
+                if(Game.CarriesShield(a)){tool.Y=-tool.Y;tool.Z=-tool.Z;}
+                glRotatef(86*(1-raised),1,0,0);ToolRotation(tool*raised);
                 if(a.Weapon=="hatchet")glTranslatef(0,.081f*raised,0);
-            }else glRotatef(86*(1-raised)+(left?-7:24)*raised,1,0,0);
+            }else if(a.Weapon=="crossbow")ToolRotation(J(86,0,0)*(1-raised)+CrossbowStance(a,false).Angles*raised);
+            else glRotatef(86*(1-raised)+(left?-7:24)*raised,1,0,0);
             Mesh(a.Weapon);glPopMatrix();
         }
         static float PickupDip(Actor a){return LiftReach(a)*(PickupLocal(a).Y<.45f?.28f:.145f);}
@@ -179,12 +183,18 @@ namespace LastSignal
         }
         void SpecialWeapon(Actor a,bool first){
             float draw=DrawStrength(a);
-            if(ThrowPose(a)){
+            bool mirror=!first&&Game.CarriesShield(a);
+            if(a.Weapon=="crossbow"){
+                DrawCrossbow(a,first);
+            }else if(ThrowPose(a)){
                 if(!a.Throwing||a.Weapon!="spear")return;
-                glPushMatrix();PointTranslate(ThrowGrip(a,first));glRotatef(first?3:0,0,1,0);
+                JointPoint grip=ThrowGrip(a,first);
+                if(mirror)grip.X=-grip.X;
+                glPushMatrix();PointTranslate(grip);glRotatef(first?3:0,0,1,0);
                 glRotatef(76+8*draw,1,0,0);Mesh("spear");glPopMatrix();
             }else if(a.Weapon=="spear"){
                 SpearStroke stroke=SpearMelee(a,first);
+                if(mirror){stroke.rear.X=-stroke.rear.X;stroke.axis.X=-stroke.axis.X;}
                 glPushMatrix();PointTranslate(stroke.rear);Align(new JointPoint(0,1,0),stroke.axis);
                 glTranslatef(0,stroke.slide,0);Mesh("spear");glPopMatrix();
             }else if(ShortMelee(a)||(Shoving(a)&&a.Weapon!="bow")){
@@ -198,7 +208,21 @@ namespace LastSignal
             }
         }
         JointPoint ArmGoal(Actor a,bool left,bool first){
+            if(Game.CarriesShield(a)){
+                if(left==first)return ShieldHand(a,first);
+                JointPoint right=WeaponArmGoal(a,false,first);
+                if(!first)right.X=-right.X;
+                return right;
+            }
+            return WeaponArmGoal(a,left,first);
+        }
+        JointPoint WeaponArmGoal(Actor a,bool left,bool first){
             float draw=DrawStrength(a);
+            if(a.Weapon=="crossbow"){
+                CrossbowViewPose pose=CrossbowStance(a,first);
+                JointPoint hand=left?pose.Support:pose.Grip;
+                return !first&&Lifting(a)?LiftGoal(a,left,hand):hand;
+            }
             if(ThrowPose(a)){
                 if(!left)return ThrowGrip(a,first);
                 return first?new JointPoint(.29f,-.33f,.53f+.11f*draw):new JointPoint(.24f,.19f,.28f+.06f*draw);
@@ -320,6 +344,7 @@ namespace LastSignal
                 }
             }
             SpecialWeapon(a,true);
+            DrawShield(a,true);
         }
     }
 }

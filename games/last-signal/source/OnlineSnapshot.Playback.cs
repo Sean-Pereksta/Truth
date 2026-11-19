@@ -228,6 +228,7 @@ namespace LastSignal
             {
                 Actor a=client.Actors[i];Pose pose=Pose.Blend(r.ActorsFrom[i],r.ActorsTo[i],blend);
                 a.X=pose.X;a.Y=pose.Y;a.Z=pose.Z;if(a!=client.Player||!a.Alive)a.Yaw=pose.Yaw;
+                if(a.CrossbowReload>0)a.CrossbowReload=Math.Min(Actor.CrossbowReloadTime,a.CrossbowReload+step);
             }
             for(int i=0;i<client.Animals.Count;i++)
             {

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace LastSignal {
     internal static class OnlineWire {
-        internal const string Version="LS1";
+        internal const string Version="LS2";
         static readonly UTF8Encoding Utf8=new UTF8Encoding(false,true);
         internal static string Token(){
             byte[] data=new byte[18];

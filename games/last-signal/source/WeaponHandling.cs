@@ -2,7 +2,7 @@ using System;
 
 namespace LastSignal {
     public partial class Game {
-        static readonly string[] belt={"knife","spear","bow","hatchet","sling"};
+        static readonly string[] belt={"knife","spear","bow","hatchet","sling","sword","crossbow"};
         string switchTo="",bufferedWeapon="";
         float bufferedUntil,bufferedPower;
         bool guardHeld;
@@ -67,10 +67,41 @@ namespace LastSignal {
             if(a.NextAttack>0||a.Windup>0)return;
             bufferedWeapon="";a.DrawPower=bufferedPower;Attack(a,bufferedPower>.32f/.72f,Pitch);
         }
-        public static float ShotSpeed(string projectile,float power){
-            return projectile=="arrow"?18+22*power:projectile=="spear"?13+17*power:34+8*power;
+        public static string RangedProjectile(string weapon){
+            switch(weapon){case "bow":return "arrow";case "crossbow":return "bolt";case "sling":return "stone";default:return "";}
         }
-        public static float ShotGravity(string projectile){return projectile=="arrow"?14.4f:projectile=="spear"?10.5f:7;}
+        public static string ShotAmmo(string projectile){
+            return projectile=="arrow"?"arrows":projectile=="bolt"?"bolts":projectile;
+        }
+        public static float ShotSpeed(string projectile,float power){
+            return projectile=="bolt"?78f:projectile=="arrow"?18+22*power:projectile=="spear"?13+17*power:34+8*power;
+        }
+        public static float ShotGravity(string projectile){
+            return projectile=="bolt"?8.5f:projectile=="arrow"?14.4f:projectile=="spear"?10.5f:7;
+        }
+        public static float ShotWindup(string projectile,float power,bool player) {
+            if(projectile=="bolt")return player?.05f:.12f;
+            if(player)return .048f;
+            return projectile=="spear"?.25f+.38f*power:.24f+.43f*power;
+        }
+
+        void StepCrossbow(Actor a,float dt) {
+            if(a.Count("bolts")==0||a.Count("crossbow")==0){a.CrossbowLoaded=false;a.CrossbowReload=0;return;}
+            if(a.Weapon!="crossbow"){a.CrossbowReload=0;return;}
+            if(a.CrossbowLoaded||a.Windup>0||DodgeMoving(a))return;
+            a.CrossbowReload+=dt;
+            if(a.CrossbowReload<Actor.CrossbowReloadTime)return;
+            a.CrossbowReload=0;a.CrossbowLoaded=true;
+            Cue((a==Player?"focus_":"")+"equip",a.X,a.Z,6);
+        }
+        void FireCrossbow(Actor a,float pitch) {
+            if(a==null||a.Weapon!="crossbow"||!a.Alive)return;
+            if(!a.CrossbowLoaded) {
+                if(a==Player)Say(a.Count("bolts")==0?"Out of bolts":"Reloading crossbow");
+                return;
+            }
+            PrepareShot(a,pitch,1,"bolt");
+        }
 
         public void WildHit(Animal hunter,Actor a,float damage){
             if(hunter==null||a==null||!a.Alive||Winner!=null||Evading(a))return;
@@ -78,11 +109,11 @@ namespace LastSignal {
             ImpactSite site=new ImpactSite(a.X-dx*.27f,a.Y+.88f,a.Z-dz*.27f,dx,0,dz,"claw");
             float yaw=(float)Math.Atan2(-dx,-dz);
             float pitch=(float)Math.Atan2(hunter.Y+Wildlife.Height(hunter)-(a.Y+(a.Crouch?1.03f:1.58f)),d);
-            GuardOutcome guard=Defend(a,site,yaw,pitch,false,ref damage);
+            GuardOutcome guard=GuardWildStrike(a,hunter,site,yaw,pitch,ref damage);
             if(guard!=GuardOutcome.Miss){
                 bool parry=guard==GuardOutcome.Parry;
                 Cue((a==Player?"focus_":"")+(parry?"parry":"guard"),a.X,a.Z,22);
-                if(parry)return;
+                if(damage<=.1f)return;
             }
             damage=Armor.Absorb(this,a,damage,site);
             a.Health-=damage;a.Hurt=.42f;a.HitDirection=(float)Math.Atan2(dx,dz);a.HitStrength=Math.Min(1,damage/32f);

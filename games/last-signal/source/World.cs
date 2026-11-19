@@ -229,9 +229,9 @@ namespace LastSignal
             // Weapons are separate real pickups and immediately disappear when taken.
             WeaponStation(g,0,-4.9f,8.65f,-.32f,true,"spear",0,"sling",5,"stone",4,"bandage",1);
             WeaponStation(g,0,4.9f,8.65f,.32f,true,"hatchet",0,"bow",4,"arrows",4,"cloth",2);
-            WeaponStation(g,0,-9.15f,-1.75f,1.30f,true,"spear",0,"knife",0,"fiber",3,"bandage",1);
+            WeaponStation(g,0,-9.15f,-1.75f,1.30f,true,"spear",0,"shield",0,"fiber",3,"bandage",1);
             WeaponStation(g,0,9.15f,-1.75f,-1.30f,true,"hatchet",0,"sling",5,"stone",4,"tinder",2);
-            Stock(g,0,-3.38f,3f,0,0,0,"knife",1,0,false);
+            Stock(g,0,-3.38f,3f,0,0,0,"sword",1,0,false);
             Stock(g,0,3.10f,3.72f,0,0,0,"spear",1,0,false);
             Stock(g,0,-1.72f,5.70f,0,0,0,"sling",1,5,false);
             string[] spill={"scrap","fiber","stone","branch","bandage","cloth","arrows","tinder"};
@@ -246,7 +246,7 @@ namespace LastSignal
             Stock(g,1,.15f,-9.65f,0,0,0,"meal",2,0,false);
             // Contestants approaching the closed back of the horn can grab equipment
             // immediately, then take either flank toward its open mouth.
-            WeaponStation(g,2,-7.95f,-8.82f,.49f,false,"spear",0,"knife",0,"scrap",2,"bandage",1);
+            WeaponStation(g,2,-7.95f,-8.82f,.49f,false,"sword",0,"shield",0,"scrap",2,"bandage",1);
             WeaponStation(g,2,7.95f,-8.82f,-.49f,false,"bow",3,"knife",0,"arrows",3,"fiber",2);
             WeaponStation(g,2,-4.72f,-13.38f,.31f,false,"sling",5,"knife",0,"stone",4,"cloth",1);
             WeaponStation(g,2,4.72f,-13.38f,-.31f,false,"spear",0,"hatchet",0,"tinder",2,"bandage",1);
@@ -270,7 +270,31 @@ namespace LastSignal
                 Decor(g,"platform",18*Sin(t),18*Cos(t),1,t+3.1415927f);
             }
             OpeningSupplies(g);
-            if(Variant!=0){PopulateVariant(g,r);return;}
+            if(Variant!=0)PopulateVariant(g,r);
+            else PopulateCrownwood(g,r);
+            PlaceRareCrossbow(g);
+        }
+        // Field supply sites already have dry, walkable ground. The separate loot roll
+        // keeps the terrain and ordinary supplies identical for the same arena seed.
+        static void PlaceRareCrossbow(Game g)
+        {
+            var roll=new Random(unchecked(g.Seed ^ (g.ArenaId*1009) ^ 0x43bc27));
+            if(roll.Next(3)!=0)return;
+            var sites=new List<Prop>();
+            foreach(Prop p in g.Props){
+                float distance=p.X*p.X+p.Z*p.Z;
+                if(p.Kind=="pickup" && p.Item=="scrap" && distance>=42*42 && distance<=118*118)
+                    sites.Add(p);
+            }
+            if(sites.Count==0)return;
+            Prop cache=sites[roll.Next(sites.Count)];
+            cache.Model=cache.Item="crossbow";
+            cache.Amount=1;
+            cache.Label="Crossbow + 4 bolts";
+            cache.Bag["bolts"]=4;
+        }
+        static void PopulateCrownwood(Game g,Random r)
+        {
             Decor(g,"floodgate",85.5f,-17,1,.17f);
             // A raised crossing and two natural banks remain accessible during flood events.
             for(int i=0;i<6;i++) Decor(g,"bridge",74,-18f+i*4.90f,1,0);

@@ -173,8 +173,8 @@ namespace LastSignal
             }
             return distance<=22 && Sight(g,x,y,z,target.X,target.Y+(target.Crouch?.64f:.79f),target.Z,range,distance);
         }
-        public static bool ActorVisible(Game g,float eyeX,float eyeY,float eyeZ,float observerYaw,Actor target)
-        {return Character(g,eyeX,eyeY,eyeZ,observerYaw,target,32f+3.5f*g.Level);}
+        public static bool ActorVisible(Game g,float eyeX,float eyeY,float eyeZ,float observerYaw,Actor target,float extendedRange=0f)
+        {return Character(g,eyeX,eyeY,eyeZ,observerYaw,target,Math.Max(extendedRange,32f+3.5f*g.Level));}
         public static bool SeeImpactSource(Game g,float eyeX,float eyeY,float eyeZ,Actor shooter)
         {
             if(shooter==null||!shooter.Alive)return false;

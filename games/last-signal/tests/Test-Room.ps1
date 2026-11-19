@@ -21,6 +21,12 @@ if($LASTEXITCODE){throw 'Could not compile the mobile room test'}
 & $mobile $Mode
 if($LASTEXITCODE){throw "Mobile room journey failed in $Mode mode"}
 if($Mode -eq 'socket'){
+    $armory = Join-Path (Split-Path $game) 'ArmoryChecks.exe'
+    $checks = 'ArmoryChecks.cs','ShieldChecks.cs','CrossbowChecks.cs' | ForEach-Object { Join-Path $PSScriptRoot $_ }
+    & $compiler /nologo /optimize+ /platform:x64 /main:ArmoryChecks /r:System.Drawing.dll /r:System.Windows.Forms.dll "/r:$game" "/out:$armory" $checks
+    if($LASTEXITCODE){throw 'Could not compile the armory checks'}
+    & $armory
+    if($LASTEXITCODE){throw 'Arena weapon checks failed'}
     $harvest=Join-Path (Split-Path $game) 'NetworkHarvest.exe'
     & $compiler /nologo /optimize+ /platform:x64 /main:NetworkHarvest /r:System.Drawing.dll /r:System.Windows.Forms.dll "/r:$game" "/out:$harvest" (Join-Path $PSScriptRoot 'NetworkHarvest.cs') (Join-Path $PSScriptRoot 'OnlinePipe.cs')
     if($LASTEXITCODE){throw 'Could not compile the shared harvest test'}

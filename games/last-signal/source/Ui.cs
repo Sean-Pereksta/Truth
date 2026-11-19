@@ -17,7 +17,7 @@ namespace LastSignal {
         Bitmap image; Graphics pen; float sw=1280,sh=720,scale=1,fx=1,fy=1; int mx=-100,my=-100;
         string route="",selected="",bind="",backPanel=""; bool hoverMoved; int packOffset;
         string wheelType=""; float wx,wy,wr; int wcount;
-        readonly string[] bindings={"Forward","Back","Left","Right","Sprint","Crouch","Jump","Use","Dodge","Shove","Craft","Build","Pack","Rotate","Cycle","Dismiss","Lean left","Lean right","Attack","Guard","Throw","Previous weapon","Next weapon","Weapon 1","Weapon 2","Weapon 3","Weapon 4","Weapon 5"};
+        readonly string[] bindings={"Forward","Back","Left","Right","Sprint","Crouch","Jump","Use","Dodge","Shove","Craft","Build","Pack","Rotate","Cycle","Dismiss","Lean left","Lean right","Attack","Guard","Throw","Previous weapon","Next weapon","Weapon 1","Weapon 2","Weapon 3","Weapon 4","Weapon 5","Weapon 6","Weapon 7"};
         class Hit { public RectangleF Rect; public string Id; public bool Nav; }
         internal static string SettingsOverride=null;
         static string PortableSettings {get{return Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"settings.txt");}}
@@ -192,10 +192,10 @@ namespace LastSignal {
                 HitBox(id,bx,by,448,29);Box(bx,by,448,29,hot?Color.FromArgb(230,59,63,48):A(Ink,200));if(hot)Box(bx,by,3,29,Gold);
                 T(k=="Throw"?"Throw spear":k.StartsWith("Weapon ")?k+"  /  "+SlotWeapon(k):k,bx+12,by+4,15,Ivory);Right(bind==k?"Press input…":KeyName(g.Settings.KeysMap[k]),bx+432,by+4,15,Gold,true,true);}
             Action("back","Back",x,t+rows*31+14,155,43);
-            T("Face the strike, then tap "+KeyName(g.Settings.KeysMap["Guard"])+". Press "+KeyName(g.Settings.KeysMap["Dodge"])+" to backstep or hold a direction to dodge.",x+185,t+rows*31+25,15,Muted);
+            T("Hold "+KeyName(g.Settings.KeysMap["Guard"])+" to raise a shield. Tap to parry with a weapon. Dodge with "+KeyName(g.Settings.KeysMap["Dodge"])+".",x+185,t+rows*31+25,15,Muted);
             PadHelp(g,"D-pad  Navigate      A  Select      B  Back");
         }
-        static string SlotWeapon(string k){switch(k){case "Weapon 1":return "Knife";case "Weapon 2":return "Spear";case "Weapon 3":return "Bow";case "Weapon 4":return "Hatchet";default:return "Sling";}}
+        static string SlotWeapon(string k){switch(k){case "Weapon 1":return "Knife";case "Weapon 2":return "Spear";case "Weapon 3":return "Bow";case "Weapon 4":return "Hatchet";case "Weapon 5":return "Sling";case "Weapon 6":return "Sword";case "Weapon 7":return "Crossbow";default:return "";}}
         void Pause(Game g){
             Backdrop();float x=sw*.08f,y=sh*.23f;Header(g.NetworkMatch?"Match menu":"Match paused",g.NetworkMatch?"The online round is live.":g.Zone,x,y);
             Action("resume","Resume",x,y+107,316,49,true);Action("settings","Settings",x,y+166,316,45);Action("leave",g.NetworkMatch?(g.Online.IsHost?"Close hosted room":"Leave match"):"Return to title",x,y+222,316,45);PadHelp(g,"D-pad  Navigate      A  Select      B  Resume");
