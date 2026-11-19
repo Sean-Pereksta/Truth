@@ -1,0 +1,42 @@
+name: Validate Last Signal network paths
+on:
+  push:
+    branches: ['codex/last-signal-endpoint-checks-2451e2']
+permissions:
+  contents: read
+jobs:
+  connection:
+    name: Diagnose ${{ matrix.mode }}
+    runs-on: windows-2025
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [socket, public]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          sparse-checkout: |
+            .last-signal-build/tests
+            games/last-signal
+          persist-credentials: false
+      - name: Test actual eight Windows game processes
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $out=Join-Path $env:RUNNER_TEMP 'last-signal-native'
+          Expand-Archive -LiteralPath 'games/last-signal/Last-Signal-Windows-x64.zip' -DestinationPath $out
+          try {
+            & './.last-signal-build/tests/Test-Room.ps1' -Mode '${{ matrix.mode }}' -GameDirectory $out
+          } catch {
+            Write-Host "::error::$($_.Exception.Message)"
+            Get-ChildItem -Path ([IO.Path]::GetTempPath()) -Directory -Filter 'last-signal-room-*' | ForEach-Object {
+              $dir=$_.FullName
+              Write-Host ("Milestones "+((Get-ChildItem -LiteralPath $dir).Name -join ', '))
+              Get-ChildItem -LiteralPath $dir -Filter 'failure-*' | ForEach-Object {
+                $first=Get-Content -LiteralPath $_.FullName -TotalCount 1
+                Write-Host ("::error::"+$first)
+              }
+            }
+            exit 1
+          }
