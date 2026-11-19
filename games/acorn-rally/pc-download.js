@@ -12,7 +12,7 @@
   const releaseFiles = [
     'index.html', 'style.css', 'app.js', 'network.js', 'local-grid.js', 'data.js', 'championship.js', 'garage-view.js',
     'kart-rig.js', 'aurora-kart.js', 'signature-kit.js', 'signature-art.js',
-    'tracks-expansion.js', 'expansion-world.js', 'rally-course-scores.js',
+    'tracks-expansion.js', 'expansion-world.js', 'hazards.js', 'bullfrog-art.js', 'course-art.js', 'rally-course-scores.js',
     'race-sim.js', 'race-world.js', 'race.js', 'item-art.js', 'item-feedback.js',
     'server/host.cjs', 'server/Hosting.txt',
     'art/driver-9.webp', 'art/rear-9.webp', 'art/rear-mask-9.png',

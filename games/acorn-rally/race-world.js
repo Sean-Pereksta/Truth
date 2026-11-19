@@ -385,8 +385,9 @@
         let skin=null;if(m.skin?.length===m.data.length/5){skin=gl.createBuffer();this.buffers.push(skin);gl.bindBuffer(gl.ARRAY_BUFFER,skin);gl.bufferData(gl.ARRAY_BUFFER,new Uint8Array(m.skin),gl.STATIC_DRAW);}
         return {b,n:m.data.length/10,uv,skin};};
       const scene=worldMeshes(course);this.regions=bakeRegions(scene.mesh,bake);this.moving=scene.mov;
+      this.courseScenery=root.AcornExpansionWorld.scenery(course,sim);
       const model=(i,lod=false)=>{const a=root.AcornKartModels?.[i],groups=lod&&a?.lod?.length?a.lod:a?.groups;return (groups&&bakeDriver(gl,groups,this.buffers))||bake(kartMesh(i,lod));};
-      const courseParts=root.AcornCourseArt.meshes(Mesh);
+      const courseParts=root.AcornCourseArt.meshes(Mesh,false,course.index===14);
       if(course.index>=8)root.AcornExpansionWorld.themeHazards(courseParts,course.index);
       this.karts=sim.drivers.map((_,i)=>model(i));this.kartLOD=sim.drivers.map((_,i)=>root.AcornKartModels?.[i]?.lod?.length?model(i,true):this.karts[i]);this.parts=Object.fromEntries(Object.entries({...extras(),...root.AcornSignatureArt.meshes(Mesh),...courseParts}).map(([key,m])=>[key,bake(m)]));
       this.textures=[];this.atlasReady=false;
@@ -458,9 +459,11 @@
         const q=sim.sample(c,s,x,branch);
         itemEffects.stamp(name,[q.x,q.y+height,q.z],Math.atan2(q.tx,q.tz)+angle,size,alpha,roll,pitch,stretch);
       };
-      const hazard=root.AcornHazards.sample(c,st.time);
-      if(itemEffects.distance(sim.sample(c,hazard.s,hazard.x,hazard.branch))<133)
-        root.AcornCourseArt.scene(hazard,st.time,roadStamp);
+      root.AcornExpansionWorld.drawWildlife(this.courseScenery,st.time,itemEffects.distance,itemEffects.stamp);
+      for(const hazard of root.AcornHazards.samples(c,st.time)){
+        if(itemEffects.distance(sim.sample(c,hazard.s,hazard.x,hazard.branch))<133)
+          root.AcornCourseArt.scene(hazard,st.time,roadStamp);
+      }
       const drawKart=(k,g=false)=>{
         const pos=sim.sample(c,k.s,k.x,k.branch),yaw=Math.atan2(pos.tx,pos.tz),next=sim.sample(c,k.s+1.05,k.x,k.branch);
         const cameraDist=Math.hypot(pos.x-cam.eye[0],pos.z-cam.eye[2]);if(cameraDist>145)return;

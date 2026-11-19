@@ -90,22 +90,27 @@
     {
       name:'Otterworks Spillway',line:['Otterworks','Spillway'],region:'Riverworks',place:'Otterworks reservoir',
       level:'Advanced',surface:'Brick & sluice timber',length:1250,
-      feature:'Build speed on the dam, brake for the pump-house hairpin, then choose the lower service cut before the riverside esses.',
+      feature:'Build speed on the dam, dodge falling timber around the pump house, then choose the lower service cut before the riverside esses.',
       anchors:[[-112,-54],[-111,0],[-107,43],[-89,60],[-68,67],[-45,47],[-37,22],[-19,18],[-7,35],[16,63],[49,66],[68,48],[65,23],[53,5],[68,-18],[89,-10],[112,-27],[119,-55],[97,-74],[62,-69],[26,-48],[-4,-54],[-38,-72],[-75,-73],[-97,-70]],
       section:[[0,13,6.6],[.11,15,6.1],[.22,12,5.25],[.29,7,5.6],[.36,5,5.25],[.47,5.8,5.7],[.57,9.5,5.25],[.64,12,5.1],[.72,16.2,6],[.81,19,6.4],[.93,16,6.25],[1,13,6.6]],
       fork:[.41,.60,14,-3.2,3.0],bridge:.60,drops:[[.62,.71]],
       hazard:{style:2,name:'Spillway release',u:.62,side:1,period:9.8,warn:2.2,live:3.5,offset:2.9,width:1.6,length:3.1,speed:.68,push:3.9,slip:.45},
-      tip:'A wet plume sweeps across the lower bend. Set your steering before the spray reaches the fast line.'
+      obstacles:[
+        {style:9,key:'mill-log',name:'Falling mill log',u:.24,side:-1,period:10.2,warn:1.95,live:3.1,offset:1.4,width:.44,length:.55,reach:5.7,speed:.48,push:5.6,slip:.41,hop:.21},
+        {style:9,key:'boom-log',name:'Falling boom log',u:.82,side:1,period:11.4,warn:2.15,live:3.6,offset:5.7,width:.40,length:.51,reach:6.3,speed:.51,push:5.1,slip:.36,hop:.20}
+      ],
+      tip:'Take the open lane away from a shaking log. At the lower bend, steer clear when the sluice starts to spray.'
     },
     {
       name:'Mooncap Marsh',line:['Mooncap','Marsh'],region:'The Mooncap Fens',place:'Mooncap Fens',
       level:'Advanced',surface:'Boardwalk & peat',length:1280,
-      feature:'Chain the bends through luminous reed beds, take the raised mushroom ferry lane, and build a long drift through the last turn.',
+      feature:'Drift across wooden boardwalks above the muddy fens, watch for a hopping bullfrog, and carry speed into the last turn.',
       anchors:[[-96,-68],[-115,-42],[-107,-16],[-83,-7],[-64,15],[-77,38],[-51,64],[-19,55],[-11,28],[9,14],[34,22],[42,48],[72,59],[101,36],[94,6],[66,-3],[51,-24],[60,-51],[39,-73],[13,-72],[-8,-50],[-31,-43],[-53,-61],[-76,-75]],
       section:[[0,7.4,6.4],[.09,5.7,5.6],[.18,7,4.95],[.25,10,4.8],[.34,8,5.35],[.43,5.5,5.25],[.53,8.3,4.75],[.64,9.9,4.7],[.73,5.6,5.0],[.83,4.8,5.65],[.94,6,6.15],[1,7.4,6.4]],
       fork:[.36,.53,13,3.8,2.9],bridge:.53,drops:[[.32,.47],[.57,.68]],
       hazard:{style:2,name:'Marsh geyser',u:.706,side:-1,period:8.8,warn:2.15,live:3.3,offset:1.7,width:1.5,length:2.6,speed:.58,push:3.1,slip:.55,hop:.25},
-      tip:'Watch the bubbling lane before the final pond. Swap sides while your kart is still straight.'
+      obstacles:[{style:8,key:'frog-crossing',name:'Bullfrog crossing',u:.555,side:-1,period:10.8,warn:1.75,live:3.75,offset:1.2,width:.76,length:.75,push:5.9,hop:.24}],
+      tip:'A bullfrog crosses the boardwalk in four hops and can knock you backward. Watch its landing spot, then steer clear of the geyser at the final pond.'
     },
     {
       name:'Tempest Treetops',line:['Tempest','Treetops'],region:'The Stormwood',place:'Stormwood canopy',
