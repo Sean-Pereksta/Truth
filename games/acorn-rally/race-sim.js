@@ -17,7 +17,8 @@
     150:{speed:1.21,acceleration:1.23,brakes:1.055},
     200:{speed:1.43,acceleration:1.49,brakes:1.11}
   };
-  const drivers = ['Nib','Bristle','Clover','Tumble','Hazel','Ember','Flint','Mica','Solstice'];
+  const astraDriver=9;
+  const drivers = ['Nib','Bristle','Clover','Tumble','Hazel','Ember','Flint','Mica','Solstice','Astra'];
   const abilities = Signatures.names, durations=Signatures.durations;
   // Steering, acceleration, corner-load, transition speed, off-road resistance and bump weight.
   const handling=[
@@ -25,11 +26,13 @@
     [1.02,12.0,1.01,7.2,1.03,.88],[1.00,10.75,.84,6.15,.97,1.06],
     [1.055,10.15,.96,7.85,.80,1.10],[1.085,11.3,1.085,7.1,1.15,.89],
     [.85,9.95,.83,5.55,.73,1.40],[.995,11.0,.975,7.0,.65,1.03],
-    [1.08,11.35,.99,7.65,1.0,1.04]
+    [1.08,11.35,.99,7.65,1.0,1.04],[1.14,10.8,.96,7.35,.95,.87]
   ];
-  const items = ['Seed Kick', 'Sap Sling', 'Burr Patch', 'Bark Guard', 'Thistle Puff', 'Pinecone Skip', 'Tailwind', 'Hawk'];
-  const hawkItem=7, hawkDistance=.10;
-  const itemTimes={seed:.91,sap:3.05,burr:1.72,guard:6.0,puff:1.05,pine:1.23,tailwind:4.15};
+  const items = ['Seed Kick', 'Sap Sling', 'Burr Patch', 'Bark Guard', 'Thistle Puff', 'Pinecone Skip', 'Tailwind', 'Hawk', 'Tracking Quill', 'Stormburst'];
+  const hawkItem=7, quillItem=8, stormItem=9, hawkDistance=.10;
+  const stormRadius=6.5, stormWarning=.82, stormCooldown=25;
+  const itemTimes={seed:.91,sap:3.05,burr:1.72,guard:6.0,puff:1.05,pine:1.23,tailwind:4.15,spin:1.12};
+  const cruiseSpeed=(c,r)=>(c.index===4?20.1:19)+(r.driverIndex===astraDriver?.75:0);
   const definitions = [
     ['Hoh Root Run',840,[[-86,-52],[-81,-15],[-53,18],[-23,18],[0,0],[28,-31],[58,-40],[91,-21],[91,4],[58,34],[24,28],[0,0],[-15,-30],[-35,-58],[-65,-70]]],
     ['Bamboo Bell Run',900,[[-75,-48],[-72,-8],[-49,14],[-60,40],[-38,62],[-5,62],[45,38],[77,13],[64,-10],[33,-14],[48,-38],[18,-63],[-25,-47],[-52,-66]]],
@@ -267,15 +270,15 @@
     const c=track(config.trackIndex), trial=config.mode==='trial', players=clamp(config.players|0 || 1,1,8);
     const humanSeats=config.humanSeats || Array.from({length:players},(_,i)=>i), count=trial?1:clamp((config.gridSize??8)|0,1,8);
     const selection=new Map(humanSeats.filter(i=>i>=0&&i<count).map(i=>[i,mod((config.driverIndices?.[i]??(i===0?config.driverIndex:undefined)??i)|0,drivers.length)]));
-    const picked=new Set(selection.values()),remaining=drivers.map((_,i)=>i).filter(i=>!picked.has(i));
+    const picked=new Set(selection.values()),remaining=drivers.map((_,i)=>i).filter(i=>i!==astraDriver&&!picked.has(i));
     const st={trackIndex:c.index, mode:config.mode||'race',cc:normalizeCC(config.cc),difficulty:normalizeDifficulty(config.difficulty),totalLaps:clamp(config.laps|0||3,1,12),time:0,countdown:3,
-      seed:(config.seed??0xACE110)>>>0,hazardSeed:(config.seed??0xACE110)>>>0,contacts:{},racers:[],pickups:[],objects:[],done:false,serial:0};
+      seed:(config.seed??0xACE110)>>>0,hazardSeed:(config.seed??0xACE110)>>>0,contacts:{},racers:[],pickups:[],objects:[],done:false,serial:0,nextStormTime:14};
     for(let i=0;i<count;i++){
       const human=humanSeats.includes(i),d=selection.get(i)??remaining.shift()??i;
       st.racers.push({seat:i,driverIndex:d,name:drivers[d],human,s:trial?0:-3.8*(1-Math.floor(i/4))-1.7, x:trial?0:(i%4-1.5)*2.25, v:0, vx:0, yaw:0,
         branch:false,drift:0,driftSide:0,driftSlip:0,driftReleaseTier:0,driftReleaseSeq:0,boost:0,boostPower:0,boostStyle:'',item:-1,reveal:0,meter:trial?1:.3,active:0,guard:0,protect:0,slow:0,slip:0,air:0,bank:0,fx:0,stomp:false,
         lapTimes:[],splitTime:0,finish:0,prevItem:false,prevAbility:false,prevDrift:false,rank:i+1,hit:0,usedItem:-1,itemFx:0,itemHitKind:-1,itemHitFx:0,itemBlocked:false,itemHitSide:1,
-        sap:0,sapSide:1,burr:0,burrSide:1,puff:0,puffSide:1,pine:0,confirmFx:0,confirmSeq:0,confirmedItem:-1,confirmedName:'',confirmedBlocked:false,lastValid:0,runoff:0,ghost:0,steer:0,
+        sap:0,sapSide:1,burr:0,burrSide:1,puff:0,puffSide:1,pine:0,spin:0,spinSide:1,confirmFx:0,confirmSeq:0,confirmedItem:-1,confirmedName:'',confirmedBlocked:false,lastValid:0,runoff:0,ghost:0,steer:0,
         contactSeq:0,contactFx:0,contactKind:'',contactSide:0,contactForce:0,contactOther:-1,contactSpeed:0,contactCarry:0,grind:0,
         fall:null,safeS:trial?0:-5,safeBranch:false,
         flight:null,launchSeq:0,landingSeq:0,landingFx:0,landingForce:0,landingKind:'',landedRamp:'',rampAngle:0,catchShelf:null,
@@ -299,7 +302,7 @@
   function clearDrift(r){r.drift=0;r.driftSlip=0;r.driftSide=0;r.prevDrift=false;}
   function slide(r,input,road,dt,time){
     const steer=r.steer,grounded=!r.flight&&r.air<=0&&!(r.driverIndex===7&&r.active>0);
-    const eligible=grounded&&r.v>7;
+    const eligible=grounded&&!r.spin&&r.v>7;
     const engaged=eligible&&input.drift&&(r.prevDrift||Math.abs(steer)>.18);
     if(!engaged){
       const tier=driftTier(r.drift);
@@ -329,6 +332,11 @@
     const travel=Math.atan2(r.vx,Math.max(8,r.v));
     return clamp(travel*.83+steer*.11+(r.driftSide||0)*(.15+.49*slip),-.95,.95);
   }
+  function spinYaw(r){
+    if(!r.spin)return 0;
+    const turn=1-clamp((r.spin||0)/itemTimes.spin,0,1);
+    return (r.spinSide||1)*TAU*turn*(2-turn);
+  }
   function damage(st,r,type,side=1){
     if(r.protect>0||(r.active>0&&(r.driverIndex===7||(r.driverIndex===4&&type===2)))) return false;
     r.itemHitKind=type;r.itemHitFx=.8;r.itemBlocked=r.guard>0;r.itemHitSide=Math.sign(side)||1;
@@ -354,6 +362,16 @@
       r.vx=r.itemHitSide*10.5;r.yaw+=r.itemHitSide*.22;
       notify(r,'Hawk sideswipe');
     }
+    if(type===quillItem){
+      r.v*=.68;r.vx+=r.itemHitSide*2.3;r.slow=Math.max(r.slow,.65);
+      notify(r,'Tracking Quill hit');
+    }
+    if(type===stormItem){
+      clearDrift(r);r.boostSources=[];r.boost=r.boostPower=r.contactCarry=0;r.boostStyle='';
+      r.hawk=null;r.spin=itemTimes.spin;r.spinSide=r.itemHitSide;
+      r.v*=.28;r.vx=r.vx*.35+r.spinSide*3.6;
+      notify(r,'Stormburst spinout');
+    }
     return true;
   }
   function rollWeights(st,r){
@@ -365,17 +383,101 @@
     // chooses the recovery mix without a discontinuity as karts exchange places.
     const seed=rank===1?0:3+12*rear+9*deficit+3*rear*deficit;
     const tail=rank===1?0:.05+1.35*rear*rear+6.8*rear**3+deficit*(5+28*rear);
-    const combat=[16+8*rear,26-20*rear,27-12*rear,13+9*rear,18+5*rear];
-    const total=combat.reduce((a,b)=>a+b,0),remaining=100-seed-tail;
-    return [seed,...combat.map(w=>w/total*remaining),tail];
+    const storm=rank>=5&&st.time>=st.nextStormTime&&
+      !st.objects.some(o=>o.kind===stormItem&&o.stage!=='burst')&&
+      !st.racers.some(kart=>!kart.finish&&kart.item===stormItem)?(rank===8?8.4:3.3+rear*2.1):0;
+    const combat=[16+8*rear,26-20*rear,27-12*rear,13+9*rear,18+5*rear,16+8*rear];
+    const total=combat.reduce((a,b)=>a+b,0),remaining=100-seed-tail-storm;
+    const [sap,burr,guard,puff,pine,quill]=combat.map(w=>w/total*remaining);
+    return [seed,sap,burr,guard,puff,pine,tail,0,quill,storm];
   }
   function drawItem(st,r) {
     const weights=rollWeights(st,r);
     const roll=random(st);
     if(r.rank===8&&roll<.5)return hawkItem;
     let n=(r.rank===8?roll*2-1:roll)*weights.reduce((v,a)=>v+a,0);
-    for(let i=0;i<weights.length;i++){n-=weights[i];if(n<0)return i;}
+    for(let i=0;i<weights.length;i++){
+      n-=weights[i];if(n>=0)continue;
+      if(i===stormItem)st.nextStormTime=st.time+stormCooldown;
+      return i;
+    }
     return 0;
+  }
+  function confirmHit(st,o,name,blocked){
+    const shooter=st.racers[o.owner];
+    if(!shooter)return;
+    shooter.confirmFx=1.68;shooter.confirmSeq=(shooter.confirmSeq||0)+1;
+    shooter.confirmedItem=o.kind;shooter.confirmedName=name;shooter.confirmedBlocked=blocked;
+  }
+  function stormLeader(st,owner){
+    return st.racers.reduce((leader,r)=>r.seat!==owner&&!r.finish&&
+      (!leader||r.s>leader.s||r.s===leader.s&&r.seat<leader.seat)?r:leader,null);
+  }
+  function steerQuill(st,o,c,dt){
+    let target=null,best=48;
+    for(const rival of st.racers){
+      const gap=Signatures.gap(o.s,rival.s,c.length);
+      if(rival.seat===o.owner||rival.finish||rival.fall||rival.hawk||rival.branch!==o.branch||gap<.2||gap>best)continue;
+      best=gap;target=rival;
+    }
+    if(target){
+      const seconds=best/Math.max(12,o.v-target.v);
+      const aim=target.x+target.vx*Math.min(.22,seconds*.5);
+      o.vx+=(clamp((aim-o.x)/Math.max(.15,seconds),-12,12)-o.vx)*Math.min(1,dt*13);
+    }
+    const u=sample(c,o.s,0).u;
+    if(o.branch&&!(u>c.branchA&&u<c.branchB))o.branch=false;
+  }
+  function advanceStorm(st,o,c,dt){
+    o.age+=dt;o.life-=dt;
+    if(o.stage==='burst')return;
+    if(o.stage==='seek'){
+      const leader=stormLeader(st,o.owner);
+      if(!leader){o.life=0;return;}
+      o.target=leader.seat;
+      const gap=leader.s-o.s;
+      o.s+=Math.sign(gap)*Math.min(Math.abs(gap),Math.max(56,Math.abs(gap)*.72)*dt);
+      o.branch=leader.branch;
+      o.x+=(leader.x-o.x)*Math.min(1,dt*6);
+      if(Math.abs(leader.s-o.s)>7.5||o.age<.55||leader.fall)return;
+      const mark=leader.s+Math.max(0,leader.v)*stormWarning;
+      const road=sample(c,mark,0,leader.branch);
+      o.stage='warn';o.warning=stormWarning;o.startS=o.s;o.startX=o.x;
+      o.blastS=mark;o.blastX=clamp(leader.x+leader.vx*.16,-road.w+.4,road.w-.4);
+      o.blastLift=Ramps.surface(c,o.blastS,o.blastX,o.branch);
+      o.life=Math.max(o.life,stormWarning+.05);
+    }
+    o.warning=Math.max(0,o.warning-dt);
+    const t=1-o.warning/stormWarning;
+    o.s=o.startS+(o.blastS-o.startS)*t;o.x=o.startX+(o.blastX-o.startX)*t;
+    o.height=3.9*(1-t)+.35*t;
+    if(o.warning>0)return;
+    o.stage='burst';o.age=0;o.life=.67;o.height=.12;
+    const center=sample(c,o.s,o.x,o.branch);
+    const blastY=center.y+o.blastLift;
+    let hitCount=0,blocked=null,lastHit=null;
+    for(const r of st.racers){
+      if(r.finish||r.fall)continue;
+      const road=sample(c,r.s,r.x,r.branch);
+      if(Math.hypot(road.x-center.x,road.z-center.z)>stormRadius||Math.abs(road.y+lift(st,r)-blastY)>2.9)continue;
+      const side=Math.sign((road.x-center.x)*center.nx+(road.z-center.z)*center.nz)||(r.seat%2?1:-1);
+      if(!damage(st,r,stormItem,side))continue;
+      if(r.seat===o.owner)continue;
+      if(r.itemBlocked)blocked=r;
+      else {hitCount++;lastHit=r;}
+    }
+    if(lastHit)confirmHit(st,o,hitCount===1?lastHit.name:hitCount+' karts',false);
+    else if(blocked)confirmHit(st,o,blocked.name,true);
+  }
+  function stormThreat(st,r,c){
+    return st.objects.find(o=>{
+      if(o.kind!==stormItem||o.stage==='burst')return false;
+      if(o.target===r.seat)return true;
+      if(o.stage!=='warn')return false;
+      const mark=sample(c,o.blastS,o.blastX,o.branch);
+      const predicted=sample(c,r.s+Math.max(0,r.v)*o.warning,r.x+r.vx*o.warning*.4,r.branch);
+      return Math.hypot(mark.x-predicted.x,mark.z-predicted.z)<stormRadius+6.5&&Math.abs(mark.y-predicted.y)<5;
+    });
   }
   function use(st,r) {
     const it=r.item; if(it<0 || r.reveal>0)return;
@@ -383,14 +485,21 @@
     if(it===0){r.slip=0;r.burr=0;r.vx*=.38;r.v=Math.max(0,r.v)+4.6;boost(r,itemTimes.seed,8.7,'seed');}
     else if(it===6)boost(r,itemTimes.tailwind,5.7,'tailwind');
     else if(it===hawkItem){
-      const c=track(st.trackIndex),cruise=(c.index===4?20.1:19)*motors[st.cc].speed;
+      const c=track(st.trackIndex),cruise=cruiseSpeed(c,r)*motors[st.cc].speed;
       const distance=c.length*hawkDistance;
       r.hawk={start:r.s,end:Math.min(r.s+distance,c.length*st.totalLaps),age:0,duration:distance/(cruise*2.75),lane:r.x,cruise,hitSeats:[]};
       r.flight=null;r.air=0;r.rampAngle=0;r.catchShelf=null;r.hazardHop=null;
-      r.sap=r.burr=r.slip=r.pine=r.puff=r.slow=r.grind=0;
+      r.sap=r.burr=r.slip=r.pine=r.puff=r.slow=r.grind=r.spin=0;
       clearDrift(r);
     }
     else if(it===3)r.guard=itemTimes.guard;
+    else if(it===stormItem){
+      const leader=stormLeader(st,r.seat);
+      if(!leader)return;
+      st.nextStormTime=Math.max(st.nextStormTime,st.time+stormCooldown);
+      st.objects.push({id:++st.serial,kind:it,owner:r.seat,s:r.s+1.7,x:r.x,branch:r.branch,age:0,
+        life:16,height:3.9,stage:'seek',target:leader.seat});
+    }
     else {
       const road=sample(track(st.trackIndex),r.s,0,r.branch),hard=[2,3,4,5,7].includes(st.trackIndex)&&!r.branch;
       const bouncePeriod=hard?.48:.365;
@@ -407,7 +516,7 @@
         }
       }
       st.objects.push({id:++st.serial,kind:it,owner:r.seat,s:r.s+(it===2?-1.7:1.7),x:r.x,branch:r.branch,age:0,
-        life:it===2?9:it===5?(hard?3.7:2.6):it===4?2.25:2.0,v:it===2?0:r.v+(it===4?12:it===5?21:28),
+        life:it===2?9:it===5?(hard?3.7:2.6):it===4?2.25:it===quillItem?2.05:2.0,v:it===2?0:r.v+(it===4?12:it===5?21:it===quillItem?32:28),
         vx:lateral,radius:it===4?.58:it===2?.92:.73,height:it===2?.22:.66,hitSeats:[],
         bouncePeriod,armed:it!==2,nextLandingS:r.s+1.7+(r.v+21)*bouncePeriod,edge:road.w});
     }
@@ -434,10 +543,11 @@
     ultimate: {look:.83, correction:.65, charge:.46, release:.13, link:1.90, rhythm:2.48}
   };
   function raceTraffic(st,r,c){
-    let pass=null,passGap=Infinity,shot=false,chaser=false,close=false,draft=false;
+    let pass=null,passGap=Infinity,shot=false,chaser=false,close=false,draft=false,quill=false;
     for(const rival of st.racers){
       if(rival===r||rival.finish||rival.fall||rival.ghost>0||rival.branch!==r.branch)continue;
       const gap=Signatures.gap(r.s,rival.s,c.length);
+      if(gap>2.5&&gap<45)quill=true;
       if(gap< -18||gap>32)continue;
       const lateral=Math.abs(rival.x-r.x);
       if(Math.hypot(gap,lateral)<6.2)close=true;
@@ -448,14 +558,15 @@
         pass=rival;passGap=gap;
       }
     }
-    return {pass,shot,chaser,close,draft};
+    return {pass,shot,chaser,close,draft,quill};
   }
   function attackItem(r,traffic,pickup,bend,edge){
     if(r.item<0||r.reveal>0||r.prevItem)return false;
     // Empty an unwanted slot before the next box. Keep a shot until a racer is in its line.
     if(pickup)return true;
     switch(r.item){
-      case hawkItem:return true;
+      case hawkItem:case stormItem:return true;
+      case quillItem:return traffic.quill;
       case 0:case 6:return (!edge||bend<.035)&&r.boost<.35;
       case 1:case 4:case 5:return traffic.shot;
       case 2:return traffic.chaser||bend>.026;
@@ -475,6 +586,7 @@
       case 6:return traffic.close||r.sap>0||r.burr>0;
       case 7:return traffic.close||r.sap>0||r.boost<.22;
       case 8:return Math.abs(r.x)<1.6;
+      case astraDriver:return r.prevDrift&&r.drift>.22;
       default:return false;
     }
   }
@@ -569,7 +681,7 @@
     const over=r.v-desired;
     return {gas:over<0?1:.28,brake:over>1?Math.min(.84,.27+faster*over*.09):0,steer,drift,
       item:r.item>=0&&r.reveal<=0&&Math.sin(st.time*skill.itemBeat+r.linePhase)>skill.itemWait,
-      ability:r.meter>=1&&(r.driverIndex===1?nearRival:Math.abs(look.curve)>.014)};
+      ability:r.meter>=1&&(r.driverIndex===1?nearRival:r.driverIndex===astraDriver?r.prevDrift&&r.drift>.22:Math.abs(look.curve)>.014)};
   }
   const halfWidth=.66,halfLength=1.01,cornerCut=.19;
   const grindPace=load=>1-.065*(load||0);
@@ -809,14 +921,15 @@
     for(const r of st.racers){
       for(const key of ['active','guard','protect','slow','slip','reveal','noticeTime','hit','fx','itemFx','itemHitFx','ghost'])r[key]=Math.max(0,r[key]-dt);
       if(!r.flight)r.air=Math.max(0,r.air-dt);
-      for(const status of ['sap','burr','puff','pine','confirmFx','contactFx','landingFx'])r[status]=Math.max(0,(r[status]||0)-dt);
+      for(const status of ['sap','burr','puff','pine','spin','confirmFx','contactFx','landingFx'])r[status]=Math.max(0,(r[status]||0)-dt);
       r.contactCarry=Math.max(0,(r.contactCarry||0)-dt*9.8);
       Signatures.advanceBoost(r,dt);
       if(r.finish){r.v=Math.max(0,r.v-dt*5);continue;}
       if(r.fall){recoverFall(r,c,dt);continue;}
       const input=r.human?(inputs[r.seat]||{}):ai(st,r,c,motor),prevS=r.s;
       const road=sample(c,r.s,0,r.branch);
-      const sgn=Math.sign(r.v||1), steer=clamp(+input.steer||0,-1,1),gas=clamp(+input.gas||0,0,1),brake=clamp(+input.brake||0,0,1);
+      const spinLoad=clamp(r.spin/.48,0,1),control=1-.87*spinLoad;
+      const sgn=Math.sign(r.v||1), steer=clamp(+input.steer||0,-1,1)*control,gas=clamp(+input.gas||0,0,1)*control,brake=clamp(+input.brake||0,0,1)*control;
       r.steer=steer;
       if(input.item&&!r.prevItem&&!r.hawk)use(st,r);
       if(r.hawk){
@@ -826,7 +939,7 @@
         continue;
       }
       r.bank=clamp(r.bank+dt*(r.v>6&&(Math.abs(steer)>.27||Math.abs(road.curve)>.018)?1:-2.5),0,1);
-      if(input.ability&&!r.prevAbility&&r.meter>=.998&&r.air<=0)Signatures.start(st,r,c.length);
+      if(input.ability&&!r.prevAbility&&!r.spin&&r.meter>=.998&&r.air<=0)Signatures.start(st,r,c.length);
       Signatures.tick(st,r,dt,c.length,road,input);
       r.prevItem=!!input.item;r.prevAbility=!!input.ability;
       const drifting=slide(r,input,road,dt,st.time);
@@ -834,7 +947,7 @@
       const slick=r.branch&&road.peak>.28&&[1,2,4,7].includes(c.index);
       const sapLoad=clamp(r.sap/.74,0,1),pineLoad=clamp((r.pine||0)/.64,0,1);
       const engineLoad=Math.max(sapLoad,pineLoad);
-      const governor=((c.index===4?20.1:19.0)*(1-Math.max(.47*sapLoad,.49*pineLoad))+(r.boost>0?r.boostPower*(1-engineLoad):0))*motor.speed;
+      const governor=(cruiseSpeed(c,r)*(1-Math.max(.47*sapLoad,.49*pineLoad))+(r.boost>0?r.boostPower*(1-engineLoad):0))*motor.speed*(1-.58*spinLoad);
       const top=(engineLoad>0?governor:Math.max(governor,r.contactCarry))*grindPace(r.grind);
       const accel=car[1]*motor.acceleration*(r.slow>0?.5:1)*(1-.68*sapLoad)*(1-.67*pineLoad);
       const snagLoad=r.slip>0?clamp(r.burr/.4,0,1):0;
@@ -847,7 +960,7 @@
       if(r.v>top-.2)r.v=top;
       const needle=r.driverIndex===0&&r.active>0,grip=slick&&!burrowing&&!needle?.8:1;
       const targetX=steer*(drifting?11.7:8.85)*car[0]*(needle?1.46:1)*grip*clamp(Math.abs(r.v)/5,0,1)*sgn
-        -road.curve*r.v*r.v*(needle?.11:drifting?.24:.43)*car[2]+(r.puffSide||1)*12.8*clamp((r.puff||0)/.80,0,1)**1.35;
+        -road.curve*r.v*r.v*(needle?.11:drifting?.24:.43)*car[2]+(r.puffSide||1)*12.8*clamp((r.puff||0)/.80,0,1)**1.35+r.spinSide*3*spinLoad;
       const impactGrip=r.contactFx>.23?1-.48*r.contactForce:1;
       r.vx+=(targetX-r.vx)*Math.min(1,dt*(airborne?.91:needle?car[3]*1.55:r.slip>0?1.35:drifting?car[3]*.47:car[3])*grip*impactGrip);
       if(r.burr>0&&r.slip>0)r.vx+=r.burrSide*Math.sin((itemTimes.burr-r.burr)*12)*2.9*dt;
@@ -896,6 +1009,8 @@
       }
       contacts(st,c,wheelStarts,dt);
       for(const o of st.objects){
+        if(o.kind===stormItem){advanceStorm(st,o,c,dt);continue;}
+        if(o.kind===quillItem)steerQuill(st,o,c,dt);
         o.age+=dt;o.life-=dt;o.s+=o.v*dt;o.x+=o.vx*dt;
         if(o.kind===2)o.armed=o.age>=.55;
         if(o.kind===4){o.radius=.68+o.age*1.28;o.height=.68+.12*Math.sin(o.age*4);}
@@ -920,8 +1035,7 @@
             const height=lift(st,r);
             if(!(direct&&height<=(o.height??.68)+.30)&&!(onBounce&&height<.45))continue;
             if(!damage(st,r,o.kind,Math.sign(r.x-o.x)||Math.sign(o.vx)||1))continue;
-            const shooter=st.racers[o.owner];
-            if(shooter){shooter.confirmFx=1.68;shooter.confirmSeq=(shooter.confirmSeq||0)+1;shooter.confirmedItem=o.kind;shooter.confirmedName=r.name;shooter.confirmedBlocked=r.itemBlocked;}
+             confirmHit(st,o,r.name,r.itemBlocked);
             if(o.kind===4){(o.hitSeats||(o.hitSeats=[])).push(r.seat);continue;}
             o.life=0;break;
           }
@@ -955,5 +1069,5 @@
       laps:r.lapTimes.slice(),standings:st.racers.slice().sort((a,b)=>a.rank-b.rank).map(a=>({name:a.name,driverIndex:a.driverIndex,position:a.rank,time:a.finish||null,human:a.human,seat:a.seat}))};
   }
   return {create,step,result,track,trackCount:definitions.length+Expansion.courses.length,sample,baseSample:sample,groundSample,groundLift,lift,rampPitch,predictRamps:(st,r,c,dt,prev)=>rampStep(st,r,c,dt,prev,true),
-    projectRoute,resolveRoute,wheelPosition,roll,flyHawk,hawkItem,driftTier,steeringYaw,drivers,abilities,items,itemTimes,durations,engineClasses,normalizeCC,difficulties,normalizeDifficulty,rollWeights,drawItem};
+    projectRoute,resolveRoute,wheelPosition,roll,flyHawk,hawkItem,quillItem,stormItem,stormRadius,stormThreat,driftTier,steeringYaw,spinYaw,drivers,abilities,items,itemTimes,durations,engineClasses,normalizeCC,difficulties,normalizeDifficulty,rollWeights,drawItem};
 });

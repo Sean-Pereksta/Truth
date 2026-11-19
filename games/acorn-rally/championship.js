@@ -4,11 +4,14 @@
   const cups = [
     { id: 'forest', name: 'Forest Cup', theme: 'Follow the water from the forest floor to the treetops.', tracks: [0, 1, 2, 6] },
     { id: 'horizon', name: 'Horizon Cup', theme: 'Race across exposed sandstone, salt flats, chalk ridges and black sand.', tracks: [3, 4, 5, 7] },
-    { id: 'expedition', name: 'Expedition Cup', theme: 'Four precision circuits through crystal caverns, open sky, orbit and lava.', tracks: [8, 9, 10, 11] }
+    { id: 'expedition', name: 'Expedition Cup', theme: 'Four precision circuits through crystal caverns, open sky, orbit and lava.', tracks: [8, 9, 10, 11] },
+    { id: 'spectrum', name: 'Spectrum Cup', theme: 'Race through the spillway, marsh and storm canopy, then finish on Prism Parade.', tracks: [13, 14, 15, 12] }
   ];
   const points = [12, 9, 7, 5, 4, 3, 2, 1];
   const levels = ['easy', 'normal', 'hard', 'ultimate'];
   const rewardDriver = 8;
+  const spectrumDriver = 9;
+  const spectrumCup = cups.findIndex(cup => cup.id === 'spectrum');
   const prefix = 'acorn-rally-championship-v1-';
   // Keep a playable session when the browser disables storage.
   const session = new Map();
@@ -27,18 +30,30 @@
     return levels.slice().reverse().find(level => read(cups[index].id + '-gold-' + level) === true) || null;
   }
   function qualifyingWins() {
-    return cups.filter((cup, i) => levels.indexOf(goldLevel(i)) >= levels.indexOf('hard')).length;
+    return cups.slice(0, spectrumCup).filter((cup, i) => levels.indexOf(goldLevel(i)) >= levels.indexOf('hard')).length;
   }
   function isDriverAvailable(index) {
-    return index !== rewardDriver || qualifyingWins() === cups.length;
+    if (index === rewardDriver) return qualifyingWins() === spectrumCup;
+    if (index === spectrumDriver) return goldLevel(spectrumCup) === 'ultimate';
+    return true;
+  }
+  function rewardForCup(index) {
+    return index === spectrumCup ? spectrumDriver : rewardDriver;
+  }
+  function rewardRequirement(index) {
+    if (index === spectrumDriver) return 'Win Spectrum Cup on Ultimate';
+    return 'Win Forest, Horizon and Expedition on Hard or Ultimate';
+  }
+  function rewardProgress(index) {
+    return index === rewardDriver ? `${qualifyingWins()}/${spectrumCup} Hard cup wins` : 'Spectrum Cup on Ultimate';
   }
   function validGrid(ids, driver) {
     return Array.isArray(ids) && ids.length === points.length && new Set(ids).size === points.length &&
-      ids.includes(driver) && ids.every(n => Number.isInteger(n) && n >= 0 && n <= rewardDriver);
+      ids.includes(driver) && ids.every(n => Number.isInteger(n) && n >= 0 && n <= spectrumDriver);
   }
   function validRun(run, index) {
     return run && run.index === index && typeof run.id === 'string' && [50, 100, 150, 200].includes(run.cc) &&
-      levels.includes(run.difficulty) && Number.isInteger(run.driver) && run.driver >= 0 && run.driver <= rewardDriver &&
+      levels.includes(run.difficulty) && Number.isInteger(run.driver) && run.driver >= 0 && run.driver <= spectrumDriver &&
       Array.isArray(run.rounds) && run.rounds.length < cups[index].tracks.length &&
       run.rounds.every(ids => validGrid(ids, run.driver) && ids.every(n => run.rounds[0].includes(n)));
   }
@@ -82,10 +97,12 @@
     const current = active?.id === run.id && active.rounds.length === roundIndex;
     const complete = next.rounds.length === cup.tracks.length;
     const won = complete && standings(next)[0].driver === next.driver;
-    const hadReward = isDriverAvailable(rewardDriver);
+    const reward = rewardForCup(run.index), hadReward = isDriverAvailable(reward);
     if (won) save(cup.id + '-gold-' + next.difficulty, true);
     if (current) save(cup.id + '-active', complete ? null : next);
-    return {run: next, complete, won, unlocked: !hadReward && isDriverAvailable(rewardDriver)};
+    const unlocked = !hadReward && isDriverAvailable(reward);
+    return {run: next, complete, won, unlocked, unlockedDriver: unlocked ? reward : null};
   }
-  root.AcornChampionship = {cups, points, rewardDriver, goldLevel, qualifyingWins, isDriverAvailable, activeRun, start, standings, record};
+  root.AcornChampionship = {cups, points, rewardDriver, spectrumDriver, goldLevel, qualifyingWins,
+    isDriverAvailable, rewardForCup, rewardRequirement, rewardProgress, activeRun, start, standings, record};
 })(typeof window !== 'undefined' ? window : globalThis);

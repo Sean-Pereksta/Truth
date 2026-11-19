@@ -276,4 +276,67 @@ window.AcornCourseScores={
       ["C3 G3 C4 E4","C6 B5/G5 E5 C5 G4 C5 - ./G4"]
     ]
   },
+  13:{
+    title:"Open the Spillgate",bpm:178,beats:4,lead:"marimba",answer:"hammer",backing:"guitar",groove:"pan",
+    bars:[
+      ["G2 B3 D4 F4","G4 D5 ./F5 E5 D5 B4/G4 D5 F5"],
+      ["C3 G3 Bb3 E4","E5 G5 Bb5 ./A5 G5 E5 D5/E5 G5"],
+      ["Bb2 F3 Ab3 D4","F5 D5/Bb4 F4 ./Ab4 Bb4 D5 F5 Ab5"],
+      ["D2 F#3 A3 C4","A5 F#5/D5 A4 C5 D5 E5/F#5 D5 ."],
+      ["G2 B3 D4 F4","G4 D5 ./F5 E5 D5 B4/G4 B4 D5"],
+      ["C3 G3 Bb3 E4","G5 A5/Bb5 C6 G5 E5 D5 E5/G5 E5"],
+      ["Bb2 F3 Ab3 D4","D5 F5/Bb5 Ab5 F5 D5 . F5 D5"],
+      ["D2 F#3 A3 C4","A4 D5/E5 F#5 A5 D6 C6/Bb5 A5 F#5"],
+      ["Eb3 G3 Bb3 D4","G5 Eb5/D5 Eb5 Bb4 . G4 Bb4 D5/Eb5"],
+      ["F2 C4 Eb4 A4","A5 G5/F5 C5 A4 C5 F5/Eb5 F5 G5"],
+      ["G2 G3 Bb3 D4","Bb5 A5/G5 . D5 F5 G5 Bb5/A5 G5"],
+      ["D2 F#3 A3 C4","F#5 A5/C6 D6 C6 A5 F#5 D5/A4 F#4"],
+      ["G2 B3 D4 F4","G4 D5 ./F5 E5 D5 B4/G4 D5 F5"],
+      ["C3 G3 Bb3 E4","E5 G5 Bb5 ./A5 G5 E5 D5/E5 C6"],
+      ["D2 F#3 A3 C4","A5 F#5/D5 A4 C5 D5 E5/F#5 A5 C6"],
+      ["G2 B3 D4 F4","B5 G5 D5/F5 E5 D5/B4 G4 - ./D5"]
+    ]
+  },
+  14:{
+    title:"Lanterns Underwater",bpm:186,beats:4,lead:"synth",answer:"whistle",backing:"bell",groove:"glide",
+    bars:[
+      ["A2 E3 G3 B3","E5 ./C5 A4 B4/E5 G5 - E5 C5"],
+      ["F2 A3 C4 E4","A4 C5/F5 . A5 G5/E5 F5 E5 C5"],
+      ["D2 A3 C4 F4","A4 D5 F5 ./A5 C6 A5 G5/F5 E5"],
+      ["E2 B3 D4 G#4","B4 E5/G#5 B5 - D6 B5/G#5 E5 ."],
+      ["A2 E3 G3 B3","E5 ./C5 A4 B4/E5 G5 B5 A5 E5"],
+      ["F2 A3 C4 E4","F5 A5/C6 E6 - C6 A5/G5 F5 E5"],
+      ["C3 G3 B3 E4","B4 E5/G5 A5 B5 E6 D6/B5 G5 E5"],
+      ["E2 B3 D4 G#4","E5 G#5/B5 D6 B5 G#5 E5 D5/B4 ."],
+      ["Bb2 F3 A3 D4","F5 . D5/A4 Bb4 D5 F5/A5 G5 F5"],
+      ["D2 A3 C4 F4","F5 A5/D6 . C6 A5 F5/E5 D5 A4"],
+      ["F2 A3 C4 E4","A4 E5/F5 G5 A5 . G5 E5/C5 A4"],
+      ["E2 B3 D4 G#4","B4 ./E5 G#5 B5/D6 B5 A5 G#5 E5"],
+      ["A2 E3 G3 B3","E5 ./C5 A4 B4/E5 G5 - E5 C5"],
+      ["F2 A3 C4 E4","A4 C5/F5 . A5 G5/E5 F5 C6 A5"],
+      ["E2 B3 D4 G#4","D6 B5/G#5 E5 B4 . E5 G#5/B5 D6"],
+      ["A2 E3 G3 C4","C6 A5 G5/E5 D5 C5 A4 - ./B4"]
+    ]
+  },
+  15:{
+    title:"Race the Thunder",bpm:196,beats:4,lead:"fiddle",answer:"brass",backing:"dulcimer",groove:"gallop",
+    bars:[
+      ["B2 F#3 A3 D4","F#5 F#5/G5 F#5 D5 F#5/B5 A5 F#5 D5"],
+      ["G2 G3 B3 D4","G5 D5/G5 A5 B5 D6/B5 A5 G5 E5"],
+      ["D3 A3 C#4 F#4","F#5 A5/D6 C#6 A5 F#5 . E5/F#5 A5"],
+      ["F#2 A#3 C#4 E4","C#6 A#5/F#5 E5 C#5 E5/F#5 A#5 C#6 ."],
+      ["B2 F#3 A3 D4","F#5 F#5/G5 F#5 D5 F#5/B5 A5 F#5 B5"],
+      ["G2 G3 B3 D4","D6 B5/G5 D5 G5 A5/B5 D6 E6 D6"],
+      ["E2 G3 B3 D4","B5 G5/E5 B4 E5 G5/A5 G5 E5 B4"],
+      ["F#2 A#3 C#4 E4","A#4 C#5/E5 F#5 A#5 C#6 E6/C#6 A#5 F#5"],
+      ["D3 A3 C#4 F#4","D6 C#6 D6/F#6 - E6 D6 A5/F#5 A5"],
+      ["G2 G3 B3 D4","G5 B5/D6 E6 D6 B5 G5/A5 G5 D5"],
+      ["E2 G3 B3 D4","G5 E5/G5 B5 D6 E6/D6 B5 G5 E5"],
+      ["F#2 A#3 C#4 E4","C#6 A#5/F#5 E5 . C#5 F#5/A#5 C#6 E6"],
+      ["B2 F#3 A3 D4","F#5 F#5/G5 F#5 D5 F#5/B5 A5 F#5 D5"],
+      ["G2 G3 B3 D4","G5 D5/G5 A5 B5 D6/B5 A5 G5 F#5"],
+      ["F#2 A#3 C#4 E4","F#5 E5/F#5 A#5 C#6 E6/C#6 A#5 F#5 E5"],
+      ["B2 F#3 A3 D4","D6 C#6/B5 A5 F#5 D5 B4 - ./F#5"]
+    ]
+  },
 };

@@ -8,7 +8,10 @@
     {sky:'#76b4da',mist:'#d8e4e6',soil:'#b3764f',edge:'#6e4a38',land:'#b9d5df',wood:'#695044',accent:'#ffe3a0',leaf:['#a8bd8d','#8eab91','#b7c9a0'],water:'#aecad4'},
     {sky:'#11162f',mist:'#35324e',soil:'#667083',edge:'#444761',land:'#161d36',wood:'#333b58',accent:'#81f0f1',leaf:['#7182ae','#a78acd','#52688a'],water:'#33304f'},
     {sky:'#803f4c',mist:'#85514d',soil:'#665452',edge:'#463c43',land:'#352d38',wood:'#493a3e',accent:'#ffc06c',leaf:['#83524b','#a45d48','#4e4149'],water:'#e2773e'},
-    {sky:'#222545',mist:'#494366',soil:'#6e76a4',edge:'#46445f',land:'#332d50',wood:'#514764',accent:'#ffdfac',leaf:['#88b6cb','#bd95d3','#dcae99'],water:'#635889'}
+    {sky:'#222545',mist:'#494366',soil:'#6e76a4',edge:'#46445f',land:'#332d50',wood:'#514764',accent:'#ffdfac',leaf:['#88b6cb','#bd95d3','#dcae99'],water:'#635889'},
+    {sky:'#4b92ac',mist:'#8db7ac',soil:'#936851',edge:'#62605a',land:'#476660',wood:'#775744',accent:'#f6cf91',leaf:['#53754b','#819761','#577e6f'],water:'#346f75'},
+    {sky:'#171b43',mist:'#343555',soil:'#575067',edge:'#393b54',land:'#232b48',wood:'#524358',accent:'#8ceadf',leaf:['#486b74','#395164','#6764a1'],water:'#273955'},
+    {sky:'#303e61',mist:'#637282',soil:'#715c56',edge:'#504454',land:'#334959',wood:'#54424b',accent:'#f8c78b',leaf:['#446966','#556776','#34575b'],water:'#526a79'}
   ];
   const roadMaterial = 20, lavaMaterial = 21, prismMaterial = 22, rockMaterial = 23;
   const up = [0, 1, 0];
@@ -61,8 +64,9 @@
         strip(start*a.w,end*a.w,start*b.w,end*b.w,base,spectrum[k],roadMaterial);
       }
     }else{
+      const planks=index===9||index===14||index===15;
       const color=index===9?['#b07e59','#bc8c65','#b48a67','#ad7c58'][j%4]:palette.soil;
-      strip(-a.w,a.w,-b.w,b.w,base,color,index===9?2:roadMaterial);
+      strip(-a.w,a.w,-b.w,b.w,base,color,planks?2:roadMaterial);
     }
     for(const side of [-1,1]){
       const aw=a.w*side,bw=b.w*side;
@@ -415,6 +419,76 @@
     }
   }
 
+  function lowlands(m,palette){
+    m.quad([-390,1,-390],[-390,1,390],[390,1,390],[390,1,-390],palette.water,0,up);
+  }
+
+  function spillway({m,c,at,clear}){
+    lowlands(m,palettes[c.index-8]);
+    for(const u of [.065,.095,.125,.155,.185]){
+      const p=at(c.length*u);
+      for(const side of [-1,1]){
+        const foot=local(p,side*(p.w+1.1),1-p.y),head=local(p,side*(p.w+1.1),4.6);
+        if(!clear(foot,1,true))continue;
+        m.ring(foot,head,.95,.58,'#b69275',6,rockMaterial);
+        m.box(...head,1.9,.45,1.8,yaw(p),'#d4b293');
+      }
+      m.ring(local(p,-p.w-1.1,4.7),local(p,p.w+1.1,4.7),.22,.22,'#d5a268',6,2);
+    }
+    for(const u of [.255,.655]){
+      const p=at(c.length*u),side=[-1,1].find(s=>clear(local(p,s*23,2),7,true));
+      if(side===undefined)continue;
+      m.box(...local(p,side*24,-.2),9,5,7,yaw(p),'#a16d52',rockMaterial);
+      m.box(...local(p,side*24,4.8),9.6,.65,7.5,yaw(p),'#56675e');
+      for(const z of [-4.2,4.2])ringBand(m,p,[side*23,2,z],4.5,Math.PI/2,'#c39961',.47,18);
+      for(let i=0;i<10;i++){
+        const a=i*tau/10,spoke=local(p,side*23+4.5*Math.cos(a),2+4.5*Math.sin(a),-4.2);
+        m.ring(local(p,side*23,2,-4.2),spoke,.13,.22,'#916745',5,2);
+        m.ring(spoke,move(spoke,p.tx*8.4,0,p.tz*8.4),.23,.23,'#ac8256',5,2);
+      }
+      m.ring(local(p,side*23,2,-4.5),local(p,side*23,2,4.5),.47,.47,'#dbaf75',7,2);
+    }
+  }
+
+  function mooncap({m,c,at,rand,clear}){
+    lowlands(m,palettes[c.index-8]);
+    for(let i=0;i<64;i++){
+      const p=at(c.length*(i+.4)/64),side=i%2?1:-1,offset=p.w+2.3+rand()*11;
+      const cap=local(p,side*offset,-.64+rand()*3.65),size=.75+rand()*1.4;
+      if(!clear(cap,size+.4,true))continue;
+      const hue=i%3===0?'#c37ee2':i%3===1?'#6dcfc5':'#8a9cfd';
+      m.ring([cap[0],1,cap[2]],cap,.22*size,.15*size,'#af97bd',6);
+      m.blob(...cap,size,.31*size,size,hue,8,22);
+      m.blob(...move(cap,0,.17*size,0),size*.71,.26*size,size*.73,hue,7,5);
+      for(let j=0;j<3;j++){
+        const r=local(p,side*(offset+size+1.4+j*.4),1.15-p.y,(j-1)*1.45);
+        if(!clear(r,.48,true))continue;
+        const tip=move(r,j*.16,1.2+rand()*2.3,-.24);
+        m.ring(r,tip,.046,.036,'#5b9784',4);
+        m.blob(...tip,.09,.15,.09,'#c3ffe1',4,5);
+      }
+    }
+  }
+
+  function tempest({m,c,at,rand,clear}){
+    bridgeTowers(m,at,.136,.206,c.length);
+    bridgeTowers(m,at,.755,.814,c.length);
+    for(let i=0;i<52;i++){
+      const p=at(c.length*(i+.54)/52),side=i%2?1:-1,dist=p.w+5+rand()*25;
+      const base=local(p,side*dist,2-p.y),tip=move(base,0,13+rand()*20,0);
+      if(clear(base,3.1,true)){
+        m.ring(base,tip,1.28,.20,'#574651',7,2);
+        for(let j=0;j<3;j++){
+          const canopy=move(tip,0,-3.6*j,0),radius=2.2+j*1.5;
+          m.ring(move(canopy,0,-3,0),move(canopy,0,1.6,0),radius,.12,'#415a59',7);
+        }
+      }
+      if(i%3!==0)continue;
+      const upper=local(p,side*(p.w-.32),-.35),lower=local(p,-side*(p.w-.32),-4.1);
+      if(clear(lower,.6))m.ring(upper,lower,.18,.17,'#795d52',6,2);
+    }
+  }
+
   function build(Mesh,c,sim){
     const m=new Mesh(),index=c.index,pal=palettes[index-8],count=c.points.length,length=c.length;
     let seed=0xb16b00b5+index*101;
@@ -435,7 +509,7 @@
         roadSegment(m,branchA,branchB,index,pal,j,true,a,b);
       }else roadSegment(m,a,b,index,pal,j);
     }
-    [cave,sky,space,volcano,rainbow][index-8]({m,c,at,rand,clear});
+    [cave,sky,space,volcano,rainbow,spillway,mooncap,tempest][index-8]({m,c,at,rand,clear});
     grid(m,at,index,pal);turnBoards(m,c,at,pal);
     for(const ramp of root.AcornRamps.list(c)){
       const deck=root.AcornRampArt.rampMesh(Mesh,c,ramp);
@@ -460,7 +534,7 @@
         float vein=1.-smoothstep(.004,.024,abs(layer-.55));
         tint=mix(tint,trackId<9.?vec3(.46,.56,.58):vec3(.45,.26,.22),vein*.31);
       }
-      if(trackId>11.5){float glint=pow(max(0.,sin(dot(wp.xz,vec2(.078,.11))+clock*.8)),15.);
+      if(abs(trackId-12.)<.2){float glint=pow(max(0.,sin(dot(wp.xz,vec2(.078,.11))+clock*.8)),15.);
         light=.89+.09*max(0.,norm.y);tint=mix(tint,vec3(.95,.91,1.),.10*glint); tex*=.98+.026*seams;}
     }else if(mat>20.5 && mat<21.5){
       vec2 v=wp.xz*.22+wp.y*.07;float field=noise(v+vec2(clock*.06,0.))*.65+noise(v*2.6-vec2(.03,.017)*clock)*.35;
@@ -501,6 +575,11 @@
       color('envFlow0',[[71,115,190],[189,185,248]],null);
       color('envChute',[[77,129,202],[209,216,249]],null);
       color('envSluice',[[87,73,130],[181,160,202]],prismMaterial);
+    }else if(index===13||index===14){
+      color('envFlow0',index===13?[[46,104,112],[178,217,198]]:[[82,101,166],[185,245,235]],null);
+      color('envSluice',[[51,61,76],[148,175,168]],rockMaterial);
+    }else if(index===15){
+      color('envBamboo',[[80,61,73],[236,170,95]],2);
     }
     return parts;
   }

@@ -38,7 +38,8 @@
       const models = window.AcornKartModels;
       if (!models || models.length < 8) return false;
       if (!models[8] && window.AcornSolsticeKart) models[8] = window.AcornSolsticeKart();
-      return models.length >= (window.RallyData?.drivers.length || 8);
+      if (!models[9] && window.AcornAuroraKart) models[9] = window.AcornAuroraKart();
+      return window.RallyData.drivers.every((_, index) => models[index]);
     };
     if (ready()) return Promise.resolve(window.AcornKartModels);
     if (modelLoad) return modelLoad;

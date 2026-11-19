@@ -110,7 +110,7 @@
       const reserved = new Set(room.seats.filter(s => s.index !== seat).map(s => s.driverIndex));
       const portraits = drivers.map((driver,i) => {
         if(!window.AcornChampionship.isDriverAvailable(i))
-          return '<button type="button" class="rr-pick" disabled title="Win all three cups on Hard or Ultimate"><img src="art/driver-'+i+'.webp" alt=""><b>'+escape(driver.name)+'</b><small>Locked</small></button>';
+          return '<button type="button" class="rr-pick" disabled title="'+escape(window.AcornChampionship.rewardRequirement(i))+'"><img src="art/driver-'+i+'.webp" alt=""><b>'+escape(driver.name)+'</b><small>Locked</small></button>';
         const taken=reserved.has(i), selected=me.driverIndex===i;
         return '<button type="button" class="rr-pick" data-rr="pick" data-driver-id="'+i+'" aria-pressed="'+selected+'" aria-label="'+escape(driver.name+' the '+driver.species.toLowerCase()+(taken?' · Taken':''))+'" '+(locked||taken?'disabled':'')+'><img src="art/driver-'+i+'.webp" alt=""><b>'+escape(driver.name)+'</b>'+(selected?'<span>✓</span>':'')+'</button>';
       }).join('');

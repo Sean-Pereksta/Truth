@@ -6,10 +6,10 @@
   'use strict';
   const BONE_COUNT=16,TAU=Math.PI*2;
   const parents=[0,0,0,0,0,0,5,6,6,5,0,5,5,5,9,14];
-  const names=['Nib','Bristle','Clover','Tumble','Hazel','Ember','Flint','Mica','Solstice'];
-  const tailWeight=[.82,.89,.46,1.24,.46,1.10,.66,.54,.48];
-  const earWeight=[.72,.59,1.95,.77,.39,1.08,.46,.57,.35];
-  const durations=[1.1,3,.86,2.7,1.05,1.25,1.15,1.12,1.5];
+  const names=['Nib','Bristle','Clover','Tumble','Hazel','Ember','Flint','Mica','Solstice','Astra'];
+  const tailWeight=[.82,.89,.46,1.24,.46,1.10,.66,.54,.48,.48];
+  const earWeight=[.72,.59,1.95,.77,.39,1.08,.46,.57,.35,1.85];
+  const durations=[1.1,3,.86,2.7,1.05,1.25,1.15,1.12,1.5,2];
   const cap=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
   const finite=(n,f=0)=>Number.isFinite(n)?n:f;
   const defaults=[[0,.29,0],[-.526,.29,-.61],[.526,.29,-.61],[-.526,.29,.55],[.526,.29,.55],

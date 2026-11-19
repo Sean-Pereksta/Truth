@@ -4,7 +4,8 @@ Playing on Windows
 
 1. Extract the full ZIP to a folder.
 2. For solo races, cups, Time Trials or local split screen, open index.html
-   in a desktop browser. For private rooms, start the PC host below.
+   in a desktop browser. Win the Spectrum Cup on Ultimate for the Aurora Runner.
+   For private rooms, start the PC host below.
 
 Starting the PC host
 
