@@ -10,6 +10,16 @@
   function label(k){return ({ArrowLeft:'←',ArrowRight:'→',ArrowUp:'↑',ArrowDown:'↓',Space:'Space',ShiftLeft:'Shift',ShiftRight:'R Shift',ControlRight:'R Ctrl',Slash:'/',Period:'.',Comma:',',Escape:'Esc'})[k]||String(k).replace(/^Key|^Digit|^Numpad/,'');}
   function safeRead(k,def){try{return JSON.parse(localStorage.getItem(k))??def;}catch{return def;}}
   function safeWrite(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch{}}
+  function approachingHazard(c,r,obstacles,min,max){
+    let nearest=null;
+    for(const obstacle of obstacles){
+      if(r.branch!==obstacle.branch||!(obstacle.active||obstacle.warning))continue;
+      const distance=root.AcornSignatures.gap(r.s,obstacle.s,c.length);
+      if(distance<=min||distance>=max)continue;
+      nearest=obstacle;max=distance;
+    }
+    return nearest;
+  }
   function svg(name){const d=(root.RallyData?.icons||{})[name]||'<path d="M7 6h3v12H7zm7 0h3v12h-3z" fill="currentColor" stroke="none"/>';return '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+d+'</svg>';}
   function style(){
     if(document.querySelector('#rally-race-styles'))return;const s=document.createElement('style');s.id='rally-race-styles';
@@ -120,7 +130,7 @@
     }
   }
   class CanvasWorld{
-    constructor(canvas,c){this.ctx=canvas.getContext('2d');this.canvas=canvas;this.c=c;this.painter=root.AcornRig.spritePainter();this.p=root.AcornWorld?.palettes[c.index]||{sky:'#bad1b8',mist:'#a2cfa9',land:'#40653e',soil:'#a1794c',edge:'#668349',wood:'#67513a',leaf:['#3a6539','#8a9e5b','#548144']};}
+    constructor(canvas,c){this.ctx=canvas.getContext('2d');this.canvas=canvas;this.c=c;this.painter=root.AcornRig.spritePainter();this.courseScenery=root.AcornExpansionWorld.scenery(c,Sim);this.p=root.AcornWorld?.palettes[c.index]||{sky:'#bad1b8',mist:'#a2cfa9',land:'#40653e',soil:'#a1794c',edge:'#668349',wood:'#67513a',leaf:['#3a6539','#8a9e5b','#548144']};}
     render(st,seat,rect,k,back,ghost,dt,postFinishTime=0){
       const ctx=this.ctx,c=this.c,p=this.p,r=st.racers[seat],w=rect.w,h=rect.h;
       ctx.save();ctx.setTransform(k,0,0,k,rect.x*k,rect.y*k);ctx.beginPath();ctx.rect(0,0,w,h);ctx.clip();
@@ -137,19 +147,21 @@
       const follow=groundLift(r)+Math.max(0,lift(r)-groundLift(r))*.72;
       const worldPoint=(x,y,z)=>{const ax=x-me.x,az=z-me.z,depth=(ax*me.tx+az*me.tz)*direction+6.3;
         return {x:w/2-((ax*me.nx+az*me.nz-r.x*.88)*direction)*f/Math.max(1,depth),y:horizon+(me.y+follow+2.65-y)*f/Math.max(1,depth),z:depth,k:f/Math.max(1,depth)};};
+      root.AcornExpansionWorld.paintScenery(ctx,this.courseScenery,st.time,worldPoint);
       const P=(s,lane,dy=0,br=false)=>{const a=Sim.sample(c,s,lane,br);return worldPoint(a.x,a.y+dy,a.z);};
       const quad=(a,b,d,e,col)=>{ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(d.x,d.y);ctx.lineTo(e.x,e.y);ctx.fillStyle=col;ctx.fill();};
       this.skids||=new root.AcornDriftArt.SkidMarks(c);
       this.skids.update(st);const skidRows=this.skids.canvasRows(st,r.s,direction,worldPoint);
       const racers=st.racers.concat(ghost?[ghost]:[]);
-      const obstacle=root.AcornHazards.sample(c,st.time),obstaclesByRow=new Map();
+      const obstaclesByRow=new Map();
       const rampRows=new Map();
       this.rampSections||=root.AcornRampArt.drawing(root.AcornWorld.Mesh,c);
       for(const segment of this.rampSections){
         const row=Math.floor((root.AcornSignatures.gap(r.s,segment.s,c.length)*direction-.30)/1.35);
         if(row< -3||row>72)continue;if(!rampRows.has(row))rampRows.set(row,[]);rampRows.get(row).push(segment);
       }
-      if(Math.abs(root.AcornSignatures.gap(r.s,obstacle.s,c.length))<126){
+      for(const obstacle of root.AcornHazards.samples(c,st.time)){
+        if(Math.abs(root.AcornSignatures.gap(r.s,obstacle.s,c.length))>=126)continue;
         root.AcornCourseArt.scene(obstacle,st.time,(...stamp)=>{
           const name=stamp[0],ground=name.startsWith('envFlow')||name.startsWith('envSaltPlate')||['envBrine','envStripes','envCracks','envShade'].includes(name);
           const nearEdge=ground?Math.abs(stamp[9]?.[2]||1)*stamp[5]:0;
@@ -217,23 +229,26 @@
       for(let i=72;i>=-3;i--){const s=r.s+i*1.35*direction,e=s+1.35*direction,main=Sim.sample(c,s);
         const split=main.u>c.branchA&&main.u<c.branchB,branch=Boolean(split&&r.branch),a=branch?Sim.sample(c,s,0,true):main;
         const route=(z,l,height=0)=>P(z,l,height,branch),pt=route(s,0);if(pt.z<.5)continue;
-        if(!a.exposed&&!skyDeck)quad(route(s,-a.w*3),route(e,-a.w*3),route(e,a.w*3),route(s,a.w*3),i%4<2?p.land:p.edge);
+        if(!a.exposed&&!skyDeck&&c.index!==13&&c.index!==14)quad(route(s,-a.w*3),route(e,-a.w*3),route(e,a.w*3),route(s,a.w*3),i%4<2?p.land:p.edge);
+        if(c.index===14||c.index===15)root.AcornExpansionWorld.paintShoulders(ctx,c.index,route,s,e,a,Sim.sample(c,e,0,branch),branch,split);
         if(split){const other=Sim.sample(c,s,0,!branch);quad(P(s,-other.w,.03,!branch),P(e,-other.w,.03,!branch),P(e,other.w,.03,!branch),P(s,other.w,.03,!branch),branch?p.soil:p.wood);}
-        quad(route(s,-a.w),route(e,-a.w),route(e,a.w),route(s,a.w),branch?([2,7].includes(c.index)?p.soil:p.wood):p.soil);
+        const timber=root.AcornExpansionWorld.timberDeck(c.index,a.u,branch);
+        const roadColor=c.index===13&&timber?'#8a694d':branch&&![2,7].includes(c.index)?p.wood:p.soil;
+        quad(route(s,-a.w),route(e,-a.w),route(e,a.w),route(s,a.w),roadColor);
         const decking=Math.floor(mod(s,c.length)/2.8);
         if(c.index===12)for(let band=0;band<7;band++){
           const left=a.w*(2*band/7-1),right=a.w*(2*(band+1)/7-1);
           quad(route(s,left),route(e,left),route(e,right),route(s,right),spectralBands[band]);
         }
-        if(c.index===9&&Math.floor(mod(e,c.length)/2.8)!==decking)quad(route(s,-a.w),route(s+.12,-a.w),route(s+.12,a.w),route(s,a.w),'#806b56');
+        if(timber&&Math.floor(mod(e,c.length)/2.8)!==decking)quad(route(s,-a.w),route(s+.12*direction,-a.w),route(s+.12*direction,a.w),route(s,a.w),c.index===14?'#3e3949':c.index===15?'#524035':'#6f5947');
         for(const side of [-1,1]){
-          if(a.exposed||skyDeck)quad(route(s,side*a.w),route(e,side*a.w),route(e,side*a.w,-.65),route(s,side*a.w,-.65),p.wood);
+          if(a.exposed||skyDeck)quad(route(s,side*a.w),route(e,side*a.w),route(e,side*a.w,-.65),route(s,side*a.w,-.65),c.index>=14&&decking%2?p.edge:p.wood);
           const edge=a.exposed?(decking%4?'#f1cf7b':'#433f46'):i%7<3?'#c4aa78':p.wood;
           quad(route(s,side*(a.w-.23)),route(e,side*(a.w-.23)),route(e,side*a.w),route(s,side*a.w),edge);
         }
         const spacing=expansion?(c.index===9?38:15):4.2,j=Math.floor(mod(s,c.length)/spacing);
         if(Math.floor(mod(e,c.length)/spacing)!==j&&i>0){const side=j%2?-1:1,pt=route(s,side*(a.w+1.1+(j%4)*.9)),sz=pt.k;
-          if(expansion)deckLandmark(ctx,c.index,route,s,side,a.w,j);
+          if(expansion){if(c.index<13)deckLandmark(ctx,c.index,route,s,side,a.w,j);}
           else{
           ctx.fillStyle=p.wood;ctx.fillRect(pt.x-sz*.18,pt.y-sz*3,sz*.36,sz*3);
           if([0,1,2,6].includes(c.index)){for(let z=0;z<3;z++){ctx.fillStyle=p.leaf[z];ctx.beginPath();ctx.moveTo(pt.x,pt.y-sz*(4.6+z*.3));ctx.lineTo(pt.x-sz*(1.4-z*.2),pt.y-sz*(1.7+z*.5));ctx.lineTo(pt.x+sz*(1.45-z*.2),pt.y-sz*(1.7+z*.5));ctx.fill();}}
@@ -284,8 +299,7 @@
     }
     if(st.countdown<=0&&!r.finish&&Math.abs(r.v)>5){
       const q=Sim.sample(c,r.s+Math.max(7,r.v*.82),0,r.branch),fork=q.u>c.branchA-.03&&q.u<c.branchA+.008;
-      const obstacle=root.AcornHazards.sample(c,st.time),gap=root.AcornSignatures.gap(r.s,obstacle.s,c.length);
-      const hazard=r.branch===obstacle.branch&&(obstacle.active||obstacle.warning)&&gap>-.7&&gap<Math.max(14,r.v*1.30);
+      const obstacle=approachingHazard(c,r,opt.obstacles,-.7,Math.max(14,r.v*1.30)),hazard=Boolean(obstacle);
       if(fork||hazard||Math.abs(q.curve)>.018){
         const sx=w*.50,sy=inset+7,sz=compact?22:29;
         roundBox(ctx,sx-sz*.68,sy-4,sz*1.36,sz+5,4,panel,line);ctx.strokeStyle=hazard?'#ffb761':'#f3cf81';ctx.lineWidth=compact?2.5:3;ctx.lineCap='round';ctx.lineJoin='round';
@@ -560,21 +574,27 @@
         }
       }
       const r=st.racers[seat]||st.racers[0],sounds=!paused&&sound.enabled;
-      const obstacle=root.AcornHazards.sample(c,st.time);
+      const obstacles=root.AcornHazards.samples(c,st.time);
       for(let i=0;i<players;i++){
         const driver=st.racers[net?seat:i];if(!driver)continue;
         const b=driver.contactSeq||0,h=driver.hazardHit,hit=h?.count||0,landing=driver.landingSeq||0,last=driverCues.get(driver.seat)||[0,0,0];
         if(!paused&&b!==last[0]&&driver.contactFx>.24)root.AcornCourseArt.feedback(sound,padMap[i],driver.contactKind,driver.contactForce,i>0);
-        if(!paused&&hit!==last[1]&&h&&st.time-h.at<.4)root.AcornCourseArt.feedback(sound,padMap[i],[2,6,7].includes(h.id)?'water':'stone',h.blocked?.24:.62,i>0);
+        if(!paused&&hit!==last[1]&&h&&st.time-h.at<.4){
+          const kind=h.id===8?'frog':h.id===9?'timber':[2,6,7].includes(h.id)?'water':'stone';
+          root.AcornCourseArt.feedback(sound,padMap[i],kind,h.blocked?.24:.62,i>0);
+        }
         if(!paused&&landing!==last[2]&&driver.landingFx>.32)root.AcornCourseArt.feedback(sound,padMap[i],'landing',Math.min(.65,driver.landingForce||.30),i>0);
         const driftTier=Sim.driftTier(driver.drift||0),oldTier=last[3]||0;
         if(!paused&&driftTier>oldTier&&!driver.fall&&!(driver.hit>0)){
           try{padMap[i]?.vibrationActuator?.playEffect('dual-rumble',{duration:45+driftTier*12,weakMagnitude:.16+.09*driftTier,strongMagnitude:.05*driftTier})?.catch(()=>{});}catch{}
         }
         if(b!==last[0]||hit!==last[1]||landing!==last[2]||driftTier!==oldTier)driverCues.set(driver.seat,[b,hit,landing,driftTier]);
-        const distance=root.AcornSignatures.gap(driver.s,obstacle.s,c.length),visit=Math.round((driver.s-obstacle.s)/c.length);
-        if(sounds&&st.countdown<=0&&driver.branch===obstacle.branch&&(obstacle.warning||obstacle.active)&&distance>0&&distance<Math.max(15,driver.v*1.35)&&approachCues.get(driver.seat)!==visit){
-          if(st.time-lastApproach>.72){root.AcornCourseArt.approach(sound,obstacle.id);lastApproach=st.time;}approachCues.set(driver.seat,visit);
+        const obstacle=sounds&&st.countdown<=0&&approachingHazard(c,driver,obstacles,0,Math.max(15,driver.v*1.35));
+        if(obstacle){
+          const key=driver.seat+':'+obstacle.key,visit=Math.round((driver.s-obstacle.baseS)/c.length);
+          if(approachCues.get(key)!==visit&&st.time-lastApproach>.72){
+            root.AcornCourseArt.approach(sound,obstacle.id);lastApproach=st.time;approachCues.set(key,visit);
+          }
         }
          const storm=!driver.finish&&!driver.fall&&Sim.stormThreat(st,driver,c);
          if(sounds&&storm){
@@ -599,7 +619,7 @@
       renderer.beginFrame?.();
       views(w,h).forEach((rect,i)=>{const id=net?seat:i;if(!st.racers[id])return;renderer.render(st,id,rect,drawScale,!!inputs[id]?.lookBack,ghostKart,frame,endDelay);
         const b=keysets[i]||defaults,gamepad=!!padMap[i];
-        hud(ctx,st,c,id,rect,{map,multi:players>1,localIndex:i,touch:touchActive,cupRoundLabel:options.cupRoundLabel,keyGas:gamepad?padLabel('accelerate',true):label(b.accelerate),keyAbility:gamepad?padLabel('ability',true):label(b.ability),keyItem:gamepad?padLabel('item',true):label(b.item)});});
+        hud(ctx,st,c,id,rect,{map,obstacles,multi:players>1,localIndex:i,touch:touchActive,cupRoundLabel:options.cupRoundLabel,keyGas:gamepad?padLabel('accelerate',true):label(b.accelerate),keyAbility:gamepad?padLabel('ability',true):label(b.ability),keyItem:gamepad?padLabel('item',true):label(b.item)});});
       if(players===3){ctx.fillStyle='#1c291f';ctx.fillRect(w/2,h/2,w/2,h/2);txt(ctx,c.name.toUpperCase(),w*.75,h*.68,Math.max(20,w*.027),'#eee8d2','italic 900','Rally','center');drawMap(ctx,map,c,st,0,w*.57,h*.7,w*.36,h*.24);}
       if(!playSignalled&&!paused&&st.countdown<=0&&st.time>0){
         playSignalled=true;

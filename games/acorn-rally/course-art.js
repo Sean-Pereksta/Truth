@@ -2,7 +2,7 @@
   'use strict';
   const TAU=Math.PI*2, cap=(n,lo=0,hi=1)=>Math.max(lo,Math.min(hi,n));
   const contacts={front:'Front bumper',rear:'Rear bumper',side:'Side contact',glance:'Glancing bump',brace:'Bumper brace'};
-  function build(Mesh,simple=false){
+  function build(Mesh,simple=false,includeMarsh=true){
     const shapes={};
     const make=name=>shapes[name]=new Mesh();
     const bar=(m,a,b,r,c,mat=2)=>m.ring(a,b,r,r,c,simple?4:6,mat);
@@ -32,6 +32,19 @@
     const culm=make('envBamboo');culm.ring([-1,0,0],[1,0,0],.16,.14,'#a4bd6f',10,3);
     for(let j=-4;j<=4;j++){const x=j*.213;culm.ring([x-.018,0,0],[x+.022,0,0],.18,.18,j%3?'#69854c':'#d5bc76',8,2);}
     for(const x of [-.76,.76]){bar(culm,[x,-.13,0],[x-.14,-.39,.04],.024,'#a35136');culm.tri([x-.08,-.25,.036],[x+.16,-.23,.036],[x+.07,-.58,.02],'#d75f42',2);}
+    const timber=make('envFallTimber'),stump=make('envTimberStump'),sides=simple?9:14;
+    for(let i=0;i<sides;i++){
+      const a=TAU*i/sides,b=TAU*(i+1)/sides;
+      const point=(x,t,r)=>[x,Math.cos(t)*r,Math.sin(t)*r];
+      const ridge=t=>.93+.07*Math.cos(t*7);
+      timber.quad(point(0,a,ridge(a)),point(0,b,ridge(b)),point(1,b,ridge(b)*.81),point(1,a,ridge(a)*.81),bark[i%5],2);
+      timber.tri(point(1,b,ridge(b)*.81),point(1,a,ridge(a)*.81),[1,0,0],'#c49b6a',2);
+      for(const radius of [.25,.53])timber.quad(point(1.004,a,radius),point(1.004,b,radius),point(1.004,b,radius+.05),point(1.004,a,radius+.05),'#8f653f',2);
+      if(i%3===0)timber.tri(point(.20,a,ridge(a)),point(.65,a,ridge(a)*.97),point(.55,a+.15,1.10),'#9d7650',2);
+    }
+    stump.ring([0,0,0],[0,.58,0],.56,.43,'#604736',10,2);
+    stump.ring([0,.56,0],[0,.62,0],.39,.35,'#ab8055',10,2);
+    if(includeMarsh)Object.assign(shapes,root.AcornExpansionWorld.frogMeshes(Mesh),root.AcornBullfrogArt.meshes(Mesh,simple));
     const stand=make('envPost');stand.box(0,0,0,.28,3.1,.31,0,'#795f42',2);
     for(const y of [.22,2.44,2.91])stand.box(0,y,0,.33,.10,.36,0,'#b59060',2);
     const gate=make('envSluice');for(const d of [-1,1]){gate.box(0,0,d*.97,.44,2.4,.34,0,'#68573f',2);
@@ -158,13 +171,16 @@
     const marker=make('envMarker');marker.box(0,0,0,.10,.98,.11,0,'#72583b',2);
     marker.box(0,.75,0,.89,.73,.13,0,'#453d30',2);screenPoly(marker,[[-.408,.79],[.408,.79],[.408,1.436],[-.408,1.436]],'#e4be72');
     // Each sign carries the profile of the obstacle ahead, also readable in silhouette.
-    for(let id=0;id<8;id++){
+    for(let id=0;id<10;id++){
       const glyph=make('envSign'+id),ink='#4e4534',z=-.106,stroke=(a,b,w=.032)=>bar(glyph,[a[0],a[1],z],[b[0],b[1],z],w,ink,5);
       if(id===0||id===3){const points=id===0?[[-.25,1.03],[-.21,1.25],[-.04,1.32],[.25,1.18],[.22,.99],[.06,.94]]:
         [[-.26,.99],[-.20,1.23],[-.04,1.32],[.15,1.25],[.27,1.04],[.12,.96]];screenPoly(glyph,points,ink,z);if(!id){for(let i=0;i<10;i++){const a=TAU*i/10,b=TAU*(i+1)/10;bar(glyph,[-.09+.09*Math.cos(a),1.125+.115*Math.sin(a),z-.028],[-.09+.09*Math.cos(b),1.125+.115*Math.sin(b),z-.028],.020,'#e9c882',5);}}}
       else if([2,6,7].includes(id)){for(let row=0;row<2;row++)for(let i=0;i<8;i++)stroke([-.28+i*.07,1.00+row*.17+.048*Math.sin(i*1.15)],[ -.28+(i+1)*.07,1.00+row*.17+.048*Math.sin((i+1)*1.15)]);}
       else if(id===4){stroke([-.23,1.28],[-.02,1.18]);stroke([-.02,1.18],[-.11,1.08]);stroke([-.11,1.08],[.23,.97]);stroke([-.11,1.08],[.20,1.14]);}
       else if(id===5){screenPoly(glyph,[[-.22,1.13],[.22,1.13],[.17,.94],[-.17,.94]],ink,z);stroke([-.22,1.14],[0,1.32]);stroke([0,1.32],[.22,1.14]);}
+      else if(id===8){screenPoly(glyph,[[-.25,1.02],[-.17,1.20],[.17,1.20],[.25,1.02],[.16,.99],[-.16,.99]],ink,z);
+        for(const eye of [-.15,.15])stroke([eye,1.16],[eye,1.30],.045);stroke([-.14,1.045],[.14,1.045],.025);}
+      else if(id===9){stroke([-.26,1.02],[.20,1.35],.067);stroke([-.19,.98],[.21,.98]);stroke([.10,1.08],[.23,1.00]);}
       else {stroke([-.26,1.02],[.26,1.20],.065);stroke([.18,1.19],[.18,1.36]);stroke([-.18,1.06],[-.18,1.35]);}
     }
     for(const [name,color] of [['envReady','#729276'],['envAmber','#ffc15b'],['envActive','#ff8d60']]){const m=make(name);m.blob(0,1.58,0,.12,.095,.12,color,8,5);}
@@ -177,6 +193,44 @@
       dust.blob(-.13,.095,0,.23,.105,.25,col,6);dust.blob(.16,.125,-.11,.18,.12,.21,col,6);}
     return shapes;
   }
+  function bullfrogPose(h,time,stamp){
+    const phase=h.active?h.hopPhase:0,air=Math.max(0,Math.sin(Math.PI*phase));
+    const windup=h.warning?.22*cap((h.progress-.55)/.45):h.active?.22*cap(1-phase/.17):0;
+    const landing=h.active?.18*cap(1-Math.abs(phase-.88)/.12):0;
+    const squash=Math.max(windup,landing),pitch=-.24*Math.sin(TAU*phase);
+    const breath=.019*Math.sin(time*5.6),lift=.05*air;
+    const bodyScale=[1+.30*squash,1-squash+.09*air+breath,1+.12*air];
+    const size=1.29,cos=Math.cos(h.heading),sin=Math.sin(h.heading);
+    const tiltCos=Math.cos(pitch),tiltSin=Math.sin(pitch);
+    const bodyPoint=([x,y,z])=>{
+      const up=y*bodyScale[1],forward=z*bodyScale[2];
+      return [x*bodyScale[0],lift+up*tiltCos-forward*tiltSin,up*tiltSin+forward*tiltCos];
+    };
+    const joint=(name,[x,y,z],yaw=0,angle=0,stretch=[1,1,1])=>stamp(name,
+      h.s+size*(z*cos-x*sin),h.x+size*(x*cos+z*sin),h.bottom+y*size,h.heading+yaw,size,1,0,angle,stretch);
+    const limb=(name,a,b)=>{
+      const dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],run=Math.hypot(dx,dz);
+      joint(name,a,Math.atan2(dx,dz),-Math.atan2(dy,run),[1,1,Math.hypot(run,dy)]);
+    };
+    joint('bullfrogBody',[0,lift,0],0,pitch,bodyScale);
+    const croak=h.warning?Math.max(0,Math.sin(h.progress*Math.PI*3))*.44:0;
+    const throat=1+breath*3+croak;
+    joint('bullfrogThroat',bodyPoint([0,.249,.549]),0,pitch,[1+croak*.29,throat,1+croak*.47]);
+    const blink=(time+1.71)%3.91<.095||h.active&&phase>.82&&phase<.88;
+    joint(blink?'bullfrogLids':'bullfrogEyes',[0,lift,0],0,pitch,bodyScale);
+    for(const side of [-1,1]){
+      const shoulder=bodyPoint([side*.33,.33,.30]),hip=bodyPoint([side*.36,.35,-.28]);
+      const wrist=[side*(.47-.12*air),.045+.18*air,.65-.14*air];
+      const knee=[side*(.56+.10*air),.25-.09*squash+.11*air,-.055-.57*air];
+      const ankle=[side*(.57+.03*air),.064+.18*air,-.54-.53*air];
+      limb('bullfrogForelimb',shoulder,wrist);
+      limb('bullfrogThigh',hip,knee);
+      limb('bullfrogShin',knee,ankle);
+      joint('bullfrogFoot',wrist,side*.20,-.06*air,[.70,.70,.68]);
+      joint('bullfrogFoot',ankle,side*.29+.82*air*side,air*.36,[1,1,1]);
+    }
+  }
+
   function scene(h,time,emit){
     const {id,s,x,branch,sourceSide:side,anchorX,halfWidth:w,halfLength:l,bottom,top,progress:p,strength:k}=h;
     const water=id===2||id===6||id===7,warning=h.warning,active=h.active;
@@ -188,8 +242,23 @@
     at('envArrow',signS,signX,0,0,1.22,1,0,0,[h.safeSide,1,1]);
     at(active?'envActive':warning?'envAmber':'envReady',signS,signX,0,0,warning?1.2+.045*Math.sin(time*7):1.22);
     if(warning){
-      const area=water?Math.abs(anchorX-h.mainX):id===0?1.7:w;
-      at('envStripes',s,h.mainX,.038,0,1,.14+.09*p+.03*Math.sin(time*5),0,0,[area,1,l]);
+      const area=h.warningHalfWidth??(water?Math.abs(anchorX-h.mainX):id===0?1.7:w);
+      at('envStripes',s,h.warningX??h.mainX,.038,0,1,.14+.09*p+.03*Math.sin(time*5),0,0,[area,1,l]);
+    }
+    if(id===8){
+      const leaping=h.bottom>.09;
+      if(active||warning)at('envShade',s,x,.035,0,1,.32/(1+h.bottom),0,0,[.65,1,.73]);
+      if(active&&leaping)at('envStripes',h.landingS,h.landingX,.045,0,1,.26,0,0,[.7,1,.62]);
+      bullfrogPose(h,time,at);
+    }
+    if(id===9){
+      const dx=h.tipX-anchorX,dy=h.tipHeight-h.hingeHeight;
+      at('envTimberStump',s,anchorX,0);
+      at('envFallTimber',s,anchorX,h.hingeHeight,0,1,1,Math.atan2(dy,dx),0,[Math.hypot(dx,dy),h.radius,h.radius]);
+      if(active&&h.fallProgress>.86){
+        const settle=cap((.43-p)/.18);
+        for(let j=0;j<4;j++)at('envLand1',s+.18*Math.sin(j*4.4),(h.tipX+anchorX)*.5+dx*(j/3-.5),.07+.36*(1-settle),j*.9,.68,settle*.63);
+      }
     }
     if(id===0&&show){
       const rot=active?p*3.8:warning?Math.sin(time*10)*.025*p:3.8;
@@ -268,7 +337,7 @@
     }
     const h=r.hazardHit,age=h?st.time-h.at:1;
     if(h&&age>=0&&age<.53){
-      const t=age/.53,water=[2,6,7].includes(h.id);
+      const t=age/.53,water=[2,6,7,8].includes(h.id);
       for(let j=0;j<5;j++){const dir=(j%2?1:-1),span=.37+t*(.49+(j%3)*.18);
         emit(water?'envFoam':h.id===4?'envCrystal':'envPebble',r.s-.2-t*(1.15+j%2*.53),r.x+dir*span,
           .17+Math.sin(t*Math.PI)*(.26+j%3*.15),t*3+j,(water?.39:.16)*(1-t*.52),.94*(1-t),j*.2,0,[1,1,1],r.branch);}
@@ -339,6 +408,10 @@
       sound.tone(470,.074,(.004+f*.006)*gain,'sawtooth',278,.026);
     }else if(kind==='water'){
       sound.tone(135,.15,.019*gain,'sine',61);sound.tone(340,.105,.008*gain,'triangle',178,.04);
+    }else if(kind==='frog'){
+      sound.tone(151,.18,.027*gain,'triangle',65);sound.tone(255,.075,.009*gain,'sine',114,.07);
+    }else if(kind==='timber'){
+      sound.tone(115,.15,.032*gain,'triangle',46);sound.tone(412,.09,.012*gain,'sawtooth',133,.023);
     }else{
       sound.tone(kind==='brace'?138:107,.095,(.022+f*.022)*gain,'triangle',54);
       sound.tone(kind==='stone'?286:326,.044,(.008+f*.012)*gain,'triangle',160,.008);
@@ -349,7 +422,8 @@
     const cues=[
       [[180,86,.12],[120,77,.08]],[[656,820,.12],[896,690,.14]],[[175,116,.14],[310,202,.15]],
       [[216,97,.065],[293,144,.055]],[[595,310,.04],[810,440,.045]],[[420,298,.11],[339,253,.08]],
-      [[305,216,.12],[363,243,.14]],[[173,111,.16],[251,155,.17]]
+      [[305,216,.12],[363,243,.14]],[[173,111,.16],[251,155,.17]],
+      [[162,102,.15],[142,89,.17]],[[330,161,.11],[290,137,.15]]
     ][id];
     cues.forEach(([tone,end,duration],i)=>sound.tone(tone,duration,i?.009:.014,id===4?'square':'triangle',end,i*.082));
   }
