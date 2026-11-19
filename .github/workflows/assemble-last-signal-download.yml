@@ -1,0 +1,68 @@
+name: Assemble Last Signal download
+on:
+  push:
+    branches: ['codex/last-signal-asset-*']
+    paths: ['.last-signal-build/**','.github/workflows/assemble-last-signal-download.yml']
+permissions:
+  contents: write
+jobs:
+  assemble:
+    runs-on: windows-2025
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Reassemble and publish the immutable game archive to this build branch
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          $build = Join-Path $env:GITHUB_WORKSPACE '.last-signal-build'
+          $spec = Get-Content (Join-Path $build 'identity.json') -Raw | ConvertFrom-Json
+          if ($env:GITHUB_REF_NAME -ne ('codex/last-signal-asset-' + $spec.sha256.Substring(0,20))) { throw 'Invalid packaging branch.' }
+          $destination = Join-Path $env:GITHUB_WORKSPACE 'games/last-signal/Last-Signal-Windows-x64.zip'
+          & (Join-Path $build 'Assemble-Download.ps1') -OutputPath $destination
+          if ((Get-FileHash -LiteralPath $destination -Algorithm SHA256).Hash -ne $spec.sha256) { throw 'Archive mismatch.' }
+          $objectId = (git hash-object --no-filters -- $destination).Trim()
+          if ($objectId -ne $spec.git) { throw 'Git object mismatch.' }
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- 'games/last-signal/Last-Signal-Windows-x64.zip'
+          git commit -m 'Assemble verified Last Signal Windows archive'
+          git push origin "HEAD:refs/heads/$env:GITHUB_REF_NAME"
+          Write-Output "Verified Windows archive Git object $objectId"
+      - name: Test eight game clients through the local socket and the public tunnel
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $spec = Get-Content '.last-signal-build/identity.json' -Raw | ConvertFrom-Json
+          if ($spec.fixture) { return }
+          $game = Join-Path $env:RUNNER_TEMP 'last-signal-native'
+          Expand-Archive -LiteralPath 'games/last-signal/Last-Signal-Windows-x64.zip' -DestinationPath $game
+          & './.last-signal-build/tests/Test-Room.ps1' -Mode socket -GameDirectory $game
+          & './.last-signal-build/tests/Test-Room.ps1' -Mode public -GameDirectory $game
+      - name: Remove the temporary build branch after its archive reaches main
+        if: always()
+        shell: pwsh
+        timeout-minutes: 16
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          $spec = Get-Content '.last-signal-build/identity.json' -Raw | ConvertFrom-Json
+          if ($spec.fixture) {
+            Write-Output 'Smoke fixture assembled and verified.'
+            $published = (git rev-parse HEAD).Trim()
+            git push "--force-with-lease=refs/heads/$($env:GITHUB_REF_NAME):$published" origin ":refs/heads/$env:GITHUB_REF_NAME"
+            return
+          }
+          for ($i = 0; $i -lt 88; $i++) {
+            git fetch --quiet --no-tags --depth=1 origin main
+            $entry = git ls-tree FETCH_HEAD -- 'games/last-signal/Last-Signal-Windows-x64.zip'
+            if ($entry -and $entry.Contains($spec.git)) {
+              $published = (git rev-parse HEAD).Trim()
+              git push "--force-with-lease=refs/heads/$($env:GITHUB_REF_NAME):$published" origin ":refs/heads/$env:GITHUB_REF_NAME"
+              Write-Output 'Released archive verified on main.'
+              return
+            }
+            Start-Sleep -Seconds 10
+          }
+          Write-Output 'Archive retained on the build branch for publication.'
