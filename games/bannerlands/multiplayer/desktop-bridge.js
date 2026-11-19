@@ -8,10 +8,10 @@ export function initializeDesktopBridge(){
   else capability=sessionStorage.getItem(key);
   if(!capability)return;
   const request=async(path,body)=>{
-    const response=await fetch('/api/desktop/'+path,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+capability,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})});
+    const response=await fetch('/api/desktop/'+path,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+capability,...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{}),...(path==='stop'?{signal:AbortSignal.timeout(8000)}:{})});
     const result=await response.json();if(!response.ok||!result.ok)throw new Error(result.message||'The hosting service could not complete this action.');return result;
   };
-  Object.defineProperty(window,'bannerlandsHost',{value:Object.freeze({host:(config,lobby)=>request('host',{config,lobby}),stop:()=>request('stop',{}),status:()=>request('status')}),writable:false,configurable:false});
+  Object.defineProperty(window,'bannerlandsHost',{value:Object.freeze({host:(config,lobby)=>request('host',{config,lobby}),stop:hostToken=>request('stop',{hostToken}),status:()=>request('status')}),writable:false,configurable:false});
   let heartbeat=null;
   const begin=()=>{if(heartbeat!==null)return;void request('status').catch(()=>{});heartbeat=setInterval(()=>request('status').catch(()=>{}),15000);};
   const stop=()=>{if(heartbeat!==null)clearInterval(heartbeat);heartbeat=null;};

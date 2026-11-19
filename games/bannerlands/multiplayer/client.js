@@ -52,13 +52,13 @@ export class MultiplayerClient{
   this.metrics={requests:0,receivedBytes:0,commands:0,commandRoundTrips:[],resyncs:0,pollFailures:0};
   this.generation=0;this.commandEpoch=0;this.pollPromise=null;this.controllers=new Set();this.commandControllers=new Set();
  }
- async request(route,{method='GET',body,hostToken,timeout=8000,etag}={}){
+ async request(route,{method='GET',body,hostToken,token=hostToken||this.session?.token,timeout=8000,etag,keepalive=false}={}){
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeout),headers={};
   this.controllers.add(controller);if(route==='/api/command')this.commandControllers.add(controller);
-  const token=hostToken||this.session?.token;if(token)headers.Authorization='Bearer '+token;
+  if(token)headers.Authorization='Bearer '+token;
   if(body!==undefined)headers['Content-Type']='application/json';if(etag)headers['If-None-Match']=etag;
   try{
-   this.metrics.requests++;const response=await this.fetchImpl(this.origin+route,{method,headers,body:body===undefined?undefined:JSON.stringify(body),signal:controller.signal,cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer'});
+   this.metrics.requests++;const response=await this.fetchImpl(this.origin+route,{method,headers,body:body===undefined?undefined:JSON.stringify(body),signal:controller.signal,cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer',keepalive});
    if(response.status===304)return {unchanged:true};
    const content=await response.text();this.metrics.receivedBytes+=new TextEncoder().encode(content).byteLength;
    if(content.length>16*1024*1024)throw new ConnectionError('The host sent an oversized update.');
@@ -68,14 +68,19 @@ export class MultiplayerClient{
   }catch(error){if(error.name==='AbortError')throw new ConnectionError('The host did not respond in time.');throw error;}finally{clearTimeout(timer);this.controllers.delete(controller);this.commandControllers.delete(controller);}
  }
  remember(){try{this.storage?.setItem('bannerlands-session:'+this.origin,JSON.stringify(this.session));}catch{}}
- forget(){try{this.storage?.removeItem('bannerlands-session:'+this.origin);}catch{}this.session=null;}
- async join({name='Guest',invite,hostToken}={}){
-  this.close();const generation=this.generation;this.session=null;this.game=null;this.lobby=null;this.snapshot=null;this.etag=null;this.sequence=0;
+ forget(){
+  try{this.storage?.removeItem('bannerlands-session:'+this.origin);}catch{}
+  this.session=null;this.game=null;this.lobby=null;this.snapshot=null;this.etag=null;this.sequence=0;this.presentation=new PresentationBuffer();
+ }
+ async join({name='Guest',invite,hostToken,lobbyId}={}){
+  this.close();this.forget();const generation=this.generation;
   this.onStatus('connecting','Reserving your house…');
-  const data=await this.request(hostToken?'/api/host/session':'/api/join',{method:'POST',hostToken,body:{v:PROTOCOL_VERSION,gameVersion:GAME_VERSION,assetVersion:ASSET_VERSION,name,invite}});
+  const data=await this.request(hostToken?'/api/host/session':'/api/join',{method:'POST',hostToken,body:{v:PROTOCOL_VERSION,gameVersion:GAME_VERSION,assetVersion:ASSET_VERSION,name,invite,lobbyId}});
   if(generation!==this.generation)throw new ConnectionError('This join request was cancelled.');
   this.session={token:data.token,team:data.team,sessionId:data.sessionId,host:!!hostToken};this.sequence=data.lastSeq||0;this.lobby=data.lobby;this.remember();this.running=true;
-  await this.poll();return data;
+  await this.poll(true).catch(error=>{if(!this.session)throw error;});
+  if(generation!==this.generation||!this.session)throw new ConnectionError('This join request was cancelled.');
+  return data;
  }
  async restore(){
   this.close();const generation=this.generation;
@@ -173,6 +178,9 @@ export class MultiplayerClient{
   });
   this.syncPromise=task;const clear=()=>{if(this.syncPromise===task)this.syncPromise=null;};task.then(clear,clear);return task;
  }
- async leave(){this.close();const generation=this.generation;try{if(this.session)await this.request('/api/leave',{method:'POST',body:{}});}finally{if(generation===this.generation)this.forget();}}
+ async leave(){
+  const token=this.session?.token;this.close();this.forget();
+  if(token)await this.request('/api/leave',{method:'POST',body:{},token,keepalive:true});
+ }
  close(){this.running=false;this.generation++;this.commandEpoch++;clearTimeout(this.timer);this.queue.length=0;this.sending=false;this.pollPromise=null;for(const controller of this.controllers)controller.abort();}
 }

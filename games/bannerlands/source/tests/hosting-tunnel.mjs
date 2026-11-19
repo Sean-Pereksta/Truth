@@ -22,6 +22,20 @@ test('connection is verified before ready and one owned child is stopped',async(
 test('simultaneous host clicks start only one connection',async()=>{
   const f=fixture();const addresses=await Promise.all([f.tunnel.start('http://127.0.0.1:4174'),f.tunnel.start('http://127.0.0.1:4174')]);assert.equal(f.children.length,1);assert.equal(addresses[0],addresses[1]);await f.tunnel.stop();
 });
+test('stopping verification releases the pending start before a new tunnel opens',async()=>{
+  let probing;const startedProbing=new Promise(resolve=>{probing=resolve;});
+  const f=fixture({fetchPublic:async(url,{signal})=>{
+    if(f.children.length>1)return success();
+    probing();return new Promise((resolve,reject)=>signal.addEventListener('abort',()=>reject(signal.reason),{once:true}));
+  }});
+  const initial=f.tunnel.start('http://127.0.0.1:4174','expected-match');
+  const cancelled=assert.rejects(initial,/cancelled/);await startedProbing;
+  await f.tunnel.stop();await cancelled;
+  assert.equal(f.tunnel.status().stage,'idle');assert.equal(f.tunnel.status().candidateUrl,null);
+  await f.tunnel.start('http://127.0.0.1:4174','expected-match');
+  assert.equal(f.children.length,2);assert.equal(f.children[0].killed,1);assert.equal(f.children[1].killed,0);
+  await f.tunnel.stop();
+});
 test('unreachable or wrong match address fails with recovery guidance and cleanup',async()=>{
   const f=fixture({fetchPublic:async()=>({ok:true,json:async()=>({ok:true,lobby:{id:'wrong-match'}})})});await assert.rejects(f.tunnel.start('http://127.0.0.1:4174','expected-match'),/could not be reached/);assert.equal(f.children[0].killed,1);assert.equal(f.tunnel.status().stage,'failed');
 });

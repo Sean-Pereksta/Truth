@@ -6,6 +6,11 @@ on:
     paths:
       - 'games/bannerlands/app.js'
       - 'games/bannerlands/asset-loader.js'
+      - 'games/bannerlands/multiplayer/**'
+      - 'games/bannerlands/source/multiplayer-server.mjs'
+      - 'games/bannerlands/source/hosting/tunnel.mjs'
+      - 'games/bannerlands/source/tests/multiplayer-*.mjs'
+      - 'games/bannerlands/source/tests/hosting-tunnel.mjs'
       - 'games/bannerlands/source/build-host.mjs'
       - 'games/bannerlands/source/tests/standalone-browser.mjs'
       - 'games/bannerlands/source/desktop/launcher.mjs'

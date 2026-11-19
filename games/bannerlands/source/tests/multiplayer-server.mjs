@@ -93,17 +93,71 @@ test('unrecognized bearer values cannot bypass per-address admission limits',asy
     assert.equal((await f.request('/api/state',{token:f.host})).status,200);
   }finally{await f.close();}
 });
-test('installed host closes online service while keeping single-player and a new lobby usable',async()=>{
-  let stopped=0,touched=0;const desktop={secret:'desktop-private-capability-000000000',touch:()=>{touched++;},status:()=>({stage:'idle'}),host:async instance=>({url:instance.url,hostToken:instance.hostToken,invite:instance.invite}),stop:async instance=>{stopped++;await instance.setReachable(false);}};
-  const f=await fixture({desktop});try{
-    const guest=(await join(f.request)).body.token,oldInvite=f.server.invite;
+test('leaving an installed match retires its sessions before a replacement is hosted',async()=>{
+  let stopped=0,touched=0,stopEntered,releaseStop;const active=new Map();
+  const stopping=new Promise(resolve=>{stopEntered=resolve;});
+  const deferredStop=new Promise(resolve=>{releaseStop=resolve;});
+  const publisher={publish:async record=>active.set(record.id,record),heartbeat:async record=>active.set(record.id,record),remove:async id=>active.delete(id)};
+  const desktop={secret:'desktop-private-capability-000000000',touch:()=>{touched++;},status:()=>({stage:'idle'}),host:async instance=>{
+    await instance.setPublicAddress('https://test-bannerlands.trycloudflare.com');
+    return {url:instance.url,hostToken:instance.hostToken,invite:instance.invite};
+  },stop:async instance=>{stopped++;stopEntered();await deferredStop;await instance.setReachable(false);}};
+  const f=await fixture({desktop,publisher});
+  const hostLobby=(lobby={})=>f.request('/api/desktop/host',{token:desktop.secret,body:{config:{enemies:3},lobby:{maxHumans:2,...lobby}}});
+  try{
+    assert.equal(f.server.getLobby().status,'closed');
+    assert.equal((await join(f.request)).status,410);
     assert.equal((await f.request('/api/desktop/status')).status,401);
-    assert.equal(touched,0);await f.request('/api/state',{token:guest});assert.equal(touched,0);
     assert.equal((await f.request('/api/desktop/status',{token:desktop.secret})).status,200);
     assert.equal(touched,1);
-    await f.request('/api/close',{token:f.host,body:{}});assert.equal(stopped,1);assert.notEqual(f.server.invite,oldInvite);
-    assert.equal((await f.request('/api/state',{token:guest})).status,401);assert.equal(f.server.getLobby().players.length,1);assert.equal(f.server.getLobby().public,false);
-    assert.equal((await fetch(f.server.url+'/')).status,200);assert.equal((await f.request('/api/desktop/host',{token:desktop.secret,body:{config:{enemies:3},lobby:{maxHumans:4}}})).status,200);
+    const first=await hostLobby({public:true});assert.equal(first.status,200);
+    const oldLobby=f.server.getLobby().id;
+    assert.equal(active.has(oldLobby),true);
+    const oldHost=(await f.request('/api/host/session',{token:first.body.hostToken,body:{}})).body;
+    f.host=oldHost.token;
+    const guest=(await join(f.request)).body.token,revision=await readyAll(f,guest);
+    assert.equal((await f.request('/api/start',{token:f.host,body:{revision}})).status,200);
+    await synchronizeAll(f,[guest]);
+    const oldMatch=f.server.getLobby().matchId;
+
+    const leaving=f.request('/api/leave',{token:f.host,body:{}});await stopping;
+    const retired=f.server.getLobby();
+    assert.equal(stopped,1);assert.equal(retired.status,'closed');assert.equal(retired.matchId,null);assert.deepEqual(retired.players,[]);
+    assert.equal(retired.reachable,false);assert.equal(active.has(oldLobby),false);
+    for(const token of [f.host,first.body.hostToken,guest])assert.equal((await f.request('/api/state',{token})).status,401);
+    assert.equal((await join(f.request,{invite:first.body.invite})).status,410);
+    assert.equal((await fetch(f.server.url+'/')).status,200);
+
+    const reopening=hostLobby({public:true});releaseStop();
+    assert.equal((await leaving).status,200);
+    const second=await reopening;assert.equal(second.status,200);
+    assert.notEqual(f.server.getLobby().id,oldLobby);
+    assert.notEqual(second.body.hostToken,first.body.hostToken);assert.notEqual(second.body.invite,first.body.invite);
+    assert.equal((await f.request('/api/desktop/stop',{token:desktop.secret,body:{hostToken:first.body.hostToken}})).status,200);
+    assert.equal((await join(f.request,{invite:first.body.invite})).status,403);
+    assert.equal((await join(f.request,{lobbyId:oldLobby})).status,409);
+    const newGuest=await join(f.request,{lobbyId:f.server.getLobby().id});assert.equal(newGuest.status,201);
+    f.host=second.body.hostToken;
+    assert.equal((await f.request('/api/start',{token:f.host,body:{revision:await readyAll(f,newGuest.body.token)}})).status,200);
+    await synchronizeAll(f,[newGuest.body.token]);
+    assert.notEqual(f.server.getLobby().matchId,oldMatch);
+  }finally{releaseStop();await f.close();}
+});
+test('an explicit guest departure releases the seat during synchronization and revokes access during play',async()=>{
+  const f=await fixture();try{
+    let guest=(await join(f.request)).body.token;
+    assert.equal((await f.request('/api/start',{token:f.host,body:{revision:await readyAll(f,guest)}})).status,200);
+    assert.equal((await f.request('/api/leave',{token:guest,body:{}})).status,200);
+    assert.equal(f.server.getLobby().status,'waiting');assert.equal(f.server.getLobby().matchId,null);
+    assert.equal((await f.request('/api/state',{token:guest})).status,401);
+    guest=(await join(f.request)).body.token;
+    assert.equal((await f.request('/api/start',{token:f.host,body:{revision:await readyAll(f,guest)}})).status,200);
+    await synchronizeAll(f,[guest]);
+    assert.equal((await f.request('/api/leave',{token:guest,body:{}})).status,200);
+    assert.equal((await f.request('/api/state',{token:guest})).status,401);
+    assert.equal(f.server.getLobby().status,'in-progress');assert.equal(f.server.getLobby().players.length,1);
+    assert.equal((await f.request('/api/end',{token:f.host,body:{}})).status,200);
+    assert.equal((await join(f.request)).status,201);
   }finally{await f.close();}
 });
 test('four humans coexist with twelve AI houses; start never fills an empty human seat with AI',async()=>{

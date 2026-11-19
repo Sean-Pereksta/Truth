@@ -8,6 +8,7 @@ const memory=new Map(),storage={getItem:key=>memory.get(key)||null,setItem:(key,
 const match=await createMatchServer({config:{enemies:1,scale:'standard',seed:44277},lobby:{public:true,maxHumans:2},simulation:false});
 let loseReply=true,rateLimit=true;const results=[];
 const transport=async(url,options)=>{
+ if(url.endsWith('/api/join'))assert.equal(JSON.parse(options.body).lobbyId,match.getLobby().id);
  if(url.endsWith('/api/command')&&rateLimit){rateLimit=false;return new Response(JSON.stringify({ok:false,code:'rate',message:'Try again.'}),{status:429});}
  const response=await fetch(url,options);
  if(url.endsWith('/api/command')&&loseReply){loseReply=false;await response.text();throw new TypeError('Simulated lost acknowledgement');}
@@ -16,7 +17,7 @@ const transport=async(url,options)=>{
 const client=new MultiplayerClient({origin:match.url,storage,fetchImpl:transport,onCommand:result=>results.push(result)});
 try{
  const host=await fetch(match.url+'/api/host/session',{method:'POST',headers:{Authorization:'Bearer '+match.hostToken,'Content-Type':'application/json'},body:JSON.stringify(COMPATIBILITY)}).then(r=>r.json());
- await client.join({name:'Guest'});
+ await client.join({name:'Guest',lobbyId:match.getLobby().id});
  const req=(route,body,token=host.token)=>fetch(match.url+route,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body)}).then(async r=>{const value=await r.json();assert.equal(r.ok,true,JSON.stringify(value));return value;});
  const revision=(await match.getLobby()).revision;
  await req('/api/ready',{ready:true,assetsReady:true,revision});await client.ready(true,revision,true);await req('/api/start',{revision});await client.poll(true);
@@ -32,7 +33,21 @@ try{
  // A rejected command consumes its acknowledged sequence. The next valid
  // command still executes in order and cannot move another player's army.
  const enemy=client.game.units.find(u=>u.team===0);client.game.hold([enemy.id]);await until(()=>results.length===3);assert.equal(results[2].ok,false);client.game.hold(ids);await until(()=>results.length===4);assert.equal(results[3].ok,true);
- const token=client.session.token;client.close();const restored=new MultiplayerClient({origin:match.url,storage});assert.equal(await restored.restore(),true);assert.equal(restored.session.token,token);assert.equal(restored.game.playerTeam,1);assert.equal((await match.getLobby()).players.length,2);restored.close();
+ const token=client.session.token;client.close();
+ let releaseLeave;const leaveGate=new Promise(resolve=>{releaseLeave=resolve;});
+ const restored=new MultiplayerClient({origin:match.url,storage,fetchImpl:async(url,options)=>{
+  if(url.endsWith('/api/leave')){assert.equal(options.headers.Authorization,'Bearer '+token);assert.equal(options.keepalive,true);await leaveGate;}
+  return fetch(url,options);
+ }});
+ assert.equal(await restored.restore(),true);assert.equal(restored.session.token,token);assert.equal(restored.game.playerTeam,1);assert.equal((await match.getLobby()).players.length,2);
+ const leaving=restored.leave();
+ try{
+  assert.equal(restored.session,null);assert.equal(restored.game,null);assert.equal(restored.lobby,null);
+  assert.equal(restored.running,false);assert.equal(storage.getItem('bannerlands-session:'+match.url),null);
+  assert.equal(await new MultiplayerClient({origin:match.url,storage}).restore(),false);
+  assert.equal(match.getLobby().players.length,2,'The client already left while server acknowledgement is pending');
+ }finally{releaseLeave();await leaving;}
+ assert.equal(match.getLobby().players.length,1,'Explicit leave releases the running campaign seat');
  console.log('PASS client retries lost acknowledgements and rate limits, preserves ordered rejection recovery, reconnects one session without duplicate purchases.');
 }finally{client.close();await match.close();}
 

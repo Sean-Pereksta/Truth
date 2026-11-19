@@ -91,6 +91,10 @@ export function mountLobbyUI({container=document.body,getConfig=()=>({}),onHost,
     if(entering&&(root.hidden||active!=='session'))show('session');
   }
   function setAssetsReady(ready){assetsReady=ready===true;if(session)renderSession(session);}
+  function clearSession(){
+    session=null;lastPhase=null;lastLobbyError=null;
+    $('.multiplayer-invite').hidden=true;$('.multiplayer-invite input').value='';
+  }
   root.addEventListener('click',event=>{
     const button=event.target.closest('button');if(!button||!root.contains(button))return;
     if(button.dataset.view){show(button.dataset.view);return;}
@@ -115,5 +119,5 @@ export function mountLobbyUI({container=document.body,getConfig=()=>({}),onHost,
     if(event.key==='Escape'){event.preventDefault();event.stopPropagation();hide();onClose();return;}
     if(event.key==='Tab'){const focusable=[...root.querySelectorAll('button,input,select,a[href]')].filter(el=>!el.disabled&&el.getClientRects().length);if(!focusable.length)return;const first=focusable[0],last=focusable.at(-1);if(event.shiftKey&&document.activeElement===first){last.focus();event.preventDefault();}else if(!event.shiftKey&&document.activeElement===last){first.focus();event.preventDefault();}}
   });
-  return {show,hide,setStatus,renderLobbies,renderSession,setAssetsReady,get element(){return root;},destroy(){destroyed=true;root.remove();}};
+  return {show,hide,setStatus,renderLobbies,renderSession,clearSession,setAssetsReady,get element(){return root;},destroy(){destroyed=true;root.remove();}};
 }

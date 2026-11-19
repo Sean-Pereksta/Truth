@@ -11,7 +11,7 @@ import {createSnapshotDelta} from '../multiplayer/transport-delta.js';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const secret=()=>randomBytes(32).toString('base64url');
-const equal=(a,b)=>typeof a==='string'&&typeof b==='string'&&a.length===b.length&&timingSafeEqual(Buffer.from(a),Buffer.from(b));
+const equal=(a,b)=>typeof a==='string'&&typeof b==='string'&&Buffer.byteLength(a)===Buffer.byteLength(b)&&timingSafeEqual(Buffer.from(a),Buffer.from(b));
 const cleanName=(value,fallback)=>typeof value==='string'&&value.trim()?value.trim().replace(/[\u0000-\u001f\u007f]/g,'').slice(0,60):fallback;
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json; charset=utf-8','.png':'image/png','.jpg':'image/jpeg','.webp':'image/webp','.svg':'image/svg+xml','.ico':'image/x-icon'};
 const stateHeaders={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Access-Control-Allow-Origin':'*','Referrer-Policy':'no-referrer'};
@@ -39,10 +39,15 @@ export async function createMatchServer({config={},lobby={},hostToken=secret(),i
   if(lobby.maxHumans>validatedGame.teams.length)throw new Error('The selected campaign has fewer houses than human slots.');
   let maxHumans=Math.min(MAX_HUMANS,validatedGame.teams.length,Math.max(1,Number.isInteger(lobby.maxHumans)?lobby.maxHumans:2));
   let name=cleanName(lobby.name,'Bannerlands lobby'),hostName=cleanName(lobby.hostName,'Host'),publicLobby=!!lobby.public;
-  let revision=1,status='waiting',origin='',reachable=false,authority=null,sequence=0,closed=false,lastPublished=0,latestSnapshotAt=0,fatalError=null,matchId=null,synchronizationDeadline=0;
+  let revision=1,status=desktop?'closed':'waiting',origin='',reachable=false,authority=null,sequence=0,closed=false,lastPublished=0,latestSnapshotAt=0,fatalError=null,matchId=null,synchronizationDeadline=0;
   let directoryError=null,publication=Promise.resolve();
-  const id=randomBytes(12).toString('hex'),sessions=new Map(),snapshots=new Map(),rate=new Map();
-  const hostSession={id:randomBytes(12).toString('hex'),token:secret(),team:0,name:hostName,host:true,ready:false,assetsReady:false,synchronized:false,lastSeen:clock(),lastSeq:0,history:new Map()};sessions.set(hostSession.token,hostSession);
+  let id=randomBytes(12).toString('hex'),hostSession=null,hostRequest=null,lobbyCleanup=null,stopRevision=0;
+  const sessions=new Map(),snapshots=new Map(),rate=new Map();
+  function seatHost(){
+    hostSession={id:randomBytes(12).toString('hex'),token:secret(),team:0,name:hostName,host:true,ready:false,assetsReady:false,synchronized:false,lastSeen:clock(),lastSeq:0,history:new Map()};
+    sessions.set(hostSession.token,hostSession);
+  }
+  if(!desktop)seatHost();
   const metrics={requests:0,stateBytes:0,stateWireBytes:0,stateResponses:0,stateEncodeMs:0,stateGzipMs:0,commands:0,simulationSteps:0,simulationMs:0,maxSimulationMs:0,directoryOperations:0};
   const record=()=>{
     const players=[...sessions.values()].map(s=>({id:s.id,name:s.name,team:s.team,host:s.host,ready:s.ready,assetsReady:s.assetsReady,synchronized:s.synchronized,connected:clock()-s.lastSeen<disconnectMs}));
@@ -54,7 +59,7 @@ export async function createMatchServer({config={},lobby={},hostToken=secret(),i
     if(!publisher)return;
     publication=publication.catch(()=>{}).then(async()=>{
       try{
-        if(remove||closed||!publicLobby||!reachable||status!=='waiting'||sessions.size>=maxHumans){await publisher.remove(id);lastPublished=0;metrics.directoryOperations++;}
+        if(remove||closed||!publicLobby||!reachable||status!=='waiting'||sessions.size>=maxHumans){lastPublished=0;await publisher.remove(id);metrics.directoryOperations++;}
         else {const entry=record();if(lastPublished){await publisher.heartbeat(entry);}else await publisher.publish(entry);lastPublished=clock();metrics.directoryOperations++;}directoryError=null;
       }catch(error){directoryError='Lobby discovery is unavailable. Invite links can still be used.';}
     });
@@ -67,9 +72,34 @@ export async function createMatchServer({config={},lobby={},hostToken=secret(),i
     }
     if([...sessions.values()].every(s=>s.synchronized&&s.ready&&s.assetsReady&&clock()-s.lastSeen<disconnectMs)){status='in-progress';synchronizationDeadline=0;queuePublish(true);}
   }
-  async function resetInstalledLobby(){
-    await desktop.stop(instance);authority=null;status='waiting';matchId=null;sequence=0;synchronizationDeadline=0;fatalError=null;invite=secret();publicLobby=false;
-    sessions.clear();hostSession.team=0;hostSession.lastSeq=0;hostSession.history.clear();hostSession.lastSeen=clock();sessions.set(hostSession.token,hostSession);changed();await publication;
+  function retireLobby(){
+    status='closed';authority=null;matchId=null;sequence=0;synchronizationDeadline=0;fatalError=null;
+    reachable=false;origin='';publicLobby=false;hostSession=null;hostToken=secret();invite=secret();lastPublished=0;
+    sessions.clear();snapshots.clear();revision++;queuePublish(true);
+  }
+  function closeInstalledLobby(){
+    if(lobbyCleanup)return lobbyCleanup;
+    if(status==='closed')return Promise.resolve();
+    retireLobby();
+    lobbyCleanup=(async()=>{
+      try{await desktop.stop(instance);}finally{await publication;}
+    })().finally(()=>{lobbyCleanup=null;});
+    return lobbyCleanup;
+  }
+  async function openInstalledLobby(body,requestedAt){
+    await closeInstalledLobby();
+    if(closed||requestedAt!==stopRevision)throw new RequestError(409,'closed','Hosting was cancelled. Create a new lobby to try again.');
+    id=randomBytes(12).toString('hex');status='waiting';seatHost();
+    try{
+      updateConfig({...body.lobby,config:body.config});
+      let result;
+      try{result=await desktop.host(instance);}catch(error){throw new RequestError(503,'hosting',error.message||'The temporary connection could not start. Check your internet connection and retry hosting.');}
+      if(status==='closed'||closed)throw new RequestError(409,'closed','Hosting was cancelled. Create a new lobby to try again.');
+      return result;
+    }catch(error){
+      await closeInstalledLobby().catch(()=>{});
+      throw error;
+    }
   }
   function prune(){checkSynchronization();if(status!=='waiting')return;let removed=false;for(const [key,s]of sessions)if(!s.host&&clock()-s.lastSeen>reservationMs){sessions.delete(key);removed=true;}if(removed)changed();}
   function sessionFor(req,hostOnly=false){
@@ -79,7 +109,10 @@ export async function createMatchServer({config={},lobby={},hostToken=secret(),i
     if(hostOnly&&!found.host)throw new RequestError(403,'host','Only the host may do this.');
     found.lastSeen=clock();return found;
   }
-  function checkWaiting(){if(status!=='waiting'||closed)throw new RequestError(409,'started','The lobby is no longer accepting changes.');}
+  function checkWaiting(){
+    if(status==='closed'||closed)throw new RequestError(410,'closed','The host closed this lobby.');
+    if(status!=='waiting')throw new RequestError(409,'started','The lobby is no longer accepting changes.');
+  }
   function updateConfig(data){
     checkWaiting();const allowed=['house','houses','enemies','difficulty','scale','seed','mode','landscape','fogOfWar'];const next={...campaign};
     for(const key of allowed)if(Object.hasOwn(data.config||{},key))next[key]=data.config[key];
@@ -113,19 +146,32 @@ export async function createMatchServer({config={},lobby={},hostToken=secret(),i
     if(url.pathname.startsWith('/api/desktop/')){
       if(!desktop||!equal((req.headers.authorization||'').replace(/^Bearer /,''),desktop.secret))throw new RequestError(401,'desktop','Start Bannerlands from its installed shortcut.');
       desktop.touch?.();
-      if(url.pathname==='/api/desktop/status'&&req.method==='GET'){hostSession.lastSeen=clock();return json(req,res,200,{ok:true,...desktop.status()});}
+      if(url.pathname==='/api/desktop/status'&&req.method==='GET'){if(hostSession)hostSession.lastSeen=clock();return json(req,res,200,{ok:true,...desktop.status()});}
       if(url.pathname==='/api/desktop/host'&&req.method==='POST'){
-        const body=await readBody(req);updateConfig({...body.lobby,config:body.config});let result;
-        try{result=await desktop.host(instance);}catch(error){throw new RequestError(503,'hosting',error.message||'The temporary connection could not start. Check your internet connection and retry hosting.');}
+        const body=await readBody(req);
+        if(hostRequest)throw new RequestError(409,'hosting','A hosting request is already in progress.');
+        hostRequest=openInstalledLobby(body,stopRevision).finally(()=>{hostRequest=null;});
+        const result=await hostRequest;
         return json(req,res,200,{ok:true,...result});
       }
-      if(url.pathname==='/api/desktop/stop'&&req.method==='POST'){await desktop.stop(instance);return json(req,res,200,{ok:true});}
+      if(url.pathname==='/api/desktop/stop'&&req.method==='POST'){
+        const body=await readBody(req);
+        if(body.hostToken===undefined||equal(body.hostToken,hostToken)||equal(body.hostToken,hostSession?.token)){
+          const pending=hostRequest;
+          stopRevision++;
+          await closeInstalledLobby();
+          await pending?.catch(()=>{});
+        }
+        return json(req,res,200,{ok:true});
+      }
       if(url.pathname==='/api/desktop/shutdown'&&req.method==='POST'&&desktop.shutdown){json(req,res,200,{ok:true,message:'Bannerlands is closing.'});setTimeout(()=>desktop.shutdown(),25).unref();return;}
       throw new RequestError(404,'not-found','Not found.');
     }
     if(url.pathname==='/api/join'&&req.method==='POST'){
       const body=await readBody(req);validVersion(body);checkWaiting();
-      if(!publicLobby&&!equal(body.invite,invite))throw new RequestError(403,'invite','This private lobby requires its invitation link.');
+      if(body.lobbyId!==undefined&&body.lobbyId!==id)throw new RequestError(409,'lobby','This lobby has closed. Browse for the host’s current lobby.');
+      if(body.invite==null&&!publicLobby)throw new RequestError(403,'invite','This private lobby requires its invitation link.');
+      if(body.invite!=null&&!equal(body.invite,invite))throw new RequestError(403,'invite','This invitation has expired. Ask the host for the current link.');
       // No await separates checking and inserting a seat: concurrent final-seat
       // requests cannot both succeed in the single authoritative process.
       if(sessions.size>=maxHumans)throw new RequestError(409,'full','This lobby is full.');
@@ -148,6 +194,7 @@ export async function createMatchServer({config={},lobby={},hostToken=secret(),i
     if(url.pathname==='/api/metrics'&&req.method==='GET')return json(req,res,200,{ok:true,metrics:{...metrics},directoryUsage:publisher?.usage?.()||null,sessions:sessions.size,sequence});
     if(req.method!=='POST')throw new RequestError(405,'method','Method not allowed.');
     const body=await readBody(req);
+    if(!sessions.has(session.token))throw new RequestError(401,'session','This private session is invalid or expired. Rejoin the lobby.');
     if(url.pathname==='/api/heartbeat')return json(req,res,200,{ok:true,lobby:record(),session:{id:session.id,team:session.team,lastSeq:session.lastSeq}});
     if(url.pathname==='/api/config'){updateConfig(body);return json(req,res,200,{ok:true,lobby:record()});}
     if(url.pathname==='/api/visibility'){if(typeof body.public!=='boolean')throw new RequestError(400,'visibility','Choose public or private.');publicLobby=body.public;changed();return json(req,res,200,{ok:true,lobby:record()});}
@@ -176,13 +223,19 @@ export async function createMatchServer({config={},lobby={},hostToken=secret(),i
       const result=authority.command(session.team,body);if(Number.isSafeInteger(result.seq))session.lastSeq=Math.max(session.lastSeq,result.seq);if(result.ok&&!result.duplicate){metrics.commands++;snapshots.clear();sequence++;}return json(req,res,result.ok?200:result.code==='sequence'?409:400,result);
     }
     if(url.pathname==='/api/leave'){
-      if(session.host){if(desktop)await resetInstalledLobby();else await close();return json(req,res,200,{ok:true});}
-      if(status==='waiting'){sessions.delete(session.token);changed();}else session.lastSeen=clock()-disconnectMs;return json(req,res,200,{ok:true});
+      if(session.host){if(desktop)await closeInstalledLobby();else await close();return json(req,res,200,{ok:true});}
+      sessions.delete(session.token);
+      if(status==='starting'){
+        status='waiting';authority=null;matchId=null;sequence=0;synchronizationDeadline=0;
+        fatalError='A commander left during synchronization. Fill the open seat and mark ready to start again.';
+      }
+      if(status==='waiting')changed();
+      return json(req,res,200,{ok:true});
     }
     if(url.pathname==='/api/end'){
       if(!['starting','in-progress','error'].includes(status))throw new RequestError(409,'not-started','There is no active match.');status='waiting';authority=null;matchId=null;sequence=0;synchronizationDeadline=0;fatalError=null;for(const s of sessions.values()){s.history.clear();s.lastSeq=0;}changed();return json(req,res,200,{ok:true,lobby:record()});
     }
-    if(url.pathname==='/api/close'){if(desktop)await resetInstalledLobby();else await close();return json(req,res,200,{ok:true});}
+    if(url.pathname==='/api/close'){if(desktop)await closeInstalledLobby();else await close();return json(req,res,200,{ok:true});}
     throw new RequestError(404,'not-found','Not found.');
   };
   const server=http.createServer({requestTimeout:10000,headersTimeout:10000,connectionsCheckingInterval:1000,maxHeaderSize:8192},async(req,res)=>{
@@ -214,9 +267,15 @@ export async function createMatchServer({config={},lobby={},hostToken=secret(),i
       if(now-latestSnapshotAt>=100){sequence++;snapshots.clear();latestSnapshotAt=now;}
     }catch(error){status='error';fatalError='The match simulation stopped. The host must return to the lobby.';queuePublish(true);}
   },16);tick.unref();
-  const heartbeat=setInterval(()=>{prune();queuePublish();if(rate.size>1024)rate.clear();},heartbeatMs);heartbeat.unref();
-  async function close(){if(closed)return;closed=true;status='closed';clearInterval(tick);clearInterval(heartbeat);queuePublish(true);await publication;server.closeIdleConnections();setTimeout(()=>server.close(),20).unref();if(desktop)await desktop.stop(instance);}
-  const instance={server,hostToken,get invite(){return invite;},get url(){return `http://127.0.0.1:${server.address()?.port}`;},get game(){return authority?.game||validatedGame;},get metrics(){return {...metrics};},getLobby:record,close,async setPublicAddress(value){const parsed=new URL(value);if(parsed.protocol!=='https:')throw new Error('The public game address must use HTTPS.');origin=parsed.origin;reachable=true;queuePublish();await publication;},async setReachable(value){reachable=!!value;if(!value)queuePublish(true);await publication;},async flushDirectory(){await publication;}};
+  const heartbeat=setInterval(()=>{prune();if(status!=='closed')queuePublish();if(rate.size>1024)rate.clear();},heartbeatMs);heartbeat.unref();
+  async function close(){
+    if(closed)return;closed=true;clearInterval(tick);clearInterval(heartbeat);
+    try{
+      if(desktop){await closeInstalledLobby();await hostRequest?.catch(()=>{});}
+      else {retireLobby();await publication;}
+    }finally{server.closeIdleConnections();setTimeout(()=>server.close(),20).unref();}
+  }
+  const instance={server,get hostToken(){return hostToken;},get invite(){return invite;},get url(){return `http://127.0.0.1:${server.address()?.port}`;},get game(){return authority?.game||validatedGame;},get metrics(){return {...metrics};},getLobby:record,close,async setPublicAddress(value){const parsed=new URL(value);if(parsed.protocol!=='https:')throw new Error('The public game address must use HTTPS.');if(closed||status==='closed')throw new Error('This lobby is closed.');origin=parsed.origin;reachable=true;queuePublish();await publication;},async setReachable(value){reachable=!!value&&status!=='closed';if(!reachable)queuePublish(true);await publication;},async flushDirectory(){await publication;}};
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(port,'127.0.0.1',resolve);});return instance;
 }
 
