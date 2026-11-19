@@ -7,8 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace LastSignal
 {
-    // The game uses the OpenGL implementation included with Windows, with accelerated drivers
-    // selected by WGL. Model vertex streams are compiled once into display lists.
+    // Use the Windows OpenGL driver when available. Both graphics drivers share the same scene and assets.
     public sealed partial class Renderer : IDisposable
     {
         [StructLayout(LayoutKind.Sequential)]
@@ -24,61 +23,7 @@ namespace LastSignal
         [DllImport("gdi32.dll")] static extern int ChoosePixelFormat(IntPtr dc,ref PixelFormatDescriptor p);
         [DllImport("gdi32.dll")] static extern bool SetPixelFormat(IntPtr dc,int i,ref PixelFormatDescriptor p);
         [DllImport("gdi32.dll")] static extern bool SwapBuffers(IntPtr dc);
-        [DllImport("opengl32.dll")] static extern IntPtr wglCreateContext(IntPtr dc);
-        [DllImport("opengl32.dll")] static extern bool wglDeleteContext(IntPtr rc);
-        [DllImport("opengl32.dll")] static extern bool wglMakeCurrent(IntPtr dc,IntPtr rc);
-        [DllImport("opengl32.dll")] static extern void glViewport(int x,int y,int w,int h);
-        [DllImport("opengl32.dll")] static extern void glClearColor(float r,float g,float b,float a);
-        [DllImport("opengl32.dll")] static extern void glClear(uint mask);
-        [DllImport("opengl32.dll")] static extern void glEnable(uint cap);
-        [DllImport("opengl32.dll")] static extern void glDisable(uint cap);
-        [DllImport("opengl32.dll")] static extern void glMatrixMode(uint mode);
-        [DllImport("opengl32.dll")] static extern void glLoadIdentity();
-        [DllImport("opengl32.dll")] static extern void glPushMatrix();
-        [DllImport("opengl32.dll")] static extern void glPopMatrix();
-        [DllImport("opengl32.dll")] static extern void glTranslatef(float x,float y,float z);
-        [DllImport("opengl32.dll")] static extern void glRotatef(float angle,float x,float y,float z);
-        [DllImport("opengl32.dll")] static extern void glScalef(float x,float y,float z);
-        [DllImport("opengl32.dll")] static extern void glFrustum(double left,double right,double bottom,double top,double near,double far);
-        [DllImport("opengl32.dll")] static extern void glOrtho(double left,double right,double bottom,double top,double near,double far);
-        [DllImport("opengl32.dll")] static extern void glBegin(uint type);
-        [DllImport("opengl32.dll")] static extern void glEnd();
-        [DllImport("opengl32.dll")] static extern void glVertex3f(float x,float y,float z);
-        [DllImport("opengl32.dll")] static extern void glColor3f(float r,float g,float b);
-        [DllImport("opengl32.dll")] static extern void glColor4f(float r,float g,float b,float a);
-        [DllImport("opengl32.dll")] static extern void glNormal3f(float x,float y,float z);
-        [DllImport("opengl32.dll")] static extern void glTexCoord2f(float u,float v);
-        [DllImport("opengl32.dll")] static extern void glBindTexture(uint target,uint tex);
-        [DllImport("opengl32.dll")] static extern void glGenTextures(int count,out uint tex);
-        [DllImport("opengl32.dll")] static extern void glDeleteTextures(int count,ref uint tex);
-        [DllImport("opengl32.dll")] static extern void glTexParameteri(uint target,uint name,int v);
-        [DllImport("opengl32.dll")] static extern void glTexImage2D(uint target,int level,int comp,int w,int h,int border,uint format,uint type,IntPtr data);
-        [DllImport("opengl32.dll")] static extern void glTexSubImage2D(uint target,int level,int x,int y,int w,int h,uint format,uint type,IntPtr data);
-        [DllImport("opengl32.dll")] static extern void glPixelStorei(uint name,int value);
-        [DllImport("opengl32.dll")] static extern void glGetIntegerv(uint name,out int value);
-        [DllImport("opengl32.dll")] static extern void glBlendFunc(uint src,uint dst);
-        [DllImport("opengl32.dll")] static extern void glDepthMask(byte enabled);
-        [DllImport("opengl32.dll")] static extern void glDepthFunc(uint func);
-        [DllImport("opengl32.dll")] static extern void glLightfv(uint light,uint param,float[] value);
-        [DllImport("opengl32.dll")] static extern void glLightModelfv(uint param,float[] value);
-        [DllImport("opengl32.dll")] static extern void glColorMaterial(uint face,uint mode);
-        [DllImport("opengl32.dll")] static extern void glFogfv(uint name,float[] v);
-        [DllImport("opengl32.dll")] static extern void glFogi(uint name,int v);
-        [DllImport("opengl32.dll")] static extern void glFogf(uint name,float v);
-        [DllImport("opengl32.dll")] static extern void glLineWidth(float v);
-        [DllImport("opengl32.dll")] static extern uint glGenLists(int n);
-        [DllImport("opengl32.dll")] static extern void glNewList(uint list,uint mode);
-        [DllImport("opengl32.dll")] static extern void glEndList();
-        [DllImport("opengl32.dll")] static extern void glCallList(uint list);
-        [DllImport("opengl32.dll")] static extern void glEnableClientState(uint cap);
-        [DllImport("opengl32.dll")] static extern void glDisableClientState(uint cap);
-        [DllImport("opengl32.dll")] static extern void glVertexPointer(int n,uint type,int stride,IntPtr buffer);
-        [DllImport("opengl32.dll")] static extern void glNormalPointer(uint type,int stride,IntPtr buffer);
-        [DllImport("opengl32.dll")] static extern void glColorPointer(int n,uint type,int stride,IntPtr buffer);
-        [DllImport("opengl32.dll")] static extern void glTexCoordPointer(int n,uint type,int stride,IntPtr buffer);
-        [DllImport("opengl32.dll")] static extern void glDrawArrays(uint mode,int first,int count);
-        [DllImport("opengl32.dll")] static extern void glReadPixels(int x,int y,int w,int h,uint format,uint type,IntPtr data);
-        [DllImport("opengl32.dll")] static extern IntPtr glGetString(uint name);
+
         const uint Texture=0x0DE1,Depth=0x0B71,Light=0x0B50,Light0=0x4000,Light1=0x4001,Fog=0x0B60,Blend=0x0BE2;
         const uint Modelview=0x1700,Projection=0x1701,Triangles=4,Strip=5,Fan=6,Quads=7,Lines=1;
         const float Deg=57.2957795f,Pi=(float)Math.PI,Tau=2*Pi;
@@ -100,8 +45,9 @@ namespace LastSignal
             PixelFormatDescriptor desc=new PixelFormatDescriptor();
             desc.size=(ushort)Marshal.SizeOf(typeof(PixelFormatDescriptor));desc.version=1;
             desc.flags=4|32|1;desc.type=0;desc.color=32;desc.alpha=8;desc.depth=24;
-            int format=ChoosePixelFormat(dc,ref desc);
-            if(format==0||!SetPixelFormat(dc,format,ref desc))throw new InvalidOperationException("Could not initialize the Windows pixel format.");
+            LoadGraphics(desc);
+            int format=chooseSurface(dc,ref desc);
+            if(format==0||!setSurface(dc,format,ref desc))throw new InvalidOperationException("Could not initialize the Windows pixel format.");
             rc=wglCreateContext(dc);
             if(rc==IntPtr.Zero||!wglMakeCurrent(dc,rc))throw new InvalidOperationException("Windows could not start an OpenGL context.");
             Driver=Marshal.PtrToStringAnsi(glGetString(0x1F01));
@@ -324,7 +270,6 @@ namespace LastSignal
         static readonly float[] ambient={.51f,.53f,.55f,1};
         readonly float[] frameAmbient=new float[4], frameSun=new float[4], frameFog=new float[4], costume=new float[4];
         static readonly float[] firePos=new float[4],fireLight={1f,.48f,.15f,1};
-        [DllImport("opengl32.dll")]static extern void glLightf(uint light,uint param,float v);
         bool Visible(Game g,float x,float z,float radius,float limit)
         {
             float dx=x-g.CamX,dz=z-g.CamZ,d=dx*sinView+dz*cosView;
@@ -332,8 +277,7 @@ namespace LastSignal
                 Math.Abs(dx*cosView-dz*sinView)<Math.Max(0,d)*sideSlope+radius*2+3 &&
                 dx*dx+dz*dz<(limit+radius)*(limit+radius);
         }
-        [DllImport("opengl32.dll")] static extern void glMaterialfv(uint face,uint name,float[] p);
-        [DllImport("opengl32.dll")] static extern void glMaterialf(uint face,uint name,float p);
+
         static readonly float[] polished={.70f,.56f,.29f,1},matte={0,0,0,1};
         public void Draw(Game g,int width,int height)
         {
@@ -767,7 +711,7 @@ namespace LastSignal
             glReadPixels(0,0,w,h,0x80E1,0x1401,data.Scan0);b.UnlockBits(data);b.RotateFlip(RotateFlipType.RotateNoneFlipY);return b;
         }
         public void Capture(string path){using(Bitmap b=Capture())b.Save(path,ImageFormat.Png);}
-        public void Present(){SwapBuffers(dc);}
+        public void Present(){presentSurface(dc);}
         public void Dispose(){wglMakeCurrent(IntPtr.Zero,IntPtr.Zero);wglDeleteContext(rc);ReleaseDC(window,dc);}
     }
 }

@@ -3,7 +3,7 @@ param([string]$Destination = (Join-Path $PSScriptRoot 'build/windows'))
 $ErrorActionPreference = 'Stop'
 $archive = Join-Path $PSScriptRoot 'Last-Signal-Windows-x64.zip'
 if (-not (Test-Path -LiteralPath $archive -PathType Leaf)) {
-    & (Join-Path $PSScriptRoot 'Assemble-Download.ps1') -OutputPath $archive
+    throw 'Restore Last-Signal-Windows-x64.zip from this repository. It contains the original assets and Cloudflare runtime.'
 }
 $output = [IO.Path]::GetFullPath($Destination)
 if (Test-Path -LiteralPath $output) {
@@ -17,7 +17,7 @@ $package = [IO.Compression.ZipFile]::OpenRead($archive)
 try {
     $prefix = $output.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
     foreach ($entry in $package.Entries) {
-        if (-not $entry.Name -or $entry.FullName.StartsWith('Source/', [StringComparison]::OrdinalIgnoreCase)) { continue }
+        if (-not $entry.Name -or $entry.FullName -match '^(Source|Mobile)/') { continue }
         $path = [IO.Path]::GetFullPath((Join-Path $output $entry.FullName))
         if (-not $path.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase)) { throw 'Invalid file path in portable archive.' }
         [IO.Directory]::CreateDirectory((Split-Path -Parent $path)) | Out-Null
@@ -31,6 +31,7 @@ foreach ($file in (Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'source')
     [IO.Directory]::CreateDirectory((Split-Path -Parent $destinationPath)) | Out-Null
     Copy-Item -LiteralPath $file.FullName -Destination $destinationPath -Force
 }
+Copy-Item -LiteralPath (Join-Path $compiledSource 'Mobile') -Destination (Join-Path $output 'Mobile') -Recurse
 & (Join-Path $compiledSource 'Build.cmd')
 if ($LASTEXITCODE -ne 0) { throw "C# compilation failed with exit code $LASTEXITCODE." }
 Write-Output (Join-Path $output 'Last Signal.exe')

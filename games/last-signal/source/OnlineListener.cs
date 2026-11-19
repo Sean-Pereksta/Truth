@@ -11,7 +11,7 @@ namespace LastSignal
     // A loopback origin for cloudflared. The native host needs neither an administrator URL reservation nor an installed web server.
     public sealed class OnlineListener : IDisposable
     {
-        const int ConnectionLimit = 20;
+        const int ConnectionLimit = 48;
         readonly object gate = new object();
         readonly OnlineInbox events = new OnlineInbox();
         readonly Dictionary<int,PeerConnection> connections = new Dictionary<int,PeerConnection>();
@@ -66,6 +66,7 @@ namespace LastSignal
 
         public bool TryRead(out OnlinePeerPacket packet) { return events.Read(out packet); }
         PeerConnection Find(int id) { lock (gate) { PeerConnection c; return connections.TryGetValue(id, out c) ? c : null; } }
+        internal int MobileEncoding(int peer) { var c = Find(peer); return c == null ? 0 : c.MobileEncoding; }
         public bool SendText(int peer, string text) { var c = Find(peer); return c != null && c.Send(1, OnlineTransport.TextBytes(text)); }
         public bool SendBinary(int peer, byte[] data) { var c = Find(peer); return c != null && c.Send(2, data); }
         public bool SendLatestBinary(int peer, byte[] data) { var c = Find(peer); return c != null && c.Send(2, data, true); }
@@ -140,6 +141,7 @@ namespace LastSignal
             readonly object output = new object();
             readonly OnlineWrites writes = new OnlineWrites();
             internal readonly int Id;
+            internal volatile int MobileEncoding;
             volatile bool ready;
             bool opened, stopped, closing, sentClose;
 
@@ -195,12 +197,6 @@ namespace LastSignal
                 string[] request = lines[0].Split(' ');
                 if (request.Length != 3 || request[0] != "GET" || request[2] != "HTTP/1.1")
                     return Http(stream,"400 Bad Request","Expected an HTTP GET.");
-                string path = request[1].Split('?')[0];
-                if (path == "/health" || path == "/api/health")
-                    return Http(stream,"200 OK","LastSignal-1:" + owner.InstanceId);
-                if (path == "/") return Http(stream,"200 OK","Last Signal host is online. Open Multiplayer in Last Signal and join with the host's tunnel address.");
-                if (path != "/ws" && path != "/last-signal/v1")
-                    return Http(stream,"404 Not Found","Unknown Last Signal route.");
                 var fields = new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);
                 for (int i = 1; i < lines.Length; i++)
                 {
@@ -209,7 +205,26 @@ namespace LastSignal
                     string key = lines[i].Substring(0,colon).Trim(), value = lines[i].Substring(colon+1).Trim();
                     if (fields.ContainsKey(key)) fields[key] += "," + value; else fields.Add(key,value);
                 }
-                if (fields.ContainsKey("Origin")) return Http(stream,"403 Forbidden","Open this room in the native game.");
+                string[] target=request[1].Split(new[]{'?'},2);
+                string path=target[0],host=Value(fields,"Host");
+                if(path=="/health"||path=="/api/health")
+                    return Http(stream,"200 OK","LastSignal-1:" + owner.InstanceId);
+                if(path==MobileWeb.ConnectPath)
+                {
+                    if(!MobileWeb.SameOrigin(host,Value(fields,"Origin")))
+                        return Http(stream,"403 Forbidden","Use the mobile client on this room's address.");
+                    MobileEncoding=target.Length==2&&target[1]=="gzip=1" ? 2 : 1;
+                }
+                else if(path=="/ws"||path=="/last-signal/v1")
+                {
+                    if(fields.ContainsKey("Origin"))return Http(stream,"403 Forbidden","Open this room in the native game.");
+                }
+                else
+                {
+                    if(MobileWeb.Serve(stream,path,host))return false;
+                    if(path=="/")return Http(stream,"200 OK","Last Signal host is online. Open Multiplayer in Last Signal and join with the host's tunnel address.");
+                    return Http(stream,"404 Not Found","Unknown Last Signal route.");
+                }
                 if (!HasToken(Value(fields,"Connection"),"Upgrade") || !HasToken(Value(fields,"Upgrade"),"websocket") || Value(fields,"Sec-WebSocket-Version") != "13")
                     return Http(stream,"400 Bad Request","Expected a WebSocket connection.");
                 string clientKey = Value(fields,"Sec-WebSocket-Key");

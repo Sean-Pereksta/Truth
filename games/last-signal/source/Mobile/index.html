@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#121813">
+  <meta name="referrer" content="no-referrer">
+  <title>Last Signal</title>
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <main id="room" class="room">
+    <section class="room-card" aria-labelledby="game-title">
+      <h1 id="game-title">Last Signal</h1>
+      <form id="join" autocomplete="off">
+        <label for="name">Contestant name</label>
+        <input id="name" name="name" maxlength="20" autocomplete="nickname" enterkeyhint="go" placeholder="Contestant">
+        <button type="submit" class="primary">Join room</button>
+      </form>
+      <div id="lobby" hidden>
+        <div class="lobby-heading">
+          <h2>Room lobby</h2>
+          <span id="human-count"></span>
+        </div>
+        <ul id="roster" class="roster"></ul>
+        <p id="bot-count" class="muted"></p>
+        <div class="room-actions">
+          <button id="lobby-leave" type="button">Leave</button>
+          <button id="ready" type="button" class="primary" aria-pressed="false">Ready</button>
+        </div>
+      </div>
+      <p id="status" class="room-status" role="status">Opening invite…</p>
+    </section>
+  </main>
+
+  <section id="arena" class="arena" aria-label="Arena" hidden>
+    <canvas id="view" aria-label="First-person view"></canvas>
+    <div id="look" class="look" aria-hidden="true"></div>
+    <header class="hud">
+      <div class="vitals" aria-label="Survival stats">
+        <label for="health">HP <progress id="health" class="health" max="100" value="100" aria-label="Health"></progress></label>
+        <label for="stamina">STA <progress id="stamina" class="stamina" max="100" value="100" aria-label="Stamina"></progress></label>
+        <label for="hunger">FOOD <progress id="hunger" class="food" max="100" value="100" aria-label="Food"></progress></label>
+        <label for="hydration">H₂O <progress id="hydration" class="water" max="100" value="100" aria-label="Hydration"></progress></label>
+      </div>
+      <div class="heading">
+        <strong id="compass">N</strong>
+        <span id="zone"></span>
+      </div>
+      <div class="hud-actions">
+        <strong id="alive">24 alive</strong>
+        <button id="menu" type="button" aria-label="Room menu">⋯</button>
+      </div>
+    </header>
+    <div class="match-notes">
+      <strong id="storm"></strong>
+      <span id="event"></span>
+    </div>
+    <div id="aim" class="aim">
+      <div class="reticle" aria-hidden="true"></div>
+      <progress id="progress" max="1" value="0" aria-label="Current action progress" hidden></progress>
+      <span id="hint"></span>
+    </div>
+    <div id="countdown" class="countdown" hidden>
+      <span>Opening horn</span>
+      <strong id="countdown-seconds"></strong>
+    </div>
+    <div class="messages">
+      <span id="notice" role="status"></span>
+      <span id="feed"></span>
+    </div>
+    <div id="controls" class="controls">
+      <div class="move-controls">
+        <div id="stick" class="stick" role="group" aria-label="Drag to move">
+          <div id="stick-thumb" class="stick-thumb"></div>
+        </div>
+        <div class="move-tools">
+          <button id="sprint" type="button" aria-pressed="false">Run</button>
+          <button id="crouch" type="button" aria-pressed="false">Crouch</button>
+        </div>
+      </div>
+      <div class="play-actions">
+        <div id="place-tools" class="extra-actions" hidden>
+          <button type="button" data-command="rotate:1">Rotate</button>
+          <button type="button" data-command="cancel">Cancel</button>
+        </div>
+        <div id="extra-actions" class="extra-actions" hidden>
+          <button type="button" data-hold="Guard">Guard / aim</button>
+          <button id="throw" type="button" data-hold="Throw" hidden>Throw</button>
+          <button type="button" data-command="+Dodge">Dodge</button>
+          <button type="button" data-command="+Shove">Shove</button>
+          <button type="button" data-command="+Jump">Jump</button>
+        </div>
+        <div class="main-actions">
+          <button id="cycle" type="button" data-command="cycle:1" aria-label="Cycle interaction" hidden>Cycle</button>
+          <button id="use" type="button" data-command="+Use">Use</button>
+          <button id="attack" type="button" class="attack primary">Attack</button>
+        </div>
+        <div class="equipment">
+          <button id="weapon" type="button" data-command="weapon:1" aria-label="Next weapon">Unarmed ↻</button>
+          <button id="pack" type="button">Gear</button>
+          <button id="more" type="button" aria-controls="extra-actions" aria-expanded="false">More</button>
+        </div>
+      </div>
+    </div>
+    <div id="outcome" class="outcome" hidden>
+      <strong id="outcome-title"></strong>
+      <p id="outcome-detail"></p>
+    </div>
+    <div id="drawer-backdrop" class="drawer-backdrop" hidden>
+      <section id="drawer" class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+        <header class="drawer-heading">
+          <h2 id="drawer-title">Gear</h2>
+          <button id="drawer-close" type="button" aria-label="Close">✕</button>
+        </header>
+        <div id="gear-tabs" class="gear-tabs" aria-label="Gear sections">
+          <button type="button" data-section="pack" aria-pressed="true">Pack</button>
+          <button type="button" data-section="craft" aria-pressed="false">Craft</button>
+          <button type="button" data-section="build" aria-pressed="false">Build</button>
+        </div>
+        <div id="gear-list" class="gear-list"></div>
+        <div id="menu-actions" class="menu-actions" hidden>
+          <p>The match keeps running while this menu is open.</p>
+          <button id="leave" type="button">Leave room</button>
+        </div>
+      </section>
+    </div>
+  </section>
+</body>
+</html>

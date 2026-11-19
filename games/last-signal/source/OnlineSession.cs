@@ -3,11 +3,12 @@ using System.Collections.Generic;
 
 namespace LastSignal {
     // The local host is the only authority for inventory, combat, AI and match time.
-    // Connections carry player input toward the host and one shared world frame back.
+    // Clients share one arena and submit the same input protocol from Windows or a browser.
     public sealed class OnlineSession : IDisposable {
         sealed class Seat {
             public string Name,Resume;
             public int Peer=-1,LastSequence=-1;
+            public int MobileEncoding,WorldRound;
             public bool Ready;
             public float LostAt,ReceivedAt,Credit=75;
         }
@@ -16,6 +17,7 @@ namespace LastSignal {
         readonly Dictionary<int,float> handshakes=new Dictionary<int,float>();
         readonly Dictionary<int,float> rejected=new Dictionary<int,float>();
         readonly List<string> commands=new List<string>();
+        readonly MobileFrames mobileFrames=new MobileFrames();
         OnlineListener listener;
         OnlineTransport client;
         readonly Func<string,OnlineTransport> dial;
@@ -101,15 +103,17 @@ namespace LastSignal {
         public void StartMatch(){
             if(!IsHost||!CanStart||Phase!="lobby")return;
             string[] names=new string[8];
-            for(int i=0;i<8;i++)if(seats[i]!=null){names[i]=seats[i].Name;seats[i].LastSequence=-1;}
+            for(int i=0;i<8;i++)if(seats[i]!=null){names[i]=seats[i].Name;seats[i].LastSequence=-1;seats[i].WorldRound=0;}
             round++;int seed=game.ForcedSeed!=0?game.ForcedSeed:((Guid.NewGuid().GetHashCode()&0x3fffffff)+1);
             game.StartOnlineRound(names,seed,game.Settings.ArenaId,game.Settings.Difficulty,game.Settings.Hunger,game.Settings.Events);
+            mobileFrames.Clear();
             Phase="playing";publicKey="";Directory.Unlist();game.Panel="";CanStart=false;frameElapsed=0;
             ToAll("ROUND|"+round);BroadcastFrame();
         }
         public void Replay(){
             if(!IsHost||Phase!="playing"||game.Winner==null)return;
             for(int s=1;s<8;s++)if(seats[s]!=null){if(seats[s].Peer<0)seats[s]=null;else seats[s].Ready=false;}
+            mobileFrames.Clear();
             EnterLobby();RefreshHost();HostAddress();
         }
         public void Command(string verb,string arg){
@@ -189,9 +193,14 @@ namespace LastSignal {
                 }
                 handshakes.Remove(peer);
                 Seat s=seats[open];s.Peer=peer;s.LastSequence=-1;s.ReceivedAt=now;s.Credit=75;
+                s.MobileEncoding=listener.MobileEncoding(peer);s.WorldRound=0;
                 listener.SendText(peer,"SEAT|"+open+"|"+s.Resume);
                 if(Phase=="playing"){game.SetOnlineSeatConnected(open,true);listener.SendText(peer,"ROUND|"+round);}
-                RefreshHost();if(Phase=="playing")listener.SendBinary(peer,OnlineSnapshot.Capture(game));
+                RefreshHost();
+                if(Phase=="playing"){
+                    if(s.MobileEncoding>0)SendMobileFrame(open,s);
+                    else listener.SendBinary(peer,OnlineSnapshot.Capture(game));
+                }
                 return;
             }
             Seat seat=seats[id];
@@ -242,9 +251,19 @@ namespace LastSignal {
         void BroadcastFrame(){
             byte[] frame=null;
             for(int i=1;i<8;i++)if(seats[i]!=null&&seats[i].Peer>=0){
+                if(seats[i].MobileEncoding>0){SendMobileFrame(i,seats[i]);continue;}
                 if(frame==null)frame=OnlineSnapshot.Capture(game);
                 listener.SendLatestBinary(seats[i].Peer,frame);
             }
+        }
+        void SendMobileFrame(int id,Seat seat){
+            bool gzip=seat.MobileEncoding==2;
+            if(seat.WorldRound!=round){
+                if(!listener.SendBinary(seat.Peer,mobileFrames.World(game,round,gzip)))return;
+                seat.WorldRound=round;
+            }
+            byte[] frame=mobileFrames.Frame(game,id,round,gzip);
+            if(frame!=null)listener.SendLatestBinary(seat.Peer,frame);
         }
         void ClientMessage(OnlinePacket m){
             if(m.Kind==OnlinePacketKind.Open){client.SendText("JOIN|"+OnlineWire.Version+"|"+key+"|"+username+"|"+resume);return;}
@@ -281,6 +300,7 @@ namespace LastSignal {
         public void Leave(){if(client!=null)client.SendText("LEAVE");Shutdown();game.Menu();}
         void Shutdown(){
             IsListed=false;publicKey="";Directory.Unlist();
+            mobileFrames.Clear();
             if(listener!=null){ToAll("ERROR|The host closed this room.");listener.Dispose();listener=null;}
             if(client!=null){client.Dispose();client=null;}
             if(tunnel!=null){tunnel.Dispose();tunnel=null;}

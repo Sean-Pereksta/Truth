@@ -115,6 +115,8 @@ namespace LastSignal {
                 T("INVITE LINK",side,row,13,Gold,true,true);
                 Para(link,side,row+26,485,69,16,Ivory);
                 Action("onlineCopy","Copy invite link",side,row+100,370,43);
+                if(s.IsHost&&link.StartsWith("https://",StringComparison.OrdinalIgnoreCase))
+                    T("Phone players open this link in their browser.",side,row+143,14,Muted);
             }else Para(s.Status,side,row,475,82,16,Muted);
             if(s.IsHost){
                 if(s.CanStart)Action("onlineStart","Start match",side,row+168,370,48,true);

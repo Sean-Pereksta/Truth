@@ -28,3 +28,42 @@ jobs:
       - name: Host, join, play and reconnect
         shell: pwsh
         run: ./games/last-signal/tests/Test-Room.ps1 -Mode ${{ matrix.mode }}
+  portable:
+    name: Publish the portable Windows game
+    if: github.ref == 'refs/heads/main'
+    needs: play
+    runs-on: windows-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    concurrency:
+      group: last-signal-portable-main
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          sparse-checkout: games/last-signal
+          persist-credentials: false
+      - name: Build and publish
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git fetch --depth=1 origin main
+          if ($LASTEXITCODE) { throw 'Could not check for a newer game revision.' }
+          git diff --quiet HEAD FETCH_HEAD -- games/last-signal
+          if ($LASTEXITCODE -eq 1) { return }
+          if ($LASTEXITCODE) { throw 'Could not compare game revisions.' }
+          $game = Join-Path $env:RUNNER_TEMP 'last-signal-portable'
+          ./games/last-signal/Build-Windows.ps1 -Destination $game
+          $zip = Join-Path $env:RUNNER_TEMP 'Last-Signal-Windows-x64.zip'
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          [IO.Compression.ZipFile]::CreateFromDirectory($game, $zip)
+          $tag = 'last-signal-windows'
+          gh release view $tag --repo $env:GITHUB_REPOSITORY 2>$null | Out-Null
+          if ($LASTEXITCODE) {
+            gh release create $tag $zip --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --latest=false --title 'Last Signal for Windows' --notes 'Extract the ZIP and run Last Signal.exe. The Windows host can share one Cloudflare invite with Windows and phone guests.'
+          } else {
+            gh release upload $tag $zip --repo $env:GITHUB_REPOSITORY --clobber
+          }
+          if ($LASTEXITCODE) { throw 'Could not publish the portable build.' }

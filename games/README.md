@@ -20,5 +20,5 @@ Use a local static web server for development, especially for the games that use
 
 ## Windows games
 
-[Last Signal](last-signal/) is a first-person survival arena for 24 contestants. The Windows build supports solo play and online matches for up to eight players. Install it from the Catnmice mini launcher or [download the portable game](https://raw.githubusercontent.com/Sean-Pereksta/Truth/main/games/last-signal/Last-Signal-Windows-x64.zip).
+[Last Signal](last-signal/) is a first-person survival arena for 24 contestants. Start a solo match on Windows or host up to eight human players with bots filling the remaining spots. Windows and phone guests can use the same room invite. Install it from the Catnmice mini launcher or [download the portable game](https://github.com/Sean-Pereksta/Truth/releases/download/last-signal-windows/Last-Signal-Windows-x64.zip).
 

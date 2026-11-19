@@ -27,7 +27,7 @@ namespace LastSignal {
             if(value==null||value.Length>2048||!Uri.TryCreate(value.Trim(),UriKind.Absolute,out u))return false;
             bool tls=u.Scheme=="https"||u.Scheme=="wss",plain=u.Scheme=="http"||u.Scheme=="ws";
             if(!tls&&!(plain&&u.IsLoopback)||u.UserInfo.Length!=0||u.Query.Length!=0||u.Fragment.Length!=25 ||
-               (u.AbsolutePath!="/"&&u.AbsolutePath!="/ws"))return false;
+               (u.AbsolutePath!="/"&&u.AbsolutePath!="/ws"&&u.AbsolutePath!="/mobile/"&&u.AbsolutePath!="/mobile"))return false;
             key=u.Fragment.Substring(1);
             foreach(char c in key)if(!(c>='A'&&c<='Z'||c>='a'&&c<='z'||c>='0'&&c<='9'||c=='-'||c=='_'))return false;
             var b=new UriBuilder(u){Scheme=tls?"wss":"ws",Path="/ws",Fragment="",Query="",Port=u.IsDefaultPort?-1:u.Port};
