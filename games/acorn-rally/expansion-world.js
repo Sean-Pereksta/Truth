@@ -477,7 +477,10 @@
           pads.push({center,radius,rotation:rand()*tau,hue:(i+j)%3,bloom:(i+2*j)%11===0});
         }
         scene.pads.push(...pads);
-        if(pads.length===3&&i%3===0)scene.frogs.push({pads,phase:rand()*8,period:1.82+rand()*.67,size:.75+rand()*.31});
+        if(pads.length===3){
+          if(i%3===0)scene.frogs.push({pads,phase:rand()*8,period:1.82+rand()*.67,size:.75+rand()*.31});
+          else if(i%3===1)scene.frogs.push({pads:[...pads].reverse(),phase:i*.67,period:1.74+(i%7)*.10,size:.62+(i%5)*.082});
+        }
       }
     }
     if(c.index===15){
@@ -643,6 +646,12 @@
       }else roadSegment(m,a,b,index,pal,j);
     }
     [cave,sky,space,volcano,rainbow,spillway,mooncap,tempest][index-8]({m,c,at,rand,clear,scene:scenery(c,sim)});
+    if(index===root.AcornMinecarts.courseIndex){
+      const sampleRoad=(s,x,branch)=>sim.sample(c,s,x,branch);
+      for(const row of root.AcornMinecarts.railRows(c,root.AcornHazards.samples(c,0),sampleRoad)){
+        for(const panel of row.panels)m.quad(...panel);
+      }
+    }
     grid(m,at,index,pal);turnBoards(m,c,at,pal);
     for(const ramp of root.AcornRamps.list(c)){
       const deck=root.AcornRampArt.rampMesh(Mesh,c,ramp);

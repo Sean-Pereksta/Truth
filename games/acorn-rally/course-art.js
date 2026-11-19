@@ -2,8 +2,9 @@
   'use strict';
   const TAU=Math.PI*2, cap=(n,lo=0,hi=1)=>Math.max(lo,Math.min(hi,n));
   const contacts={front:'Front bumper',rear:'Rear bumper',side:'Side contact',glance:'Glancing bump',brace:'Bumper brace'};
-  function build(Mesh,simple=false,includeMarsh=true,includeCosmic=true){
+  function build(Mesh,simple=false,includeMarsh=true,includeCosmic=true,includeMines=true,includeStorm=true){
     const shapes={};
+    if(includeMines)Object.assign(shapes,root.AcornMinecarts.meshes(Mesh,simple));
     const make=name=>shapes[name]=new Mesh();
     const bar=(m,a,b,r,c,mat=2)=>m.ring(a,b,r,r,c,simple?4:6,mat);
     function disk(m,axis,radius,width,color,count=18){
@@ -12,6 +13,27 @@
     }
     function screenPoly(m,pts,co,z=-.095){
       for(let i=1;i<pts.length-1;i++)m.tri([pts[0][0],pts[0][1],z],[pts[i][0],pts[i][1],z],[pts[i+1][0],pts[i+1][1],z],co,5,[0,0,-1]);
+    }
+    if(includeStorm){
+      const marker=make('envStormMarker'),ripple=make('envStormRipple');
+      for(let i=0;i<24;i++){
+        const a=TAU*i/24,b=TAU*(i+1)/24,point=(t,r)=>[Math.cos(t)*r,0,Math.sin(t)*r];
+        marker.quad(point(a,1),point(b,1),point(b,.91),point(a,.91),'#ffb95d',5,[0,1,0]);
+        ripple.quad(point(a,1),point(b,1),point(b,.89),point(a,.89),'#b4dcff',5,[0,1,0]);
+        if(i%6===0)marker.tri(point(a,1.04),point(b,1.04),point((a+b)*.5,.69),'#fff3b0',5,[0,1,0]);
+      }
+      for(let variant=0;variant<3;variant++){
+        const center=make('envBolt'+variant),halo=make('envBoltGlow'+variant);
+        const points=[[0,0,0]];
+        for(let i=1;i<=9;i++)points.push([Math.sin(i*2.6+variant*4)*(.20+i*.22),i*3.48,Math.cos(i*2.9+variant*2.2)*(.33+i*.14)]);
+        for(let i=1;i<points.length;i++){
+          bar(center,points[i-1],points[i],.079+i*.008,'#f5fcff',5);
+          bar(halo,points[i-1],points[i],.21+i*.018,'#86adff',5);
+          if(i<3||i%2===0)continue;
+          const [x,y,z]=points[i],sign=i%4===1?1:-1,mid=[x+sign*1.52,y-1.3,z+.9],tip=[x+sign*2.66,y-3.7,z-.35];
+          bar(center,points[i],mid,.053,'#bcdeff',5);bar(center,mid,tip,.033,'#92bcff',5);
+        }
+      }
     }
     // Bark splinters and the exposed scarps of the hollow trunk are visible from both directions.
     const log=make('envLog'),segments=simple?12:19;
@@ -251,29 +273,49 @@
     const a=Math.cos(yaw),b=Math.sin(yaw);
     return [base[0]+x*a+z*b,base[1]+y,base[2]-x*b+z*a];
   }
+  function joint(base,yaw,roll,pitch,x,y,z){
+    const a=Math.cos(roll),b=Math.sin(roll),c=Math.cos(pitch),d=Math.sin(pitch);
+    const across=x*a-y*b,up=x*b+y*a;
+    return offset(base,yaw,across,up*c-z*d,up*d+z*c);
+  }
   function lavaMonster(hazards,time,sample,stamp){
-    const first=hazards[0],source=worldAnchor(sample,first.sourceS,first.sourceX,first.sourceY);
+    const {position:source,size}=root.AcornCosmicHazardsArt.titanSite;
     const targets=hazards.map(h=>worldAnchor(sample,h.s,h.x,.22,h.branch));
     const facing=position=>Math.atan2(position[0]-source[0],position[2]-source[2]);
-    const neutral=facing(targets[1]||targets[0]);
+    const neutral=-.96;
     const index=hazards.findIndex(h=>h.warning||h.active);
     const aim=index<0?null:hazards[index],turn=aim?facing(targets[index])-neutral:0;
-    const intent=aim?.warning?smooth(aim.progress/.54):aim?.active?1-smooth(aim.progress/.88):0;
+    const progress=aim?.progress||0;
+    const intent=aim?.warning?smooth(progress/.22):aim?.active?1-smooth(progress):0;
+    const charge=aim?.warning?smooth(progress/.24)*(1-smooth((progress-.26)/.11)):0;
+    const release=aim?.warning?smooth((progress-.22)/.07)*(1-smooth((progress-.30)/.34)):0;
+    const idle=Math.sin(time*.89),breath=Math.sin(time*1.66);
     const look=Math.atan2(Math.sin(turn),Math.cos(turn))*intent;
-    const bodyYaw=neutral+look*.56,headYaw=neutral+look,size=3.95;
-    const swell=.1*Math.sin(time*1.6),heat=aim?.warning?smooth((aim.progress-.18)/.35):aim?.active?1-smooth(aim.progress/.42):0;
-    const body=[source[0],source[1]-3.56*size+swell,source[2]];
-    const head=offset(body,bodyYaw,0,3.18*size,.12*size);
-    stamp('lavaTitan',body,bodyYaw,size);
-    stamp('lavaTitanHead',head,headYaw,size,1,0,-heat*.09);
-    stamp('lavaTitanJaw',offset(head,headYaw,0,.28*size,.45*size),headYaw,size,1,0,heat*.42);
+    const bodyYaw=neutral+look*.69+idle*.13*(1-intent),headYaw=neutral+look+idle*.49*(1-intent);
+    const bodyRoll=.053*idle,bodyPitch=.055*breath-.18*charge+.24*release;
+    const body=offset(source,bodyYaw,0,(1.10+.055*breath-.09*charge+.08*release)*size,0);
+    const head=joint(body,bodyYaw,bodyRoll,bodyPitch,0,2.08*size,.12*size);
+    const headRoll=bodyRoll*.64,headPitch=bodyPitch*.66-.17*charge+.12*release;
+    stamp('lavaTitanStance',source,neutral,size);
+    stamp('lavaTitan',body,bodyYaw,size,1,bodyRoll,bodyPitch);
+    stamp('lavaTitanHead',head,headYaw,size,1,headRoll,headPitch);
+    stamp('lavaTitanJaw',joint(head,headYaw,headRoll,headPitch,0,.28*size,.45*size),headYaw,size,1,headRoll,headPitch+.11+.11*breath+.60*charge+.38*release);
     for(const side of [-1,1]){
-      const shoulder=offset(body,bodyYaw,side*2.02*size,2.51*size,.12*size);
-      const motion=Math.sin(time*1.7+side)*.077;
-      stamp(side<0?'lavaTitanArmL':'lavaTitanArmR',shoulder,bodyYaw,size,1,side*(motion+.29*heat),-.12-.54*heat);
+      const shoulder=joint(body,bodyYaw,bodyRoll,bodyPitch,side*1.92*size,1.41*size,.12*size);
+      const swing=Math.sin(time*1.55+side*.82),lead=side===(index%2===0?-1:1)?1:.57;
+      const armRoll=bodyRoll+side*(.15+.10*swing+.29*charge+.34*release);
+      const armPitch=bodyPitch-.22+.13*swing-lead*(.66*charge+.64*release);
+      const wrist=joint(shoulder,bodyYaw,armRoll,armPitch,side*.23*size,-.88*size,.10*size);
+      stamp(side<0?'lavaTitanArmL':'lavaTitanArmR',shoulder,bodyYaw,size,1,armRoll,armPitch);
+      stamp(side<0?'lavaTitanFistL':'lavaTitanFistR',wrist,bodyYaw,size,1,armRoll+side*.05,armPitch-.19-.61*charge+.28*release);
+      for(let j=0;j<3;j++){
+        const age=(time*.63+j/3+(side===1?.16:0))%1,spin=time*1.8+j*2.399;
+        stamp('lavaEmber',offset(shoulder,spin,0,2+8*age,1+5*age),
+          spin,.37+.31*charge,.74*Math.sin(Math.PI*age),spin*.8);
+      }
     }
-    const mouth=offset(head,headYaw,0,.38*size,1.05*size);
-    if(heat>.13&&aim?.warning&&(aim.flightProgress||0)<=0)stamp('lavaFireball',mouth,time*4,.35+heat*.52,.55+heat*.42);
+    const mouth=joint(head,headYaw,headRoll,headPitch,0,.38*size,1.05*size);
+    if(charge>.09&&!aim.flightProgress)stamp('lavaFireball',mouth,headYaw,charge*1.57,.34+charge*.65,time*5,headPitch);
     for(let i=0;i<hazards.length;i++){
       const h=hazards[i],target=targets[i],flight=h.flightProgress;
       if(h.warning&&flight>0){
@@ -282,7 +324,9 @@
           point[1]+=4*t*(1-t)*h.arcHeight;
           return point;
         };
-        stamp('lavaFireball',arc(flight),time*5,1.07,1,time*4);
+        const ball=arc(flight),before=arc(Math.max(0,flight-.015));
+        const dx=ball[0]-before[0],dy=ball[1]-before[1],dz=ball[2]-before[2];
+        stamp('lavaFireball',ball,Math.atan2(dx,dz),1.17,1,time*4,-Math.atan2(dy,Math.hypot(dx,dz)));
         for(let j=1;j<=6;j++){
           const t=flight-j*.031;if(t<0)break;
           const point=arc(t);point[0]+=.39*Math.sin(j*2.4+time*7);point[2]+=.39*Math.cos(j*2.4+time*7);
@@ -331,6 +375,7 @@
     }
   }
   function cosmic(course,hazards,time,sample,stamp){
+    if(course.index===root.AcornMinecarts.courseIndex)root.AcornMinecarts.draw(course,hazards,time,sample,stamp);
     if(course.index!==10&&course.index!==11)return;
     const group=hazards.filter(h=>h.id===(course.index===11?10:11));
     if(!group.length)return;
@@ -343,6 +388,22 @@
     const water=id===2||id===6||id===7,warning=h.warning,active=h.active;
     const show=active?1:warning?1:h.phase==='receding'?cap(1-p*3):0;
     const at=(name,ss,xx,y,yaw=0,size=1,opacity=1,roll=0,pitch=0,stretch=[1,1,1])=>{if(opacity>.025&&size>.005)emit(name,ss,xx,y,yaw,size,Math.min(1,opacity),roll,pitch,stretch,branch);};
+    if(id===root.AcornMinecarts.id)return;
+    if(id===13){
+      if(warning){
+        const pulse=.73+.16*Math.sin(p*p*TAU*2.5);
+        at('envStormMarker',s,x,.067,0,1,pulse,0,0,[w,1,l]);
+        at('envStormMarker',s,x,.080,Math.PI*.25,1,.64,0,0,[w*(1.55-.70*p),1,l*(1.55-.70*p)]);
+      }else if(active){
+        const glare=1-smooth((p-.10)/.89),yaw=h.boltVariant*2.04;
+        at('envBolt'+h.boltVariant,s,x,.08,yaw,1,glare);
+        at('envBoltGlow'+h.boltVariant,s,x,.08,yaw,1,glare*.56);
+        at('envStormRipple',s,x,.081,0,1,glare*.82,0,0,[w*(.55+p),1,l*(.55+p)]);
+      }else if(h.phase==='receding'){
+        at('envStormRipple',s,x,.073,0,1,.31*(1-p),0,0,[w*(1.42+p*.25),1,l*(1.42+p*.25)]);
+      }
+      return;
+    }
     const fixedSide=side*(branch?3.22:5.83),signX=side*(branch?3.10:5.88),signS=h.baseS-20;
     at('envMarker',signS,signX,0,0,1.22);
     at('envSign'+id,signS,signX,0,0,1.22);
@@ -460,7 +521,7 @@
     if(h&&age>=0&&age<.53){
       const t=age/.53,water=[2,6,7,8].includes(h.id);
       for(let j=0;j<5;j++){const dir=(j%2?1:-1),span=.37+t*(.49+(j%3)*.18);
-        emit(water?'envFoam':h.id===4?'envCrystal':h.id===10?'lavaEmber':h.id===11?'ufoGroundRings':'envPebble',r.s-.2-t*(1.15+j%2*.53),r.x+dir*span,
+        emit(water?'envFoam':h.id===4?'envCrystal':h.id===10?'lavaEmber':h.id===11?'ufoGroundRings':h.id===13?'envStormRipple':h.id===root.AcornMinecarts.id?'envScrape':'envPebble',r.s-.2-t*(1.15+j%2*.53),r.x+dir*span,
           .17+Math.sin(t*Math.PI)*(.26+j%3*.15),t*3+j,(water?.39:.16)*(1-t*.52),.94*(1-t),j*.2,0,[1,1,1],r.branch);}
     }
     if(!r.contactSeq||!(r.contactFx>0))return;
@@ -512,7 +573,7 @@
     ctx.restore();
   }
   function paintWorld(ctx,library,project,name,[x,y,z],yaw=0,size=1,opacity=1,roll=0,pitch=0,stretch){
-    paint(ctx,library,(forward,side,height)=>project(side,height,forward),name,z,x,y,yaw,size,opacity,roll,pitch,stretch,false,190);
+    paint(ctx,library,(forward,side,height)=>project(side,height,forward),name,z,x,y,yaw,size,opacity,roll,pitch,stretch,false,name.startsWith('lavaTitan')?245:190);
   }
   function hud(ctx,w,h,r,time,compact){
     if(!r.contactSeq||r.contactFx<=.055||r.finish||r.itemHitFx>.42)return;
@@ -536,6 +597,10 @@
       sound.tone(151,.18,.027*gain,'triangle',65);sound.tone(255,.075,.009*gain,'sine',114,.07);
     }else if(kind==='timber'){
       sound.tone(115,.15,.032*gain,'triangle',46);sound.tone(412,.09,.012*gain,'sawtooth',133,.023);
+    }else if(kind==='minecart'){
+      sound.tone(92,.17,.033*gain,'triangle',46);sound.tone(483,.11,.011*gain,'sawtooth',182,.015);
+    }else if(kind==='lightning'){
+      sound.tone(146,.24,.028*gain,'sawtooth',40);sound.tone(1120,.095,.013*gain,'triangle',362,.018);
     }else if(kind==='fireball'||kind==='beam'){
       const beam=kind==='beam';
       sound.tone(beam?692:103,.23,.029*gain,beam?'sine':'sawtooth',beam?328:40);
@@ -554,7 +619,8 @@
       [[162,102,.15],[142,89,.17]],[[330,161,.11],[290,137,.15]],
       [[187,92,.23],[305,123,.19]],[[434,693,.11],[650,1070,.15]]
     ][id];
-    cues.forEach(([tone,end,duration],i)=>sound.tone(tone,duration,i?.009:.014,id===4?'square':'triangle',end,i*.082));
+    const signal=id===13?[[503,619,.076],[741,840,.08]]:id===root.AcornMinecarts.id?[[337,434,.09],[337,434,.09]]:cues;
+    signal?.forEach(([tone,end,duration],i)=>sound.tone(tone,duration,i?.009:.014,id===4?'square':'triangle',end,i*.082));
   }
   root.AcornCourseArt={meshes:build,scene,cosmic,reaction,fallbackMeshes,paint,paintWorld,hud,feedback,approach};
 })(typeof globalThis==='object'?globalThis:this);

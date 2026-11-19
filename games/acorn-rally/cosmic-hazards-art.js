@@ -6,6 +6,7 @@
   const move=(p,x,y,z)=>[p[0]+x,p[1]+y,p[2]+z];
   const lavaColors=['#514147','#685254','#503e47','#765652','#635155','#493a42'];
   const warmColors=['#aa5240','#c46a43','#e17e44','#fba55b'];
+  const titanSite={position:[-27,-4,29],size:10.85};
   const pick=(colors,index)=>colors[((index%colors.length)+colors.length)%colors.length];
 
   function rock(m,center,radii,sides,id,hot=false){
@@ -66,27 +67,30 @@
   }
 
   function titan(parts,simple){
-    const torso=parts('lavaTitan'),head=parts('lavaTitanHead'),jaw=parts('lavaTitanJaw');
+    const stance=parts('lavaTitanStance'),torso=parts('lavaTitan'),head=parts('lavaTitanHead'),jaw=parts('lavaTitanJaw');
     const low=simple?5:8,large=simple?7:12;
+    rock(stance,[0,-.12,0],[2.34,.31,1.80],large,30,true);
     for(const side of [-1,1]){
-      rock(torso,[side*.95,.43,.44],[.86,.43,.84],large,side+2,true);
-      rock(torso,[side*.95,.99,.01],[.78,.67,.64],large,side+3,true);
-      if(!simple)for(let i=0;i<3;i++)rock(torso,[side*.95+(i-1)*.36,.18,1.03],[.24,.17,.30],low,i+9);
-      rock(torso,[side*1.38,2.53,.13],[.83,.60,.73],large,side+8,true);
-      rock(torso,[side*.75,2.13,.81],[.66,.53,.35],large,side+13,true);
-      const crest=[[side*.26,3.02,-.43],[side*.42,3.78,-.49],[side*.53,3.01,-.77]];
+      rock(stance,[side*.95,.43,.44],[.86,.43,.84],large,side+2,true);
+      rock(stance,[side*.95,.99,.01],[.78,.67,.64],large,side+3,true);
+      if(!simple)for(let i=0;i<3;i++)rock(stance,[side*.95+(i-1)*.36,.18,1.03],[.24,.17,.30],low,i+9);
+      rock(torso,[side*1.38,1.43,.13],[.83,.60,.73],large,side+8,true);
+      rock(torso,[side*.75,1.03,.81],[.66,.53,.35],large,side+13,true);
+      const crest=[[side*.31,1.87,-.43],[side*.54,2.88,-.74],[side*.64,1.79,-.85]];
       torso.tri(crest[0],crest[1],crest[2],'#6b5050',stone);
       torso.tri(crest[0],move(crest[1],0,.052,.116),crest[2],'#b35f43',stone);
+      torso.ring([side*.91,1.28,-.61],[side*1.29,2.45,-.86],.247,.024,'#78564e',low,stone);
+      vein(torso,[[side*.39,.12,-.99],[side*.55,.57,-1.07],[side*.23,.90,-1.08],[side*.51,1.51,-.86]],.05,low);
     }
-    rock(torso,[0,1.38,-.14],[1.36,.9,1.03],large,4,true);
-    rock(torso,[0,2.33,.06],[1.54,1.0,1.08],large,9,true);
+    rock(torso,[0,.28,-.14],[1.36,.9,1.03],large,4,true);
+    rock(torso,[0,1.23,.06],[1.54,1.0,1.08],large,9,true);
     // Magma shows through broken armor at the breast and joints.
-    torso.blob(0,2.22,1.04,.27,.37,.13,'#ed7a45',large,emissive);
-    torso.blob(.02,2.24,1.15,.139,.235,.085,'#ffbc61',large,emissive);
-    vein(torso,[[.04,2.54,1.07],[-.16,2.75,1.02],[-.09,3.01,.74],[.18,3.16,.53]],.062,low);
-    vein(torso,[[.00,2.10,1.12],[.24,1.92,1.09],[.18,1.74,1.03],[.37,1.61,.87]],.069,low);
-    vein(torso,[[-1.22,2.67,.70],[-.97,2.58,1.05],[-.76,2.31,1.13],[-.53,2.24,1.11]],.035,low);
-    vein(torso,[[.56,2.24,1.11],[.91,2.32,1.09],[1.10,2.51,.93],[1.31,2.63,.75]],.042,low);
+    torso.blob(0,1.12,1.04,.27,.37,.13,'#ed7a45',large,emissive);
+    torso.blob(.02,1.14,1.15,.139,.235,.085,'#ffbc61',large,emissive);
+    vein(torso,[[.04,1.44,1.07],[-.16,1.65,1.02],[-.09,1.91,.74],[.18,2.06,.53]],.062,low);
+    vein(torso,[[.00,1.00,1.12],[.24,.82,1.09],[.18,.64,1.03],[.37,.51,.87]],.069,low);
+    vein(torso,[[-1.22,1.57,.70],[-.97,1.48,1.05],[-.76,1.21,1.13],[-.53,1.14,1.11]],.035,low);
+    vein(torso,[[.56,1.14,1.11],[.91,1.22,1.09],[1.10,1.41,.93],[1.31,1.53,.75]],.042,low);
 
     rock(head,[0,.27,.06],[.73,.53,.62],large,2,true);
     rock(head,[0,.69,.30],[.94,.53,.73],large,17,true);
@@ -116,12 +120,14 @@
       jaw.ring([x,.064,z],[x*.92,.227-i*.04,z+.04],.070,.005,'#bb8866',low,stone);
     }
     for(const side of [-1,1]){
-      const arm=parts(side<0?'lavaTitanArmL':'lavaTitanArmR');
+      const left=side<0,arm=parts(left?'lavaTitanArmL':'lavaTitanArmR'),fist=parts(left?'lavaTitanFistL':'lavaTitanFistR');
       rock(arm,[side*.14,-.23,.04],[.56,.62,.51],large,side+10,true);
-      rock(arm,[side*.27,-.86,.133],[.46,.64,.43],large,side+13,true);
-      rock(arm,[side*.35,-1.48,.26],[.49,.46,.44],large,side+5);
-      vein(arm,[[side*.27,-.07,.46],[side*.46,-.44,.39],[side*.25,-.57,.49],[side*.37,-.97,.42],[side*.47,-1.38,.58]],.048,low);
-      if(!simple)for(let i=0;i<3;i++)rock(arm,[(i-1)*.24+side*.33,-1.85+i*.03,.32+i*.075],[.146,.27,.167],low,i+7,true);
+      rock(arm,[side*.23,-.77,.10],[.43,.41,.43],large,side+13,true);
+      vein(arm,[[side*.20,-.07,.46],[side*.34,-.38,.39],[side*.18,-.57,.46],[side*.27,-.87,.43]],.051,low);
+      rock(fist,[side*.06,-.32,.08],[.45,.55,.43],large,side+14,true);
+      rock(fist,[side*.15,-.81,.19],[.52,.45,.49],large,side+5,true);
+      vein(fist,[[side*.01,-.10,.37],[side*.18,-.31,.46],[side*.08,-.54,.49],[side*.25,-.83,.57]],.052,low);
+      for(let i=0;i<3;i++)rock(fist,[(i-1)*.24+side*.13,-1.13+i*.04,.25+i*.075],[.152,.25,.173],low,i+7,true);
     }
   }
 
@@ -291,7 +297,7 @@
     frost.blob(0,.018,0,.133,.071,.137,'#defafa',small,emissive);
   }
 
-  root.AcornCosmicHazardsArt={meshes(Mesh,simple=false){
+  root.AcornCosmicHazardsArt={titanSite,meshes(Mesh,simple=false){
     const result={},part=name=>(result[name]=new Mesh());
     titan(part,simple);
     saucer(part,simple);

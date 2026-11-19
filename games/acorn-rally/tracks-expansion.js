@@ -22,7 +22,11 @@
         [.53,7.4,5.3],[.62,10,5.25],[.71,7,4.6],[.80,12.5,4.3],[.89,14,4.55],[.96,7,5.3],[1,6,6.2]],
       fork: [.52,.70,15,3.7,2.9], bridge: .86, drops: [[.745,.91]],
       hazard: {style:5,name:'Ore lift',u:.38,side:-1,period:9.1,warn:2.3,live:3.7,offset:1.15,width:1.34,length:1.12,speed:.61,push:3.7,hop:.17},
-      tip: 'The ore lift lowers over the inside line. Pass to its left, or wait for the basket to rise.',
+      obstacles: [
+        {style:12,key:81,name:'Mine cart crossing',u:.139,side:-1,period:13.2,warn:1.25,live:6.6,offset:2.7,width:.88,length:20,speed:0,push:4.4,hop:.43},
+        {style:12,key:82,name:'Geode freight cart',u:.465,side:1,period:14.7,warn:1.25,live:6.8,offset:8.15,width:.88,length:22,speed:0,push:4.4,hop:.43}
+      ],
+      tip: 'Watch the crossing lights and give loaded mine carts a full lane. Pass the ore lift on the left while its basket is down.',
       ramps: [{id:'geode-trestle',name:'Mine rail lip',style:'trestle',branch:true,u:.622,lane:0,halfWidth:2.10,
         landingWidth:2.60,runup:8.3,rise:1.65,gap:2.2,landingRise:.88,landingLength:31,minSpeed:6}]
     },
@@ -114,23 +118,32 @@
     {
       name:'Mooncap Marsh',line:['Mooncap','Marsh'],region:'The Mooncap Fens',place:'Mooncap Fens',
       level:'Advanced',surface:'Boardwalk & peat',length:1280,
-      feature:'Drift across wooden boardwalks above the muddy fens, watch for a hopping bullfrog, and carry speed into the last turn.',
+      feature:'Drift across boardwalks above the muddy fens, watch for hopping bullfrogs, and carry speed into the last turn.',
       anchors:[[-96,-68],[-115,-42],[-107,-16],[-83,-7],[-64,15],[-77,38],[-51,64],[-19,55],[-11,28],[9,14],[34,22],[42,48],[72,59],[101,36],[94,6],[66,-3],[51,-24],[60,-51],[39,-73],[13,-72],[-8,-50],[-31,-43],[-53,-61],[-76,-75]],
       section:[[0,7.4,6.4],[.09,5.7,5.6],[.18,7,4.95],[.25,10,4.8],[.34,8,5.35],[.43,5.5,5.25],[.53,8.3,4.75],[.64,9.9,4.7],[.73,5.6,5.0],[.83,4.8,5.65],[.94,6,6.15],[1,7.4,6.4]],
       fork:[.36,.53,13,3.8,2.9],bridge:.53,drops:[[.32,.47],[.57,.68]],
       hazard:{style:2,name:'Marsh geyser',u:.706,side:-1,period:8.8,warn:2.15,live:3.3,offset:1.7,width:1.5,length:2.6,speed:.58,push:3.1,slip:.55,hop:.25},
-      obstacles:[{style:8,key:'frog-crossing',name:'Bullfrog crossing',u:.555,side:-1,period:10.8,warn:1.75,live:3.75,offset:1.2,width:.76,length:.75,push:5.9,hop:.24}],
-      tip:'A bullfrog crosses the boardwalk in four hops and can knock you backward. Watch its landing spot, then steer clear of the geyser at the final pond.'
+      obstacles:[
+        {style:8,key:'frog-reed-bank',name:'Reed-bank bullfrog',u:.224,side:1,period:11.7,warn:1.6,live:3.5,offset:4.8,width:.73,length:.74,push:5.7,hop:.23},
+        {style:8,key:'frog-crossing',name:'Bullfrog crossing',u:.555,side:-1,period:10.8,warn:1.75,live:3.75,offset:1.2,width:.76,length:.75,push:5.9,hop:.24},
+        {style:8,key:'frog-mud-bank',name:'Mud-bank bullfrog',u:.869,side:-1,period:12.6,warn:1.7,live:3.8,offset:7.4,width:.78,length:.79,push:6.0,hop:.25}
+      ],
+      tip:'Bullfrogs can knock you backward. Watch their marked landing spots and steer clear of the final geyser.'
     },
     {
       name:'Tempest Treetops',line:['Tempest','Treetops'],region:'The Stormwood',place:'Stormwood canopy',
       level:'Expert',surface:'Timber trestle & slate',length:1420,
-      feature:'Climb the zigzag trestle, race high above the lower loop, then brake for the descent through the storm gates.',
+      feature:'Climb the zigzag trestle above the lower loop and dodge lightning on the exposed decks.',
       anchors:[[-108,-66],[-116,-31],[-93,0],[-66,21],[-32,15],[0,0],[33,-18],[53,-43],[77,-58],[109,-42],[116,-9],[104,21],[78,48],[42,66],[18,53],[9,25],[0,0],[-12,-29],[-38,-34],[-49,-63],[-80,-80]],
       section:[[0,20,6.2],[.13,25,5.2],[.22,36,4.65],[.31,37,4.9],[.41,30,5.2],[.51,23,5.4],[.63,17,4.9],[.72,12,4.5],[.80,11,5],[.88,15,5.1],[.96,19,6],[1,20,6.2]],
       fork:[.41,.59,13,4.3,2.8],bridge:.22,drops:[[.11,.34],[.40,.65],[.73,.84]],
       hazard:{style:1,name:'Storm signal arm',u:.575,side:1,period:8.5,warn:2.2,live:3.2,offset:2.4,width:.58,length:.9,speed:.68,push:3.8},
-      tip:'Keep to the middle of the exposed deck. Move off the signal arm’s path before it swings down.',
+      obstacles:[
+        {style:13,key:'tempest-upper-bolt',name:'Lightning strike',u:.181,side:-1,period:11.4,warn:1.16,live:.39,offset:1.1,width:1.64,length:1.83,lane:1.55,speed:.49,push:3.3,hop:.31},
+        {style:13,key:'tempest-descent-bolt',name:'Lightning strike',u:.679,side:1,period:11.4,warn:1.16,live:.39,offset:4.9,width:1.78,length:1.97,lane:1.72,speed:.49,push:3.2,hop:.30},
+        {style:13,key:'tempest-lower-bolt',name:'Lightning strike',u:.845,side:-1,period:11.4,warn:1.16,live:.39,offset:8.7,width:1.62,length:1.82,lane:1.58,speed:.49,push:3.3,hop:.31}
+      ],
+      tip:'Steer away from the amber rings before lightning hits. Watch the swinging signal arm on the high deck.',
       ramps:[{id:'tempest-trestle',name:'Trestle lip',style:'trestle',branch:true,u:.49,lane:0,halfWidth:2.1,landingWidth:2.55,runup:8.2,rise:1.55,gap:2,landingRise:.88,landingLength:31,minSpeed:6}]
     }
   ];

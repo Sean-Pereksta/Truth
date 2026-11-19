@@ -1,9 +1,9 @@
 (function(root, factory) {
   const server=typeof module==='object'&&module.exports;
-  const api=factory(server?require('./kart-rig.js'):root.AcornRig,server?require('./signature-kit.js'):root.AcornSignatures,server?require('./hazards.js'):root.AcornHazards,server?require('./ramps.js'):root.AcornRamps,server?require('./tracks-expansion.js'):root.AcornExpansion);
+  const api=factory(server?require('./kart-rig.js'):root.AcornRig,server?require('./signature-kit.js'):root.AcornSignatures,server?require('./hazards.js'):root.AcornHazards,server?require('./ramps.js'):root.AcornRamps,server?require('./tracks-expansion.js'):root.AcornExpansion,server?require('./breakwater-tides.js'):root.AcornBreakwater);
   if (server) module.exports = api;
   else root.AcornSim = api;
-})(typeof globalThis === 'object' ? globalThis : this, function(Rig,Signatures,Hazards,Ramps,Expansion) {
+})(typeof globalThis === 'object' ? globalThis : this, function(Rig,Signatures,Hazards,Ramps,Expansion,Breakwater) {
   'use strict';
   const TAU = Math.PI * 2;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -86,7 +86,8 @@
       }
       const bridge=Math.exp(-Math.pow((u-bridgeS)/(.045+(index===5?.018:0)),2));
       const y=1.8+elev*(1+.63*Math.sin(TAU*u-.7)+.28*Math.sin(2*TAU*u+1))+bridge*([8.5,4.2,4,3,0,7,6,4][index]);
-      points.push({x,y,z,w:5.4+Math.max(0,1-Math.min(u,1-u)*18)*1.15});
+      const tide=index===Breakwater.courseIndex?Breakwater.profile(length,u):null;
+      points.push({x,y:y-(tide?.drop||0),z,w:5.4+Math.max(0,1-Math.min(u,1-u)*18)*1.15,bank:tide?.bank||0});
     }
     orientRoad(points,length);
     let branchPoints=null;
@@ -116,7 +117,8 @@
     const b=clamp((u-course.branchA)/(course.branchB-course.branchA),0,1), peak=Math.sin(Math.PI*b)**2;
     const legacyFork=branch&&!course.branchPoints,offset=legacyFork?peak*12:0;
     const nx=mix('nx'),nz=mix('nz'),w=legacyFork?mix('w')-peak*2.7:mix('w');
-    return {x:mix('x')+nx*(offset+lane),y:mix('y')+(legacyFork?peak*([2,-.25,-1.4,3,-.3,-.6,3.5,-1][course.index]):0),z:mix('z')+nz*(offset+lane),tx:mix('tx'),tz:mix('tz'),nx,nz,curve:mix('curve'),w,u,peak,exposed:!!p.exposed};
+    const bank=course.index===Breakwater.courseIndex?mix('bank'):0;
+    return {x:mix('x')+nx*(offset+lane),y:mix('y')+(legacyFork?peak*([2,-.25,-1.4,3,-.3,-.6,3.5,-1][course.index]):0)+Breakwater.crossfall(bank,lane,w),z:mix('z')+nz*(offset+lane),tx:mix('tx'),tz:mix('tz'),nx,nz,curve:mix('curve'),w,u,peak,bank,exposed:!!p.exposed};
   }
   function groundSample(c,s,x=0,branch=false){
     const p=sample(c,s,x,branch);p.y+=Ramps.surface(c,s,x,branch);return p;
@@ -162,6 +164,13 @@
   function slopeAt(c,s,x,branch){
     const a=sample(c,s-.28,x,branch),b=sample(c,s+.28,x,branch);
     return {rise:(b.y-a.y)/.56,run:Math.max(.25,Math.hypot(b.x-a.x,b.z-a.z)/.56)};
+  }
+  function bankAttitude(c,r,road,headingOffset){
+    const bank=road.bank;
+    if(!bank)return null;
+    const slope=slopeAt(c,r.s,r.x,r.branch),along=slope.rise/slope.run;
+    const sin=Math.sin(headingOffset),cos=Math.cos(headingOffset);
+    return {roll:Math.atan(bank*cos-along*sin),pitch:-Math.atan(along*cos+bank*sin)};
   }
   function rampStep(st,r,c,dt,prev,predict=false){
     const ramps=Ramps.list(c);
@@ -633,6 +642,7 @@
       target=traffic.pass&&traffic.pass.x>1.2&&r.x<.8?-.8:2.4+.32*Math.sin(r.linePhase);
     }
     target=Hazards.avoid(st,r,c,Ramps.aim(c,r,target));
+    target=Breakwater.dryLine(c,r,st.time,target,sample);
     target=clamp(target,-room,room);
     const holdingCorner=r.driftSide*exit.curve>.018&&r.driftSlip>.43;
     const charge=holdingCorner?(st.difficulty==='ultimate'&&bend>.028?driftRewards[2].charge:driftRewards[1].charge):skill.charge+(r.speedSkill-.82)*.55;
@@ -667,6 +677,7 @@
     }
     target=Ramps.aim(c,r,target);
     target=Hazards.avoid(st,r,c,target);
+    if(st.difficulty!=='easy')target=Breakwater.dryLine(c,r,st.time,target,sample);
     const exposed=here.exposed||look.exposed;
     if(exposed){
       const margin=Math.max(.6,Math.min(here.w,look.w)-1.05);
@@ -958,21 +969,23 @@
       const burrowing=r.driverIndex===7&&r.active>0,verge=Math.abs(r.x)>road.w-.38&&!burrowing,car=handling[r.driverIndex];
       const slick=r.branch&&road.peak>.28&&[1,2,4,7].includes(c.index);
       const sapLoad=clamp(r.sap/.74,0,1),pineLoad=clamp((r.pine||0)/.64,0,1);
-      const engineLoad=Math.max(sapLoad,pineLoad);
+      const engineLoad=Math.max(sapLoad,pineLoad),water=Breakwater.load(c,r,st.time,sample);
       const governor=(cruiseSpeed(c,r)*(1-Math.max(.47*sapLoad,.49*pineLoad))+(r.boost>0?r.boostPower*(1-engineLoad):0))*motor.speed*(1-.58*spinLoad);
       const top=(engineLoad>0?governor:Math.max(governor,r.contactCarry))*grindPace(r.grind);
-      const accel=car[1]*motor.acceleration*(r.slow>0?.5:1)*(1-.68*sapLoad)*(1-.67*pineLoad);
+      const accel=car[1]*motor.acceleration*(r.slow>0?.5:1)*(1-.68*sapLoad)*(1-.67*pineLoad)*(1-.22*water);
       const snagLoad=r.slip>0?clamp(r.burr/.4,0,1):0;
-      const drag=1.1+.012*r.v*r.v+(verge&&r.air===0?5.5*car[4]:0)+(drifting&&r.active===0?1.1*Math.abs(steer):0)+4.3*snagLoad;
+      const drag=1.1+.012*r.v*r.v+(verge&&r.air===0?5.5*car[4]:0)+(drifting&&r.active===0?1.1*Math.abs(steer):0)+4.3*snagLoad+(1.7+.15*Math.abs(r.v))*water;
       const thrust=r.boost>0?(r.boostStyle==='seed'?12:r.boostStyle==='tailwind'?7.4:9):0;
       const airborne=!!r.flight;
       r.v+=(thrust*motor.acceleration*(1-.96*engineLoad)+(gas*accel-brake*(r.v>0?23*motor.brakes:4.1))*(airborne?.075:1)-sgn*((airborne?.38:drag)+1.45*sapLoad))*dt;
       if(!gas&&!brake&&r.boost===0&&Math.abs(r.v)<.22)r.v=0;
       r.v=clamp(r.v,-3.8,top);
       if(r.v>top-.2)r.v=top;
-      const needle=r.driverIndex===0&&r.active>0,grip=slick&&!burrowing&&!needle?.8:1;
+      if(water>0)r.v=Breakwater.drag(r.v,water,top,dt);
+      const needle=r.driverIndex===0&&r.active>0,grip=(slick&&!burrowing&&!needle?.8:1)*(1-.17*water);
       const targetX=steer*(drifting?11.7:8.85)*car[0]*(needle?1.46:1)*grip*clamp(Math.abs(r.v)/5,0,1)*sgn
-        -road.curve*r.v*r.v*(needle?.11:drifting?.24:.43)*car[2]+(r.puffSide||1)*12.8*clamp((r.puff||0)/.80,0,1)**1.35+r.spinSide*3*spinLoad;
+        -road.curve*r.v*r.v*(needle?.11:drifting?.24:.43)*car[2]+(r.puffSide||1)*12.8*clamp((r.puff||0)/.80,0,1)**1.35+r.spinSide*3*spinLoad
+        -(!airborne&&r.air===0?road.bank*3.3*clamp(Math.abs(r.v)/4,0,1):0);
       const impactGrip=r.contactFx>.23?1-.48*r.contactForce:1;
       r.vx+=(targetX-r.vx)*Math.min(1,dt*(airborne?.91:needle?car[3]*1.55:r.slip>0?1.35:drifting?car[3]*.47:car[3])*grip*impactGrip);
       if(r.burr>0&&r.slip>0)r.vx+=r.burrSide*Math.sin((itemTimes.burr-r.burr)*12)*2.9*dt;
@@ -1085,5 +1098,5 @@
       laps:r.lapTimes.slice(),standings:st.racers.slice().sort((a,b)=>a.rank-b.rank).map(a=>({name:a.name,driverIndex:a.driverIndex,position:a.rank,time:a.finish||null,human:a.human,seat:a.seat}))};
   }
   return {create,step,result,track,trackCount:definitions.length+Expansion.courses.length,sample,baseSample:sample,groundSample,groundLift,lift,rampPitch,predictRamps:(st,r,c,dt,prev)=>rampStep(st,r,c,dt,prev,true),
-    projectRoute,resolveRoute,wheelPosition,roll,isFrozen,flyHawk,hawkItem,quillItem,stormItem,stormRadius,stormThreat,driftTier,steeringYaw,spinYaw,drivers,abilities,items,itemTimes,durations,engineClasses,normalizeCC,difficulties,normalizeDifficulty,rollWeights,drawItem};
+    projectRoute,resolveRoute,wheelPosition,bankAttitude,roll,isFrozen,flyHawk,hawkItem,quillItem,stormItem,stormRadius,stormThreat,driftTier,steeringYaw,spinYaw,drivers,abilities,items,itemTimes,durations,engineClasses,normalizeCC,difficulties,normalizeDifficulty,rollWeights,drawItem};
 });

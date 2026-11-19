@@ -1,13 +1,14 @@
 (function(root,make){
-  const api=make(typeof module==='object'&&module.exports?require('./tracks-expansion.js'):root.AcornExpansion);
+  const server=typeof module==='object'&&module.exports;
+  const api=make(server?require('./tracks-expansion.js'):root.AcornExpansion,server?require('./minecart-hazards.js'):root.AcornMinecarts);
   if(typeof module==='object'&&module.exports)module.exports=api;
   else root.AcornHazards=api;
-})(typeof globalThis==='object'?globalThis:this,function(Expansion){
+})(typeof globalThis==='object'?globalThis:this,function(Expansion,Minecarts){
   'use strict';
   const cap=(x,a,b)=>Math.max(a,Math.min(b,x)),wrap=(x,p)=>((x%p)+p)%p;
   const smooth=x=>{const t=cap(x,0,1);return t*t*(3-2*t);};
-  const frog=8,timber=9,fireball=10,freezeBeam=11;
-  const aimed=id=>id===fireball||id===freezeBeam;
+  const frog=8,timber=9,fireball=10,freezeBeam=11,lightning=13;
+  const aimed=id=>id===fireball||id===freezeBeam||id===lightning;
   const tips=[
     'Give the rolling log room. Follow the open lane past its end.',
     'When the bamboo pole starts to dip, take the lane opposite its hinge.',
@@ -77,6 +78,7 @@
       else if(id===timber)timberPath(state,cfg,road.w,p);
       else strikePath(state,c,cfg,road.w,cycle,time);
     }
+    if(id===Minecarts.id)return Minecarts.sample(c,cfg,state,p,Math.floor((time+cfg.offset)/cfg.period));
     return state;
   }
   function frogPath(state,cfg,width,p,cycle){
@@ -111,6 +113,10 @@
     const {warning,active,phase,progress}=state;
     Object.assign(state,{x,sourceSide:side,safeSide:-side,warningX:x,warningHalfWidth:cfg.width,
       strength:active?1:0});
+    if(state.id===lightning){
+      Object.assign(state,{top:34,boltVariant:wrap(cycle+Math.round(cfg.u*100),3)});
+      return;
+    }
     if(state.id===fireball){
       const launch=.28;
       Object.assign(state,{sourceS:c.length*.415,sourceX:50,sourceY:-21.8,arcHeight:cfg.arc,
@@ -159,7 +165,9 @@
       const h=sampleObstacle(c,st.time-dt*(1-f),cfg);
       if(!h.active||h.strength<.105&&[2,4,6,7].includes(h.id))continue;
       const s=previousS+(r.s-previousS)*f-near-(h.s-base),x=x0+(r.x-x0)*f;
-      if(Math.abs(s)>h.halfLength+.70||Math.abs(x-h.x)>h.halfWidth+.49)continue;
+      if(h.id===Minecarts.id){
+        if(!Minecarts.overlaps(h,s,x-h.x))continue;
+      }else if(Math.abs(s)>h.halfLength+.70||Math.abs(x-h.x)>h.halfWidth+.49)continue;
       if(aimed(h.id)&&Math.hypot(s/(h.halfLength+.70),(x-h.x)/(h.halfWidth+.49))>1)continue;
       const wheels=buried?-.84:liftNow,roof=wheels+(buried?.62:1.25);
       let bottom=h.bottom,top=h.top;
@@ -171,7 +179,7 @@
       }
       if(wheels>top+.035||roof<bottom-.035)continue;
       let direction=h.safeSide;
-      if([0,3,4,5,frog,fireball].includes(h.id)&&Math.abs(x-h.x)>.10)direction=Math.sign(x-h.x);
+      if([0,3,4,5,frog,fireball,Minecarts.id,lightning].includes(h.id)&&Math.abs(x-h.x)>.10)direction=Math.sign(x-h.x);
       r.hazardHit={id:h.id,key:h.key,at:st.time,side:direction,blocked:r.guard>0,cross:near,count:(r.hazardHit?.count||0)+1};
       if(r.guard>0){r.guard=0;r.protect=.80;r.notice='Bark Guard absorbed '+h.name;r.noticeTime=1.25;return true;}
       if(h.id===freezeBeam){
@@ -179,7 +187,7 @@
         r.notice='Frozen by alien beam';r.noticeTime=1.25;return true;
       }
       const speedFactor=cap(Math.abs(r.v)/13,.32,1);
-      r.v=h.id===frog?-(1.4+2.1*speedFactor):r.v*cfg.speed;
+      r.v=h.id===Minecarts.id?-(2.6+2.6*speedFactor):h.id===frog?-(1.4+2.1*speedFactor):r.v*cfg.speed;
       r.vx=cap((r.vx||0)+direction*cfg.push*speedFactor,-10,10);
       r.x+=direction*.12*speedFactor;r.yaw=cap((r.yaw||0)+direction*(cfg.slip?.12:.075),-.44,.44);
       r.protect=.86;r.hit=.38;r.slow=Math.max(r.slow||0,cfg.slip?.35:.24);
@@ -187,7 +195,7 @@
       if(cfg.hop&&speedFactor>.42){
         const duration=.21+cfg.hop*.41;r.air=duration;r.hazardHop={at:st.time,duration,height:cfg.hop*speedFactor};
       }
-      r.notice=h.id===frog?'Bullfrog bumped you back':h.name;r.noticeTime=1.25;return true;
+      r.notice=h.id===Minecarts.id?'Mine cart bounced you back':h.id===frog?'Bullfrog bumped you back':h.name;r.noticeTime=1.25;return true;
     }
     return false;
   }
@@ -206,6 +214,18 @@
     const lap=Math.floor(r.s/c.length),distance=cfg.u*c.length+lap*c.length-r.s;
     const tier=st.difficulty==='ultimate'?3:st.difficulty==='hard'?2:st.difficulty==='easy'?0:1;
     const horizon=[.98,1.55,2.05,2.45][tier],v=Math.max(6,r.v);
+    if(cfg.style===Minecarts.id){
+      if(distance<-(cfg.length+2.6)||distance>v*horizon+cfg.length+2.6)return target;
+      const miss=decision(st.hazardSeed??0xace110,cfg.key,lap,r.seat)<[.38,.12,.035,.007][tier];
+      for(let eta=miss?.26:horizon;eta>=0;eta-=.14){
+        const h=sampleObstacle(c,st.time+eta,cfg),ds=r.s+v*eta-lap*c.length-h.s;
+        if(!h.active||!Minecarts.overlaps(h,ds,target-h.x))continue;
+        const safe=h.safeSide*3.38;
+        if(!miss&&eta>.16&&Math.abs(safe-r.x)>1.65)r.hazardPace=Math.min(r.hazardPace||Infinity,18.2);
+        return target+(safe-target)*smooth((horizon+.16-eta)/.48);
+      }
+      return target;
+    }
     const extra=cfg.style===frog||cfg.style===timber||aimed(cfg.style);
     const pathShift=cfg.style===frog?2.65:0;
     if(distance<-(cfg.length+1.35+pathShift)||distance>v*horizon+cfg.length+2+pathShift)return target;
