@@ -8,9 +8,13 @@ Download [Last-Signal-Windows-x64.zip](https://github.com/Sean-Pereksta/Truth/re
 
 In the Catnmice mini launcher on Windows, install **Last Signal** and choose **Host Lobby**, or start the game and choose **Multiplayer**. Sharing a room opens a Cloudflare tunnel from the host’s PC. The host copies the invite, keeps the game running and starts the round after guests ready up. Windows guests can paste the invite into **Multiplayer → Join with an invite**.
 
-## Join from a phone
+## Join in a browser
 
-Open the host’s HTTPS invite in Safari or Chrome, enter a name and tap **Ready** from the lobby. Use the left thumb area to move and drag the right side to look. The touch HUD keeps attack and interaction within reach, with pack, crafting and building available from the action menu. Phone players share the same match and eight-player limit as Windows players. Hosting and solo play run on the Windows game.
+Open [Last Signal in your browser](https://sean-pereksta.github.io/Truth/games/last-signal/), choose a public arena or paste the host’s full HTTPS invite. You can also open the invite directly. Enter a name and select **Ready** in the room lobby. Browser and Windows players share the same match and eight-player limit. Hosting and solo play run on the Windows game.
+
+**Keyboard and mouse:** Click the arena to capture the mouse. Move with WASD, attack with left click, guard with right click, and interact with E. I, C and B open the pack, crafting and building. Escape releases the mouse.
+
+**Touch:** Use the left thumb area to move and drag the right side to look. Attack and interaction stay within reach, with pack, crafting and building in the action menu.
 
 ## Arena equipment
 

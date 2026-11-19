@@ -237,6 +237,22 @@ progress::-moz-progress-bar { background: var(--fill, var(--accent)); border-rad
   pointer-events: none;
 }
 
+.desktop-controls { display: none; }
+
+@media (hover: hover) and (pointer: fine) {
+  .arena:not([data-input="touch"]) .desktop-controls {
+    display: block;
+    align-self: end;
+    max-width: min(45vw, 370px);
+    margin: 0;
+    padding: 6px 9px;
+    border-radius: 6px;
+    background: var(--veil);
+  }
+
+  .arena:not([data-input="touch"]) .move-controls { display: none; }
+}
+
 .controls button, .stick { pointer-events: auto; touch-action: none; }
 .move-controls, .play-actions { display: grid; gap: 5px; align-items: end; }
 .move-tools, .main-actions, .equipment, .extra-actions { display: flex; gap: 4px; }

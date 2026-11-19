@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Last Signal | Play in Browser</title>
+  <link rel="stylesheet" href="./web.css">
+  <script type="module" src="./web.mjs"></script>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <a class="back" href="https://catnmice.com/lobby/lobby.html">← Catnmice Lobby</a>
+      <h1>Last Signal</h1>
+      <p>Join a first-person survival arena with up to eight human players.</p>
+    </div>
+  </header>
+  <main class="wrap">
+    <div class="panels">
+      <section id="lobbies" class="panel" aria-labelledby="lobbies-title">
+        <div class="section-head">
+          <h2 id="lobbies-title">Public arenas</h2>
+          <button type="button" id="refresh">Refresh</button>
+        </div>
+        <p id="directory-status" class="status" role="status">Refresh to find an open arena.</p>
+        <ul id="rooms" hidden></ul>
+      </section>
+      <section class="panel" aria-labelledby="invite-title">
+        <h2 id="invite-title">Join by invite</h2>
+        <form id="invite">
+          <label for="invite-link">Room invite link</label>
+          <input id="invite-link" type="url" maxlength="2048" required autocomplete="off"
+                 autocapitalize="none" spellcheck="false" placeholder="https://…trycloudflare.com/#…"
+                 aria-describedby="invite-error">
+          <p id="invite-error" class="error" role="alert" hidden></p>
+          <button class="primary" type="submit">Join arena</button>
+        </form>
+      </section>
+    </div>
+    <p class="download">To play solo or host an arena, <a href="https://github.com/Sean-Pereksta/Truth/releases/download/last-signal-windows/Last-Signal-Windows-x64.zip">download Last Signal for Windows</a>.</p>
+    <noscript><p>Enable JavaScript to browse arenas or open the full invite from your host.</p></noscript>
+  </main>
+</body>
+</html>

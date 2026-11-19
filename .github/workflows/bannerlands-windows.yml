@@ -1,6 +1,13 @@
 name: Bannerlands on Windows
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'games/bannerlands/source/build-host.mjs'
+      - 'games/bannerlands/source/desktop/launcher.mjs'
+      - 'games/bannerlands/source/tests/launcher-pack.mjs'
+      - '.github/workflows/bannerlands-windows.yml'
   pull_request:
     paths:
       - 'games/bannerlands/**'
@@ -38,3 +45,13 @@ jobs:
           node source/build-standalone.mjs "$env:RUNNER_TEMP/bannerlands-pack"
           npm run test:multiplayer-lobby-browser
           npm run test:standalone-browser -- "$env:RUNNER_TEMP/bannerlands-pack/Bannerlands.html"
+      - name: Verify the Catnmice local hosting pack
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          $pins = Get-Content -LiteralPath source/hosting/licenses/components.json -Raw | ConvertFrom-Json
+          $tunnel = Join-Path $env:RUNNER_TEMP 'bannerlands-cloudflared.exe'
+          $asset = "https://github.com/cloudflare/cloudflared/releases/download/$($pins.cloudflaredVersion)/cloudflared-windows-amd64.exe"
+          Invoke-WebRequest -Uri $asset -OutFile $tunnel
+          $pack = Join-Path $env:RUNNER_TEMP 'bannerlands-hub-pack'
+          node source/build-host.mjs --hub --output $pack --cloudflared $tunnel
+          node source/tests/launcher-pack.mjs $pack

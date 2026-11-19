@@ -23,6 +23,15 @@ const validKey = /^[a-zA-Z0-9_-]{24}$/.test(key);
 const storageKey = "last-signal:seat:" + key;
 const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
 const holdStops = new Set();
+const mouseLayout = matchMedia("(hover: hover) and (pointer: fine)");
+const movementKeys = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight", "KeyZ", "KeyX"]);
+const desktopActions = {
+  Space: "+Jump", KeyE: "+Use", KeyQ: "+Dodge", KeyV: "+Shove", KeyF: "cycle:1",
+  KeyR: "rotate:1", KeyH: "+Dismiss", BracketLeft: "weapon:-1", BracketRight: "weapon:1", Backspace: "cancel"
+};
+const desktopGearTabs = { KeyI: "pack", KeyC: "craft", KeyB: "build" };
+const desktopKeys = new Set();
+const mouseActions = new Map();
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();
 const compressed = typeof DecompressionStream === "function";
@@ -68,6 +77,8 @@ let sprint = false;
 let crouch = false;
 let stickPointer = null;
 let lookPointer = null;
+let mouseLocked = false;
+let desktopThrow = false;
 let lastLook = null;
 let actions = [];
 
@@ -252,7 +263,7 @@ function handleText(text) {
       resetRound();
     }
     renderRoster(values);
-    setMode("lobby", ready ? "Waiting for the host to start." : "Tap Ready when you’re set.");
+    setMode("lobby", ready ? "Waiting for the host to start." : "Choose Ready when you’re set.");
   } else if (type === "ROUND") {
     const next = Number(values[0]);
     if (!Number.isInteger(next) || next < 1) return;
@@ -353,7 +364,8 @@ function renderHud() {
   const touchHint = (hud.hint || "")
     .replace(/\s*\[[^\]]+\]\s*(?:Next action|Place|Rotate|Cancel)\b/g, "")
     .replace(/\[[^\]]+\]\s*/g, "").trim();
-  setText($("hint"), touchHint || hud.buildProblem);
+  const showKeyHints = mouseLayout.matches && arena.dataset.input !== "touch";
+  setText($("hint"), (showKeyHints ? hud.hint : touchHint) || hud.buildProblem);
   const crossbow = player.weapon === "crossbow";
   const reload = crossbow ? player.reload || 0 : 0;
   const currentProgress = Math.max(hud.progress || 0, hud.charge || 0, reload);
@@ -416,12 +428,17 @@ function sendInput() {
   header.setUint8(0, 1);
   header.setInt32(1, round, true);
   header.setInt32(5, ++sequence, true);
-  header.setFloat32(9, right, true);
-  header.setFloat32(13, forward, true);
-  header.setFloat32(17, 0, true);
+  const keyRight = Number(desktopKeys.has("KeyD")) - Number(desktopKeys.has("KeyA"));
+  const keyForward = Number(desktopKeys.has("KeyW")) - Number(desktopKeys.has("KeyS"));
+  const keyScale = Math.max(1, Math.hypot(keyRight, keyForward));
+  header.setFloat32(9, stickPointer === null ? keyRight / keyScale : right, true);
+  header.setFloat32(13, stickPointer === null ? keyForward / keyScale : forward, true);
+  header.setFloat32(17, Number(desktopKeys.has("KeyX")) - Number(desktopKeys.has("KeyZ")), true);
   header.setFloat32(21, yaw, true);
   header.setFloat32(25, pitch, true);
-  header.setUint8(29, (sprint ? 1 : 0) | (crouch ? 2 : 0));
+  const running = sprint || desktopKeys.has("ShiftLeft") || desktopKeys.has("ShiftRight");
+  const crouching = crouch || desktopKeys.has("ControlLeft") || desktopKeys.has("ControlRight");
+  header.setUint8(29, (running ? 1 : 0) | (crouching ? 2 : 0));
   header.setUint8(30, fragments.length);
   let offset = 31;
   for (const part of fragments) {
@@ -433,6 +450,13 @@ function sendInput() {
 }
 
 function neutralize(transmit) {
+  desktopKeys.clear();
+  mouseActions.clear();
+  desktopThrow = false;
+  if (document.pointerLockElement === look) {
+    mouseLocked = false;
+    document.exitPointerLock();
+  }
   const moving = stickPointer;
   const looking = lookPointer;
   stickPointer = lookPointer = null;
@@ -481,20 +505,27 @@ function releaseStick(event) {
 }
 for (const type of ["pointerup", "pointercancel", "lostpointercapture"]) stick.addEventListener(type, releaseStick);
 
+function updateLook(dx, dy) {
+  const sensitivity = frame.player.aim ? 0.0047 : 0.0069;
+  const nextYaw = yaw + dx * sensitivity;
+  yaw = Math.atan2(Math.sin(nextYaw), Math.cos(nextYaw));
+  pitch = Math.max(-1.46, Math.min(1.46, pitch - dy * sensitivity));
+  renderer.setLook(yaw, pitch);
+}
+
 look.addEventListener("pointerdown", (event) => {
-  if (!canPlay() || lookPointer !== null || event.button !== 0) return;
+  if (!canPlay() || document.pointerLockElement === look || lookPointer !== null || event.button !== 0) return;
+  if (event.pointerType === "mouse" && look.requestPointerLock) {
+    try { Promise.resolve(look.requestPointerLock()).catch(() => {}); } catch {}
+  }
   lookPointer = event.pointerId;
   look.setPointerCapture(lookPointer);
   lastLook = [event.clientX, event.clientY];
 });
 look.addEventListener("pointermove", (event) => {
-  if (event.pointerId !== lookPointer) return;
-  const sensitivity = frame.player.aim ? 0.0047 : 0.0069;
-  const nextYaw = yaw + (event.clientX - lastLook[0]) * sensitivity;
-  yaw = Math.atan2(Math.sin(nextYaw), Math.cos(nextYaw));
-  pitch = Math.max(-1.46, Math.min(1.46, pitch - (event.clientY - lastLook[1]) * sensitivity));
+  if (event.pointerId !== lookPointer || document.pointerLockElement === look) return;
+  updateLook(event.clientX - lastLook[0], event.clientY - lastLook[1]);
   lastLook = [event.clientX, event.clientY];
-  renderer.setLook(yaw, pitch);
 });
 function releaseLook(event) {
   if (event.pointerId !== lookPointer) return;
@@ -502,6 +533,40 @@ function releaseLook(event) {
   lastLook = null;
 }
 for (const type of ["pointerup", "pointercancel", "lostpointercapture"]) look.addEventListener(type, releaseLook);
+document.addEventListener("pointerlockchange", () => {
+  if (document.pointerLockElement === look) {
+    mouseLocked = true;
+    const id = lookPointer;
+    lookPointer = null;
+    lastLook = null;
+    if (id !== null && look.hasPointerCapture(id)) look.releasePointerCapture(id);
+  } else if (mouseLocked) {
+    mouseLocked = false;
+    neutralize(true);
+  }
+});
+document.addEventListener("mousemove", (event) => {
+  if (document.pointerLockElement === look && canPlay()) updateLook(event.movementX, event.movementY);
+});
+look.addEventListener("mousedown", (event) => {
+  if (document.pointerLockElement !== look || !canPlay() || mouseActions.has(event.button)) return;
+  const action = event.button === 0 ? attackCommand(event.shiftKey) :
+    event.button === 2 && !frame.hud.buildId ? "+Guard" : "";
+  if (action.startsWith("+")) mouseActions.set(event.button, action.slice(1));
+  if (action) queue(action);
+});
+document.addEventListener("mouseup", (event) => {
+  const action = mouseActions.get(event.button);
+  if (action) {
+    mouseActions.delete(event.button);
+    queue("-" + action);
+  }
+});
+look.addEventListener("wheel", (event) => {
+  if (document.pointerLockElement !== look || !canPlay() || !event.deltaY) return;
+  event.preventDefault();
+  queue(event.deltaY > 0 ? "weapon:1" : "weapon:-1");
+}, { passive: false });
 
 function bindHold(button, command) {
   let pointer = null;
@@ -541,10 +606,12 @@ function bindHold(button, command) {
     }
   });
 }
-bindHold(attack, () => {
-  if (frame.hud.buildId) return "place";
+function attackCommand(repeat = false) {
+  if (attack.disabled) return "";
+  if (frame.hud.buildId) return repeat ? "repeat" : "place";
   return frame.player.weapon === "crossbow" && !frame.player.crossbowLoaded ? "" : "+Attack";
-});
+}
+bindHold(attack, attackCommand);
 for (const button of document.querySelectorAll("[data-hold]")) bindHold(button, () => "+" + button.dataset.hold);
 
 controls.addEventListener("click", (event) => {
@@ -715,6 +782,42 @@ window.addEventListener("contextmenu", (event) => { if (arena.contains(event.tar
 window.addEventListener("blur", () => neutralize(true));
 window.addEventListener("orientationchange", () => neutralize(true));
 document.addEventListener("visibilitychange", () => { if (document.hidden) neutralize(true); });
+arena.addEventListener("pointerdown", (event) => {
+  if (event.pointerType === "mouse" || event.pointerType === "touch") arena.dataset.input = event.pointerType;
+}, { capture: true });
+document.addEventListener("keydown", (event) => {
+  const { code } = event;
+  if (!canPlay() || event.altKey || event.metaKey || event.target?.matches?.("input, textarea, select, [contenteditable]")) return;
+  if (movementKeys.has(code)) {
+    event.preventDefault();
+    arena.dataset.input = "mouse";
+    desktopKeys.add(code);
+    return;
+  }
+  if (event.ctrlKey && document.pointerLockElement !== look) return;
+  const gearTab = desktopGearTabs[code] || (code === "Tab" && document.pointerLockElement === look ? "pack" : null);
+  const action = desktopActions[code];
+  if (!(gearTab || action || code === "KeyT")) return;
+  if (code === "Space" && document.pointerLockElement !== look && event.target?.matches?.("button")) return;
+  event.preventDefault();
+  if (event.repeat) return;
+  if (gearTab) {
+    openDrawer("gear", $("pack"));
+    document.querySelector('[data-section="' + gearTab + '"]').click();
+  } else if (action) {
+    queue(action);
+  } else if (frame.player.weapon === "spear") {
+    desktopThrow = true;
+    queue("+Throw");
+  }
+});
+document.addEventListener("keyup", (event) => {
+  desktopKeys.delete(event.code);
+  if (event.code === "KeyT" && desktopThrow) {
+    desktopThrow = false;
+    queue("-Throw");
+  }
+});
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && drawer) closeDrawer();
   if (event.key !== "Tab" || !drawer) return;
@@ -751,4 +854,4 @@ function draw(now) {
   requestAnimationFrame(draw);
 }
 requestAnimationFrame(draw);
-setMode("join", validKey ? "Join the host’s arena." : "Open the full phone invite from the host.", !validKey);
+setMode("join", validKey ? "Join the host’s arena." : "Open the full room invite from the host.", !validKey);
