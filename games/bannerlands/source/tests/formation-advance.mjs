@@ -19,7 +19,45 @@ function company(g,team,n,x,y,type='bridge_warden'){
   return Array.from({length:n},(_,i)=>{const u=g.addUnit(team,type,x-Math.floor(i/6)*.43,y+(i%6-2.5)*.43);u.facingX=team?-1:1;u.facingY=0;return u;});
 }
 
-test('W advances the company in fixed ranks and ignores a lone flanking distraction',()=>{
+test('Advance wheels onto the chosen bearing and holds at the destination',()=>{
+  const g=fixture(),troops=company(g,0,12,30,40),foes=company(g,1,18,37,40,'infantry');
+  for(const u of foes){g.hold([u.id]);u.cooldown=1e9;}
+  const destination={x:troops.reduce((sum,u)=>sum+u.x,0)/troops.length,y:51};
+  assert.equal(g.advance(troops.map(u=>u.id),'line',{ranks:2},destination).ok,true);
+  const c=[...g.formationAdvances.values()][0];
+  step(g,.2);assert.ok(c.angle>0&&c.angle<.3);assert.equal(c.y,40);
+  step(g,25);
+  assert.equal(c.status,'Holding');
+  assert.ok(Math.hypot(c.x-destination.x,c.y-destination.y)<.02);
+  assert.ok(troops.every(u=>Math.abs(u.order.facingX)<.01&&u.order.facingY>.99));
+  const stopped=[c.x,c.y,c.angle];step(g,2);
+  assert.deepEqual([c.x,c.y,c.angle],stopped);
+});
+
+test('Advance stops on front melee contact while both ranks retain their slots',()=>{
+  const g=fixture(),pikes=company(g,0,12,30,40),archers=company(g,0,6,28,40,'river_ranger'),troops=[...pikes,...archers];
+  const foes=Array.from({length:12},(_,i)=>g.addUnit(1,'infantry',38,40+(i-5.5)*.46));
+  for(const u of foes){g.hold([u.id]);u.cooldown=1e9;u.hp=u.maxHp=1000;}
+  const result=g.advance(troops.map(u=>u.id),'line',{ranks:3},{x:50,y:40});
+  assert.equal(result.ok,true);
+  const c=[...g.formationAdvances.values()][0],slots=liveSlots(troops);
+  let rangedBeforeContact=false,meleeAfterContact=false;
+  for(let i=0;i<1200;i++){
+    g.update(1/60);
+    if(c.status==='Advancing'&&archers.some(u=>u.attackAnim>0))rangedBeforeContact=true;
+    if(c.status==='Engaged'&&pikes.some(u=>u.attackAnim>0))meleeAfterContact=true;
+  }
+  assert.ok(rangedBeforeContact,'Ranged engagement must not stop the melee front.');
+  assert.equal(c.status,'Engaged');assert.ok(c.x>35&&c.x<38,'The formation stops ahead of its original front and short of its destination.');
+  assert.ok(pikes.some(u=>foes.some(f=>Math.hypot(u.x-f.x,u.y-f.y)<=g.unitRange(u)+.1)));
+  assert.ok(meleeAfterContact,'The front ranks keep attacking after making contact.');
+  assert.deepEqual(liveSlots(troops),slots);
+  assert.ok(troops.every(u=>Math.hypot(u.x-u.order.x,u.y-u.order.y)<.46));
+  const stop=[c.x,c.y];for(const u of foes)u.hp=0;
+  step(g,2);assert.deepEqual([c.x,c.y],stop,'A new order is required to move after the melee line halts.');
+});
+
+test('Automatic advance keeps fixed ranks and ignores a lone flanking distraction',()=>{
   const g=fixture(),troops=company(g,0,24,30,40),enemy=company(g,1,18,44,40,'infantry'),bait=g.addUnit(1,'infantry',30,34);
   for(const u of [...enemy,bait]){g.hold([u.id]);u.cooldown=1e9;}
   const result=g.advance(troops.map(u=>u.id),'line');assert.equal(result.ok,true);

@@ -3,7 +3,7 @@ import {Game} from '../../core.js';
 
 let checks=0;
 const test=(name,fn)=>{fn();checks++;console.log('PASS '+name);};
-function fixture(){
+function fixture(armySize=320){
   const g=new Game({landscape:'open',scale:'standard',enemies:1,house:0,fogOfWar:false,seed:628410});
   g.units=[];g.buildings=[];g.byId.clear();g.projectiles=[];g.effects=[];g.fireZones=[];g.objectives=[];g.castles=[];
   for(const t of g.tiles){
@@ -14,7 +14,7 @@ function fixture(){
   g.navigation.invalidate();
   for(const team of g.teams){team.count=0;team.aiClock=1e9;team.heroTimer=0;team.alive=true;team.gold=0;}
   for(let team=0;team<2;team++){const keep=g.addBuilding(team,'keep',team?103.5:7.5,team?88.5:7.5);keep.spawnTimer=-1e9;keep.cooldown=1e9;}
-  const troops=Array.from({length:320},(_,i)=>g.addUnit(0,i%19===0?'siege':i%7===0?'cavalry':i%5===0?'archer':'infantry',34.5+i%20*.5,41.5+Math.floor(i/20)*.5));
+  const troops=Array.from({length:armySize},(_,i)=>g.addUnit(0,i%19===0?'siege':i%7===0?'cavalry':i%5===0?'archer':'infantry',34.5+i%20*.5,41.5+Math.floor(i/20)*.5));
   g.hash.rebuild(g.units);
   return {g,troops,ids:troops.map(u=>u.id)};
 }
@@ -56,6 +56,19 @@ test('All 320 mixed troops cross a bridge, then obey a new Move back across the 
   advance(g,2400,()=>troops.every(u=>u.x<54));
   assert.ok(troops.every(u=>u.x<54),'The entire force obeys the return order and crosses back.');
   assertGoal(troops,30.5,45.5);assert.equal(g.units.length,320);
+});
+
+test('Infantry keep shoulder room while closing into melee range',()=>{
+  const {g}=fixture(0);
+  const infantry=Array.from({length:32},(_,i)=>g.addUnit(0,'infantry',26-Math.floor(i/8)*.43,40+(i%8-3.5)*.43));
+  const defenders=Array.from({length:10},(_,i)=>g.addUnit(1,'infantry',32,40+(i-4.5)*.43));
+  const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+  g.hold(defenders.map(u=>u.id));
+  for(const u of [...infantry,...defenders])u.cooldown=1e9;
+  g.command(infantry.map(u=>u.id),37,40,'attack','line');
+  advance(g,360);
+  assert.ok(infantry.filter(u=>defenders.some(foe=>distance(u,foe)<=g.unitRange(u)+.07)).length>=26);
+  assert.ok(infantry.filter(u=>infantry.some(ally=>ally!==u&&distance(u,ally)<.35)).length<=3,'Melee pressure should not pack most friendly troops shoulder to shoulder.');
 });
 
 console.log(`${checks} large-army movement checks passed.`);

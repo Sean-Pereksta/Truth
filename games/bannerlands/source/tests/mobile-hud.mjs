@@ -41,6 +41,14 @@ const open=async(page,pane)=>{await page.locator(`[data-drawer="${pane}"]`).clic
 const touch=async(session,type,points)=>session.send('Input.dispatchTouchEvent',{type,touchPoints:points.map((p,i)=>({x:p.x,y:p.y,id:i+1,radiusX:2,radiusY:2,force:1}))});
 const tap=async(session,p)=>{await touch(session,'touchStart',[p]);await touch(session,'touchEnd',[]);};
 const drag=async(session,from,to,{hold=0,cancel=false}={})=>{await touch(session,'touchStart',[from]);if(hold)await new Promise(r=>setTimeout(r,hold));await touch(session,'touchMove',[to]);await touch(session,cancel?'touchCancel':'touchEnd',[]);};
+const advancePoint=page=>page.evaluate(async()=>{
+ const {view,game}=window.__bannerlands,{screenToWorld}=await import('./render.js');
+ for(let y=innerHeight*.38;y<innerHeight*.62;y+=14)for(let x=innerWidth*.25;x<innerWidth*.78;x+=18){
+  const point=screenToWorld(x,y,view);
+  if(document.elementFromPoint(x,y)?.id==='battleCanvas'&&game.isWalkable(point.x,point.y))return {x,y};
+ }
+ return null;
+});
 
 try{
  for(const [width,height] of [[320,740],[390,844],[667,375],[740,320],[844,390],[1536,688]]){
@@ -57,6 +65,11 @@ try{
   await page.evaluate(()=>window.__bannerlands.selectArmy());await assertOnscreen(page,'#quickAdvanceButton');await assertOnscreen(page,'#quickHoldButton');await assertOnscreen(page,'#mobileAttack');await assertOnscreen(page,'#mobileOptions');await hidden(page,'#selectionDock');
   await page.locator('#mobileOptions').click();for(const selector of ['#mobileExpand','#mobilePatrol','#mobileStandard','#mobileMoreOrders','#mobileClear'])assert.equal(await visible(page,selector),true,selector);
   await page.locator('#mobileOptions').click();await hidden(page,'#mobileOptionsMenu');
+  await page.locator('#quickAdvanceButton').tap();assert.equal(await visible(page,'#buildBanner'),true);
+  assert.equal(await page.evaluate(()=>window.__bannerlands.game.formationAdvances?.size??0),0);
+  const destination=await advancePoint(page);assert.ok(destination,'The open field contains a walkable advance point.');
+  await tap(session,destination);await hidden(page,'#buildBanner');
+  assert.ok(await page.evaluate(()=>[...window.__bannerlands.ui.selected].every(id=>window.__bannerlands.game.byId.get(id)?.order?.mode==='advance')));
   if(landscapePhone){
    for(const selector of ['#quickFormButton','#quickRetreatButton'])await assertOnscreen(page,selector);
    await hidden(page,'#compactTroopSelection');
@@ -93,6 +106,8 @@ try{
   assert.equal(await page.locator('#gameplayDock button:visible').count(),5);
   await page.evaluate(()=>window.__bannerlands.selectArmy());await page.locator('#quickAdvanceButton').click();
   assert.equal(await page.locator('#commandPanel').isVisible(),false);
+  assert.equal(await visible(page,'#buildBanner'),true);
+  const destination=await advancePoint(page);assert.ok(destination);await page.mouse.click(destination.x,destination.y);await hidden(page,'#buildBanner');
   assert.ok(await page.evaluate(()=>[...window.__bannerlands.ui.selected].some(id=>window.__bannerlands.game.byId.get(id)?.order?.mode==='advance')));
   await page.locator('#quickHoldButton').click();assert.ok(await page.evaluate(()=>[...window.__bannerlands.ui.selected].every(id=>window.__bannerlands.game.byId.get(id)?.order?.mode==='hold')));
   await page.locator('#locateSelection').click();assert.ok(await page.locator('#fieldTypes').textContent());

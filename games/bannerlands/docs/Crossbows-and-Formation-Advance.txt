@@ -1,11 +1,11 @@
 CROSSBOWS AND FORMATION ADVANCE
 
 W — ADVANCE IN FORMATION
-Select soldiers, choose Line, Wedge or Spread, then press W or click Advance
-in formation. They advance together, retain their slots and strike enemies in
-reach. The formation turns gradually toward the nearest enemy force of
-meaningful size. A lone scout does not turn a large spear line away from a
-nearby enemy force. Use a broad Line to bring more spear points into contact.
+Select soldiers, choose a formation, then press W or tap Advance. Click or
+tap a point on the battlefield to set the destination and facing. The ranks
+retain their slots and strike enemies in reach. The formation halts at the
+destination or when the front melee rank reaches an enemy, and holds there
+until your next order. Use a broad Line to bring more spear points into contact.
 At narrow crossings, the formation narrows to pass, then restores its ranks.
 
 A — BREAK AND CHARGE

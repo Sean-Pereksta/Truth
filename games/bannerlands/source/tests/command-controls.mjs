@@ -44,7 +44,7 @@ function fixture({house=0,realMenu=false}={}){
   game.navigation.invalidate();
   const elements=new Map(),actions=new Map(),tabs=['army','build','council'].map(name=>{const tab=new Element();tab.dataset.tab=name;return tab;}),messages=[],effects=[],commands=[];
   const element=id=>{if(!elements.has(id))elements.set(id,new Element(id));return elements.get(id);};
-  const canvas=element('battleCanvas'),win=new Element('window'),ui={selected:new Set(),selectedBuildings:new Set(),formation:'line',formationOptions:{ranks:2,width:null,lockFacing:false},formMode:false,formPreview:null,buildMode:null,rallyMode:false,teamOrderMode:null,facingMode:false,facingPreview:null,drag:null,hover:null};
+  const canvas=element('battleCanvas'),win=new Element('window'),ui={selected:new Set(),selectedBuildings:new Set(),formation:'line',formationOptions:{ranks:2,width:null,lockFacing:false},formMode:false,formPreview:null,advanceMode:false,buildMode:null,rallyMode:false,teamOrderMode:null,facingMode:false,facingPreview:null,drag:null,hover:null};
   element('resultOverlay').hidden=true;
   element('mobileOptionsMenu').hidden=true;
   const context={console,Math,Map,Set,String,Array,HOUSES,HERO_PROFILES,heroProfile,UNIT_DEFS,BUILD_DEFS,isPassableTile,worldToScreen,screenToWorld,regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit,formationPreview,formationRole,placeFormation,game,canvas,window:win,performance:{now:()=>100},standardTapBlock:null,
@@ -102,7 +102,7 @@ test('Shift troop filters preserve and restore the selected group, and open menu
   assert.deepEqual(ids(f.ui.selected),[infantry.id]);assert.equal(f.actions.get('[data-recruit="archer"]').clicks,1);
 });
 
-test('W advances once and A charges, while Shift+W remains the siege-works shortcut',()=>{
+test('W opens advance targeting once and A charges, while Shift+W remains the siege-works shortcut',()=>{
   const f=fixture();
   const advance=f.event({key:'w',code:'KeyW'});f.win.dispatch('keydown',advance);
   assert.equal(advance.defaultPrevented,true);assert.deepEqual(f.effects,['advance']);
@@ -115,15 +115,37 @@ test('W advances once and A charges, while Shift+W remains the siege-works short
   assert.equal(f.effects.filter(x=>x==='advance').length,2);
 });
 
-test('Formation advance uses only the selected living owned troops and does not change the click order mode',()=>{
+test('Advance waits for a battlefield point and uses only selected living owned troops',()=>{
   const f=fixture(),a=f.game.addUnit(0,'infantry',20,20),b=f.game.addUnit(0,'archer',21,20),enemy=f.game.addUnit(1,'infantry',25,20),dead=f.game.addUnit(0,'infantry',22,20);dead.hp=0;
   f.ui.selected=new Set([a.id,b.id,enemy.id,dead.id]);f.ui.formation='wedge';f.context.orderMode='move';f.ui.buildMode='barracks';f.ui.orderMarker={x:0,y:0};
   const calls=[];f.game.advance=(...args)=>{calls.push(args);return {ok:true,message:'Advance together.'};};
-  vm.runInContext(extract('advanceAttack'),f.context);f.context.advanceAttack();
+  for(const name of ['advanceAttack','placeAdvance'])vm.runInContext(extract(name),f.context);
+  f.context.advanceAttack();
+  assert.equal(calls.length,0);assert.equal(f.ui.advanceMode,true);assert.equal(f.element('buildBanner').hidden,false);
+  assert.equal(f.ui.buildMode,null);
+  const point={button:0,clientX:456,clientY:356};
+  f.canvas.dispatch('pointerdown',f.event(point));assert.equal(calls.length,0);
+  f.canvas.dispatch('pointerup',f.event(point));
   assert.equal(calls.length,1);assert.deepEqual(ids(calls[0][0]),ids([a.id,b.id]));assert.equal(calls[0][1],'wedge');
-  assert.equal(f.context.orderMode,'move');assert.equal(f.ui.buildMode,null);assert.equal(f.ui.orderMarker,null);assert.equal(f.messages.at(-1),'Advance together.');
-  f.ui.selected.clear();f.context.advanceAttack();assert.equal(calls.length,1);assert.ok(f.messages.at(-1).includes('Select soldiers'));
-  f.ui.selected.add(a.id);f.context.menuOpen=true;f.context.advanceAttack();assert.equal(calls.length,1);
+  assert.deepEqual({...calls[0][3]},{x:33,y:31});
+  assert.equal(f.context.orderMode,'move');assert.equal(f.ui.advanceMode,false);assert.equal(f.element('buildBanner').hidden,true);assert.equal(f.messages.at(-1),'Advance together.');
+  assert.deepEqual(ids(f.ui.selected),ids([a.id,b.id,enemy.id,dead.id]));
+  for(const cancel of [()=>f.win.dispatch('keydown',f.event({key:'Escape'})),()=>{f.canvas.dispatch('pointerdown',f.event());f.canvas.dispatch('pointerup',f.event());}]){
+    f.context.advanceAttack();assert.equal(f.ui.advanceMode,true);cancel();
+    assert.equal(f.ui.advanceMode,false);assert.equal(calls.length,1);assert.deepEqual(ids(f.ui.selected),ids([a.id,b.id,enemy.id,dead.id]));
+  }
+  f.context.advanceAttack();
+  const touch={...point,pointerType:'touch'};
+  f.canvas.dispatch('pointerdown',f.event(touch));
+  f.canvas.dispatch('pointermove',f.event({...touch,clientX:485}));
+  f.canvas.dispatch('pointerup',f.event({...touch,clientX:485}));
+  assert.equal(calls.length,1);assert.equal(f.ui.advanceMode,true);
+  const tap={...touch,clientX:420,clientY:325};
+  const expected=screenToWorld(tap.clientX,tap.clientY,f.context.view);
+  f.canvas.dispatch('pointerdown',f.event(tap));f.canvas.dispatch('pointerup',f.event(tap));
+  assert.equal(calls.length,2);assert.deepEqual({...calls[1][3]},expected);assert.equal(f.ui.advanceMode,false);
+  f.ui.selected.clear();f.context.advanceAttack();assert.equal(calls.length,2);assert.ok(f.messages.at(-1).includes('Select soldiers'));
+  f.ui.selected.add(a.id);f.context.menuOpen=true;f.context.advanceAttack();assert.equal(calls.length,2);
 });
 
 test('Right-drag issues one order at the pressed destination with normalized world-space facing',()=>{

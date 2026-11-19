@@ -3,17 +3,19 @@
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 export const FORMATION_PRESETS=Object.freeze({line:'Line',pike:'Pike Block',shield:'Shield Wall',wedge:'Wedge',loose:'Loose'});
+const FORMATION_SPACING=Object.freeze({line:.56,pike:.52,shield:.48,wedge:.58,loose:.78});
 export function marchSlot(index,count,columns,formation){
-  const spacing=formation==='spread'?.7:.43,rank=Math.floor(index/columns),rows=Math.ceil(count/columns);
+  const spacing=FORMATION_SPACING[formation==='spread'?'loose':formation]??FORMATION_SPACING.line,rank=Math.floor(index/columns),rows=Math.ceil(count/columns);
   if(formation==='wedge'&&count>1){
     const side=(index%columns-(columns-1)/2)*spacing;
     return {rank,side,back:Math.abs(side)*.7+rank*spacing-rows*spacing*.45};
   }
-  return {rank,side:(index%columns-(Math.min(columns,count)-1)/2)*spacing,back:(rank-(rows-1)/2)*spacing};
+  const inRank=Math.min(columns,count-rank*columns);
+  return {rank,side:(index%columns-(inRank-1)/2)*spacing,back:(rank-(rows-1)/2)*spacing};
 }
 export function formationSettings(count,options={}){
   const preset=FORMATION_PRESETS[options.preset]?options.preset:options.preset==='spread'?'loose':'line';
-  const spacing=preset==='loose'?.75:.48,n=Math.max(1,count|0);
+  const spacing=FORMATION_SPACING[preset],n=Math.max(1,count|0);
   const requestedRanks=clamp(Math.round(options.ranks||(preset==='pike'?4:preset==='shield'?2:2)),1,Math.min(4,n));
   // Width controls the column count, while the selected rank count bounds depth.
   const minColumns=Math.ceil(n/Math.min(4,n)),maxColumns=n;
@@ -24,6 +26,27 @@ export function formationSettings(count,options={}){
 export function formationRole(g,u,defs){
   const d=defs[u.type]||{},kind=g.unitClass(u);
   return kind==='siege'?5:kind==='archer'||d.crossbow||d.ranged?4:kind==='cavalry'?3:d.spearBrace||d.spearWeapon?0:d.shieldBearer||d.shieldType?1:2;
+}
+// Each slot keeps its assigned role. Find a nearby soldier of that role so a
+// new order does not send the whole front through neighboring occupied files.
+export function assignFormationSlots(g,troops,slots,center,angle,defs){
+  const fx=Math.cos(angle),fy=Math.sin(angle),byRole=new Map(),roles=[];
+  for(const u of troops){
+    const role=formationRole(g,u,defs);
+    if(!byRole.has(role))byRole.set(role,[]);
+    byRole.get(role).push(u);roles.push(role);
+  }
+  return slots.map(({side,back},i)=>{
+    const x=center.x-fy*side-fx*back,y=center.y+fx*side-fy*back;
+    const candidates=byRole.get(roles[i]);
+    let nearest=0,best=Infinity;
+    for(let j=0;j<candidates.length;j++){
+      const u=candidates[j],error=(u.x-x)**2+(u.y-y)**2;
+      if(error<best||error===best&&u.id<candidates[nearest].id){nearest=j;best=error;}
+    }
+    const u=candidates[nearest];candidates[nearest]=candidates.at(-1);candidates.pop();
+    return u;
+  });
 }
 // Slot indices and roles belong to the original footprint. A casualty only
 // frees that slot. A replacement order also releases the departing soldier.
@@ -146,8 +169,9 @@ export function updatePlacedFormations(g,dt,defs){
     fillFormationGaps(g,c,living,'slotIndex');
     for(const u of living){
       const o=u.order;
+      if(o.mode==='idle')o.mode='hold';
       if(o.mode==='hold'&&!c.lockFacing){delete o.facingX;delete o.facingY;}
-      if(o.mode==='hold'&&distance(u,o)>.38)o.mode='move';
+      if(o.mode==='hold'&&!o.slotBlocked&&!(u.knockT>0)&&distance(u,o)>.25){o.mode='move';u.target=null;u.aggroAnchor=null;}
     }
   }
 }
