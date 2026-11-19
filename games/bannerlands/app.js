@@ -7,6 +7,7 @@ import {createBattleHud} from './hud.js';
 import {FORMATION_PRESETS,formationSettings,formationPreview,formationRole,placeFormation,formationStatus,drawFormationGround} from './formation-placement.js';
 import {HERO_PROFILES,heroProfile} from './heroes.js';
 import {setupMultiplayer} from './multiplayer/menu.js';
+import {lastArtworkFailure} from './asset-loader.js';
 import {HOST_CONNECTION_MESSAGE} from './multiplayer/lobby-ui.js';
 import {createTroopSelectionFilter,troopFilterShortcut} from './troop-selection.js';
 
@@ -831,20 +832,24 @@ async function boot(){
    await task;
    if(!artFailed)button.textContent='LOADING BATTLE ART · '+(++completed)+' / '+critical.length;
   }));
+  paintBuildingIcons();paintHousePreview();paintTownHall();
+  if(game.remote)home();else fitMap();
+  updateHud();
   artworkReady=true;
-  performance.mark('bannerlands-battle-art-ready');
   online?.assetsReady();
   button.disabled=false;
   button.innerHTML='PLAY SOLO <span>→</span>';
-  paintBuildingIcons();paintHousePreview();paintTownHall();
-  if(game.remote)home();else fitMap();
-  updateHud();requestAnimationFrame(frame);
+  performance.mark('bannerlands-battle-art-ready');
+  requestAnimationFrame(frame);
  }catch(error){
   artFailed=true;
-  const message='Battle artwork could not load. Check the connection or open the complete offline download, then retry.';
+  artworkReady=false;
+  const failure=lastArtworkFailure();
+  const detail=failure?failure.source+' · '+failure.reason:String(error?.message||error).slice(0,180);
+  const message='Battle artwork could not load. '+detail+' Reload the game to retry.';
   button.textContent='RETRY BATTLE ART';button.onclick=()=>location.reload();button.disabled=false;
   $('chosenTrait').textContent=message;online?.ui.setStatus(message,{error:true});
-  console.error('Battle artwork failed to load',error);
+  console.error('Battle artwork failed to load: '+detail,error);
   return;
  }
  // Keep the map playable while the remaining sheets load. Rebuild the
@@ -898,5 +903,15 @@ if(location.protocol==='file:'){
  $('hostLobbyButton').addEventListener('click',showHostError);
  if(new URLSearchParams(location.search).get('host')==='1')showHostError();
 }
-if('serviceWorker' in navigator&&location.protocol!=='file:')navigator.serviceWorker.register('./sw.js',{type:'module'}).catch(()=>{});
+if('serviceWorker' in navigator&&location.protocol!=='file:'){
+ const script=new URL('./sw.js',location.href).href;
+ if(window.bannerlandsHost){
+  const scope=new URL('.',script).href;
+  // The Windows game serves its verified pack directly. Remove only the old
+  // Bannerlands registration from this origin and leave browser guests alone.
+  navigator.serviceWorker.getRegistration(scope).then(registration=>{
+   if(registration?.scope===scope&&[registration.active,registration.waiting,registration.installing].some(worker=>worker?.scriptURL===script))return registration.unregister();
+  }).catch(()=>{});
+ }else navigator.serviceWorker.register(script,{type:'module'}).catch(()=>{});
+}
 boot();

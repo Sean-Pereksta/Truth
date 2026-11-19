@@ -18,11 +18,16 @@ page.on('console',message=>{if(message.type()==='error')errors.push(message.text
 await page.route(/^https?:/,route=>{external.push(route.request().url());return route.abort();});
 try{
   await page.goto(pathToFileURL(path.resolve(file)).href,{waitUntil:'load',timeout:120000});
-  await page.waitForFunction(()=>document.getElementById('startButton')?.disabled===false,null,{timeout:120000});
+  const startup=await page.waitForFunction(()=>{
+    const button=document.getElementById('startButton');
+    if(button?.textContent==='RETRY BATTLE ART')return 'failed';
+    if(button?.textContent.includes('PLAY SOLO')&&performance.getEntriesByName('bannerlands-battle-art-ready').length)return 'ready';
+  },null,{timeout:120000});
+  assert.equal(await startup.jsonValue(),'ready',errors.join('\n')||'The offline campaign could not load its battle artwork.');
   assert.equal(await page.locator('.online-download').isVisible(),false,'Downloaded offline game does not ask to download again');
   assert.equal(await page.locator('#browseLobbiesButton').isVisible(),false,'The offline campaign does not browse the lobby directory');
   await page.locator('#hostLobbyButton').click();
-  assert.match(await page.locator('#offlineHostError').innerText(),/could not connect.*Bannerlands Local Edition/i);
+  assert.match(await page.locator('#offlineHostError').innerText(),/Catnmice Game Hub for Windows.*Host Lobby/i);
   const painting=await page.locator('#menuOverlay .campaign-painting').evaluate(async img=>{
     await img.decode();return [img.naturalWidth,img.naturalHeight,img.currentSrc.startsWith('data:image/webp;')];
   });
