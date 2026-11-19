@@ -35,7 +35,9 @@ its horizontal mirror. Precise combat facing remains independent. See
 
 Press Z to place a formation with chosen width, ranks, position and facing.
 Line, Pike Block, Shield Wall, Wedge and Loose presets support a visible facing
-lock. W advances the ranks; A releases them to charge independently. A plain
+lock. Press W or tap Advance, then choose a point on the battlefield. The ranks
+turn toward it and halt at the point or when the front melee rank makes contact.
+A releases troops to charge independently. A plain
 right-click moves immediately; right-drag chooses the final front. D opens
 Move & Face, Shift+D faces in place, H holds/braces, and V retreats.
 With a force selected on desktop, Shift+1 selects its infantry, Shift+2 its
@@ -166,7 +168,8 @@ The top strip shows gold and income, troop supply, territory, hero health and
 the current objective. Click the hero to find them, or the objective for the
 realm panel. The bottom command bar opens Build, Muster, Orders, Map and Council.
 On touch, Map toggles the minimap and its Map details button opens the drawer.
-Select troops for a count by type and immediate Advance and Hold controls.
+Select troops for a count by type and quick Advance and Hold controls. Tap
+Advance, then tap the battlefield to choose where to march and face.
 Click the selected count to center the camera on that formation. A loss alert
 with a location marker takes you to the affected area.
 

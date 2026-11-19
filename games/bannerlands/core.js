@@ -153,6 +153,14 @@ UNIT_DEFS.gilded_crossbow.impact='60-damage bolts; 108 against cavalry. A belt-a
 
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const ds=(a,b)=> (a.x-b.x)**2+(a.y-b.y)**2;
+const MAX_UNIT_RADIUS=Math.max(...Object.values(UNIT_DEFS).map(unit=>unit.radius||0));
+const ALLY_CLEARANCE=.48;
+const sameFormation=(a,b)=>a&&b&&(a.advanceId!=null&&a.advanceId===b.advanceId||a.placementId!=null&&a.placementId===b.placementId);
+function tightFormationGround(g,u){
+  if(u.order?.advanceStatus==='Crossing')return true;
+  const feature=g.tileAt(u.x,u.y)?.feature;
+  return feature==='bridge'||feature==='ford'||feature==='pass';
+}
 const result=(ok,message)=>({ok,message});
 const MAP_SIZES={standard:{width:112,height:96,name:'Standard'},epic:{width:160,height:128,name:'Epic'},continent:{width:224,height:176,name:'Continent'}};
 export const GAME_MODES={
@@ -591,11 +599,12 @@ export class Game {
     const rank=u=>this.unitClass(u)==='siege'?4:this.unitClass(u)==='archer'?3:UNIT_DEFS[u.type].spearBrace?0:UNIT_DEFS[u.type].shieldBearer?.5:1;
     arr.sort((a,b)=>rank(a)-rank(b)||a.id-b.id);
     const cols=Math.max(3,Math.ceil(Math.sqrt(arr.length)*1.45));
+    const attackLane=mode==='attack'&&formation!=='spread'&&arr.length>1?{attackSideX:sideX,attackSideY:sideY}:null;
     arr.forEach((u,i)=>{const {side,back}=marchSlot(i,arr.length,cols,formation);
-      let goal=this.bound({x:x+sideX*side-fx*back,y:y+sideY*side-fy*back});if(!this.isWalkable(goal.x,goal.y))goal=this.navigation.nearestPassable(goal)||destination;if(!this.navigation.isClearPoint(goal.x,goal.y,u.radius))goal={x:Math.floor(goal.x)+.5,y:Math.floor(goal.y)+.5};if(this.unitClass(u)==='cavalry'&&(mode!=='attack'||u.charging&&((goal.x-u.x)*u.chargeDir.x+(goal.y-u.y)*u.chargeDir.y)<0||locked&&fx*u.chargeDir.x+fy*u.chargeDir.y<.5))this.stopCharge(u);u.championRegroup=null;u.championCyclePending=false;this.interruptAction(u);u.order={...goal,mode,formation,groupX:x,groupY:y,...(locked?{facingX:fx,facingY:fy}:{})};u.braceTime=0;u.braceDir=null;u.target=null;u.aggroAnchor=null;u.seek=0;u.sweepWait=0;if(UNIT_DEFS[u.type].setupSeconds&&Math.hypot(goal.x-u.x,goal.y-u.y)>.16)u.setupProgress=0;
+      let goal=this.bound({x:x+sideX*side-fx*back,y:y+sideY*side-fy*back});if(!this.isWalkable(goal.x,goal.y))goal=this.navigation.nearestPassable(goal)||destination;if(!this.navigation.isClearPoint(goal.x,goal.y,u.radius))goal={x:Math.floor(goal.x)+.5,y:Math.floor(goal.y)+.5};if(this.unitClass(u)==='cavalry'&&(mode!=='attack'||u.charging&&((goal.x-u.x)*u.chargeDir.x+(goal.y-u.y)*u.chargeDir.y)<0||locked&&fx*u.chargeDir.x+fy*u.chargeDir.y<.5))this.stopCharge(u);u.championRegroup=null;u.championCyclePending=false;this.interruptAction(u);u.order={...goal,mode,formation,groupX:x,groupY:y,...attackLane,...(locked?{facingX:fx,facingY:fy}:{})};u.braceTime=0;u.braceDir=null;u.target=null;u.aggroAnchor=null;u.seek=0;u.sweepWait=0;if(UNIT_DEFS[u.type].setupSeconds&&Math.hypot(goal.x-u.x,goal.y-u.y)>.16)u.setupProgress=0;
     });
   }
-  advance(ids,formation='line',options={}){return startFormationAdvance(this,ids,formation,UNIT_DEFS,options);}
+  advance(ids,formation='line',options={},point){return startFormationAdvance(this,ids,formation,UNIT_DEFS,options,point);}
   setFacingLock(ids,locked){
     if(typeof locked!=='boolean')return result(false,'Choose a facing lock setting.');
     let count=0;
@@ -1019,7 +1028,8 @@ export class Game {
   }
   findTarget(u){
     if(u.standardAction)return null;
-    const autonomous=this.autonomousAggro(u),direct=this.isRanged(u)||u.type==='beacon_engineer',range=autonomous?this.aggroRange(u):this.unitClass(u)==='cavalry'&&u.order?.mode==='attack'?6.2:this.unitRange(u)+1.5;let best=null,bestScore=Infinity;
+    const autonomous=this.autonomousAggro(u),direct=this.isRanged(u)||u.type==='beacon_engineer',reach=this.unitRange(u),range=autonomous?this.aggroRange(u):this.unitClass(u)==='cavalry'&&u.order?.mode==='attack'?6.2:reach+1.5;let best=null,bestScore=Infinity;
+    const lane=u.order?.mode==='attack'&&Number.isFinite(u.order.attackSideX)?u.order:null;
     this.hash.visit(u.x,u.y,range,e=>{if(!this.hostile(e.team,u.team)||e.hp<=0||!this.isVisibleTo(u.team,e))return;const distance=ds(u,e);if(distance>range*range||!this.canAttackFacing(u,e))return;let score=distance;
       if(this.unitClass(u)==='cavalry'&&this.unitClass(e)==='archer')score*=.58;
       if(!this.isHuman(u.team)&&this.unitClass(u)==='cavalry'&&!UNIT_DEFS[u.type].noCharge){
@@ -1029,6 +1039,8 @@ export class Game {
       }
       if(this.unitClass(u)==='archer'&&this.unitClass(e)==='infantry')score*=.78;
       if(this.unitClass(u)==='infantry'&&this.unitClass(e)==='cavalry')score*=.75;
+      // A formed attack-move prefers enemies in each soldier's own file.
+      if(lane&&distance>(reach+.07)**2)score+=Math.min(4,((e.x-lane.x)*lane.attackSideX+(e.y-lane.y)*lane.attackSideY)**2)*.75;
       if(score<bestScore&&(!direct||this.combatTerrain.canShoot(u,e))&&(!autonomous||this.canAggro(u,e))){best=e;bestScore=score;}
     },u.team);
     // Guards and patrols ignore forts; expanders defending an actual attack
@@ -1325,7 +1337,7 @@ export class Game {
     }
   }
   buildingCollisionGrid(){
-    const size=4,stride=Math.ceil(this.W/size)+2,bins=new Map(),padding=Math.max(...Object.values(UNIT_DEFS).map(value=>value.radius||0));
+    const size=4,stride=Math.ceil(this.W/size)+2,bins=new Map(),padding=MAX_UNIT_RADIUS;
     // Each bucket retains the original building iteration order. Pruning
     // distant buildings therefore preserves every force and floating-point
     // addition, including keep upgrades, new construction and destroyed posts.
@@ -1367,6 +1379,7 @@ export class Game {
       }
       if(!u.order)this.idle([u.id]);
       const order=u.order,mode=order.mode,locked=this.hasFacingOrder(u),autonomous=this.autonomousAggro(u);u.backpedaling=false;
+      const preciseSlot=mode==='advance'||(mode==='move'&&order.placementId!=null&&!order.slotBlocked),arrival=preciseSlot?.075:.16;
       if(locked)this.turnFacing(u,order.facingX,order.facingY,dt);else if(d.spearBrace&&u.braceDir&&this.formationSettled(u))this.turnFacing(u,u.braceDir.x,u.braceDir.y,dt);
       const stagger=(u.knockT||0)>0;if(this.unitClass(u)==='cavalry'&&(mode!=='attack'||stagger&&u.charging))this.stopCharge(u);
       if(!u.target&&u.hit===0&&u.hp<u.maxHp){const recovery=this.recoveryRate(u,mode);if(this.tileAt(u.x,u.y)?.owner===u.team||u.houseAura&&(team.sigil==='bear'||team.sigil==='fish'))u.hp=Math.min(u.maxHp,u.hp+u.maxHp*recovery*dt);}
@@ -1402,10 +1415,10 @@ export class Game {
         else if(distance<=range+extra&&(order.targetId==null||!(this.isRanged(u)||u.type==='beacon_engineer'||d.lanceChampion)||this.combatTerrain.canShoot(u,target))){if(u.cooldown<=0)this.attack(u,target);if(u.charging&&BUILD_DEFS[target.type])this.stopCharge(u);}
         else if(mode!=='hold'&&!locked){tx=target.x;ty=target.y;moving=true;}
       }
-      if(!target&&order){const goal=u.aggroAnchor?.returning?u.aggroAnchor:order,distance=Math.hypot(goal.x-u.x,goal.y-u.y);if(distance>.16){tx=goal.x;ty=goal.y;moving=true;}}
+      if(!target&&order){const goal=u.aggroAnchor?.returning?u.aggroAnchor:order,distance=Math.hypot(goal.x-u.x,goal.y-u.y);if(distance>arrival){tx=goal.x;ty=goal.y;moving=true;}}
       // A facing order is a deliberate formation march, never an invitation to
       // chase a flank target away from the ordered line or orderly withdrawal.
-      if(locked&&order&&mode!=='hold'&&Math.hypot(order.x-u.x,order.y-u.y)>.16){tx=order.x;ty=order.y;moving=true;}
+      if(locked&&order&&mode!=='hold'&&Math.hypot(order.x-u.x,order.y-u.y)>arrival){tx=order.x;ty=order.y;moving=true;}
       if(team.sigil==='sun'&&this.isRanged(u)&&mode==='attack'){let danger=null,nearest=1.7**2;this.hash.visit(u.x,u.y,1.7,e=>{if(this.hostile(e.team,u.team)&&e.hp>0&&this.isVisibleTo(u.team,e)&&this.unitClass(e)!=='archer'&&this.unitClass(e)!=='siege'){const dd=ds(u,e);if(dd<nearest){nearest=dd;danger=e;}}},u.team);if(danger){const away=Math.sqrt(nearest)||1;tx=u.x+(u.x-danger.x)/away;ty=u.y+(u.y-danger.y)/away;moving=true;}}
       if(u.disciplineUntil>this.time&&mode==='attack'&&order&&Math.hypot(order.x-u.x,order.y-u.y)>.16){tx=order.x;ty=order.y;moving=true;}
       if(u.charging){tx=u.x+u.chargeDir.x;ty=u.y+u.chargeDir.y;moving=true;}
@@ -1426,13 +1439,29 @@ export class Game {
         else u.sweepWait=0;
         if(locked&&!u.charging){const alignment=(dx*u.facingX+dy*u.facingY)/len;if(alignment<-.25){speed*=.55;u.backpedaling=true;}else if(alignment<.5)speed*=.8;}
         if(u.charging)speed*=1+.85*u.momentum;if(stagger)speed*=.1;
+        if(preciseSlot&&tx===order.x&&ty===order.y)speed=Math.min(speed,len/dt);
         mx=dx/len*speed;my=dy/len*speed;
       }
       if(!locked&&!target&&this.unitClass(u)!=='cavalry'&&moving)this.turnFacing(u,mx,my,dt);
       if(this.unitClass(u)==='cavalry'){const motion=this.applyCavalryMotion(u,mx,my,dt,u.aggroAnchor?.returning?u.aggroAnchor:null);mx=motion.x;my=motion.y;}
-      // Local avoidance is always active, including holding units and fighting front ranks.
+      // Give allied files room to pass and fight on open ground. Troops in
+      // the same formation use their slots for spacing, while troops at a
+      // choke use body clearance so the rear can follow through the gap.
+      const tightGround=tightFormationGround(this,u);
       let pushX=0,pushY=0;
-      this.hash.visit(u.x,u.y,.62,o=>{if(o===u||o.hp<=0)return;let dx=u.x-o.x,dy=u.y-o.y,dd=dx*dx+dy*dy;const min=d.radius+UNIT_DEFS[o.type].radius+.055;if(dd>=min*min)return;if(dd<.000001){const a=(u.id*2.399+o.id)*1.1;dx=Math.cos(a)*.001;dy=Math.sin(a)*.001;dd=.000001;}const anchored=this.unitClass(u)==='infantry'&&u.order?.formation!=='spread'&&this.formationSettled(u)&&!stagger;const distance=Math.sqrt(dd),force=(min-distance)/min*2.6*(u.charging&&this.hostile(o.team,u.team)?.12:d.lanceChampion&&mode==='move'?.4:anchored?.3:1);pushX+=dx/distance*force;pushY+=dy/distance*force;});
+      this.hash.visit(u.x,u.y,Math.max(ALLY_CLEARANCE,d.radius+MAX_UNIT_RADIUS+.055),o=>{
+        if(o===u||o.hp<=0)return;
+        let dx=u.x-o.x,dy=u.y-o.y,dd=dx*dx+dy*dy;
+        const bodyClearance=d.radius+UNIT_DEFS[o.type].radius+.055,allyClearance=Math.max(ALLY_CLEARANCE,bodyClearance);
+        if(dd>=allyClearance**2)return;
+        const friendlyRoom=!tightGround&&this.allied(u.team,o.team)&&!sameFormation(order,o.order)&&!tightFormationGround(this,o);
+        const min=friendlyRoom?allyClearance:bodyClearance;
+        if(dd>=min*min)return;
+        if(dd<.000001){const a=(u.id*2.399+o.id)*1.1;dx=Math.cos(a)*.001;dy=Math.sin(a)*.001;dd=.000001;}
+        const anchored=this.unitClass(u)==='infantry'&&order.formation!=='spread'&&this.formationSettled(u)&&!stagger;
+        const distance=Math.sqrt(dd),force=(min-distance)/min*(friendlyRoom?4.1:2.6)*(u.charging&&this.hostile(o.team,u.team)?.12:d.lanceChampion&&mode==='move'?.4:anchored?.3:1);
+        pushX+=dx/distance*force;pushY+=dy/distance*force;
+      });
       for(const b of collisionBuildings.bins.get(Math.floor(u.y/collisionBuildings.size)*collisionBuildings.stride+Math.floor(u.x/collisionBuildings.size))||emptyBuildings){if(b.hp<=0)continue;const rad=this.buildingRadius(b)+d.radius,dx=u.x-b.x,dy=u.y-b.y,dd=dx*dx+dy*dy;if(dd<rad*rad&&dd>.000001){const len=Math.sqrt(dd),force=(rad-len)/rad*3.5;pushX+=dx/len*force;pushY+=dy/len*force;}}
       mx+=pushX;my+=pushY;const speed=Math.hypot(mx,my),limit=(u.charging?d.speed*(1+.9*u.momentum):d.speed*1.3*(d.lanceChampion&&mode==='move'?d.withdrawSpeed:1))*this.specialistSpeed(u);if(speed>limit){mx*=limit/speed;my*=limit/speed;}
       if(stagger){const fade=u.knockT/(u.knockDuration||.34);mx+=(u.knockVX||0)*fade;my+=(u.knockVY||0)*fade;u.knockT=Math.max(0,u.knockT-dt);if(!u.knockT){u.knockVX=0;u.knockVY=0;}}
@@ -1452,11 +1481,22 @@ export class Game {
         }
         u.charge=u.momentum;u.chargeSpeed=u.charging?actual:0;
       }
-      if(mode==='move'&&u.order===order&&Math.hypot(u.x-order.x,u.y-order.y)<.22){order.mode=locked?'hold':'idle';u.aggroAnchor=null;u.seek=0;u.target=null;}
+      if(mode==='move'&&u.order===order&&Math.hypot(u.x-order.x,u.y-order.y)<(preciseSlot?.08:.22)){order.mode=locked||order.placementId!=null?'hold':'idle';u.aggroAnchor=null;u.seek=0;u.target=null;}
     }
     // Symmetric positional relaxation prevents front ranks from occupying the same ground.
     this.hash.rebuild(this.units);
-    for(const u of this.units){if(u.hp<=0)continue;this.hash.visit(u.x,u.y,.52,o=>{if(o.id<=u.id||o.hp<=0)return;let dx=u.x-o.x,dy=u.y-o.y,dd=dx*dx+dy*dy,min=(UNIT_DEFS[u.type].radius+UNIT_DEFS[o.type].radius)*.92;if(dd>=min*min)return;if(dd<.0000001){dx=.0001*Math.cos(u.id);dy=.0001*Math.sin(u.id);dd=dx*dx+dy*dy;}const len=Math.sqrt(dd),shift=Math.min(.055,(min-len)*.4);
+    for(const u of this.units){
+      if(u.hp<=0)continue;
+      const tightGround=tightFormationGround(this,u),radius=UNIT_DEFS[u.type].radius;
+      this.hash.visit(u.x,u.y,radius+MAX_UNIT_RADIUS+.055,o=>{
+      if(o.id<=u.id||o.hp<=0)return;
+      let dx=u.x-o.x,dy=u.y-o.y,dd=dx*dx+dy*dy;
+      const body=radius+UNIT_DEFS[o.type].radius;
+      if(dd>=(body+.055)**2)return;
+      const friendlyRoom=!tightGround&&this.allied(u.team,o.team)&&!sameFormation(u.order,o.order)&&!tightFormationGround(this,o),min=friendlyRoom?body+.055:body*.92;
+      if(dd>=min*min)return;
+      if(dd<.0000001){dx=.0001*Math.cos(u.id);dy=.0001*Math.sin(u.id);dd=dx*dx+dy*dy;}
+      const len=Math.sqrt(dd),shift=Math.min(.055,(min-len)*.4);
       // A struck fighter is deflected out of the rider's lane, rather than
       // becoming an unlimited forward-moving bulldozer for the whole charge.
       const horse=this.hostile(u.team,o.team)?(u.charging?u:o.charging?o:null):null,foe=horse===u?o:u;

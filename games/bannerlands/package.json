@@ -32,5 +32,5 @@
     "test:multiplayer-latency": "node source/tests/multiplayer-latency.mjs",
     "test:battlefield-slice": "node source/tests/battlefield-slice.mjs"
   },
-  "version": "0.3.0-battlefield-preview.1"
+  "version": "0.3.0-battlefield-preview.2"
 }

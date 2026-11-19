@@ -1282,6 +1282,20 @@ export class Renderer{
     c.globalAlpha=.95;line(c,a.x,a.y,b.x,b.y,color,2/zoom);line(c,p.x,p.y,q.x,q.y,color,2/zoom);polygon(c,[[q.x+dx*head,q.y+dy*head],[q.x-dy*head*.55,q.y+dx*head*.55],[q.x+dy*head*.55,q.y-dx*head*.55]],color);
     c.font=`600 ${10/zoom}px Segoe UI`;c.textAlign='center';c.textBaseline='middle';c.strokeStyle='#10282d';c.lineWidth=4/zoom;const tx=q.x+dx*19/zoom,ty=q.y+dy*19/zoom;c.strokeText('FRONT',tx,ty);c.fillStyle='#f4dfb2';c.fillText('FRONT',tx,ty);c.restore();
   }
+  advancePreview(c,{x,y,fromX,fromY,valid},zoom){
+    const start=iso(fromX,fromY),end=iso(x,y),dx=end.x-start.x,dy=end.y-start.y,length=Math.hypot(dx,dy),size=7/zoom;
+    const color=valid?'#f3d88c':'#eb9b83';
+    c.save();
+    if(length>size*2){
+      c.setLineDash([6/zoom,5/zoom]);
+      line(c,start.x,start.y,end.x,end.y,color,1.75/zoom);
+      c.setLineDash([]);
+      const fx=dx/length,fy=dy/length;
+      polygon(c,[[end.x+fx*size,end.y+fy*size],[end.x-(fx+fy)*size,end.y-(fy-fx)*size],[end.x-(fx-fy)*size,end.y-(fy+fx)*size]],color);
+    }
+    c.beginPath();c.ellipse(end.x,end.y,size*1.55,size*1.2,0,0,TAU);c.strokeStyle=color;c.lineWidth=1.5/zoom;c.stroke();
+    c.restore();
+  }
   projectiles(c,g,bounds){
     if(!this.projectileFrames)return;
     for(const b of g.projectiles||[]){const p=iso(b.x,b.y);
@@ -1428,6 +1442,7 @@ export class Renderer{
     this.teamOrderMarkers(c,g,v.zoom);
     if(ui.teamOrderMode&&ui.hover){const p=iso(ui.hover.x,ui.hover.y),color=ui.teamOrderMode==='defend'?'#8fdfca':'#f3b77c';c.save();c.strokeStyle=color;c.lineWidth=2/v.zoom;c.setLineDash([5/v.zoom,4/v.zoom]);diamond(c,p.x,p.y,32,16,null,color);c.setLineDash([]);this.flag(c,p.x,p.y,color,g.time,.8);c.restore();}
     if(ui.hover&&ui.hover.x>=0&&ui.hover.y>=0&&ui.hover.x<g.W&&ui.hover.y<g.H){const tx=Math.floor(ui.hover.x),ty=Math.floor(ui.hover.y),p=iso(tx+.5,ty+.5),tile=g.tiles[ty*g.W+tx];c.lineWidth=1.2;diamond(c,p.x,p.y,HW,HH,null,ui.buildMode?(tile.owner===(g.playerTeam??0)&&g.isWalkable(tx+.5,ty+.5)&&!['bridge','ford','pass'].includes(tile.feature)?'#e8d38a':'#e28a71'):'rgba(229,223,174,.6)');if(ui.buildMode){c.globalAlpha=.55;this.building(c,{type:ui.buildMode,x:tx+.5,y:ty+.5,team:(g.playerTeam??0),hp:1,maxHp:1},g);c.globalAlpha=1;}}
+    if(ui.advancePreview)this.advancePreview(c,ui.advancePreview,v.zoom);
     c.restore();
     const vignette=c.createRadialGradient(v.w/2,v.h/2,v.h*.3,v.w/2,v.h/2,v.w*.8);vignette.addColorStop(0,'rgba(2,14,19,0)');vignette.addColorStop(1,'rgba(2,14,19,.35)');c.fillStyle=vignette;c.fillRect(0,0,v.w,v.h);
     if(ui.drag){const r=ui.drag,x=Math.min(r.x0,r.x1),y=Math.min(r.y0,r.y1),w=Math.abs(r.x1-r.x0),h=Math.abs(r.y1-r.y0);c.fillStyle='rgba(221,208,140,.08)';c.fillRect(x,y,w,h);c.strokeStyle='#e0cc83';c.lineWidth=1;c.setLineDash([4,3]);c.strokeRect(x+.5,y+.5,w,h);c.setLineDash([]);}

@@ -48,19 +48,27 @@ try{
     window.__ours=ours.map(u=>u.id);
   });
   await page.keyboard.press('w');
+  assert.equal(await page.locator('#buildBanner').isVisible(),true);
+  assert.equal(await page.evaluate(()=>window.__bannerlands.game.formationAdvances?.size??0),0);
+  const advancePoint=await page.evaluate(()=>window.__point(42,40));
+  await page.mouse.click(advancePoint.x,advancePoint.y);
+  assert.equal(await page.locator('#buildBanner').isVisible(),false);
   const advance=await page.evaluate(()=>{
     const g=window.__bannerlands.game,c=[...g.formationAdvances.values()][0],start=c.x;
-    window.__step(4);
+    window.__step(6);
     return {modes:window.__ours.map(id=>g.byId.get(id).order.mode),travel:c.x-start,angle:c.angle,errors:window.__ours.map(id=>{const u=g.byId.get(id);return Math.hypot(u.x-u.order.x,u.y-u.order.y);})};
   });
   assert.ok(advance.modes.every(mode=>mode==='advance'));assert.ok(advance.travel>1);assert.ok(Math.abs(advance.angle)<.15);assert.ok(advance.errors.every(error=>error<.8));
-  console.log('PASS Real W key advances a coherent spear line without turning toward a lone scout.');
+  console.log('PASS W and a battlefield click advance a coherent spear line toward the chosen point.');
   await page.keyboard.press('a');
   assert.equal(await page.evaluate(()=>{const g=window.__bannerlands.game;return window.__ours.every(id=>{const o=g.byId.get(id).order;return o.mode==='attack'&&o.formation==='spread'&&o.advanceId===undefined&&!Number.isFinite(o.facingX);});}),true);
   await page.keyboard.press('w');
   const point=await page.evaluate(()=>window.__point(25,40));await page.mouse.click(point.x,point.y,{button:'right'});
+  assert.equal(await page.locator('#buildBanner').isVisible(),false);
+  assert.equal(await page.evaluate(()=>{const g=window.__bannerlands.game;return window.__ours.every(id=>g.byId.get(id).order.mode==='attack');}),true);
+  await page.mouse.click(point.x,point.y,{button:'right'});
   assert.equal(await page.evaluate(()=>{const g=window.__bannerlands.game;return window.__ours.every(id=>{const o=g.byId.get(id).order;return o.mode==='move'&&o.advanceId===undefined&&!Number.isFinite(o.facingX);});}),true);
-  console.log('PASS Real A releases the ranks, and a plain right-click replaces W with an unlocked retreat.');
+  console.log('PASS A releases the ranks, right-click cancels advance targeting, and the next right-click orders an unlocked retreat.');
   await page.keyboard.press('Shift+w');
   assert.equal(await page.evaluate(()=>window.__bannerlands.ui.buildMode),'workshop');await page.keyboard.press('Escape');
   console.log('PASS Shift+W still opens siege-works placement.');
@@ -86,6 +94,9 @@ try{
   }
   await page.locator('[data-drawer="orders"]').click();
   assert.equal(await page.locator('#advanceButton').isVisible(),true);await page.locator('#advanceButton').click();
+  assert.equal(await page.locator('#buildBanner').isVisible(),true);
+  assert.notEqual(await page.evaluate(()=>window.__bannerlands.game.byId.get(window.__crossbow).order.mode),'advance');
+  await page.mouse.click(advancePoint.x,advancePoint.y);
   assert.equal(await page.evaluate(()=>window.__bannerlands.game.byId.get(window.__crossbow).order.mode),'advance');
   assert.deepEqual(errors,[],'Browser runtime and console errors');
   console.log('PASS Accessible advance button works and the full browser smoke run has no script errors.');

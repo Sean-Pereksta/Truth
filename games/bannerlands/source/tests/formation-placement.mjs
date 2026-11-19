@@ -69,6 +69,17 @@ test('Formation orders turn physically and each arrived pikeman settles independ
  g.command(troops.map(u=>u.id),20,40,'move');assert.ok(troops.every(u=>u.order.placementId===undefined));tick(g,.1);assert.equal(g.placedFormations.size,0);
 });
 
+test('Unlocked formations keep their ranks while archers turn to fight off the rear',()=>{
+ const g=fixture(),pikes=company(g,6),archers=company(g,6,'river_ranger'),troops=[...pikes,...archers];
+ assert.ok(placeFormation(g,troops.map(u=>u.id),{x:34,y:40,angle:0,ranks:2,lockFacing:false},UNIT_DEFS).ok);
+ tick(g,8);
+ const foe=g.addUnit(1,'infantry',30.8,40);g.hold([foe.id]);foe.cooldown=1e9;foe.hp=foe.maxHp=1000;
+ tick(g,5);
+ assert.ok(foe.hp<1000,'An unlocked archer may aim behind the formation.');
+ assert.ok(archers.some(u=>u.facingX<-.8));
+ assert.ok(troops.every(u=>u.order.mode==='hold'&&Math.hypot(u.x-u.order.x,u.y-u.order.y)<.2),'The melee ranks do not leave the line to chase.');
+});
+
 test('Locked advance keeps the commanded front and one lost straggler cannot stop the main line',()=>{
  const g=fixture(),troops=company(g,24),enemy=Array.from({length:12},(_,i)=>g.addUnit(1,'infantry',45,38+i*.4));for(const u of enemy){g.hold([u.id]);u.cooldown=1e9;}
  g.advance(troops.map(u=>u.id),'pike',{ranks:4,lockFacing:true});const c=[...g.formationAdvances.values()][0],start=c.x;

@@ -40,6 +40,16 @@ test('coordinates, enums and unexposed mutation methods are rejected',()=>{
   assert.equal(command(1,'build',['__proto__',4,4]).ok,false);
   assert.equal(command(1,'recruit',['constructor']).ok,false);
 });
+test('advance accepts a reachable destination and rejects malformed points',()=>{
+  const hero=game.heroFor(1),ids=[hero.id],destination={x:hero.x+.2,y:hero.y};
+  assert.equal(command(1,'advance',[ids,'line',{ranks:1},destination]).ok,true);
+  assert.deepEqual(game.formationAdvances.get(hero.order.advanceId).destination,destination);
+  const order=hero.order;
+  for(const bad of [null,[hero.x,hero.y],{x:NaN,y:hero.y},{x:game.W,y:hero.y},{x:hero.x}]){
+    assert.equal(command(1,'advance',[ids,'line',{ranks:1},bad]).ok,false);
+    assert.equal(hero.order,order);
+  }
+});
 test('server forces the session house despite client team arguments',()=>{
   const before=game.teams.map(value=>value.gold);
   const response=command(1,'upgrade',['weapons',0]);assert.equal(response.ok,true);

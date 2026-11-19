@@ -87,7 +87,11 @@ export function executePlayerCommand(game,team,type,args){
       case 'retreat':response=game.retreat(ids(args[0]));break;
       case 'expand':response=game.expand(ids(args[0]));break;
       case 'patrol':response=game.patrol(ids(args[0]),team);break;
-      case 'advance':response=game.advance(ids(args[0]),formation(args[1]),settings(args[2]));break;
+      case 'advance':{
+        const destination=args[3];
+        if(args.length>3&&!isObject(destination))invalid('Choose a point for the advance.');
+        response=game.advance(ids(args[0]),formation(args[1]),settings(args[2]),destination&&point(destination.x,destination.y));break;
+      }
       case 'setFacingLock':if(typeof args[1]!=='boolean')invalid('Invalid facing lock.');response=game.setFacingLock(ids(args[0]),args[1]);break;
       case 'attackNearest':response=game.attackNearest(ids(args[0]),formation(args[1]));break;
       case 'attackTarget':{
