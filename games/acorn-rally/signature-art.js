@@ -58,6 +58,8 @@
     const sunMark=make('sigSunMark');
     sunMark.quad([0,.04,.34],[.12,.04,0],[0,.04,-.34],[-.12,.04,0],'#ffce6c',5);
     bar(sunMark,[0,.06,-.17],[0,.06,.17],.025,'#fff3c9');
+    trail(make('sigPrismIce'),1.9,.15,'#72dff0','#f3fdff');
+    trail(make('sigPrismViolet'),1.9,.13,'#aa7cfa','#edcaff');
     for(const [id,co] of colors.entries()){const ring=make('sigRing'+id);loop(ring,1,.043,.02,co,6,30);loop(ring,.955,.015,.02,'#fff1c3',6,30);}
     return models;
   }
@@ -145,6 +147,16 @@
       for(let j=0;j<3;j++){const a=time*2.3+j*tau/3;
         here('sigSunMark',1.34*Math.cos(a),1.10*Math.sin(a),.34+.20*Math.sin(a),a,.6,glow);}
     }
+    if(id===9){
+      if(s.stage==='active'&&r.active>0){
+        wake('sigPrismIce',4,.9+s.charge*.75);
+        here('sigRing9',-.4,0,.075,0,.62+s.charge*.47,.36+s.charge*.49);
+      }
+      if(s.stage==='release'&&beat<.82){
+        wake('sigPrismIce',6,2.0);wake('sigPrismViolet',5,1.5);
+        if(beat<.42)here('sigRing9',-.7,0,.14,0,.48+beat*3,1-beat/.42);
+      }
+    }
     if(id===7){
       if(r.active>0){here('sigLamp',.77,0,.15,0,1.42,.98);here('sigRing7',.25,0,.08,0,.75,.55,[1,1,1.46]);
         for(let j=0;j<8;j++){const t=(time*2.7+j/8)%1,sign=j%2?1:-1;
@@ -183,7 +195,7 @@
     else if(name==='sigLamp'||name==='sigDirt'){ctx.fillStyle=name==='sigLamp'?'#ffdf9c':'#af8863';ctx.beginPath();ctx.ellipse(0,0,name==='sigLamp'?.12:.24,.16,angle,0,tau);ctx.fill();}
     else{ctx.rotate(-angle);ctx.beginPath();
       if(name==='sigChevron'){ctx.strokeStyle='#ffaf7f';ctx.lineWidth=.09;ctx.moveTo(-.52,.22);ctx.lineTo(0,-.27);ctx.lineTo(.52,.22);ctx.stroke();}
-      else{const color={sigSpine:'#ffe17d',sigNeedle:'#e2fff8',sigThread:'#89ece8',sigLeaf:'#85f2ae',sigBerm:'#55e1ac',sigEmber:'#ff8568',sigSunMark:'#ffcd70'}[name]||'#fff3ba';
+      else{const color={sigSpine:'#ffe17d',sigNeedle:'#e2fff8',sigThread:'#89ece8',sigLeaf:'#85f2ae',sigBerm:'#55e1ac',sigEmber:'#ff8568',sigSunMark:'#ffcd70',sigPrismIce:'#72dff0',sigPrismViolet:'#aa7cfa'}[name]||'#fff3ba';
         const length=name==='sigEmber'?1.65:name==='sigSpine'?.81:1.03;ctx.fillStyle=color;ctx.moveTo(0,-length*.61);ctx.lineTo(.12,0);ctx.lineTo(.02,length*.72);ctx.lineTo(-.095,0);ctx.closePath();ctx.fill();}}
     ctx.restore();
   }

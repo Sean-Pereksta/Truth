@@ -488,7 +488,7 @@
           if(cached.frame!==this.poseFrame||!this.poseFrame){root.AcornRig.pose(source,motion,cached.bones);cached.frame=this.poseFrame;}
           gl.uniformMatrix4fv(this.un['bones[0]'],false,cached.bones);
         }
-        draw(mesh,matrix(pos.x,pos.y+.037+jump,pos.z,yaw+(k.yaw||0),1,0,pitch));
+        draw(mesh,matrix(pos.x,pos.y+.037+jump,pos.z,yaw+(k.yaw||0)+sim.spinYaw(k),1,0,pitch));
         if(!g&&(k.signature||k.signatureHit))root.AcornSignatureArt.render(st,k,(name,s,l,height,angle,size,alpha,stretch,branch=k.branch)=>{
           const q=sim.sample(c,s,l,branch);
           itemEffects.stamp(name,[q.x,q.y+height+.03,q.z],Math.atan2(q.tx,q.tz)+angle,size,alpha,0,0,stretch);

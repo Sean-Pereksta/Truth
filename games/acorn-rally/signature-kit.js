@@ -4,9 +4,9 @@
   else root.AcornSignatures=api;
 })(typeof globalThis==='object'?globalThis:this,function(){
   'use strict';
-  const names=['Needle Turn','Shoulder Through','Springstep','Berm Burst','Quill Fan','Slipstream Dash','Ground Pound','Tunnel Dash','Golden Hour'];
-  const durations=[1.45,3,.86,2.7,1.05,1.25,1.15,1.12,1.5];
-  const colors=['#90e6ed','#f0ac59','#d5a2ff','#65eab5','#ffe16c','#ff775e','#b3df6d','#69d9ff','#ffcd70'];
+  const names=['Needle Turn','Shoulder Through','Springstep','Berm Burst','Quill Fan','Slipstream Dash','Ground Pound','Tunnel Dash','Golden Hour','Prism Wake'];
+  const durations=[1.45,3,.86,2.7,1.05,1.25,1.15,1.12,1.5,2];
+  const colors=['#90e6ed','#f0ac59','#d5a2ff','#65eab5','#ffe16c','#ff775e','#b3df6d','#69d9ff','#ffcd70','#8debfa'];
   const groundPound={core:3.9,radius:11.4,travel:.27};
   const quillFan={core:2.75,radius:8.8,travel:.18};
   const cap=(v,low,high)=>Math.max(low,Math.min(high,v));
@@ -91,6 +91,7 @@
   function start(st,r,length){
     const id=r.driverIndex, duration=durations[id];
     if(id===3&&r.bank<.15){tell(r,'Hold a turn to arm');return;}
+    if(id===9&&!r.prevDrift){tell(r,'Start a drift to arm');return;}
     const sig=r.signature={stage:'active',label:names[id],since:st.time,until:st.time+duration,beat:st.time,s:r.s,x:r.x,branch:r.branch,mask:0,hits:0,charge:0,side:Math.abs(r.steer)>.22?Math.sign(r.steer):0,target:-1};
     r.meter=0;r.active=duration;r.fx=duration;tell(r,names[id]);
     if(id===0){sig.label='Reverse your turn';r.slip=0;r.burr=0;r.puff=0;}
@@ -110,6 +111,7 @@
     if(id===6){r.air=.29;r.stomp=true;sig.label='Brace for impact';}
     if(id===7){r.slip=0;r.burr=0;r.slow=0;r.sap=0;sig.label='Below the track';boost(r,1.08,6.4);}
     if(id===8){sig.label='Follow the gold line';tell(r,sig.label);}
+    if(id===9){sig.label='Charge and release your drift';tell(r,sig.label);}
   }
   function tick(st,r,dt,length,road,input){
     const hit=r.signatureHit;
@@ -167,6 +169,18 @@
           beat(r,st,'Sunburst shield','release');boost(r,1.25,8.8);r.guard=Math.max(r.guard,3);
         }
         else beat(r,st,'Gold line missed','miss');
+      }
+    }
+    if(id===9&&sig.stage==='active'){
+      const clean=r.v>7&&!r.spin&&!r.fall&&!r.ghost&&!r.flight&&r.air<=0&&Math.abs(r.x)<road.w-.15;
+      if(clean&&r.active>0&&r.prevDrift){
+        if(input.drift){sig.charge=cap(sig.charge+dt*(.48+r.driftSlip*.76),0,1);}
+        else if(sig.charge>=.18){
+          beat(r,st,'Prism release','release');boost(r,.82+sig.charge*.92,8.7+sig.charge*4.1);r.active=0;r.fx=.8;
+        }
+      }
+      if(sig.stage==='active'&&(!clean||!input.drift||!r.prevDrift||r.active<=0)){
+        beat(r,st,'Prism wake faded','miss');r.active=0;r.fx=0;
       }
     }
   }

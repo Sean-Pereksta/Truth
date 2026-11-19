@@ -3,6 +3,8 @@
 Run python tools/build-pc-overlay.py in the game directory. The hosted ZIP
 provides the original licensed Windows runtime, launcher and compressed models.
 Its bytes and filename must remain intact alongside the generated overlay.
+The web downloader also layers the current release files from pc-download.js
+onto this overlay so source updates can ship without rebuilding the binary.
 """
 import base64
 import hashlib
@@ -43,8 +45,8 @@ def build_sources(base):
         'Extract this ZIP. On Windows, double-click "Start Acorn Rally.cmd" to open the game. '
         "The Windows x64 Node.js runtime and its license are included in runtime/.\r\n\r\n"
         "Open Cup series to choose a four-race cup, engine class and AI difficulty. "
-        "Win all three cups on Hard or Ultimate to unlock Solstice. "
-        "Prism Parade is a standalone circuit. Settings, records and cups save in this browser.\r\n\r\n"
+        "Win the original three cups on Hard or Ultimate to unlock Solstice. "
+        "Win the Spectrum Cup on Ultimate to unlock the Aurora Runner. Settings, records and cups save in this browser.\r\n\r\n"
         "For solo or local play you can also open index.html. On macOS or Linux, use "
         "Node.js 18 or newer and run node server/host.cjs for private rooms. "
         "Additional hosting and network instructions are in server/Hosting.txt.\r\n"

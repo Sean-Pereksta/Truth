@@ -106,10 +106,10 @@ function localGridScreen() {
     const bands=cursors.map((i,k)=>seatColors[i]+' '+(100*k/cursors.length)+'% '+(100*(k+1)/cursors.length)+'%').join(',');
     const frame=cursors.length===1?'linear-gradient('+seatColors[cursors[0]]+','+seatColors[cursors[0]]+')':'conic-gradient(from 180deg,'+bands+')';
     const owners=cursors.map(i=>', P'+(i+1)+(g.ready[i]?' ready':' choosing')).join('');
-    return '<button type="button" class="driver-card grid-pick local-pick" data-pick-driver="'+id+'" aria-label="'+safeName(racer.name)+(locked?' locked':'')+owners+'" aria-pressed="'+cursors.includes(selected)+'" '+(cursors.length?'style="--cursor-ring:'+frame+'" ':'')+(locked?'disabled':'')+'>'+
+    return '<button type="button" class="driver-card grid-pick local-pick" data-pick-driver="'+id+'" aria-label="'+safeName(racer.name)+(locked?' · '+championship.rewardRequirement(id):'')+owners+'" aria-pressed="'+cursors.includes(selected)+'" '+(cursors.length?'style="--cursor-ring:'+frame+'" ':'')+(locked?'disabled':'')+'>'+
       '<span class="driver-img"><img src="art/driver-'+id+'.webp" alt=""><span class="local-cursors">'+cursors.map(i=>
         '<b style="--seat:'+seatColors[i]+'" data-cursor="'+i+'" data-locked="'+g.ready[i]+'">P'+(i+1)+(g.ready[i]?' ✓':'')+'</b>').join('')+'</span></span>'+
-      '<span class="driver-copy"><strong>'+racer.name+'</strong><small>'+(locked?lockProgress():racer.species)+'</small></span>'+
+      '<span class="driver-copy"><strong>'+racer.name+'</strong><small>'+(locked?lockProgress(id):racer.species)+'</small></span>'+
       '<span class="local-stripe">'+cursors.map(i=>'<i style="background:'+seatColors[i]+'"></i>').join('')+'</span></button>';
   }).join('');
   const seatsHtml=g.ready.map((ready,i)=>'<button type="button" class="local-seat" style="--seat:'+seatColors[i]+'" data-local-seat="'+i+'" aria-pressed="'+(i===selected)+'"><b>P'+(i+1)+'</b><span><strong>'+drivers[g.choices[i]].name+'</strong><small>'+safeName(deviceLabel(g.padSeats[i],g.padMap[i],i))+'</small></span><em>'+ (ready?'Ready ✓':'Picking')+'</em></button>').join('');

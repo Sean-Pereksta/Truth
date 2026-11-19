@@ -1,8 +1,10 @@
 'use strict';
-const colors=['#ffad3f','#eab14d','#97cf42','#d9ac60','#cba9f0','#db9158','#61dece','#ffc36c'];
-const descriptions=['Break free of a burr, regain grip and launch with a short blast from the rear wheels.','Aim down a rival’s lane. Sticky amber sap cuts their speed in half and drags on their motor for three seconds.','Plant a prickly burr behind you. Once it opens, it snags a wheel and makes steering sluggish.','Raise a six-second bark shield. Its plates shatter to absorb one incoming item.','Send a widening crosswind through the pack. It shoves each kart out of its lane. Steer into the gust to recover.','Each skip strikes a circle on the road. Catch a rival there or hit them directly to launch them and cut their speed. The strike is wider on stone.','Ride a four-second tailwind. The sustained speed boost helps you close a gap.','Draw in eighth place. Ride a hawk for 10% of a lap, sideswipe nearby rivals, and land at full speed.'];
+const colors=['#ffad3f','#eab14d','#97cf42','#d9ac60','#cba9f0','#db9158','#61dece','#ffc36c','#f0ee9a','#7bc9ff'];
+const descriptions=['Break free of a burr, regain grip and launch with a short blast from the rear wheels.','Aim down a rival’s lane. Sticky amber sap cuts their speed in half and drags on their motor for three seconds.','Plant a prickly burr behind you. Once it opens, it snags a wheel and makes steering sluggish.','Raise a six-second bark shield. Its plates shatter to absorb one incoming item.','Send a widening crosswind through the pack. It shoves each kart out of its lane. Steer into the gust to recover.','Each skip strikes a circle on the road. Catch a rival there or hit them directly to launch them and cut their speed. The strike is wider on stone.','Ride a four-second tailwind. The sustained speed boost helps you close a gap.','Draw in eighth place. Ride a hawk for 10% of a lap, sideswipe nearby rivals, and land at full speed.',
+ 'Fire a quill that bends toward the nearest kart ahead on your route. A hit scrubs speed and pushes the kart sideways.',
+ 'A rare draw in fifth place or lower. The storm pod hunts the front-running rival, marks an impact zone and spins out every exposed kart caught in the blast.'];
 const TAU=Math.PI*2;
-const itemArtTimes=window.AcornSim?.itemTimes||{puff:1.05,pine:1.23};
+const {hawkItem,quillItem,stormItem,stormRadius,spinYaw,itemTimes:itemArtTimes}=window.AcornSim;
 function meshes(Mesh){
  const nut=new Mesh(),glob=new Mesh(),trap=new Mesh(),puff=new Mesh(),cone=new Mesh(),guard=new Mesh(),wind=new Mesh(),seed=new Mesh(),bounce=new Mesh();
  function hoop(mesh,cy,rx,rz,width,col,count=20){
@@ -132,6 +134,20 @@ function meshes(Mesh){
   hawkWing.tri([x,0,z],[x+.29,.02,z-.16],[x+.51,-.03,z-.71],
    ['#75462f','#915a36','#a56c40'][i%3],5);
  }
+ const quill=make('trackingQuill'),storm=make('stormPod'),blast=make('stormRing'),spark=make('stormSpark');
+ quill.ring([0,0,-.75],[0,0,.86],.061,.007,'#fff5b9',6,5);
+ for(const side of [-1,1]){
+  quill.tri([0,0,.42],[side*.215,.053,-.47],[0,.016,-.66],side>0?'#ae8036':'#f2c657',5);
+  quill.tri([0,.036,.18],[side*.28,.027,-.65],[0,0,-.84],side>0?'#fce98a':'#c99442',5);
+  storm.tri([side*.45,.04,.17],[side*1.03,.26,-.56],[side*.39,.03,-.48],'#99ddff',5);
+  storm.tri([side*.48,.06,.13],[side*.78,.09,-.39],[side*.39,.04,-.48],'#286499',5);
+ }
+ storm.blob(0,.02,0,.59,.54,.71,'#214674',10);
+ storm.blob(0,.09,.38,.43,.36,.28,'#6fd2ff',10);
+ hoop(storm,.14,.51,.59,.045,'#adf1ff',14);
+ hoop(blast,0,1,1,.027,'#87dcff',28);
+ spark.tri([-.065,0,0],[0,.055,.65],[.064,0,0],'#e0fcff',5);
+ spark.tri([-.065,0,0],[.064,0,0],[0,-.04,-.075],'#4587fc',5);
  const jets=make('kickJets'),wings=make('kickWings'),air=make('airStream');
  for(const side of [-1,1]){
   ribbon(jets,[[side*.43,.18,-.66],[side*.49,.24,-1.18],[side*.55,.19,-1.8],[side*.72,.16,-2.62]],[.065,.14,.08,0],'#f28a28','#ffcf4d');
@@ -195,7 +211,7 @@ function meshes(Mesh){
  scale.tri([-.075,0,-.09],[.072,.005,-.10],[.013,.082,.17],'#a86134',0);
  scale.tri([.072,.005,-.10],[.091,.081,.071],[.013,.082,.17],'#e3ac71',0);
  const palettes={sapBurst:['#ffad30','#ffe58a'],burrBurst:['#8fcd43','#e2ed91'],guardBurst:['#d8a96a','#fff1b2'],
-   puffBurst:['#c599dd','#fce3ff'],pineBurst:['#ce9058','#ffddb1']};
+   puffBurst:['#c599dd','#fce3ff'],pineBurst:['#ce9058','#ffddb1'],quillBurst:['#a89a47','#fff7bb'],stormBurst:['#397cc0','#b9f0ff']};
  for(const [name,[mid,tip]] of Object.entries(palettes)){
   const model=make(name);
   for(let j=0;j<9;j++){
@@ -252,6 +268,35 @@ function drawObject(ctx,o) {
    const t=(age*1.27+j*.25)%1,side=j%2?1:-1;
    stamp('floss',local(p,side*(.65+span*(.31+.55*t)),h+.36*Math.sin(Math.PI*t),-.31*t),yaw+spin+t*3,.76+.32*t,.82*(1-t),side*t*1.36);
   }
+ } else if(key===quillItem) {
+  const aim=yaw+Math.atan2(o.vx||0,o.v),h=o.height??.66;
+  stamp('trackingQuill',local(p,0,h),aim,1.12,1,spin*.8);
+  if(near)stamp('trackingQuill',local(p,-o.vx*.03,h,-.85),aim,1.05,.35,spin*.8,0,[.67,.67,1.25]);
+ } else if(key===stormItem) {
+  if(o.stage!=='burst'){
+   const h=o.height??3.9;
+   stamp('stormPod',local(p,0,h),yaw+spin,.97,1,.14*Math.sin(spin));
+   if(near)for(let j=1;j<=3;j++)stamp('stormSpark',local(p,Math.sin(spin+j)*.38,h+.25-j*.09,-j*.66),yaw+spin+j,.83-j*.15,.72-j*.14);
+  }
+  if(o.stage==='warn'||o.stage==='burst'){
+   const mark=ctx.sample(o.blastS,o.blastX,o.branch),floor=o.blastLift+.17;
+   const slope=tilt(ctx,o.blastS,o.blastX,o.branch),markYaw=Math.atan2(mark.tx,mark.tz);
+   if(o.stage==='warn'){
+    const pulse=.5+.5*Math.sin(age*32);
+    stamp('stormRing',local(mark,0,floor),markYaw,stormRadius,.63+.28*pulse,0,slope);
+    stamp('stormRing',local(mark,0,floor+.12),markYaw,stormRadius*(.36+.32*pulse),.52,0,slope);
+    stamp('stormPod',local(mark,0,floor+.50),markYaw+spin,.41,.40+.21*pulse);
+   }else{
+    const elapsed=clamp01(age/.67),fade=1-elapsed;
+    stamp('stormRing',local(mark,0,floor+elapsed*.33),markYaw,stormRadius*(.34+.72*Math.sqrt(elapsed)),fade,0,slope);
+    stamp('stormBurst',local(mark,0,floor+elapsed*.62),markYaw+phase,1.8+4.2*elapsed,fade*.88);
+    stamp('stormPod',local(mark,0,floor+.42),markYaw,.7+2*elapsed,fade*fade);
+    for(let j=0;j<(ctx.split?7:13);j++){
+     const a=j*2.399+phase,spread=stormRadius*Math.sqrt(elapsed)*(.52+.09*(j%5));
+     stamp('stormSpark',local(mark,Math.sin(a)*spread,floor+.35+Math.sin(elapsed*Math.PI)*(.8+.25*(j%4)),Math.cos(a)*spread),markYaw+a,.95-elapsed*.56,fade,a);
+    }
+   }
+  }
  } else if(key===5) {
   const period=o.bouncePeriod??.42,t=(age%period)/period,hard=period>.45,apex=o.height??(.29+4*t*(1-t)*.68);
   stamp('cone',local(p,0,apex),yaw+spin,.95,1,.32,age*10);
@@ -274,7 +319,7 @@ function drawObject(ctx,o) {
 
 function drawRacer(ctx,k,p,yaw,jump,pitch) {
  const stamp=ctx.stamp,distance=ctx.distance(p),near=distance<(ctx.split?26:43),time=ctx.time,seat=k.seat||0;
- const kartYaw=yaw+(k.yaw||0),sn=Math.sin(kartYaw),cs=Math.cos(kartYaw),si=Math.sin(pitch),co=Math.cos(pitch);
+ const kartYaw=yaw+(k.yaw||0)+spinYaw(k),sn=Math.sin(kartYaw),cs=Math.cos(kartYaw),si=Math.sin(pitch),co=Math.cos(pitch);
  // Offsets are in the kart's sprung-road frame. A hit on a drifting rival stays on that rival.
  function mounted(side,up,forward){const length=si*up+co*forward;return [p.x+cs*side+sn*length,p.y+jump+.037+co*up-si*forward,p.z-sn*side+cs*length];}
  if(k.hawk){
@@ -357,7 +402,7 @@ function drawRacer(ctx,k,p,yaw,jump,pitch) {
  if(!(k.itemHitFx>0))return;
  const hit=clamp01((.8-k.itemHitFx)/.8),fade=1-hit,kind=k.itemHitKind,blocked=k.itemBlocked;
  const side=Math.sign(k.itemHitSide||k.vx||((seat%2)?-1:1)),direction=side*(.18+hit*.71);
- const burst=blocked?'guardBurst':({1:'sapBurst',2:'burrBurst',4:'puffBurst',5:'pineBurst',7:'puffBurst'})[kind];
+ const burst=blocked?'guardBurst':({1:'sapBurst',2:'burrBurst',4:'puffBurst',5:'pineBurst',7:'puffBurst',[quillItem]:'quillBurst',[stormItem]:'stormBurst'})[kind];
  if(burst&&hit<.43){
   const t=hit/.43;
   stamp(burst,local(p,0,.47+jump),yaw+seat*.48,.68+t*.93,1-t*t);
@@ -378,6 +423,8 @@ function drawRacer(ctx,k,p,yaw,jump,pitch) {
  }else if(kind===5){
   const hard=[2,3,4,5,7].includes(ctx.index)&&!k.branch;
   part=hard?'stoneSpark':'soilClod';size=hard?1.30:1.58;count=7;
+ }else if(kind===quillItem||kind===stormItem){
+  part=kind===quillItem?'trackingQuill':'stormSpark';size=kind===quillItem?.35:.88;count=7;
  }else return;
  for(let j=0;j<(ctx.split?4:count);j++){
   const a=seat*.82+kind*.71+j*2.399,sp=.67+((j*7+seat)%6)*.095,range=.34+hit*(.83+sp);
@@ -409,6 +456,22 @@ function drawHawk(g,x,y,size,flap=0){
  g.beginPath();g.ellipse(0,.11,.22,.34,0,0,TAU);g.fill();
  g.fillStyle='#f1d4a4';g.beginPath();g.ellipse(0,-.09,.16,.17,0,0,TAU);g.fill();
  g.fillStyle='#efac39';g.beginPath();g.moveTo(-.082,-.09);g.lineTo(.082,-.09);g.lineTo(0,.075);g.fill();
+ g.restore();
+}
+function drawItemIcon(g,item,x,y,size,rotation=0){
+ if(item===hawkItem){drawHawk(g,x,y,size);return;}
+ g.save();g.translate(x,y);g.rotate(rotation);g.scale(size,size);
+ if(item===quillItem){
+  g.fillStyle='#a67636';g.beginPath();g.moveTo(-.78,.70);g.quadraticCurveTo(-.85,-.29,.77,-.88);g.quadraticCurveTo(.54,.31,-.37,.55);g.closePath();g.fill();
+  g.fillStyle='#f6dd7b';g.beginPath();g.moveTo(-.65,.55);g.quadraticCurveTo(-.57,-.34,.77,-.88);g.quadraticCurveTo(.38,.26,-.65,.55);g.fill();
+  g.strokeStyle='#fff6c9';g.lineWidth=.11;g.lineCap='round';g.beginPath();g.moveTo(-.84,.79);g.lineTo(.61,-.73);g.stroke();
+  g.strokeStyle='#ae803d';g.lineWidth=.055;for(let j=0;j<3;j++){const t=j*.24;g.beginPath();g.moveTo(t-.42,.36-t);g.lineTo(t-.51,.11-t);g.moveTo(t-.27,.24-t);g.lineTo(t+.03,.27-t);g.stroke();}
+ }else if(item===stormItem){
+  g.fillStyle='#52a9ec';g.beginPath();g.moveTo(-.36,-.19);g.lineTo(-.93,-.44);g.lineTo(-.67,.33);g.lineTo(-.26,.34);g.moveTo(.36,-.19);g.lineTo(.93,-.44);g.lineTo(.67,.33);g.lineTo(.26,.34);g.fill();
+  g.fillStyle='#213d6c';g.beginPath();g.ellipse(0,.06,.58,.64,0,0,TAU);g.fill();
+  g.strokeStyle='#d7f9ff';g.lineWidth=.13;g.beginPath();g.moveTo(-.45,-.14);g.quadraticCurveTo(0,.13,.45,-.14);g.stroke();
+  g.fillStyle='#9ee9ff';g.beginPath();g.moveTo(.06,-.32);g.lineTo(-.20,.12);g.lineTo(-.02,.13);g.lineTo(-.09,.43);g.lineTo(.23,-.01);g.lineTo(.05,-.02);g.closePath();g.fill();
+ }
  g.restore();
 }
 function drawKart2d(g,k,point,dim,time,foreground){
@@ -447,7 +510,32 @@ function drawKart2d(g,k,point,dim,time,foreground){
  }
  g.restore();
 }
-function drawObject2d(g,o,pt){
+function drawObject2d(g,o,pt,project){
+ if(o.kind===quillItem){
+  drawItemIcon(g,quillItem,pt.x,pt.y-(o.height||.66)*pt.k,pt.k*.53,Math.atan2(o.vx||0,o.v));
+  return;
+ }
+ if(o.kind===stormItem){
+  if(o.stage!=='burst')drawItemIcon(g,stormItem,pt.x,pt.y-o.height*pt.k,pt.k*.83,Math.sin(o.age*12)*.20);
+  if(o.stage==='warn'||o.stage==='burst'){
+   const mark=project(o.blastS,o.blastX,o.blastLift+.16,o.branch);
+   if(mark.z<.8)return;
+   const pulse=.5+.5*Math.sin(o.age*32),elapsed=clamp01(o.age/.67),burst=o.stage==='burst';
+   const radius=stormRadius*mark.k*(burst?.34+.72*Math.sqrt(elapsed):1);
+   g.save();g.translate(mark.x,mark.y);g.lineWidth=Math.max(1.5,Math.min(radius*.018,6));
+   g.globalAlpha=burst?1-elapsed:.55+.35*pulse;g.strokeStyle=burst?'#d6f9ff':'#73d4ff';
+   g.beginPath();g.ellipse(0,0,radius,radius*.26,0,0,TAU);g.stroke();
+   if(burst){
+    const flash=radius*.68;g.fillStyle='#9be2ff';g.beginPath();
+    for(let i=0;i<20;i++){const a=i*TAU/20,length=flash*(i%2?.32:1);g.lineTo(Math.cos(a)*length,Math.sin(a)*length*.8-flash*.26);}
+    g.closePath();g.fill();
+   }else{
+    g.beginPath();g.ellipse(0,0,radius*(.35+.24*pulse),radius*.12,0,0,TAU);g.stroke();
+   }
+   g.restore();
+  }
+  return;
+ }
  const h=o.kind===2?.23:o.height||.68;g.save();g.translate(pt.x,pt.y-h*pt.k);g.scale(pt.k/38,pt.k/38);
  if(o.kind===1){g.strokeStyle='#efb146';g.lineWidth=6;g.lineCap='round';g.beginPath();g.moveTo(1,2);g.lineTo(-3,13);g.stroke();resin2d(g,0,0,15);}
  if(o.kind===2){g.strokeStyle=o.armed?'#afcc64':'#ffc453';g.lineWidth=1.6;g.beginPath();g.ellipse(0,9,30,8,0,0,TAU);g.stroke();burr2d(g,0,0,o.armed?14:10);}
@@ -456,4 +544,4 @@ function drawObject2d(g,o,pt){
  if(o.kind===5){g.rotate(o.age*9);g.fillStyle='#8d552d';g.beginPath();g.ellipse(0,0,11,16,0,0,TAU);g.fill();for(let i=0;i<9;i++){g.fillStyle=i%2?'#da9e5f':'#ab764b';g.beginPath();const x=(i%3-1)*5,y=(Math.floor(i/3)-1)*8;g.ellipse(x,y,4.6,3.1,-.4,0,TAU);g.fill();}}
  g.restore();
 }
-window.AcornItemArt={colors,descriptions,drawHawk,meshes,drawObject,drawRacer,drawKart2d,drawObject2d};
+window.AcornItemArt={colors,descriptions,drawHawk,drawItemIcon,meshes,drawObject,drawRacer,drawKart2d,drawObject2d};

@@ -45,4 +45,5 @@ html[data-pad-nav="on"] :is(button,a[href],select,input,summary):not(.local-pick
 }
 .pad-nav-hint {font:600 11px/1.5 DM,Arial,sans-serif;color:#d8d1b9}
 .pad-nav-hint[hidden] {display:none}
+.item-guide-row canvas {width:58px;height:58px;flex:none}
 @media(max-width:850px){footer:has(.pad-nav-hint:not([hidden])){flex-wrap:wrap;row-gap:6px}.pad-nav-hint{order:3;flex-basis:100%;text-align:center}}
