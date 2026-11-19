@@ -17,3 +17,8 @@ The Catnmice lobby in `Sean-Pereksta/Magic`, at `lobby/lobby.html`, links to the
 Keep each game's relative folder structure intact when updating it. The current JavaScript, styles, artwork and credits are included with each game. Historical backups and temporary preview/test outputs are omitted. The repository's existing budget tracker and chat pages remain at their original addresses.
 
 Use a local static web server for development, especially for the games that use JavaScript modules. The `.nojekyll` file in the repository root makes GitHub Pages serve the game files directly.
+
+## Windows games
+
+[Last Signal](last-signal/) is a first-person survival arena for 24 contestants. The Windows build supports solo play and online matches for up to eight players. Install it from the Catnmice mini launcher or [download the portable game](https://raw.githubusercontent.com/Sean-Pereksta/Truth/main/games/last-signal/Last-Signal-Windows-x64.zip).
+

@@ -1,0 +1,30 @@
+name: Last Signal Windows multiplayer
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'games/last-signal/**'
+      - '.github/workflows/last-signal-windows.yml'
+permissions:
+  contents: read
+jobs:
+  play:
+    name: Eight clients over ${{ matrix.mode }}
+    runs-on: windows-latest
+    timeout-minutes: 14
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [socket, public]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          sparse-checkout: games/last-signal
+          persist-credentials: false
+      - name: Build the native Windows game
+        shell: pwsh
+        run: ./games/last-signal/Build-Windows.ps1
+      - name: Host, join, play and reconnect
+        shell: pwsh
+        run: ./games/last-signal/tests/Test-Room.ps1 -Mode ${{ matrix.mode }}
