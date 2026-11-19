@@ -43,7 +43,7 @@
     {
       name: 'Orrery Outpost', line: ['Orrery','Outpost'], region: 'The Acorn Belt', place: 'Orbital dock, the Acorn Belt',
       surface: 'Lunar alloy', length: 1340, level: 'Expert',
-      feature: 'Orbit the observatory in a stacked figure eight. The left launch spur trades a narrow landing for a faster route through low gravity.',
+      feature: 'Dodge freeze beams around the observatory’s stacked figure eight. The left launch spur trades a narrow landing for a faster route through low gravity.',
       // Both passes through (0, 0) have independent heights. Progress stays on its own deck.
       anchors: [[-86,-54],[-99,-27],[-98,9],[-84,40],[-58,58],[-34,54],[-16,29],[0,0],[16,-28],
         [42,-54],[72,-59],[96,-38],[103,-9],[88,17],[67,25],[53,49],[32,54],[15,34],[0,0],
@@ -52,7 +52,12 @@
         [.62,11,4.8],[.70,9,4.6],[.79,8.5,4.9],[.87,10,5.45],[.95,14,5.7],[1,13,6.2]],
       fork: [.37,.54,16,2.8,3.0], bridge: .30, drops: [[.11,.325],[.595,.74],[.825,.93]],
       hazard: {style:3,name:'Meteor fragment',u:.76,side:-1,period:8.5,warn:2.45,live:3.2,offset:1.6,width:.90,length:.96,speed:.59,push:4.1,hop:.41},
-      tip: 'Watch the meteor shadow at the docking bend. Pass behind the fragment when it tumbles away.',
+      obstacles: [
+        {style:11,key:'orrery-beam-1',name:'Alien freeze beam',u:.195,side:-1,period:10.6,warn:2.05,live:.94,offset:1.3,width:1.40,length:1.40,lane:1.9,height:12.0},
+        {style:11,key:'orrery-beam-2',name:'Alien freeze beam',u:.590,side:1,period:11.7,warn:2.05,live:1.04,offset:5.6,width:1.53,length:1.53,lane:2.1,height:13.6},
+        {style:11,key:'orrery-beam-3',name:'Alien freeze beam',u:.930,side:-1,period:12.3,warn:2.15,live:1.0,offset:7.0,width:1.38,length:1.38,lane:1.75,height:11.6}
+      ],
+      tip: 'Leave the saucer’s marked lane before its beam locks you in place for one second. Watch the meteor shadow at the docking bend.',
       ramps: [{id:'orbital-launch',name:'Low-gravity launch spur',style:'chalk',branch:true,u:.445,lane:0,halfWidth:2.22,
         landingWidth:2.65,runup:10,rise:2.05,gap:2.75,landingRise:1.03,landingLength:46,minSpeed:6},
         {id:'lunar-kicker',name:'Observatory kicker',style:'chalk',branch:false,u:.865,lane:-1.85,halfWidth:2.05,
@@ -61,7 +66,7 @@
     {
       name: 'Cinder Crown', line: ['Cinder','Crown'], region: 'The Ember Isles', place: 'Caldera rim, the Ember Isles',
       surface: 'Obsidian & clinker', length: 1390, level: 'Expert',
-      feature: 'Climb the switchback stair to the crater rim, choose the low lava-tube bypass, then link the downhill basalt esses without running wide.',
+      feature: 'Climb the switchbacks beneath the lava guardian’s fireballs, choose the low lava-tube bypass, then link the downhill basalt esses.',
       anchors: [[-90,-57],[-94,-29],[-73,-8],[-44,0],[-43,13],[-66,16],[-78,32],[-65,45],[-38,40],
         [-22,47],[-21,65],[0,78],[31,77],[62,63],[85,40],[91,12],[75,-10],[50,-18],[24,-10],
         [9,-24],[22,-43],[52,-51],[56,-69],[34,-81],[9,-74],[-11,-51],[-31,-44],[-46,-64],[-69,-76]],
@@ -69,7 +74,12 @@
         [.52,26,5.45],[.62,22,5.45],[.705,18,4.85],[.795,10,4.7],[.88,5,4.5],[.955,4,5.4],[1,5,6.35]],
       fork: [.53,.70,16,-5.0,3.1], bridge: .42, drops: [[.32,.505],[.74,.845]],
       hazard: {style:4,name:'Fracturing caldera crust',u:.40,side:1,period:10.0,warn:2.4,live:4.5,offset:1.8,width:1.65,length:3.15,speed:.63,push:2.8,slip:.62,hop:.15},
-      tip: 'When the crust starts to split, move onto solid basalt on the right side of the rim.'
+      obstacles: [
+        {style:10,key:'cinder-fire-1',name:'Lava guardian fireball',u:.305,side:-1,period:18,warn:2.3,live:.66,offset:2.0,width:1.64,length:1.64,lane:1.85,arc:28,speed:.48,push:5.3,hop:.78},
+        {style:10,key:'cinder-fire-2',name:'Lava guardian fireball',u:.490,side:1,period:18,warn:2.45,live:.72,offset:14.0,width:1.83,length:1.83,lane:2.05,arc:25,speed:.44,push:5.7,hop:.87},
+        {style:10,key:'cinder-fire-3',name:'Lava guardian fireball',u:.768,side:-1,period:18,warn:2.5,live:.66,offset:8.0,width:1.57,length:1.57,lane:1.85,arc:37,speed:.48,push:5.2,hop:.76}
+      ],
+      tip: 'Move away from the guardian’s glowing impact markers. Take the solid right lane when the caldera crust starts to split.'
     },
     {
       name: 'Prism Parade', line: ['Prism','Parade'], region: 'Festival Special', place: 'Aurora fairground',

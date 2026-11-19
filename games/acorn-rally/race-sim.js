@@ -8,6 +8,7 @@
   const TAU = Math.PI * 2;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const mod = (v, n) => ((v % n) + n) % n;
+  const isFrozen = (st, r, elapsed = 0) => r.freezeUntil > st.time - elapsed + 1e-9;
   const engineClasses=[50,100,150,200],difficulties=['easy','normal','hard','ultimate'];
   const normalizeCC=value=>engineClasses.includes(Number(value))?Number(value):100;
   const normalizeDifficulty=value=>difficulties.includes(value)?value:'normal';
@@ -761,6 +762,8 @@
         const a=bodies[i],b=bodies[j];if(!a||!b)continue;
         const n=contactNormal(a,b,pass===0);if(!n)continue;
         const A=a.r,B=b.r,key=A.seat*8+B.seat,fresh=memory[key]===undefined;
+        const fixedA=isFrozen(st,A,dt),fixedB=isFrozen(st,B,dt);
+        if(fixedA&&fixedB)continue;
         const pair=memory[key]||(memory[key]={start:st.time,last:st.time});
         if(st.time-pair.last>.075)pair.start=st.time;
         pair.last=st.time;
@@ -771,13 +774,15 @@
           grinding.add(A);grinding.add(B);
         }
         const bracer=(engaged||siding&&st.time-pair.start>.1)&&(A.driverIndex===1&&A.active>0?A:B.driverIndex===1&&B.active>0?B:null);
-        const brace=bracer&&Signatures.brace(st,A,B);
-        const invA=(brace&&bracer===A?.10:1)/a.mass,invB=(brace&&bracer===B?.10:1)/b.mass,sum=invA+invB;
+        const brace=bracer&&!fixedA&&!fixedB&&Signatures.brace(st,A,B);
+        const invA=fixedA?0:(brace&&bracer===A?.10:1)/a.mass,invB=fixedB?0:(brace&&bracer===B?.10:1)/b.mass,sum=invA+invB;
         const impact=!!brace||engaged&&fresh;
         if(impact){feedback(A,a,B,n.x,n.z,closing,tangent,brace&&bracer===A);feedback(B,b,A,-n.x,-n.z,closing,tangent,brace&&bracer===B);}
         if(n.depth<.0001&&closing<=.0001&&!impact)continue;
         if(n.depth>.0001){
-          const move=n.depth+.0003;shift(a,-n.x*move*invA/sum,-n.z*move*invA/sum);shift(b,n.x*move*invB/sum,n.z*move*invB/sum);
+          const move=n.depth+.0003;
+          if(invA)shift(a,-n.x*move*invA/sum,-n.z*move*invA/sum);
+          if(invB)shift(b,n.x*move*invB/sum,n.z*move*invB/sum);
         }
         if(closing>0||impact){
           // A first strike separates the hulls. Continued contact only resolves overlap.
@@ -792,8 +797,8 @@
           impulse(a,-ix*invA,-iz*invA);impulse(b,ix*invB,iz*invB);
           if(impact){
             const twist=Math.min(.28,.04+.023*Math.max(0,closing)+.012*kick);
-            A.yaw=clamp(A.yaw-(n.x*a.rx+n.z*a.rz)*twist,-.48,.48);
-            B.yaw=clamp(B.yaw+(n.x*b.rx+n.z*b.rz)*twist,-.48,.48);
+            if(!fixedA)A.yaw=clamp(A.yaw-(n.x*a.rx+n.z*a.rz)*twist,-.48,.48);
+            if(!fixedB)B.yaw=clamp(B.yaw+(n.x*b.rx+n.z*b.rz)*twist,-.48,.48);
           }
         }
         bodies[i]=contactBody(c,A,starts[i],st);bodies[j]=contactBody(c,B,starts[j],st);resolved=true;
@@ -919,13 +924,20 @@
     const hawkPasses=[];
     for(const p of st.pickups)p.cooldown=Math.max(0,p.cooldown-dt);
     for(const r of st.racers){
+      const locked=isFrozen(st,r,dt);
       for(const key of ['active','guard','protect','slow','slip','reveal','noticeTime','hit','fx','itemFx','itemHitFx','ghost'])r[key]=Math.max(0,r[key]-dt);
-      if(!r.flight)r.air=Math.max(0,r.air-dt);
+      if(!r.flight&&!locked)r.air=Math.max(0,r.air-dt);
       for(const status of ['sap','burr','puff','pine','spin','confirmFx','contactFx','landingFx'])r[status]=Math.max(0,(r[status]||0)-dt);
       r.contactCarry=Math.max(0,(r.contactCarry||0)-dt*9.8);
       Signatures.advanceBoost(r,dt);
       if(r.finish){r.v=Math.max(0,r.v-dt*5);continue;}
       if(r.fall){recoverFall(r,c,dt);continue;}
+      if(locked){
+        r.v=r.vx=r.steer=0;
+        r.prevItem=r.human&&!!inputs[r.seat]?.item;
+        r.prevAbility=r.human&&!!inputs[r.seat]?.ability;
+        continue;
+      }
       const input=r.human?(inputs[r.seat]||{}):ai(st,r,c,motor),prevS=r.s;
       const road=sample(c,r.s,0,r.branch);
       const spinLoad=clamp(r.spin/.48,0,1),control=1-.87*spinLoad;
@@ -983,6 +995,10 @@
       const from=previous.branch===r.branch?{s:prevS,x:previous.lane}:projectRoute(c,prevS,previous.x,previous.z,r.branch);
       const caught=Hazards.contact(st,r,c,from.s,from.x,dt,lift(st,r));
       if(caught&&r.flight&&r.hazardHop?.at===st.time){r.hazardHop=null;}
+      if(caught&&isFrozen(st,r)){
+        clearDrift(r);r.contactCarry=r.steer=0;
+        continue;
+      }
       r.meter=clamp(r.meter+Math.max(0,Math.min(adv*dt,r.s-prevS))/c.length*1.85,0,1);
       for(const p of st.pickups){
         const gap=mod(p.s-mod(r.s,c.length)+c.length*.5,c.length)-c.length*.5;
@@ -1069,5 +1085,5 @@
       laps:r.lapTimes.slice(),standings:st.racers.slice().sort((a,b)=>a.rank-b.rank).map(a=>({name:a.name,driverIndex:a.driverIndex,position:a.rank,time:a.finish||null,human:a.human,seat:a.seat}))};
   }
   return {create,step,result,track,trackCount:definitions.length+Expansion.courses.length,sample,baseSample:sample,groundSample,groundLift,lift,rampPitch,predictRamps:(st,r,c,dt,prev)=>rampStep(st,r,c,dt,prev,true),
-    projectRoute,resolveRoute,wheelPosition,roll,flyHawk,hawkItem,quillItem,stormItem,stormRadius,stormThreat,driftTier,steeringYaw,spinYaw,drivers,abilities,items,itemTimes,durations,engineClasses,normalizeCC,difficulties,normalizeDifficulty,rollWeights,drawItem};
+    projectRoute,resolveRoute,wheelPosition,roll,isFrozen,flyHawk,hawkItem,quillItem,stormItem,stormRadius,stormThreat,driftTier,steeringYaw,spinYaw,drivers,abilities,items,itemTimes,durations,engineClasses,normalizeCC,difficulties,normalizeDifficulty,rollWeights,drawItem};
 });
