@@ -58,6 +58,14 @@ try{
 
   browser=await chromium.launch({headless:true,executablePath:process.env.BANNERLANDS_BROWSER});
   const host=await browser.newPage({viewport:{width:1440,height:960}});
+  const artworkErrors=[];
+  host.on('response',response=>{
+    const url=new URL(response.url());
+    if(url.origin===origin&&url.pathname.startsWith('/assets/')&&response.status()>=400)artworkErrors.push(url.pathname+' returned HTTP '+response.status());
+  });
+  host.on('console',message=>{
+    if(message.type()==='error'&&message.text().startsWith('Battle artwork failed'))artworkErrors.push(message.text());
+  });
   local.searchParams.set('host','1');
   await host.goto(local.href);
   await host.locator('[data-pane="host"] button[type="submit"]').waitFor({timeout:120000});
@@ -66,6 +74,11 @@ try{
     privateFragmentRemoved:!location.hash.includes('desktop=')
   }));
   assert.deepEqual(bridge,{stage:'idle',privateFragmentRemoved:true});
+  const artwork=await host.waitForFunction(()=>{
+    if(performance.getEntriesByName('bannerlands-battle-art-ready').length)return 'ready';
+    if(document.getElementById('startButton')?.textContent==='RETRY BATTLE ART')return 'failed';
+  },undefined,{timeout:120000});
+  assert.equal(await artwork.jsonValue(),'ready',artworkErrors.join('\n')||'The Windows hosting pack could not load its battle artwork.');
   assert.ok(await host.locator('[data-pane="host"] button[type="submit"]').isEnabled());
   assert.equal(await host.locator('.online-download').isVisible(),false);
 

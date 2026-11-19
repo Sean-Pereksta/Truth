@@ -7,7 +7,8 @@ a{color:#ead29c}a:focus-visible,summary:focus-visible{outline:2px solid #e5c78c;
 nav,.links{display:flex;gap:20px;align-items:center;flex-wrap:wrap;font-size:14px}
 nav{justify-content:space-between;margin-bottom:28px}nav a,.links a{display:inline-flex;align-items:center;min-height:44px}
 .hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,34%);gap:clamp(16px,4vw,40px);align-items:center;padding:0 0 26px;border-bottom:1px solid #766c4c}
-.campaign-painting{display:block;width:100%;height:auto}
+.campaign-painting{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover}
+.hero:has(.campaign-painting[hidden]){grid-template-columns:1fr}.setup-note{font-size:14px;margin:8px 0 0}
 h1,h2,summary{font-family:Georgia,serif;font-weight:normal;color:#f2e2bf}
 h1{font-size:clamp(38px,6vw,61px);line-height:1.05;margin:8px 0 15px}h2{font-size:27px;line-height:1.2;margin:0 0 10px}
 p{color:#bdc9be;margin:8px 0 18px}
@@ -25,17 +26,34 @@ p{color:#bdc9be;margin:8px 0 18px}
 }
 </style></head><body><main>
 <nav><a href="index.html">← Bannerlands</a><a href="index.html#view=browse">Browse lobbies</a></nav>
-<div class="hero"><div><h1>Download Bannerlands</h1><p id="releaseState" role="status">Checking downloads for this build…</p></div><img class="campaign-painting" src="assets/battlefield-slice/campaign-menu.webp" alt="" width="1600" height="900"></div>
+<div class="hero">
+  <div>
+    <h1>Download Bannerlands</h1>
+    <p>Install the current Windows edition through Catnmice Game Hub. Play solo or host a lobby for up to four people. Guests can join from their browser.</p>
+    <a id="downloadHub" class="download" href="https://github.com/Sean-Pereksta/Magic/releases/download/catnmice-hub-channel/Catnmice-Game-Hub-Setup.exe">Download Catnmice Game Hub for Windows</a>
+    <p class="setup-note">If the launcher is already installed, close it and run this setup to update it. Open Bannerlands and choose <strong>Host Lobby</strong>.</p>
+  </div>
+  <img id="campaignPainting" class="campaign-painting" src="./assets/battlefield-slice/campaign-menu.webp" alt="" width="1600" height="900">
+</div>
+<p id="releaseState" role="status" hidden></p>
 <div class="editions">
 <section class="panel" id="windowsEdition" hidden><h2>Windows edition</h2><p>Play solo or host a lobby for up to four people. Friends can join from their browser.</p><a id="downloadInstaller" class="download" hidden>Windows installer ↓</a><p><a id="downloadPortable" hidden>Portable ZIP for Windows x64 ↓</a></p></section>
 <section class="panel" id="offlineEdition" hidden><h2>Standalone offline edition</h2><p>Save the single HTML file, then open it in a browser to play a solo campaign offline.</p><a id="downloadOffline" class="download" hidden>Download Bannerlands.html ↓</a></section>
 </div>
 <p id="manifestInfo" hidden><a href="release-manifest.json">Matching file sizes and SHA-256 checksums</a></p>
-<details id="publishedWindows" class="panel" open><summary>Published Windows preview</summary><p>Version 0.2.0-multiplayer-preview.1 is the previously published build. Online guests need the matching game and artwork. The installer is unsigned.</p><div class="links"><a href="https://github.com/Sean-Pereksta/Truth/releases/download/bannerlands-v0.2.0-multiplayer-preview.1/Bannerlands-Setup.exe">Preview installer</a><a href="https://github.com/Sean-Pereksta/Truth/releases/download/bannerlands-v0.2.0-multiplayer-preview.1/Bannerlands-Windows-x64.zip">Preview portable ZIP</a><a href="https://github.com/Sean-Pereksta/Truth/releases/tag/bannerlands-v0.2.0-multiplayer-preview.1">Preview notes and checksums</a></div></details>
+<details id="publishedWindows" class="panel"><summary>Archived Windows preview</summary><p>This preview is version 0.2.0-multiplayer-preview.1. Online play requires guests on the same preview version. The installer is unsigned.</p><div class="links"><a href="https://github.com/Sean-Pereksta/Truth/releases/download/bannerlands-v0.2.0-multiplayer-preview.1/Bannerlands-Setup.exe">Preview installer</a><a href="https://github.com/Sean-Pereksta/Truth/releases/download/bannerlands-v0.2.0-multiplayer-preview.1/Bannerlands-Windows-x64.zip">Preview portable ZIP</a><a href="https://github.com/Sean-Pereksta/Truth/releases/tag/bannerlands-v0.2.0-multiplayer-preview.1">Preview notes and checksums</a></div></details>
 <script type="module">
-import {GAME_VERSION,ASSET_VERSION,PROTOCOL_VERSION} from './multiplayer/protocol.js';
+const painting=document.getElementById('campaignPainting');
+const fallback='https://raw.githubusercontent.com/Sean-Pereksta/Magic/main/lobby/assets/game-tiles/bannerlands-v2.webp';
+function usePaintingFallback(){
+ if(painting.src===fallback){painting.hidden=true;return;}
+ painting.src=fallback;
+}
+painting.addEventListener('error',usePaintingFallback);
+if(painting.complete&&!painting.naturalWidth)usePaintingFallback();
 const state=document.getElementById('releaseState');
 try{
+ const {GAME_VERSION,ASSET_VERSION,PROTOCOL_VERSION}=await import('./multiplayer/protocol.js');
  const response=await fetch('./release-manifest.json',{cache:'no-cache'});
  if(!response.ok)throw new Error('Unavailable');
  const manifest=await response.json();
@@ -46,10 +64,10 @@ try{
   const link=document.getElementById(id);link.href=file;link.download=file;link.hidden=false;document.getElementById(section).hidden=false;count++;
  }
  if(!count)throw new Error('No matching files');
- state.textContent='Game '+GAME_VERSION+' · Artwork '+ASSET_VERSION;
+ state.textContent='Separate downloads for game '+GAME_VERSION+' · Artwork '+ASSET_VERSION;
+ state.hidden=false;
  document.getElementById('manifestInfo').hidden=false;
- document.getElementById('publishedWindows').open=false;
 }catch{
- state.textContent='The Windows and standalone offline downloads for this browser build have not been posted here. The published Windows preview is available below.';
+ // The current Windows launcher link above does not depend on a separate game release.
 }
 </script></main></body></html>

@@ -64,13 +64,16 @@ try{
     assert.ok(menu.scrollWidth<=menu.clientWidth+1,'Original campaign menu has no horizontal overflow');assert.ok(menu.rect.y>=0&&menu.rect.y+menu.rect.height<=size.height+1,'Original campaign menu stays inside viewport');
     if(size.width<600){await page.locator('#menuCampaignTab').click();assert.equal(await page.locator('#menuOverlay').getAttribute('data-menu-tab'),'campaign');if(out)await page.screenshot({path:path.join(out,'bannerlands-mobile-campaign-before-return.png')});await page.locator('#menuHouseTab').click();}
     await page.locator('#hostLobbyButton').click();
-    assert.match(await page.locator('[data-pane="host-required"] [role="alert"]').innerText(),/could not connect.*Bannerlands Local Edition/i);
+    assert.match(await page.locator('[data-pane="host-required"] [role="alert"]').innerText(),/Catnmice Game Hub for Windows.*Host Lobby/i);
     assert.ok(await page.locator('[data-pane="host-required"] [data-download]').isVisible());
     assert.equal(await page.locator('[data-pane="host"]').isVisible(),false);
     await page.locator('[data-action="close"]').click();
     await page.locator('#joinInviteButton').click();assert.ok(await page.locator('[data-view="host"]').isVisible());await page.locator('[data-action="close"]').click();
     if(out)await page.screenshot({path:path.join(out,'bannerlands-main-menu-'+size.width+'.png')});
     await page.locator('.online-download').click();await page.waitForURL('**/download.html');assert.equal(await page.title(),'Download Bannerlands');assert.ok(await page.locator('#publishedWindows').isVisible());
+    assert.equal(await page.locator('#downloadHub').getAttribute('href'),'https://github.com/Sean-Pereksta/Magic/releases/download/catnmice-hub-channel/Catnmice-Game-Hub-Setup.exe');
+    assert.equal(await page.locator('#publishedWindows').evaluate(element=>element.open),false);
+    await page.waitForFunction(()=>document.getElementById('campaignPainting').naturalWidth>0);
     const download=await page.evaluate(()=>({width:document.documentElement.scrollWidth,viewport:innerWidth}));assert.ok(download.width<=download.viewport+1,'Download page has no horizontal overflow');
     if(out)await page.screenshot({path:path.join(out,'bannerlands-download-'+size.width+'.png')});
     mainMenus.push({...size,menu,download});
@@ -82,8 +85,9 @@ try{
   await page.reload();await page.waitForSelector('#downloadOffline:visible');
   for(const [id,path] of [['downloadOffline',files[0].path],['downloadInstaller',files[1].path],['downloadPortable',files[2].path]])assert.equal(await page.locator('#'+id).getAttribute('href'),path);
   manifest={...manifest,assetVersion:'different-art'};
-  await page.reload();await page.waitForFunction(()=>document.querySelector('#releaseState').textContent.includes('have not been posted'));
+  await Promise.all([page.waitForResponse(response=>response.url().endsWith('/release-manifest.json')),page.reload()]);
   assert.equal(await page.locator('#downloadOffline').isVisible(),false);
+  assert.ok(await page.locator('#downloadHub').isVisible());
   const installed=await browser.newPage({viewport:{width:1440,height:960}});
   await installed.addInitScript(()=>{window.__hostAttempts=0;window.bannerlandsHost={status:async()=>({status:'ready'}),host:async()=>{window.__hostAttempts++;throw Error('The hosting connection timed out.');},stop:async()=>({})};});
   await installed.goto(server.url+'/?host=1');await installed.waitForFunction(()=>window.__bannerlands&&!document.getElementById('startButton').disabled,{timeout:120000});
@@ -93,8 +97,8 @@ try{
   assert.equal(await installed.locator('[data-download]:visible').count(),0,'Installed game does not offer a download in the hosting view');
   await installed.locator('[data-pane="host"] button[type="submit"]').click();
   await installed.locator('.multiplayer-status.error').waitFor();
-  assert.match(await installed.locator('.multiplayer-status.error').innerText(),/connection timed out.*Bannerlands Local Edition/i);
-  assert.ok(await installed.locator('[data-host-recovery]').isVisible());
+  assert.match(await installed.locator('.multiplayer-status.error').innerText(),/^The hosting connection timed out\.$/);
+  assert.equal(await installed.locator('[data-download]:visible').count(),0);
   assert.equal(await installed.evaluate(()=>window.__hostAttempts),1,'The game attempted its normal host connection');
   await installed.close();
   assert.deepEqual(errors,[]);
