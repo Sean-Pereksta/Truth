@@ -2,7 +2,7 @@
   'use strict';
   const TAU=Math.PI*2, cap=(n,lo=0,hi=1)=>Math.max(lo,Math.min(hi,n));
   const contacts={front:'Front bumper',rear:'Rear bumper',side:'Side contact',glance:'Glancing bump',brace:'Bumper brace'};
-  function build(Mesh,simple=false,includeMarsh=true){
+  function build(Mesh,simple=false,includeMarsh=true,includeCosmic=true){
     const shapes={};
     const make=name=>shapes[name]=new Mesh();
     const bar=(m,a,b,r,c,mat=2)=>m.ring(a,b,r,r,c,simple?4:6,mat);
@@ -45,6 +45,15 @@
     stump.ring([0,0,0],[0,.58,0],.56,.43,'#604736',10,2);
     stump.ring([0,.56,0],[0,.62,0],.39,.35,'#ab8055',10,2);
     if(includeMarsh)Object.assign(shapes,root.AcornExpansionWorld.frogMeshes(Mesh),root.AcornBullfrogArt.meshes(Mesh,simple));
+    if(includeCosmic){
+      Object.assign(shapes,root.AcornCosmicHazardsArt.meshes(Mesh,simple));
+      const ice=make('ufoIceLock');
+      for(let i=0;i<10;i++){
+        const angle=i*TAU/10,x=Math.cos(angle)*.87,z=Math.sin(angle)*1.04,h=.32+(i%4)*.25;
+        const a=[x-.18,.045,z-.13],b=[x+.18,.055,z-.11],c=[x+.03,.027,z+.16],tip=[x*1.17,h,z*1.10];
+        ice.tri(a,b,tip,'#97e7ec',5);ice.tri(b,c,tip,'#438ec0',5);ice.tri(c,a,tip,'#e6ffff',5);
+      }
+    }
     const stand=make('envPost');stand.box(0,0,0,.28,3.1,.31,0,'#795f42',2);
     for(const y of [.22,2.44,2.91])stand.box(0,y,0,.33,.10,.36,0,'#b59060',2);
     const gate=make('envSluice');for(const d of [-1,1]){gate.box(0,0,d*.97,.44,2.4,.34,0,'#68573f',2);
@@ -171,7 +180,7 @@
     const marker=make('envMarker');marker.box(0,0,0,.10,.98,.11,0,'#72583b',2);
     marker.box(0,.75,0,.89,.73,.13,0,'#453d30',2);screenPoly(marker,[[-.408,.79],[.408,.79],[.408,1.436],[-.408,1.436]],'#e4be72');
     // Each sign carries the profile of the obstacle ahead, also readable in silhouette.
-    for(let id=0;id<10;id++){
+    for(let id=0;id<12;id++){
       const glyph=make('envSign'+id),ink='#4e4534',z=-.106,stroke=(a,b,w=.032)=>bar(glyph,[a[0],a[1],z],[b[0],b[1],z],w,ink,5);
       if(id===0||id===3){const points=id===0?[[-.25,1.03],[-.21,1.25],[-.04,1.32],[.25,1.18],[.22,.99],[.06,.94]]:
         [[-.26,.99],[-.20,1.23],[-.04,1.32],[.15,1.25],[.27,1.04],[.12,.96]];screenPoly(glyph,points,ink,z);if(!id){for(let i=0;i<10;i++){const a=TAU*i/10,b=TAU*(i+1)/10;bar(glyph,[-.09+.09*Math.cos(a),1.125+.115*Math.sin(a),z-.028],[-.09+.09*Math.cos(b),1.125+.115*Math.sin(b),z-.028],.020,'#e9c882',5);}}}
@@ -181,6 +190,8 @@
       else if(id===8){screenPoly(glyph,[[-.25,1.02],[-.17,1.20],[.17,1.20],[.25,1.02],[.16,.99],[-.16,.99]],ink,z);
         for(const eye of [-.15,.15])stroke([eye,1.16],[eye,1.30],.045);stroke([-.14,1.045],[.14,1.045],.025);}
       else if(id===9){stroke([-.26,1.02],[.20,1.35],.067);stroke([-.19,.98],[.21,.98]);stroke([.10,1.08],[.23,1.00]);}
+      else if(id===10){screenPoly(glyph,[[-.23,1.01],[-.28,1.16],[-.14,1.10],[.02,1.34],[.04,1.19],[.28,1.30],[.20,1.01],[0,.94]],ink,z);}
+      else if(id===11){stroke([-.26,1.20],[.26,1.20],.066);stroke([-.15,1.22],[.02,1.33]);stroke([.02,1.33],[.15,1.22]);stroke([-.09,1.14],[-.20,.97]);stroke([.09,1.14],[.20,.97]);}
       else {stroke([-.26,1.02],[.26,1.20],.065);stroke([.18,1.19],[.18,1.36]);stroke([-.18,1.06],[-.18,1.35]);}
     }
     for(const [name,color] of [['envReady','#729276'],['envAmber','#ffc15b'],['envActive','#ff8d60']]){const m=make(name);m.blob(0,1.58,0,.12,.095,.12,color,8,5);}
@@ -231,6 +242,102 @@
     }
   }
 
+  const smooth=t=>{t=cap(t);return t*t*(3-2*t);};
+  function worldAnchor(sample,s,x,y,branch=false){
+    const road=sample(s,x,branch);
+    return [road.x,road.y+y,road.z];
+  }
+  function offset(base,yaw,x,y,z){
+    const a=Math.cos(yaw),b=Math.sin(yaw);
+    return [base[0]+x*a+z*b,base[1]+y,base[2]-x*b+z*a];
+  }
+  function lavaMonster(hazards,time,sample,stamp){
+    const first=hazards[0],source=worldAnchor(sample,first.sourceS,first.sourceX,first.sourceY);
+    const targets=hazards.map(h=>worldAnchor(sample,h.s,h.x,.22,h.branch));
+    const facing=position=>Math.atan2(position[0]-source[0],position[2]-source[2]);
+    const neutral=facing(targets[1]||targets[0]);
+    const index=hazards.findIndex(h=>h.warning||h.active);
+    const aim=index<0?null:hazards[index],turn=aim?facing(targets[index])-neutral:0;
+    const intent=aim?.warning?smooth(aim.progress/.54):aim?.active?1-smooth(aim.progress/.88):0;
+    const look=Math.atan2(Math.sin(turn),Math.cos(turn))*intent;
+    const bodyYaw=neutral+look*.56,headYaw=neutral+look,size=3.95;
+    const swell=.1*Math.sin(time*1.6),heat=aim?.warning?smooth((aim.progress-.18)/.35):aim?.active?1-smooth(aim.progress/.42):0;
+    const body=[source[0],source[1]-3.56*size+swell,source[2]];
+    const head=offset(body,bodyYaw,0,3.18*size,.12*size);
+    stamp('lavaTitan',body,bodyYaw,size);
+    stamp('lavaTitanHead',head,headYaw,size,1,0,-heat*.09);
+    stamp('lavaTitanJaw',offset(head,headYaw,0,.28*size,.45*size),headYaw,size,1,0,heat*.42);
+    for(const side of [-1,1]){
+      const shoulder=offset(body,bodyYaw,side*2.02*size,2.51*size,.12*size);
+      const motion=Math.sin(time*1.7+side)*.077;
+      stamp(side<0?'lavaTitanArmL':'lavaTitanArmR',shoulder,bodyYaw,size,1,side*(motion+.29*heat),-.12-.54*heat);
+    }
+    const mouth=offset(head,headYaw,0,.38*size,1.05*size);
+    if(heat>.13&&aim?.warning&&(aim.flightProgress||0)<=0)stamp('lavaFireball',mouth,time*4,.35+heat*.52,.55+heat*.42);
+    for(let i=0;i<hazards.length;i++){
+      const h=hazards[i],target=targets[i],flight=h.flightProgress;
+      if(h.warning&&flight>0){
+        const arc=t=>{
+          const point=mouth.map((v,j)=>v+(target[j]-v)*t);
+          point[1]+=4*t*(1-t)*h.arcHeight;
+          return point;
+        };
+        stamp('lavaFireball',arc(flight),time*5,1.07,1,time*4);
+        for(let j=1;j<=6;j++){
+          const t=flight-j*.031;if(t<0)break;
+          const point=arc(t);point[0]+=.39*Math.sin(j*2.4+time*7);point[2]+=.39*Math.cos(j*2.4+time*7);
+          stamp('lavaEmber',point,time*5+j,.78*(1-j*.105),1-j*.13,time*2);
+        }
+      }
+      if(h.active){
+        const fade=1-smooth(h.progress);
+        const blast=1-smooth(h.progress/.34);
+        if(blast>.04)stamp('lavaFireball',[target[0],target[1]+.38+blast*.48,target[2]],time*3,1.15+blast*.67,blast*.88);
+        for(let j=0;j<8;j++){
+          const a=j*2.399+i,age=cap(h.progress*1.35),r=.55+age*(2.4+(j%3)*.43);
+          const point=[target[0]+Math.cos(a)*r,target[1]+.1+Math.sin(Math.PI*age)*(.80+(j%4)*.54),target[2]+Math.sin(a)*r];
+          stamp('lavaEmber',point,a+time*3,.85*(.54+fade*.46),fade*.88,time*4);
+        }
+      }
+    }
+  }
+  function alienPatrol(hazards,time,sample,stamp){
+    for(const [i,h] of hazards.entries()){
+      const target=worldAnchor(sample,h.s,h.x,.05,h.branch);
+      const high=worldAnchor(sample,h.sourceS,h.sourceX,h.sourceY,h.branch);
+      const phase=i*2.1+time*(.67+i*.12);
+      const aligned=h.active||h.warning&&h.progress>=.64;
+      const hover=aligned?0:.047*Math.sin(phase);
+      const yaw=-phase+(i%2?Math.PI:.36),size=1.34;
+      stamp('ufoSaucer',high,yaw,size,1,0,hover);
+      stamp('ufoRimLights',high,yaw,size,.78+.20*Math.sin(phase*2.5),0,hover);
+      for(const side of [-1,1]){
+        const pilot=offset(high,yaw,side*.53*size,(.48+.055*Math.sin(time*5+side+i))*size,.20*size);
+        stamp((i+(side>0?1:0))%2?'ufoAlienViolet':'ufoAlienGreen',pilot,yaw+side*.15*Math.sin(time*3+i),size,1,0,.065*Math.sin(time*4+i+side));
+      }
+      stamp('ufoCanopy',high,yaw,size,.19,0,hover);
+      if(aligned){
+        const beamStart=offset(high,yaw,0,-.55*size,0),beamLength=Math.max(.1,beamStart[1]-target[1]);
+        const pulse=.80+.20*Math.sin(time*26+i),width=h.beamRadius*(h.active?1:.63);
+        stamp('ufoBeam',beamStart,time*.2,1,h.active?.22+.08*pulse:.10+.05*pulse,0,0,[width,beamLength,width]);
+        if(h.active){
+          stamp('ufoBeam',beamStart,-time*.4,1,.23+.06*pulse,0,0,[width*.38,beamLength,width*.38]);
+          for(let j=0;j<4;j++){
+            const t=(time*1.65+j*.25)%1,a=j*2.4+time*5,r=width*.47*t;
+            stamp('ufoSpark',[target[0]+Math.cos(a)*r,beamStart[1]-.15-t*beamLength,target[2]+Math.sin(a)*r],a,.29,.64*Math.sin(Math.PI*t));
+          }
+        }
+      }
+    }
+  }
+  function cosmic(course,hazards,time,sample,stamp){
+    if(course.index!==10&&course.index!==11)return;
+    const group=hazards.filter(h=>h.id===(course.index===11?10:11));
+    if(!group.length)return;
+    if(course.index===11)lavaMonster(group,time,sample,stamp);
+    else alienPatrol(group,time,sample,stamp);
+  }
+
   function scene(h,time,emit){
     const {id,s,x,branch,sourceSide:side,anchorX,halfWidth:w,halfLength:l,bottom,top,progress:p,strength:k}=h;
     const water=id===2||id===6||id===7,warning=h.warning,active=h.active;
@@ -241,9 +348,18 @@
     at('envSign'+id,signS,signX,0,0,1.22);
     at('envArrow',signS,signX,0,0,1.22,1,0,0,[h.safeSide,1,1]);
     at(active?'envActive':warning?'envAmber':'envReady',signS,signX,0,0,warning?1.2+.045*Math.sin(time*7):1.22);
-    if(warning){
+    if(warning&&id<10){
       const area=h.warningHalfWidth??(water?Math.abs(anchorX-h.mainX):id===0?1.7:w);
       at('envStripes',s,h.warningX??h.mainX,.038,0,1,.14+.09*p+.03*Math.sin(time*5),0,0,[area,1,l]);
+    }
+    if(id===10&&(warning||active||h.phase==='receding')){
+      const flare=warning?.55+.35*p:active?.94*(1-p):.22*(1-p);
+      const spread=active?.46+.54*smooth(p/.45):1;
+      at('lavaShockwave',s,x,.055,time*.25,1,flare,0,0,[w*spread,1,l*spread]);
+    }
+    if(id===11&&(warning||active)){
+      const radius=h.beamRadius*(warning?1.25-.25*p:1);
+      at('ufoGroundRings',s,x,.053,time*.49,1,active?.92:.47+.40*p,0,0,[radius,1,radius]);
     }
     if(id===8){
       const leaping=h.bottom>.09;
@@ -327,6 +443,11 @@
     }
   }
   function reaction(st,r,emit){
+    if(root.AcornSim.isFrozen(st,r)){
+      const fade=cap((r.freezeUntil-st.time)*6),deck=root.AcornSim.groundLift(st,r),y=Math.max(deck,root.AcornSim.lift(st,r));
+      emit('ufoIceLock',r.s,r.x,y+.035,r.yaw,1,.73*fade,0,0,[1,1,1],r.branch);
+      emit('ufoGroundRings',r.s,r.x,deck+.047,st.time*1.1,1,.76*fade,0,0,[1.45,1,1.72],r.branch);
+    }
     if(r.landingSeq&&r.landingFx>0){
       const t=cap(1-r.landingFx/.60),force=cap(r.landingForce),dry=st.trackIndex===3?1:st.trackIndex===5?2:st.trackIndex===6?3:0;
       for(const side of [-1,1]){
@@ -339,7 +460,7 @@
     if(h&&age>=0&&age<.53){
       const t=age/.53,water=[2,6,7,8].includes(h.id);
       for(let j=0;j<5;j++){const dir=(j%2?1:-1),span=.37+t*(.49+(j%3)*.18);
-        emit(water?'envFoam':h.id===4?'envCrystal':'envPebble',r.s-.2-t*(1.15+j%2*.53),r.x+dir*span,
+        emit(water?'envFoam':h.id===4?'envCrystal':h.id===10?'lavaEmber':h.id===11?'ufoGroundRings':'envPebble',r.s-.2-t*(1.15+j%2*.53),r.x+dir*span,
           .17+Math.sin(t*Math.PI)*(.26+j%3*.15),t*3+j,(water?.39:.16)*(1-t*.52),.94*(1-t),j*.2,0,[1,1,1],r.branch);}
     }
     if(!r.contactSeq||!(r.contactFx>0))return;
@@ -362,16 +483,16 @@
         for(let j=0;j<3;j++){const k=i+j*10,pos=m.data.slice(k,k+3),id=pos.map(n=>Math.round(n*10000)).join(',');
           if(!map.has(id)){map.set(id,coords.length);coords.push(pos);}indices.push(map.get(id));}
         const n=m.data.slice(i+3,i+6),c=m.data.slice(i+6,i+9),light=m.data[i+9]===5?.99:.75+.26*Math.max(0,.42*n[0]+.78*n[1]-.53*n[2]);
-        const m0=m.data[i+9],coverage=m0>7.98?cap(((m0%1)+(m.data[i+19]%1)+(m.data[i+29]%1))/.81):1;
+        const m0=m.data[i+9],coverage=m0>7.98&&m0<19.5?cap(((m0%1)+(m.data[i+19]%1)+(m.data[i+29]%1))/.81):1;
         faces.push([...indices,'rgb('+c.map(k=>Math.round(255*cap(k*light))).join(',')+')',coverage]);
       }
       geometry2d[key]={coords,faces};
     }
     return geometry2d;
   }
-  function paint(ctx,library,P,name,s,x,height,yaw=0,size=1,opacity=1,roll=0,pitch=0,stretch=[1,1,1],branch=false){
+  function paint(ctx,library,P,name,s,x,height,yaw=0,size=1,opacity=1,roll=0,pitch=0,stretch=[1,1,1],branch=false,maxDepth=116){
     const mesh=library[name];if(!mesh||opacity<.04)return;
-    const p=P(s,x,height,branch);if(p.z<1.0||p.z>116)return;
+    const p=P(s,x,height,branch);if(p.z<1.0||p.z>maxDepth)return;
     const px=P(s,x+1,height,branch),pz=P(s+1,x,height,branch),py=P(s,x,height+1,branch);
     const ox=p.x*p.z,oy=p.y*p.z,delta=q=>[q.x*q.z-ox,q.y*q.z-oy,q.z-p.z];
     const ax=delta(px),az=delta(pz),ay=delta(py),a=Math.cos(roll),b=Math.sin(roll),c=Math.cos(yaw),d=Math.sin(yaw),k=Math.cos(pitch),l=Math.sin(pitch);
@@ -389,6 +510,9 @@
     tris.sort((a,b)=>b[4]-a[4]);ctx.save();ctx.globalAlpha=cap(opacity);
     for(const [a,b,c,color,depth,coverage] of tris){ctx.globalAlpha=cap(opacity*coverage);ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.lineTo(c[0],c[1]);ctx.closePath();ctx.fill();}
     ctx.restore();
+  }
+  function paintWorld(ctx,library,project,name,[x,y,z],yaw=0,size=1,opacity=1,roll=0,pitch=0,stretch){
+    paint(ctx,library,(forward,side,height)=>project(side,height,forward),name,z,x,y,yaw,size,opacity,roll,pitch,stretch,false,190);
   }
   function hud(ctx,w,h,r,time,compact){
     if(!r.contactSeq||r.contactFx<=.055||r.finish||r.itemHitFx>.42)return;
@@ -412,6 +536,10 @@
       sound.tone(151,.18,.027*gain,'triangle',65);sound.tone(255,.075,.009*gain,'sine',114,.07);
     }else if(kind==='timber'){
       sound.tone(115,.15,.032*gain,'triangle',46);sound.tone(412,.09,.012*gain,'sawtooth',133,.023);
+    }else if(kind==='fireball'||kind==='beam'){
+      const beam=kind==='beam';
+      sound.tone(beam?692:103,.23,.029*gain,beam?'sine':'sawtooth',beam?328:40);
+      sound.tone(beam?1022:216,.19,.017*gain,'triangle',beam?520:66,.04);
     }else{
       sound.tone(kind==='brace'?138:107,.095,(.022+f*.022)*gain,'triangle',54);
       sound.tone(kind==='stone'?286:326,.044,(.008+f*.012)*gain,'triangle',160,.008);
@@ -423,9 +551,10 @@
       [[180,86,.12],[120,77,.08]],[[656,820,.12],[896,690,.14]],[[175,116,.14],[310,202,.15]],
       [[216,97,.065],[293,144,.055]],[[595,310,.04],[810,440,.045]],[[420,298,.11],[339,253,.08]],
       [[305,216,.12],[363,243,.14]],[[173,111,.16],[251,155,.17]],
-      [[162,102,.15],[142,89,.17]],[[330,161,.11],[290,137,.15]]
+      [[162,102,.15],[142,89,.17]],[[330,161,.11],[290,137,.15]],
+      [[187,92,.23],[305,123,.19]],[[434,693,.11],[650,1070,.15]]
     ][id];
     cues.forEach(([tone,end,duration],i)=>sound.tone(tone,duration,i?.009:.014,id===4?'square':'triangle',end,i*.082));
   }
-  root.AcornCourseArt={meshes:build,scene,reaction,fallbackMeshes,paint,hud,feedback,approach};
+  root.AcornCourseArt={meshes:build,scene,cosmic,reaction,fallbackMeshes,paint,paintWorld,hud,feedback,approach};
 })(typeof globalThis==='object'?globalThis:this);

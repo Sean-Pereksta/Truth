@@ -153,14 +153,21 @@
       this.skids||=new root.AcornDriftArt.SkidMarks(c);
       this.skids.update(st);const skidRows=this.skids.canvasRows(st,r.s,direction,worldPoint);
       const racers=st.racers.concat(ghost?[ghost]:[]);
-      const obstaclesByRow=new Map();
+      const obstaclesByRow=new Map(),worldByRow=new Map(),hazards=root.AcornHazards.samples(c,st.time);
       const rampRows=new Map();
       this.rampSections||=root.AcornRampArt.drawing(root.AcornWorld.Mesh,c);
       for(const segment of this.rampSections){
         const row=Math.floor((root.AcornSignatures.gap(r.s,segment.s,c.length)*direction-.30)/1.35);
         if(row< -3||row>72)continue;if(!rampRows.has(row))rampRows.set(row,[]);rampRows.get(row).push(segment);
       }
-      for(const obstacle of root.AcornHazards.samples(c,st.time)){
+      root.AcornCourseArt.cosmic(c,hazards,st.time,(s,x,branch)=>Sim.sample(c,s,x,branch),(...stamp)=>{
+        const point=worldPoint(...stamp[1]);
+        if(point.z<1||point.z>190)return;
+        const row=clamp(Math.floor((point.z-6.3)/1.35),-3,72);
+        if(!worldByRow.has(row))worldByRow.set(row,[]);
+        worldByRow.get(row).push(stamp);
+      });
+      for(const obstacle of hazards){
         if(Math.abs(root.AcornSignatures.gap(r.s,obstacle.s,c.length))>=126)continue;
         root.AcornCourseArt.scene(obstacle,st.time,(...stamp)=>{
           const name=stamp[0],ground=name.startsWith('envFlow')||name.startsWith('envSaltPlate')||['envBrine','envStripes','envCracks','envShade'].includes(name);
@@ -173,6 +180,12 @@
         });
       }
       const courseStamp=(...stamp)=>{this.courseParts||=root.AcornCourseArt.fallbackMeshes(root.AcornWorld.Mesh);root.AcornCourseArt.paint(ctx,this.courseParts,P,...stamp);};
+      const worldStamps=row=>{
+        const stamps=worldByRow.get(row);
+        if(!stamps)return;
+        this.courseParts||=root.AcornCourseArt.fallbackMeshes(root.AcornWorld.Mesh);
+        for(const stamp of stamps)root.AcornCourseArt.paintWorld(ctx,this.courseParts,worldPoint,...stamp);
+      };
       const drawKart=(a,point,dim)=>{const iw=art('art/rear-'+a.driverIndex+'.webp'),groundHeight=groundLift(a),offGround=Math.max(0,lift(a)-groundHeight);
         ctx.save();ctx.globalAlpha=.45/(1+offGround*.54);ctx.fillStyle='#18241c';ctx.beginPath();ctx.ellipse(point.x+offGround*dim*.025,point.y-dim*groundHeight/1.53,dim*.55,dim*.12,0,0,tau);ctx.fill();ctx.restore();
         root.AcornItemArt.drawKart2d(ctx,a,point,dim,st.time,false);
@@ -228,7 +241,8 @@
       };
       for(let i=72;i>=-3;i--){const s=r.s+i*1.35*direction,e=s+1.35*direction,main=Sim.sample(c,s);
         const split=main.u>c.branchA&&main.u<c.branchB,branch=Boolean(split&&r.branch),a=branch?Sim.sample(c,s,0,true):main;
-        const route=(z,l,height=0)=>P(z,l,height,branch),pt=route(s,0);if(pt.z<.5)continue;
+        const route=(z,l,height=0)=>P(z,l,height,branch),pt=route(s,0);
+        if(pt.z<.5){worldStamps(i);continue;}
         if(!a.exposed&&!skyDeck&&c.index!==13&&c.index!==14)quad(route(s,-a.w*3),route(e,-a.w*3),route(e,a.w*3),route(s,a.w*3),i%4<2?p.land:p.edge);
         if(c.index===14||c.index===15)root.AcornExpansionWorld.paintShoulders(ctx,c.index,route,s,e,a,Sim.sample(c,e,0,branch),branch,split);
         if(split){const other=Sim.sample(c,s,0,!branch);quad(P(s,-other.w,.03,!branch),P(e,-other.w,.03,!branch),P(e,other.w,.03,!branch),P(s,other.w,.03,!branch),branch?p.soil:p.wood);}
@@ -261,6 +275,7 @@
         }
         ctx.globalAlpha=1;
         for(const stamp of obstaclesByRow.get(i)||[])courseStamp(...stamp);
+        worldStamps(i);
         for(const a of racers){if(a.seat===seat)continue;const gap=mod(a.s-s+c.length/2,c.length)-c.length/2;if(gap*direction>=0&&gap*direction<1.35){const q=P(a.s,a.x,0,a.branch);drawKart(a,q,q.k*1.53);}}
       }
       const kartScale=Math.min(w*.29,h*.34);drawKart(r,{x:w*.5-clamp(r.vx,-10,10)*w*.002,y:h*.84+follow*kartScale/1.53},kartScale);
@@ -366,6 +381,11 @@
     }
     else if(r.fall){
       txt(ctx,'OVER THE EDGE',w/2,h*.36,compact?25:40,'#ffce86','italic 900','Rally','center');
+    }
+    else if(Sim.isFrozen(st,r)){
+      const left=Math.ceil(clamp(r.freezeUntil-st.time,0,1)*10)/10,label='FROZEN  '+left.toFixed(1)+'s',width=compact?119:152;
+      roundBox(ctx,w/2-width/2,h*.33-15,width,30,5,'#122e43ef','#91e8fd');
+      txt(ctx,label,w/2,h*.33+5,compact?15:21,'#b9f4ff','800','Condensed','center');
     }
     else if(threat){
       const y=h*.33,warn=threat.stage==='warn',width=compact?142:182;
@@ -533,7 +553,7 @@
         if(now-lastSend>36){net.sendInput(inputs[seat]);lastSend=now;}
         const snap=net.getState();
         if(snap&&snap!==lastSnap){const old=st;st=JSON.parse(JSON.stringify(snap));lastSnap=snap;snapshotTime=now;
-          if(old&&old.time>0&&!st.done){for(const r of st.racers){const a=old.racers[r.seat];if(!a||a.hawk||r.hawk||!!a.fall!==!!r.fall)continue;
+          if(old&&old.time>0&&!st.done){for(const r of st.racers){const a=old.racers[r.seat];if(!a||a.hawk||r.hawk||Sim.isFrozen(old,a)||Sim.isFrozen(st,r)||!!a.fall!==!!r.fall)continue;
             let previous=a;
             if(a.branch!==r.branch){
               const from=Sim.sample(c,a.s,a.x,a.branch),to=Sim.sample(c,r.s,r.x,r.branch);
@@ -550,6 +570,7 @@
           const dt=Math.min(frame,.045);if(st.countdown<=0)st.time+=dt;
           for(const r of st.racers){
             const previous=Sim.wheelPosition(c,r,st);
+            if(Sim.isFrozen(st,r,dt)){r.steer=0;Sim.roll(c,r,dt,previous,st);continue;}
              if(r.seat===seat)r.steer=(inputs[seat].steer||0)*(1-.87*clamp((r.spin||0)/.48,0,1));
             if(r.fall){r.fall.age=Math.min(r.fall.duration,r.fall.age+dt);continue;}
             if(r.hawk&&!r.finish){Sim.flyHawk(r,c,dt);Sim.roll(c,r,dt,previous,st);continue;}
@@ -580,7 +601,7 @@
         const b=driver.contactSeq||0,h=driver.hazardHit,hit=h?.count||0,landing=driver.landingSeq||0,last=driverCues.get(driver.seat)||[0,0,0];
         if(!paused&&b!==last[0]&&driver.contactFx>.24)root.AcornCourseArt.feedback(sound,padMap[i],driver.contactKind,driver.contactForce,i>0);
         if(!paused&&hit!==last[1]&&h&&st.time-h.at<.4){
-          const kind=h.id===8?'frog':h.id===9?'timber':[2,6,7].includes(h.id)?'water':'stone';
+          const kind=({8:'frog',9:'timber',10:'fireball',11:'beam'})[h.id]||([2,6,7].includes(h.id)?'water':'stone');
           root.AcornCourseArt.feedback(sound,padMap[i],kind,h.blocked?.24:.62,i>0);
         }
         if(!paused&&landing!==last[2]&&driver.landingFx>.32)root.AcornCourseArt.feedback(sound,padMap[i],'landing',Math.min(.65,driver.landingForce||.30),i>0);

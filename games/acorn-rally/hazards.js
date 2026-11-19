@@ -6,7 +6,8 @@
   'use strict';
   const cap=(x,a,b)=>Math.max(a,Math.min(b,x)),wrap=(x,p)=>((x%p)+p)%p;
   const smooth=x=>{const t=cap(x,0,1);return t*t*(3-2*t);};
-  const frog=8,timber=9;
+  const frog=8,timber=9,fireball=10,freezeBeam=11;
+  const aimed=id=>id===fireball||id===freezeBeam;
   const tips=[
     'Give the rolling log room. Follow the open lane past its end.',
     'When the bamboo pole starts to dip, take the lane opposite its hinge.',
@@ -69,10 +70,12 @@
     const state={id,key,name:cfg.name,tip:tips[c.index],s,x,baseS,branch,halfWidth,halfLength,bottom,top,warning:phase==='warning',
       active:phase==='active',phase,progress,strength,sourceSide:side,safeSide:-side,anchorX,mainX,tipX,period:cfg.period,
       shift:id===0?-side*4.85*6*p*(1-p)/cfg.live:id===3?-side*5.15*6*p*(1-p)/cfg.live:water?-side*cfg.push*strength:0};
-    if(id===frog||id===timber){
+    if(id===frog||id===timber||aimed(id)){
       const road=c.points[Math.floor(cfg.u*c.points.length)];
-      if(id===frog)frogPath(state,cfg,road.w,p,Math.floor((time+cfg.offset)/cfg.period));
-      else timberPath(state,cfg,road.w,p);
+      const cycle=Math.floor((time+cfg.offset)/cfg.period);
+      if(id===frog)frogPath(state,cfg,road.w,p,cycle);
+      else if(id===timber)timberPath(state,cfg,road.w,p);
+      else strikePath(state,c,cfg,road.w,cycle,time);
     }
     return state;
   }
@@ -102,6 +105,25 @@
     Object.assign(state,{x:(anchorX+tipX)*.5,halfWidth:Math.abs(anchorX-tipX)*.5+radius,
       bottom:hingeHeight-radius,top:tipHeight+radius,anchorX,tipX,radius,hingeHeight,tipHeight,fallProgress,
       warningX,warningHalfWidth:reach*.5+radius});
+  }
+  function strikePath(state,c,cfg,width,cycle,time){
+    const side=cycle%2?-cfg.side:cfg.side,x=side*Math.min(cfg.lane,width-cfg.width-.7);
+    const {warning,active,phase,progress}=state;
+    Object.assign(state,{x,sourceSide:side,safeSide:-side,warningX:x,warningHalfWidth:cfg.width,
+      strength:active?1:0});
+    if(state.id===fireball){
+      const launch=.28;
+      Object.assign(state,{sourceS:c.length*.415,sourceX:50,sourceY:-21.8,arcHeight:cfg.arc,
+        flying:warning&&progress>=launch,flightProgress:warning?cap((progress-launch)/(1-launch),0,1):1,
+        impactProgress:active?progress:1,top:active?1.85*(1-.55*progress):0});
+      return;
+    }
+    // Hover between shots and settle over the lane before firing straight down.
+    const wander=warning?1-smooth(progress/.64):active?0:phase==='receding'?smooth(progress):1;
+    const approachX=warning?x*(1-2*wander):x;
+    const orbit=time*.68+cfg.u*13,sourceY=cfg.height+.4*Math.sin(orbit*1.7);
+    Object.assign(state,{sourceS:state.s+Math.cos(orbit)*7.0*wander,sourceX:approachX+Math.sin(orbit)*4.9*wander,
+      sourceY,beamRadius:cfg.width,top:sourceY});
   }
   function lift(st,r){
     if(!(r.air>0))return 0;
@@ -138,6 +160,7 @@
       if(!h.active||h.strength<.105&&[2,4,6,7].includes(h.id))continue;
       const s=previousS+(r.s-previousS)*f-near-(h.s-base),x=x0+(r.x-x0)*f;
       if(Math.abs(s)>h.halfLength+.70||Math.abs(x-h.x)>h.halfWidth+.49)continue;
+      if(aimed(h.id)&&Math.hypot(s/(h.halfLength+.70),(x-h.x)/(h.halfWidth+.49))>1)continue;
       const wheels=buried?-.84:liftNow,roof=wheels+(buried?.62:1.25);
       let bottom=h.bottom,top=h.top;
       if(h.id===timber){
@@ -148,9 +171,13 @@
       }
       if(wheels>top+.035||roof<bottom-.035)continue;
       let direction=h.safeSide;
-      if([0,3,4,5,frog].includes(h.id)&&Math.abs(x-h.x)>.10)direction=Math.sign(x-h.x);
+      if([0,3,4,5,frog,fireball].includes(h.id)&&Math.abs(x-h.x)>.10)direction=Math.sign(x-h.x);
       r.hazardHit={id:h.id,key:h.key,at:st.time,side:direction,blocked:r.guard>0,cross:near,count:(r.hazardHit?.count||0)+1};
       if(r.guard>0){r.guard=0;r.protect=.80;r.notice='Bark Guard absorbed '+h.name;r.noticeTime=1.25;return true;}
+      if(h.id===freezeBeam){
+        r.freezeUntil=st.time+1;r.v=0;r.vx=0;r.protect=1.2;r.hit=.34;
+        r.notice='Frozen by alien beam';r.noticeTime=1.25;return true;
+      }
       const speedFactor=cap(Math.abs(r.v)/13,.32,1);
       r.v=h.id===frog?-(1.4+2.1*speedFactor):r.v*cfg.speed;
       r.vx=cap((r.vx||0)+direction*cfg.push*speedFactor,-10,10);
@@ -179,7 +206,7 @@
     const lap=Math.floor(r.s/c.length),distance=cfg.u*c.length+lap*c.length-r.s;
     const tier=st.difficulty==='ultimate'?3:st.difficulty==='hard'?2:st.difficulty==='easy'?0:1;
     const horizon=[.98,1.55,2.05,2.45][tier],v=Math.max(6,r.v);
-    const extra=cfg.style===frog||cfg.style===timber;
+    const extra=cfg.style===frog||cfg.style===timber||aimed(cfg.style);
     const pathShift=cfg.style===frog?2.65:0;
     if(distance<-(cfg.length+1.35+pathShift)||distance>v*horizon+cfg.length+2+pathShift)return target;
     const live=sampleObstacle(c,st.time,cfg);
@@ -196,6 +223,7 @@
       if(!h.active||h.bottom>=1.35||(!extra&&h.strength<=.09))continue;
       if(cfg.style===frog&&Math.abs(target-h.x)>h.halfWidth+1.3)continue;
       if(cfg.style===timber&&(h.fallProgress<.48||Math.abs(target-h.x)>h.halfWidth+.65))continue;
+      if(aimed(cfg.style)&&Math.abs(target-h.x)>h.halfWidth+.95)continue;
       danger=h;
     }
     if(!danger)return target;
