@@ -79,6 +79,7 @@ namespace LastSignal {
         public string Type; public float X,Y,Z,Time,Life=1,DX,DY,DZ; public int Color;
     }
     public class Noise {
+        public string Activity;
         public float Y=float.NaN;
         public int Source; public float X,Z,Range,Time;
     }
@@ -123,6 +124,6 @@ namespace LastSignal {
             return k.ToString();
         }
         public void Say(string text) { Notice=text; NoticeTime=3.1f; }
-        public void SoundAt(Actor a,float range) { Noises.Add(new Noise{X=a.X,Y=a.Y+.79f,Z=a.Z,Source=a.Id,Range=range,Time=Time}); }
+        public void SoundAt(Actor a,float range,string activity=null) { Noises.Add(new Noise{X=a.X,Y=a.Y+.79f,Z=a.Z,Source=a.Id,Range=range,Time=Time,Activity=activity}); }
     }
 }

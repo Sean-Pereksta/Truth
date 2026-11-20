@@ -26,7 +26,11 @@ namespace LastSignal
             public float HitCooldown, GuardFor, RunFor, Stuck, Action, Danger, Age;
             public float Drift;
             public int Side, SearchLeg, Harvests;
-            public bool Expedition, Rush, RushArmed, Vault;
+            public bool Expedition, Rush, RushArmed, Vault, GrabAndLeave, WatchOpening;
+            public Place RimPost;
+            public float ExtraThreatUntil, ExposedUntil, SawDuelUntil, HoldBackUntil, ReconsiderAt;
+            public Actor ExposedTarget;
+            public int VisibleRivals;
             public int VaultLane;
             public float VaultUntil;
             public Prop Claim, AvoidPrize;
@@ -42,6 +46,10 @@ namespace LastSignal
             public bool SawMotion, AnswerMotion, LargeWind, WasGuard, ReadGuard, ReadRanged, ReadSwing, ReadMotion, CanRead;
 
             public Prop Item, Fire, WaterSource, Barrel;
+            public Prop WorkTree;
+            public float NextWorkCheck, WorkEnds;
+            public Prop ShelterFrame;
+            public float ShelterWork, NextShelterCheck;
 
             public float WaterDeadline, WaterRecheck;
             public int Drinks;
@@ -174,7 +182,7 @@ namespace LastSignal
             foreach(Prop p in g.Props)
             {
                 if(p.Model=="cornucopia")horn=true;
-                if(p.Kind=="pickup" && Inside(p.X,p.Z,Arena.OpeningSupplyRadius))prizes.Add(p);
+                if((p.Kind=="pickup" || p.Kind=="pack") && Inside(p.X,p.Z,Arena.OpeningSupplyRadius))prizes.Add(p);
             }
             var candidates=new List<Actor>();
             foreach(Actor a in g.Actors)
@@ -215,6 +223,15 @@ namespace LastSignal
                 if(selected>=count)break;
                 if(!minds[a].Rush){minds[a].Rush=true;selected++;}
             }
+            foreach(Actor a in candidates)
+            {
+                Mind m=minds[a];
+                m.GrabAndLeave=m.Rush && !m.Vault && m.Style==Style.Scout;
+                m.WatchOpening=!m.Rush && (m.Style==Style.Hunter || m.Style==Style.Shadow);
+                if(!m.WatchOpening)continue;
+                Place post=Offset(new Place(0,0),Heading(a.X,a.Z)+m.Side*.11f,m.Between(21,25));
+                m.RimPost=Arena.CanStand(g,post.X,Arena.Ground(g,post.X,post.Z),post.Z)?post:new Place(a.X,a.Z);
+            }
         }
 
         static int OpeningPriority(Actor a,Mind m,int seed)
@@ -249,6 +266,13 @@ namespace LastSignal
             foreach(Prop p in prizes)
             {
                 if(p.Removed || p==m.AvoidPrize || Claimed(g,a,p))continue;
+                if(m.GrabAndLeave)
+                {
+                    if(Interior(p) || !PrizeVisible(g,a,p))continue;
+                    float value=(p.Kind=="pack"?13f:RankWeapon(p.Item)>0?2f:0f)-Dist(a.X,a.Z,p.X,p.Z);
+                    if(value>bestScore){best=p;bestScore=value;}
+                    continue;
+                }
                 int rank=RankWeapon(p.Item);
                 bool ammo=(p.Item=="arrows" && a.Count("bow")>0 && a.Count("arrows")==0) ||
                           (p.Item=="bolts" && a.Count("crossbow")>0 && a.Count("bolts")==0) ||
@@ -325,15 +349,32 @@ namespace LastSignal
         {
             if(!m.Opening)return false;
             float radius=Dist(0,0,a.X,a.Z);
+            if(m.WatchOpening)
+            {
+                float nearest=m.HasObservation?Dist(a.X,a.Z,m.LastSeen.X,m.LastSeen.Z):100f;
+                if(nearest<6f || a.Hurt>.03f || m.Age>16f)m.WatchOpening=false;
+                else if(m.Age>5f && (m.ExposedUntil>g.Time || (m.Age>10f && m.VisibleRivals<=1)))
+                {
+                    m.WatchOpening=false;m.Rush=true;m.GrabAndLeave=true;
+                }
+                else
+                {
+                    if(Dist(a.X,a.Z,m.RimPost.X,m.RimPost.Z)>1.6f)
+                    {m.Job=Aim.Travel;m.Goal=m.RimPost;return true;}
+                    m.Job=Aim.Wait;m.Pause=.8f;m.NextScanPose=1.2f;m.Replan=.42f;
+                    Place focus=m.HasObservation?m.LastSeen:new Place(0,0);
+                    m.Steering=Heading(focus.X-a.X,focus.Z-a.Z);return true;
+                }
+            }
             if(!m.Rush)
             {
-                if(radius<33 && m.Age<17)
+                if(radius<33 && (m.Age<17 || g.Time<m.ContestUntil))
                 {
                     m.Goal=m.Home;m.Job=Aim.Travel;m.RunFor=.68f;return true;
                 }
                 m.Opening=false;return false;
             }
-            if(!CombatReady(a))
+            if(!CombatReady(a) || m.GrabAndLeave)
             {
                 if(m.Age>34 || a.Health<26)
                 {
@@ -425,20 +466,33 @@ namespace LastSignal
 
         static void Observe(Game g, Actor a, Mind m)
         {
-            Actor best=null;float bestScore=-100f;
+            Actor best=null,other=null;float bestScore=-100f,secondScore=-100f;
+            m.VisibleRivals=0;
             foreach(Actor b in g.Actors)
             {
                 if(b==a || !b.Alive || Allied(g,a,b) || OfferPartners(a,b))continue;
                 float d=Dist(a.X,a.Z,b.X,b.Z);
                 if(d>(m.FocusTarget==b?78f:65f) || !Visible(g,a,b,d))continue;
+                m.VisibleRivals++;
+                bool exposed=b.Hurt>.04f || b.CrossbowReload>.12f;
                 float score=40f-d+(m.Enemy==b?3f:0f);
-                if(g.PlayerDriven(b) && ActiveHunter(a))score+=5f;
+                if(exposed && CombatReady(a))score+=m.Style==Style.Hunter?9f:6f;
+                if(d<4f && (b.Swing>0 || b.Windup>0))score+=7f;
                 if(m.Opening && m.Rush && m.RushArmed && Inside(b.X,b.Z,21f))score+=8f;
                 if(m.Vault && g.Time<m.VaultUntil && b.Z<2.3f && Math.Abs(b.X)<6.4f)score+=12f;
-                if(score>bestScore) { best=b;bestScore=score; }
+                if(score>bestScore){other=best;secondScore=bestScore;best=b;bestScore=score;}
+                else if(score>secondScore){other=b;secondScore=score;}
             }
             if(best!=null)
             {
+                if(best.Hurt>.04f || best.CrossbowReload>.12f)
+                {m.ExposedTarget=best;m.ExposedUntil=g.Time+2.1f;}
+                if(other!=null && Dist(a.X,a.Z,other.X,other.Z)<28f)
+                {
+                    m.ExtraThreatUntil=g.Time+3f;
+                    if(AttackingRival(best,other) || AttackingRival(other,best))
+                        m.SawDuelUntil=g.Time+2.8f;
+                }
                 m.Enemy=best;m.HasObservation=true;m.SeenAt=g.Time;
                 m.LastSeen=new Place(best.X,best.Z);m.SeenFeet=best.Y;m.LostSight=m.Between(8f,15f);
                 if(m.FocusTarget==best && g.Time<m.FocusUntil)m.FocusUntil=g.Time+2.2f;
@@ -453,27 +507,44 @@ namespace LastSignal
                 }
                 m.HasObservation=false;
             }
-            Noise pick=null;float bestStrength=0;
+            Noise pick=null;float bestStrength=0,newest=m.LastNoiseAt;
             for(int i=g.Noises.Count-1;i>=0;i--)
             {
                 Noise n=g.Noises[i];
                 if(n.Time<=m.LastNoiseAt || g.Time-n.Time>2f) break;
+                newest=Math.Max(newest,n.Time);
                 if(n.Source==a.Id || FriendlyNoise(g,a,n.Source))continue;
                 float d=Dist(a.X,a.Z,n.X,n.Z);
                 float range=Perception.HearingRange(g,a,n);
                 float strength=range/(d+2f);
-                if(d<range && strength>bestStrength){pick=n;bestStrength=strength;}
+                if(d>=range)continue;
+                if(best!=null && n.Source>=0 && n.Source!=best.Id && d<16f && n.Range>=12f && Dist(n.X,n.Z,best.X,best.Z)>3f)
+                    m.ExtraThreatUntil=g.Time+2.6f;
+                if(strength>bestStrength){pick=n;bestStrength=strength;}
             }
+            m.LastNoiseAt=newest;
             if(pick!=null)
             {
-                m.LastNoiseAt=pick.Time;
                 if(best==null)
                 {
                     float spread=Math.Min(5.2f,.8f+Dist(a.X,a.Z,pick.X,pick.Z)*.11f);
                     m.Heard=Offset(new Place(pick.X,pick.Z),m.Between(0,Tau),m.Between(0,spread));
                     m.HeardFor=m.Between(3f,6f);m.HeardEnemy=true;
+                    if(m.LostSight>0 && pick.Time>m.SeenAt && Dist(m.Heard.X,m.Heard.Z,m.LastSeen.X,m.LastSeen.Z)<16f)
+                    {
+                        // The fresh sound displaces an older visual fix only as a search lead.
+                        m.Goal=m.Heard;m.LostSight=0;m.Replan=0;
+                    }
                 }
             }
+        }
+
+        static bool AttackingRival(Actor actor,Actor rival)
+        {
+            if(actor.Swing<=0 && actor.Windup<=0 && !actor.Aiming)return false;
+            float dx=rival.X-actor.X,dz=rival.Z-actor.Z;
+            if(dx*dx+dz*dz>(Ranged(actor)?42f*42f:5f*5f))return false;
+            return Math.Abs(Angle(Heading(dx,dz)-actor.Yaw))<(Ranged(actor)?.38f:.95f);
         }
 
         // Pick a nearby detour, favouring foliage, sight-breaking rocks and the
@@ -780,7 +851,9 @@ namespace LastSignal
             {
                 m.Goal=m.ImpactClue;m.Job=Aim.Search;m.Pause=0;return;
             }
-            if(m.ImpactUntil<=g.Time && OpeningPlan(g,a,m))return;
+            // A bot who has taken a prize still needs to clear the opening before
+            // it will compare targets. Contestants guarding the horn can disengage.
+            if(m.ImpactUntil<=g.Time && !(m.RushArmed && m.ExtraThreatUntil>g.Time) && OpeningPlan(g,a,m))return;
             if(m.HasObservation && m.Enemy!=null)
             {
                 float d=Dist(a.X,a.Z,m.LastSeen.X,m.LastSeen.Z);
@@ -795,7 +868,24 @@ namespace LastSignal
                     Dist(a.X,a.Z,m.Fire.X,m.Fire.Z)<21f;
                 bool outmatched=a.Health<29 || (!CombatReady(a) && RankWeapon(m.Enemy.Weapon)>0 && d>1.6f);
                 bool shadow=m.Style==Style.Shadow && !supported && !ActiveHunter(a);
-                bool flee=g.SafeRadius>11f && (outmatched || (shadow && d>2.8f));
+                bool crowded=m.ExtraThreatUntil>g.Time && !supported;
+                bool exposed=m.ExposedTarget==m.Enemy && g.Time<m.ExposedUntil;
+                bool spent=a.Stamina<24 || a.Hunger<23 || a.Hydration<25;
+                bool endangered=crowded && (a.Health<56 || spent || !CombatReady(a));
+                bool intervene=crowded && exposed && CombatReady(a) && a.Health>=54 && !spent && d<(Ranged(a)?31f:13f);
+                bool flee=g.SafeRadius>6f && (outmatched || endangered || (shadow && !intervene && m.SawDuelUntil<=g.Time && d>2.8f));
+                if(!flee && !intervene && m.SawDuelUntil>g.Time && d>5f && a.Hurt<=.02f && g.Time>=m.ReconsiderAt)
+                {
+                    // Watch a real exchange briefly. A missed opening leads to a
+                    // fresh decision even if both rivals keep fighting.
+                    m.HoldBackUntil=g.Time+m.Between(1.7f,g.AliveCount<=3?4.8f:3.2f);
+                    m.ReconsiderAt=m.HoldBackUntil+m.Between(6f,10f);
+                }
+                if(!flee && !intervene && m.HoldBackUntil>g.Time && d>5f && a.Hurt<=.02f)
+                {
+                    m.Job=Aim.Wait;m.Goal=new Place(a.X,a.Z);m.Pause=.65f;m.NextScanPose=1f;
+                    m.Steering=Heading(m.LastSeen.X-a.X,m.LastSeen.Z-a.Z);m.Replan=.28f;return;
+                }
                 if(flee && m.Style==Style.Shadow && a.Hunger>32 && a.Hydration>33 && d>8 && Arena.Cover(g,a.X,a.Z)>.55f)
                 {
                     a.Crouch=true;
@@ -1062,7 +1152,7 @@ namespace LastSignal
                 else {m.ReadVX=0;m.ReadVZ=0;}
             }
             else {m.ReadVX=m.ReadVZ=0;}
-            m.FixTime=g.Time;m.EyeFix=fix;m.LastSeen=fix;
+            m.FixTime=g.Time;m.EyeFix=fix;m.LastSeen=fix;m.SeenAt=g.Time;
             m.ReadGuard=b.Guard;
             if(b.Guard && !m.WasGuard)
             {
@@ -1429,6 +1519,7 @@ namespace LastSignal
             if(TickPackCare(g,a,m,dt))return;
             if(m.Replan<=0) Plan(g,a,m);
             a.State=m.Job==Aim.Wait && m.LookoutUntil>g.Time?"keeping watch":labels[(int)m.Job];a.Sprint=false;a.Aiming=false;
+            if(WorkOnShelter(g,a,m,dt))return;
             if(ClimbObservedFort(g,a,m,dt))return;
             if(m.Job==Aim.Combat){Duel(g,a,m,dt);return;}
             Guard(a,false);
@@ -1436,6 +1527,7 @@ namespace LastSignal
             if(m.Job==Aim.Camp){Camp(g,a,m,dt);return;}
             if(m.Job==Aim.Water){Water(g,a,m,dt);return;}
             a.Crouch=m.Job==Aim.Wait || (Defensive(m) && !m.Opening && m.RunFor<=0 && Arena.Cover(g,a.X,a.Z)>.3f);
+            if(Fieldwork(g,a,m,dt))return;
             if(m.Job==Aim.Wait || (m.Job==Aim.Search && m.Pause>0))
             {
                 a.Speed=0;
@@ -1455,7 +1547,15 @@ namespace LastSignal
             }
             if(m.Job==Aim.Loot && d<grab)
             {
-                if(Survival.Take(g,a,m.Item))Prepare(g,a,m);
+                if(Survival.Take(g,a,m.Item))
+                {
+                    Prepare(g,a,m);
+                    if(m.Opening && m.GrabAndLeave)
+                    {
+                        m.GrabAndLeave=false;m.Rush=false;m.Claim=null;
+                        m.Expedition=true;m.Goal=m.Home;m.RunFor=2.6f;m.ContestUntil=g.Time+8f;
+                    }
+                }
                 else if(m.Opening && m.Rush && m.Claim==m.Item)
                 {
                     // An item on a stand can be in radius but occluded by its rim.

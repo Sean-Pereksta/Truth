@@ -22,17 +22,19 @@ namespace LastSignal {
             internal float X,Y,Z,Scale,Yaw,W,H,D;
             internal string Model,Kind;
             internal int Damage;
-            internal bool Lit,Open,Present;
+            internal bool Lit,Open,Present,ShelterFrame;
 
             internal PropView(Prop p) {
                 X=p.X;Y=p.Y;Z=p.Z;Scale=p.Scale;Yaw=p.Yaw;W=p.W;H=p.H;D=p.D;
                 Model=p.Model;Kind=p.Kind;Damage=DamageStage(p);
+                ShelterFrame=Survival.IsShelterFrame(p);
                 Lit=p.Lit;Open=p.Open;Present=!p.Removed&&!String.IsNullOrEmpty(p.Model);
             }
             internal bool Matches(Prop p) {
                 return Present==(!p.Removed&&!String.IsNullOrEmpty(p.Model))&&
                     (!Present||(X==p.X&&Y==p.Y&&Z==p.Z&&Scale==p.Scale&&Yaw==p.Yaw&&W==p.W&&H==p.H&&D==p.D&&
-                    Model==p.Model&&Kind==p.Kind&&Damage==DamageStage(p)&&Lit==p.Lit&&Open==p.Open));
+                    Model==p.Model&&Kind==p.Kind&&Damage==DamageStage(p)&&Lit==p.Lit&&Open==p.Open&&
+                    ShelterFrame==Survival.IsShelterFrame(p)));
             }
         }
 
@@ -141,7 +143,8 @@ namespace LastSignal {
                     camera=new {x=Value(g.CamX),y=Value(g.CamY),z=Value(g.CamZ),yaw=Value(g.CamYaw),pitch=Value(g.CamPitch)},
                     storm=new {x=g.StormX,z=g.StormZ,radius=Value(g.StormRadius),nextRadius=Value(g.StormNextRadius),
                         seconds=Value(g.StormSecondsRemaining),warning=g.StormWarning,moving=g.StormMoving,active=g.StormActive},
-                    propChanges=ChangesInView(g),actors,wildlife,shots,ghost=g.Ghost==null?null:PropRecord(g.Ghost,-1),ghostFits=g.GhostFits,
+                    propChanges=ChangesInView(g),actors,wildlife,shots,workSound=RecentWorkSound(g,player),
+                    ghost=g.Ghost==null?null:PropRecord(g.Ghost,-1),ghostFits=g.GhostFits,
                     player=new {id=player.Id,name=player.Name,yaw=Value(player.Yaw),pitch=Value(g.Pitch),
                         health=Value(player.Health),stamina=Value(player.Stamina),hunger=Value(player.Hunger),
                         hydration=Value(player.Hydration),water=Value(player.WaterCarried),weapon=player.Weapon,
@@ -160,6 +163,22 @@ namespace LastSignal {
                 });
             });
             return bytes!=null&&gzip?Compress(bytes):bytes;
+        }
+
+        static object RecentWorkSound(Game g,Actor listener) {
+            if(!listener.Alive)return null;
+            for(int i=g.Noises.Count-1;i>=0;i--) {
+                Noise n=g.Noises[i];
+                if(g.Time-n.Time>.55f)break;
+                if(n.Activity==null)continue;
+                float dx=n.X-listener.X,dz=n.Z-listener.Z;
+                float distance=(float)Math.Sqrt(dx*dx+dz*dz);
+                float range=Perception.HearingRange(g,listener,n);
+                if(distance>=range || range<=0)continue;
+                float pan=distance<.2f?0:(float)(Math.Cos(listener.Yaw)*dx-Math.Sin(listener.Yaw)*dz)/distance;
+                return new {at=Value(n.Time),kind=n.Activity,pan=Value(pan),volume=Value(1f-distance/range)};
+            }
+            return null;
         }
 
         void PrepareChanges(Game g) {
@@ -201,7 +220,7 @@ namespace LastSignal {
             int damage=DamageStage(p);
             string stage=damage==0?p.Model:p.Model+(damage==2?"2":"1");
             return new object[]{p.Model,Value(p.X),Value(p.Y),Value(p.Z),Value(p.Scale),Value(p.Yaw),
-                Value(p.W),Value(p.H),Value(p.D),p.Kind,p.Lit,Value(fallAge),Value(p.FellDirection),p.Open,stage};
+                  Value(p.W),Value(p.H),Value(p.D),p.Kind,p.Lit,Value(fallAge),Value(p.FellDirection),p.Open,stage,Survival.IsShelterFrame(p)};
         }
 
         static List<object[]> Recipes(Actor actor,Recipe[] recipes) {

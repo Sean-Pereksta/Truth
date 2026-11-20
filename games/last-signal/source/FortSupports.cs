@@ -183,8 +183,13 @@ namespace LastSignal
             {
                 Prop food=Drop(g,"meat",1,p.X+.38f,p.Z+.15f,maxY);food.FoodProgress.Add(p.Cook);p.HasMeat=false;
             }
-            int wood=p.Model=="wall"||p.Model=="gate"?3:p.Model=="fire"?1:2;
-            Drop(g,"branch",wood,p.X,p.Z,maxY);
+            Recipe recipe=Survival.Find(Survival.Builds,p.Model);
+            int woodCost;
+            if(recipe!=null && recipe.Needs.TryGetValue("branch",out woodCost) && woodCost>0)
+            {
+                int wood=p.Model=="wall"||p.Model=="gate"?3:p.Model=="fire"?1:2;
+                Drop(g,"branch",Math.Min(woodCost,wood),p.X,p.Z,maxY);
+            }
         }
         static void SeverFortPiece(Game g,Prop struck)
         {

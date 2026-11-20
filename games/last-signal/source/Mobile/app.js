@@ -63,6 +63,10 @@ let retry = null;
 let retryUntil = 0;
 let frameAt = 0;
 let renderedFrameAt = 0;
+let workAudio;
+let woodSample;
+let sampleLoading = false;
+let lastWorkSoundAt = -Infinity;
 let binaryEpoch = 0;
 let pendingBinary = [];
 let decodingBinary = false;
@@ -340,8 +344,48 @@ async function drainBinary() {
   decodingBinary = false;
 }
 
+function enableWorkAudio() {
+  const Audio = window.AudioContext || window.webkitAudioContext;
+  if (!Audio) return;
+  try {
+    workAudio ||= new Audio();
+    if (workAudio.state !== "running") void workAudio.resume().catch(() => {});
+    if (woodSample || sampleLoading) return;
+    sampleLoading = true;
+    const clip = soloMode ? "../../browser-assets/wood.wav" : "./assets/Audio/wood.wav";
+    fetch(new URL(clip, import.meta.url))
+      .then(response => {
+        if (!response.ok) throw new Error("Wood audio unavailable");
+        return response.arrayBuffer();
+      })
+      .then(bytes => workAudio.decodeAudioData(bytes))
+      .then(sample => { woodSample = sample; })
+      .catch(() => {})
+      .finally(() => { sampleLoading = false; });
+  } catch { /* Audio may be disabled by the browser. */ }
+}
+
+function playWorkSound(cue) {
+  if (!cue || !Number.isFinite(cue.at) || cue.at <= lastWorkSoundAt) return;
+  lastWorkSoundAt = cue.at;
+  if (!woodSample || workAudio?.state !== "running" || document.hidden) return;
+  const gain = workAudio.createGain();
+  gain.gain.value = 0.7 * Math.max(0, Math.min(1, cue.volume));
+  const source = workAudio.createBufferSource();
+  source.buffer = woodSample;
+  source.playbackRate.value = cue.kind === "build" ? 0.78 : 1;
+  source.connect(gain);
+  if (workAudio.createStereoPanner) {
+    const position = workAudio.createStereoPanner();
+    position.pan.value = Math.max(-1, Math.min(1, cue.pan));
+    gain.connect(position).connect(workAudio.destination);
+  } else gain.connect(workAudio.destination);
+  source.start();
+}
+
 function resetRound() {
   neutralize(false);
+  lastWorkSoundAt = -Infinity;
   round = 0;
   worldRound = -1;
   frame = null;
@@ -362,6 +406,7 @@ function handleFrame(packet) {
   const first = frame === null;
   const wasAlive = frame?.player.alive && !frame.winner;
   frame = packet;
+  playWorkSound(frame.workSound);
   renderedFrameAt = frameAt = performance.now();
   if (first) {
     yaw = frame.player.yaw;
@@ -807,14 +852,19 @@ join.addEventListener("submit", (event) => {
   }
   playerName = nameInput.value.replace(/[^\p{L}\p{N} _.\-]/gu, "").trim().slice(0, 20) || "Contestant";
   nameInput.value = playerName;
+  enableWorkAudio();
   if (soloMode) void startSolo();
   else connect();
 });
 
 $("replay").addEventListener("click", () => {
-  if (solo && (!frame?.player.alive || frame.winner)) void startSolo();
+  if (solo && (!frame?.player.alive || frame.winner)) {
+    enableWorkAudio();
+    void startSolo();
+  }
 });
 readyButton.addEventListener("click", () => {
+  enableWorkAudio();
   if (socketSend(ready ? "READY|0" : "READY|1")) readyButton.disabled = true;
 });
 $("lobby-leave").addEventListener("click", leave);
@@ -828,6 +878,7 @@ window.addEventListener("blur", () => neutralize(true));
 window.addEventListener("orientationchange", () => neutralize(true));
 document.addEventListener("visibilitychange", () => { if (document.hidden) neutralize(true); });
 arena.addEventListener("pointerdown", (event) => {
+  if (workAudio && workAudio.state !== "running") enableWorkAudio();
   if (event.pointerType === "mouse" || event.pointerType === "touch") arena.dataset.input = event.pointerType;
 }, { capture: true });
 document.addEventListener("keydown", (event) => {
