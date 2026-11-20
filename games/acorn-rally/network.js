@@ -4,6 +4,10 @@
   const tracks = window.RallyData.tracks;
   const roomPattern = /^[A-Z2-9]{5}$/;
   const storageKey = 'acorn-rally-room-v1';
+  const queueStorageKey = 'acorn-rally-queue-v1';
+  const playerNameStorageKey = 'acorn-rally-player-name';
+  const maxPlayerName = 22;
+  const queuePollMs = 2500;
   const cleanCode = value => String(value || '').trim().toUpperCase();
   const escape = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const icon = name => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + window.RallyData.icons[name] + '</svg>';
@@ -17,6 +21,29 @@
       if (value) sessionStorage.setItem(storageKey, JSON.stringify(value));
       else sessionStorage.removeItem(storageKey);
     } catch { /* Storage may be disabled in private browsing. */ }
+  }
+  function storedQueueToken() {
+    try {
+      const token = sessionStorage.getItem(queueStorageKey);
+      return /^[a-f0-9]{64}$/.test(token || '') ? token : '';
+    } catch { return ''; }
+  }
+  function rememberQueueToken(token) {
+    try {
+      if (token) sessionStorage.setItem(queueStorageKey, token);
+      else sessionStorage.removeItem(queueStorageKey);
+    } catch { /* The current tab can still queue without storage. */ }
+  }
+  function storedPlayerName() {
+    try { return (sessionStorage.getItem(playerNameStorageKey) || '').slice(0, maxPlayerName); }
+    catch { return ''; }
+  }
+  function rememberPlayerName(name) {
+    try { sessionStorage.setItem(playerNameStorageKey, name); }
+    catch { /* The name is still available while this page stays open. */ }
+  }
+  function createQueueToken() {
+    return Array.from(crypto.getRandomValues(new Uint8Array(32)), byte => byte.toString(16).padStart(2, '0')).join('');
   }
   function urlCode(value) {
     try {
@@ -45,9 +72,10 @@
 
   function open(opts) {
     if (active?.room) { active.showLobby(); return; }
+    if (active?.isQueued()) { active.showQueue(); return; }
     if (active) active.destroy();
     const container = opts.container;
-    const context = { room: null, destroy, showLobby };
+    const context = { room: null, destroy, showLobby, showQueue: setup, isQueued: () => Boolean(queueToken) };
     active = context;
     const root = document.createElement('section');
     root.className = 'rr-room';
@@ -58,6 +86,7 @@
     let inRace = false, playedRound = -1, snapshot = null, snapTick = -1, lastRoomRound = -1;
     let seq = Date.now() * 8, latest = {}, pulses = {}, lastSent = 0, lastSerial = '';
     let sender = 0, busy = false, connecting = false, disconnected = false, outbound = 0;
+    let queueToken = '', queueTimer = 0, playerName = storedPlayerName();
     let statusText = '', statusError = false, connectionNote = null;
     const getRoom = () => context.room;
     const target = action => '/api/rooms/' + getRoom().code + '/' + action;
@@ -67,7 +96,7 @@
     function onCancel(event) { if (!inRace) { event.preventDefault(); void leave(); } }
     if (dialog) { dialog.addEventListener('cancel', onCancel); dialogGuard = true; }
     function top(title, code) {
-      return '<header class="rr-head"><p>' + icon('globe') + ' MULTIPLAYER</p><button type="button" class="rr-x" data-rr="close" aria-label="Close private rooms">' + icon('close') + '</button><h2>' + title + '</h2>' + (code || '') + '</header>';
+      return '<header class="rr-head"><p>' + icon('globe') + ' MULTIPLAYER</p><button type="button" class="rr-x" data-rr="close" aria-label="' + (support?.queueEnabled ? 'Close race queue' : 'Close private rooms') + '">' + icon('close') + '</button><h2>' + title + '</h2>' + (code || '') + '</header>';
     }
     function status(message, error = false) {
       statusText = message; statusError = error;
@@ -90,7 +119,8 @@
     function phoneSetup() {
       if (!localHost) return '';
       const addresses = support.addresses || [];
-      const instructions = support.singleRoom ? 'On each phone, tap Join lobby.' : 'One phone creates a room and shares its invite.';
+      const instructions = support.queueEnabled ? 'On each phone, tap Join race queue.'
+        : support.singleRoom ? 'On each phone, tap Join lobby.' : 'One phone creates a room and shares its invite.';
       const details = addresses.length
         ? '<p>Open a phone lobby address in each phone’s browser on the same Wi-Fi as this computer. ' + instructions + '</p>' +
           shareLinks(addresses.map(address => new URL('/?room=join', address).href), 'Phone lobby address')
@@ -107,6 +137,13 @@
       } else if (!support) {
         root.innerHTML = top('PRIVATE ROOMS') + '<div class="rr-callout"><strong>Host a race on your PC</strong><p>Download the PC edition and run <b>Start Acorn Rally</b>. Phones on the same Wi-Fi can open the host address and create or join a room in their browsers.</p><a class="rr-primary" href="?download=pc">' + icon('download') + 'Download PC edition</a></div>' +
           '<form data-form="remote"><h3>Join a host</h3><label>Host address or invite link<input name="remote" inputmode="url" autocapitalize="none" placeholder="http://192.168.1.20:8791" required spellcheck="false" autocomplete="off"></label><button type="submit" class="rr-secondary">Open host ' + icon('arrow') + '</button></form>' + statusBox();
+      } else if (support.queueEnabled) {
+        const queuePanel = queueToken
+          ? '<div class="rr-callout"><strong>Waiting for a seat</strong><p>Keep this tab open. Seats open as each race ends.</p><button type="button" class="rr-secondary" data-rr="queue-leave">Leave queue</button></div>'
+          : '<div class="rr-callout"><strong>Race with other players</strong><p>Seats are offered in queue order. Every race closes its room so the next group can join.</p>' +
+            '<form data-form="queue"><label>Player name (optional)<input name="playerName" type="text" maxlength="' + maxPlayerName + '" autocomplete="nickname" value="' +
+            escape(playerName) + '"></label><button type="submit" class="rr-primary">' + icon('flag') + 'Join race queue</button></form></div>';
+        root.innerHTML = top('RACE QUEUE') + (queueToken ? '' : phoneSetup()) + queuePanel + statusBox();
       } else {
         const create = support.singleRoom
           ? '<div class="rr-callout"><strong>Acorn Rally lobby</strong><p>The first player picks the race. Up to eight players can join.</p><button type="button" class="rr-primary" data-rr="enter">' + icon('flag') + 'Join lobby</button></div>'
@@ -120,6 +157,48 @@
         root.innerHTML = top('PRIVATE ROOMS') + phoneSetup() +
           (code ? join + create : create + (support.singleRoom ? '' : join)) + statusBox();
       }
+    }
+    function queueOptions() {
+      return { trackIndex: opts.trackIndex, driverIndex: opts.driverIndex, cc: opts.cc, difficulty: opts.difficulty, botFill: true };
+    }
+    function stopQueue(cancel) {
+      clearTimeout(queueTimer);
+      const token = queueToken;
+      queueToken = '';
+      if (!token) return;
+      rememberQueueToken('');
+      if (cancel) void request('/api/rooms/queue/leave', { token }).catch(() => {});
+    }
+    function startQueue(token = createQueueToken()) {
+      if (queueToken || !support?.queueEnabled || getRoom()) return;
+      queueToken = token;
+      rememberQueueToken(token);
+      urlCode('join');
+      status('Joining the race queue…');
+      setup();
+      root.querySelector('[data-rr="queue-leave"]')?.focus();
+      void pollQueue(token);
+    }
+    async function pollQueue(token) {
+      try {
+        const value = await request('/api/rooms/queue', { token, name: playerName.trim(), ...queueOptions() });
+        if (active !== context || token !== queueToken) {
+          const admission = value.admission;
+          if (admission) void request('/api/rooms/' + admission.room.code + '/leave', {}, admission.token).catch(() => {});
+          return;
+        }
+        if (value.admission) {
+          stopQueue(false);
+          connect(value.admission);
+          return;
+        }
+        const message = value.phase === 'racing' ? 'A race is underway. ' : '';
+        const position = message + 'Queue position ' + value.position + ' of ' + value.waiting + '.';
+        if (statusText !== position || statusError) status(position);
+      } catch (error) {
+        if (active === context && token === queueToken) status(error.message + ' Retrying…', true);
+      }
+      if (active === context && token === queueToken) queueTimer = setTimeout(() => pollQueue(token), queuePollMs);
     }
     function optionList(data, selected) {
       return data.map((entry, i) => '<option value="' + i + '"' + (i === selected ? ' selected' : '') +
@@ -142,7 +221,7 @@
         const taken=reserved.has(i), selected=me.driverIndex===i;
         return '<button type="button" class="rr-pick" data-rr="pick" data-driver-id="'+i+'" aria-pressed="'+selected+'" aria-label="'+escape(driver.name+' the '+driver.species.toLowerCase()+(taken?' · Taken':''))+'" '+(locked||taken?'disabled':'')+'><img src="art/driver-'+i+'.webp" alt=""><b>'+escape(driver.name)+'</b>'+(selected?'<span>✓</span>':'')+'</button>';
       }).join('');
-      const allReady = room.seats.every(s => s.connected && (s.ready || s.index === room.host));
+      const canStart = support.queueEnabled || room.seats.every(s => s.connected && (s.ready || s.index === room.host));
       const track = tracks[room.trackIndex];
       const grid = room.seats.map(s => '<li><img src="art/driver-' + s.driverIndex + '.webp" alt=""><span><strong>' + escape(s.name) +
         (s.index === seat ? ' <small>YOU</small>' : '') + '</strong><em>' + escape(drivers[s.driverIndex].species) + '</em></span><b class="' +
@@ -156,18 +235,19 @@
         '<label class="rr-toggle"><input name="fill" type="checkbox"' + (room.botFill ? ' checked' : '') + (locked ? ' disabled' : '') + '>Fill empty seats with AI</label>' :
         '<p class="rr-track-readout">' + icon('track') + escape(track.name) + ' · ' + room.laps + ' laps · '+cc+' cc · '+skillLabel(difficulty)+' AI</p>';
       const action = locked ? '<button class="rr-primary" data-rr="rejoin">Return to race ' + icon('arrow') + '</button>' :
-        owner ? '<button class="rr-primary" data-rr="start"' + (!allReady ? ' disabled' : '') + '>' + icon('flag') + (room.phase === 'finished' ? 'Start rematch' : 'Start race') + '</button>' :
+        owner ? '<button class="rr-primary" data-rr="start"' + (!canStart ? ' disabled' : '') + '>' + icon('flag') + (room.phase === 'finished' ? 'Start rematch' : 'Start race') + '</button>' :
           '<button class="' + (me.ready ? 'rr-secondary' : 'rr-primary') + '" data-rr="ready">' + (me.ready ? 'Cancel ready' : 'Ready to race') + '</button>';
       const invite = new URL(location.href);
-      invite.search = '?room=' + room.code;
+      invite.search = '?room=' + (support.queueEnabled ? 'join' : room.code);
       invite.hash = '';
       const invitePaths = localHost && support.addresses?.length ? support.addresses.map(address => {
         const localInvite = new URL(invite);
         localInvite.host = new URL(address).host;
         return localInvite.href;
       }) : [invite.href];
-      root.innerHTML = top('RACE ROOM') + '<div class="rr-invite"><span>INVITE CODE<b>' + escape(room.code) +
-        '</b></span>' + shareLinks(invitePaths, 'Race invite') + '</div>' +
+      const inviteHeading = support.queueEnabled ? '<span>SHARE QUEUE</span>' : '<span>INVITE CODE<b>' + escape(room.code) + '</b></span>';
+      root.innerHTML = top('RACE ROOM') + '<div class="rr-invite">' + inviteHeading +
+        shareLinks(invitePaths, support.queueEnabled ? 'Race queue link' : 'Race invite') + '</div>' +
         '<div class="rr-lobby-cols"><div><h3>Starting grid <small>' + room.seats.length + ' / 8</small></h3><ul class="rr-seats">' + grid + '</ul></div>' +
         '<div class="rr-lobby-config">' + hostControls + '</div></div><section class="rr-characters"><h3>Choose your driver</h3><div class="rr-grid-picks">' + portraits + '</div></section>' +
         '<div class="rr-actions">' + action + '<button class="rr-text" data-rr="close">Leave room</button></div>' + statusBox();
@@ -196,7 +276,7 @@
       const raceSeat = me.kartIndex;
       void request(target('control'), { driving: true }, key).catch(() => {});
       const network = { seat: raceSeat, sendInput, getState: () => snapshot, returnToLobby: showLobby, leave,
-        isConnected: () => !disconnected };
+        queueMode: support.queueEnabled === true, isConnected: () => !disconnected };
       if (dialog?.open) dialog.close();
       opts.startRace({ trackIndex: room.trackIndex, driverIndex: me.driverIndex,
         driverIndices: snapshot.racers.map(r => r.driverIndex),
@@ -220,32 +300,58 @@
       try { await request(target('input'), { round: room.round, seq: ++seq, input }, key); }
       catch { lastSerial = ''; } finally { outbound--; }
     }
+    function retireRoom() {
+      if (active !== context) return;
+      const racing = inRace;
+      source?.close();
+      source = null;
+      clearInterval(sender);
+      connectedNote(false);
+      remember(null);
+      urlCode(null);
+      context.room = null;
+      key = '';
+      inRace = false;
+      if (racing) {
+        destroy();
+        opts.onRetired?.(snapshot?.done === true);
+      } else {
+        status('This room has closed. Join the queue for another race.');
+        setup();
+      }
+    }
     function connect(value) {
       if (active !== context) return;
       seat = value.seat; key = value.token; context.room = value.room; lastRoomRound = value.room.round;
+      snapshot = null; snapTick = -1; playedRound = -1;
       remember({ code: value.room.code, key }); urlCode(value.room.code); status(value.assignment || '');
       showLobby();
       source?.close();
-      source = new EventSource(target('events') + '?seatKey=' + encodeURIComponent(key));
-      source.addEventListener('room', event => {
+      const stream = new EventSource(target('events') + '?seatKey=' + encodeURIComponent(key));
+      source = stream;
+      stream.addEventListener('room', event => {
+        if (source !== stream) return;
         disconnected = false; connectedNote(false);
         if (statusText === 'Reconnecting to the host…') status('');
         receiveRoom(JSON.parse(event.data));
       });
-      source.addEventListener('snapshot', event => {
-        if (active !== context) return;
+      stream.addEventListener('snapshot', event => {
+        if (active !== context || source !== stream) return;
         const data = JSON.parse(event.data);
         if (data.round !== getRoom().round || data.tick <= snapTick) return;
         snapshot = data.state; snapTick = data.tick;
         beginRace();
       });
-      source.onerror = () => {
-        if (active !== context) return;
+      if (support.queueEnabled) stream.addEventListener('retired', () => { if (source === stream) retireRoom(); });
+      stream.onerror = () => {
+        if (active !== context || source !== stream) return;
+        if (support.queueEnabled && (snapshot?.done || stream.readyState === EventSource.CLOSED)) return retireRoom();
         disconnected = true; connectedNote(true); status('Reconnecting to the host…');
       };
       clearInterval(sender); sender = setInterval(pump, 40);
     }
     function destroy() {
+      stopQueue(true);
       if (dialogGuard) dialog.removeEventListener('cancel', onCancel);
       source?.close(); clearInterval(sender); connectionNote?.remove(); root.remove();
       if (active === context) active = null;
@@ -291,6 +397,13 @@
       if (!button) return;
       const cmd = button.dataset.rr;
       if (cmd === 'close') return void leave();
+      if (cmd === 'queue-leave') {
+        stopQueue(true);
+        status('You left the race queue.');
+        setup();
+        field('playerName')?.focus();
+        return;
+      }
       if (cmd === 'keypad') {
         const grid = root.querySelector('.rr-keypad');
         grid.hidden = !grid.hidden;
@@ -309,9 +422,7 @@
       }
       void action(async () => {
         if (cmd === 'create' || cmd === 'enter') {
-          connect(await request('/api/rooms/' + cmd, {
-            trackIndex: opts.trackIndex, driverIndex: opts.driverIndex, cc: opts.cc, difficulty: opts.difficulty, botFill: true
-          }));
+          connect(await request('/api/rooms/' + cmd, queueOptions()));
         }
         if (cmd === 'copy') await copyLink(button.parentElement.querySelector('input'));
         if (cmd === 'rejoin') beginRace(true);
@@ -320,8 +431,20 @@
         if (cmd === 'ready') await request(target('ready'), { ready: !getRoom().seats.find(s => s.index === seat).ready }, key);
       });
     });
+    function savePlayerName(value) {
+      playerName = value.slice(0, maxPlayerName);
+      rememberPlayerName(playerName);
+    }
+    root.addEventListener('input', event => {
+      if (event.target.name === 'playerName') savePlayerName(event.target.value);
+    });
     root.addEventListener('submit', event => {
       event.preventDefault();
+      if (event.target.dataset.form === 'queue') {
+        savePlayerName(field('playerName').value);
+        startQueue();
+        return;
+      }
       void action(async () => {
         if (event.target.dataset.form === 'join') {
           const code = cleanCode(field('code').value);
@@ -360,9 +483,14 @@
       const prior = stored(), code = cleanCode(new URLSearchParams(location.search).get('room'));
       if (support && prior && (!roomPattern.test(code) || prior.code === code)) {
         try { connect(await request('/api/rooms/' + prior.code + '/resume', {}, prior.key)); return; }
-        catch { remember(null); }
+        catch {
+          remember(null);
+          if (support.queueEnabled && roomPattern.test(code)) urlCode('join');
+        }
       }
-      setup();
+      const queued = support?.queueEnabled && storedQueueToken();
+      if (queued) startQueue(queued);
+      else setup();
     })();
   }
   window.RallyRooms = { open };

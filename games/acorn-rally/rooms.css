@@ -17,7 +17,7 @@
 .rr-room label { display:grid; gap:7px; width:100%; color:#b9beaf; font-weight:650; font-size:12px; }
 .rr-room input:not([type=checkbox]),.rr-room select { max-width:100%; min-height:40px; padding:8px 12px; border:1px solid #515548; border-radius:4px; color:#fff9ec; background:#171914; font:inherit; font-size:14px; }
 .rr-room input:focus-visible,.rr-room select:focus-visible,.rr-room button:focus-visible,.rr-room a:focus-visible { outline:2px solid #ffc785; outline-offset:3px; }
-.rr-room input.rr-input-code,.rr-room input[name=remote],.rr-room .rr-share-link input { font-size:16px; }
+.rr-room input.rr-input-code,.rr-room input[name=remote],.rr-room input[name=playerName],.rr-room .rr-share-link input { font-size:16px; }
 .rr-room [data-form=join]+.rr-callout { margin:20px 0 0; }
 .rr-share-link { display:flex; gap:8px; min-width:0; }
 .rr-share-link+.rr-share-link { margin-top:8px; }

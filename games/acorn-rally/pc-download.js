@@ -16,7 +16,7 @@
     'breakwater-tides.js', 'race-sim.js', 'race-world.js', 'race.js', 'item-art.js', 'item-feedback.js',
     'mythic-world.js', 'mythic-hazards-art.js', 'ramps.js', 'ramp-art.js', 'cup-menu.css', 'horizon.js',
     'darkness-world.js', 'darkness-hazards-art.js', 'grimoire-kart.js', 'touch-controls.js', 'touch-controls.css',
-    'server/host.cjs', 'server/Hosting.txt', 'server/lobby-supervisor.cjs', 'server/Start Acorn Rally Lobby.cmd', 'server/firebase-lobby.cjs',
+    'server/host.cjs', 'server/Hosting.txt', 'server/lobby-supervisor.cjs', 'server/Start Acorn Rally Lobby.cmd', 'server/firebase-lobby.cjs', 'server/race-queue.cjs',
     'art/driver-9.webp', 'art/rear-9.webp', 'art/rear-mask-9.png',
     'art/driver-10.webp', 'art/rear-10.webp', 'art/rear-mask-10.png',
     'art/driver-11.webp', 'art/rear-11.webp', 'art/rear-mask-11.png',

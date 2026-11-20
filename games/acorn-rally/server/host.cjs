@@ -9,11 +9,14 @@ const { performance } = require('node:perf_hooks');
 
 const root = path.resolve(__dirname, '..');
 const raceSim = require('../race-sim.js');
+const { createRaceQueue } = require('./race-queue.cjs');
 const names = raceSim.drivers;
 const earnedDrivers = new Set([names.indexOf('Astra'), names.indexOf('Aurel'), names.indexOf('Grimoire the Vile')]);
 const neutral = Object.freeze({ steer: 0, gas: 0, brake: 0, drift: false, item: false, ability: false, lookBack: false });
 const idleLimit = 15 * 60 * 1000;
 const lobbyIdleLimit = 2 * 60 * 1000;
+const admissionTimeout = 25_000;
+const queueTokenPattern = /^[0-9a-f]{64}$/;
 const capacity = 8;
 const stepSeconds = 1 / 60;
 const mime = {
@@ -33,8 +36,8 @@ function scalar(value, lower) {
   return Number.isFinite(n) ? Math.min(1, Math.max(lower, n)) : 0;
 }
 
-function driverName(value, index) {
-  return String(value || '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 22) || names[index];
+function displayName(value) {
+  return String(value || '').replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 22);
 }
 
 function fail(status, message) {
@@ -63,11 +66,12 @@ function newSeat(index, body, occupied = []) {
   const preferred = integer(body.driverIndex, 0, names.length - 1, index);
   const driverIndex = reserved.has(preferred) ? names.findIndex((_, id) => !earnedDrivers.has(id) && !reserved.has(id)) : preferred;
   if (driverIndex < 0) fail(409, 'Every racer is already on this grid.');
-  return { index, driverIndex, name: driverName(body.name, driverIndex), token: crypto.randomBytes(24).toString('hex'),
+  return { index, driverIndex, name: displayName(body.name) || names[driverIndex], token: crypto.randomBytes(24).toString('hex'),
     kartIndex: index, driving: true, ready: false, stream: null, touched: Date.now(), seq: -1, inputAt: 0, input: { ...neutral }, pulses: {} };
 }
 
-function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false } = {}) {
+function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false,
+  raceQueue = singleRoom ? createRaceQueue() : null } = {}) {
   const rooms = new Map();
   function members(room) { return room.seats.filter(Boolean); }
   function activeRoom() {
@@ -81,11 +85,13 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
   function status() {
     const room = activeRoom();
     return { phase: !room || room.phase === 'lobby' ? 'waiting' : room.phase,
-      players: room ? members(room).length : 0, capacity };
+      players: room ? members(room).length : 0, capacity,
+      ...(raceQueue && { queueEnabled: true, waiting: raceQueue.size() }) };
   }
   function authenticate(room, token) {
     const seat = members(room).find(s => s.token === token);
-    if (!seat) fail(403, 'This seat has expired. Join again with the room code.');
+    if (!seat) fail(403, singleRoom ? 'This seat has expired. Join the race queue again.'
+      : 'This seat has expired. Join again with the room code.');
     seat.touched = room.touched = Date.now();
     return seat;
   }
@@ -134,11 +140,11 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
   function begin(room) {
     if (room.phase === 'racing') fail(409, 'The race has already started.');
     const occupied = members(room);
-    if (!occupied.every(s => s.stream && (s.index === room.host || s.ready)))
+    if (!singleRoom && !occupied.every(s => s.stream && (s.index === room.host || s.ready)))
       fail(409, 'Every driver must be connected and ready.');
     // Lobby identities survive rematches. Empty slots collapse when AI filling is disabled.
     occupied.forEach((s, i) => { s.kartIndex = room.botFill ? s.index : i; });
-    const humanSeats = occupied.map(s => s.kartIndex);
+    const humanSeats = occupied.filter(s => !singleRoom || s.stream).map(s => s.kartIndex);
     const gridSize = room.botFill ? capacity : occupied.length;
     const drivers = gridDrivers(occupied, gridSize);
     const state = sim.create({ trackIndex: room.trackIndex, mode: 'single', players: 1,
@@ -146,11 +152,21 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
       seed: crypto.randomInt(1, 2147483646) });
     if (!room.botFill && state.racers.length > gridSize) state.racers.length = gridSize;
     for (const s of occupied) {
+      if (singleRoom) state.racers[s.kartIndex].name = s.name;
       s.seq = -1; s.driving = true; s.input = { ...neutral }; s.pulses = {}; s.inputAt = 0;
     }
     room.state = state; room.tick = 0; room.phase = 'racing'; room.round += 1;
     announce(room);
     publish(room, 'snapshot', { round: room.round, tick: room.tick, state: room.state });
+  }
+  function retireRoom(room) {
+    rooms.delete(room.code);
+    publish(room, 'retired', { code: room.code, round: room.round });
+    for (const seat of members(room)) {
+      const stream = seat.stream;
+      seat.stream = null;
+      stream?.end();
+    }
   }
   function tick() {
     const now = Date.now();
@@ -163,8 +179,13 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
         seat.pulses = {};
       }
       sim.step(room.state, stepSeconds, inputs);
-      // An absent player races under AI control and still earns an official finish.
-      if (room.state.done) room.state.done = room.state.racers.every(r => r.finish > 0);
+      if (singleRoom) {
+        const finishes = members(room).map(seat => room.state.racers[seat.kartIndex].finish);
+        const cutoff = Math.min(12 * 60, ...finishes.filter(Boolean).map(time => time + 90));
+        room.state.done = finishes.every(Boolean) || room.state.time >= cutoff;
+      } else if (room.state.done) {
+        room.state.done = room.state.racers.every(racer => racer.finish > 0);
+      }
       room.tick += 1;
       if (room.state.done) {
         room.phase = 'finished';
@@ -172,7 +193,10 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
       }
       if (room.tick % 3 === 0 || room.state.done)
         publish(room, 'snapshot', { round: room.round, tick: room.tick, state: room.state });
-      if (room.state.done) announce(room);
+      if (room.state.done) {
+        if (singleRoom) retireRoom(room);
+        else announce(room);
+      }
     }
   }
   function collect() {
@@ -181,7 +205,8 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
     for (const room of rooms.values()) {
       if (members(room).some(s => s.stream)) {
         for (const s of members(room)) {
-          if (!s.stream && now - s.touched > disconnectLimit) removeSeat(room, s);
+          const timeout = s.queueKey && !s.joinedStream ? admissionTimeout : disconnectLimit;
+          if (!s.stream && now - s.touched > timeout) removeSeat(room, s);
           else if (s.stream) s.stream.write(': heartbeat\n\n');
         }
       } else if (now - room.touched > disconnectLimit) rooms.delete(room.code);
@@ -222,6 +247,41 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
     const assignment = preferred === seat.driverIndex ? '' : names[preferred] + ' is already on the grid. You joined as ' + names[seat.driverIndex] + '.';
     return { seat: index, token: seat.token, room: lobby(room), assignment };
   }
+  function queueRequest(body, leaving = false) {
+    const token = body.token;
+    if (typeof token !== 'string' || token.length !== 64 || !queueTokenPattern.test(token))
+      fail(400, 'Invalid race queue ticket.');
+    const queueKey = crypto.createHash('sha256').update(token).digest('hex');
+    let room = activeRoom();
+    if (room?.phase === 'lobby') {
+      for (const seat of members(room)) {
+        if (seat.queueKey && !seat.joinedStream && Date.now() - seat.touched > admissionTimeout) {
+          removeSeat(room, seat);
+        }
+      }
+      room = activeRoom();
+    }
+    const seat = room && members(room).find(player => player.queueKey === queueKey);
+    if (leaving) {
+      raceQueue.remove(token);
+      if (seat && !seat.joinedStream) removeSeat(room, seat);
+      return { left: true };
+    }
+    if (seat) return { admission: { seat: seat.index, token: seat.token, room: lobby(room) } };
+    const place = raceQueue.enter(token);
+    if (!place) fail(503, 'The race queue is full. Try joining again in a moment.');
+    const phase = room?.phase === 'racing' ? 'racing' : 'waiting';
+    if (place.position !== 1 || phase === 'racing' || (room && members(room).length >= capacity))
+      return { ...place, phase };
+    const name = typeof body.name === 'string' ? displayName(body.name) : '';
+    const options = { ...body, name };
+    const admission = room ? joinRoom(room, options) : createRoom(options);
+    const admitted = rooms.get(admission.room.code).seats[admission.seat];
+    admitted.queueKey = queueKey;
+    admitted.customName = name;
+    raceQueue.remove(token);
+    return { admission };
+  }
   function localUrls(port) {
     const addresses = Object.values(os.networkInterfaces()).flat().filter(record =>
       record && !record.internal && record.family === 'IPv4');
@@ -252,7 +312,7 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
       if (url.pathname === '/api/rooms/version' && req.method === 'GET') {
         const localSocket = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
         const localHost = /^(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/i.test(req.headers.host || '');
-        return returnJson(res, { game: 'acorn-rally', version: 1, singleRoom,
+        return returnJson(res, { game: 'acorn-rally', version: 1, singleRoom, queueEnabled: singleRoom,
           addresses: localSocket && localHost ? localUrls(server.address().port) : [] });
       }
       if (singleRoom && url.pathname === '/api/rooms/status' && req.method === 'GET')
@@ -261,12 +321,13 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
         fail(415, 'Send a JSON room request.');
       const body = req.method === 'POST' ? await readJson(req) : {};
       if (req.method === 'POST') {
-        if (url.pathname === '/api/rooms/enter' && singleRoom) {
-          const current = activeRoom();
-          return returnJson(res, current ? joinRoom(current, body) : createRoom(body), 201);
+        if (singleRoom && ['/api/rooms/queue', '/api/rooms/queue/leave'].includes(url.pathname)) {
+          await raceQueue.ready();
+          return returnJson(res, queueRequest(body, url.pathname.endsWith('/leave')));
         }
+        if (url.pathname === '/api/rooms/enter' && singleRoom) fail(409, 'Join the race queue to get a seat.');
         if (url.pathname === '/api/rooms/create') {
-          if (singleRoom && activeRoom()) fail(409, 'A lobby is already open. Choose Join lobby.');
+          if (singleRoom) fail(409, 'Join the race queue to get a seat.');
           return returnJson(res, createRoom(body), 201);
         }
       }
@@ -274,13 +335,17 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
       const room = match && rooms.get(match[1]);
       if (!room) fail(404, 'No room on this host matches that code.');
       const action = match[2];
-      if (action === 'join' && req.method === 'POST') return returnJson(res, joinRoom(room, body), 201);
+      if (action === 'join' && req.method === 'POST') {
+        if (singleRoom) fail(409, 'Join the race queue to get a seat.');
+        return returnJson(res, joinRoom(room, body), 201);
+      }
       const token = req.headers.authorization?.replace(/^Bearer /, '') ||
         (action === 'events' ? url.searchParams.get('seatKey') : null);
       const seat = authenticate(room, token);
       if (action === 'events' && req.method === 'GET') {
         const previous = seat.stream;
-        seat.stream = res; if (previous && previous !== res) previous.end();
+        seat.stream = res; seat.joinedStream = true;
+        if (previous && previous !== res) previous.end();
         req.socket.setNoDelay(true);
         res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store, no-transform',
           Connection: 'keep-alive', 'X-Accel-Buffering': 'no', 'Referrer-Policy': 'no-referrer' });
@@ -325,7 +390,8 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
         if (members(room).some(s => s !== seat && s.driverIndex === wanted))
           fail(409, names[wanted] + ' has already been selected. Choose another racer.');
         if (wanted !== seat.driverIndex) seat.ready = seat.index === room.host;
-        seat.driverIndex = wanted; seat.name = driverName(body.name, wanted);
+        seat.driverIndex = wanted;
+        seat.name = (singleRoom ? seat.customName : displayName(body.name)) || names[wanted];
       }
       if (action === 'config' || action === 'start') {
         if (seat.index !== room.host) fail(403, 'Only the host can start or change this race.');
@@ -345,7 +411,9 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
     }
   });
   return { server, rooms, tick, localUrls, status, close() {
-    if (timer) clearInterval(timer); clearInterval(cleanup);
+    if (timer) clearInterval(timer);
+    clearInterval(cleanup);
+    raceQueue?.close();
     for (const room of rooms.values()) for (const seat of members(room)) seat.stream?.end();
     server.closeAllConnections?.();
     return new Promise(resolve => server.close(resolve));
@@ -381,7 +449,7 @@ if (require.main === module) {
     console.log('\n  ACORN RALLY  /  ' + (singleRoom ? 'LOBBY SERVER' : 'PC HOST') + '\n\n  Play here: ' + local);
     for (const address of host.localUrls(port)) console.log('  Phone lobby: ' + address + '/?room=join');
     console.log('\n  On the same Wi-Fi, open a Phone lobby link in each phone’s browser.');
-    console.log('  ' + (singleRoom ? 'Join lobby opens one room for everyone.' : 'One phone creates a room and shares its invite.'));
+    console.log('  ' + (singleRoom ? 'Join the race queue to get the next available seat.' : 'One phone creates a room and shares its invite.'));
     console.log('  Keep this window open while racing.\n');
     if (singleRoom && process.env.ACORN_RALLY_PUBLIC_ORIGIN) {
       const { createFirebaseLobbyPublisher } = require('./firebase-lobby.cjs');

@@ -6,13 +6,20 @@ Keep one lobby running on a laptop
    "Start Acorn Rally Lobby.cmd" to start the supervised lobby server.
    Use "node server/lobby-supervisor.cjs" on macOS or Linux.
 2. On each phone, open one of the "Phone lobby" addresses printed by the
-   server, then tap Join lobby. The first player becomes the race host.
-   Others join that room. The laptop runs the server and can sit out.
-3. When the race finishes, join or ready up for the next race in the same
-   lobby. If the host leaves, a connected player takes over. If everyone
-   leaves, the next join opens a new room. Disconnected seats can resume
-   for two minutes. Visitors can join a race between rounds.
-4. Leave the laptop plugged in and awake. The supervisor restarts the
+   server, enter an optional player name, and tap Join Race Queue. The
+   first admitted player hosts the race and can start as soon as they
+   want, even while guests are in the garage. The laptop can sit out.
+3. Keep the queue page open to see your position. Seats open in arrival
+   order, and players arriving during a race wait for the next one.
+   A queue position expires after a minute of inactivity. Use Leave
+   queue to release your position immediately.
+4. The host closes the lobby when the entered racers finish, 90 seconds
+   after the first entered racer finishes, or at 12 minutes of race time,
+   whichever comes first. Unfinished runs are marked DNF. Racers see their
+   results and can rejoin at the back of the queue. If the room host leaves
+   early, a connected player takes over. A disconnected racer can resume
+   for two minutes while the room is still active.
+5. Leave the laptop plugged in and awake. The supervisor restarts the
    server after an unexpected exit. Active races live in memory and end
    if the process restarts.
 
@@ -76,7 +83,7 @@ Use https://rally.catnmice.com/?room=join for guests. The game streams
 race state with Server-Sent Events, so the tunnel must support SSE.
 Cloudflare Quick Tunnels lack SSE support.
 
-Optional Firebase listing
+Optional Firebase queue and listing
 
 Run the public lobby first. To publish its join link, install firebase-admin
 with "npm install --prefix server firebase-admin" in the extracted game
@@ -85,9 +92,13 @@ project on the laptop, set ACORN_RALLY_PUBLIC_ORIGIN=https://rally.catnmice.com,
 and start the lobby launcher from that environment. For scheduled startup,
 make the same settings available to the task's Windows account. Store
 credentials outside the game folder. Configure one publisher for this
-document, acornRallyService/public. It refreshes every 30 seconds and
-expires 90 seconds after its last update. The lobby keeps working if the
-directory is unavailable.
+listing, acornRallyService/public. It refreshes every 30 seconds and
+expires 90 seconds after its last update. The queue uses the private
+acornRallyService/queue document to restore recent waiting positions after
+a restart. The laptop's Admin SDK controls the queue. The website can read
+the public join link and waiting count. Use one laptop per Firebase queue.
+Local play uses an in-memory queue if Firebase is unconfigured or cannot
+be reached at startup.
 
 Connection recovery
 

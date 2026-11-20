@@ -52,7 +52,7 @@ function createFirebaseLobbyPublisher({ getStatus = () => ({}), env = process.en
     do {
       queued = false;
       try {
-        const { phase, players, capacity } = getStatus() || {};
+        const { phase, players, capacity, queueEnabled, waiting } = getStatus() || {};
         const record = {
           origin,
           joinUrl: origin + '/?room=join',
@@ -60,6 +60,8 @@ function createFirebaseLobbyPublisher({ getStatus = () => ({}), env = process.en
           expiresAt: firestore.Timestamp.fromMillis(Date.now() + expiryMs)
         };
         if (onlinePhases.has(phase)) record.phase = phase;
+        if (queueEnabled === true) record.queueEnabled = true;
+        if (Number.isInteger(waiting) && waiting >= 0 && waiting <= 128) record.waiting = waiting;
         if (Number.isInteger(capacity) && capacity >= 2 && capacity <= 8) record.capacity = capacity;
         if (Number.isInteger(players) && players >= 0 && players <= (record.capacity ?? 8)) record.players = players;
         await listing.set(record);

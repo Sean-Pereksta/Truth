@@ -444,9 +444,10 @@
       txt(ctx,'OVER THE EDGE',w/2,h*.36,compact?25:40,'#ffce86','italic 900','Rally','center');
     }
     else if(Sim.isFrozen(st,r)){
-      const left=Math.ceil(clamp(r.freezeUntil-st.time,0,1)*10)/10,label='FROZEN  '+left.toFixed(1)+'s',width=compact?119:152;
-      roundBox(ctx,w/2-width/2,h*.33-15,width,30,5,'#122e43ef','#91e8fd');
-      txt(ctx,label,w/2,h*.33+5,compact?15:21,'#b9f4ff','800','Condensed','center');
+      const grabbed=r.hazardHit?.id===23,left=Math.ceil(clamp(r.freezeUntil-st.time,0,1)*10)/10;
+      const label=(grabbed?'GRABBED  ':'FROZEN  ')+left.toFixed(1)+'s',width=compact?119:152;
+      roundBox(ctx,w/2-width/2,h*.33-15,width,30,5,grabbed?'#2b1c39ef':'#122e43ef',grabbed?'#dca9ff':'#91e8fd');
+      txt(ctx,label,w/2,h*.33+5,compact?15:21,grabbed?'#f2dbff':'#b9f4ff','800','Condensed','center');
     }
     else if(threat){
       const y=h*.33,warn=threat.stage==='warn',width=compact?142:182;
@@ -732,8 +733,10 @@
         document.documentElement.dataset.catnmicePlaying='true';
         root.dispatchEvent(new Event('catnmice-game-started'));
       }
-      if(st.done&&!paused){endDelay+=frame;if(endDelay>2.12){
-        const data=Sim.result(lastSnap?.done?lastSnap:st,seat);stop();options.onFinish?.(data);return;}}
+      if(st.done&&(!paused||net?.queueMode)){endDelay+=frame;if(endDelay>2.12){
+        const finalState=lastSnap?.done?lastSnap:st, data=Sim.result(finalState,seat);
+        if(net?.queueMode&&!finalState.racers[seat]?.finish){data.dnf=true;data.time=null;}
+        stop();options.onFinish?.(data);return;}}
       raf=requestAnimationFrame(run);
     }
     const dispose=()=>{alive=false;touchControls.dispose();cancelAnimationFrame(raf);listeners.forEach(fn=>fn());sound.close();music?.setScene('menu');music?.setPaused(false);renderer.dispose();stage.remove();container.hidden=true;};
