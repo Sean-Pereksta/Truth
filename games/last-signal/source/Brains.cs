@@ -48,6 +48,8 @@ namespace LastSignal
             public Prop Item, Fire, WaterSource, Barrel;
             public Prop WorkTree;
             public float NextWorkCheck, WorkEnds;
+            public Prop ShelterFrame;
+            public float ShelterWork, NextShelterCheck;
 
             public float WaterDeadline, WaterRecheck;
             public int Drinks;
@@ -1517,6 +1519,7 @@ namespace LastSignal
             if(TickPackCare(g,a,m,dt))return;
             if(m.Replan<=0) Plan(g,a,m);
             a.State=m.Job==Aim.Wait && m.LookoutUntil>g.Time?"keeping watch":labels[(int)m.Job];a.Sprint=false;a.Aiming=false;
+            if(WorkOnShelter(g,a,m,dt))return;
             if(ClimbObservedFort(g,a,m,dt))return;
             if(m.Job==Aim.Combat){Duel(g,a,m,dt);return;}
             Guard(a,false);

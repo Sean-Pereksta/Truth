@@ -48,6 +48,10 @@ namespace LastSignal
 
     public static partial class Survival
     {
+        internal const string ShelterFrameLabel="Unfinished shelter frame";
+        internal static bool IsShelterFrame(Prop p) {
+            return p!=null && p.Model=="barricade" && p.Label==ShelterFrameLabel;
+        }
         public static readonly Recipe[] Crafts = {
             new Recipe("sling","Sling","Hold Attack, then release a stone. Aim steadies the shot.",1,"fiber",2,"cloth",1),
             new Recipe("spear","Spear","Attack to thrust. Hold Throw and release. Recover with Use.",1,"branch",2,"stone",1,"fiber",1),
@@ -438,7 +442,7 @@ namespace LastSignal
         }
         private static bool Eligible(Prop p)
         {
-            return !p.Removed && (p.Kind=="pickup" || p.Kind=="pack" || p.Kind=="remnant" || Fire(p) || Gate(p) || WaterSource(p));
+            return !p.Removed && (p.Kind=="pickup" || p.Kind=="pack" || p.Kind=="remnant" || IsShelterFrame(p) || Fire(p) || Gate(p) || WaterSource(p));
         }
         struct InteractionRay
         {
@@ -549,7 +553,7 @@ namespace LastSignal
                     if(!target.Latched)g.FocusOptions.Add("gate");
                     if(!target.Open&&Arena.TendsGate(g,a,target))g.FocusOptions.Add("latch");
                 }
-                else if(target.Kind!="remnant") g.FocusOptions.Add("pick");
+                else if(target.Kind!="remnant" && !IsShelterFrame(target)) g.FocusOptions.Add("pick");
             }
             else if(animal!=null)
             {
@@ -602,6 +606,7 @@ namespace LastSignal
             int count=g.FocusOptions.Count;
             Prop p=g.FocusProp;
             if(p!=null && p.Kind=="remnant") return "Emptied pack";
+            if(IsShelterFrame(p))return ShelterFrameLabel;
             string status="";
             if(WaterSource(p) || g.FocusShore)
             {

@@ -4,6 +4,25 @@ namespace LastSignal
 {
     public sealed partial class Renderer
     {
+        static void DrawShelterFrame(float width)
+        {
+            // The paid windbreak carries a lashed ridge and two bare, sloping rafters.
+            glDisable(Texture);
+            for(int side=-1;side<=1;side+=2)
+            {
+                float x=side*width*.34f;
+                glColor3f(.40f,.29f,.17f);
+                glPushMatrix();glTranslatef(x,.84f,0);Box(.09f,1.68f,.09f);glPopMatrix();
+                glColor3f(.57f,.43f,.26f);
+                glPushMatrix();glTranslatef(x,.81f,.48f);glRotatef(-31,1,0,0);Box(.075f,1.88f,.075f);glPopMatrix();
+                glColor3f(.75f,.62f,.38f);
+                glPushMatrix();glTranslatef(x,1.58f,0);glRotatef(12,0,0,1);Box(.14f,.075f,.16f);glPopMatrix();
+            }
+            glColor3f(.46f,.34f,.21f);
+            glPushMatrix();glTranslatef(0,1.61f,0);Box(width*.76f,.08f,.09f);glPopMatrix();
+            White();
+        }
+
         static void Segment(float x1,float y1,float z1,float x2,float y2,float z2)
         {
             glVertex3f(x1,y1,z1);glVertex3f(x2,y2,z2);

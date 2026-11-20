@@ -79,7 +79,8 @@ function makeActor(id, name, style, spawn, groundY, random) {
     decision: random() * 0.4, target: null, aggression: random(), intent: "roam",
     lastSeen: null, lastSound: 0, soundMemory: null, opponent: null, openingLoot: false,
     attackedAt: -Infinity, woundedAt: -Infinity, nextStepNoise: 0, lookAt: null,
-    escapeUntil: 0, openingRoute: null, leftPlaza: false, winded: false
+    escapeUntil: 0, openingRoute: null, leftPlaza: false, winded: false,
+    seenHits: new Map(), seenSwings: new Map()
   };
 }
 
@@ -300,12 +301,12 @@ export class SoloArena {
     equips(actor, id);
   }
 
-  blueprint(actor = this.player, recipe = this.build, rotation = this.buildAngle) {
+  blueprint(actor = this.player, recipe = this.build, rotation = this.buildAngle, reach = 3.45) {
     if (!recipe) return null;
     const { x, z, yaw, id: actorId } = actor;
     const id = recipe[0];
-    const px = Math.round((x + Math.sin(yaw) * 3.45) * 2) / 2;
-    const pz = Math.round((z + Math.cos(yaw) * 3.45) * 2) / 2;
+    const px = Math.round((x + Math.sin(yaw) * reach) * 2) / 2;
+    const pz = Math.round((z + Math.cos(yaw) * reach) * 2) / 2;
     const y = this.map.heightAt(px, pz);
     const [w, h, d] = pieceSize[id];
     const angle = Math.round(yaw / (Math.PI / 4)) * Math.PI / 4 + rotation;
@@ -342,6 +343,7 @@ export class SoloArena {
     const { id, x, y, z, w, h, d, angle, lit, open } = piece;
     const record = itemRow(id, x, y, z, w, h, d, "structure", angle, lit);
     record[13] = Boolean(open);
+    record[15] = Boolean(piece.shelterFrame);
     this.changes.set(piece.propIndex, record);
   }
 
@@ -395,6 +397,16 @@ export class SoloArena {
     for (const stove of this.stoves) addOption(stove, "campfire", "Cook game");
     for (const piece of this.pieces) {
       if (this.removed.has(piece.propIndex)) continue;
+      if (piece.shelterFrame && aimAt(piece) && distance(actor, piece) <= clueDistance) {
+        // Look at the near face, so the frame's own solid windbreak does not hide the clue.
+        const range = distance(actor, piece);
+        const inset = Math.min(1, Math.max(piece.w, piece.d) * 0.55 / Math.max(0.01, range));
+        const near = { x: piece.x + (actor.x - piece.x) * inset, z: piece.z + (actor.z - piece.z) * inset };
+        if (this.lineClear(actor, near)) {
+          this.nearbyRemnant = "Unfinished shelter frame";
+          clueDistance = range;
+        }
+      }
       if (piece.id === "fire") addOption(piece, "campfire", piece.lit ? "Cook game" : "Light campfire");
       if (piece.id === "gate") addOption(piece, "gate", piece.open ? "Close gate" : "Open gate");
     }
@@ -513,19 +525,27 @@ export class SoloArena {
   }
 
   workSite(actor) {
+    const frame = actor.campFrame;
+    if (frame && this.removed.has(frame.propIndex)) actor.campFrame = null;
+    const camp = actor.campFrame;
     if (this.alive <= 3 || this.clock < (actor.nextWorkSearch || 0) ||
-        actor.health < 40 || actor.hydration < 35 || actor.hunger < 35 ||
-        this.pieces.some(p => p.owner === actor.id && !this.removed.has(p.propIndex))) return null;
+        actor.health < 40 || actor.hydration < 35 || actor.hunger < 35) return null;
+    if (camp && (!camp.shelterFrame || distance(actor, camp) > 32 ||
+        (this.storm.active && distance(camp, this.storm) >= this.storm.radius - 5))) return null;
+    if (!camp && this.pieces.some(p => p.owner === actor.id && !this.removed.has(p.propIndex))) return null;
     actor.nextWorkSearch = this.clock + 3;
-    const recipe = builds.find(row => row[0] === "barricade");
-    if (recipeAffordable(actor, recipe, true)) return { x: actor.x, z: actor.z,
-      workNode: { x: actor.x, z: actor.z, type: "camp" } };
+    const recipe = builds.find(row => row[0] === (camp ? "lean_to" : "barricade"));
+    if (recipeAffordable(actor, recipe, true)) {
+      if (camp) return { ...camp.workSpot, workNode: { ...camp.workSpot, type: "roof", propIndex: camp.propIndex } };
+      return { x: actor.x, z: actor.z, workNode: { x: actor.x, z: actor.z, type: "camp" } };
+    }
     let best = null, nearest = 22;
+    const needs = id => count(actor, id) < (recipe[2][id] || 0);
     for (const cache of this.map.caches) {
-      const useful = (count(actor, "branch") < recipe[2].branch && cache.items.branch) ||
-        (count(actor, "fiber") < recipe[2].fiber && cache.items.fiber) ||
-        (!count(actor, "hatchet") && cache.items.hatchet);
+      const model = this.world.props[cache.propIndex]?.[0];
+      const useful = model === "cache" || needs(model) || (model === "hatchet" && !count(actor, "hatchet"));
       if (!useful || this.removed.has(cache.propIndex)) continue;
+      if (camp && distance(cache, camp) > 30) continue;
       const range = distance(actor, cache);
       if (range >= nearest || (range > 2 && Math.abs(angleDifference(heading(actor, cache), actor.yaw)) > 1.7)) continue;
       if ((this.storm.active && distance(cache, this.storm) >= this.storm.radius - 6) || !this.lineClear(actor, cache)) continue;
@@ -533,9 +553,10 @@ export class SoloArena {
       nearest = range;
     }
     for (const node of this.map.nodes) {
-      const useful = (node.type === "tree" && count(actor, "hatchet")) ||
-        (node.type === "fiber" && count(actor, "fiber") < recipe[2].fiber);
+      const useful = (node.type === "tree" && count(actor, "hatchet") && (needs("branch") || needs("fiber"))) ||
+        (node.type === "fiber" && needs("fiber"));
       if (!useful || this.removed.has(node.propIndex)) continue;
+      if (camp && distance(node, camp) > 30) continue;
       const range = distance(actor, node);
       if (range < 0.1 || range >= nearest || Math.abs(angleDifference(heading(actor, node), actor.yaw)) > 1.7) continue;
       if (this.storm.active && distance(node, this.storm) >= this.storm.radius - 6) continue;
@@ -548,6 +569,23 @@ export class SoloArena {
     return best;
   }
 
+  finishRoof(actor, recipe) {
+    const frame = actor.campFrame;
+    if (!frame?.shelterFrame || this.removed.has(frame.propIndex) || !recipeAffordable(actor, recipe, true)) return false;
+    // Both sides use the frame's actual orientation. The roof sits beside the
+    // cover and the worker stays outside its footprint when the roof goes up.
+    for (const yaw of [frame.angle, frame.angle + Math.PI]) {
+      const roof = this.blueprint({ id: actor.id, x: frame.x, z: frame.z, yaw }, recipe, 0, 2.25);
+      if (!roof.fits || distance(actor, roof) < 2.2) continue;
+      this.installPiece(actor, recipe, roof);
+      frame.shelterFrame = false;
+      this.showPiece(frame);
+      break;
+    }
+    actor.roofStarted = null;
+    return false;
+  }
+
   workAt(actor, site) {
     const node = site.workNode;
     if (!node || this.removed.has(node.propIndex) || this.alive <= 3) return false;
@@ -556,13 +594,26 @@ export class SoloArena {
     if (distance(actor, node) > 2.7 || !this.lineClear(actor, site)) return false;
     if (this.clock < (actor.nextWorkStroke || 0)) return true;
     actor.nextWorkStroke = this.clock + 1.05;
-    const recipe = builds.find(row => row[0] === "barricade");
-    if (recipeAffordable(actor, recipe, true)) {
+    const camp = actor.campFrame;
+    const recipe = builds.find(row => row[0] === (camp ? "lean_to" : "barricade"));
+    if (node.type === "roof") {
+      if (!camp?.shelterFrame || camp.propIndex !== node.propIndex || !recipeAffordable(actor, recipe, true)) return false;
+      actor.yaw = heading(actor, camp);
+      if (actor.roofStarted == null) actor.roofStarted = this.clock;
+      actor.swing = 0.4;
+      this.rivalNoise(actor, 14, "build");
+      return this.clock - actor.roofStarted < 4 || this.finishRoof(actor, recipe);
+    }
+    if (camp && recipeAffordable(actor, recipe, true)) return false;
+    if (!camp && recipeAffordable(actor, recipe, true)) {
       const facing = actor.yaw;
       for (const turn of [Math.PI, Math.PI / 2, -Math.PI / 2]) {
         actor.yaw = facing + turn;
         const piece = this.blueprint(actor, recipe, 0);
         if (!piece.fits) continue;
+        piece.shelterFrame = true;
+        piece.workSpot = { x: actor.x, z: actor.z };
+        actor.campFrame = piece;
         this.installPiece(actor, recipe, piece);
         break;
       }
@@ -574,6 +625,7 @@ export class SoloArena {
       return false;
     }
     if (node.type === "camp" || (node.type === "tree" && !count(actor, "hatchet"))) return false;
+    if (camp && node.type === "tree" && count(actor, "branch") >= recipe[2].branch && count(actor, "fiber") >= recipe[2].fiber) return false;
     if (node.type === "tree") equips(actor, "hatchet");
     actor.swing = 0.48;
     actor.cooldown = Math.max(actor.cooldown, weapons.hatchet.delay);
@@ -822,6 +874,7 @@ export class SoloArena {
   }
 
   rivalPlan(actor, intent, goal, lookAt = null, opponent = null) {
+    if (intent !== "work" || goal?.workNode?.type !== "roof") actor.roofStarted = null;
     actor.intent = intent;
     actor.target = goal;
     actor.lookAt = lookAt;
@@ -833,7 +886,15 @@ export class SoloArena {
     const bold = actor.style === "fighter", cautious = actor.style === "runner" || actor.style === "stalker";
     const sound = this.heardBy(actor);
     const visible = this.actors.filter(other => this.canSeeRival(actor, other));
-    const rank = other => distance(actor, other) - (other.health < 43 ? 7 : 0) -
+    for (const rival of visible) {
+      if (rival.hurt > 0 && now - rival.woundedAt < 0.43) actor.seenHits.set(rival.id, now);
+      if (rival.swing > 0 && now - rival.attackedAt < 0.48) {
+        actor.seenSwings.set(rival.id, { x: rival.x, z: rival.z, yaw: rival.yaw, at: now });
+      }
+    }
+    const exposed = other => now - (actor.seenHits.get(other.id) ?? -Infinity) < 2.6 ||
+      (other.weapon === "crossbow" && other.reload > 0);
+    const rank = other => distance(actor, other) - (exposed(other) ? 7 : 0) -
       (other.id === actor.opponent ? 3 : 0);
     visible.sort((a, b) => rank(a) - rank(b));
     const enemy = visible[0], third = visible[1];
@@ -866,9 +927,12 @@ export class SoloArena {
       const contact = reach < 4.3 || (reach < 14 && now - actor.woundedAt < 1.8);
       const outmatched = actor.weapon === "fists" && enemy.weapon !== "fists";
       const extraThreat = third || (sound && sound.source !== enemy.id && now - sound.at < 1.8);
-      const trading = third && distance(enemy, third) < 13 &&
-        (now - enemy.attackedAt < 2.6 || now - third.attackedAt < 2.6);
-      const vulnerable = enemy.health < 42 || (enemy.weapon === "crossbow" && enemy.reload > 0);
+      const swungAt = (striker, rival) => {
+        const swing = actor.seenSwings.get(striker.id);
+        return swing && now - swing.at < 2.6 && Math.abs(angleDifference(swing.yaw, heading(swing, rival))) < 1.1;
+      };
+      const trading = third && distance(enemy, third) < 13 && (swungAt(enemy, third) || swungAt(third, enemy));
+      const vulnerable = exposed(enemy);
       const needsRecovery = actor.health < 48 || actor.stamina < 23 || actor.hunger < 26 || actor.hydration < 26;
       if (this.alive > 2 && ((needsRecovery && extraThreat) ||
         (contact && (actor.health < 25 || (outmatched && cautious))))) {
@@ -1118,7 +1182,7 @@ export class SoloArena {
         .map(other => [other.x, other.y, other.z, other.yaw, other.alive, other.crouch,
           other.style, other.name, other.yaw, other.anim, other.speed, other.weapon,
           hasShield(other), hasShield(other) && other.guard, Number(other.guard), other.reload / 4,
-          other.crossbowLoaded, other.swing]),
+          other.crossbowLoaded, other.swing, this.clock - other.woundedAt < 0.43 ? other.hurt / 0.43 : 0]),
       wildlife: this.wildlife.filter(animal => !animal.harvested && distance(actor, animal) < 85)
         .map(animal => [animal.model, animal.x, this.map.heightAt(animal.x, animal.z), animal.z, animal.yaw, animal.health > 0, animal.phase]),
       shots: this.shots.map(shot => [shot.model, shot.x, shot.y, shot.z, shot.yaw, Math.PI / 2 - shot.pitch]),

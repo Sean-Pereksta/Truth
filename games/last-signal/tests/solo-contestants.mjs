@@ -167,6 +167,58 @@ test("a worker builds a persistent barricade from wood actually gathered at the 
   assert.equal(game.changes.get(barrier.propIndex)[9], "structure");
 });
 
+test("a nearby fight interrupts a shelter and the owner pays for the roof only upon returning", () => {
+  const game = clearing(["hunter", "runner", "fighter"]);
+  const [player, worker] = game.actors;
+  Object.assign(player, { x: 90, z: 90 });
+  Object.assign(game.actors[2], { x: -80, z: 90 });
+  Object.assign(game.actors[3], { x: 80, z: -90 });
+  Object.assign(worker, { bag: { branch: 8, fiber: 5, cloth: 2, spear: 1 }, weapon: "spear" });
+  const start = game.workSite(worker);
+  assert.ok(start);
+  game.workAt(worker, start);
+  const frame = game.pieces[0];
+  assert.equal(frame.shelterFrame, true);
+  assert.equal(game.changes.get(frame.propIndex)[15], true);
+  assert.deepEqual(worker.bag, { branch: 6, fiber: 4, cloth: 2, spear: 1 });
+
+  for (let step = 0; step < 150 && worker.roofStarted == null; step++) game.step(0.1);
+  assert.ok(Number.isFinite(worker.roofStarted), "the worker reached the roof site");
+  for (let step = 0; step < 15; step++) game.step(0.1);
+  assert.equal(game.pieces.length, 1);
+
+  // Put the threat on the worker's side of the frame and keep it in sight.
+  Object.assign(player, { x: worker.x + Math.sin(worker.yaw) * 1.2, z: worker.z + Math.cos(worker.yaw) * 1.2 });
+  for (let i = 0; i < 70; i++) {
+    // Sustain the threat for longer than it normally takes to add the roof.
+    player.health = 100;
+    game.step(0.1);
+  }
+  assert.equal(worker.intent, "engage");
+  assert.equal(worker.roofStarted, null);
+  assert.deepEqual(game.pieces, [frame]);
+  assert.equal(frame.shelterFrame, true);
+  assert.deepEqual(worker.bag, { branch: 6, fiber: 4, cloth: 2, spear: 1 });
+
+  Object.assign(player, { x: 90, z: 90 });
+  for (let step = 0; step < 240 && game.pieces.length === 1; step++) {
+    game.clock += 0.1;
+    game.updateActor(worker, 0.1);
+  }
+  assert.equal(game.pieces.length, 2);
+  assert.equal(game.pieces[0].propIndex, frame.propIndex);
+  assert.equal(frame.shelterFrame, false);
+  assert.equal(game.pieces[1].id, "lean_to");
+  assert.equal(game.pieces[1].owner, worker.id);
+  assert.deepEqual(worker.bag, { branch: 3, fiber: 2, cloth: 1, spear: 1 });
+  for (let i=0; i<100; i++) {
+    game.clock += 0.1;
+    game.updateActor(worker, 0.1);
+  }
+  assert.equal(game.pieces.length, 2);
+  assert.deepEqual(worker.bag, { branch: 3, fiber: 2, cloth: 1, spear: 1 });
+});
+
 test("all three maps run complete 24-contestant solo matches", () => {
   for (let arena = 0; arena < 3; arena++) {
     const game = new SoloArena({ arena, seed: 1776 + arena });

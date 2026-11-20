@@ -2,6 +2,58 @@ using System;
 
 namespace LastSignal {
     public static partial class Brains {
+        static bool WorkOnShelter(Game g,Actor a,Mind m,float dt)
+        {
+            if(m.Style!=Style.Builder)return false;
+            bool available=m.Job==Aim.Camp || m.Job==Aim.Wait || m.Job==Aim.Travel || m.Job==Aim.Forage || m.Job==Aim.Loot;
+            if(!available || m.Opening || m.HasObservation || m.HeardFor>0 || m.LostSight>0 || m.ImpactUntil>g.Time ||
+                a.Hurt>.02f || a.Health<40 || a.Hunger<35 || a.Hydration<35 || g.AliveCount<=3 ||
+                Inside(a.X,a.Z,24) || !Inside(a.X,a.Z,g.SafeRadius-6f))
+            {
+                m.ShelterWork=0;return false;
+            }
+            Prop frame=m.ShelterFrame;
+            if(frame==null || frame.Removed)
+            {
+                if(g.Time<m.NextShelterCheck)return false;
+                m.NextShelterCheck=g.Time+3f;
+                if(Math.Abs(a.Y-Arena.Ground(g,a.X,a.Z))>.32f || !Survival.CanMake(a,Survival.Find(Survival.Builds,"barricade")))return false;
+                for(int attempt=0;attempt<6;attempt++)
+                {
+                    float yaw=a.Yaw+attempt*1.0472f;
+                    frame=Survival.Build(g,a,"barricade",a.X+Sin(yaw)*2.5f,a.Z+Cos(yaw)*2.5f,yaw);
+                    if(frame!=null)break;
+                }
+                if(frame==null)return false;
+                frame.Label=Survival.ShelterFrameLabel;m.ShelterFrame=frame;
+                m.ShelterWork=0;m.NextShelterCheck=0;
+            }
+            if(frame.Label!=Survival.ShelterFrameLabel || !Inside(frame.X,frame.Z,g.SafeRadius-3f) ||
+                !Survival.CanMake(a,Survival.Find(Survival.Builds,"lean_to")))return false;
+            float distance=Dist(a.X,a.Z,frame.X,frame.Z);
+            if(distance>12f || Math.Abs(a.Y-frame.Y)>2.5f){m.ShelterWork=0;return false;}
+            if(g.Time<m.NextShelterCheck)return false;
+            Guard(a,false);a.State="building a shelter";a.Crouch=false;
+            if(distance>3.6f)
+            {
+                Go(g,a,m,frame.X-a.X,frame.Z-a.Z,2.7f,dt,true);return true;
+            }
+            a.Speed=0;a.Crouch=true;a.Yaw=ApproachAngle(a.Yaw,Heading(frame.X-a.X,frame.Z-a.Z),dt*4);
+            m.ShelterWork+=dt;
+            if(m.ShelterWork<4f)return true;
+            for(int side=-1;side<=1;side+=2)
+            {
+                float x=frame.X+side*Cos(frame.Yaw)*2.85f-Sin(frame.Yaw)*.48f;
+                float z=frame.Z-side*Sin(frame.Yaw)*2.85f-Cos(frame.Yaw)*.48f;
+                if(Survival.Build(g,a,"lean_to",x,z,frame.Yaw)!=null)
+                {
+                    frame.Label="Shelter windbreak";m.ShelterWork=0;return true;
+                }
+            }
+            // The site may now be occupied. Resume normal work until another try.
+            m.NextShelterCheck=g.Time+6f;return false;
+        }
+
         static bool Fieldwork(Game g,Actor a,Mind m,float dt)
         {
             bool idle=m.Job==Aim.Forage || m.Job==Aim.Wait || m.Job==Aim.Travel;

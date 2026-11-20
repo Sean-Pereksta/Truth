@@ -410,6 +410,7 @@ namespace LastSignal
             Model gate;
             if(p.Open&&p.Model=="gate"&&models.TryGetValue(Stage(p),out gate)){foreach(Part root in gate.roots)GatePart(root);}
             else Mesh(Stage(p));
+            if(Survival.IsShelterFrame(p))DrawShelterFrame(p.W);
             if(metal)glMaterialfv(0x0408,0x1202,matte);
             if(p.HasMeat){glTranslatef(0,p.Model=="stove"?.91f:.43f,0);glScalef(.7f,.7f,.7f);Mesh(p.Cook>=1?"meal":"meat");}
             glPopMatrix();

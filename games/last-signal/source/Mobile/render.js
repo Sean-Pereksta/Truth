@@ -981,9 +981,19 @@ export class ArenaRenderer {
   }
 
   prop(batch, p, elapsed, lowDetail = false, highlight = null) {
-    const [id, x, y, z, size, yaw, w, h, d, kind, lit, felledAge, fallYaw, open, damagedMesh] = p;
+    const [id, x, y, z, size, yaw, w, h, d, kind, lit, felledAge, fallYaw, open, damagedMesh, shelterFrame] = p;
     const oldTree = felledAge != null && felledAge >= 0;
     let matrix = pose(x, y, z, yaw, 0, size);
+    if (shelterFrame) {
+      const timber = [0.40, 0.29, 0.17, 1], sapling = [0.57, 0.43, 0.26, 1], cord = [0.75, 0.62, 0.38, 1];
+      for (const side of [-1, 1]) {
+        const end = side * w * 0.34;
+        this.queue(batch, this.trunk, multiply(matrix, pose(end, 0, 0, 0, 0, 0.09, 1.68, 0.09)), timber);
+        this.queue(batch, this.trunk, multiply(matrix, pose(end, 0, 0.96, 0, -0.54, 0.075, 1.88, 0.075)), sapling);
+        this.queue(batch, this.box, multiply(matrix, pose(end, 1.54, 0, 0, 0, 0.14, 0.08, 0.16)), cord);
+      }
+      this.queue(batch, this.box, multiply(matrix, pose(0, 1.57, 0, 0, 0, w * 0.76, 0.08, 0.09)), timber);
+    }
     if (kind === "remnant") {
       if (id === "cache") {
         // Leave the lid propped against the far side, exposing the empty interior.
@@ -1074,10 +1084,10 @@ export class ArenaRenderer {
   }
 
   actor(batch, a, clock, nearby) {
-    const [x, y, z, yaw, alive, crouch, style, , fallYaw, anim, speed, weapon, shield, guard, guardBlend, reload, loaded, striking] = a;
+    const [x, y, z, yaw, alive, crouch, style, , fallYaw, anim, speed, weapon, shield, guard, guardBlend, reload, loaded, striking, recoil = 0] = a;
     const tint = costume[style] ?? solid;
     const gait = alive ? Math.sin(anim ?? clock * 5) * clamp((speed ?? 0) * 0.25) : 0;
-    const matrix = alive ? pose(x, y - (crouch ? 0.20 : 0), z, yaw, 0, 1, crouch ? 0.86 : 1, 1)
+    const matrix = alive ? pose(x, y - (crouch ? 0.20 : 0) - recoil * 0.1, z, yaw, -0.19 * recoil, 1, crouch ? 0.86 : 1, 1)
       : pose(x, y + 0.18, z, fallYaw ?? yaw, -Math.PI / 2);
     if (alive && nearby) {
       const advance = shield ? clamp(Math.max(guard ? 0.85 : 0, guardBlend || 0)) : 0;

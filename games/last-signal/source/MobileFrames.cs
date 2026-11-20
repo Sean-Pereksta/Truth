@@ -22,17 +22,19 @@ namespace LastSignal {
             internal float X,Y,Z,Scale,Yaw,W,H,D;
             internal string Model,Kind;
             internal int Damage;
-            internal bool Lit,Open,Present;
+            internal bool Lit,Open,Present,ShelterFrame;
 
             internal PropView(Prop p) {
                 X=p.X;Y=p.Y;Z=p.Z;Scale=p.Scale;Yaw=p.Yaw;W=p.W;H=p.H;D=p.D;
                 Model=p.Model;Kind=p.Kind;Damage=DamageStage(p);
+                ShelterFrame=Survival.IsShelterFrame(p);
                 Lit=p.Lit;Open=p.Open;Present=!p.Removed&&!String.IsNullOrEmpty(p.Model);
             }
             internal bool Matches(Prop p) {
                 return Present==(!p.Removed&&!String.IsNullOrEmpty(p.Model))&&
                     (!Present||(X==p.X&&Y==p.Y&&Z==p.Z&&Scale==p.Scale&&Yaw==p.Yaw&&W==p.W&&H==p.H&&D==p.D&&
-                    Model==p.Model&&Kind==p.Kind&&Damage==DamageStage(p)&&Lit==p.Lit&&Open==p.Open));
+                    Model==p.Model&&Kind==p.Kind&&Damage==DamageStage(p)&&Lit==p.Lit&&Open==p.Open&&
+                    ShelterFrame==Survival.IsShelterFrame(p)));
             }
         }
 
@@ -218,7 +220,7 @@ namespace LastSignal {
             int damage=DamageStage(p);
             string stage=damage==0?p.Model:p.Model+(damage==2?"2":"1");
             return new object[]{p.Model,Value(p.X),Value(p.Y),Value(p.Z),Value(p.Scale),Value(p.Yaw),
-                Value(p.W),Value(p.H),Value(p.D),p.Kind,p.Lit,Value(fallAge),Value(p.FellDirection),p.Open,stage};
+                  Value(p.W),Value(p.H),Value(p.D),p.Kind,p.Lit,Value(fallAge),Value(p.FellDirection),p.Open,stage,Survival.IsShelterFrame(p)};
         }
 
         static List<object[]> Recipes(Actor actor,Recipe[] recipes) {
