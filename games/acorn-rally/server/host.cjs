@@ -249,10 +249,12 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
         try { origin = new URL(req.headers.origin); } catch { fail(403, 'Open the game on this host to join.'); }
         if (origin.host !== req.headers.host) fail(403, 'Open the game on this host to join.');
       }
-      if (url.pathname === '/api/rooms/version' && req.method === 'GET')
+      if (url.pathname === '/api/rooms/version' && req.method === 'GET') {
+        const localSocket = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
+        const localHost = /^(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/i.test(req.headers.host || '');
         return returnJson(res, { game: 'acorn-rally', version: 1, singleRoom,
-          addresses: (req.socket.remoteAddress === '127.0.0.1' || req.socket.remoteAddress === '::1' ||
-          req.socket.remoteAddress === '::ffff:127.0.0.1') ? localUrls(server.address().port) : [] });
+          addresses: localSocket && localHost ? localUrls(server.address().port) : [] });
+      }
       if (singleRoom && url.pathname === '/api/rooms/status' && req.method === 'GET')
         return returnJson(res, status());
       if (req.method === 'POST' && !req.headers['content-type']?.startsWith('application/json'))
