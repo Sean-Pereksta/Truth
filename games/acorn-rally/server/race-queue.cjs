@@ -6,6 +6,7 @@ const maxWaiting = 128;
 const ticketLifetimeMs = 60_000;
 const heartbeatWriteMs = 12_000;
 const restoreTimeoutMs = 1_800;
+const communityRestoreTimeoutMs = 9_000;
 const retryWriteMs = 5_000;
 const ticketPattern = /^[a-f0-9]{64}$/;
 const validTicket = value => typeof value === 'string' && value.length === 64 && ticketPattern.test(value);
@@ -34,19 +35,20 @@ function firebaseQueueStore(env, logger) {
   }
 }
 
-async function restoreWithTimeout(load) {
+async function restoreWithTimeout(load, timeoutMs) {
   let timeout;
   try {
     return await Promise.race([
       load(),
-      new Promise((_, reject) => { timeout = setTimeout(() => reject(new Error('Queue restore timed out')), restoreTimeoutMs); })
+      new Promise((_, reject) => { timeout = setTimeout(() => reject(new Error('Queue restore timed out')), timeoutMs); })
     ]);
   } finally {
     clearTimeout(timeout);
   }
 }
 
-function createRaceQueue({ env = process.env, logger = console, now = Date.now, store = firebaseQueueStore(env, logger) } = {}) {
+function createRaceQueue({ env = process.env, logger = console, now = Date.now, community = false,
+  store = community ? null : firebaseQueueStore(env, logger) } = {}) {
   const tickets = new Map();
   let usingCloud = false;
   let closed = false;
@@ -58,7 +60,7 @@ function createRaceQueue({ env = process.env, logger = console, now = Date.now, 
   const restored = store ? restore() : Promise.resolve();
   async function restore() {
     try {
-      const records = await restoreWithTimeout(() => store.load());
+      const records = await restoreWithTimeout(() => store.load(), community ? communityRestoreTimeoutMs : restoreTimeoutMs);
       const current = now();
       if (!Array.isArray(records)) throw new Error('Invalid saved queue');
       for (const record of records.slice(0, maxWaiting)) {

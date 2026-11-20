@@ -1,0 +1,21 @@
+.rr-directory { margin:18px 0; padding:16px; background:#282c25; border:1px solid #505644; border-radius:7px; }
+.rr-directory-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.rr-directory .rr-directory-head h3,.rr-directory h4 { margin:0; }
+.rr-directory [data-directory-name] { margin:10px 0; }
+.rr-directory [data-directory-name][hidden] { display:none; }
+.rr-directory input[name=directoryPlayerName] { font-size:16px; }
+.rr-directory h4 { font-size:13px; color:#d2d8c4; }
+.rr-directory-head+.rr-directory-head { margin-top:12px; }
+.rr-directory-list { display:grid; gap:8px; padding:0; margin:0 0 12px; list-style:none; }
+.rr-directory-list li { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 0; border-top:1px solid #444a3c; }
+.rr-directory-list li>div { display:grid; gap:3px; min-width:0; overflow-wrap:anywhere; }
+.rr-directory-list small,.rr-directory-status { color:#bcc2af; font-size:12px; }
+.rr-directory form { display:flex; align-items:end; gap:8px; flex-wrap:wrap; }
+.rr-directory form label { width:auto; flex:1 1 110px; }
+.rr-directory input[name=serverCode] { width:100%; font:16px monospace; letter-spacing:.16em; }
+.rr-directory-status { margin:8px 0 0; }
+.rr-directory-status:empty { display:none; }
+.hero-actions { flex-wrap:wrap; }
+.mode-strip.online-modes { grid-template-columns:auto repeat(4,minmax(0,1fr)); }
+@media(max-width:960px) { .mode-strip.online-modes { grid-template-columns:repeat(4,minmax(0,1fr)); }.mode-strip.online-modes h2 { display:none; } }
+@media(max-width:640px) { .mode-strip.online-modes { grid-template-columns:repeat(2,minmax(0,1fr)); } }
