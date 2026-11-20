@@ -171,12 +171,16 @@ namespace LastSignal
 
         public void Connect(string endpoint)
         {
+            Connect(endpoint,null);
+        }
+        internal void Connect(string endpoint,CookieContainer access)
+        {
             lock (sync)
             {
                 if (disposed) throw new ObjectDisposedException("OnlineTransport");
                 if (current != null) current.Close();
                 current = new ClientConnection();
-                try { current.Connect(new Uri(NormalizeEndpoint(endpoint))); }
+                try { current.Connect(new Uri(NormalizeEndpoint(endpoint)),access); }
                 catch (ArgumentException e) { current.Stop(e.Message); }
             }
         }
@@ -224,7 +228,7 @@ namespace LastSignal
             volatile bool ready;
             bool stopped, closing;
 
-            internal void Connect(Uri endpoint) { Background("Last Signal connect", delegate { Receive(endpoint); }); }
+            internal void Connect(Uri endpoint,CookieContainer access) { Background("Last Signal connect", delegate { Receive(endpoint,access); }); }
             internal void Attach(WebSocket upgraded)
             {
                 Background("Last Signal receive", delegate
@@ -236,7 +240,7 @@ namespace LastSignal
             }
             internal bool Send(int opcode, byte[] data) { return ready && writes.Add(opcode, data); }
 
-            void Receive(Uri uri)
+            void Receive(Uri uri,CookieContainer access)
             {
                 string reason = "The host disconnected.";
                 try
@@ -249,6 +253,7 @@ namespace LastSignal
                             socket = connection;
                         }
                         connection.Options.KeepAliveInterval = TimeSpan.FromSeconds(18);
+                        if(access!=null)connection.Options.Cookies=access;
                         // Framework applications compiled with the built-in compiler can inherit legacy TLS defaults.
                         if (uri.Scheme == "wss" && (int)ServicePointManager.SecurityProtocol != 0)
                             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;

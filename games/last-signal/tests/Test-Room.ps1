@@ -21,6 +21,15 @@ if($LASTEXITCODE){throw 'Could not compile the mobile room test'}
 & $mobile $Mode
 if($LASTEXITCODE){throw "Mobile room journey failed in $Mode mode"}
 if($Mode -eq 'socket'){
+    & $mobile managed-socket
+    if($LASTEXITCODE){throw 'Managed arena lifecycle failed'}
+    $nativeChecks=Join-Path (Split-Path $game) 'ManagedNativeChecks.exe'
+    $nativeSources=(Get-ChildItem -LiteralPath (Join-Path (Split-Path $game) 'Source') -Filter '*.cs').FullName
+    & $compiler /nologo /optimize+ /platform:x64 /main:ManagedNativeChecks /r:System.Web.Extensions.dll /r:System.Drawing.dll /r:System.Windows.Forms.dll "/out:$nativeChecks" $nativeSources (Join-Path $PSScriptRoot 'ManagedNative.cs') (Join-Path $PSScriptRoot 'OnlinePipe.cs')
+    if($LASTEXITCODE){throw 'Could not compile native Server Manager checks'}
+    & $nativeChecks socket
+    if($LASTEXITCODE){throw 'Native Server Manager checks failed'}
+
     $armory = Join-Path (Split-Path $game) 'ArmoryChecks.exe'
     $checks = 'ArmoryChecks.cs','ShieldChecks.cs','CrossbowChecks.cs' | ForEach-Object { Join-Path $PSScriptRoot $_ }
     & $compiler /nologo /optimize+ /platform:x64 /main:ArmoryChecks /r:System.Drawing.dll /r:System.Windows.Forms.dll "/r:$game" "/out:$armory" $checks

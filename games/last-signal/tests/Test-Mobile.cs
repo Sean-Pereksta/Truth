@@ -203,8 +203,65 @@ class TestMobile {
         }
         return false;
     }
+    static void ManagedRound(bool usePipe) {
+        game=new Game {ForcedSeed=73119};
+        game.Menu();
+        using(room=new OnlineSession(game)) {
+            game.Online=room;
+            typeof(OnlineSession).GetMethod("HostManaged",BindingFlags.Instance|BindingFlags.NonPublic).Invoke(room,null);
+            var invite=new Uri(room.LocalInvite);
+            origin=invite.GetLeftPart(UriPartial.Authority);
+            roomKey=invite.Fragment.Substring(1);
+            pipeListener=usePipe?(OnlineListener)typeof(OnlineSession).GetField("listener",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(room):null;
+            Check(room.HumanCount==0&&!room.CanStart,"An empty manager reserved a player seat.");
+            using(var first=Connect(true))using(var second=Connect(true)) {
+                Join(first,true,"First","",0);
+                Join(second,true,"Second","",1);
+                var guests=new List<WebSocket>();
+                try {
+                    for(int i=2;i<8;i++) {
+                        var guest=Connect(true);guests.Add(guest);
+                        Join(guest,true,"Guest"+i,"",i);
+                    }
+                    Check(room.HumanCount==8,"The manager did not accept eight real players.");
+                    foreach(var guest in guests)Text(guest,"LEAVE");
+                    Until(()=>room.HumanCount==2,"six players leave");
+                } finally { foreach(var guest in guests)guest.Dispose(); }
+                Text(second,"START");
+                Text(second,"READY|1");
+                ReadTo(second,true,m=>m.Text!=null&&m.Text.Contains("1,Ready,Second"),"non-captain ready");
+                Check(room.Phase=="lobby","Another player started the captain's match.");
+                Text(first,"START");
+                int round=int.Parse(Reply(first,true,"ROUND").Split('|')[1]);
+                VerifyFrame(State(first,true,"frame"),0,"First");
+                VerifyFrame(State(second,true,"frame"),1,"Second");
+                Check(game.HumanCount==2&&game.Actors.Count==24,"Wrong managed bot count.");
+                Until(()=>game.Countdown<=0,"countdown");
+                var actor=game.Actors[0];float x=actor.X,z=actor.Z;
+                Move(first,round,1,actor.Yaw,1);
+                Until(()=>Game.Distance(x,z,actor.X,actor.Z)>.4f,"remote input on seat zero");
+                game.Winner=actor;
+                Until(()=>room.Phase=="lobby"&&room.HumanCount==0,"arena reopens after results");
+            }
+            using(var departed=Connect(true))using(var next=Connect(true)) {
+                Join(departed,true,"Departed","",0);
+                Join(next,true,"Next","",1);
+                Text(departed,"LEAVE");
+                ReadTo(next,true,m=>m.Text!=null&&m.Text.Contains("1,Captain,Next"),"captain succession");
+                Text(next,"START");Reply(next,true,"ROUND");
+                VerifyFrame(State(next,true,"frame"),1,"Next");
+                Check(game.HumanCount==1&&!game.IsOnlineHuman(game.Actors[0]),"Vacated captain slot did not become a bot.");
+                Text(next,"LEAVE");
+                Until(()=>room.Phase=="lobby"&&room.HumanCount==0,"abandoned round resets");
+            }
+        }
+    }
+
     static int Main(string[] args) {
         try {
+            if(args.Length>0&&args[0].StartsWith("managed-",StringComparison.Ordinal)) {
+                ManagedRound(args[0]=="managed-pipe");Console.WriteLine("Managed eight-player arena and repeat rounds passed.");return 0;
+            }
             bool publish=args.Length>0&&args[0]=="public";
             game=new Game {ForcedSeed=73119};
             game.Menu();

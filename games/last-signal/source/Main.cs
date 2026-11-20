@@ -72,6 +72,7 @@ namespace LastSignal {
     static class Program {
         [DllImport("user32.dll")]static extern bool SetProcessDPIAware();
         [STAThread] static int Main(string[] args){
+            if(args.Length==1&&args[0]=="--managed-server")return ManagedArena.Run();
             bool diag=args.Length>0&&(args[0]=="--check"||args[0]=="--capture"||args[0]=="--simulate");
             try{
                 SetProcessDPIAware();Application.EnableVisualStyles();Application.SetCompatibleTextRenderingDefault(false);

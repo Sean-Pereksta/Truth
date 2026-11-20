@@ -31,15 +31,16 @@ namespace LastSignal {
             }
             return g.Settings.OnlineName;
         }
-        bool Editing(Game g){return g.Panel=="onlineInvite"||g.Panel=="onlineName";}
+        bool Editing(Game g){return g.Panel=="onlineInvite"||g.Panel=="onlineName"||g.Panel=="onlineManagedCode";}
         string OnlineSelection(Game g,string previous) {
             switch(g.Panel){
                 case "multiplayer":return "onlineHost";
-                case "onlineBrowse":return "onlineRefresh";
+                case "onlineBrowse":case "onlineManaged":return "onlineRefresh";
+                case "onlineManagedCode":return "onlinePaste";
                 case "onlineJoin":return invite.Length==0?"onlineEditInvite":"onlineConnect";
                 case "onlineInvite":return "onlinePaste";
                 case "onlineName":return "char0";
-                case "onlineLobby":return g.Online!=null&&g.Online.Phase=="lobby"?(g.Online.IsHost?(g.Online.CanStart?"onlineStart":"onlineCopy"):"onlineReady"):"onlineLeave";
+                case "onlineLobby":return g.Online!=null&&g.Online.Phase=="lobby"?(g.Online.IsHost?(g.Online.CanStart?"onlineStart":"onlineCopy"):g.Online.IsCaptain?"onlineStart":"onlineReady"):"onlineLeave";
                 case "onlineRules":return "arena";
                 case "onlineExit":return "onlineStay";
             }
@@ -51,7 +52,8 @@ namespace LastSignal {
                 case "multiplayer":OnlineHome(g);return true;
                 case "onlineJoin":OnlineJoin(g);return true;
                 case "onlineBrowse":OnlineBrowse(g);return true;
-                case "onlineInvite":case "onlineName":OnlineEditor(g);return true;
+                case "onlineManaged":if(!ManagedResults(g))OnlineBrowse(g);return true;
+                case "onlineInvite":case "onlineName":case "onlineManagedCode":OnlineEditor(g);return true;
                 case "onlineLobby":OnlineLobby(g);return true;
                 case "onlineRules":OnlineRules(g);return true;
                 case "onlineExit":OnlineExit(g);return true;
@@ -63,7 +65,9 @@ namespace LastSignal {
             Header("Multiplayer","Up to 8 players. Bots fill the remaining platforms in a 24-contestant arena.",x,y);
             Action("onlineHost","Host a match",x,y+115,403,51,true);
             Action("onlineJoinMenu","Join with an invite",x,y+177,403,46);
-            Action("onlineFind","Public lobbies",x,y+233,403,46);
+            Action("onlineFind","Player-hosted lobbies",x,y+233,403,46);
+            Action("onlineManagedLive","Live Join",x+421,y+115,285,51,true);
+            Action("onlineManagedBrowse","Browse servers",x+421,y+177,285,46);
             Action("onlineEditName","Player name     "+OnlinePlayerName(g),x,y+301,403,44);
             Action("back","Back",x,y+363,155,42);
             string note=onlineNote;
@@ -124,7 +128,8 @@ namespace LastSignal {
                 Action("onlineRules","Match settings",side,row+226,370,43);
                 Action("onlineList",s.IsListed?"Public listing    On":"Public listing    Off",side,row+278,370,43);
                 T(Arena.NameOf(g.Settings.ArenaId)+"   /   "+Diff(g.Settings.Difficulty),x,row+343,15,Muted);
-            }else Action("onlineReady",s.IsReady?"Ready  ·  Change to not ready":"Ready up",side,row+168,370,48,true);
+            }else if(s.IsCaptain)Action("onlineStart","Start match",side,row+168,370,48,true);
+            else Action("onlineReady",s.IsReady?"Ready  ·  Change to not ready":"Ready up",side,row+168,370,48,true);
             Action("onlineLeave",s.IsHost?"Close room":"Leave room",x,row+371,222,43);
             string detail=onlineNote;
             if(detail=="")detail=s.IsHost&&s.IsListed?s.ListingStatus:(link!=""?s.Status:"");
@@ -160,7 +165,8 @@ namespace LastSignal {
         }
         bool CloseOnline(Game g) {
             switch(g.Panel){
-                case "onlineInvite":case "onlineName":g.Panel=editReturn;return true;
+                case "onlineInvite":case "onlineName":case "onlineManagedCode":g.Panel=editReturn;return true;
+                case "onlineManaged":CancelManagedRequest();g.Panel="multiplayer";onlineNote="";return true;
                 case "onlineExit":g.Panel=leaveReturn;return true;
                 case "onlineRules":g.Panel="onlineLobby";return true;
                 case "onlineLobby":ConfirmLeave(g);return true;
@@ -174,6 +180,11 @@ namespace LastSignal {
             if(!id.StartsWith("online",StringComparison.Ordinal)&&!(Editing(g)&&id.StartsWith("char")))return false;
             if(RoomAction(g,id))return true;
             switch(id){
+                case "onlineManagedLive":case "onlineManagedBrowse":
+                    ManagedWork(g,id=="onlineManagedLive"?"live":"browse");return true;
+                case "onlineManagedPin":
+                    CancelManagedRequest();editReturn="onlineManaged";editValue="";editFresh=true;
+                    editUpper=editSymbols=false;g.Panel="onlineManagedCode";onlineNote="";return true;
                 case "onlineHost":case "onlineConnect":
                     if(g.Online==null){onlineNote="The network connection is unavailable.";return true;}
                     if(id=="onlineConnect"&&invite.Trim()==""){onlineNote="Enter or paste the host’s invite link.";return true;}
@@ -195,7 +206,7 @@ namespace LastSignal {
                 case "onlineStay":g.Panel=leaveReturn;return true;
                 case "onlineEnd":LeaveOnline(g);return true;
                 case "onlineReady":onlineNote="";if(g.Online!=null)g.Online.ToggleReady();return true;
-                case "onlineStart":if(g.Online!=null&&g.Online.IsHost&&g.Online.CanStart){onlineNote="";g.Online.StartMatch();}return true;
+                case "onlineStart":if(g.Online!=null&&((g.Online.IsHost&&g.Online.CanStart)||g.Online.IsCaptain)){onlineNote="";g.Online.StartMatch();}return true;
                 case "onlineRules":if(g.Online!=null&&g.Online.IsHost)g.Panel="onlineRules";return true;
                 case "onlineCopy":
                     if(g.Online!=null&&!string.IsNullOrEmpty(g.Online.Code)){
@@ -209,6 +220,10 @@ namespace LastSignal {
                 case "onlineErase":Erase();return true;
                 case "onlineSpace":Type(g," ");return true;
                 case "onlineDone":
+                    if(g.Panel=="onlineManagedCode"){
+                        if(editValue.Length!=4){onlineNote="Enter all four digits.";return true;}
+                        ManagedWork(g,"code",null,editValue);editValue="";return true;
+                    }
                     if(g.Panel=="onlineName"){string name=PlayerName(editValue);if(name==""){onlineNote="Enter a player name.";return true;}g.Settings.OnlineName=name;Save(g.Settings);}
                     else invite=editValue.Trim();
                     onlineNote="";g.Panel=editReturn;return true;
@@ -221,8 +236,8 @@ namespace LastSignal {
         }
         char EditChar(int index){char c=(editSymbols?symbolKeys:letterKeys)[index/10][index%10];return editUpper?char.ToUpperInvariant(c):c;}
         void OnlineEditor(Game g) {
-            Backdrop(true);float x=(sw-806)/2,y=(sh-560)/2;bool name=g.Panel=="onlineName";
-            Header(name?"Player name":"Invite link",name?"Shown to the other contestants in the lobby.":"Paste the full link, or enter it below.",x,y);
+            Backdrop(true);float x=(sw-806)/2,y=(sh-560)/2;bool name=g.Panel=="onlineName",pin=g.Panel=="onlineManagedCode";
+            Header(pin?"Private server code":name?"Player name":"Invite link",pin?"Enter the four digits shown in Server Manager.":name?"Shown to the other contestants in the lobby.":"Paste the full link, or enter it below.",x,y);
             Box(x,y+89,805,52,A(Ink,234));Edge(x,y+89,805,52,Brass);
             string text=editValue;
             if(text.Length>82)text="…"+text.Substring(text.Length-82);
@@ -247,9 +262,10 @@ namespace LastSignal {
         void Erase() {if(editFresh)editValue="";else if(editValue.Length>0)editValue=editValue.Substring(0,editValue.Length-1);editFresh=false;}
         void Type(Game g,string text) {
             if(editFresh){editValue="";editFresh=false;}
-            bool name=g.Panel=="onlineName";int max=name?18:2048;
+            bool name=g.Panel=="onlineName",pin=g.Panel=="onlineManagedCode";int max=pin?4:name?18:2048;
             foreach(char c in text){
                 if(editValue.Length>=max)break;
+                if(pin&&(c<'0'||c>'9'))continue;
                 if(name&&!(c==' '||PlayerName(c.ToString()).Length>0))continue;
                 if(!name&&(c<=32||c>=127))continue;
                 editValue+=c;
@@ -269,7 +285,7 @@ namespace LastSignal {
             catch(ThreadStateException){onlineNote="Clipboard unavailable. Enter the invite link.";}
         }
         bool OnlinePad(Game g,string button) {
-            if(g.Panel=="onlineBrowse"&&button=="Y"){RoomAction(g,"onlineRefresh");return true;}
+            if((g.Panel=="onlineBrowse"||g.Panel=="onlineManaged")&&button=="Y"){RoomAction(g,"onlineRefresh");return true;}
             if(!Editing(g)){if(g.Panel=="onlineJoin"&&button=="Y"){Paste(g);return true;}return false;}
             if(button=="X"){Erase();return true;}if(button=="Y"){Paste(g);return true;}
             if(button=="Start"){ActivateOnline(g,"onlineDone");return true;}

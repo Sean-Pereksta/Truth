@@ -26,6 +26,10 @@
         </div>
         <button type="submit" class="primary">Join room</button>
       </form>
+      <nav id="managed-rooms" class="room-actions" aria-label="Managed servers">
+        <a class="browse-rooms" href="https://catnmice.com/shared/managed-servers.html?game=lastsignal&amp;live=1">Live Join</a>
+        <a class="browse-rooms" href="https://catnmice.com/shared/managed-servers.html?game=lastsignal">Browse servers</a>
+      </nav>
       <a id="browse-rooms" class="browse-rooms" href="../../#lobbies" hidden>Join an online room</a>
       <div id="lobby" hidden>
         <div class="lobby-heading">
@@ -36,6 +40,7 @@
         <p id="bot-count" class="muted"></p>
         <div class="room-actions">
           <button id="lobby-leave" type="button">Leave</button>
+          <button id="managed-start" type="button" class="primary" hidden>Start match</button>
           <button id="ready" type="button" class="primary" aria-pressed="false">Ready</button>
         </div>
       </div>

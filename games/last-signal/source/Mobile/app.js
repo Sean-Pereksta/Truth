@@ -8,6 +8,7 @@ const join = $("join");
 const nameInput = $("name");
 const joinButton = join.querySelector("button");
 const readyButton = $("ready");
+const startButton = $("managed-start");
 const controls = $("controls");
 const stick = $("stick");
 const thumb = $("stick-thumb");
@@ -128,6 +129,7 @@ function setMode(next, message, error = false) {
     arena.hidden = true;
     room.hidden = false;
   }
+  $("managed-rooms").hidden = next !== "join";
   join.hidden = (!validKey && !soloMode) || next === "lobby" || next === "playing";
   nameInput.disabled = next === "connecting";
   joinButton.disabled = next === "connecting";
@@ -268,7 +270,10 @@ function renderRoster(parts) {
   roster.replaceChildren(...rows);
   setText($("human-count"), members.length + "/8 players");
   setText($("bot-count"), (24 - members.length) + " bots fill the arena.");
-  ready = members.find((member) => member.index === seat)?.hint === "Ready";
+  const role = members.find((member) => member.index === seat)?.hint;
+  startButton.hidden = role !== "Captain";
+  readyButton.hidden = role === "Captain";
+  ready = role === "Ready";
   readyButton.disabled = false;
   readyButton.setAttribute("aria-pressed", String(ready));
   setText(readyButton, ready ? "Unready" : "Ready");
@@ -282,7 +287,7 @@ function handleText(text) {
   }
   if (type === "SEAT") {
     seat = Number(values[0]);
-    if (!(seat >= 1 && seat <= 7 && /^[a-zA-Z0-9_-]{24}$/.test(values[1]))) {
+    if (!(Number.isInteger(seat) && seat >= 0 && seat <= 7 && /^[a-zA-Z0-9_-]{24}$/.test(values[1]))) {
       fail("The host returned an invalid seat.");
       return;
     }
@@ -292,14 +297,14 @@ function handleText(text) {
     sequence = 0;
     return;
   }
-  if (seat < 1) return;
+  if (seat < 0) return;
   if (type === "LOBBY") {
     if (phase !== "lobby") {
       clearBinary();
       resetRound();
     }
     renderRoster(values);
-    setMode("lobby", ready ? "Waiting for the host to start." : "Choose Ready when you’re set.");
+    setMode("lobby", !startButton.hidden ? "Start the match when your group is ready." : ready ? "Waiting for the host to start." : "Choose Ready when you’re set.");
   } else if (type === "ROUND") {
     const next = Number(values[0]);
     if (!Number.isInteger(next) || next < 1) return;
@@ -863,6 +868,7 @@ $("replay").addEventListener("click", () => {
     void startSolo();
   }
 });
+startButton.addEventListener("click", () => { if (!startButton.hidden) socketSend("START"); });
 readyButton.addEventListener("click", () => {
   enableWorkAudio();
   if (socketSend(ready ? "READY|0" : "READY|1")) readyButton.disabled = true;
@@ -964,5 +970,10 @@ if (soloMode) {
   $("replay").hidden = false;
   $("leave").textContent = "End solo match";
 }
+const suggestedName = new URLSearchParams(location.search).get("name");
+if (validKey && suggestedName && !resume) nameInput.value = suggestedName.slice(0, 20);
 setMode("join", soloMode ? "Play against 23 bots." : validKey ? "Join the host’s arena." :
   "Open the full room invite from the host.", !soloMode && !validKey);
+if (validKey && new URLSearchParams(location.search).get("managed") === "1") {
+  join.requestSubmit();
+}
