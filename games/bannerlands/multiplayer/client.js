@@ -2,7 +2,7 @@ import {PROTOCOL_VERSION,GAME_VERSION,ASSET_VERSION} from './protocol.js';
 import {createRemoteGame,applySnapshot} from './snapshot.js';
 import {applySnapshotDelta} from './transport-delta.js';
 
-const COMMANDS=new Set(['command','setFacingLock','idle','advance','placeFormation','attackNearest','attackTarget','hold','retreat','patrol','expand','setRally','clearRally','recruit','build','upgrade','upgradeTownHall','upgradeTower','useHousePower','callTeamOrder','plantStandard','retrieveStandard','refitStandard','reforgeStandard','cancelStandard']);
+const COMMANDS=new Set(['command','setFacingLock','idle','advance','placeFormation','attackNearest','attackTarget','hold','retreat','patrol','expand','setTrebuchetDeployment','setRally','clearRally','recruit','build','upgrade','upgradeTownHall','upgradeTower','useHousePower','callTeamOrder','plantStandard','retrieveStandard','refitStandard','reforgeStandard','cancelStandard']);
 const finiteFields=['x','y','motionVX','motionVY','vx','vy','facingX','facingY','faceX','faceY','angle','attackAnim','hit','life','t'];
 const presentationKeys=['units','buildings','projectiles','effects','standards','placedFormations','formationAdvances'];
 const items=value=>value instanceof Map?value.values():value||[];

@@ -101,8 +101,11 @@ immediately claims passable land within 8 tiles. Destroyed castles
 become neutral ruins again. A faction survives while it has at least one castle,
 and its home moves to a surviving castle if the original capital falls.
 
-Bolton and Hightower can build dedicated siege yards for long-range trebuchets
-that need 15 stationary seconds to deploy. Free Folk Giant Camps muster one
+Bolton and Hightower can build dedicated siege yards for long-range trebuchets.
+When playing Bolton, select a trebuchet and choose **Set up** (10 seconds) to
+bombard. It ignores movement orders until **Take down** finishes (5 seconds).
+Hightower trebuchets deploy automatically after 15 stationary seconds.
+Free Folk Giant Camps muster one
 high-health giant with splash damage and knockback per 130 seconds; paid and automatic mustering
 share each camp's cadence. Tully Sharpshooter Lodges train marksmen with longer
 range and slower attacks than archers. Build these facilities with Shift+J and

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {Game,GAME_MODES,UNIT_DEFS} from '../../core.js';
+import {Game,GAME_MODES,HOUSES,UNIT_DEFS} from '../../core.js';
 import {createAuthority,validateCampaignConfig,createPrivateHomePermutation} from '../../multiplayer/authority.js';
 import {snapshotWorld,createRemoteGame,applySnapshot,decodeRuns} from '../../multiplayer/snapshot.js';
 import {PROTOCOL_VERSION,GAME_VERSION,ASSET_VERSION,MAX_HUMANS,compatible} from '../../multiplayer/protocol.js';
@@ -22,6 +22,34 @@ test('house one commands its own troops through the existing movement rules',()=
   const hero=game.heroFor(1),other=game.heroFor(0),oldOrder=other.order;
   const result=command(1,'command',[[hero.id],hero.x+2,hero.y,'move','line',{x:0,y:1}]);
   assert.equal(result.ok,true);assert.equal(hero.order.mode,'move');assert.equal(hero.order.facingY,1);assert.equal(other.order,oldOrder);
+});
+test('a Bolton guest controls only its own trebuchet and receives the authoritative countdown',()=>{
+  const bolton=HOUSES.findIndex(h=>h.sigil==='flayed');
+  const match=createAuthority({...config,houses:[0,bolton,2,3]},{humanTeams:[0,1]});
+  const {x,y}=match.game.teams[1].home;
+  const engine=match.game.addUnit(1,'trebuchet',x+2,y);
+  const send=(team,seq,type,args)=>match.command(team,{v:PROTOCOL_VERSION,seq,type,args});
+  const deploy=(team,seq,enabled)=>send(team,seq,'setTrebuchetDeployment',[[engine.id],enabled]);
+  assert.equal(deploy(0,1,true).ok,false);
+  assert.equal(deploy(1,1,'true').ok,false);
+  const remote=createRemoteGame(match.snapshot(1,{initial:true}));
+  assert.equal(remote.byId.get(engine.id).trebuchetState,'packed');
+  assert.equal(deploy(1,2,true).ok,true);
+  for(let i=0;i<20;i++)match.step(.05);
+  assert.equal(deploy(1,2,true).duplicate,true);
+  assert.equal(send(1,3,'command',[[engine.id],x+3,y,'move']).ok,false);
+  const update=()=>{applySnapshot(remote,match.snapshot(1));return remote.byId.get(engine.id);};
+  assert.equal(update().trebuchetState,'settingUp');
+  assert.equal(update().trebuchetRemaining,9);
+  for(let i=0;i<180;i++)match.step(.05);
+  assert.equal(update().trebuchetState,'deployed');
+  assert.equal(deploy(1,4,false).ok,true);
+  assert.equal(update().trebuchetState,'takingDown');
+  assert.equal(update().trebuchetRemaining,5);
+  for(let i=0;i<100;i++)match.step(.05);
+  assert.equal(update().trebuchetState,'packed');
+  assert.equal(update().trebuchetRemaining,undefined);
+  assert.equal(send(1,5,'command',[[engine.id],x+3,y,'move']).ok,true);
 });
 test('foreign, allied and mixed ownership cannot be commanded',()=>{
   const other=game.heroFor(0),own=game.heroFor(1),old=own.order;

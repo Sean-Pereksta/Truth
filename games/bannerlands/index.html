@@ -126,6 +126,11 @@
 
  <aside id="minimapDock" aria-label="Minimap">  <section class="minimap-section"><div class="section-label">MINIMAP <span>CLICK TO NAVIGATE · M</span></div><button id="touchMapDetails" title="Open map details">Map details</button><canvas id="minimap" aria-label="Minimap. Click to navigate."></canvas><div class="terrain-legend" aria-label="Terrain legend"><span><i class="legend-water"></i>River</span><span><i class="legend-road"></i>Road</span><span><i class="legend-bridge"></i>Crossing</span><span><i class="legend-mountain"></i>Peaks</span></div><div class="mini-footer"><span><i class="key-dot"></i> Your house</span><span id="campaignLabel">EPIC CONQUEST</span></div></section></aside>
  <div id="fieldCommands">
+  <div id="trebuchetOrders" role="group" aria-label="Selected Bolton trebuchets" hidden>
+   <button id="trebuchetSetupButton" type="button">Set up <small>10s</small></button>
+   <button id="trebuchetTakedownButton" type="button">Take down <small>5s</small></button>
+   <span id="trebuchetStatus"></span>
+  </div>
   <div id="fieldArmyControls">
   <div id="compactTroopSelection" aria-label="Selected troops">
    <button id="locateSelection" title="Find selected formation"><b id="compactSelectionCount">0</b><span>Find</span></button>

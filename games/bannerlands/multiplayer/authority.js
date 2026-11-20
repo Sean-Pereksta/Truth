@@ -9,7 +9,7 @@ const own=(value,key)=>Object.prototype.hasOwnProperty.call(value,key);
 const isObject=value=>!!value&&typeof value==='object'&&!Array.isArray(value);
 const FORMATIONS=['line','spread','wedge','pike','shield','loose'];
 const MODES=['move','attack','hold'];
-const allowedMethods=new Set(['command','idle','advance','setFacingLock','attackNearest','attackTarget','hold','retreat','patrol','expand','setRally','clearRally','recruit','build','upgrade','useHousePower','upgradeTownHall','upgradeTower','callTeamOrder','plantStandard','retrieveStandard','refitStandard','reforgeStandard','cancelStandard','placeFormation']);
+const allowedMethods=new Set(['command','idle','advance','setFacingLock','attackNearest','attackTarget','hold','retreat','patrol','expand','setTrebuchetDeployment','setRally','clearRally','recruit','build','upgrade','useHousePower','upgradeTownHall','upgradeTower','callTeamOrder','plantStandard','retrieveStandard','refitStandard','reforgeStandard','cancelStandard','placeFormation']);
 
 export function createPrivateHomePermutation(config,randomIndex=randomInt){
   const count=config.enemies+1,paired=!!GAME_MODES[config.mode]?.teams;
@@ -80,12 +80,13 @@ export function executePlayerCommand(game,team,type,args){
       case 'command':{
         const list=ids(args[0]),p=point(args[1],args[2]),mode=args[3]??'attack',f=formation(args[4]);if(!MODES.includes(mode))invalid('Unknown order.');
         let facing=null;if(args[5]!=null){if(!isObject(args[5])||!Number.isFinite(args[5].x)||!Number.isFinite(args[5].y)||Math.hypot(args[5].x,args[5].y)<.001||Math.abs(args[5].x)>10000||Math.abs(args[5].y)>10000)invalid('Invalid facing.');facing={x:args[5].x,y:args[5].y};}
-        game.command(list,p.x,p.y,mode,f,facing);break;
+        response=game.command(list,p.x,p.y,mode,f,facing);break;
       }
       case 'idle':response=game.idle(ids(args[0]));break;
       case 'hold':response=game.hold(ids(args[0]));break;
       case 'retreat':response=game.retreat(ids(args[0]));break;
       case 'expand':response=game.expand(ids(args[0]));break;
+      case 'setTrebuchetDeployment':response=game.setTrebuchetDeployment(ids(args[0]),args[1]);break;
       case 'patrol':response=game.patrol(ids(args[0]),team);break;
       case 'advance':{
         const destination=args[3];

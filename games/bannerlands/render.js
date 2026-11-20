@@ -7,6 +7,7 @@ import {PAINTED_HEROES,HERO_ACTIONS,selectHeroFrame,selectStandardFrame,heroOwns
 import {paintTerrainPolish,roadsideFields,preparePaintedGround,bakePaintedGround,onPaintedApproach} from './terrain-polish.js';
 import {FormationBannerLayer} from './formation-banners.js';
 import {BridgeArtwork,bridgeSurface} from './bridge-art.js';
+import {BOLTON_TREBUCHET_TIMES} from './regiments.js';
 
 const HW=28, HH=14;
 const TAU=Math.PI*2;
@@ -1235,8 +1236,26 @@ export class Renderer{
       }
       this.drawPaintedTroop(c,painted,index,facing,x,y,team.color);
     }
-    else{const sprite=this.soldierSprite(u.type,team.color,team.dark,facing,frame,attack||u.type==='trebuchet'&&(u.setupProgress||0)>=UNIT_DEFS.trebuchet.setupSeconds,specialHouse);if(sprite)c.drawImage(sprite,p.x-32,p.y-64,64,72);}
-    if(u.type==='trebuchet'&&zoom>.5){const setup=UNIT_DEFS.trebuchet.setupSeconds,progress=clamp((u.setupProgress||0)/setup,0,1);c.fillStyle='#142c2c';c.fillRect(p.x-20,p.y-61,40,4);c.fillStyle=progress>=1?'#b8d4a0':'#d6b773';c.fillRect(p.x-20,p.y-61,40*progress,4);if(selected){c.font='bold 8px Segoe UI';c.textAlign='center';c.fillStyle='#f2deac';c.fillText(progress>=1?'DEPLOYED':'SETUP '+Math.ceil(setup-(u.setupProgress||0))+'s',p.x,p.y-65);}}
+    else{
+      const deployed=u.type==='trebuchet'&&(u.trebuchetState?u.trebuchetState==='deployed'||u.trebuchetState==='takingDown':(u.setupProgress||0)>=UNIT_DEFS.trebuchet.setupSeconds);
+      const sprite=this.soldierSprite(u.type,team.color,team.dark,facing,frame,attack||deployed,specialHouse);
+      if(sprite)c.drawImage(sprite,p.x-32,p.y-64,64,72);
+    }
+    if(u.type==='trebuchet'&&zoom>.5){
+      const state=u.trebuchetState,takingDown=state==='takingDown',packed=state==='packed';
+      const duration=state?BOLTON_TREBUCHET_TIMES[takingDown?'takedown':'setup']:UNIT_DEFS.trebuchet.setupSeconds;
+      const remaining=state?u.trebuchetRemaining||0:duration-(u.setupProgress||0);
+      const ready=state?state==='deployed':remaining<=0;
+      if(!packed){
+        const progress=clamp(1-remaining/duration,0,1);
+        c.fillStyle='#142c2c';c.fillRect(p.x-20,p.y-61,40,4);
+        c.fillStyle=ready?'#b8d4a0':'#d6b773';c.fillRect(p.x-20,p.y-61,40*progress,4);
+      }
+      if(selected){
+        const label=ready?'DEPLOYED':packed?'PACKED':`${takingDown?'TAKEDOWN':'SETUP'} ${Math.ceil(remaining)}s`;
+        c.font='bold 8px Segoe UI';c.textAlign='center';c.fillStyle='#f2deac';c.fillText(label,p.x,p.y-65);
+      }
+    }
     if(marked&&zoom>.55&&Math.hypot(direction.x,direction.y)>.01){
       const dx=screenFacing.x/faceLength,dy=screenFacing.y/faceLength,color=u.backpedaling?'#a8ddd1':'#e7cc89';
       c.save();c.globalAlpha=.85;line(c,p.x+dx*9,p.y+1+dy*9,p.x+dx*17,p.y+1+dy*17,color,1.2);

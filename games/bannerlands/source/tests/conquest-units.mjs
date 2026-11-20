@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {Game,HOUSES,UNIT_DEFS,BUILD_DEFS} from '../../core.js';
 import {CONQUEST_BUILDINGS,regimentAllowed,regimentForHouse,regimentBuildingForHouse} from '../../regiments.js';
+import {placeFormation} from '../../formation-placement.js';
 
 let checks=0;
 const test=(name,fn)=>{fn();checks++;console.log('PASS '+name);};
@@ -36,36 +37,84 @@ test('New regiments and dedicated facilities are exclusive to their requested ho
   }
 });
 
-test('Trebuchets cannot fire before fifteen stationary seconds and movement restarts setup',()=>{
-  for(const sigil of ['flayed','beacon']){
-    const g=fixture(sigil),engine=g.addUnit(0,'trebuchet',30,30),fort=g.addBuilding(1,'barracks',38,30);
-    engine.cooldown=0;g.hold([engine.id]);
-    for(let i=0;i<149;i++)step(g,.1);
-    step(g,.09);assert.equal(g.projectiles.length,0);assert.ok(engine.setupProgress<15);
-    step(g,.02);assert.equal(g.projectiles.length,1);assert.equal(g.projectiles[0].target,fort.id);
-    assert.equal(engine.setupProgress,15);assert.equal(engine.cooldown,7.5);
-    g.command([engine.id],35,30,'move','line');assert.equal(engine.setupProgress,0);
-    step(g,.1);assert.equal(engine.setupProgress,0);assert.ok(Math.hypot(engine.vx,engine.vy)>.03);
-    g.hold([engine.id]);engine.vx=engine.vy=0;engine.setupX=engine.x;engine.setupY=engine.y;
-    for(let i=0;i<100;i++)step(g,.1);
-    assert.ok(engine.setupProgress<15);engine.cooldown=0;g.attack(engine,fort);assert.equal(g.projectiles.length,1,'A partially rebuilt engine cannot attack directly.');
-  }
+test('Hightower trebuchets cannot fire before fifteen stationary seconds and movement restarts setup',()=>{
+  const g=fixture('beacon'),engine=g.addUnit(0,'trebuchet',30,30),fort=g.addBuilding(1,'barracks',38,30);
+  engine.cooldown=0;g.hold([engine.id]);
+  for(let i=0;i<149;i++)step(g,.1);
+  step(g,.09);assert.equal(g.projectiles.length,0);assert.ok(engine.setupProgress<15);
+  step(g,.02);assert.equal(g.projectiles.length,1);assert.equal(g.projectiles[0].target,fort.id);
+  assert.equal(engine.setupProgress,15);assert.equal(engine.cooldown,7.5);
+  g.command([engine.id],35,30,'move','line');assert.equal(engine.setupProgress,0);
+  step(g,.1);assert.equal(engine.setupProgress,0);assert.ok(Math.hypot(engine.vx,engine.vy)>.03);
+  g.hold([engine.id]);engine.vx=engine.vy=0;engine.setupX=engine.x;engine.setupY=engine.y;
+  for(let i=0;i<100;i++)step(g,.1);
+  assert.ok(engine.setupProgress<15);engine.cooldown=0;g.attack(engine,fort);assert.equal(g.projectiles.length,1,'A partially rebuilt engine cannot attack directly.');
 });
 
-test('Physical displacement and knockback invalidate a prepared trebuchet',()=>{
-  const g=fixture(),engine=g.addUnit(0,'trebuchet',30,30),fort=g.addBuilding(1,'barracks',38,30);
+test('Physical displacement and knockback invalidate a prepared Hightower trebuchet',()=>{
+  const g=fixture('beacon'),engine=g.addUnit(0,'trebuchet',30,30),fort=g.addBuilding(1,'barracks',38,30);
   engine.setupProgress=15;engine.x+=.2;engine.cooldown=0;step(g,.01);
   assert.equal(g.projectiles.length,0);assert.equal(engine.setupProgress,0);
   engine.setupProgress=15;engine.knockT=.2;engine.knockVX=2;engine.knockVY=0;g.attack(engine,fort);assert.equal(g.projectiles.length,0);
 });
 
 test('Trebuchets outrange ordinary siege and bombard buildings heavily with a slow reload',()=>{
-  const g=fixture(),engine=g.addUnit(0,'trebuchet',30,30),fort=g.addBuilding(1,'barracks',40,30);
+  const g=fixture('beacon'),engine=g.addUnit(0,'trebuchet',30,30),fort=g.addBuilding(1,'barracks',40,30);
   assert.ok(UNIT_DEFS.trebuchet.range>UNIT_DEFS.siege.range*1.8);
   assert.ok(UNIT_DEFS.trebuchet.rate>UNIT_DEFS.siege.rate*2);
   engine.setupProgress=15;engine.cooldown=0;g.hash.rebuild(g.units);g.attack(engine,fort);
   const shot=g.projectiles[0];assert.equal(shot.type,'rock');assert.equal(shot.splash,1.7);
   const hp=fort.hp;g.updateProjectiles(shot.duration);assert.ok(hp-fort.hp>=540);
+});
+
+test('Bolton trebuchets set up in 10 seconds and take down in 5, with no automatic deployment or fire during transitions',()=>{
+  const g=fixture(),engine=g.addUnit(0,'trebuchet',30,30),fort=g.addBuilding(1,'barracks',38,30);
+  engine.cooldown=0;
+  for(let i=0;i<200;i++)step(g,.1);
+  assert.equal(engine.trebuchetState,'packed');
+  assert.equal(g.projectiles.length,0);
+  g.command([engine.id],34,30,'move');
+  assert.equal(g.setTrebuchetDeployment([engine.id],true).ok,true);
+  assert.equal(g.setTrebuchetDeployment([engine.id],true).ok,false);
+  for(let i=0;i<199;i++)step(g,.05);
+  assert.equal(engine.trebuchetState,'settingUp');
+  assert.equal(g.projectiles.length,0);
+  step(g,.05);
+  assert.equal(engine.trebuchetState,'deployed');
+  assert.equal(g.projectiles[0].target,fort.id);
+  assert.equal(g.setTrebuchetDeployment([engine.id],false).ok,true);
+  engine.cooldown=0;
+  for(let i=0;i<99;i++)step(g,.05);
+  assert.equal(engine.trebuchetState,'takingDown');
+  assert.equal(g.projectiles.length,1);
+  assert.equal(g.command([engine.id],34,30,'move').ok,false);
+  step(g,.05);
+  assert.equal(engine.trebuchetState,'packed');
+  assert.deepEqual([engine.x,engine.y],[30,30],'Ignored movement orders are never resumed.');
+  g.command([engine.id],34,30,'move');
+  step(g,.05);
+  assert.ok(engine.x>30);
+});
+
+test('Bolton trebuchets stay put through mixed movement orders and can fire at a designated target in range',()=>{
+  const g=fixture(),engine=g.addUnit(0,'trebuchet',30,30),troop=g.addUnit(0,'infantry',30.35,30);
+  const fort=g.addBuilding(1,'barracks',40,30),distant=g.addBuilding(1,'barracks',52,30);
+  g.setTrebuchetDeployment([engine.id],true);
+  for(let i=0;i<200;i++)step(g,.05);
+  const ids=[engine.id,troop.id];
+  g.command(ids,35,30,'move','line',{x:1,y:0});assert.equal(troop.order.mode,'move');
+  assert.equal(g.advance(ids,'line',{}, {x:35,y:30}).count,1);
+  assert.equal(placeFormation(g,ids,{x:35,y:30},UNIT_DEFS).count,1);
+  assert.equal(g.expand(ids).ok,true);
+  assert.equal(g.attackNearest(ids).count,1);
+  assert.equal(g.attackTarget([engine.id],distant.id).ok,false);
+  assert.equal(g.attackTarget(ids,fort.id).count,2);
+  assert.equal(engine.order.targetId,fort.id);
+  g.retreat(ids);assert.equal(troop.order.retreat,true);
+  g.idle(ids);
+  for(let i=0;i<10;i++)step(g,.05);
+  assert.equal(engine.order.mode,'hold');
+  assert.deepEqual([engine.x,engine.y],[30,30],'Crowds and mixed orders cannot move a deployed engine.');
 });
 
 test('Giants have high health and splash nearby enemies without harming allies',()=>{

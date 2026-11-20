@@ -4,7 +4,7 @@ import vm from 'node:vm';
 import {Game,HOUSES,UNIT_DEFS,BUILD_DEFS} from '../../core.js';
 import {isPassableTile} from '../../lands.js';
 import {worldToScreen,screenToWorld} from '../../render.js';
-import {regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit} from '../../regiments.js';
+import {regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit,trebuchetAnchored} from '../../regiments.js';
 import {formationPreview,formationRole,placeFormation} from '../../formation-placement.js';
 import {HERO_PROFILES,heroProfile} from '../../heroes.js';
 import {createTroopSelectionFilter,troopFilterShortcut} from '../../troop-selection.js';
@@ -47,7 +47,7 @@ function fixture({house=0,realMenu=false}={}){
   const canvas=element('battleCanvas'),win=new Element('window'),ui={selected:new Set(),selectedBuildings:new Set(),formation:'line',formationOptions:{ranks:2,width:null,lockFacing:false},formMode:false,formPreview:null,advanceMode:false,buildMode:null,rallyMode:false,teamOrderMode:null,facingMode:false,facingPreview:null,drag:null,hover:null};
   element('resultOverlay').hidden=true;
   element('mobileOptionsMenu').hidden=true;
-  const context={console,Math,Map,Set,String,Array,HOUSES,HERO_PROFILES,heroProfile,UNIT_DEFS,BUILD_DEFS,isPassableTile,worldToScreen,screenToWorld,regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit,formationPreview,formationRole,placeFormation,game,canvas,window:win,performance:{now:()=>100},standardTapBlock:null,
+  const context={console,Math,Map,Set,String,Array,HOUSES,HERO_PROFILES,heroProfile,UNIT_DEFS,BUILD_DEFS,isPassableTile,worldToScreen,screenToWorld,regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit,trebuchetAnchored,formationPreview,formationRole,placeFormation,game,canvas,window:win,performance:{now:()=>100},standardTapBlock:null,
     troopFilter:createTroopSelectionFilter(),troopFilterShortcut,isLivingSelectedUnit:id=>{const u=game.byId.get(id);return !!(u&&u.team===(game.playerTeam??0)&&u.hp>0&&UNIT_DEFS[u.type]);},
     ui,view:{x:0,y:840,w:800,h:600,zoom:1},battleHud:{open(){},close(){},isOpen:false,touchSelect:false,syncSelection(){}},started:true,menuOpen:false,orderMode:'attack',tab:'army',allSelected:false,allBuildingsSelected:false,
     pointers:new Map(),keys:new Set(),groups:new Map(),gesture:null,pinch:null,edgeMouse:null,
@@ -89,6 +89,28 @@ function fixture({house=0,realMenu=false}={}){
   return {game,ui,context,canvas,win,element,actions,messages,effects,commands,event,refreshMenu};
 }
 const ids=value=>[...value].sort((a,b)=>a-b);
+
+test('Bolton trebuchet buttons follow selection, setup and takedown',()=>{
+  const f=fixture({house:HOUSES.findIndex(h=>h.sigil==='flayed')});
+  const engine=f.game.addUnit(0,'trebuchet',20,20),other=f.game.addUnit(0,'infantry',23,20);
+  for(const name of ['updateTrebuchetHud','setSelectedTrebuchetDeployment'])vm.runInContext(extract(name),f.context);
+  for(const id of ['trebuchetSetupButton','trebuchetTakedownButton']){
+    const binding=source.split('\n').find(line=>line.startsWith("$('"+id+"').onclick="));
+    vm.runInContext(binding,f.context);
+  }
+  const panel=f.element('trebuchetOrders'),setup=f.element('trebuchetSetupButton'),takeDown=f.element('trebuchetTakedownButton'),status=f.element('trebuchetStatus');
+  f.context.updateTrebuchetHud([other]);
+  assert.equal(panel.hidden,true);
+  f.ui.selected=new Set([engine.id,other.id]);
+  f.context.updateTrebuchetHud([engine,other]);
+  assert.equal(panel.hidden,false);assert.equal(setup.disabled,false);assert.equal(takeDown.disabled,true);
+  setup.onclick();f.context.updateTrebuchetHud([engine,other]);
+  assert.equal(status.textContent,'Setting up 10s');assert.ok(setup.disabled&&takeDown.disabled);
+  f.game.updateUnits(10);f.context.updateTrebuchetHud([engine,other]);
+  assert.equal(status.textContent,'Deployed');assert.equal(takeDown.disabled,false);
+  takeDown.onclick();f.context.updateTrebuchetHud([engine,other]);
+  assert.equal(status.textContent,'Taking down 5s');assert.ok(setup.disabled&&takeDown.disabled);
+});
 
 test('Shift troop filters preserve and restore the selected group, and open menus keep recruitment shortcuts',()=>{
   const f=fixture(),infantry=f.game.addUnit(0,'infantry',20,20),archer=f.game.addUnit(0,'archer',21,20),other=f.game.addUnit(0,'hero',22,20);
