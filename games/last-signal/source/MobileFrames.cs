@@ -141,7 +141,8 @@ namespace LastSignal {
                     camera=new {x=Value(g.CamX),y=Value(g.CamY),z=Value(g.CamZ),yaw=Value(g.CamYaw),pitch=Value(g.CamPitch)},
                     storm=new {x=g.StormX,z=g.StormZ,radius=Value(g.StormRadius),nextRadius=Value(g.StormNextRadius),
                         seconds=Value(g.StormSecondsRemaining),warning=g.StormWarning,moving=g.StormMoving,active=g.StormActive},
-                    propChanges=ChangesInView(g),actors,wildlife,shots,ghost=g.Ghost==null?null:PropRecord(g.Ghost,-1),ghostFits=g.GhostFits,
+                    propChanges=ChangesInView(g),actors,wildlife,shots,workSound=RecentWorkSound(g,player),
+                    ghost=g.Ghost==null?null:PropRecord(g.Ghost,-1),ghostFits=g.GhostFits,
                     player=new {id=player.Id,name=player.Name,yaw=Value(player.Yaw),pitch=Value(g.Pitch),
                         health=Value(player.Health),stamina=Value(player.Stamina),hunger=Value(player.Hunger),
                         hydration=Value(player.Hydration),water=Value(player.WaterCarried),weapon=player.Weapon,
@@ -160,6 +161,22 @@ namespace LastSignal {
                 });
             });
             return bytes!=null&&gzip?Compress(bytes):bytes;
+        }
+
+        static object RecentWorkSound(Game g,Actor listener) {
+            if(!listener.Alive)return null;
+            for(int i=g.Noises.Count-1;i>=0;i--) {
+                Noise n=g.Noises[i];
+                if(g.Time-n.Time>.55f)break;
+                if(n.Activity==null)continue;
+                float dx=n.X-listener.X,dz=n.Z-listener.Z;
+                float distance=(float)Math.Sqrt(dx*dx+dz*dz);
+                float range=Perception.HearingRange(g,listener,n);
+                if(distance>=range || range<=0)continue;
+                float pan=distance<.2f?0:(float)(Math.Cos(listener.Yaw)*dx-Math.Sin(listener.Yaw)*dz)/distance;
+                return new {at=Value(n.Time),kind=n.Activity,pan=Value(pan),volume=Value(1f-distance/range)};
+            }
+            return null;
         }
 
         void PrepareChanges(Game g) {

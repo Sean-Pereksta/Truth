@@ -18,7 +18,7 @@ namespace LastSignal {
             {"models.bin","application/octet-stream"},{"modelpaint.png","image/png"},{"paint.png","image/png"},
             {"ground.png","image/png"},{"soil.png","image/png"},{"pavers.png","image/png"},{"sky.png","image/png"},
             {"gorge_floor.png","image/png"},{"gorge_path.png","image/png"},
-            {"frost_floor.png","image/png"},{"frost_path.png","image/png"}
+            {"frost_floor.png","image/png"},{"frost_path.png","image/png"},{"Audio/wood.wav","audio/wav"}
         };
         internal static bool Available { get { return File.Exists(Path.Combine(root,"Mobile","index.html")); } }
 

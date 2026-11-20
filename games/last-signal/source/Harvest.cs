@@ -32,7 +32,7 @@ namespace LastSignal {
             actor.Add(tree?"branch":"stone",amount);
             node.HP=Math.Max(0,node.HP-wear*amount);
             HitEffect(tree?"wood":"spark",contact.X,contact.Y,contact.Z,actor.Heavy?10:6);
-            SoundAt(actor,tree?35:29);Cue(tree?"wood":"guard",contact.X,contact.Z,32);
+            SoundAt(actor,tree?35:29,tree?"chop":null);Cue(tree?"wood":"guard",contact.X,contact.Z,32);
             if(tree){
                 actor.Add("fiber",1);
                 if(node.HP<=0){

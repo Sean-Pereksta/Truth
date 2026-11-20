@@ -400,6 +400,7 @@ namespace LastSignal
         }
         void DrawProp(Prop p,float t){
             if(p.Model=="")return;glPushMatrix();glTranslatef(p.X,p.Y,p.Z);glRotatef(p.Yaw*Deg,0,1,0);
+            if(p.Kind=="remnant")glScalef(1.22f,.23f,1.16f);
             
             if(p.Kind=="pickup" && LongGear(p.Model)){glTranslatef(0,p.Model=="spear"?.074f:.13f,0);glRotatef(86,1,0,0);}
             if(p.Kind=="pickup" && p.Model=="shield"){glTranslatef(0,.115f,0);glRotatef(-90,1,0,0);}

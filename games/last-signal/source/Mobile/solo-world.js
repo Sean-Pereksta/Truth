@@ -286,6 +286,29 @@ export function createSoloWorld(seed, arena = 0) {
   const canOccupy = (x, z, removed) => hypot(x, z) < RADIUS && !(collisions.get(cellKey(x, z)) ?? [])
     .some(body => !removed?.has(body.index) && hypot(x - body.x, z - body.z) < body.radius);
 
+  function clearSight(from, to, eye, end, removed) {
+    const dx = to.x - from.x, dz = to.z - from.z, lengthSq = dx * dx + dz * dz;
+    if (lengthSq < 0.0001) return true;
+    const steps = Math.ceil(Math.sqrt(lengthSq) / 1.5);
+    let lastCell;
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps, x = from.x + dx * t, z = from.z + dz * t;
+      if (i && i < steps && terrainHeight(x, z) > eye + (end - eye) * t) return false;
+      const key = cellKey(x, z);
+      if (key === lastCell) continue;
+      lastCell = key;
+      for (const body of collisions.get(key) || []) {
+        if (removed.has(body.index)) continue;
+        const along = max(0, min(1, ((body.x - from.x) * dx + (body.z - from.z) * dz) / lengthSq));
+        const height = eye + (end - eye) * along, prop = props[body.index];
+        if (height < prop[2] || height > prop[2] + prop[7]) continue;
+        const offsetX = from.x + dx * along - body.x, offsetZ = from.z + dz * along - body.z;
+        if (offsetX * offsetX + offsetZ * offsetZ < body.radius * body.radius) return false;
+      }
+    }
+    return true;
+  }
+
   function add(model, x, z, { scale = 1, yaw = 0, y = terrainHeight(x, z), kind = "decor", lit = false, solid = 0 } = {}) {
     const [w, h, d] = dimensions[model] ?? [0.62, 0.35, 0.57];
     const index = props.length;
@@ -425,5 +448,5 @@ export function createSoloWorld(seed, arena = 0) {
   }
 
   return { arena, radius: RADIUS, terrain, props, landmarks, caches, nodes, waterSources, wildlife,
-    spawns, heightAt, surfaceAt, zoneAt, canOccupy, random };
+    spawns, heightAt, surfaceAt, zoneAt, canOccupy, clearSight, random };
 }

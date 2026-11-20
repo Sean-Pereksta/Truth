@@ -66,13 +66,13 @@ namespace LastSignal
 
         public static readonly Recipe[] Builds = {
             new Recipe("barricade","Low barricade","Waist-high cover. Crouch to break sight.",1,"branch",2,"fiber",1),
-            new Recipe("wall","Timber wall","Join walls at their ends or start another story on a floor edge.",1,"branch",4,"fiber",2),
+            new Recipe("wall","Timber wall","Join walls at their ends or start another story on a floor edge.",1,"branch",3,"fiber",2),
             new Recipe("gate","Hinged gate","Fits between walls. Close it and choose Bar gate to secure it.",1,"branch",3,"fiber",1,"scrap",1),
-            new Recipe("lean_to","Lean-to","A shelter for a camp on the arena floor.",1,"branch",4,"fiber",2,"cloth",1),
+            new Recipe("lean_to","Lean-to","A shelter for a camp on the arena floor.",1,"branch",3,"fiber",2,"cloth",1),
             new Recipe("ramp","Timber ramp","Align the high end with a landing to walk up one story.",1,"branch",3,"fiber",1),
             new Recipe("fire","Campfire","Cook game here. Smoke and light reveal its position.",1,"branch",2,"stone",2,"tinder",1),
             new Recipe("rain_barrel","Rain barrel","Stores 160 water. Collects rain or accepts water from a skin.",1,"branch",4,"fiber",2,"cloth",1),
-            new Recipe("floor","Floor / ceiling","Aim at a wall top to build above it, or a floor edge to extend it.",1,"branch",4,"fiber",2)
+            new Recipe("floor","Floor / ceiling","Aim at a wall top to build above it, or a floor edge to extend it.",1,"branch",3,"fiber",2)
         };
 
         private const float Reach = 3.25f;
@@ -174,7 +174,8 @@ namespace LastSignal
             if (id=="fire" && a.Count("firekit")>0) a.Add("firekit",-1);
             else Pay(a,r);
             if (id=="fire") { p.Fuel=55f; p.Lit=false; }
-            g.SoundAt(a,14);
+            g.SoundAt(a,14,"build");
+            g.Cue("wood",p.X,p.Z,14);
             return p;
         }
         public static bool Eat(Game g,Actor a)
@@ -195,7 +196,7 @@ namespace LastSignal
         }
         public static bool Take(Game g,Actor a,Prop p)
         {
-            if (p==null || p.Removed || !InReach(a,p.X,p.Z,.3f) || Math.Abs(a.Y-p.Y)>3f) return false;
+            if (p==null || p.Removed || p.Kind=="remnant" || !InReach(a,p.X,p.Z,.3f) || Math.Abs(a.Y-p.Y)>3f) return false;
             if (!Visible(g,a,p.X,p.Y+.28f,p.Z,p)) return false;
             if (p.Kind=="pack" || p.Model=="pack" && p.Item=="")
             {
@@ -215,6 +216,8 @@ namespace LastSignal
                 int skins; p.Bag.TryGetValue("waterskin",out skins);
                 LoadCarriedWater(a,p,skins);
                 p.FoodProgress.Clear(); p.Bag.Clear(); p.Removed=true;
+                if(total>0) Arena.Register(g,new Prop{Model="pack",Kind="remnant",Label="Emptied pack",
+                    X=p.X,Y=p.Y,Z=p.Z,Yaw=p.Yaw+.47f,Scale=p.Scale,W=.62f,H=.12f,D=.48f});
                 if(a.Weapon!=prior)a.LiftWeapon(p,a.Weapon);
                 if(gear) g.Cue(a==g.Player?"focus_equip":"equip",a.X,a.Z,9);
                 if (a==g.Player) g.Say(total==0?"The pack was empty":"Recovered supplies from the pack");
@@ -435,7 +438,7 @@ namespace LastSignal
         }
         private static bool Eligible(Prop p)
         {
-            return !p.Removed && (p.Kind=="pickup" || p.Kind=="pack" || Fire(p) || Gate(p) || WaterSource(p));
+            return !p.Removed && (p.Kind=="pickup" || p.Kind=="pack" || p.Kind=="remnant" || Fire(p) || Gate(p) || WaterSource(p));
         }
         struct InteractionRay
         {
@@ -546,7 +549,7 @@ namespace LastSignal
                     if(!target.Latched)g.FocusOptions.Add("gate");
                     if(!target.Open&&Arena.TendsGate(g,a,target))g.FocusOptions.Add("latch");
                 }
-                else g.FocusOptions.Add("pick");
+                else if(target.Kind!="remnant") g.FocusOptions.Add("pick");
             }
             else if(animal!=null)
             {
@@ -598,6 +601,7 @@ namespace LastSignal
             if(!String.IsNullOrEmpty(g.ActionId)) return ActionLabel(g,g.ActionId,g.UseProp,g.UseAnimal);
             int count=g.FocusOptions.Count;
             Prop p=g.FocusProp;
+            if(p!=null && p.Kind=="remnant") return "Emptied pack";
             string status="";
             if(WaterSource(p) || g.FocusShore)
             {

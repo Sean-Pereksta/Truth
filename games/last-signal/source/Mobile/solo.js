@@ -42,13 +42,13 @@ const crafts = [
 ];
 const builds = [
   ["barricade", 1, { branch: 2, fiber: 1 }],
-  ["wall", 1, { branch: 4, fiber: 2 }],
+  ["wall", 1, { branch: 3, fiber: 2 }],
   ["gate", 1, { branch: 3, fiber: 1, scrap: 1 }],
-  ["lean_to", 1, { branch: 4, fiber: 2, cloth: 1 }],
+  ["lean_to", 1, { branch: 3, fiber: 2, cloth: 1 }],
   ["ramp", 1, { branch: 3, fiber: 1 }],
   ["fire", 1, { branch: 2, stone: 2, tinder: 1 }],
   ["rain_barrel", 1, { branch: 4, fiber: 2, cloth: 1 }],
-  ["floor", 1, { branch: 4, fiber: 2 }]
+  ["floor", 1, { branch: 3, fiber: 2 }]
 ];
 const pieceSize = {
   barricade: [3.7, 1.2, 0.48], wall: [4, 2.6, 0.42], gate: [3.4, 2.4, 0.44],
@@ -68,15 +68,18 @@ function add(actor, item, amount) {
   else delete actor.bag[item];
 }
 
-function makeActor(id, name, spawn, groundY, random) {
+function makeActor(id, name, style, spawn, groundY, random) {
   return {
     id, name, x: spawn.x, y: groundY, z: spawn.z, yaw: spawn.yaw,
-    style: id ? BOT_STYLES[(id - 1) % BOT_STYLES.length] : "player",
+    style,
     health: 100, stamina: 100, hunger: 100, hydration: 100,
     water: 0, alive: true, placement: 0, weapon: "fists", armor: "", speed: 0,
     cooldown: random() * 0.55, crouch: false, guard: false, swing: 0, hurt: 0, anim: 0,
     reload: 0, crossbowLoaded: false, jump: 0, verticalSpeed: 0, bag: {},
-    decision: random() * 0.4, target: null, aggression: random()
+    decision: random() * 0.4, target: null, aggression: random(), intent: "roam",
+    lastSeen: null, lastSound: 0, soundMemory: null, opponent: null, openingLoot: false,
+    attackedAt: -Infinity, woundedAt: -Infinity, nextStepNoise: 0, lookAt: null,
+    escapeUntil: 0, openingRoute: null, leftPlaza: false, winded: false
   };
 }
 
@@ -116,14 +119,37 @@ function itemRow(model, x, y, z, w, h, d, kind, yaw = 0, lit = false) {
   return [model, x, y, z, 1, yaw, w, h, d, kind, lit, -1, 0, false, model];
 }
 
+// Intersect the whole sight segment with a rotated building piece. A thin wall
+// can fall entirely between movement samples, and a low barricade only hides a crouched rival.
+function crossesPiece(from, to, eye, end, piece) {
+  const c = Math.cos(piece.angle), s = Math.sin(piece.angle);
+  const ox = from.x - piece.x, oz = from.z - piece.z, dx = to.x - from.x, dz = to.z - from.z;
+  let near = 0, far = 1;
+  function slab(start, delta, extent) {
+    if (Math.abs(delta) < 0.00001) return Math.abs(start) <= extent;
+    const a = (-extent - start) / delta, b = (extent - start) / delta;
+    near = Math.max(near, Math.min(a, b));
+    far = Math.min(far, Math.max(a, b));
+    return near <= far;
+  }
+  return slab(ox * c - oz * s, dx * c - dz * s, piece.w / 2) &&
+    slab(ox * s + oz * c, dx * s + dz * c, piece.d / 2) &&
+    slab(eye - piece.y - piece.h / 2, end - eye, piece.h / 2);
+}
+
 export class SoloArena {
   constructor({ name = "Contestant", round = 1, seed = Date.now(), arena = 0 } = {}) {
     this.map = createSoloWorld(seed, arena);
     const { terrain, props, spawns, heightAt, random } = this.map;
     this.world = { type: "world", round, arena, seed, radius: this.map.radius || 185, terrain, props };
+    const styles = BOT_NAMES.map((_, index) => BOT_STYLES[index % BOT_STYLES.length]);
+    for (let i = styles.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [styles[i], styles[j]] = [styles[j], styles[i]];
+    }
     this.actors = [name, ...BOT_NAMES].map((contestant, id) => {
       const spawn = spawns[id];
-      return makeActor(id, contestant, spawn, heightAt(spawn.x, spawn.z), random);
+      return makeActor(id, contestant, id ? styles[id - 1] : "player", spawn, heightAt(spawn.x, spawn.z), random);
     });
     this.player = this.actors[0];
     this.input = { right: 0, forward: 0, lean: 0, pitch: 0, yaw: this.player.yaw };
@@ -139,6 +165,8 @@ export class SoloArena {
     this.pieces = [];
     this.dropped = [];
     this.shots = [];
+    this.rivalSounds = [];
+    this.soundSerial = 0;
     this.wildlife = (this.map.wildlife || []).map(animal => ({ ...animal, phase: random() * TAU }));
     this.stoves = props.flatMap((prop, propIndex) => prop?.[0] === "stove" ?
       [{ x: prop[1], z: prop[3], propIndex, lit: true }] : []);
@@ -272,15 +300,15 @@ export class SoloArena {
     equips(actor, id);
   }
 
-  blueprint() {
-    if (!this.build) return null;
-    const { x, z, yaw, id: actorId } = this.player;
-    const id = this.build[0];
+  blueprint(actor = this.player, recipe = this.build, rotation = this.buildAngle) {
+    if (!recipe) return null;
+    const { x, z, yaw, id: actorId } = actor;
+    const id = recipe[0];
     const px = Math.round((x + Math.sin(yaw) * 3.45) * 2) / 2;
     const pz = Math.round((z + Math.cos(yaw) * 3.45) * 2) / 2;
     const y = this.map.heightAt(px, pz);
     const [w, h, d] = pieceSize[id];
-    const angle = Math.round(yaw / (Math.PI / 4)) * Math.PI / 4 + this.buildAngle;
+    const angle = Math.round(yaw / (Math.PI / 4)) * Math.PI / 4 + rotation;
     const fits = this.map.surfaceAt(px, pz) <= y + 0.25 &&
       this.canOccupy(px, pz, 0.7) &&
       this.pieces.every(piece => this.removed.has(piece.propIndex) || piece.id !== id || distance(piece, { x: px, z: pz }) > 0.75) &&
@@ -294,14 +322,20 @@ export class SoloArena {
       this.say("Find clear ground and check materials.");
       return;
     }
-    pay(this.player, this.build, true);
+    this.installPiece(this.player, this.build, piece);
+    this.say("Placed " + label(piece.id).toLowerCase() + ".");
+    if (!repeat || !recipeAffordable(this.player, this.build, true)) this.build = null;
+  }
+
+  installPiece(actor, recipe, piece) {
+    pay(actor, recipe, true);
     piece.propIndex = this.nextProp++;
+    piece.owner = actor.id;
     piece.health = 48;
     piece.lit = false;
     this.pieces.push(piece);
     this.showPiece(piece);
-    this.say("Placed " + label(piece.id).toLowerCase() + ".");
-    if (!repeat || !recipeAffordable(this.player, this.build, true)) this.build = null;
+    this.rivalNoise(actor, 14, "build");
   }
 
   showPiece(piece) {
@@ -311,9 +345,9 @@ export class SoloArena {
     this.changes.set(piece.propIndex, record);
   }
 
-  drop(x, z, items) {
+  drop(x, z, items, leavePack = false) {
     const propIndex = this.nextProp++;
-    this.dropped.push({ x, z, propIndex, items });
+    this.dropped.push({ x, z, propIndex, items, leavePack });
     this.changes.set(propIndex, itemRow("pack", x, this.map.heightAt(x, z), z, 0.6, 0.48, 0.48, "pack"));
   }
 
@@ -330,8 +364,14 @@ export class SoloArena {
     const addOption = (target, kind, title) => {
       if (aimAt(target)) options.push({ target, kind, title, distance: distance(actor, target) });
     };
+    this.nearbyRemnant = "";
+    let clueDistance = REACH;
     for (const cache of [...this.map.caches, ...this.dropped]) {
       if (!this.removed.has(cache.propIndex)) addOption(cache, "cache", "Take supplies");
+      else if (cache.emptied && aimAt(cache) && distance(actor, cache) <= clueDistance && this.lineClear(actor, cache)) {
+        this.nearbyRemnant = cache.emptied;
+        clueDistance = distance(actor, cache);
+      }
     }
     for (const node of this.map.nodes) {
       if (this.removed.has(node.propIndex)) continue;
@@ -405,19 +445,26 @@ export class SoloArena {
       add(actor, id, amount);
       if (actor.weapon === "fists") equips(actor, id);
     }
+    const row = this.world.props[cache.propIndex] || this.changes.get(cache.propIndex);
     this.remove(cache);
+    if (row && (row[0] === "cache" || cache.leavePack)) {
+      cache.emptied = row[0] === "cache" ? "Stripped supply chest" : "Emptied pack";
+      const remnant = [...row];
+      remnant[9] = "remnant";
+      this.changes.set(cache.propIndex, remnant);
+    }
   }
 
-  harvest(node) {
-    const actor = this.player;
+  harvest(node, actor = this.player) {
     if (this.removed.has(node.propIndex)) return;
+    const notify = message => { if (actor === this.player) this.say(message); };
     const hatchet = actor.weapon === "hatchet";
     if (node.type === "stone" && !hatchet) {
-      this.say("Equip a hatchet to mine stone.");
+      notify("Equip a hatchet to mine stone.");
       return;
     }
     if (node.type === "tree" && !hatchet && actor.weapon !== "fists") {
-      this.say("Use your hands for fiber or equip a hatchet.");
+      notify("Use your hands for fiber or equip a hatchet.");
       return;
     }
     const health = (this.nodeHealth.get(node.propIndex) ?? (node.type === "tree" ? 7 : 3)) -
@@ -425,23 +472,113 @@ export class SoloArena {
     this.nodeHealth.set(node.propIndex, health);
     if (node.type === "tree") {
       add(actor, "fiber", 1);
-      if (hatchet) add(actor, "branch", 2);
-      this.say(hatchet ? "Collected wood and fiber." : "Collected fiber. A hatchet cuts wood.");
+      if (hatchet) {
+        add(actor, "branch", 2);
+        this.rivalNoise(actor, 35, "chop");
+      }
+      notify(hatchet ? "Collected wood and fiber." : "Collected fiber. A hatchet cuts wood.");
     } else if (node.type === "stone") {
       add(actor, "stone", 2);
-      this.say("Collected stone.");
+      notify("Collected stone.");
     } else if (node.type === "berry") {
       actor.hunger = Math.min(100, actor.hunger + 21);
-      this.say("Ate berries.");
+      notify("Ate berries.");
     } else {
       add(actor, "fiber", 2);
       add(actor, "tinder", 1);
-      this.say("Collected fiber and tinder.");
+      notify("Collected fiber and tinder.");
     }
     if (health <= 0) {
       this.remove(node);
       if (node.type === "tree") this.falling.set(node.propIndex, { born: this.clock, angle: actor.yaw });
     }
+  }
+
+  recentWorkSound() {
+    const listener = this.player;
+    if (!listener.alive) return null;
+    for (let i = this.rivalSounds.length - 1; i >= 0; i--) {
+      const sound = this.rivalSounds[i];
+      if (this.clock - sound.at > 0.55) break;
+      if (sound.kind !== "chop" && sound.kind !== "build") continue;
+      const range = distance(listener, sound);
+      if (range >= sound.radius) continue;
+      const reach = this.lineClear(listener, sound) ? sound.radius : sound.radius * 0.68;
+      if (range < reach) return {
+        at: sound.at, kind: sound.kind, volume: 1 - range / reach,
+        pan: range < 0.2 ? 0 : Math.sin(heading(listener, sound) - listener.yaw)
+      };
+    }
+    return null;
+  }
+
+  workSite(actor) {
+    if (this.alive <= 3 || this.clock < (actor.nextWorkSearch || 0) ||
+        actor.health < 40 || actor.hydration < 35 || actor.hunger < 35 ||
+        this.pieces.some(p => p.owner === actor.id && !this.removed.has(p.propIndex))) return null;
+    actor.nextWorkSearch = this.clock + 3;
+    const recipe = builds.find(row => row[0] === "barricade");
+    if (recipeAffordable(actor, recipe, true)) return { x: actor.x, z: actor.z,
+      workNode: { x: actor.x, z: actor.z, type: "camp" } };
+    let best = null, nearest = 22;
+    for (const cache of this.map.caches) {
+      const useful = (count(actor, "branch") < recipe[2].branch && cache.items.branch) ||
+        (count(actor, "fiber") < recipe[2].fiber && cache.items.fiber) ||
+        (!count(actor, "hatchet") && cache.items.hatchet);
+      if (!useful || this.removed.has(cache.propIndex)) continue;
+      const range = distance(actor, cache);
+      if (range >= nearest || (range > 2 && Math.abs(angleDifference(heading(actor, cache), actor.yaw)) > 1.7)) continue;
+      if ((this.storm.active && distance(cache, this.storm) >= this.storm.radius - 6) || !this.lineClear(actor, cache)) continue;
+      best = { x: cache.x, z: cache.z, workNode: cache };
+      nearest = range;
+    }
+    for (const node of this.map.nodes) {
+      const useful = (node.type === "tree" && count(actor, "hatchet")) ||
+        (node.type === "fiber" && count(actor, "fiber") < recipe[2].fiber);
+      if (!useful || this.removed.has(node.propIndex)) continue;
+      const range = distance(actor, node);
+      if (range < 0.1 || range >= nearest || Math.abs(angleDifference(heading(actor, node), actor.yaw)) > 1.7) continue;
+      if (this.storm.active && distance(node, this.storm) >= this.storm.radius - 6) continue;
+      const offset = Math.min(1, 1.65 / range);
+      const edge = { x: node.x + (actor.x - node.x) * offset, z: node.z + (actor.z - node.z) * offset };
+      if (!this.canOccupy(edge.x, edge.z) || !this.lineClear(actor, edge)) continue;
+      best = { ...edge, workNode: node };
+      nearest = range;
+    }
+    return best;
+  }
+
+  workAt(actor, site) {
+    const node = site.workNode;
+    if (!node || this.removed.has(node.propIndex) || this.alive <= 3) return false;
+    actor.speed = 0;
+    actor.yaw = heading(actor, node);
+    if (distance(actor, node) > 2.7 || !this.lineClear(actor, site)) return false;
+    if (this.clock < (actor.nextWorkStroke || 0)) return true;
+    actor.nextWorkStroke = this.clock + 1.05;
+    const recipe = builds.find(row => row[0] === "barricade");
+    if (recipeAffordable(actor, recipe, true)) {
+      const facing = actor.yaw;
+      for (const turn of [Math.PI, Math.PI / 2, -Math.PI / 2]) {
+        actor.yaw = facing + turn;
+        const piece = this.blueprint(actor, recipe, 0);
+        if (!piece.fits) continue;
+        this.installPiece(actor, recipe, piece);
+        break;
+      }
+      return false;
+    }
+    if (node.items) {
+      this.loot(actor, node);
+      actor.nextWorkSearch = this.clock + 0.5;
+      return false;
+    }
+    if (node.type === "camp" || (node.type === "tree" && !count(actor, "hatchet"))) return false;
+    if (node.type === "tree") equips(actor, "hatchet");
+    actor.swing = 0.48;
+    actor.cooldown = Math.max(actor.cooldown, weapons.hatchet.delay);
+    this.harvest(node, actor);
+    return true;
   }
 
   canOccupy(x, z, padding = 0.28) {
@@ -483,6 +620,8 @@ export class SoloArena {
     }
     actor.cooldown = weapon.delay;
     actor.swing = 0.48;
+    actor.attackedAt = this.clock;
+    this.rivalNoise(actor, 17, "strike");
     const aligned = target => distance(actor, target) <= weapon.reach &&
       Math.abs(angleDifference(actor.yaw, heading(actor, target))) < 0.56 &&
       this.lineClear(actor, target);
@@ -515,6 +654,10 @@ export class SoloArena {
       Math.abs(angleDifference(actor.yaw, heading(actor, candidate))) < 0.6);
     if (piece && (piece.health -= weapon.damage) <= 0) {
       this.remove(piece);
+      const recipe = builds.find(([id]) => id === piece.id);
+      const salvage = piece.id === "wall" || piece.id === "gate" ? 3 : piece.id === "fire" ? 1 : 2;
+      const wood = Math.min(recipe?.[2].branch ?? 0, salvage);
+      if (wood > 0) this.drop(piece.x, piece.z, { branch: wood });
       this.say("Structure broken.");
     }
   }
@@ -523,6 +666,8 @@ export class SoloArena {
     if (actor.cooldown > 0 || !actor.alive) return false;
     actor.cooldown = weapon.delay;
     actor.swing = 0.36;
+    actor.attackedAt = this.clock;
+    this.rivalNoise(actor, 23, "shot");
     const pitch = actor === this.player ? this.input.pitch || 0 : actor.aimPitch || 0;
     this.shots.push({
       owner: actor, model: weapon.shot, x: actor.x, y: actor.y + (actor.crouch ? 1.06 : 1.46), z: actor.z,
@@ -533,13 +678,10 @@ export class SoloArena {
   }
 
   lineClear(from, to) {
-    const length = distance(from, to);
-    const steps = Math.ceil(length / 1.3);
-    for (let i = 1; i < steps; i++) {
-      const fraction = i / steps;
-      if (!this.canOccupy(from.x + (to.x - from.x) * fraction, from.z + (to.z - from.z) * fraction, 0)) return false;
-    }
-    return true;
+    const eye = from.y + (from.crouch ? 1.04 : 1.6);
+    const end = (to.y ?? this.map.heightAt(to.x, to.z)) + (to.crouch ? 0.99 : to.alive ? 1.55 : 0.55);
+    return this.map.clearSight(from, to, eye, end, this.removed) &&
+      !this.pieces.some(piece => !piece.open && !this.removed.has(piece.propIndex) && crossesPiece(from, to, eye, end, piece));
   }
 
   damage(actor, amount, source, contact = {}) {
@@ -558,13 +700,15 @@ export class SoloArena {
       if (actor.armor) amount *= actor.armor === "scrap_cuirass" ? 0.64 : 0.79;
       if (actor === this.player) this.impactAngle = incoming;
       if (source === this.player) this.hitUntil = this.clock + 0.25;
+      actor.woundedAt = this.clock;
+      if (actor !== this.player) actor.decision = this.clock;
     }
     actor.health = Math.max(0, actor.health - amount);
     if (amount >= 1) actor.hurt = source ? 0.43 : Math.max(actor.hurt, 0.12);
     if (actor.health > 0) return;
     actor.alive = false;
     actor.placement = this.alive--;
-    if (Object.keys(actor.bag).length) this.drop(actor.x, actor.z, { ...actor.bag });
+    if (Object.keys(actor.bag).length) this.drop(actor.x, actor.z, { ...actor.bag }, true);
     this.feed = source ? source.name + " eliminated " + actor.name + "." : actor.name + " was lost to the arena.";
     this.feedUntil = this.clock + 5;
     if (this.alive <= 1) this.winner = this.actors.find(candidate => candidate.alive)?.name || actor.name;
@@ -615,62 +759,253 @@ export class SoloArena {
     this.shots = remaining;
   }
 
-  bot(actor, seconds) {
-    const age = this.clock - ROUND_START;
-    if (actor.decision <= this.clock) {
-      actor.decision = this.clock + 0.32 + this.map.random() * 0.43;
-      const enemy = this.actors.filter(other => other !== actor && other.alive &&
-        distance(actor, other) < (other.crouch ? 8 : actor.aggression < 0.3 ? 14 : 24) &&
-        (age > 10 || distance(actor, other) < 3) && this.lineClear(actor, other))
-        .sort((a, b) => distance(actor, a) - distance(actor, b))[0];
-      const loot = actor.weapon === "fists" && (age > 10 || actor.aggression > 0.55) && [...this.map.caches, ...this.dropped]
-        .filter(cache => !this.removed.has(cache.propIndex) && distance(actor, cache) < 34 &&
-          Object.keys(cache.items).some(id => Object.hasOwn(weapons, id)))
-        .sort((a, b) => distance(actor, a) - distance(actor, b))[0];
-      if (this.storm.active && distance(actor, this.storm) > Math.max(1, this.storm.radius - 5)) {
-        actor.target = { x: this.storm.x, z: this.storm.z };
-      } else if (enemy && actor.health >= 26 && (actor.weapon !== "fists" || !loot || distance(actor, enemy) < 3) && age >= 6) {
-        actor.target = enemy;
-      } else if (loot) actor.target = loot;
-      else if (enemy && actor.health < 26 && this.storm.radius > 12) {
-        const yaw = heading(enemy, actor);
-        actor.target = { x: actor.x + Math.sin(yaw) * 12, z: actor.z + Math.cos(yaw) * 12 };
-      } else if (!actor.target || distance(actor, actor.target) < 3 || actor.target.alive !== undefined ||
-        (actor.target.propIndex !== undefined && this.removed.has(actor.target.propIndex))) {
-        const yaw = age < 10 ? actor.id * TAU / 24 + (this.map.random() - 0.5) : this.map.random() * TAU;
-        const radius = age < 10 ? 34 + actor.aggression * 20 : 5 + this.map.random() * Math.max(3, this.storm.radius * 0.68);
-        actor.target = { x: Math.sin(yaw) * radius, z: Math.cos(yaw) * radius };
+  rivalNoise(actor, radius, kind) {
+    if (!actor.alive) return;
+    this.rivalSounds.push({ id: ++this.soundSerial, source: actor.id, x: actor.x, z: actor.z, at: this.clock, radius, kind });
+  }
+
+  heardBy(actor) {
+    let best = null, volume = 0;
+    for (let i = this.rivalSounds.length - 1; i >= 0; i--) {
+      const sound = this.rivalSounds[i];
+      if (sound.id <= actor.lastSound || this.clock - sound.at > 1.1) break;
+      if (sound.source === actor.id) continue;
+      const loudness = 1 - distance(actor, sound) / sound.radius;
+      if (loudness > volume) { best = sound; volume = loudness; }
+    }
+    actor.lastSound = this.soundSerial;
+    if (best) {
+      const error = 0.4 + 2.2 * (1 - volume), angle = this.map.random() * TAU;
+      actor.soundMemory = { x: best.x + Math.sin(angle) * error, z: best.z + Math.cos(angle) * error,
+        source: best.source, at: best.at, kind: best.kind };
+    }
+    return actor.soundMemory && this.clock - actor.soundMemory.at < 4.5 ? actor.soundMemory : null;
+  }
+
+  canSeeRival(actor, other) {
+    if (other === actor || !other.alive) return false;
+    const reach = distance(actor, other);
+    const range = other.crouch ? 17 : actor.style === "hunter" ? 43 : 35;
+    if (reach > range || (reach > 2.2 && Math.abs(angleDifference(actor.yaw, heading(actor, other))) > 1.45)) return false;
+    return this.lineClear(actor, other);
+  }
+
+  supplyFor(actor, takeAny) {
+    let best = null, score = Infinity;
+    for (const group of [this.map.caches, this.dropped]) {
+      for (const cache of group) {
+        if (this.removed.has(cache.propIndex)) continue;
+        const reach = distance(actor, cache);
+        if (reach > 28 || reach > score + 6) continue;
+        const model = this.world.props[cache.propIndex]?.[0] || "pack";
+        const container = model === "cache" || model === "pack";
+        const needsGear = actor.weapon === "fists", needsAid = actor.health < 65, needsFood = actor.hunger < 60;
+        const useful = (needsGear && Object.hasOwn(weapons, model)) || (needsAid && model === "bandage") ||
+          (needsFood && (model === "meal" || model === "berries"));
+        if (!useful && !takeAny && !(container && (needsGear || needsAid || needsFood))) continue;
+        const value = reach - (useful && !takeAny ? 5 : 0);
+        if (value >= score || (reach > 3 && Math.abs(angleDifference(actor.yaw, heading(actor, cache))) > 1.55) ||
+          !this.lineClear(actor, cache)) continue;
+        score = value;
+        best = cache;
       }
+    }
+    return best;
+  }
+
+  rivalExit(actor, threat) {
+    const angle = (threat ? heading(threat, actor) : Math.atan2(actor.x, actor.z)) +
+      (actor.id % 2 ? 0.28 : -0.28);
+    const x = actor.x + Math.sin(angle) * 16, z = actor.z + Math.cos(angle) * 16;
+    const scale = Math.min(1, this.storm.radius * 0.96 / Math.max(1, Math.hypot(x - this.storm.x, z - this.storm.z)));
+    return { x: this.storm.x + (x - this.storm.x) * scale, z: this.storm.z + (z - this.storm.z) * scale };
+  }
+
+  rivalPlan(actor, intent, goal, lookAt = null, opponent = null) {
+    actor.intent = intent;
+    actor.target = goal;
+    actor.lookAt = lookAt;
+    actor.opponent = opponent;
+  }
+
+  thinkRival(actor) {
+    const now = this.clock, age = now - ROUND_START, opening = age < 14;
+    const bold = actor.style === "fighter", cautious = actor.style === "runner" || actor.style === "stalker";
+    const sound = this.heardBy(actor);
+    const visible = this.actors.filter(other => this.canSeeRival(actor, other));
+    const rank = other => distance(actor, other) - (other.health < 43 ? 7 : 0) -
+      (other.id === actor.opponent ? 3 : 0);
+    visible.sort((a, b) => rank(a) - rank(b));
+    const enemy = visible[0], third = visible[1];
+    const sight = enemy && { x: enemy.x, z: enemy.z, at: now, id: enemy.id };
+    if (sight) actor.lastSeen = sight;
+    if (this.storm.active && distance(actor, this.storm) > this.storm.radius - Math.min(2.5, this.storm.radius * 0.12)) {
+      return this.rivalPlan(actor, "storm", { x: this.storm.x, z: this.storm.z });
+    }
+    if (actor.intent === "retreat" && now < actor.escapeUntil && actor.target && distance(actor, actor.target) > 2) return;
+    // Carry a successful grab out of the plaza. Losing a pursuer's sight on the
+    // first step should not make a runner turn back toward the same fight.
+    const leaveOpening = actor.style === "runner" && (actor.openingLoot || age > 5) ||
+      actor.style === "hunter" && age > (actor.aggression < 0.55 ? 2 : 8) ||
+      actor.style === "stalker" && age > 10;
+    if (!actor.leftPlaza && this.alive > 3 && age < 25 && leaveOpening) {
+      if (!actor.openingRoute) {
+        const angle = Math.atan2(actor.x, actor.z) + (actor.id % 2 ? 0.25 : -0.25);
+        const radius = 42 + actor.aggression * 18;
+        actor.openingRoute = { x: Math.sin(angle) * radius, z: Math.cos(angle) * radius };
+      }
+      if (distance(actor, actor.openingRoute) > 2.5) {
+        actor.lastSeen = null;
+        return this.rivalPlan(actor, "retreat", actor.openingRoute);
+      }
+      actor.leftPlaza = true;
+      actor.lastSeen = null;
+    }
+    if (enemy) {
+      const reach = distance(actor, enemy);
+      const contact = reach < 4.3 || (reach < 14 && now - actor.woundedAt < 1.8);
+      const outmatched = actor.weapon === "fists" && enemy.weapon !== "fists";
+      const extraThreat = third || (sound && sound.source !== enemy.id && now - sound.at < 1.8);
+      const trading = third && distance(enemy, third) < 13 &&
+        (now - enemy.attackedAt < 2.6 || now - third.attackedAt < 2.6);
+      const vulnerable = enemy.health < 42 || (enemy.weapon === "crossbow" && enemy.reload > 0);
+      const needsRecovery = actor.health < 48 || actor.stamina < 23 || actor.hunger < 26 || actor.hydration < 26;
+      if (this.alive > 2 && ((needsRecovery && extraThreat) ||
+        (contact && (actor.health < 25 || (outmatched && cautious))))) {
+        actor.escapeUntil = now + 3.5;
+        return this.rivalPlan(actor, "retreat", this.rivalExit(actor, sight));
+      }
+      if (trading && !contact && (cautious || this.alive === 3) && !(vulnerable && actor.health > 48)) {
+        return this.rivalPlan(actor, "watch", { x: actor.x, z: actor.z }, sight);
+      }
+      if ((contact && (!opening || bold || !outmatched)) ||
+        ((!opening || (bold && actor.weapon !== "fists")) &&
+          (!outmatched || vulnerable || this.alive === 2) &&
+          (!cautious || vulnerable || this.alive === 2 || reach < 8 || trading))) {
+        return this.rivalPlan(actor, "engage", sight, null, enemy.id);
+      }
+      if (opening && actor.style === "stalker" && !contact && !vulnerable) {
+        return this.rivalPlan(actor, "watch", { x: actor.x, z: actor.z }, sight);
+      }
+      if (!opening && cautious && (actor.weapon !== "fists" || outmatched)) {
+        return this.rivalPlan(actor, "watch", reach < 7 ? this.rivalExit(actor, sight) : { x: actor.x, z: actor.z }, sight);
+      }
+    }
+    if (!enemy) {
+      const memory = actor.lastSeen;
+      if (cautious && this.alive > 2 && sound && (sound.kind === "strike" || sound.kind === "shot") &&
+        (!memory || memory.at < sound.at) && distance(actor, sound) < 12) {
+        actor.escapeUntil = now + 2.8;
+        return this.rivalPlan(actor, "retreat", this.rivalExit(actor, sound));
+      }
+      if (sound && (!memory || sound.at > memory.at)) return this.rivalPlan(actor, "investigate", sound);
+      if (memory && now - memory.at < (actor.style === "hunter" ? 8 : 5.5)) return this.rivalPlan(actor, "search", memory);
+      if (sound) return this.rivalPlan(actor, "investigate", sound);
+      if (actor.health < 75 && count(actor, "bandage")) {
+        add(actor, "bandage", -1);
+        actor.health = Math.min(100, actor.health + 28);
+      }
+      if (actor.hunger < 68) {
+        const food = count(actor, "meal") ? "meal" : "berries";
+        if (count(actor, food)) {
+          add(actor, food, -1);
+          actor.hunger = Math.min(100, actor.hunger + (food === "meal" ? 42 : 18));
+        }
+      }
+      if (actor.hydration < 58) {
+        if (actor.water > 0 && count(actor, "waterskin")) {
+          const drink = Math.min(24, actor.water);
+          actor.water -= drink;
+          actor.hydration += drink;
+        } else if (this.map.surfaceAt(actor.x, actor.z) > this.map.heightAt(actor.x, actor.z) + 0.05) {
+          actor.hydration = Math.min(100, actor.hydration + 55);
+        } else {
+          const spring = this.map.waterSources.find(source => distance(actor, source) < 18 && this.lineClear(actor, source));
+          if (spring) return this.rivalPlan(actor, "drink", spring);
+        }
+      }
+    }
+    const supply = this.supplyFor(actor, opening && !actor.openingLoot && actor.style === "runner");
+    if (supply) return this.rivalPlan(actor, "loot", supply);
+    if (this.alive > 2 && (!opening || actor.leftPlaza) && !enemy && (actor.style === "runner" || actor.style === "hunter")) {
+      if (actor.intent === "work" && actor.target && !this.removed.has(actor.target.workNode?.propIndex)) return;
+      const site = this.workSite(actor);
+      if (site) return this.rivalPlan(actor, "work", site);
+    }
+    if (actor.intent === "roam" && actor.target && distance(actor, actor.target) > 2) return;
+    const angle = opening ? Math.atan2(actor.x, actor.z) : this.map.random() * TAU;
+    const radius = opening ? 27 + actor.aggression * 9 : Math.max(2, this.storm.radius * (0.15 + 0.65 * this.map.random()));
+    this.rivalPlan(actor, "roam", { x: this.storm.x + Math.sin(angle) * radius, z: this.storm.z + Math.cos(angle) * radius });
+  }
+
+  bot(actor, seconds) {
+    const current = weapons[actor.weapon];
+    if (current.ammo && !count(actor, current.ammo)) {
+      equips(actor, Object.keys(weapons).reverse().find(id => weapons[id].reach && count(actor, id)) || "fists");
+    }
+    if (actor.decision <= this.clock) {
+      actor.decision = this.clock + 0.32 + this.map.random() * 0.25;
+      this.thinkRival(actor);
     }
     const target = actor.target;
     if (!target) return;
-    const reach = distance(actor, target);
-    const weapon = weapons[actor.weapon];
-    const effectiveReach = weapon.ammo && count(actor, weapon.ammo) ? weapon.range * 0.7 : weapon.reach || 2.3;
-    if (weapon.ammo && !count(actor, weapon.ammo)) equips(actor, "fists");
-    const enemy = Boolean(target.alive);
-    actor.yaw = heading(actor, target);
-    actor.guard = hasShield(actor) && enemy && reach < 4 && actor.cooldown > 0.23;
-    actor.crouch = !enemy && actor.aggression < 0.18 && age > 14 && reach < 6;
-    if (enemy && reach <= effectiveReach && this.lineClear(actor, target)) {
-      actor.aimPitch = Math.atan2(target.y - actor.y + reach * reach * 0.0009, reach);
-      actor.speed = 0;
-      this.attack(actor);
-    } else if (target.propIndex !== undefined && reach < 2.15) this.loot(actor, target);
-    else if (reach > 0.95) {
-      const x = actor.x;
-      const z = actor.z;
-      const speed = (actor.crouch ? 2.05 : 3.35 + actor.aggression * 1.1) * (age < 7 ? 1.28 : 1);
-      this.move(actor, 0, 1, seconds, speed);
-      if (Math.hypot(actor.x - x, actor.z - z) < 0.015) {
-        actor.yaw += (actor.id % 2 ? 1 : -1) * 1.1;
-        this.move(actor, 0, 1, seconds, speed);
+    const reach = distance(actor, target), intent = actor.intent;
+    actor.speed = 0;
+    actor.guard = false;
+    actor.crouch = intent === "watch" || (intent === "search" && actor.style === "stalker");
+    if (intent === "engage") {
+      const enemy = this.actors.find(other => other.id === actor.opponent), weapon = weapons[actor.weapon];
+      const attackRange = weapon.ammo ? weapon.range * 0.68 : weapon.reach;
+      if (enemy && reach < attackRange + 1) {
+        actor.yaw = heading(actor, target);
+        actor.guard = hasShield(actor) && actor.cooldown > 0.18;
+        if (actor.cooldown <= 0 && this.canSeeRival(actor, enemy) && distance(actor, enemy) <= attackRange) {
+          actor.yaw = heading(actor, enemy);
+          actor.aimPitch = Math.atan2(enemy.y - actor.y + (enemy.crouch ? -0.64 : -0.29) + reach * reach * 0.0009, Math.max(0.2, reach));
+          this.attack(actor);
+          return;
+        }
+        if (actor.cooldown > 0 && reach < attackRange * 0.85) return;
       }
+    }
+    if (intent === "loot" && reach < 2.15 && this.lineClear(actor, target)) {
+      if (!this.removed.has(target.propIndex)) {
+        this.loot(actor, target);
+        actor.openingLoot = true;
+      }
+      actor.target = null;
+      actor.decision = 0;
+      return;
+    }
+    if (intent === "work" && (reach < 0.5 || distance(actor, target.workNode) <= 2.7)) {
+      if (!this.workAt(actor, target)) { actor.target = null; actor.decision = 0; }
+      return;
+    }
+    if (intent === "drink" && reach < 2.3) {
+      actor.hydration = Math.min(100, actor.hydration + 55);
+      if (count(actor, "waterskin")) actor.water = 42;
+      actor.target = null;
+      actor.decision = 0;
+      return;
+    }
+    if (reach < 1.0) {
+      if (actor.lookAt) actor.yaw = heading(actor, actor.lookAt);
+      else if (intent === "investigate" || intent === "search") actor.yaw += seconds * (actor.id % 2 ? 1.25 : -1.25);
+      return;
+    }
+    const yaw = heading(actor, target), side = actor.id % 2 ? 1 : -1;
+    const speed = actor.crouch ? 2.05 : intent === "retreat" && !actor.winded ? 5.8 : 3.7 + actor.aggression * 0.9;
+    for (const offset of [0, 0.55, -0.55, 1.1, -1.1, 1.65]) {
+      actor.yaw = yaw + side * offset;
+      if (!this.canOccupy(actor.x + Math.sin(actor.yaw) * 0.75, actor.z + Math.cos(actor.yaw) * 0.75)) continue;
+      this.move(actor, 0, 1, seconds, speed);
+      break;
     }
   }
 
   updateActor(actor, seconds) {
     if (!actor.alive) return;
+    const oldX = actor.x, oldZ = actor.z;
     actor.cooldown = Math.max(0, actor.cooldown - seconds);
     actor.hurt = Math.max(0, actor.hurt - seconds);
     actor.swing = Math.max(0, actor.swing - seconds);
@@ -683,6 +1018,9 @@ export class SoloArena {
     }
     if (actor !== this.player) {
       this.bot(actor, seconds);
+      actor.stamina = clamp(actor.stamina + seconds * (actor.speed > 5 ? -13 : 16), 0, 100);
+      if (actor.stamina < 8) actor.winded = true;
+      if (actor.stamina > 34) actor.winded = false;
     } else {
       const { right = 0, forward = 0, sprint, crouch } = this.input;
       actor.crouch = Boolean(crouch);
@@ -696,6 +1034,11 @@ export class SoloArena {
       }
       this.move(actor, right, forward, seconds, speed);
       if (this.hold.has("attack") && !weapons[actor.weapon].ammo && actor.cooldown <= 0) this.attack(actor);
+    }
+    if (!actor.crouch && actor.speed > 5 && this.clock >= actor.nextStepNoise &&
+      Math.hypot(actor.x - oldX, actor.z - oldZ) > seconds * 2.5) {
+      actor.nextStepNoise = this.clock + 0.48;
+      this.rivalNoise(actor, 15, "footsteps");
     }
     actor.hunger = Math.max(0, actor.hunger - seconds * (actor.speed > 5 ? 0.5 : 0.25));
     actor.hydration = Math.max(0, actor.hydration - seconds * (actor.speed > 5 ? 0.7 : 0.36));
@@ -711,6 +1054,7 @@ export class SoloArena {
     this.clock += seconds;
     const elapsed = this.clock - ROUND_START;
     if (elapsed < 0) return;
+    while (this.rivalSounds.length && this.clock - this.rivalSounds[0].at > 1.2) this.rivalSounds.shift();
     const stormTime = Math.max(0, elapsed - 38);
     const radius = this.world.radius;
     this.storm.radius = Math.max(5, radius - stormTime * 0.87);
@@ -768,7 +1112,7 @@ export class SoloArena {
       mode: "match", daylight, rain: false, flood: false,
       camera: { x: leaning ? cameraX : x, y: y + (actor.crouch ? 1.08 : 1.65),
         z: leaning ? cameraZ : z, yaw, pitch: this.input.pitch || 0 },
-      storm: this.storm,
+      storm: this.storm, workSound: this.recentWorkSound(),
       propChanges: [...this.changes],
       actors: this.actors.filter(other => other !== actor && distance(actor, other) < 105)
         .map(other => [other.x, other.y, other.z, other.yaw, other.alive, other.crouch,
@@ -792,7 +1136,7 @@ export class SoloArena {
       alive: this.alive, countdown, winner: this.winner,
       hud: {
         hint: blueprint ? blueprint.fits ? "[Attack] Place " + label(blueprint.id).toLowerCase() : "" :
-          selected ? "[E] " + selected.title : this.clock < 15 ? "Look for supplies near the center or along trails." : "",
+          selected ? "[E] " + selected.title : this.nearbyRemnant || (this.clock < 15 ? "Look for supplies near the center or along trails." : ""),
         notice: this.clock < this.noticeUntil ? this.notice : "",
         event: !countdown && this.clock < 9 ? "Outlast 23 arena bots." : "",
         feed: this.clock < this.feedUntil ? this.feed : "",

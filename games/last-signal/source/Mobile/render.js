@@ -984,6 +984,22 @@ export class ArenaRenderer {
     const [id, x, y, z, size, yaw, w, h, d, kind, lit, felledAge, fallYaw, open, damagedMesh] = p;
     const oldTree = felledAge != null && felledAge >= 0;
     let matrix = pose(x, y, z, yaw, 0, size);
+    if (kind === "remnant") {
+      if (id === "cache") {
+        // Leave the lid propped against the far side, exposing the empty interior.
+        const board = (ox, oy, oz, width, height, depth, color, tilt = 0) =>
+          this.queue(batch, this.box, multiply(matrix, pose(ox, oy, oz, 0, tilt, width, height, depth)), color);
+        const timber = [0.41, 0.29, 0.17, 1];
+        board(0, 0.03, 0, w, 0.10, d, [0.20, 0.16, 0.11, 1]);
+        for (const side of [-1, 1]) {
+          board(0, 0, side * d * 0.47, w, h * 0.62, 0.06, timber);
+          board(side * w * 0.47, 0, 0, 0.07, h * 0.62, d, timber);
+        }
+        board(0, h * 0.58, -d * 0.46, w, 0.09, d, timber, -1.08);
+        return;
+      }
+      matrix = pose(x, y, z, yaw, 0, size * 1.22, size * 0.23, size * 1.16);
+    }
     if (oldTree) {
       const age = felledAge + elapsed;
       if (age > 1.65) return;
