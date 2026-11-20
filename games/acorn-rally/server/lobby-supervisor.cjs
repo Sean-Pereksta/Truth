@@ -25,6 +25,11 @@ function launch() {
   openOnLaunch = false;
   const current = spawn(process.execPath, args, { stdio: ['ignore', 'inherit', 'pipe', 'ipc'], windowsHide: true });
   child = current;
+  current.on('message', update => {
+    if (child === current && process.connected && update?.type === 'rally-host-status') {
+      process.send(update, () => {});
+    }
+  });
   let spawnError;
   let recentError = '';
   current.stderr.on('data', chunk => {
@@ -34,6 +39,7 @@ function launch() {
   current.once('error', error => { spawnError = error; });
   current.once('close', (code, signal) => {
     child = null;
+    if (process.connected) process.send({ type: 'rally-host-status', status: 'offline' }, () => {});
     if (stopping) return finish(0);
     if (code === 98 || /\blisten EADDRINUSE\b/.test(recentError)) {
       console.error('The lobby port is already in use. Close the other host or set ACORN_RALLY_PORT to an available port.');

@@ -6,6 +6,8 @@
   const storageKey = 'acorn-rally-room-v1';
   const queueStorageKey = 'acorn-rally-queue-v1';
   const playerNameStorageKey = 'acorn-rally-player-name';
+  const serverCodeStorageKey = 'acorn-rally-server-code';
+  const serverCodePattern = /^[0-9]{4}$/;
   const maxPlayerName = 22;
   const queuePollMs = 2500;
   const cleanCode = value => String(value || '').trim().toUpperCase();
@@ -45,6 +47,37 @@
   function createQueueToken() {
     return Array.from(crypto.getRandomValues(new Uint8Array(32)), byte => byte.toString(16).padStart(2, '0')).join('');
   }
+  function saveServerCode(code) {
+    try {
+      if (code) sessionStorage.setItem(serverCodeStorageKey, code);
+      else sessionStorage.removeItem(serverCodeStorageKey);
+    } catch { /* The code is still available for this page. */ }
+  }
+  function readJoinLink() {
+    const url = new URL(location.href);
+    const params = new URLSearchParams(url.hash.slice(1));
+    const autoJoin = params.get('join') === '1';
+    const code = params.get('code');
+    const name = autoJoin ? params.get('name') : null;
+    if (params.has('join') || params.has('name') || code !== null) {
+      for (const field of ['join', 'name', 'code']) params.delete(field);
+      url.hash = params.toString();
+      try { history.replaceState(null, '', url); }
+      catch { /* Some browsers restrict replacing history. */ }
+    }
+    return { autoJoin, code, name };
+  }
+  function readServerCode(fragmentCode) {
+    if (fragmentCode !== null) {
+      const code = serverCodePattern.test(fragmentCode) ? fragmentCode : '';
+      saveServerCode(code);
+      return code;
+    }
+    try {
+      const code = sessionStorage.getItem(serverCodeStorageKey) || '';
+      return serverCodePattern.test(code) ? code : '';
+    } catch { return ''; }
+  }
   function urlCode(value) {
     try {
       const url = new URL(location.href);
@@ -52,17 +85,20 @@
       history.replaceState(null, '', url);
     } catch { /* File previews can restrict history changes. */ }
   }
-  async function request(url, body, token) {
+  async function request(url, body, token, controller = new AbortController()) {
     const headers = body ? { 'Content-Type': 'application/json' } : {};
     if (token) headers.Authorization = 'Bearer ' + token;
-    const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 3500);
     try {
       const resp = await fetch(url, { method: body ? 'POST' : 'GET', headers, body: body && JSON.stringify(body),
         credentials: 'same-origin', cache: 'no-store', signal: controller.signal });
       if (!resp.headers.get('content-type')?.includes('application/json')) throw Error('This copy of the game needs a PC host for private rooms.');
       const value = await resp.json();
-      if (!resp.ok) throw Error(value.error || 'The room host was unavailable.');
+      if (!resp.ok) {
+        const error = new Error(value.error || 'The room host was unavailable.');
+        error.status = resp.status;
+        throw error;
+      }
       return value;
     } catch (err) {
       if (err.name === 'AbortError') throw Error('The host took too long to answer. Check its address and try again.');
@@ -86,7 +122,8 @@
     let inRace = false, playedRound = -1, snapshot = null, snapTick = -1, lastRoomRound = -1;
     let seq = Date.now() * 8, latest = {}, pulses = {}, lastSent = 0, lastSerial = '';
     let sender = 0, busy = false, connecting = false, disconnected = false, outbound = 0;
-    let queueToken = '', queueTimer = 0, playerName = storedPlayerName();
+    let queueToken = '', queueTimer = 0, playerName = storedPlayerName(), serverCode = '';
+    let discoveryCleanup, liveJoin = opts.liveJoin === true;
     let statusText = '', statusError = false, connectionNote = null;
     const getRoom = () => context.room;
     const target = action => '/api/rooms/' + getRoom().code + '/' + action;
@@ -130,20 +167,25 @@
     function setup() {
       if (active !== context) return;
       attach();
+      unmountDiscovery();
       const invite = cleanCode(new URLSearchParams(location.search).get('room'));
       const code = roomPattern.test(invite) ? invite : '';
+      const listing = '<section data-community-servers></section>';
       if (support === null) {
         root.innerHTML = top('PRIVATE ROOMS') + '<p class="rr-explain">Connecting to the race host…</p>' + statusBox();
       } else if (!support) {
-        root.innerHTML = top('PRIVATE ROOMS') + '<div class="rr-callout"><strong>Host a race on your PC</strong><p>Download the PC edition and run <b>Start Acorn Rally</b>. Phones on the same Wi-Fi can open the host address and create or join a room in their browsers.</p><a class="rr-primary" href="?download=pc">' + icon('download') + 'Download PC edition</a></div>' +
+        root.innerHTML = top('PRIVATE ROOMS') + listing + '<div class="rr-callout"><strong>Host a race on your PC</strong><p>Download the PC edition and run <b>Start Acorn Rally</b>. Phones on the same Wi-Fi can open the host address and create or join a room in their browsers.</p><a class="rr-primary" href="?download=pc">' + icon('download') + 'Download PC edition</a></div>' +
           '<form data-form="remote"><h3>Join a host</h3><label>Host address or invite link<input name="remote" inputmode="url" autocapitalize="none" placeholder="http://192.168.1.20:8791" required spellcheck="false" autocomplete="off"></label><button type="submit" class="rr-secondary">Open host ' + icon('arrow') + '</button></form>' + statusBox();
       } else if (support.queueEnabled) {
+        const codeField = support.visibility === 'code'
+          ? '<label>Server code<input name="serverCode" type="text" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" required value="' + escape(serverCode) + '"></label>'
+          : '';
         const queuePanel = queueToken
           ? '<div class="rr-callout"><strong>Waiting for a seat</strong><p>Keep this tab open. Seats open as each race ends.</p><button type="button" class="rr-secondary" data-rr="queue-leave">Leave queue</button></div>'
           : '<div class="rr-callout"><strong>Race with other players</strong><p>Seats are offered in queue order. Every race closes its room so the next group can join.</p>' +
             '<form data-form="queue"><label>Player name (optional)<input name="playerName" type="text" maxlength="' + maxPlayerName + '" autocomplete="nickname" value="' +
-            escape(playerName) + '"></label><button type="submit" class="rr-primary">' + icon('flag') + 'Join race queue</button></form></div>';
-        root.innerHTML = top('RACE QUEUE') + (queueToken ? '' : phoneSetup()) + queuePanel + statusBox();
+            escape(playerName) + '"></label>' + codeField + '<button type="submit" class="rr-primary">' + icon('flag') + 'Join race queue</button></form></div>';
+        root.innerHTML = top('RACE QUEUE') + (queueToken ? '' : phoneSetup()) + queuePanel + statusBox() + (queueToken ? '' : listing);
       } else {
         const create = support.singleRoom
           ? '<div class="rr-callout"><strong>Acorn Rally lobby</strong><p>The first player picks the race. Up to eight players can join.</p><button type="button" class="rr-primary" data-rr="enter">' + icon('flag') + 'Join lobby</button></div>'
@@ -155,8 +197,17 @@
           '">Join room ' + icon('arrow') + '</button><button type="button" class="rr-text" data-rr="keypad" aria-expanded="false">' +
           icon('gamepad') + 'Code keypad</button></div><div class="rr-keypad" hidden></div></form>';
         root.innerHTML = top('PRIVATE ROOMS') + phoneSetup() +
-          (code ? join + create : create + (support.singleRoom ? '' : join)) + statusBox();
+          (code ? join + create : create + (support.singleRoom ? '' : join)) + statusBox() + listing;
       }
+      const panel = root.querySelector('[data-community-servers]');
+      if (panel && window.AcornCommunityServers) {
+        discoveryCleanup = window.AcornCommunityServers.mount(panel, { liveJoin });
+        liveJoin = false;
+      }
+    }
+    function unmountDiscovery() {
+      if (typeof discoveryCleanup === 'function') discoveryCleanup();
+      discoveryCleanup = null;
     }
     function queueOptions() {
       return { trackIndex: opts.trackIndex, driverIndex: opts.driverIndex, cc: opts.cc, difficulty: opts.difficulty, botFill: true };
@@ -171,6 +222,10 @@
     }
     function startQueue(token = createQueueToken()) {
       if (queueToken || !support?.queueEnabled || getRoom()) return;
+      if (support.visibility === 'code' && !serverCodePattern.test(serverCode)) {
+        status('Enter the four-digit server code.', true);
+        return;
+      }
       queueToken = token;
       rememberQueueToken(token);
       urlCode('join');
@@ -181,7 +236,8 @@
     }
     async function pollQueue(token) {
       try {
-        const value = await request('/api/rooms/queue', { token, name: playerName.trim(), ...queueOptions() });
+        const code = support.visibility === 'code' ? serverCode : undefined;
+        const value = await request('/api/rooms/queue', { token, code, name: playerName.trim(), ...queueOptions() });
         if (active !== context || token !== queueToken) {
           const admission = value.admission;
           if (admission) void request('/api/rooms/' + admission.room.code + '/leave', {}, admission.token).catch(() => {});
@@ -196,7 +252,17 @@
         const position = message + 'Queue position ' + value.position + ' of ' + value.waiting + '.';
         if (statusText !== position || statusError) status(position);
       } catch (error) {
-        if (active === context && token === queueToken) status(error.message + ' Retrying…', true);
+        if (active !== context || token !== queueToken) return;
+        if (support.visibility === 'code' && [401, 403].includes(error.status)) {
+          stopQueue(true);
+          serverCode = '';
+          saveServerCode('');
+          status(error.message, true);
+          setup();
+          field('serverCode')?.focus();
+          return;
+        }
+        status(error.message + ' Retrying…', true);
       }
       if (active === context && token === queueToken) queueTimer = setTimeout(() => pollQueue(token), queuePollMs);
     }
@@ -206,6 +272,7 @@
     }
     function showLobby() {
       if (active !== context || !getRoom()) return;
+      unmountDiscovery();
       if (inRace && getRoom().phase === 'racing') void request(target('control'), { driving: false }, key).catch(() => {});
       inRace = false; connectionNote?.remove(); connectionNote = null; attach();
       const focused = root.contains(document.activeElement) ? document.activeElement : null;
@@ -267,14 +334,14 @@
       context.room = room;
       if (!inRace) showLobby();
     }
-    function beginRace(force = false) {
+    function beginRace(force = false, terminal = false) {
       const room = getRoom();
-      if (!snapshot || !room || room.phase !== 'racing' || (!force && playedRound === room.round)) return;
-      playedRound = room.round; inRace = true; latest = {}; pulses = {}; lastSerial = ''; lastSent = 0;
+      if (!snapshot || !room || (!terminal && room.phase !== 'racing') || (!force && playedRound === room.round)) return;
       const me = room.seats.find(s => s.index === seat);
       if (!me) return;
+      playedRound = room.round; inRace = true; latest = {}; pulses = {}; lastSerial = ''; lastSent = 0;
       const raceSeat = me.kartIndex;
-      void request(target('control'), { driving: true }, key).catch(() => {});
+      if (!terminal) void request(target('control'), { driving: true }, key).catch(() => {});
       const network = { seat: raceSeat, sendInput, getState: () => snapshot, returnToLobby: showLobby, leave,
         queueMode: support.queueEnabled === true, isConnected: () => !disconnected };
       if (dialog?.open) dialog.close();
@@ -320,6 +387,65 @@
         setup();
       }
     }
+    function markConnected() {
+      disconnected = false; connectedNote(false);
+      if (statusText === 'Reconnecting to the host…') status('');
+    }
+    function markDisconnected() {
+      disconnected = true; connectedNote(true); status('Reconnecting to the host…');
+    }
+    function receiveSnapshot(data, terminal = false) {
+      if (data.round !== getRoom()?.round || data.tick <= snapTick) return;
+      snapshot = data.state; snapTick = data.tick;
+      beginRace(false, terminal && snapshot.done);
+    }
+    function subscribeEvents() {
+      const stream = new EventSource(target('events') + '?seatKey=' + encodeURIComponent(key));
+      source = stream;
+      stream.addEventListener('room', event => {
+        if (source !== stream) return;
+        markConnected();
+        receiveRoom(JSON.parse(event.data));
+      });
+      stream.addEventListener('snapshot', event => {
+        if (active === context && source === stream) receiveSnapshot(JSON.parse(event.data));
+      });
+      if (support.queueEnabled) stream.addEventListener('retired', () => { if (source === stream) retireRoom(); });
+      stream.onerror = () => {
+        if (active !== context || source !== stream) return;
+        if (support.queueEnabled && (snapshot?.done || stream.readyState === EventSource.CLOSED)) return retireRoom();
+        markDisconnected();
+      };
+    }
+    function subscribePoll() {
+      let revision = 0, retryMs = 400, timer = 0, pending;
+      const path = target('poll'), token = key;
+      const subscription = { close() { clearTimeout(timer); pending?.abort(); } };
+      const current = () => active === context && source === subscription;
+      source = subscription;
+      async function poll() {
+        pending = new AbortController();
+        try {
+          const update = await request(path + '?after=' + revision, undefined, token, pending);
+          if (!current()) return;
+          markConnected();
+          if (update.room) receiveRoom(update.room);
+          if (update.snapshot) receiveSnapshot(update.snapshot, Boolean(update.retired));
+          if (update.retired) { retireRoom(); return; }
+          const advanced = Number.isSafeInteger(update.revision) && update.revision > revision;
+          if (advanced) revision = update.revision;
+          retryMs = 400;
+          timer = setTimeout(poll, advanced ? 0 : 75);
+        } catch (error) {
+          if (!current()) return;
+          if ([401, 403, 404, 410].includes(error.status)) { retireRoom(); return; }
+          markDisconnected();
+          timer = setTimeout(poll, retryMs);
+          retryMs = Math.min(retryMs * 2, 2000);
+        }
+      }
+      void poll();
+    }
     function connect(value) {
       if (active !== context) return;
       seat = value.seat; key = value.token; context.room = value.room; lastRoomRound = value.room.round;
@@ -327,30 +453,12 @@
       remember({ code: value.room.code, key }); urlCode(value.room.code); status(value.assignment || '');
       showLobby();
       source?.close();
-      const stream = new EventSource(target('events') + '?seatKey=' + encodeURIComponent(key));
-      source = stream;
-      stream.addEventListener('room', event => {
-        if (source !== stream) return;
-        disconnected = false; connectedNote(false);
-        if (statusText === 'Reconnecting to the host…') status('');
-        receiveRoom(JSON.parse(event.data));
-      });
-      stream.addEventListener('snapshot', event => {
-        if (active !== context || source !== stream) return;
-        const data = JSON.parse(event.data);
-        if (data.round !== getRoom().round || data.tick <= snapTick) return;
-        snapshot = data.state; snapTick = data.tick;
-        beginRace();
-      });
-      if (support.queueEnabled) stream.addEventListener('retired', () => { if (source === stream) retireRoom(); });
-      stream.onerror = () => {
-        if (active !== context || source !== stream) return;
-        if (support.queueEnabled && (snapshot?.done || stream.readyState === EventSource.CLOSED)) return retireRoom();
-        disconnected = true; connectedNote(true); status('Reconnecting to the host…');
-      };
+      if (support.transport === 'poll') subscribePoll();
+      else subscribeEvents();
       clearInterval(sender); sender = setInterval(pump, 40);
     }
     function destroy() {
+      unmountDiscovery();
       stopQueue(true);
       if (dialogGuard) dialog.removeEventListener('cancel', onCancel);
       source?.close(); clearInterval(sender); connectionNote?.remove(); root.remove();
@@ -442,6 +550,10 @@
       event.preventDefault();
       if (event.target.dataset.form === 'queue') {
         savePlayerName(field('playerName').value);
+        if (support.visibility === 'code') {
+          serverCode = field('serverCode').value.trim();
+          if (serverCodePattern.test(serverCode)) saveServerCode(serverCode);
+        }
         startQueue();
         return;
       }
@@ -480,6 +592,9 @@
         support = data.game === 'acorn-rally' && data.version === 1 ? data : false;
       } catch { support = false; }
       if (active !== context) return;
+      const link = readJoinLink();
+      if (support?.visibility === 'code') serverCode = readServerCode(link.code);
+      if (support?.queueEnabled && link.name !== null) savePlayerName(link.name.replace(/[\x00-\x1f\x7f]/g, '').trim());
       const prior = stored(), code = cleanCode(new URLSearchParams(location.search).get('room'));
       if (support && prior && (!roomPattern.test(code) || prior.code === code)) {
         try { connect(await request('/api/rooms/' + prior.code + '/resume', {}, prior.key)); return; }
@@ -488,9 +603,14 @@
           if (support.queueEnabled && roomPattern.test(code)) urlCode('join');
         }
       }
-      const queued = support?.queueEnabled && storedQueueToken();
-      if (queued) startQueue(queued);
-      else setup();
+      if (support?.queueEnabled && (support.visibility !== 'code' || serverCode)) {
+        const queued = storedQueueToken();
+        if (queued || link.autoJoin) {
+          startQueue(queued || undefined);
+          return;
+        }
+      }
+      setup();
     })();
   }
   window.RallyRooms = { open };

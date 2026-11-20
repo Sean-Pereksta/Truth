@@ -1,6 +1,20 @@
 ACORN RALLY — PC EDITION
 
-Keep one lobby running on a laptop
+Host a named internet server from Catnmice Games
+
+Open Server Manager in the Windows launcher and choose Acorn Rally.
+Enter a server name and choose Public or Code. Start the server and
+wait for its online status. A Public server appears in Acorn Rally and
+players can join directly. For a Code server, give friends the four-digit
+code shown by the launcher. Leave the laptop awake while hosting.
+
+Players open multiplayer in Acorn Rally to see available public servers
+or enter a code. Live Join in the game menu first tries available public
+servers where the race has yet to start. Each laptop controls its own
+queue and races independently. Firebase stores directory listings and
+the host's queue. The launcher opens an outbound tunnel for game traffic.
+
+Keep one LAN lobby running on a laptop
 
 1. Extract the PC edition and open the server folder. Double-click
    "Start Acorn Rally Lobby.cmd" to start the supervised lobby server.
@@ -77,13 +91,14 @@ your friends works across home networks. A publicly reachable reverse
 proxy can also forward HTTP and the live event stream to this port.
 Enable streaming without response buffering.
 
-For access from outside your network, configure a named Cloudflare
+For the operator-managed fixed-host option, configure a named Cloudflare
 Tunnel with rally.catnmice.com pointing to http://127.0.0.1:8791.
 Use https://rally.catnmice.com/?room=join for guests. The game streams
 race state with Server-Sent Events, so the tunnel must support SSE.
-Cloudflare Quick Tunnels lack SSE support.
+Community servers opened by Server Manager use HTTP polling through
+their own Quick Tunnel. The standalone fixed-address host uses SSE.
 
-Optional Firebase queue and listing
+Optional Firebase queue and listing for the fixed-address host
 
 Run the public lobby first. To publish its join link, install firebase-admin
 with "npm install --prefix server firebase-admin" in the extracted game

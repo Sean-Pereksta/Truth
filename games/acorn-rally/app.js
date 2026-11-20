@@ -62,13 +62,13 @@ function hero(){const t=tracks[track];return `<div class="hero-image" style="bac
 <div class="hero-copy"><div class="hero-kicker eyebrow"><span class="checker"></span>${track===0?'Featured circuit':'Selected circuit'}</div>
 <h1 class="hero-title ${t.name.length>16?'long':''}"><span>${t.line[0]}</span><span>${t.line[1]}</span></h1>
 <p class="hero-location">${icon('pin')}${t.place}</p><div class="hero-tags"><span>${bars(t.level)}${t.level}</span><span>${icon('lap')}${laps} ${laps===1?'lap':'laps'}</span><span>${icon('road')}${t.surface}</span><span class="hero-class">${engineClass} cc</span></div>
-<div class="hero-actions"><button class="action primary" data-action="start">${icon('flag')}Single race</button><button class="action primary cup-shortcut" data-setup="cup">${icon('trophy')}Cup series</button><button class="action secondary" data-action="setup">${icon('tune')}Race setup</button></div></div>
+<div class="hero-actions"><button class="action primary" data-action="start">${icon('flag')}Single race</button><button class="action primary cup-shortcut" data-setup="cup">${icon('trophy')}Cup series</button><button class="action secondary" data-action="liveJoin">${icon('globe')}Live Join</button><button class="action secondary" data-action="setup">${icon('tune')}Race setup</button></div></div>
 <div class="hero-ident" aria-label="Circuit ${track+1} of ${tracks.length}">${pad2(track+1)}<span class="slash">/</span><span class="total">${pad2(tracks.length)}</span></div>`}
 function cards(){return tracks.map((t,i)=>`<button class="course ${i===track?'chosen':''}" data-track="${i}" aria-pressed="${i===track}" aria-label="Select ${t.name}"><span class="course-photo"><img src="art/course-${i}.webp" alt="" draggable="false"><span class="track-no">${pad2(i+1)}</span>${i===track?`<span class="selected-icon">${icon('check')}</span>`:''}</span><span class="card-info"><strong>${t.name}</strong><span class="card-place">${t.region}</span><span class="course-foot"><span class="level ${t.level.toLowerCase()}">${bars(t.level)}${t.level}</span>${mapIcon(t)}</span></span></button>`).join('')}
 function hub(){
  main.innerHTML=`<section class="hero" aria-label="Selected circuit">${hero()}</section>
  <section class="circuits" aria-labelledby="circuitsHeading"><div class="section-head"><span class="marks" aria-hidden="true"></span><h2 class="sec-title" id="circuitsHeading">Circuit select</h2><span class="count">${tracks.length} circuits</span><div class="shelf-buttons"><button data-action="prev" aria-label="Previous circuits">${icon('left')}</button><button data-action="next" aria-label="Next circuits">${icon('right')}</button></div></div><div class="course-shelf">${cards()}</div></section>
- <section class="mode-strip" aria-label="More race modes"><h2>Race modes</h2>${[['cup','trophy','Cup series',`${cups.length} championships`],['trial','clock','Time trial','Chase your best lap'],['local','users','Multiplayer','Split-screen & private rooms']].map(([m,i,n,d])=>`<button class="mode-shortcut" data-setup="${m}">${icon(i)}<span><strong>${n}</strong><small>${d}</small></span>${icon('right')}</button>`).join('')}</section>`;
+ <section class="mode-strip online-modes" aria-label="More race modes"><h2>Race modes</h2>${[['cup','trophy','Cup series',`${cups.length} championships`],['trial','clock','Time trial','Chase your best lap'],['local','users','Multiplayer','Split-screen & private rooms']].map(([m,i,n,d])=>`<button class="mode-shortcut" data-setup="${m}">${icon(i)}<span><strong>${n}</strong><small>${d}</small></span>${icon('right')}</button>`).join('')}<button class="mode-shortcut" data-action="rooms">${icon('globe')}<span><strong>Online servers</strong><small>Public list &amp; private codes</small></span>${icon('right')}</button></section>`;
  const shelf=one('.course-shelf');shelf.scrollLeft=shelfPos;shelf.addEventListener('scroll',()=>{shelfPos=shelf.scrollLeft;arrowState()},{passive:true});arrowState();
 }
 function arrowState(){const shelf=one('.course-shelf');if(!shelf)return;one('[data-action=prev]').disabled=shelf.scrollLeft<3;one('[data-action=next]').disabled=shelf.scrollLeft+shelf.clientWidth>=shelf.scrollWidth-3}
@@ -197,10 +197,10 @@ function settingsPanel(){modalView('settings','Settings',`<label class="settings
  <p class="form-note"><a class="kit-link" href="assets/Acorn-Rally-Models.zip" download>${icon('download')}Download editable 3D models</a></p>`)}
 function keyName(k){return (k||'').replace(/^Key/,'').replace(/^Digit/,'').replace(/^Arrow/,'Arrow ').replace(/Left$/,' Left').replace(/Right$/,' Right').trim()}
 function controlsPanel(){modalView('bindings','Driving controls',`${presetPicker()}<div class="control-line label"><span>Action</span><span>Keyboard</span><span>${settings.padStyle==='ps'?'PlayStation':'Xbox'}</span></div>${Object.entries(keys).map(([k,l])=>`<div class="control-line"><span>${l}</span><span><button data-bind="${k}" data-focus-id="bind-${k}" class="binding ${k===capture?'capture':''}">${k===capture?'Press a key…':keyName(settings.bindings[k])}</button></span><span>${gamepadControls.buttonLabel(gamepadControls.get(settings.padPreset),k,settings.padStyle)}</span></div>`).join('')}<div class="control-line"><span>Pause</span><span><kbd>Esc</kbd></span><span>${settings.padStyle==='ps'?'Options':'Menu'}</span></div><p class="form-note">Select a keyboard binding to change it. Arrow keys also steer, accelerate, and brake.</p><div class="modal-bottom"><button class="action secondary" data-action="resetKeys">Reset keys</button><button class="action primary" data-action="close">Done</button></div>`)}
-function openRooms(){
+function openRooms(liveJoin=false){
  if(!window.RallyRooms){notice('Private rooms could not load. Refresh to try again.');return}
  modal='rooms';dc.replaceChildren();if(!dialog.open)dialog.showModal();document.body.style.overflow='hidden';
- window.RallyRooms.open({container:dc,trackIndex:track,driverIndex:driver,cc:engineClass,difficulty:cpuLevel,settings,
+ window.RallyRooms.open({container:dc,trackIndex:track,driverIndex:driver,cc:engineClass,difficulty:cpuLevel,settings,liveJoin,
   startRace:o=>{roomSession=o.network;launch({...o,mode:'race'})},
   onRetired:hasResults=>{
    roomSession=null;
@@ -308,6 +308,7 @@ function backFromDialog(){
 }
 document.addEventListener('click',e=>{
  const b=e.target.closest('button');if(!b)return;
+ if(b.dataset.action==='liveJoin'){openRooms(true);return}
  if(b.dataset.page){if(b.dataset.page==='records')recordsClass=engineClass;nav(b.dataset.page);return}
  if(b.dataset.engine){engineClass=simulation.normalizeCC(b.dataset.engine);refreshRuleControls('engine-'+engineClass);return}
  if(b.dataset.skill){cpuLevel=simulation.normalizeDifficulty(b.dataset.skill);refreshRuleControls('skill-'+cpuLevel);return}
