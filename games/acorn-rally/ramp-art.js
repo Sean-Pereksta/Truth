@@ -7,7 +7,130 @@
     chalk:{boards:['#bcab89','#bdaa87','#c5b295','#bda986'],edge:'#9b8b72',stripe:'#765d45',brace:'#8d785e',landing:'#a0a388'},
     trestle:{boards:['#a38966','#937a54','#9a805d','#a58a66'],edge:'#5d523f',stripe:'#efc57c',brace:'#766147',landing:'#90ae8e'}
   };
+  // Textile, tension cord, frame, and landing inlay for each Mythos realm.
+  const springKits={
+    16:['#483976','#665295','#93c7ee','#ffdeb0','#5a517c'],
+    17:['#485d4a','#698367','#ffd799','#ffc5d7','#53684a'],
+    18:['#3f303e','#58434e','#e98376','#ffe3a8','#554555'],
+    19:['#38556e','#506d80','#e8bb66','#fff4ce','#667580']
+  };
+  function trampolineMesh(Mesh,c,r){
+    const m=new Mesh();m.roadSections=[];
+    const [weft,warp,metal,thread,stone]=springKits[c.index]||springKits[16];
+    const sim=root.AcornSim,raw=sim.baseSample||sim.sample;
+    function point(s,x,lift=0){
+      const q=raw(c,s,x,r.branch);
+      return [q.x,q.y+root.AcornRamps.deck(r,s,x).height+.055+lift,q.z];
+    }
+    function part(s,draw){
+      const begin=m.data.length;draw();m.roadSections.push({s,begin,end:m.data.length});
+    }
+    function ribbon(s,t,x,y,width,co,h=.018){
+      m.quad(point(s,x-width,h),point(t,y-width,h),point(t,y+width,h),point(s,x+width,h),co,5,[0,1,0]);
+    }
+    function strip(s,t,x,y,co,h=0){
+      m.quad(point(s,x,h),point(t,x,h),point(t,y,h),point(s,y,h),co,5,[0,1,0]);
+    }
+    const lane=r.lane, usable=r.halfWidth-r.shoulder, start=r.startS,lip=r.lipS;
+    const station=u=>start+r.runup*u;
+    for(let j=0;j<12;j++){
+      const s=station(j/12),t=station((j+1)/12),mid=(s+t)/2;
+      part(mid,()=>{
+        for(let i=0;i<6;i++){
+          const x=lane+usable*(i/3-1),y=lane+usable*((i+1)/3-1);
+          strip(s,t,x,y,(i+j)%2?warp:weft);
+        }
+        for(const side of [-1,1]){
+          const edge=lane+side*usable,frame=lane+side*(r.halfWidth-.14);
+          strip(s,t,edge,frame,weft);
+          m.ring(point(s,frame,.035),point(t,frame,.035),.085,.085,metal,6,5);
+          ribbon(s+.02,t-.02,edge,frame,.035,thread,.045);
+          if(j%4===2){
+            // A tapered coil winds below each outer rail on the raised deck.
+            const center=lane+side*(usable+.05),q=point(mid,center);
+            const floor=raw(c,mid,center,r.branch).y+.025,height=q[1]-floor;
+            if(height>.15){
+              let prev;
+              for(let k=0;k<=12;k++){
+                const angle=k*Math.PI/3,p=[q[0]+Math.sin(angle)*.14,floor+height*k/12,q[2]+Math.cos(angle)*.14];
+                if(prev)m.ring(prev,p,.035,.035,metal,4,5);
+                prev=p;
+              }
+            }
+          }
+        }
+      });
+    }
+    // The center glyph identifies a launch from either chase camera. Its
+    // broken ellipse surrounds three arrowheads pointing across the void.
+    for(let k=0;k<28;k++){
+      if(k%7===0)continue;
+      const a=k*Math.PI/14,b=(k+1)*Math.PI/14;
+      const tip=(angle,f)=>point(station(.53+.33*f*Math.cos(angle)),lane+usable*.8*f*Math.sin(angle),.028);
+      part(station(.53+.33*Math.cos(a)),()=>m.quad(tip(a,.93),tip(b,.93),tip(b,1),tip(a,1),metal,5));
+    }
+    for(const u of [.30,.48,.66]){
+      part(station(u),()=>{
+        for(const sign of [-1,1]){
+          const x=lane+sign*usable*.36,s=station(u);
+          m.quad(point(s,x,.045),point(s+.53,lane,.045),point(s+.87,lane,.045),point(s+.30,x,.045),thread,5);
+        }
+      });
+    }
+    // The edge fittings read as part of the world even when the shared launch
+    // arrows are obscured by another kart.
+    for(const u of [.29,.58,.86])for(const side of [-1,1]){
+      const s=station(u),q=raw(c,s,0,r.branch),rim=point(s,lane+side*(r.halfWidth-.22),.06);
+      const at=(out,up,ahead)=>[rim[0]+side*out*q.nx+ahead*q.tx,rim[1]+up,rim[2]+side*out*q.nz+ahead*q.tz];
+      part(s,()=>{
+        if(c.index===16){
+          // Quilted pearl bolsters gathered around a tiny gold star button.
+          const p=at(.03,.02,0);
+          m.blob(...p,.28,.16,.28,'#aaa6de',7,5);
+          for(let i=0;i<10;i++){
+            const a=i*Math.PI/5,b=(i+1)*Math.PI/5,ra=i%2?.07:.16,rb=i%2?.16:.07;
+            m.tri(at(0,.19,0),at(ra*Math.cos(a),.17,ra*Math.sin(a)),at(rb*Math.cos(b),.17,rb*Math.sin(b)),thread,5,[0,1,0]);
+          }
+        }else if(c.index===17){
+          const root=at(-.07,.05,-.36),tip=at(.47,.27,.29),ridge=at(.17,.30,0);
+          const back=at(.48,.14,-.21),front=at(-.02,.14,.24);
+          m.tri(root,back,ridge,'#df87ae',5);m.tri(back,tip,ridge,'#f2a7c1',5);
+          m.tri(tip,front,ridge,'#ffc7cd',5);m.tri(front,root,ridge,'#d278a5',5);
+          m.ring(root,ridge,.032,.021,thread,4,5);m.ring(ridge,tip,.022,.008,thread,4,5);
+        }else if(c.index===18){
+          const socket=at(-.08,.04,-.26),knuckle=at(.18,.26,-.04),tip=at(.27,.31,.28);
+          m.ring(socket,knuckle,.18,.095,'#c7ae99',6,6);
+          m.ring(knuckle,tip,.097,.005,'#f1d4b6',6,6);
+        }else{
+          const bottom=at(0,-.01,0),top=at(0,.095,0);
+          m.ring(bottom,top,.255,.22,metal,12,5);
+          m.blob(...top,.15,.11,.15,'#799ba9',8,5);
+        }
+      });
+    }
+    // The landing threshold is a clearly visible pair of inset endstones,
+    // followed by a narrowing band of dashes as the normal surface returns.
+    for(let n=0;n<10;n++){
+      const a=r.landingS+r.landingLength*n/10,b=r.landingS+r.landingLength*(n+1)/10;
+      part((a+b)/2,()=>{
+        const w=r.landingWidth;
+        for(const side of [-1,1]){
+          const x=lane+side*(w-r.shoulder),y=lane+side*w;
+          strip(a,b,lane,x,stone);
+          strip(a,b,x,y,warp);
+          ribbon(a+.05,a+(b-a)*.64,x,x,.08,n<4?thread:metal,.024);
+          if(!n){
+            strip(a,a+.23,lane,x,metal,.028);
+            const face=point(a,x);
+            m.quad(point(a,lane),face,[face[0],face[1]-.5,face[2]],point(a,lane,-.5),weft,5);
+          }
+        }
+      });
+    }
+    return m;
+  }
   function rampMesh(Mesh,c,r){
+    if(r.style==='trampoline')return trampolineMesh(Mesh,c,r);
     const m=new Mesh();m.roadSections=[];
     const palette=schemes[r.style],wood=!['chalk','sandstone'].includes(r.style),rock=r.style==='sandstone',raw=root.AcornSim.baseSample||root.AcornSim.sample;
     const pt=(s,x,dy=0)=>{const q=raw(c,s,x,r.branch);return [q.x,q.y+root.AcornRamps.deck(r,s,x).height+.028+dy,q.z];};

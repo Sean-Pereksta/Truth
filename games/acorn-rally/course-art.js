@@ -2,9 +2,11 @@
   'use strict';
   const TAU=Math.PI*2, cap=(n,lo=0,hi=1)=>Math.max(lo,Math.min(hi,n));
   const contacts={front:'Front bumper',rear:'Rear bumper',side:'Side contact',glance:'Glancing bump',brace:'Bumper brace'};
-  function build(Mesh,simple=false,includeMarsh=true,includeCosmic=true,includeMines=true,includeStorm=true){
+  function build(Mesh,simple=false,includeMarsh=true,includeCosmic=true,includeMines=true,includeStorm=true,courseIndex){
     const shapes={};
     if(includeMines)Object.assign(shapes,root.AcornMinecarts.meshes(Mesh,simple));
+    if(courseIndex===undefined||courseIndex>=16&&courseIndex<=19)
+      Object.assign(shapes,root.AcornMythicHazardsArt.meshes(Mesh,simple,courseIndex));
     const make=name=>shapes[name]=new Mesh();
     const bar=(m,a,b,r,c,mat=2)=>m.ring(a,b,r,r,c,simple?4:6,mat);
     function disk(m,axis,radius,width,color,count=18){
@@ -384,6 +386,7 @@
   }
 
   function scene(h,time,emit){
+    if(h.id>=14&&h.id<=21)return root.AcornMythicHazardsArt.scene(h,time,emit);
     const {id,s,x,branch,sourceSide:side,anchorX,halfWidth:w,halfLength:l,bottom,top,progress:p,strength:k}=h;
     const water=id===2||id===6||id===7,warning=h.warning,active=h.active;
     const show=active?1:warning?1:h.phase==='receding'?cap(1-p*3):0;
@@ -619,7 +622,11 @@
       [[162,102,.15],[142,89,.17]],[[330,161,.11],[290,137,.15]],
       [[187,92,.23],[305,123,.19]],[[434,693,.11],[650,1070,.15]]
     ][id];
-    const signal=id===13?[[503,619,.076],[741,840,.08]]:id===root.AcornMinecarts.id?[[337,434,.09],[337,434,.09]]:cues;
+    const mythCues=[[[484,580,.12],[726,890,.17]],[[730,860,.08],[976,1150,.11]],
+      [[585,803,.073],[1318,1050,.10]],[[633,821,.13],[493,629,.11]],
+      [[172,106,.17],[204,83,.16]],[[331,178,.11],[226,103,.14]],
+      [[218,183,.19],[327,274,.17]],[[829,652,.12],[722,399,.16]]];
+    const signal=id>=14?mythCues[id-14]:id===13?[[503,619,.076],[741,840,.08]]:id===root.AcornMinecarts.id?[[337,434,.09],[337,434,.09]]:cues;
     signal?.forEach(([tone,end,duration],i)=>sound.tone(tone,duration,i?.009:.014,id===4?'square':'triangle',end,i*.082));
   }
   root.AcornCourseArt={meshes:build,scene,cosmic,reaction,fallbackMeshes,paint,paintWorld,hud,feedback,approach};

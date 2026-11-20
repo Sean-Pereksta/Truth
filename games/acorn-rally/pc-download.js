@@ -11,12 +11,14 @@
   // the launcher, compressed model pack, and unchanged assets.
   const releaseFiles = [
     'index.html', 'style.css', 'app.js', 'network.js', 'local-grid.js', 'data.js', 'championship.js', 'garage-view.js',
-    'kart-rig.js', 'aurora-kart.js', 'signature-kit.js', 'signature-art.js',
+    'kart-rig.js', 'aurora-kart.js', 'angel-kart.js', 'signature-kit.js', 'signature-art.js',
     'tracks-expansion.js', 'expansion-world.js', 'minecart-hazards.js', 'hazards.js', 'bullfrog-art.js', 'cosmic-hazards-art.js', 'course-art.js', 'rally-course-scores.js',
     'breakwater-tides.js', 'race-sim.js', 'race-world.js', 'race.js', 'item-art.js', 'item-feedback.js',
+    'mythic-world.js', 'mythic-hazards-art.js', 'ramps.js', 'ramp-art.js', 'cup-menu.css', 'horizon.js',
     'server/host.cjs', 'server/Hosting.txt',
     'art/driver-9.webp', 'art/rear-9.webp', 'art/rear-mask-9.png',
-    ...[13, 14, 15].flatMap(id => [`art/course-${id}.webp`, `art/horizon-${id}.webp`]),
+    'art/driver-10.webp', 'art/rear-10.webp', 'art/rear-mask-10.png',
+    ...[13, 14, 15, 16, 17, 18, 19].flatMap(id => [`art/course-${id}.webp`, `art/horizon-${id}.webp`]),
     ...fontFiles
   ];
   const crcTable = Uint32Array.from({length: 256}, (_, i) => {
@@ -141,6 +143,8 @@
     edit('network.js', source => source.replace(pcLink, '')
       .replace('Download the PC edition and run <b>Start Acorn Rally</b>.', 'Open <b>Start Acorn Rally.cmd</b> from the extracted game folder.'));
     edit('race.js', source => source.replace('i.src=src;fallbackImages[src]=i', 'i.src=window.AcornFileTextures?.[src] || src;fallbackImages[src]=i'));
+    edit('horizon.js', source => source.replace("image.src='art/horizon-'+i+'.webp'",
+      "image.src=window.AcornFileTextures?.['art/horizon-'+i+'.webp'] || 'art/horizon-'+i+'.webp'"));
     edit('style.css', source => fontFiles.reduce((css, name) =>
       css.replace(`url(${name})`, `url(${dataUrl('font/ttf', files.get(name))})`), source));
     const textures = Object.fromEntries([...files]
@@ -151,7 +155,8 @@
       'ACORN RALLY - PC EDITION', '',
       'Extract the ZIP and double-click "Start Acorn Rally.cmd" on Windows to start the included PC host.',
       'For solo or local play, you can also open index.html directly.', '',
-      'Choose from four cups. Win the original three cups on Hard or Ultimate to unlock Solstice.',
+      'Choose from five cups. Win the original three cups on Hard or Ultimate to unlock Solstice.',
+      'Finish first on all twenty circuits against Ultimate rivals to unlock Aurel and the Sunward Chariot.',
       'Win the Spectrum Cup on Ultimate to unlock the Aurora Runner. Settings, records and cups save in your browser.', '',
       'For private rooms on macOS or Linux, run node server/host.cjs with Node.js 18 or newer.',
       'See server/Hosting.txt for additional hosting instructions.', ''

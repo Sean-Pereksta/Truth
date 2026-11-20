@@ -41,7 +41,7 @@ function mapIcon(t){
  const path=points.filter((_,i)=>i%8===0).map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+' '+p.z.toFixed(1)).join(' ')+'Z';
  return `<svg viewBox="${left-6} ${top-6} ${w+12} ${h+12}" class="course-map" aria-hidden="true"><path style="stroke-width:${w*.028}" d="${path}"/></svg>`
 }
-function bars(level){let n=({Beginner:1,Intermediate:2,Advanced:3,Expert:3})[level];return `<i class="skill-bars" aria-hidden="true">${[1,2,3].map(i=>`<em class="${i<=n?'on':''}"></em>`).join('')}</i>`}
+function bars(level){let n=({Beginner:1,Intermediate:2,Advanced:3,Expert:3,Master:3})[level];return `<i class="skill-bars" aria-hidden="true">${[1,2,3].map(i=>`<em class="${i<=n?'on':''}"></em>`).join('')}</i>`}
 const pad2=n=>String(n).padStart(2,'0');
 function time(v){if(!Number.isFinite(v)||v<=0)return '—';const ms=Math.round(v*1000);return `${Math.floor(ms/60000)}:${pad2(Math.floor(ms/1000)%60)}.${String(ms%1000).padStart(3,'0')}`}
 function ordinal(n){return n+((n>=11&&n<=13)?'th':({1:'st',2:'nd',3:'rd'})[n%10]||'th')}
@@ -132,9 +132,9 @@ function recordKey(trackIndex,cc){return cc===100?String(trackIndex):cc+'-'+trac
 function showRecords(){
  const rows=tracks.map((t,i)=>{
    const rec=records[recordKey(i,recordsClass)]||{};
-   return `<div class="record-row"><img src="art/course-${i}.webp" alt=""><b>${t.name}</b><time>${time(rec.lap)}</time><time>${time(rec.trial)}</time></div>`;
+   return `<div class="record-row"><img src="art/course-${i}.webp" alt=""><b>${t.name}<small class="ultimate-mark">${championship.hasUltimateWin(i)?"✓ Ultimate win":"Ultimate win needed"}</small></b><time>${time(rec.lap)}</time><time>${time(rec.trial)}</time></div>`;
  }).join('');
- main.innerHTML=`<div class="page-top"><div><h1>Track records</h1><p>Your fastest laps and Time Trials in each engine class.</p></div><button class="action primary" data-action="recordTrial">${icon('clock')}Time trial</button></div><div class="record-classes">${segments('Engine class','record-cc',engineChoices,recordsClass)}</div><section class="records" aria-label="${recordsClass} cc track records"><div class="record-row record-heading"><span>Track</span><span>Circuit</span><span>Best lap</span><span>3-lap trial</span></div>${rows}</section>`;
+ main.innerHTML=`<div class="page-top"><div><h1>Track records</h1><p>Your fastest laps and Time Trials in each engine class. Aurel · ${championship.rewardProgress(championship.angelDriver)}.</p></div><button class="action primary" data-action="recordTrial">${icon('clock')}Time trial</button></div><div class="record-classes">${segments('Engine class','record-cc',engineChoices,recordsClass)}</div><section class="records" aria-label="${recordsClass} cc track records"><div class="record-row record-heading"><span>Track</span><span>Circuit</span><span>Best lap</span><span>3-lap trial</span></div>${rows}</section>`;
 }
 function closeModal(){capture='';modal=null;if(dialog.open)dialog.close();document.body.style.overflow=running?'hidden':''}
 let bindingsFromSettings=false;
@@ -172,8 +172,8 @@ function cupScoring(){
 }
 function cupReward(index){
  const reward=championship.rewardForCup(index),unlocked=driverAvailable(reward),racer=drivers[reward];
- const requirement=championship.rewardRequirement(reward)+(reward===championship.rewardDriver?' · '+championship.rewardProgress(reward):'');
- return `<div class="cup-reward"><img src="art/driver-${reward}.webp" alt=""><div><strong>${racer.kart} · ${unlocked?'Unlocked':'Cup reward'}</strong><span>${unlocked?`${racer.name} is available in the garage.`:requirement}</span></div></div>`;
+ const requirement=championship.rewardRequirement(reward)+(reward!==championship.spectrumDriver?' · '+championship.rewardProgress(reward):'');
+ return `<div class="cup-reward"><img src="art/driver-${reward}.webp" alt=""><div><strong>${racer.kart} · ${unlocked?'Unlocked':reward===championship.angelDriver?'Circuit mastery reward':'Cup reward'}</strong><span>${unlocked?`${racer.name} is available in the garage.`:requirement}</span></div></div>`;
 }
 function setup(m=mode){mode=m;
  const cupMode=m==='cup',local=m==='local',saved=cupMode&&championship.activeRun(cupIndex);
@@ -241,6 +241,9 @@ function detachRace(){running=false;window.AcornRace?.stop();race.hidden=true;ap
 function returnRoom(){const net=roomSession;roomSession=null;closeModal();modal='rooms';net.returnToLobby();document.body.style.overflow='hidden'}
 function leaveRace(){detachRace();if(roomSession){returnRoom();return}const pausedCup=cup;cup=null;nav('hub');if(pausedCup)notice(`${cups[pausedCup.index].name} saved · Resume race ${pausedCup.rounds.length+1} in Cup series`)}
 function updateResults(r){const idx=recordKey(r.trackIndex??lastRun.trackIndex,simulation.normalizeCC(r.cc??lastRun.cc)),rec=records[idx]||{};if(r.bestLap>0&&(!rec.lap||r.bestLap<rec.lap))rec.lap=r.bestLap;if(lastRun.mode==='trial'&&lastRun.laps===3&&r.time>0&&(!rec.trial||r.time<rec.trial))rec.trial=r.time;records[idx]=rec;write('records',records)}
+function unlockCard(id){
+ return `<div class="cup-unlocked" role="status"><img src="art/driver-${id}.webp" alt=""><div><small>Racer unlocked</small><strong>${drivers[id].name}</strong><span>${drivers[id].kart} · Available in the garage</span></div></div>`;
+}
 function finishCup(result){
  const round=championship.record(cup,result);
  cup=round.run;
@@ -251,11 +254,13 @@ function finishCup(result){
  const next=round.complete?'Choose cup':`Race ${number+1} · ${tracks[c.tracks[number]].name}`;
  const podium=round.complete?(round.won?'Cup champion':ordinal(place)+' overall'):ordinal(result.position)+' in '+course;
  const subhead=round.complete?`${winner} wins with ${board[0].total} points · ${cup.cc} cc · ${skillLabel(cup.difficulty)}`:`${drivers[cup.driver].name} · +${championship.points[player.last-1]} pts · ${cup.cc} cc · ${skillLabel(cup.difficulty)}`;
- const unlocked=round.unlockedDriver;
+ const unlocks=[];
+ if(round.unlockedDriver!==null)unlocks.push(round.unlockedDriver);
+ if(championship.recordUltimate(result))unlocks.push(championship.angelDriver);
  modalView('results',title,`<div class="result-podium"><img src="art/driver-${cup.driver}.webp" alt=""><div><strong>${podium}</strong><span>${subhead}</span></div></div>
  <div class="result-stats"><div><small>Race time</small><b>${time(result.time)}</b></div><div><small>Best lap</small><b>${time(result.bestLap)}</b></div><div><small>Your points</small><b>${player.total}</b></div></div>
  <table class="cup-table"><caption>${round.complete?'Final standings':'Cup standings'}</caption><thead><tr><th scope="col">Pos</th><th scope="col">Driver</th><th scope="col">Race ${number}</th><th scope="col">Points</th></tr></thead><tbody>${board.map((s,i)=>`<tr class="${s.driver===cup.driver?'human':''}"><td>${i+1}</td><th scope="row">${drivers[s.driver].name}${s.driver===cup.driver?' · You':''}</th><td>${ordinal(s.last)} <small>+${championship.points[s.last-1]}</small></td><td><b>${s.total}</b></td></tr>`).join('')}</tbody></table>
- ${unlocked!==null?`<div class="cup-unlocked" role="status"><img src="art/driver-${unlocked}.webp" alt=""><div><small>Kart unlocked</small><strong>${drivers[unlocked].kart}</strong><span>${drivers[unlocked].name} · Available in the garage</span></div></div>`:round.complete?cupReward(cup.index):''}
+ ${unlocks.length?unlocks.map(unlockCard).join(''):round.complete?cupReward(cup.index):''}
  <div class="modal-bottom"><button class="action secondary" data-action="resultHub">${round.complete?'Race hub':'Save and exit'}</button><button class="action primary" data-action="rematch">${next}${icon('arrow')}</button></div>`);
 }
 function finish(r){
@@ -268,7 +273,9 @@ function finish(r){
  const idx=r.trackIndex??lastRun.trackIndex,d=drivers[r.driverIndex??driver],board=r.standings||[];
  const title=lastRun.mode==='trial'?'Trial complete':'Race results';
  const next=roomSession?'Room lobby':'Race again';
+ const unlocked=championship.recordUltimate(r,!roomSession&&lastRun.players>1);
  modalView('results',title,`<div class="result-podium"><img src="art/driver-${r.driverIndex??driver}.webp" alt=""><div><strong>${lastRun.mode==='trial'?'Finish':ordinal(r.position||1)+' place'}</strong><span>${d.name} · ${tracks[idx].name} · ${simulation.normalizeCC(r.cc??lastRun.cc)} cc</span></div></div><div class="result-stats"><div><small>Race time</small><b>${time(r.time)}</b></div><div><small>Best lap</small><b>${time(r.bestLap)}</b></div></div>
+ ${unlocked?unlockCard(championship.angelDriver):''}
  ${board.map(s=>`<div class="finish-row ${s.human?'human':''}"><span>${pad2(s.position)}</span><b>${safeName(s.name)}</b><span>${time(s.time)}</span></div>`).join('')}
  <div class="modal-bottom"><button class="action secondary" data-action="resultHub">Race hub</button><button class="action primary" data-action="rematch">${next}${icon('arrow')}</button></div>`);
 }

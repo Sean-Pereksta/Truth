@@ -6,10 +6,10 @@
   'use strict';
   const BONE_COUNT=16,TAU=Math.PI*2;
   const parents=[0,0,0,0,0,0,5,6,6,5,0,5,5,5,9,14];
-  const names=['Nib','Bristle','Clover','Tumble','Hazel','Ember','Flint','Mica','Solstice','Astra'];
-  const tailWeight=[.82,.89,.46,1.24,.46,1.10,.66,.54,.48,.48];
-  const earWeight=[.72,.59,1.95,.77,.39,1.08,.46,.57,.35,1.85];
-  const durations=[1.1,3,.86,2.7,1.05,1.25,1.15,1.12,1.5,2];
+  const names=['Nib','Bristle','Clover','Tumble','Hazel','Ember','Flint','Mica','Solstice','Astra','Aurel'];
+  const tailWeight=[.82,.89,.46,1.24,.46,1.10,.66,.54,.48,.48,.48];
+  const earWeight=[.72,.59,1.95,.77,.39,1.08,.46,.57,.35,1.85,.51];
+  const durations=[1.1,3,.86,2.7,1.05,1.25,1.15,1.12,1.5,2,2];
   const cap=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
   const finite=(n,f=0)=>Number.isFinite(n)?n:f;
   const defaults=[[0,.29,0],[-.526,.29,-.61],[.526,.29,-.61],[-.526,.29,.55],[.526,.29,.55],
@@ -151,8 +151,16 @@
       for(let j=0;j<3;j++)out[i*16+12+j]+=(rim[j]-wrist[j])*.985*(1-(i===12?envelope:0));
     }
     make(13,ears*.58+tailPitch*.30,tail*.41,lean*-.56+mid*.32);inherit(out,13,5);
-    make(14,tailPitch*tw*.39,mid*tw*.49,mid*tw*.46);inherit(out,14,9);
-    make(15,tailPitch*tw*.25,tip*tw*.43,tip*tw*.31);inherit(out,15,14);
+    if(id===10){
+      const spread=.06*Math.sin(travel*.8)+comp*.8+wave*action*.36+envelope*.21;
+      for(const wing of [14,15]){
+        const side=wing===14?-1:1;
+        make(wing,-nod*.16,side*action*wave*.13,side*spread);inherit(out,wing,5);
+      }
+    }else{
+      make(14,tailPitch*tw*.39,mid*tw*.49,mid*tw*.46);inherit(out,14,9);
+      make(15,tailPitch*tw*.25,tip*tw*.43,tip*tw*.31);inherit(out,15,14);
+    }
     return out;
   }
   const fields=['travel','steer','lean','nod','head','headRoll','ears','tail','tailMid','tailTip','tailPitch','compression','heave','impact','drift','offset','gesture','gesturePhase','victory','wheelV'];

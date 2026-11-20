@@ -157,6 +157,16 @@
         if(beat<.42)here('sigRing9',-.7,0,.14,0,.48+beat*3,1-beat/.42);
       }
     }
+    if(id===10 && s.stage==='active' && r.guard>0 && r.active>0){
+      here('sigRing10',0,0,1.86+.05*Math.sin(time*7),0,.57,.87);
+      for(const side of [-1,1])here('sigSunMark',0,side*1.03,.78,side*.42,.77,.85);
+    }
+    if(id===10 && s.stage==='release' && beat<.75){
+      for(const side of [-1,1])for(let j=0;j<3;j++){
+        const t=(beat*2+j/3)%1;
+        here('sigSunMark',-.9-t*2.4,side*(.4+t*.45),.52-t*.38,side*.3,.65,1-t);
+      }
+    }
     if(id===7){
       if(r.active>0){here('sigLamp',.77,0,.15,0,1.42,.98);here('sigRing7',.25,0,.08,0,.75,.55,[1,1,1.46]);
         for(let j=0;j<8;j++){const t=(time*2.7+j/8)%1,sign=j%2?1:-1;
@@ -178,7 +188,7 @@
       ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.stroke();
     }
     ctx.save();ctx.globalAlpha=clamp(alpha);ctx.lineCap='round';
-    if(ring)for(let i=0;i<36;i++){if(i%6===5)continue;line(point(tau*i/36,1),point(tau*(i+1)/36,1),colors[Number(name.slice(-1))],.035);}
+    if(ring)for(let i=0;i<36;i++){if(i%6===5)continue;line(point(tau*i/36,1),point(tau*(i+1)/36,1),colors[Number(name.slice('sigRing'.length))],.035);}
     else for(let i=0;i<14;i++){const a=tau*i/14,b=point(a+.045,.8);line(point(a,.58),b,'#776444',.027);line(b,point(a-.025,1),'#dfd59e',.018);}
     ctx.restore();return true;
   }
@@ -187,7 +197,7 @@
     if(scale<.3||alpha<.035)return;
     ctx.save();ctx.translate(x,y);ctx.scale(scale*(stretch?.[0]||1),scale*.48*(stretch?.[2]||1));ctx.globalAlpha=clamp(alpha);
     ctx.lineWidth=.045;ctx.lineCap='round';ctx.lineJoin='round';
-    if(name.startsWith('sigRing')){ctx.strokeStyle=colors[Number(name.slice(-1))];ctx.setLineDash([.32,.12]);ctx.beginPath();ctx.arc(0,0,1,0,tau);ctx.stroke();}
+    if(name.startsWith('sigRing')){ctx.strokeStyle=colors[Number(name.slice('sigRing'.length))];ctx.setLineDash([.32,.12]);ctx.beginPath();ctx.arc(0,0,1,0,tau);ctx.stroke();}
     else if(name==='sigBumper'){ctx.strokeStyle='#ffd49a';ctx.lineWidth=.09;for(const d of [-1,1]){ctx.beginPath();ctx.moveTo(d*.91,.62);ctx.lineTo(d*.91,-.72);ctx.lineTo(d*.65,-1.02);ctx.stroke();}}
     else if(name==='sigFault'){ctx.strokeStyle='#ced390';for(let j=0;j<12;j++){const a=tau*j/12;ctx.beginPath();ctx.moveTo(Math.cos(a)*.55,Math.sin(a)*.55);ctx.lineTo(Math.cos(a+.06)*.83,Math.sin(a+.06)*.83);ctx.lineTo(Math.cos(a)*.99,Math.sin(a)*.99);ctx.stroke();}}
     else if(name==='sigSpring'){ctx.strokeStyle='#ddc4ff';ctx.lineWidth=.07;ctx.beginPath();for(let j=0;j<34;j++){const a=j/33*tau*2.5;const xx=Math.cos(a)*.32,yy=-j/33+Math.sin(a)*.15;if(!j)ctx.moveTo(xx,yy);else ctx.lineTo(xx,yy);}ctx.stroke();}

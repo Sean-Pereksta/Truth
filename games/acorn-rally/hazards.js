@@ -9,6 +9,7 @@
   const smooth=x=>{const t=cap(x,0,1);return t*t*(3-2*t);};
   const frog=8,timber=9,fireball=10,freezeBeam=11,lightning=13;
   const aimed=id=>id===fireball||id===freezeBeam||id===lightning;
+  const mythic=id=>id>=14&&id<=21;
   const tips=[
     'Give the rolling log room. Follow the open lane past its end.',
     'When the bamboo pole starts to dip, take the lane opposite its hinge.',
@@ -79,7 +80,59 @@
       else strikePath(state,c,cfg,road.w,cycle,time);
     }
     if(id===Minecarts.id)return Minecarts.sample(c,cfg,state,p,Math.floor((time+cfg.offset)/cfg.period));
+    if(mythic(id))mythicPath(state,c,cfg,time);
     return state;
+  }
+  // All poses, collision extents and warning marks derive from race time. Replays,
+  // offline races and authoritative hosts therefore see the same open lane.
+  function mythicPath(h,c,cfg,time){
+    const width=c.points[Math.floor(cfg.u*c.points.length)].w;
+    const cycle=Math.floor((time+cfg.offset)/cfg.period);
+    const side=cycle%2?-cfg.side:cfg.side,edge=width+cfg.width+1;
+    const lane=Math.max(.8,Math.min(width*.39,width-cfg.width-.35));
+    const p=h.progress,a=h.active,w=h.warning,out=h.phase==='receding';
+    const pulse=a?Math.sin(Math.PI*p):0;
+    h.sourceSide=side;h.safeSide=-side;h.warningX=side*lane;h.warningHalfWidth=cfg.width;
+    h.x=side*lane;h.yaw=0;h.strength=a?1:0;h.reveal=1;
+    h.warningS=h.baseS;h.warningHalfLength=cfg.length;
+    if(h.id===14||h.id===16||h.id===18||h.id===21){
+      // One shoulder stays open, even at maximum reach. The road mark covers
+      // the entire sweep, including the leading edge of each moving silhouette.
+      const inbound=h.id===14||h.id===16;
+      const turn=inbound?(a?smooth(p):out?1:0):(a?Math.sin(Math.PI*p)**1.4:0);
+      const target=h.id===14?-.25:h.id===16?.25:lane;
+      const retreat=out?smooth(p):0;
+      const from=inbound?edge+(w?1.1*(1-p):0):edge;
+      h.x=side*(from+(target-from)*turn);
+      if(inbound&&out)h.x=side*(target+(edge-target)*retreat);
+      h.yaw=side*(inbound?-1.38:-1.14);
+      const offset=h.id===21?2.8:h.id===18?1.35:1;
+      h.s+=offset*pulse;
+      h.warningX=side*(width+target)*.5;
+      h.warningHalfWidth=(width-target)*.5+cfg.width*.6;
+      h.warningS+=offset*.5;h.warningHalfLength+=offset*.5;
+      if(h.id===14)h.bottom=a?.12+2.9*(1-p)**2:w?3.02:out?.12+3.8*smooth(p):3.92;
+      else if(h.id===16)h.bottom=a?.28+.73*(1-pulse):w?1.01:out?1.01+1.5*smooth(p):2.51;
+      else if(h.id===21)h.bottom=6.1-5.97*pulse;
+      else h.bottom=.045+.39*pulse;
+      h.top=h.bottom+({14:1.72,16:.66,18:2.02,21:.87})[h.id];
+    }else if(h.id===15){
+      h.bottom=a?.06+4.4*(1-pulse)**2:4.46;
+      h.s+=a?1.5*(2*p-1):w?-1.5:1.5;
+      h.warningHalfLength+=1.5;
+      h.yaw=side*.23;h.top=h.bottom+2.6;
+    }else if(h.id===17||h.id===19){
+      h.reveal=a?smooth(p/.16)*smooth((1-p)/.22):0;
+      h.bottom=0;h.top=(h.id===17?1.86:2.45)*h.reveal;
+      h.strength=h.reveal;
+    }else{
+      h.bottom=a?5.8*(1-smooth(p/.21)*smooth((1-p)/.29)):5.8;
+      h.top=h.bottom+5.7;
+    }
+    const sn=Math.sin(h.yaw),cs=Math.cos(h.yaw);
+    h.bodyWidth=cfg.width;h.bodyLength=cfg.length;
+    h.halfWidth=Math.hypot(cfg.width*cs,cfg.length*sn);
+    h.halfLength=Math.hypot(cfg.length*cs,cfg.width*sn);
   }
   function frogPath(state,cfg,width,p,cycle){
     const side=cycle%2?-cfg.side:cfg.side,shoulder=width+.52,hops=4;
@@ -163,10 +216,13 @@
     const buried=r.driverIndex===7&&r.active>0;
     for(const f of [.0,.5,1]){
       const h=sampleObstacle(c,st.time-dt*(1-f),cfg);
-      if(!h.active||h.strength<.105&&[2,4,6,7].includes(h.id))continue;
+      if(!h.active||h.strength<.105&&[2,4,6,7,17,19].includes(h.id))continue;
       const s=previousS+(r.s-previousS)*f-near-(h.s-base),x=x0+(r.x-x0)*f;
       if(h.id===Minecarts.id){
         if(!Minecarts.overlaps(h,s,x-h.x))continue;
+      }else if(mythic(h.id)){
+        const sn=Math.sin(h.yaw),cs=Math.cos(h.yaw),dx=x-h.x;
+        if(Math.hypot((cs*dx-sn*s)/(h.bodyWidth+.55),(sn*dx+cs*s)/(h.bodyLength+.7))>1)continue;
       }else if(Math.abs(s)>h.halfLength+.70||Math.abs(x-h.x)>h.halfWidth+.49)continue;
       if(aimed(h.id)&&Math.hypot(s/(h.halfLength+.70),(x-h.x)/(h.halfWidth+.49))>1)continue;
       const wheels=buried?-.84:liftNow,roof=wheels+(buried?.62:1.25);
@@ -226,8 +282,9 @@
       }
       return target;
     }
-    const extra=cfg.style===frog||cfg.style===timber||aimed(cfg.style);
-    const pathShift=cfg.style===frog?2.65:0;
+    const realm=mythic(cfg.style);
+    const extra=cfg.style===frog||cfg.style===timber||aimed(cfg.style)||realm;
+    const pathShift=cfg.style===frog?2.65:realm?2.8:0;
     if(distance<-(cfg.length+1.35+pathShift)||distance>v*horizon+cfg.length+2+pathShift)return target;
     const live=sampleObstacle(c,st.time,cfg);
     if(!extra&&(live.phase==='clear'||live.phase==='receding'))return target;
@@ -244,11 +301,12 @@
       if(cfg.style===frog&&Math.abs(target-h.x)>h.halfWidth+1.3)continue;
       if(cfg.style===timber&&(h.fallProgress<.48||Math.abs(target-h.x)>h.halfWidth+.65))continue;
       if(aimed(cfg.style)&&Math.abs(target-h.x)>h.halfWidth+.95)continue;
+      if(realm&&(h.strength<.105||Math.abs(target-h.x)>h.halfWidth+.95))continue;
       danger=h;
     }
     if(!danger)return target;
     const side=extra?danger.safeSide:live.safeSide;
-    const safe=side*(cfg.branch?2.02:3.38);
+    const safe=side*(realm?Math.min(3.38,c.points[Math.floor(cfg.u*c.points.length)].w-1):cfg.branch?2.02:3.38);
     // Fast classes may exhaust their lateral grip if a bot steers at full
     // throttle into the sluice bend. Give it time to move onto the clear line.
     if(!miss&&side*(r.x-safe)<-.68&&eta>.18){

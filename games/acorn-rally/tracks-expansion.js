@@ -148,6 +148,138 @@
     }
   ];
 
+  // Mythos Cup. Keep every spring's approach and landing clear of timed hazards.
+  // Fork widths refer to the isolated ribbon, after it separates from the main road.
+  courses.push(
+    {
+      name:'Somnimbus Sound',line:['Somnimbus','Sound'],region:'The Sleeping Sea',place:'Over the Sleeping Sea',
+      level:'Master',length:1560,surface:'Starlit satin & cloud silk',
+      feature:'Spiral beneath the whale road, bounce across its missing span, then climb through the same opening on the upper deck. A narrow silk ribbon splits off above the cloud sea.',
+      anchors:[[-106,-70],[-106,-36],[-102,-10],[-82,0],[-66,-13],[-60,-35],[-40,-53],
+        [-13,-55],[10,-36],[18,-6],[6,16],[-20,23],[-40,11],[-41,-8],[-25,-18],[-3,-10],
+        [14,9],[35,27],[66,60],[99,63],[122,42],[122,12],[109,0],[91,8],[75,24],[57,21],
+        [49,6],[62,-9],[91,-22],[105,-41],[90,-64],[63,-66],[40,-55],[20,-59],[-7,-84],[-42,-88],[-73,-75]],
+      // The spiral crosses itself at .260 and .410, with 23 units of headroom.
+      section:[[0,19,6.4],[.062,21,5.7],[.125,12,4.5],[.178,14,4.75],[.212,15,4.65],
+        [.252,15,4.8],[.29,17,4.35],[.34,25,3.9],[.39,37,4.55],[.425,38,4.7],
+        [.475,38,4.75],[.529,34,5.2],[.592,26,4.2],[.655,20,4.5],[.713,27,3.95],
+        [.78,32,4.55],[.848,21,4.2],[.924,15,5],[.97,18,5.9],[1,19,6.4]],
+      fork:[.375,.522,13,4,3.65],bridge:.410,drops:[[.069,.177],[.184,.292],[.32,.523],[.56,.808]],
+      hazard:{style:14,key:'dream-wake',name:'Dreamtide Leviathan',u:.127,side:-1,
+        width:1,length:1.9,period:10.8,warn:1.9,live:2.65,offset:1.2,speed:.53,push:4.2,hop:.28},
+      obstacles:[
+        {style:15,key:'dream-hart',name:'Constellation Hart',u:.545,side:1,
+          width:.95,length:1.5,period:8.6,warn:1.6,live:2.1,offset:3.7,speed:.56,push:3.6,hop:.22},
+        {style:14,key:'dream-ebb',name:'Dreamtide Leviathan',u:.817,side:1,
+          width:1,length:1.9,period:11.4,warn:1.85,live:2.8,offset:6.3,speed:.52,push:4.15,hop:.29}
+      ],
+      ramps:[
+        {id:'dream-pillow',name:'Cloud pillow',style:'trampoline',branch:false,u:.217,lane:0,
+          halfWidth:3.2,landingWidth:3.85,runup:7,rise:.8,gap:10,landingRise:.55,landingLength:34,minSpeed:7},
+        {id:'dream-silk',name:'Silk sling',style:'trampoline',branch:true,u:.449,lane:0,
+          halfWidth:2.5,landingWidth:3.05,runup:6,rise:.78,gap:10.5,landingRise:.6,landingLength:32,minSpeed:8}
+      ],
+      tip:'Pass behind the breaching leviathan. Center up on the cloud pillow before the spiral and take the upper silk fork for a second bounce.'
+    },
+    {
+      name:'Thistledown Court',line:['Thistledown','Court'],region:'The Fairy Demesne',place:'The Fairy Queen’s garden',
+      level:'Master',length:1620,surface:'Veined leaves & petal silk',
+      feature:'Race a three-lobed flower crown. Each petal folds into a tight turn at its stem. Cross the torn leaf on a flower spring, then choose the narrow calyx fork near the finish.',
+      anchors:[[-107,-55],[-110,-20],[-104,5],[-87,16],[-70,10],[-61,-4],[-48,-1],[-48,17],
+        [-68,40],[-71,66],[-56,86],[-29,87],[-13,67],[-17,41],[-13,24],[2,25],[12,47],
+        [12,69],[33,91],[60,86],[74,63],[63,43],[44,32],[38,16],[52,6],[74,17],
+        [98,23],[120,8],[118,-15],[99,-32],[70,-31],[53,-48],[36,-57],[23,-43],
+        [9,-29],[-9,-39],[-24,-63],[-48,-73],[-68,-57],[-82,-49],[-95,-68]],
+      section:[[0,12,6.35],[.06,13,5.4],[.124,10,4.2],[.192,22,4.55],[.254,29,4.35],
+        [.318,14,4.05],[.348,9,3.95],[.403,25,4.4],[.461,32,4.45],[.518,21,4.25],
+        [.565,15,4.05],[.589,16,4.65],[.633,16,4.75],[.68,23,4.4],[.754,10,4.3],
+        [.813,17,4.1],[.877,21,5.05],[.903,22,4.8],[.953,22,4.7],[.978,15,5.55],[1,12,6.35]],
+      fork:[.866,.978,12,3.6,3.55],bridge:.453,drops:[[.164,.314],[.376,.542],[.579,.716],[.85,.968]],
+      hazard:{style:16,key:'court-glasswing',name:'Glasswing Moth',u:.193,side:1,
+        width:1.55,length:1,period:8.7,warn:1.7,live:2.75,offset:2.7,speed:.58,push:3.9,slip:.34},
+      obstacles:[
+        {style:17,key:'court-orchid',name:'Slipper Orchid',u:.354,side:-1,
+          width:1.3,length:1.3,period:8.3,warn:1.65,live:2.35,offset:1.1,speed:.48,push:4.05,hop:.26},
+        {style:16,key:'court-veils',name:'Glasswing Moth',u:.774,side:-1,
+          width:1.55,length:1,period:9.4,warn:1.7,live:2.65,offset:5.2,speed:.56,push:4,slip:.36}
+      ],
+      ramps:[
+        {id:'court-corolla',name:'Corolla spring',style:'trampoline',branch:false,u:.598,lane:.25,
+          halfWidth:2.95,landingWidth:3.65,runup:6.7,rise:.82,gap:11,landingRise:.6,landingLength:34,minSpeed:7.5},
+        {id:'court-calyx',name:'Calyx spring',style:'trampoline',branch:true,u:.924,lane:0,
+          halfWidth:2.45,landingWidth:3,runup:6,rise:.8,gap:10,landingRise:.55,landingLength:31,minSpeed:8}
+      ],
+      tip:'Watch the moth’s low wing and the orchid’s marked lane. Unwind your steering as you enter the flower spring, before the leaf tears away.'
+    },
+    {
+      name:'The Maw Between',line:['The Maw','Between'],region:'The Waking Dark',place:'The gate of bad dreams',
+      level:'Master',length:1650,surface:'Black glass & fossil bone',
+      feature:'Thread two opposing rows of teeth, clear the broken jaw, then plunge into the lower mouth. A shorter passage splits off beside the last claw strike.',
+      anchors:[[-116,-68],[-117,-38],[-122,1],[-112,31],[-92,50],[-76,44],[-74,22],[-80,7],
+        [-71,-4],[-54,10],[-51,39],[-35,59],[-12,68],[-2,56],[-12,30],[-3,14],[17,24],
+        [29,54],[58,66],[88,61],[109,42],[107,21],[87,6],[62,1],[46,-14],[52,-34],
+        [72,-44],[92,-48],[104,-65],[86,-80],[61,-80],[33,-61],[11,-57],[-8,-76],
+        [-31,-82],[-54,-62],[-68,-43],[-84,-42],[-101,-66]],
+      section:[[0,19,6.3],[.065,12,5.25],[.125,21,4.25],[.189,12,3.9],[.239,23,4.15],
+        [.267,24,4.35],[.316,24,4.45],[.366,13,3.85],[.43,25,4.15],[.493,32,4.25],
+        [.546,13,4.55],[.605,7,4.3],[.661,14,4.05],[.718,22,4.6],[.759,20,4.65],
+        [.812,20,4.7],[.852,15,4.45],[.91,11,3.95],[.958,17,5.25],[1,19,6.3]],
+      fork:[.702,.851,12.5,-4.5,3.55],bridge:.493,drops:[[.108,.218],[.239,.432],[.448,.624],[.707,.86],[.888,.935]],
+      hazard:{style:18,key:'maw-sentry',name:'Three-Mouthed Hound',u:.163,side:1,
+        width:1,length:1.9,period:8.8,warn:1.65,live:2.4,offset:1.4,speed:.47,push:4.35,slip:.32},
+      obstacles:[
+        {style:19,key:'maw-watcher',name:'Watcher’s Talon',u:.412,side:-1,
+          width:1.25,length:1.25,period:7.9,warn:1.6,live:2.2,offset:5.1,speed:.48,push:4.2,hop:.28},
+        {style:18,key:'maw-keeper',name:'Three-Mouthed Hound',u:.59,side:-1,
+          width:1,length:1.9,period:9.2,warn:1.65,live:2.4,offset:4.4,speed:.47,push:4.35,slip:.32},
+        {style:19,key:'maw-gate',name:'Watcher’s Talon',u:.764,side:1,
+          width:1.25,length:1.25,period:8.6,warn:1.6,live:2.3,offset:2.8,speed:.46,push:4.2,hop:.3}
+      ],
+      ramps:[
+        {id:'maw-jaw',name:'Jawbone spring',style:'trampoline',branch:false,u:.279,lane:0,
+          halfWidth:2.85,landingWidth:3.55,runup:6.6,rise:.85,gap:11.5,landingRise:.65,landingLength:35,minSpeed:8},
+        {id:'maw-sinew',name:'Sinew sling',style:'trampoline',branch:true,u:.776,lane:0,
+          halfWidth:2.35,landingWidth:2.95,runup:6.4,rise:.87,gap:11,landingRise:.55,landingLength:32,minSpeed:8}
+      ],
+      tip:'Brake at the tips of the teeth and take the open side of a lunging hound. The lower fork skips the final talon and has a narrow sling landing.'
+    },
+    {
+      name:'Aegis Ascent',line:['Aegis','Ascent'],region:'Mount Olympus',place:'The terraces of Olympus',
+      level:'Master',length:1800,surface:'Veined marble & chased bronze',
+      feature:'Climb four marble terraces to a broken causeway above the clouds. Link two shield springs at the summit, then race the bronze eagle down the outside of the mountain.',
+      anchors:[[-119,-91],[-122,-62],[-114,-42],[-91,-30],[-56,-25],[-37,-16],[-39,-4],[-59,2],
+        [-91,0],[-109,14],[-103,31],[-76,38],[-45,35],[-24,46],[-24,61],[-46,71],
+        [-74,70],[-82,84],[-65,98],[-27,98],[5,84],[37,68],[72,65],[101,75],[123,62],
+        [120,40],[101,24],[77,25],[67,11],[79,-4],[102,-9],[117,-27],[110,-47],
+        [84,-53],[56,-45],[41,-29],[22,-26],[15,-42],[29,-65],[24,-83],[6,-96],
+        [-23,-91],[-46,-71],[-62,-65],[-81,-75],[-100,-97]],
+      section:[[0,14,6.4],[.056,16,5.2],[.109,21,4.5],[.146,23,3.9],[.194,29,4.1],
+        [.243,32,4.45],[.291,38,4.05],[.348,42,3.95],[.397,47,4.75],[.487,47,4.8],
+        [.539,44,4.45],[.595,30,4.3],[.633,25,3.85],[.686,24,4.65],[.708,23,4.7],
+        [.768,23,4.65],[.806,15,4.1],[.853,20,3.95],[.91,12,4.4],[.965,14,5.15],[1,14,6.4]],
+      fork:[.66,.794,13,4,3.6],bridge:.451,drops:[[.082,.213],[.247,.515],[.545,.65],[.68,.79],[.821,.911]],
+      hazard:{style:20,key:'aegis-guardian',name:'Talos Heel',u:.165,side:1,
+        width:1.45,length:2,period:9.6,warn:1.85,live:2.35,offset:1.8,speed:.43,push:4.45,hop:.35},
+      obstacles:[
+        {style:21,key:'aegis-summit',name:'Aetos Eagle',u:.322,side:-1,
+          width:1.55,length:1.4,period:8.5,warn:1.75,live:2.25,offset:3.1,speed:.52,push:4.15,slip:.3},
+        {style:20,key:'aegis-step',name:'Talos Heel',u:.589,side:-1,
+          width:1.45,length:2,period:10.2,warn:1.85,live:2.45,offset:5.8,speed:.44,push:4.45,hop:.33},
+        {style:21,key:'aegis-descent',name:'Aetos Eagle',u:.858,side:1,
+          width:1.55,length:1.4,period:8.9,warn:1.65,live:2.3,offset:1.2,speed:.50,push:4.15,slip:.32}
+      ],
+      ramps:[
+        {id:'aegis-first-shield',name:'First shield spring',style:'trampoline',branch:false,u:.423,lane:-.45,
+          halfWidth:3,landingWidth:3.65,runup:7,rise:.88,gap:11,landingRise:.55,landingLength:32,minSpeed:8},
+        {id:'aegis-second-shield',name:'Second shield spring',style:'trampoline',branch:false,u:.458,lane:.65,
+          halfWidth:2.65,landingWidth:3.45,runup:6.3,rise:.92,gap:12,landingRise:.65,landingLength:33,minSpeed:8.5},
+        {id:'aegis-aerie',name:'Eagle aerie spring',style:'trampoline',branch:true,u:.729,lane:0,
+          halfWidth:2.35,landingWidth:2.95,runup:6.2,rise:.87,gap:11.5,landingRise:.6,landingLength:32,minSpeed:8}
+      ],
+      tip:'At the summit, launch just left of center, then move right on the little terrace for the second shield. Leave the marked lane before Talos plants his foot.'
+    }
+  );
+
   // Project the real Catmull–Rom loop into the menu badge. Equivalent cubic
   // Bézier handles keep the tight hairpins and the orbital crossover visible.
   function outline(anchors) {

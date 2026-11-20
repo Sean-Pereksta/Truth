@@ -19,7 +19,8 @@
     200:{speed:1.43,acceleration:1.49,brakes:1.11}
   };
   const astraDriver=9;
-  const drivers = ['Nib','Bristle','Clover','Tumble','Hazel','Ember','Flint','Mica','Solstice','Astra'];
+  const angelDriver=10;
+  const drivers = ['Nib','Bristle','Clover','Tumble','Hazel','Ember','Flint','Mica','Solstice','Astra','Aurel'];
   const abilities = Signatures.names, durations=Signatures.durations;
   // Steering, acceleration, corner-load, transition speed, off-road resistance and bump weight.
   const handling=[
@@ -27,7 +28,8 @@
     [1.02,12.0,1.01,7.2,1.03,.88],[1.00,10.75,.84,6.15,.97,1.06],
     [1.055,10.15,.96,7.85,.80,1.10],[1.085,11.3,1.085,7.1,1.15,.89],
     [.85,9.95,.83,5.55,.73,1.40],[.995,11.0,.975,7.0,.65,1.03],
-    [1.08,11.35,.99,7.65,1.0,1.04],[1.14,10.8,.96,7.35,.95,.87]
+    [1.08,11.35,.99,7.65,1.0,1.04],[1.14,10.8,.96,7.35,.95,.87],
+    [.98,11.15,.85,6.3,.86,1.45]
   ];
   const items = ['Seed Kick', 'Sap Sling', 'Burr Patch', 'Bark Guard', 'Thistle Puff', 'Pinecone Skip', 'Tailwind', 'Hawk', 'Tracking Quill', 'Stormburst'];
   const hawkItem=7, quillItem=8, stormItem=9, hawkDistance=.10;
@@ -179,7 +181,7 @@
       const f=r.flight,deck=groundSample(c,r.s,r.x,r.branch);
       const oldY=f.y;
       f.y+=f.vy*dt-.5*gravity*dt*dt;f.vy-=gravity*dt;f.age+=dt;
-      if(f.supported&&f.y<=deck.y+.025&&oldY>=deck.y-.14&&f.vy<=slopeAt(c,r.s,r.x,r.branch).rise*r.v+.12){
+      if(f.supported&&!Ramps.gapAt(c,r.s,r.branch)&&f.y<=deck.y+.025&&oldY>=deck.y-.14&&f.vy<=slopeAt(c,r.s,r.x,r.branch).rise*r.v+.12){
         r.flight=null;r.air=0;r.rampAngle=0;
         if(!predict){r.landingSeq=(r.landingSeq||0)+1;r.landingKind='road';r.landedRamp=f.id||'';
           r.landingForce=clamp(-f.vy/13,.12,1);r.landingFx=.45;}
@@ -194,10 +196,12 @@
     if(!ramps.length)return;
     const moved=r.s-prev.progress,speed=moved/Math.max(.0001,dt),ground=sample(c,r.s,r.x,r.branch);
     if(r.catchShelf&&(r.branch!==r.catchShelf.branch||r.s>r.catchShelf.end||r.s<r.catchShelf.start-.06))r.catchShelf=null;
-    if((r.ghost||0)>prev.recovery+.1||r.driverIndex===7&&r.active>0){
+    const gap=Ramps.gapAt(c,r.s,r.branch);
+    const deck=rampEntry(c,r.s,r.x,r.branch);
+    const spring=gap||deck?.ramp.style==='trampoline';
+    if((r.ghost||0)>prev.recovery+.1||r.driverIndex===7&&r.active>0&&!spring){
       r.flight=null;r.catchShelf=null;r.rampAngle=0;return;
     }
-    const deck=rampEntry(c,r.s,r.x,r.branch);
     let elapsed=dt;
     if(!r.flight&&Math.abs(moved)<12&&prev.branch===r.branch){
       const from=rampEntry(c,prev.progress,prev.lane,r.branch);
@@ -216,15 +220,30 @@
         const lapLip=ramp.lipS+c.length*Math.round((prev.progress-ramp.lipS)/c.length);
         const lip=full?Math.max(prev.progress,Math.min(lapLip,r.s)):prev.progress,fraction=full&&moved>0?clamp((lip-prev.progress)/moved,0,1):0;
         const x=prev.lane+(r.x-prev.lane)*fraction,lipShape=Ramps.deck(ramp,full?lip-.00001:lip,x),base=sample(c,lip,x,r.branch),slope=slopeAt(c,lip,x,r.branch);
-        const carry=r.air>0,launched=!carry&&full&&!r.catchShelf&&r.v>=ramp.minSpeed&&lipShape.height>.1;
+        const elastic=ramp.style==='trampoline';
+        const carry=r.air>0&&(!elastic||Hazards.lift(st,r)>.16);
+        const launched=!carry&&full&&!r.catchShelf&&r.v>=ramp.minSpeed&&lipShape.height>.1;
+        if(elastic&&!launched&&!carry&&gap){leaveDeck(st,r,gap);return;}
         const tangent=launched?lipShape.grade*speed:0;
         const upward=Math.min(8.4,tangent)+Math.max(0,tangent-8.4)*.55;
         const hop=carry?Hazards.lift(st,r):0,hopRate=carry?(Hazards.lift({time:st.time+.008},{...r,air:Math.max(0,r.air-.008)})-hop)/.008:0;
         r.flight={id:ramp.id,kind:carry?'carry':launched?'ramp':'drop',y:base.y+(r.catchShelf?0:Math.max(0,lipShape.height))+hop,vy:slope.rise*speed+upward+hopRate,age:0,lipS:lapLip,launchSpeed:r.v};
+        if(elastic&&launched){
+          // The spring supplies lift independently of uphill grade. Account for
+          // takeoff speed and the actual far bank, including elevated bypasses.
+          r.v=Math.max(r.v,ramp.minSpeed+8);
+          const travel=r.v*(r.branch?1+.17*base.peak:1);
+          const seconds=clamp((ramp.gap+7)/travel,.92,1.55);
+          const landing=groundSample(c,lip+travel*seconds,ramp.lane,r.branch);
+          r.flight.spring=true;r.flight.vy=(landing.y-r.flight.y)/seconds+.5*gravity*seconds;
+          r.hazardHop=null;
+          if(r.driverIndex===7){r.active=0;r.signature=null;}
+        }
         if(launched&&!predict)r.launchSeq=(r.launchSeq||0)+1;
         elapsed=dt*(1-fraction);
       }
     }
+    if(gap&&!r.flight){leaveDeck(st,r,gap);return;}
     let targetPitch=0;
     if(r.flight){
       const f=r.flight,ramp=ramps.find(a=>a.id===f.id),oldY=f.y;
@@ -234,12 +253,16 @@
       if(!r.catchShelf&&prev.progress<landingStart&&r.s>=landingStart){
         const fraction=clamp((landingStart-prev.progress)/Math.max(.001,moved),0,1),crossX=prev.lane+(r.x-prev.lane)*fraction;
         const atFront=groundSample(c,landingStart+.00001,crossX,r.branch);
-        if(oldY+(f.y-oldY)*fraction<atFront.y-.035)r.catchShelf={id:f.id,start:landingStart-.10,end:landingEnd,branch:r.branch};
+        if(oldY+(f.y-oldY)*fraction<atFront.y-.035){
+          if(ramp.style==='trampoline'){leaveDeck(st,r,ramp);return;}
+          r.catchShelf={id:f.id,start:landingStart-.10,end:landingEnd,branch:r.branch};
+        }
       }
       const below=ground.y+groundLift(st,r),deckGrade=deck&&!r.catchShelf?deck.shape.grade:0,fallSpeed=(slope.rise+deckGrade)*speed-f.vy;
       targetPitch=clamp(-Math.atan2(f.vy,along)+Math.atan2(slope.rise,slope.run),-.55,.42);
       if(f.age>.02&&f.y<=below+.001&&fallSpeed>0){
-        const catchLanding=r.catchShelf||r.s<landingStart-.02||(!Ramps.matchLanding(ramp,r.s,r.x)&&r.s<landingEnd&&r.s>=landingStart);
+        if(gap){leaveDeck(st,r,gap);return;}
+        const catchLanding=ramp.style!=='trampoline'&&(r.catchShelf||r.s<landingStart-.02||(!Ramps.matchLanding(ramp,r.s,r.x)&&r.s<landingEnd&&r.s>=landingStart));
         if(catchLanding&&r.s<landingEnd)r.catchShelf={id:f.id,start:Math.min(r.s,landingStart)-.12,end:landingEnd,branch:r.branch};
         r.air=0;r.flight=null;
         if(!predict){
@@ -280,7 +303,7 @@
     const c=track(config.trackIndex), trial=config.mode==='trial', players=clamp(config.players|0 || 1,1,8);
     const humanSeats=config.humanSeats || Array.from({length:players},(_,i)=>i), count=trial?1:clamp((config.gridSize??8)|0,1,8);
     const selection=new Map(humanSeats.filter(i=>i>=0&&i<count).map(i=>[i,mod((config.driverIndices?.[i]??(i===0?config.driverIndex:undefined)??i)|0,drivers.length)]));
-    const picked=new Set(selection.values()),remaining=drivers.map((_,i)=>i).filter(i=>i!==astraDriver&&!picked.has(i));
+    const picked=new Set(selection.values()),remaining=drivers.map((_,i)=>i).filter(i=>i!==astraDriver&&i!==angelDriver&&!picked.has(i));
     const st={trackIndex:c.index, mode:config.mode||'race',cc:normalizeCC(config.cc),difficulty:normalizeDifficulty(config.difficulty),totalLaps:clamp(config.laps|0||3,1,12),time:0,countdown:3,
       seed:(config.seed??0xACE110)>>>0,hazardSeed:(config.seed??0xACE110)>>>0,contacts:{},racers:[],pickups:[],objects:[],done:false,serial:0,nextStormTime:14};
     for(let i=0;i<count;i++){
@@ -497,7 +520,11 @@
     else if(it===hawkItem){
       const c=track(st.trackIndex),cruise=cruiseSpeed(c,r)*motors[st.cc].speed;
       const distance=c.length*hawkDistance;
-      r.hawk={start:r.s,end:Math.min(r.s+distance,c.length*st.totalLaps),age:0,duration:distance/(cruise*2.75),lane:r.x,cruise,hitSeats:[]};
+      let end=Math.min(r.s+distance,c.length*st.totalLaps);
+      const nextMerge=r.s+mod(c.branchB*c.length-r.s,c.length);
+      const gap=Ramps.gapAt(c,end,r.branch&&end<=nextMerge);
+      if(gap)end=gap.startS+c.length*Math.round((end-gap.lipS)/c.length)-8;
+      r.hawk={start:r.s,end,age:0,duration:distance/(cruise*2.75),lane:r.x,cruise,hitSeats:[]};
       r.flight=null;r.air=0;r.rampAngle=0;r.catchShelf=null;r.hazardHop=null;
       r.sap=r.burr=r.slip=r.pine=r.puff=r.slow=r.grind=r.spin=0;
       clearDrift(r);
@@ -597,6 +624,7 @@
       case 7:return traffic.close||r.sap>0||r.boost<.22;
       case 8:return Math.abs(r.x)<1.6;
       case astraDriver:return r.prevDrift&&r.drift>.22;
+      case angelDriver:return !r.guard && (traffic.chaser||traffic.close);
       default:return false;
     }
   }
@@ -823,9 +851,17 @@
       if(r.grind>previous&&r.v>0)r.v*=grindPace(r.grind)/grindPace(previous);
     }
   }
-  function leaveDeck(st,r){
+  function leaveDeck(st,r,pad){
     const duration=1.12,initialLift=lift(st,r);
     r.fall={age:0,duration,initialLift,side:Math.sign(r.x)||1};
+    const c=track(st.trackIndex);
+    pad=pad||Ramps.gapAt(c,r.s,r.branch)||Ramps.list(c).find(p=>p.style==='trampoline'&&p.id===r.flight?.id);
+    if(pad){
+      // Give the kart enough run-up to clear the same gap even after a miss
+      // at the far bank. Subsequent laps retain their absolute progress.
+      r.fall.retryS=pad.startS+c.length*Math.round((r.s-pad.lipS)/c.length)-13;
+      r.fall.retryLane=pad.lane;r.fall.retryBranch=pad.branch;
+    }
     r.flight=null;r.catchShelf=null;r.hazardHop=null;r.air=0;r.rampAngle=0;
     r.ghost=duration+.5;r.protect=duration+.5;r.boostSources=[];r.boost=0;r.active=0;
     r.signature=null;r.stomp=false;clearDrift(r);r.v=0;r.contactCarry=0;r.grind=0;
@@ -915,10 +951,10 @@
     if(f.age<f.duration)return;
     // Rejoin the same route behind the departure. A fall can never advance a lap.
     const lapFloor=r.lapTimes.length?r.lapTimes.length*c.length:-10;
-    r.s=Math.max(lapFloor,clamp(r.safeS??r.s-5,r.s-9,r.s-2));
+    r.s=Math.max(lapFloor,f.retryS??clamp(r.safeS??r.s-5,r.s-9,r.s-2));
     const u=mod(r.s,c.length)/c.length;
-    r.branch=r.safeBranch&&u>c.branchA&&u<c.branchB;
-    r.fall=null;r.x=0;r.v=5.5;r.vx=0;r.yaw=0;r.rampAngle=0;r.runoff=0;
+    r.branch=(f.retryBranch??r.safeBranch)&&u>c.branchA&&u<c.branchB;
+    r.fall=null;r.x=f.retryLane??0;r.v=5.5;r.vx=0;r.yaw=0;r.rampAngle=0;r.runoff=0;
     r.ghost=1.35;r.protect=1.35;r.lastValid=r.s;notify(r,'Back on course');
   }
   function step(st,dt,inputs={}) {

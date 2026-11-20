@@ -339,4 +339,88 @@ window.AcornCourseScores={
       ["B2 F#3 A3 D4","D6 C#6/B5 A5 F#5 D5 B4 - ./F#5"]
     ]
   },
+  16:{
+    title:"The Whale Road",bpm:184,beats:4,lead:"synth",answer:"flute",backing:"bell",groove:"glide",
+    bars:[
+      ["A2 A3 C#4 E4","E5 - D#5/E5 B5 . A5 G#5/E5 B4"],
+      ["B2 A3 D#4 F#4","D#5/F#5 . B5 A5 F#5 - E5/D#5 B4"],
+      ["F#2 A3 C#4 E4","C#5 E5/F#5 A5 . C#6 A5 G#5/E5 F#5"],
+      ["E2 G#3 B3 F#4","B5 - G#5 F#5/E5 B4 . D#5 E5/B5"],
+      ["A2 A3 C#4 E4","E5 - D#5/E5 B5 . A5 B5/C#6 E6"],
+      ["C#3 G#3 B3 E4","E6 C#6/B5 G#5 . E5/G#5 B5 G#5 E5"],
+      ["B2 A3 D#4 F#4","F#5 . D#5/F#5 A5 B5 A5/F#5 D#5 B4"],
+      ["E2 G#3 B3 D4","E5/B5 - G#5 D5 E5 F#5 G#5 ./B4"],
+      ["F#2 A3 C#4 E4","A4 C#5/E5 F#5 - . A5 E5/C#5 A4"],
+      ["D2 A3 C#4 F#4","F#4 A4/C#5 D5 - F#5 E5 C#5/A4 D5"],
+      ["B2 A3 D#4 F#4","D#5 . F#5/A5 B5 - A5 F#5 D#5"],
+      ["E2 G#3 B3 F#4","B4 E5/G#5 B5 - F#5 E5 B4/D#5 F#5"],
+      ["A2 A3 C#4 E4","E5 - D#5/E5 B5 . A5 G#5/E5 B4"],
+      ["B2 A3 D#4 F#4","D#5/F#5 . B5 D#6 F#6 - D#6/B5 A5"],
+      ["E2 G#3 B3 D4","B5 G#5/E5 D5 . E5 G#5/B5 D6 B5"],
+      ["A2 A3 C#4 E4","C#6 A5/E5 B4 C#5 A4 - . ./D#5"]
+    ]
+  },
+  17:{
+    title:"Dance of the Glasswings",bpm:198,beats:3,lead:"whistle",answer:"mandolin",backing:"dulcimer",groove:"waltz",
+    bars:[
+      ["G2 G3 B3 D4","D5/G5 ./A5 B5 A5/G5 D5 B4/D5"],
+      ["C3 G3 C4 E4","E5/G5 ./B5 C6 B5/G5 E5 C5"],
+      ["A2 G3 C4 E4","A4/C5 E5 A5 . G5/E5 C5"],
+      ["D2 F#3 A3 C4","F#5/A5 C6 B5 A5/F#5 D5 ./D5"],
+      ["G2 G3 B3 D4","D5/G5 ./A5 B5 A5/G5 D6 B5"],
+      ["E2 G3 B3 D4","G5/B5 ./C6 D6 B5/G5 E5 G5"],
+      ["C3 G3 B3 E4","E5/G5 B5 C6 E6/C6 B5 G5"],
+      ["D2 F#3 A3 C4","A5 - F#5/D5 C5 ./A4 D5"],
+      ["G2 G3 Bb3 D4","Bb4 D5/G5 F5 D5/Bb4 . G4"],
+      ["Eb2 G3 Bb3 D4","G4 Bb4/D5 Eb5 G5/F5 D5 Bb4"],
+      ["C3 G3 Bb3 Eb4","Eb5/G5 . Bb5 G5 Eb5/D5 C5"],
+      ["D2 F#3 A3 C4","D5/F#5 A5 C6 B5/A5 F#5 ./A4"],
+      ["G2 G3 B3 D4","D5/G5 ./A5 B5 A5/G5 D5 B4/D5"],
+      ["C3 G3 C4 E4","E5/G5 ./B5 C6 E6/D6 C6 B5"],
+      ["D2 F#3 A3 C4","A5/D6 C6 B5/A5 F#5 D5 A4"],
+      ["G2 G3 B3 D4","G5 B5/G5 D5 B4 G4 ./D5"]
+    ]
+  },
+  18:{
+    title:"Teeth in the Rearview",bpm:200,beats:3,lead:"electric",answer:"organ",backing:"hammer",groove:"stomp",
+    bars:[
+      ["E2 G3 Bb3 E4","E4 ./F4 E4 Bb4/A4 . F4/E4"],
+      ["F2 A3 C4 E4","F4/F4 . C5 B4/F4 E4 C4"],
+      ["Bb2 F3 Ab3 Db4","Bb4 ./A4 Bb4 Db5/C5 Bb4 F4"],
+      ["B1 A3 B3 D#4","B4 D#5/F#5 D#5 B4/F4 E4 ./D#4"],
+      ["E2 G3 Bb3 E4","E4 ./F4 E4 Bb4/A4 . G4/Bb4"],
+      ["G2 G3 Bb3 D4","D5 Bb4/G4 . G4/Bb4 Db5 D5"],
+      ["F2 A3 C4 E4","F5 . E5/C5 A4 C5/F5 F5"],
+      ["B1 F#3 A3 D#4","F#5 F5/D#5 B4 - F4 ./D#4"],
+      ["C2 G3 Bb3 Eb4","Eb5 - Bb4/G4 C5 . Eb5/Db5"],
+      ["Db2 F3 Ab3 C4","Db5 F5/Ab5 G5 F5/E5 Db5 ."],
+      ["Bb2 F3 Ab3 Db4","Db5 . Bb4/F4 Ab4 Db5/C5 Bb4"],
+      ["B1 A3 B3 D#4","D#5 F#5/A5 F#5 D#5/F5 D#5 B4"],
+      ["E2 G3 Bb3 E4","E4 ./F4 E4 Bb4/A4 . F4/E4"],
+      ["F2 A3 C4 E4","F4/F4 . C5 F5/E5 C5 A4"],
+      ["B1 F#3 A3 D#4","B4/D#5 F#5 F5/D#5 B4 F4 D#4"],
+      ["E2 G3 Bb3 E4","E4 E5/Bb4 G4 F4/E4 . ./B3"]
+    ]
+  },
+  19:{
+    title:"The Bronze Procession",bpm:196,beats:4,lead:"brass",answer:"fiddle",backing:"mandolin",groove:"rush",
+    bars:[
+      ["D2 A3 D4 F#4","D5 A4/D5 F#5 . A5 - G5/F#5 D5"],
+      ["C3 G3 C4 E4","E5 G4/C5 E5 . G5 A5/G5 E5 C5"],
+      ["G2 G3 B3 D4","B4 D5/G5 B5 . D6 B5/A5 G5 D5"],
+      ["A2 G3 C#4 E4","C#5 E5/A5 C#6 B5 A5 . E5/G5 A5"],
+      ["D2 A3 D4 F#4","D5 A4/D5 F#5 . A5 - D6/A5 F#5"],
+      ["B2 A3 D4 F#4","B4 F#4/B4 D5 . F#5 A5/B5 D6 F#6"],
+      ["G2 G3 B3 D4","D6 B5/G5 D5 . B4 D5/G5 B5 A5"],
+      ["A2 G3 C#4 E4","A5 E5/C#5 E5 G5 A5 . C#5 ./E5"],
+      ["D2 A3 C4 F4","F5 - A5/D6 C6 A5 F5/E5 D5 A4"],
+      ["Bb2 F3 A3 D4","D5 F5/A5 Bb5 - A5 F5 D5/C5 Bb4"],
+      ["G2 G3 Bb3 D4","Bb4 D5/G5 Bb5 D6 . Bb5 G5/F5 D5"],
+      ["A2 G3 C#4 E4","E5 A5/C#6 E6 C#6 A5 G5/E5 C#5 A4"],
+      ["D2 A3 D4 F#4","D5 A4/D5 F#5 . A5 - G5/F#5 D5"],
+      ["G2 G3 B3 D4","G5 B4/D5 G5 B5 D6 - B5/A5 G5"],
+      ["A2 G3 C#4 E4","A5 E5/A5 C#6 E6 D6/C#6 A5 G5 E5"],
+      ["D2 A3 D4 F#4","D6 A5/F#5 D5 A4 D5 - . ./A4"]
+    ]
+  },
 };

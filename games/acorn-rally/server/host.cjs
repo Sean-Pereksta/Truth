@@ -10,7 +10,7 @@ const { performance } = require('node:perf_hooks');
 const root = path.resolve(__dirname, '..');
 const raceSim = require('../race-sim.js');
 const names = raceSim.drivers;
-const earnedDriver = names.indexOf('Astra');
+const earnedDrivers = new Set([names.indexOf('Astra'), names.indexOf('Aurel')]);
 const neutral = Object.freeze({ steer: 0, gas: 0, brake: 0, drift: false, item: false, ability: false, lookBack: false });
 const idleLimit = 15 * 60 * 1000;
 const stepSeconds = 1 / 60;
@@ -59,7 +59,7 @@ async function readJson(req) {
 function newSeat(index, body, occupied = []) {
   const reserved = new Set(occupied.map(s => s.driverIndex));
   const preferred = integer(body.driverIndex, 0, names.length - 1, index);
-  const driverIndex = reserved.has(preferred) ? names.findIndex((_, id) => id !== earnedDriver && !reserved.has(id)) : preferred;
+  const driverIndex = reserved.has(preferred) ? names.findIndex((_, id) => !earnedDrivers.has(id) && !reserved.has(id)) : preferred;
   if (driverIndex < 0) fail(409, 'Every racer is already on this grid.');
   return { index, driverIndex, name: driverName(body.name, driverIndex), token: crypto.randomBytes(24).toString('hex'),
     kartIndex: index, driving: true, ready: false, stream: null, touched: Date.now(), seq: -1, inputAt: 0, input: { ...neutral }, pulses: {} };
@@ -94,7 +94,7 @@ function createRallyServer({ sim = raceSim, automatic = true } = {}) {
   function gridDrivers(occupied, gridSize) {
     const grid = Array(gridSize).fill(null);
     for (const seat of occupied) grid[seat.kartIndex] = seat.driverIndex;
-    const spare = names.map((_, id) => id).filter(id => id !== earnedDriver && !grid.includes(id));
+    const spare = names.map((_, id) => id).filter(id => !earnedDrivers.has(id) && !grid.includes(id));
     let next = 0;
     return grid.map(driver => driver === null ? spare[next++] : driver);
   }

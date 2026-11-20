@@ -4,9 +4,9 @@
   else root.AcornSignatures=api;
 })(typeof globalThis==='object'?globalThis:this,function(){
   'use strict';
-  const names=['Needle Turn','Shoulder Through','Springstep','Berm Burst','Quill Fan','Slipstream Dash','Ground Pound','Tunnel Dash','Golden Hour','Prism Wake'];
-  const durations=[1.45,3,.86,2.7,1.05,1.25,1.15,1.12,1.5,2];
-  const colors=['#90e6ed','#f0ac59','#d5a2ff','#65eab5','#ffe16c','#ff775e','#b3df6d','#69d9ff','#ffcd70','#8debfa'];
+  const names=['Needle Turn','Shoulder Through','Springstep','Berm Burst','Quill Fan','Slipstream Dash','Ground Pound','Tunnel Dash','Golden Hour','Prism Wake','Halo Counter'];
+  const durations=[1.45,3,.86,2.7,1.05,1.25,1.15,1.12,1.5,2,2];
+  const colors=['#90e6ed','#f0ac59','#d5a2ff','#65eab5','#ffe16c','#ff775e','#b3df6d','#69d9ff','#ffcd70','#8debfa','#ffdb87'];
   const groundPound={core:3.9,radius:11.4,travel:.27};
   const quillFan={core:2.75,radius:8.8,travel:.18};
   const cap=(v,low,high)=>Math.max(low,Math.min(high,v));
@@ -112,6 +112,7 @@
     if(id===7){r.slip=0;r.burr=0;r.slow=0;r.sap=0;sig.label='Below the track';boost(r,1.08,6.4);}
     if(id===8){sig.label='Follow the gold line';tell(r,sig.label);}
     if(id===9){sig.label='Charge and release your drift';tell(r,sig.label);}
+    if(id===10){r.guard=Math.max(r.guard,duration);sig.previousGuard=r.guard;}
   }
   function tick(st,r,dt,length,road,input){
     const hit=r.signatureHit;
@@ -126,6 +127,12 @@
     const age=st.time-sig.since, sinceBeat=st.time-sig.beat, id=r.driverIndex;
     const linger=id===8&&sig.stage==='release'&&r.guard>0?3:1.25;
     if(st.time>sig.until+linger){delete r.signature;return;}
+    if(id===10&&sig.stage==='active'){
+      if(r.guard<=0&&sig.previousGuard>dt+.0001&&st.time<=sig.until){
+        beat(r,st,'Halo counterboost','release');boost(r,1.15,8.1);
+      }
+      sig.previousGuard=r.guard;
+    }
     if(id===0&&r.active>0&&sig.stage==='active'){
       if(Math.abs(r.steer)>.34){
         if(!sig.side)sig.side=Math.sign(r.steer);

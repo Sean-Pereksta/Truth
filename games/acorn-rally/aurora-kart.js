@@ -15,7 +15,7 @@
     [0,.90,.24],[-.25,.92,.08],[.25,.92,.08],[0,1.02,-.22],[0,.82,-.46],[0,.83,-.50]
   ];
 
-  function build(low) {
+  function kartMesh(palette, low) {
     const groups = new Map();
     function group(material) {
       if (!groups.has(material)) {
@@ -63,6 +63,11 @@
         return [offset.map((t,i)=>center[i]+t+normal[i]*r),normal];
       });
     }
+    return {groups, surface, face, oval, rod, ring};
+  }
+  root.AcornKartMesh = kartMesh;
+  function build(low) {
+    const {groups, surface, face, oval, rod, ring} = kartMesh(palette, low);
     // A blunt snowplow nose tapers into a low sled and twin ski-shaped side pods.
     const profile=[[-1.04,.14,.35,.07],[-.89,.43,.40,.15],[-.66,.49,.44,.16],[-.25,.45,.45,.18],
       [.18,.42,.42,.15],[.65,.365,.39,.155],[.98,.26,.34,.125],[1.16,.125,.31,.072],[1.19,.04,.31,.03]];

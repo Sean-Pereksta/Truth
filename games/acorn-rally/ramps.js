@@ -39,6 +39,39 @@
   }
   // Signed distance from a lip, including subsequent laps and reverse crossings.
   function relative(r,s){const d=s-r.lipS;return d-r.courseLength*Math.round(d/r.courseLength);}
+  // A springboard spans one route's chasm. The other ribbon, even at the
+  // same lap distance, has its own supports and collision.
+  function gapAt(c,s,branch=false){
+    for(const pad of list(c)){
+      if(pad.style!=='trampoline'||pad.branch!==branch)continue;
+      const d=relative(pad,s);
+      if(d>0&&d<pad.gap)return pad;
+    }
+    return null;
+  }
+  function solidSpans(c,from,to,branch=false){
+    if(to<from)return solidSpans(c,to,from,branch).reverse().map(([a,b])=>[b,a]);
+    let spans=[[from,to]];
+    for(const pad of list(c)){
+      if(pad.style!=='trampoline'||pad.branch!==branch)continue;
+      const firstLap=Math.floor((from-pad.lipS)/c.length),lastLap=Math.floor((to-pad.lipS)/c.length);
+      for(let lap=firstLap;lap<=lastLap;lap++){
+        const lip=pad.lipS+c.length*lap;
+        const end=lip+pad.gap;
+        if(end<=from)continue;
+        const clipped=[];
+        for(const [a,b] of spans){
+          if(b<=lip||a>=end)clipped.push([a,b]);
+          else{
+            if(a<lip)clipped.push([a,lip]);
+            if(b>end)clipped.push([end,b]);
+          }
+        }
+        spans=clipped;
+      }
+    }
+    return spans;
+  }
   function deck(r,s,x){
     const d=relative(r,s),land=d>=r.gap-1e-8,approach=d<=1e-8;
     const width=land?r.landingWidth:r.halfWidth,border=width-Math.abs(x-r.lane);
@@ -83,17 +116,18 @@
     r.rampPace=0;
     for(const ramp of list(c)){
       if(r.branch!==ramp.branch||r.v<2||r.catchShelf)continue;
-      const d=relative(ramp,r.s),look=Math.max(13,r.v*(ramp.style==='trestle'?1.75:1.20));
+      const spring=ramp.style==='trampoline';
+      const d=relative(ramp,r.s),look=Math.max(13,r.v*(spring?1.85:ramp.style==='trestle'?1.75:1.20));
       if(d< -ramp.runup-look||d>0&&r.flight?.id!==ramp.id)continue;
       // The approach in Hoh has an ordinary outside passing line. Drivers on
       // that side keep their lane instead of cutting across a pack for the ramp.
-      if(!ramp.branch&&r.seat%3===2&&r.x<ramp.lane-1.1&&!r.flight)continue;
+      if(!spring&&!ramp.branch&&r.seat%3===2&&r.x<ramp.lane-1.1&&!r.flight)continue;
       const ready=smooth(cap((d+ramp.runup+look)/(look*.58)));
       const bends=ramp.style==='sandstone'||ramp.style==='trestle';
-      r.rampPace=ramp.style==='trestle'&&d< -ramp.runup?17.2:bends?20.3:24.7;
+      r.rampPace=spring?25:ramp.style==='trestle'&&d< -ramp.runup?17.2:bends?20.3:24.7;
       return target+(ramp.lane-target)*ready;
     }
     return target;
   }
-  return {list,deck,surface,crossed,matchLanding,aim};
+  return {list,deck,surface,crossed,matchLanding,aim,gapAt,solidSpans};
 });

@@ -5,12 +5,15 @@
     { id: 'forest', name: 'Forest Cup', theme: 'Follow the water from the forest floor to the treetops.', tracks: [0, 1, 2, 6] },
     { id: 'horizon', name: 'Horizon Cup', theme: 'Race across exposed sandstone, salt flats, chalk ridges and black sand.', tracks: [3, 4, 5, 7] },
     { id: 'expedition', name: 'Expedition Cup', theme: 'Four precision circuits through crystal caverns, open sky, orbit and lava.', tracks: [8, 9, 10, 11] },
-    { id: 'spectrum', name: 'Spectrum Cup', theme: 'Race through the spillway, marsh and storm canopy, then finish on Prism Parade.', tracks: [13, 14, 15, 12] }
+    { id: 'spectrum', name: 'Spectrum Cup', theme: 'Race through the spillway, marsh and storm canopy, then finish on Prism Parade.', tracks: [13, 14, 15, 12] },
+    { id: 'mythos', name: 'Mythos Cup', theme: 'Master difficulty. Cross cloud gaps, thread the fairy court, escape the Maw and climb to the summit of Olympus.', tracks: [16, 17, 18, 19] }
   ];
   const points = [12, 9, 7, 5, 4, 3, 2, 1];
   const levels = ['easy', 'normal', 'hard', 'ultimate'];
   const rewardDriver = 8;
   const spectrumDriver = 9;
+  const angelDriver = 10;
+  const circuits = cups.flatMap(cup => cup.tracks);
   const spectrumCup = cups.findIndex(cup => cup.id === 'spectrum');
   const prefix = 'acorn-rally-championship-v1-';
   // Keep a playable session when the browser disables storage.
@@ -32,28 +35,51 @@
   function qualifyingWins() {
     return cups.slice(0, spectrumCup).filter((cup, i) => levels.indexOf(goldLevel(i)) >= levels.indexOf('hard')).length;
   }
+  function hasUltimateWin(track) {
+    return read('ultimate-first-' + track) === true;
+  }
+  function creditTrack(track) {
+    if (!hasUltimateWin(track)) save('ultimate-first-' + track, true);
+    if (!isDriverAvailable(angelDriver) && circuits.every(hasUltimateWin)) {
+      save('angel-bear-unlocked', true);
+      return true;
+    }
+    return false;
+  }
+  function recordUltimate(result, sharedGrid = false) {
+    if (result.difficulty !== 'ultimate' || !['race','single','cup'].includes(result.mode) ||
+        !circuits.includes(result.trackIndex) || !Array.isArray(result.standings) ||
+        !result.standings.some(row => !row.human)) return false;
+    const winner = result.standings.find(row => row.position === 1);
+    if (!winner?.human || !(winner.time > 0) || (!sharedGrid && winner.driverIndex !== result.driverIndex)) return false;
+    return creditTrack(result.trackIndex);
+  }
   function isDriverAvailable(index) {
+    if (index === angelDriver) return read('angel-bear-unlocked') === true;
     if (index === rewardDriver) return qualifyingWins() === spectrumCup;
     if (index === spectrumDriver) return goldLevel(spectrumCup) === 'ultimate';
     return true;
   }
   function rewardForCup(index) {
+    if (cups[index]?.id === 'mythos') return angelDriver;
     return index === spectrumCup ? spectrumDriver : rewardDriver;
   }
   function rewardRequirement(index) {
+    if (index === angelDriver) return 'Win every circuit against Ultimate rivals';
     if (index === spectrumDriver) return 'Win Spectrum Cup on Ultimate';
     return 'Win Forest, Horizon and Expedition on Hard or Ultimate';
   }
   function rewardProgress(index) {
+    if (index === angelDriver) return circuits.filter(hasUltimateWin).length + '/' + circuits.length + ' Ultimate wins';
     return index === rewardDriver ? `${qualifyingWins()}/${spectrumCup} Hard cup wins` : 'Spectrum Cup on Ultimate';
   }
   function validGrid(ids, driver) {
     return Array.isArray(ids) && ids.length === points.length && new Set(ids).size === points.length &&
-      ids.includes(driver) && ids.every(n => Number.isInteger(n) && n >= 0 && n <= spectrumDriver);
+      ids.includes(driver) && ids.every(n => Number.isInteger(n) && n >= 0 && n <= angelDriver);
   }
   function validRun(run, index) {
     return run && run.index === index && typeof run.id === 'string' && [50, 100, 150, 200].includes(run.cc) &&
-      levels.includes(run.difficulty) && Number.isInteger(run.driver) && run.driver >= 0 && run.driver <= spectrumDriver &&
+      levels.includes(run.difficulty) && Number.isInteger(run.driver) && run.driver >= 0 && run.driver <= angelDriver &&
       Array.isArray(run.rounds) && run.rounds.length < cups[index].tracks.length &&
       run.rounds.every(ids => validGrid(ids, run.driver) && ids.every(n => run.rounds[0].includes(n)));
   }
@@ -103,6 +129,13 @@
     const unlocked = !hadReward && isDriverAvailable(reward);
     return {run: next, complete, won, unlocked, unlockedDriver: unlocked ? reward : null};
   }
-  root.AcornChampionship = {cups, points, rewardDriver, spectrumDriver, goldLevel, qualifyingWins,
+  // Older in-progress cups retain finishing order for each completed round.
+  cups.forEach((cup, index) => {
+    const run = activeRun(index);
+    if (run?.difficulty === 'ultimate') run.rounds.forEach((ids, round) => {
+      if (ids[0] === run.driver) creditTrack(cup.tracks[round]);
+    });
+  });
+  root.AcornChampionship = {cups, points, rewardDriver, spectrumDriver, angelDriver, hasUltimateWin, recordUltimate, goldLevel, qualifyingWins,
     isDriverAvailable, rewardForCup, rewardRequirement, rewardProgress, activeRun, start, standings, record};
 })(typeof window !== 'undefined' ? window : globalThis);

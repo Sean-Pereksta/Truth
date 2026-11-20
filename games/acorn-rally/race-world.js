@@ -316,9 +316,12 @@
     const m=new Mesh(),asset=root.AcornKartModels?.[i];
     if(asset){const groups=lod&&asset.lod?.length?asset.lod:asset.groups;m.uvs=[];m.skin=[];for(const g of groups){const pp=g.positions,nn=g.normals;for(const idx of g.indices){const j=idx*3;m.data.push(pp[j],pp[j+1],pp[j+2],nn[j],nn[j+1],nn[j+2],g.color[0],g.color[1],g.color[2],0);if(g.uvs)m.uvs.push(g.uvs[idx*2],g.uvs[idx*2+1]);if(g.rig)m.skin.push(g.rig[idx],Math.round((g.flex?.[idx]??1)*255));}}}
     if(!m.data.length){
-      m.box(0,.36,0,1.19,.35,1.56,0,['#d17f42','#817b77','#a1a86b','#b88651','#b6994a','#cf6944','#73916a','#7194a0'][i],2);
+      const hull=['#d17f42','#817b77','#a1a86b','#b88651','#b6994a','#cf6944','#73916a','#7194a0','#164d52','#7363b6','#34569a'][i];
+      const fur=['#ab9479','#9c8b84','#e8e0c8','#c88346','#997e57','#d07b48','#797c71','#77716b','#c8ab83','#d8f0f3','#bc884f'][i];
+      m.box(0,.36,0,1.19,.35,1.56,0,hull,2);
       for(const x of [-.66,.66])for(const z of [-.57,.55])m.ring([x-.12,.32,z],[x+.12,.32,z],.31,.31,'#373b35',12);
-      m.blob(0,.99,-.1,.4,.48,.33,'#628873');m.blob(0,1.53,-.06,.42,.39,.38,['#ab9479','#9c8b84','#e8e0c8','#c88346','#997e57','#d07b48','#797c71','#77716b'][i]);for(const s of [-1,1])m.blob(s*.28,1.82,-.09,.18,i===2?.39:.17,.085,'#b88f75');
+      m.blob(0,.99,-.1,.4,.48,.33,'#628873');m.blob(0,1.53,-.06,.42,.39,.38,fur);
+      for(const s of [-1,1])m.blob(s*.28,1.82,-.09,.18,i===2||i===9?.39:.17,.085,'#b88f75');
     }return m;
   }
   function extras(){
@@ -390,7 +393,7 @@
       const scene=worldMeshes(course);this.regions=bakeRegions(scene.mesh,bake);this.moving=scene.mov;
       this.courseScenery=root.AcornExpansionWorld.scenery(course,sim);
       const model=(i,lod=false)=>{const a=root.AcornKartModels?.[i],groups=lod&&a?.lod?.length?a.lod:a?.groups;return (groups&&bakeDriver(gl,groups,this.buffers))||bake(kartMesh(i,lod));};
-      const courseParts=root.AcornCourseArt.meshes(Mesh,false,course.index===14,course.index===10||course.index===11,course.index===root.AcornMinecarts.courseIndex,course.index===15);
+      const courseParts=root.AcornCourseArt.meshes(Mesh,false,course.index===14,course.index===10||course.index===11,course.index===root.AcornMinecarts.courseIndex,course.index===15,course.index);
       if(course.index>=8)root.AcornExpansionWorld.themeHazards(courseParts,course.index);
       this.karts=sim.drivers.map((_,i)=>model(i));this.kartLOD=sim.drivers.map((_,i)=>root.AcornKartModels?.[i]?.lod?.length?model(i,true):this.karts[i]);this.parts=Object.fromEntries(Object.entries({...extras(),...root.AcornSignatureArt.meshes(Mesh),...courseParts}).map(([key,m])=>[key,bake(m)]));
       this.textures=[];this.atlasReady=false;
@@ -464,7 +467,7 @@
       for(const a of st.objects)root.AcornItemArt.drawObject(itemEffects,a);
       const roadStamp=(name,s,x,height,angle,size,alpha,roll,pitch,stretch,branch)=>{
         const q=sim.sample(c,s,x,branch);
-        if(name.startsWith('envStorm')&&height<.11){
+        if((name.startsWith('envStorm')||name.startsWith('mythMark'))&&height<.11){
           const a=sim.sample(c,s-1,x,branch),b=sim.sample(c,s+1,x,branch);
           pitch=-Math.atan2(b.y-a.y,Math.hypot(b.x-a.x,b.z-a.z));
         }

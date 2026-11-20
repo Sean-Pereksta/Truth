@@ -12,7 +12,7 @@
     {sky:'#4b92ac',mist:'#8db7ac',soil:'#936851',edge:'#62605a',land:'#476660',wood:'#775744',accent:'#f6cf91',leaf:['#53754b','#819761','#577e6f'],water:'#346f75'},
     {sky:'#171b43',mist:'#3c3b52',soil:'#5f4b4d',edge:'#58453d',land:'#493a35',wood:'#665050',accent:'#8ceadf',leaf:['#486b74','#395164','#6764a1'],water:'#3d4e46'},
     {sky:'#303e61',mist:'#637282',soil:'#715c56',edge:'#614b40',land:'#334949',wood:'#60483c',accent:'#f8c78b',leaf:['#446966','#556776','#34575b'],water:'#526a79'}
-  ];
+  ].concat(root.AcornMythicWorld?.palettes||[]);
   const roadMaterial = 20, lavaMaterial = 21, prismMaterial = 22, rockMaterial = 23;
   const peatMaterial = 24, spillwaterMaterial = 25, marshWaterMaterial = 26;
   const up = [0, 1, 0];
@@ -73,7 +73,7 @@
     }else{
       const planks=timberDeck(index,a.u,branch);
       const color=index===9?['#b07e59','#bc8c65','#b48a67','#ad7c58'][j%4]:index===13&&planks?'#9d7655':palette.soil;
-      strip(-a.w,a.w,-b.w,b.w,base,color,planks?2:roadMaterial);
+      strip(-a.w,a.w,-b.w,b.w,base,color,index>=16?27:planks?2:roadMaterial);
     }
     for(const side of [-1,1]){
       const aw=a.w*side,bw=b.w*side;
@@ -84,6 +84,11 @@
         strip(aw-side*.24,aw,bw-side*.24,bw,base+.014,j%8<6?cap:palette.edge,5);
         const fascia=index===14||index===15||index===13&&timberDeck(index,a.u,branch);
         m.quad(local(a,aw,base),local(b,bw,base),local(b,bw,base-.7),local(a,aw,base-.7),palette.edge,fascia?2:0);
+        if(index===19){
+          // A continuous gold fillet with alternating keyed blocks at the edge.
+          strip(aw-side*.72,aw-side*.65,bw-side*.72,bw-side*.65,base+.018,'#a78346',5);
+          if(j%4===1)strip(aw-side*.68,aw-side*.26,bw-side*.68,bw-side*.26,base+.024,'#bd9b64',5);
+        }
       }
       // Each fork owns its outside shoulder. An inside apron from the higher
       // route would otherwise span the lower road as the two lanes rejoin.
@@ -125,6 +130,18 @@
           const x=side*a.w*.89,lamp=local(a,x,base+.027);
           m.quad(lamp,local(a,x+side*.21,base+.027),local(a,x+side*.21,base+.027,.38),local(a,x,base+.027,.38),'#efc687',5,up);
         }
+      }
+    }
+    if(index===17&&j%3===1){
+      // Cross veins follow the actual leaf ribbon through turns and both forks.
+      for(const side of [-1,1]){
+        strip(side*.17,side*.08,side*b.w*.80,side*(b.w*.80+.09),base+.018,'#8baf7e',0);
+      }
+    }
+    if(index===16&&j%8===2){
+      const x=.71*a.w*(j%16<8?-1:1);
+      if(x>leftA+.35){
+        m.quad(local(a,x-.24,base+.021),local(a,x,base+.021,.50),local(a,x+.24,base+.021),local(a,x,base+.021,-.50),'#e3d5be',5,up);
       }
     }
     if(j%5===0&&(index===9||index===10)){
@@ -459,6 +476,10 @@
     }
     const clear=(point,radius)=>lines.every(p=>Math.hypot(p.x-point[0],p.z-point[2])>p.w+radius);
     const scene={index:c.index,pads:[],frogs:[],trees:[],ridges:[],ripples:[],ground:[]};
+    if(c.index>=16){
+      scene.mythic=root.AcornMythicWorld.decorate(c,sim,rand,clear);
+      scene.basin=root.AcornMythicWorld.underworld(c);
+    }
     if(c.index===13||c.index===14){
       for(let i=0;i<94;i++){
         const p=at((i+.39)/94),side=i%2?1:-1;
@@ -639,13 +660,24 @@
     for(let j=0;j<count;j++){
       const s=length*j/count,end=length*(j+1)/count,a=at(s),b=at(end);
       const fork=end>c.branchA*length&&s<c.branchB*length;
-      if(fork){
+      if(index>=16){
+        // Intersect each ribbon with its own gap boundaries. Trimming at the
+        // exact lip and catch preserves the visible drop even between samples.
+        for(const branch of fork?[false,true]:[false]){
+          for(const [start,stop] of root.AcornRamps.solidSpans(c,s,end,branch)){
+            roadSegment(m,at(start,branch),at(stop,branch),index,pal,j,branch,
+              fork?at(start,!branch):null,fork?at(stop,!branch):null);
+          }
+        }
+      }else if(fork){
         const branchA=at(s,true),branchB=at(end,true);
         roadSegment(m,a,b,index,pal,j,false,branchA,branchB);
         roadSegment(m,branchA,branchB,index,pal,j,true,a,b);
       }else roadSegment(m,a,b,index,pal,j);
     }
-    [cave,sky,space,volcano,rainbow,spillway,mooncap,tempest][index-8]({m,c,at,rand,clear,scene:scenery(c,sim)});
+    const scene=scenery(c,sim);
+    if(index>=16)root.AcornMythicWorld.build(m,Mesh,scene);
+    else [cave,sky,space,volcano,rainbow,spillway,mooncap,tempest][index-8]({m,c,at,rand,clear,scene});
     if(index===root.AcornMinecarts.courseIndex){
       const sampleRoad=(s,x,branch)=>sim.sample(c,s,x,branch);
       for(const row of root.AcornMinecarts.railRows(c,root.AcornHazards.samples(c,0),sampleRoad)){
@@ -714,7 +746,7 @@
       tint=mix(tint*.72,vec3(.29,.22,.16),smoothstep(.28,.78,shallows));
       tint=mix(tint,vec3(.38,.48,.43),smoothstep(.73,1.,ripple)*.23);
       tex=.88+.12*noise(wp.xz*7.8);
-    }`;
+    }`+(root.AcornMythicWorld?.materials||'');
 
   function frogMeshes(Mesh){
     function frog(leap){
@@ -787,8 +819,9 @@
     ctx.restore();
   }
 
-  function paintScenery(ctx,scene,time,worldPoint){
+  function paintScenery(ctx,scene,time,worldPoint,heading,width){
     if(!scene)return;
+    if(scene.mythic){root.AcornMythicWorld.paint(ctx,scene,worldPoint,heading,width);return;}
     const project=p=>worldPoint(...p);
     const path=(points,col)=>{
       ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
@@ -921,6 +954,17 @@
     if(!image){image=new Image();image.src='art/horizon-'+index+'.webp';horizonImages[index]=image;}
     if(!image.naturalWidth)return;
     const slide=((heading/tau)%1+1)%1,band=Math.max(w*2.2,h*2.3),left=-slide*band,destHeight=h*.82;
+    if(index>=16){
+      // Mirror the panorama over one full revolution, as the WebGL sky shader does.
+      const scroll=2*slide;
+      for(let tile=Math.floor(scroll);(tile-scroll)*band<w;tile++){
+        const x=(tile-scroll)*band,mirror=tile%2===1;
+        ctx.save();ctx.translate(mirror?x+band:x,0);
+        if(mirror)ctx.scale(-1,1);
+        ctx.drawImage(image,0,-h*.08,band+.5,destHeight);ctx.restore();
+      }
+      return;
+    }
     for(let x=left-band;x<w;x+=band)ctx.drawImage(image,x,-h*.08,band,destHeight);
   }
   root.AcornExpansionWorld={build,palettes,materials,paintSky,themeHazards,scenery,frogMeshes,drawWildlife,paintFrog,paintScenery,paintShoulders,timberDeck};
