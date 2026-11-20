@@ -510,10 +510,18 @@
     }
   }
   function reaction(st,r,emit){
+    const h=r.hazardHit;
     if(root.AcornSim.isFrozen(st,r)){
       const fade=cap((r.freezeUntil-st.time)*6),deck=root.AcornSim.groundLift(st,r),y=Math.max(deck,root.AcornSim.lift(st,r));
-      emit('ufoIceLock',r.s,r.x,y+.035,r.yaw,1,.73*fade,0,0,[1,1,1],r.branch);
-      emit('ufoGroundRings',r.s,r.x,deck+.047,st.time*1.1,1,.76*fade,0,0,[1.45,1,1.72],r.branch);
+      if(h?.id===23){
+        emit('shadeMark1',r.s,r.x,deck+.067,r.yaw,1,.84*fade,0,0,[1.12,1,1.43],r.branch);
+        for(const side of [-1,1]){
+          emit('shadeFinger',r.s,r.x+side*.79,y+.045,r.yaw+side*Math.PI/2,.82,.9*fade,0,0,[1,1,1],r.branch);
+        }
+      }else if(h?.id===11){
+        emit('ufoIceLock',r.s,r.x,y+.035,r.yaw,1,.73*fade,0,0,[1,1,1],r.branch);
+        emit('ufoGroundRings',r.s,r.x,deck+.047,st.time*1.1,1,.76*fade,0,0,[1.45,1,1.72],r.branch);
+      }
     }
     if(r.landingSeq&&r.landingFx>0){
       const t=cap(1-r.landingFx/.60),force=cap(r.landingForce),dry=st.trackIndex===3?1:st.trackIndex===5?2:st.trackIndex===6?3:0;
@@ -523,7 +531,7 @@
         emit('envLand'+dry,s,x,deck+.06+t*.19,side*t*.5,.58+force*.54+t*.61,(1-t)*(.29+.26*force),0,0,[1,1,1.15],r.branch);
       }
     }
-    const h=r.hazardHit,age=h?st.time-h.at:1;
+    const age=h?st.time-h.at:1;
     if(h&&age>=0&&age<.53){
       const t=age/.53,water=[2,6,7,8].includes(h.id);
       for(let j=0;j<5;j++){const dir=(j%2?1:-1),span=.37+t*(.49+(j%3)*.18);

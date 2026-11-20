@@ -458,10 +458,10 @@
         sample:(s,x,branch)=>sim.sample(c,s,x,branch),
         distance:pos=>Math.hypot(pos.x-smooth.eye[0],pos.z-smooth.eye[2]),
         stamp:(name,at,yaw=0,size=1,opacity=1,roll=0,pitch=0,stretch=null)=>{
-          if(opacity<.035||size<=0)return;
+          const mesh=this.parts[name];
+          if(!mesh||opacity<.035||size<=0)return;
           const pose=matrix(at[0],at[1],at[2],yaw,size,roll,pitch);
           if(stretch)for(let axis=0;axis<3;axis++)for(let n=0;n<3;n++)pose[axis*4+n]*=stretch[axis];
-          const mesh=this.parts[name];
           if(opacity>=.995){draw(mesh,pose);return;}
           const depth=(at[0]-smooth.eye[0])*facing[0]+(at[1]-smooth.eye[1])*facing[1]+(at[2]-smooth.eye[2])*facing[2];
           if(depth>-.5)translucent.push({mesh,pose,depth,opacity});
