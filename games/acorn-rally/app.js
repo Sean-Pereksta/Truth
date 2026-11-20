@@ -200,7 +200,14 @@ function controlsPanel(){modalView('bindings','Driving controls',`${presetPicker
 function openRooms(){
  if(!window.RallyRooms){notice('Private rooms could not load. Refresh to try again.');return}
  modal='rooms';dc.replaceChildren();if(!dialog.open)dialog.showModal();document.body.style.overflow='hidden';
- window.RallyRooms.open({container:dc,trackIndex:track,driverIndex:driver,cc:engineClass,difficulty:cpuLevel,settings,startRace:o=>{roomSession=o.network;launch({...o,mode:'race'})},onClose:()=>{roomSession=null;closeModal()}});
+ window.RallyRooms.open({container:dc,trackIndex:track,driverIndex:driver,cc:engineClass,difficulty:cpuLevel,settings,
+  startRace:o=>{roomSession=o.network;launch({...o,mode:'race'})},
+  onRetired:hasResults=>{
+   roomSession=null;
+   if(!hasResults&&running){detachRace();closeModal();nav('hub');notice('The race room closed before results arrived.')}
+  },
+  onClose:()=>{roomSession=null;closeModal()}
+ });
 }
 function itemGuide(){
  const {items,hawkItem}=window.AcornSim;
@@ -239,7 +246,7 @@ async function launch(options){
  if(!options.network&&!driverAvailable(options.driverIndex)){notice(championship.rewardRequirement(options.driverIndex)+' to unlock this driver.');return}
  lastRun=options;running=true;closeModal();race.hidden=false;app.inert=true;document.body.style.overflow='hidden';
  race.innerHTML=`<div class="grid-loading" style="background-image:linear-gradient(0deg,#121712ec,#12171233),url(art/course-${options.trackIndex}.webp)"><div><span class="hero-kicker eyebrow"><span class="checker"></span>${options.cupRoundLabel||'Preparing starting grid'}</span><h2>${tracks[options.trackIndex].name}</h2><div class="load-progress"></div></div></div>`;
- try{await window.KartViewer.loadModels();race.replaceChildren();window.AcornRace.start({...options,container:race,settings:{...settings,bindings:{...settings.bindings}},onExit:leaveRace,onFinish:finish,onSoundChange:enabled=>{settings.sound=enabled;pref()},onPadPresetChange:id=>{settings.padPreset=id;pref()}})}catch(err){console.error(err);leaveRace();notice('The race could not start. Refresh the game and try again.')}
+ try{await window.KartViewer.loadModels();if(!running||lastRun!==options)return;race.replaceChildren();window.AcornRace.start({...options,container:race,settings:{...settings,bindings:{...settings.bindings}},onExit:leaveRace,onFinish:finish,onSoundChange:enabled=>{settings.sound=enabled;pref()},onPadPresetChange:id=>{settings.padPreset=id;pref()}})}catch(err){console.error(err);leaveRace();notice('The race could not start. Refresh the game and try again.')}
 }
 function detachRace(){running=false;window.AcornRace?.stop();race.hidden=true;app.inert=false;document.body.style.overflow=''}
 function returnRoom(){const net=roomSession;roomSession=null;closeModal();modal='rooms';net.returnToLobby();document.body.style.overflow='hidden'}
@@ -276,12 +283,14 @@ function finish(r){
  }
  const idx=r.trackIndex??lastRun.trackIndex,d=drivers[r.driverIndex??driver],board=r.standings||[];
  const title=lastRun.mode==='trial'?'Trial complete':'Race results';
- const next=roomSession?'Room lobby':'Race again';
- const unlocked=championship.recordUltimate(r,!roomSession&&lastRun.players>1);
- modalView('results',title,`<div class="result-podium"><img src="art/driver-${r.driverIndex??driver}.webp" alt=""><div><strong>${lastRun.mode==='trial'?'Finish':ordinal(r.position||1)+' place'}</strong><span>${d.name} · ${tracks[idx].name} · ${simulation.normalizeCC(r.cc??lastRun.cc)} cc</span></div></div><div class="result-stats"><div><small>Race time</small><b>${time(r.time)}</b></div><div><small>Best lap</small><b>${time(r.bestLap)}</b></div></div>
+ const queueRace=lastRun.network?.queueMode;
+ const next=queueRace?'Race queue':roomSession?'Room lobby':'Race again';
+ const unlocked=!r.dnf&&championship.recordUltimate(r,!roomSession&&lastRun.players>1);
+ if(queueRace)roomSession=null;
+ modalView('results',title,`<div class="result-podium"><img src="art/driver-${r.driverIndex??driver}.webp" alt=""><div><strong>${r.dnf?'DNF':lastRun.mode==='trial'?'Finish':ordinal(r.position||1)+' place'}</strong><span>${d.name} · ${tracks[idx].name} · ${simulation.normalizeCC(r.cc??lastRun.cc)} cc</span></div></div><div class="result-stats"><div><small>Race time</small><b>${r.dnf?'—':time(r.time)}</b></div><div><small>Best lap</small><b>${time(r.bestLap)}</b></div></div>
  ${unlocked?unlockCard(idx===championship.darknessCircuit?championship.wolfDriver:championship.angelDriver):''}
- ${board.map(s=>`<div class="finish-row ${s.human?'human':''}"><span>${pad2(s.position)}</span><b>${safeName(s.name)}</b><span>${time(s.time)}</span></div>`).join('')}
- <div class="modal-bottom"><button class="action secondary" data-action="resultHub">Race hub</button><button class="action primary" data-action="rematch">${next}${icon('arrow')}</button></div>`);
+ ${board.map(s=>`<div class="finish-row ${s.human?'human':''}"><span>${pad2(s.position)}</span><b>${safeName(s.name)}</b><span>${queueRace&&s.time==null?'DNF':time(s.time)}</span></div>`).join('')}
+ <div class="modal-bottom"><button class="action secondary" data-action="resultHub">Race hub</button><button class="action primary" data-action="${queueRace?'rooms':'rematch'}">${next}${icon('arrow')}</button></div>`);
 }
 function rematch(){
  if(roomSession){returnRoom();return}

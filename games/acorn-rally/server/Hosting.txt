@@ -1,45 +1,110 @@
 ACORN RALLY — PC EDITION
 
-Playing on Windows
+Keep one lobby running on a laptop
 
-1. Extract the full ZIP to a folder.
-2. For solo races, cups, Time Trials or local split screen, open index.html
-   in a desktop browser. Win the Spectrum Cup on Ultimate for the Aurora Runner.
-   For private rooms, start the PC host below.
+1. Extract the PC edition and open the server folder. Double-click
+   "Start Acorn Rally Lobby.cmd" to start the supervised lobby server.
+   Use "node server/lobby-supervisor.cjs" on macOS or Linux.
+2. On each phone, open one of the "Phone lobby" addresses printed by the
+   server, enter an optional player name, and tap Join Race Queue. The
+   first admitted player hosts the race and can start as soon as they
+   want, even while guests are in the garage. The laptop can sit out.
+3. Keep the queue page open to see your position. Seats open in arrival
+   order, and players arriving during a race wait for the next one.
+   A queue position expires after a minute of inactivity. Use Leave
+   queue to release your position immediately.
+4. The host closes the lobby when the entered racers finish, 90 seconds
+   after the first entered racer finishes, or at 12 minutes of race time,
+   whichever comes first. Unfinished runs are marked DNF. Racers see their
+   results and can rejoin at the back of the queue. If the room host leaves
+   early, a connected player takes over. A disconnected racer can resume
+   for two minutes while the room is still active.
+5. Leave the laptop plugged in and awake. The supervisor restarts the
+   server after an unexpected exit. Active races live in memory and end
+   if the process restarts.
 
-Starting the PC host
+For Windows startup, schedule "Start Acorn Rally Lobby.cmd" to run at
+logon in Task Scheduler. Add --no-open as an argument, set the Start in
+folder to the extracted server folder, clear the execution time limit,
+and choose "Do not start a new instance" for overlapping runs.
+The laptop needs to be awake whenever players want to join.
 
-1. Open the server folder and double-click "Start Acorn Rally.cmd".
-   The launcher uses a bundled runtime if present, or Node.js 18 or newer
-   installed on your computer. Node is available from https://nodejs.org.
-   The host uses built-in Node modules and requires no package installation.
-2. Keep the host window open. The game opens at http://localhost:8791.
-   On macOS or Linux with Node installed, run "node server/host.cjs"
-   from the extracted game folder, then open that address in a browser.
-3. Select Private room in the game, then Create room. Choose a course,
-   choose your driver, and set whether empty seats are filled by AI.
-4. Copy the invite link and send it to your friends. On the same network,
-   guests can also open the Local network address printed by the host,
-   choose Private room, then enter the five-character room code.
-5. Each guest selects a racer and chooses Ready to race. The host starts
-   the race when everyone is ready. Up to eight people can join.
-6. At the finish, return to the room and ready up for a rematch. Changing
-   the course or AI setting resets guest readiness.
+Race on phones over Wi-Fi
+
+1. Download the PC edition, extract the full ZIP, and double-click
+   "Start Acorn Rally.cmd" from the extracted folder. The Windows
+   launcher uses its bundled Node runtime when available. On macOS
+   or Linux, install Node.js 18 or newer and run "node server/host.cjs"
+   from the extracted folder.
+2. Leave the host window running. Connect all phones to the same local
+   network as the computer. The computer can use Ethernet on that network
+   and can run the server without joining the race.
+3. Open the "Phone lobby" address listed in the host window on one phone.
+   The Windows launcher's Private Rooms screen also shows those addresses
+   under "Play on phones." An example is http://192.168.1.20:8791/?room=join.
+   If several addresses are listed, use the one for your shared network.
+4. On that phone, choose Create room, select a course, and share the invite
+   link. Each other phone opens the link and taps Join room. Players can
+   also open the Phone lobby address and enter the five-character code.
+5. Guests select Ready to race. The phone that created the room starts
+   the race. Two to four phones can race together, with up to eight total
+   players. Turn off Fill empty seats with AI for a human-only grid.
+6. After finishing, return to the room and ready up for a rematch.
+   Changing race settings resets guest readiness.
+
+The room server runs on the local network. Once the package is on the
+computer, a local race does not require an internet connection.
+
+If a phone cannot reach the lobby
+
+- Use the computer's local address with http:// and port 8791. The
+  localhost address works only on the computer running the server.
+- Check that the phone can reach other devices on the same network.
+  Guest Wi-Fi and some hotspots isolate devices from each other.
+- If Windows asks, allow the host on your private network. Keep the host
+  window open while playing. Set ACORN_RALLY_PORT before starting the host
+  if you need to use another port.
+
+Solo play and split screen
+
+Open index.html in a desktop browser for solo races, cups, Time Trials
+or local split screen.
 
 Sharing across networks
 
-The host listens on TCP port 8791. Players need a network route to its
-address. A private VPN shared with your friends works across home networks.
-A publicly reachable reverse proxy can also forward HTTP and the live
-event stream to this port. Enable streaming without response buffering.
-On a different computer, use the host's network address rather than
-localhost. If Windows asks, allow the host on your private network.
-To change the port, set ACORN_RALLY_PORT before starting the host.
+The host listens on TCP port 8791 by default. A private VPN shared with
+your friends works across home networks. A publicly reachable reverse
+proxy can also forward HTTP and the live event stream to this port.
+Enable streaming without response buffering.
+
+For access from outside your network, configure a named Cloudflare
+Tunnel with rally.catnmice.com pointing to http://127.0.0.1:8791.
+Use https://rally.catnmice.com/?room=join for guests. The game streams
+race state with Server-Sent Events, so the tunnel must support SSE.
+Cloudflare Quick Tunnels lack SSE support.
+
+Optional Firebase queue and listing
+
+Run the public lobby first. To publish its join link, install firebase-admin
+with "npm install --prefix server firebase-admin" in the extracted game
+folder. Configure Application Default Credentials for the Catnmice Firebase
+project on the laptop, set ACORN_RALLY_PUBLIC_ORIGIN=https://rally.catnmice.com,
+and start the lobby launcher from that environment. For scheduled startup,
+make the same settings available to the task's Windows account. Store
+credentials outside the game folder. Configure one publisher for this
+listing, acornRallyService/public. It refreshes every 30 seconds and
+expires 90 seconds after its last update. The queue uses the private
+acornRallyService/queue document to restore recent waiting positions after
+a restart. The laptop's Admin SDK controls the queue. The website can read
+the public join link and waiting count. Use one laptop per Firebase queue.
+Local play uses an in-memory queue if Firebase is unconfigured or cannot
+be reached at startup.
 
 Connection recovery
 
 If a browser loses its connection, an AI takes its place. The same browser
 tab reconnects with its saved seat automatically. Refreshing the tab
 restores the invite and seat as long as the host is still running. Use
-Leave room when you are finished. Empty rooms expire after 15 minutes.
+Leave room when you are finished. In private room mode, inactive rooms
+expire after 15 minutes.
 Stopping the host window closes its rooms.

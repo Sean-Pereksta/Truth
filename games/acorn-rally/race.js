@@ -733,8 +733,10 @@
         document.documentElement.dataset.catnmicePlaying='true';
         root.dispatchEvent(new Event('catnmice-game-started'));
       }
-      if(st.done&&!paused){endDelay+=frame;if(endDelay>2.12){
-        const data=Sim.result(lastSnap?.done?lastSnap:st,seat);stop();options.onFinish?.(data);return;}}
+      if(st.done&&(!paused||net?.queueMode)){endDelay+=frame;if(endDelay>2.12){
+        const finalState=lastSnap?.done?lastSnap:st, data=Sim.result(finalState,seat);
+        if(net?.queueMode&&!finalState.racers[seat]?.finish){data.dnf=true;data.time=null;}
+        stop();options.onFinish?.(data);return;}}
       raf=requestAnimationFrame(run);
     }
     const dispose=()=>{alive=false;touchControls.dispose();cancelAnimationFrame(raf);listeners.forEach(fn=>fn());sound.close();music?.setScene('menu');music?.setPaused(false);renderer.dispose();stage.remove();container.hidden=true;};
