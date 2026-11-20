@@ -13,6 +13,8 @@ const names = raceSim.drivers;
 const earnedDrivers = new Set([names.indexOf('Astra'), names.indexOf('Aurel'), names.indexOf('Grimoire the Vile')]);
 const neutral = Object.freeze({ steer: 0, gas: 0, brake: 0, drift: false, item: false, ability: false, lookBack: false });
 const idleLimit = 15 * 60 * 1000;
+const lobbyIdleLimit = 2 * 60 * 1000;
+const capacity = 8;
 const stepSeconds = 1 / 60;
 const mime = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
@@ -65,9 +67,22 @@ function newSeat(index, body, occupied = []) {
     kartIndex: index, driving: true, ready: false, stream: null, touched: Date.now(), seq: -1, inputAt: 0, input: { ...neutral }, pulses: {} };
 }
 
-function createRallyServer({ sim = raceSim, automatic = true } = {}) {
+function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false } = {}) {
   const rooms = new Map();
   function members(room) { return room.seats.filter(Boolean); }
+  function activeRoom() {
+    const room = rooms.values().next().value;
+    if (room && !members(room).some(s => s.stream) && Date.now() - room.touched > lobbyIdleLimit) {
+      rooms.delete(room.code);
+      return null;
+    }
+    return room || null;
+  }
+  function status() {
+    const room = activeRoom();
+    return { phase: !room || room.phase === 'lobby' ? 'waiting' : room.phase,
+      players: room ? members(room).length : 0, capacity };
+  }
   function authenticate(room, token) {
     const seat = members(room).find(s => s.token === token);
     if (!seat) fail(403, 'This seat has expired. Join again with the room code.');
@@ -124,7 +139,7 @@ function createRallyServer({ sim = raceSim, automatic = true } = {}) {
     // Lobby identities survive rematches. Empty slots collapse when AI filling is disabled.
     occupied.forEach((s, i) => { s.kartIndex = room.botFill ? s.index : i; });
     const humanSeats = occupied.map(s => s.kartIndex);
-    const gridSize = room.botFill ? 8 : occupied.length;
+    const gridSize = room.botFill ? capacity : occupied.length;
     const drivers = gridDrivers(occupied, gridSize);
     const state = sim.create({ trackIndex: room.trackIndex, mode: 'single', players: 1,
       laps: room.laps, cc: room.cc, difficulty: room.difficulty, driverIndices: drivers, humanSeats, gridSize,
@@ -162,13 +177,14 @@ function createRallyServer({ sim = raceSim, automatic = true } = {}) {
   }
   function collect() {
     const now = Date.now();
+    const disconnectLimit = singleRoom ? lobbyIdleLimit : idleLimit;
     for (const room of rooms.values()) {
       if (members(room).some(s => s.stream)) {
         for (const s of members(room)) {
-          if (!s.stream && now - s.touched > idleLimit) removeSeat(room, s);
+          if (!s.stream && now - s.touched > disconnectLimit) removeSeat(room, s);
           else if (s.stream) s.stream.write(': heartbeat\n\n');
         }
-      } else if (now - room.touched > idleLimit) rooms.delete(room.code);
+      } else if (now - room.touched > disconnectLimit) rooms.delete(room.code);
     }
   }
   let last = performance.now(), accumulator = 0;
@@ -182,6 +198,29 @@ function createRallyServer({ sim = raceSim, automatic = true } = {}) {
     res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store',
       'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer' });
     res.end(JSON.stringify(value));
+  }
+  function createRoom(body) {
+    if (rooms.size >= 64) fail(503, 'The host is full. Try again later.');
+    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code;
+    do { code = Array.from({ length: 5 }, () => alphabet[crypto.randomInt(alphabet.length)]).join(''); }
+    while (rooms.has(code));
+    const seat = newSeat(0, body); seat.ready = true;
+    const room = { code, host: 0, phase: 'lobby', round: 0, tick: 0, touched: Date.now(), seats: [seat],
+      trackIndex: integer(body.trackIndex, 0, sim.trackCount - 1, 0), cc: sim.normalizeCC(body.cc), difficulty: sim.normalizeDifficulty(body.difficulty),
+      botFill: body.botFill !== false, laps: 3, state: null };
+    rooms.set(code, room);
+    return { seat: seat.index, token: seat.token, room: lobby(room) };
+  }
+  function joinRoom(room, body) {
+    if (room.phase === 'racing') fail(409, 'A race is underway. Join after it finishes.');
+    const index = Array.from({ length: capacity }, (_, i) => i).find(i => !room.seats[i]);
+    if (index === undefined) fail(409, 'All eight seats are taken.');
+    const seat = newSeat(index, body, members(room)); room.seats[index] = seat; room.touched = Date.now();
+    announce(room);
+    const preferred = integer(body.driverIndex, 0, names.length - 1, seat.driverIndex);
+    const assignment = preferred === seat.driverIndex ? '' : names[preferred] + ' is already on the grid. You joined as ' + names[seat.driverIndex] + '.';
+    return { seat: index, token: seat.token, room: lobby(room), assignment };
   }
   function localUrls(port) {
     const addresses = Object.values(os.networkInterfaces()).flat().filter(record =>
@@ -211,39 +250,29 @@ function createRallyServer({ sim = raceSim, automatic = true } = {}) {
         if (origin.host !== req.headers.host) fail(403, 'Open the game on this host to join.');
       }
       if (url.pathname === '/api/rooms/version' && req.method === 'GET')
-        return returnJson(res, { game: 'acorn-rally', version: 1,
+        return returnJson(res, { game: 'acorn-rally', version: 1, singleRoom,
           addresses: (req.socket.remoteAddress === '127.0.0.1' || req.socket.remoteAddress === '::1' ||
           req.socket.remoteAddress === '::ffff:127.0.0.1') ? localUrls(server.address().port) : [] });
+      if (singleRoom && url.pathname === '/api/rooms/status' && req.method === 'GET')
+        return returnJson(res, status());
       if (req.method === 'POST' && !req.headers['content-type']?.startsWith('application/json'))
         fail(415, 'Send a JSON room request.');
       const body = req.method === 'POST' ? await readJson(req) : {};
-      if (url.pathname === '/api/rooms/create' && req.method === 'POST') {
-        if (rooms.size >= 64) fail(503, 'The host is full. Try again later.');
-        const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        let code;
-        do { code = Array.from({ length: 5 }, () => alphabet[crypto.randomInt(alphabet.length)]).join(''); }
-        while (rooms.has(code));
-        const seat = newSeat(0, body); seat.ready = true;
-        const room = { code, host: 0, phase: 'lobby', round: 0, tick: 0, touched: Date.now(), seats: [seat],
-          trackIndex: integer(body.trackIndex, 0, sim.trackCount - 1, 0), cc: sim.normalizeCC(body.cc), difficulty: sim.normalizeDifficulty(body.difficulty),
-          botFill: body.botFill !== false, laps: 3, state: null };
-        rooms.set(code, room);
-        return returnJson(res, { seat: 0, token: seat.token, room: lobby(room) }, 201);
+      if (req.method === 'POST') {
+        if (url.pathname === '/api/rooms/enter' && singleRoom) {
+          const current = activeRoom();
+          return returnJson(res, current ? joinRoom(current, body) : createRoom(body), 201);
+        }
+        if (url.pathname === '/api/rooms/create') {
+          if (singleRoom && activeRoom()) fail(409, 'A lobby is already open. Choose Join lobby.');
+          return returnJson(res, createRoom(body), 201);
+        }
       }
       const match = /^\/api\/rooms\/([A-Z2-9]{5})\/(join|events|resume|control|input|ready|driver|config|start|leave)$/.exec(url.pathname);
       const room = match && rooms.get(match[1]);
       if (!room) fail(404, 'No room on this host matches that code.');
       const action = match[2];
-      if (action === 'join' && req.method === 'POST') {
-        if (room.phase === 'racing') fail(409, 'That race is underway. Join after it finishes.');
-        const index = Array.from({ length: 8 }, (_, i) => i).find(i => !room.seats[i]);
-        if (index === undefined) fail(409, 'All eight seats are taken.');
-        const seat = newSeat(index, body, members(room)); room.seats[index] = seat; room.touched = Date.now();
-        announce(room);
-        const preferred = integer(body.driverIndex, 0, names.length - 1, seat.driverIndex);
-        const assignment = preferred === seat.driverIndex ? '' : names[preferred] + ' is already on the grid. You joined as ' + names[seat.driverIndex] + '.';
-        return returnJson(res, { seat: index, token: seat.token, room: lobby(room), assignment }, 201);
-      }
+      if (action === 'join' && req.method === 'POST') return returnJson(res, joinRoom(room, body), 201);
       const token = req.headers.authorization?.replace(/^Bearer /, '') ||
         (action === 'events' ? url.searchParams.get('seatKey') : null);
       const seat = authenticate(room, token);
@@ -313,7 +342,7 @@ function createRallyServer({ sim = raceSim, automatic = true } = {}) {
       else returnJson(res, { error: err.status ? err.message : 'The host could not process this request.' }, err.status || 500);
     }
   });
-  return { server, rooms, tick, localUrls, close() {
+  return { server, rooms, tick, localUrls, status, close() {
     if (timer) clearInterval(timer); clearInterval(cleanup);
     for (const room of rooms.values()) for (const seat of members(room)) seat.stream?.end();
     server.closeAllConnections?.();
@@ -323,19 +352,43 @@ function createRallyServer({ sim = raceSim, automatic = true } = {}) {
 
 if (require.main === module) {
   const port = integer(Number(process.env.ACORN_RALLY_PORT || 8791), 1, 65535, 8791);
-  const host = createRallyServer();
+  const singleRoom = process.argv.includes('--single-room');
+  const host = createRallyServer({ singleRoom });
+  let publisher;
+  let shuttingDown = false;
+  async function shutdown() {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    publisher?.close();
+    await host.close();
+    if (process.connected) process.disconnect();
+  }
+  process.once('SIGINT', shutdown);
+  process.once('SIGTERM', shutdown);
+  if (process.send) {
+    process.on('message', message => { if (message?.type === 'stop') void shutdown(); });
+    process.once('disconnect', shutdown);
+  }
   host.server.once('error', err => {
-    console.error('Acorn Rally could not open port', port, '—', err.message);
-    host.close(); process.exitCode = 1;
+    console.error('Acorn Rally could not open port', port, '—', err.code || err.message);
+    process.exitCode = err.code === 'EADDRINUSE' ? 98 : 1;
+    void shutdown();
   });
   host.server.listen(port, '0.0.0.0', () => {
     const local = 'http://localhost:' + port;
-    console.log('\n  ACORN RALLY  /  PC HOST\n\n  Play here: ' + local);
-    for (const address of host.localUrls(port)) console.log('  Local network: ' + address);
-    console.log('\n  Leave this window open while racing. Press Ctrl+C to stop.\n');
+    console.log('\n  ACORN RALLY  /  ' + (singleRoom ? 'LOBBY SERVER' : 'PC HOST') + '\n\n  Play here: ' + local);
+    for (const address of host.localUrls(port)) console.log('  Phone lobby: ' + address + '/?room=join');
+    console.log('\n  On the same Wi-Fi, open a Phone lobby link in each phone’s browser.');
+    console.log('  ' + (singleRoom ? 'Join lobby opens one room for everyone.' : 'One phone creates a room and shares its invite.'));
+    console.log('  Keep this window open while racing.\n');
+    if (singleRoom && process.env.ACORN_RALLY_PUBLIC_ORIGIN) {
+      const { createFirebaseLobbyPublisher } = require('./firebase-lobby.cjs');
+      publisher = createFirebaseLobbyPublisher({ getStatus: host.status });
+    }
     if (process.argv.includes('--open') && process.platform === 'win32') {
-      require('node:child_process').execFile('rundll32.exe', ['url.dll,FileProtocolHandler', local], () => {});
+      require('node:child_process').execFile('rundll32.exe', ['url.dll,FileProtocolHandler', local + '/?room=join'], () => {});
     }
   });
 }
+
 module.exports = { createRallyServer };

@@ -10,13 +10,13 @@
   // Changes since the binary overlay was last rebuilt. The base still supplies
   // the launcher, compressed model pack, and unchanged assets.
   const releaseFiles = [
-    'index.html', 'style.css', 'app.js', 'network.js', 'local-grid.js', 'data.js', 'championship.js', 'garage-view.js',
+    'index.html', 'style.css', 'rooms.css', 'app.js', 'network.js', 'local-grid.js', 'data.js', 'championship.js', 'garage-view.js',
     'kart-rig.js', 'aurora-kart.js', 'angel-kart.js', 'signature-kit.js', 'signature-art.js',
     'tracks-expansion.js', 'expansion-world.js', 'minecart-hazards.js', 'hazards.js', 'bullfrog-art.js', 'cosmic-hazards-art.js', 'course-art.js', 'rally-course-scores.js',
     'breakwater-tides.js', 'race-sim.js', 'race-world.js', 'race.js', 'item-art.js', 'item-feedback.js',
     'mythic-world.js', 'mythic-hazards-art.js', 'ramps.js', 'ramp-art.js', 'cup-menu.css', 'horizon.js',
     'darkness-world.js', 'darkness-hazards-art.js', 'grimoire-kart.js', 'touch-controls.js', 'touch-controls.css',
-    'server/host.cjs', 'server/Hosting.txt',
+    'server/host.cjs', 'server/Hosting.txt', 'server/lobby-supervisor.cjs', 'server/Start Acorn Rally Lobby.cmd', 'server/firebase-lobby.cjs',
     'art/driver-9.webp', 'art/rear-9.webp', 'art/rear-mask-9.png',
     'art/driver-10.webp', 'art/rear-10.webp', 'art/rear-mask-10.png',
     'art/driver-11.webp', 'art/rear-11.webp', 'art/rear-mask-11.png',
@@ -162,7 +162,8 @@
       'Finish first on all twenty cup circuits against Ultimate rivals to unlock Aurel and the Sunward Chariot.',
       'Win the standalone Realm of Darkness on Ultimate to unlock Grimoire the Vile and the Blackletter Hearse.',
       'Win the Spectrum Cup on Ultimate to unlock the Aurora Runner. Settings, records and cups save in your browser.', '',
-      'For private rooms on macOS or Linux, run node server/host.cjs with Node.js 18 or newer.',
+      'For one always-on room, open server/Start Acorn Rally Lobby.cmd on Windows.',
+      'On macOS or Linux, use node server/lobby-supervisor.cjs with Node.js 18 or newer.',
       'See server/Hosting.txt for additional hosting instructions.', ''
     ].join('\r\n'));
     return files;

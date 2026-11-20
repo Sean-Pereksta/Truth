@@ -52,6 +52,7 @@
     const root = document.createElement('section');
     root.className = 'rr-room';
     container.replaceChildren(root);
+    const localHost = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
     const staticPages = location.hostname === 'sean-pereksta.github.io' && location.pathname.startsWith('/Truth/games/acorn-rally/');
     let seat = -1, key = '', source = null, support = staticPages || location.protocol === 'file:' ? false : null;
     let inRace = false, playedRound = -1, snapshot = null, snapTick = -1, lastRoomRound = -1;
@@ -78,6 +79,24 @@
       if (!root.isConnected) container.replaceChildren(root);
       if (dialog && !dialog.open) dialog.showModal();
     }
+    function shareLinks(links, label) {
+      return links.map((link, i) => {
+        const name = links.length > 1 ? label + ' ' + (i + 1) : label;
+        return '<div class="rr-share-link"><input aria-label="' + name + '" type="text" readonly value="' +
+          escape(link) + '"><button type="button" class="rr-secondary" data-rr="copy" aria-label="Copy ' +
+          name.toLowerCase() + '">Copy link</button></div>';
+      }).join('');
+    }
+    function phoneSetup() {
+      if (!localHost) return '';
+      const addresses = support.addresses || [];
+      const instructions = support.singleRoom ? 'On each phone, tap Join lobby.' : 'One phone creates a room and shares its invite.';
+      const details = addresses.length
+        ? '<p>Open a phone lobby address in each phone’s browser on the same Wi-Fi as this computer. ' + instructions + '</p>' +
+          shareLinks(addresses.map(address => new URL('/?room=join', address).href), 'Phone lobby address')
+        : '<p>Connect this computer to your local network and reopen Private Rooms to see its phone lobby address.</p>';
+      return '<section class="rr-callout"><h3>Play on phones</h3>' + details + '</section>';
+    }
     function setup() {
       if (active !== context) return;
       attach();
@@ -86,11 +105,20 @@
       if (support === null) {
         root.innerHTML = top('PRIVATE ROOMS') + '<p class="rr-explain">Connecting to the race host…</p>' + statusBox();
       } else if (!support) {
-        root.innerHTML = top('PRIVATE ROOMS') + '<div class="rr-callout"><strong>Host a race on your PC</strong><p>Download the PC edition and run <b>Start Acorn Rally</b>. Your friends can join from a browser on the same network or through your shared host address.</p><a class="rr-primary" href="?download=pc">' + icon('download') + 'Download PC edition</a></div>' +
-          '<form data-form="remote"><h3>Join a host</h3><label>Host address or invite link<input name="remote" placeholder="http://192.168.1.20:8791" required spellcheck="false" autocomplete="off"></label><button type="submit" class="rr-secondary">Open host ' + icon('arrow') + '</button></form>' + statusBox();
+        root.innerHTML = top('PRIVATE ROOMS') + '<div class="rr-callout"><strong>Host a race on your PC</strong><p>Download the PC edition and run <b>Start Acorn Rally</b>. Phones on the same Wi-Fi can open the host address and create or join a room in their browsers.</p><a class="rr-primary" href="?download=pc">' + icon('download') + 'Download PC edition</a></div>' +
+          '<form data-form="remote"><h3>Join a host</h3><label>Host address or invite link<input name="remote" inputmode="url" autocapitalize="none" placeholder="http://192.168.1.20:8791" required spellcheck="false" autocomplete="off"></label><button type="submit" class="rr-secondary">Open host ' + icon('arrow') + '</button></form>' + statusBox();
       } else {
-        root.innerHTML = top('PRIVATE ROOMS') + '<div class="rr-callout"><strong>Start a private race</strong><p>Invite up to seven friends and fill the remaining grid with AI racers.</p><button type="button" class="rr-primary" data-rr="create">' + icon('flag') + 'Create room</button></div>' +
-          '<form data-form="join"><h3>Join a room</h3><label>Room code<input class="rr-input-code" name="code" value="' + code + '" placeholder="ABCDE" minlength="5" maxlength="5" required autocomplete="off" spellcheck="false"></label><div class="rr-code-actions"><button type="submit" class="rr-secondary">Join room ' + icon('arrow') + '</button><button type="button" class="rr-text" data-rr="keypad" aria-expanded="false">' + icon('gamepad') + 'Code keypad</button></div><div class="rr-keypad" hidden></div></form>' + statusBox();
+        const create = support.singleRoom
+          ? '<div class="rr-callout"><strong>Acorn Rally lobby</strong><p>The first player picks the race. Up to eight players can join.</p><button type="button" class="rr-primary" data-rr="enter">' + icon('flag') + 'Join lobby</button></div>'
+          : '<div class="rr-callout"><strong>Start a private race</strong><p>Invite up to seven friends and fill the remaining grid with AI racers.</p><button type="button" class="rr-primary" data-rr="create">' + icon('flag') + 'Create room</button></div>';
+        const join = '<form data-form="join"><h3>' + (code ? 'Join race ' + code : 'Join a room') +
+          '</h3><label>Room code<input class="rr-input-code" name="code" value="' + code +
+          '" placeholder="ABCDE" minlength="5" maxlength="5" required autocomplete="off" autocapitalize="characters" spellcheck="false"></label>' +
+          '<div class="rr-code-actions"><button type="submit" class="' + (code ? 'rr-primary' : 'rr-secondary') +
+          '">Join room ' + icon('arrow') + '</button><button type="button" class="rr-text" data-rr="keypad" aria-expanded="false">' +
+          icon('gamepad') + 'Code keypad</button></div><div class="rr-keypad" hidden></div></form>';
+        root.innerHTML = top('PRIVATE ROOMS') + phoneSetup() +
+          (code ? join + create : create + (support.singleRoom ? '' : join)) + statusBox();
       }
     }
     function optionList(data, selected) {
@@ -130,7 +158,16 @@
       const action = locked ? '<button class="rr-primary" data-rr="rejoin">Return to race ' + icon('arrow') + '</button>' :
         owner ? '<button class="rr-primary" data-rr="start"' + (!allReady ? ' disabled' : '') + '>' + icon('flag') + (room.phase === 'finished' ? 'Start rematch' : 'Start race') + '</button>' :
           '<button class="' + (me.ready ? 'rr-secondary' : 'rr-primary') + '" data-rr="ready">' + (me.ready ? 'Cancel ready' : 'Ready to race') + '</button>';
-      root.innerHTML = top('RACE ROOM') + '<div class="rr-invite"><span>INVITE CODE<b>' + escape(room.code) + '</b></span><button class="rr-secondary" data-rr="copy">Copy invite</button></div>' +
+      const invite = new URL(location.href);
+      invite.search = '?room=' + room.code;
+      invite.hash = '';
+      const invitePaths = localHost && support.addresses?.length ? support.addresses.map(address => {
+        const localInvite = new URL(invite);
+        localInvite.host = new URL(address).host;
+        return localInvite.href;
+      }) : [invite.href];
+      root.innerHTML = top('RACE ROOM') + '<div class="rr-invite"><span>INVITE CODE<b>' + escape(room.code) +
+        '</b></span>' + shareLinks(invitePaths, 'Race invite') + '</div>' +
         '<div class="rr-lobby-cols"><div><h3>Starting grid <small>' + room.seats.length + ' / 8</small></h3><ul class="rr-seats">' + grid + '</ul></div>' +
         '<div class="rr-lobby-config">' + hostControls + '</div></div><section class="rr-characters"><h3>Choose your driver</h3><div class="rr-grid-picks">' + portraits + '</div></section>' +
         '<div class="rr-actions">' + action + '<button class="rr-text" data-rr="close">Leave room</button></div>' + statusBox();
@@ -231,18 +268,23 @@
       }
       finally { busy = false; }
     }
-    async function copyInvite() {
-      const invite = new URL(location.href);
-      if (['localhost', '127.0.0.1', '[::1]'].includes(invite.hostname) && support.addresses?.length)
-        invite.host = new URL(support.addresses[0]).host;
-      invite.search = ''; invite.hash = ''; invite.searchParams.set('room', getRoom().code);
-      const text = invite.href;
-      try { await navigator.clipboard.writeText(text); status('Invite link copied.'); }
-      catch {
-        const input = document.createElement('input'); input.value = text; input.readOnly = true;
-        const box = root.querySelector('.rr-status'); box.replaceChildren(input); input.select();
-        try { if (document.execCommand('copy')) status('Invite link copied.'); } catch { /* Selected text is copyable. */ }
+    async function copyLink(input) {
+      if (navigator.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(input.value);
+          status('Link copied.');
+          return;
+        } catch { /* The link remains selectable when clipboard access is denied. */ }
       }
+      input.focus();
+      input.select();
+      try {
+        if (document.execCommand('copy')) {
+          status('Link copied.');
+          return;
+        }
+      } catch { /* The browser may allow manual copying only. */ }
+      status('Copy the selected link using your browser’s copy command.');
     }
     root.addEventListener('click', event => {
       const button = event.target.closest('[data-rr]');
@@ -266,8 +308,12 @@
         return;
       }
       void action(async () => {
-        if (cmd === 'create') connect(await request('/api/rooms/create', { trackIndex: opts.trackIndex, driverIndex: opts.driverIndex, cc: opts.cc, difficulty: opts.difficulty, botFill: true }));
-        if (cmd === 'copy') await copyInvite();
+        if (cmd === 'create' || cmd === 'enter') {
+          connect(await request('/api/rooms/' + cmd, {
+            trackIndex: opts.trackIndex, driverIndex: opts.driverIndex, cc: opts.cc, difficulty: opts.difficulty, botFill: true
+          }));
+        }
+        if (cmd === 'copy') await copyLink(button.parentElement.querySelector('input'));
         if (cmd === 'rejoin') beginRace(true);
         if (cmd === 'pick') await request(target('driver'), { driverIndex: Number(button.dataset.driverId) }, key);
         if (cmd === 'start') await request(target('start'), {}, key);
