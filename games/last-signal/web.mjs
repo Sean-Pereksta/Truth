@@ -102,6 +102,13 @@ async function listPublicArenas() {
 }
 
 function init() {
+  for (const link of document.querySelectorAll('[data-managed]')) {
+    link.addEventListener('click', event => {
+      if (!window.CatnmiceServers || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      window.CatnmiceServers.open('lastsignal', { live: link.dataset.managed === 'live' });
+    });
+  }
   const form = document.querySelector('#invite');
   const inviteInput = document.querySelector('#invite-link');
   const inviteError = document.querySelector('#invite-error');

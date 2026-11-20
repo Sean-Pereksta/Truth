@@ -20,7 +20,7 @@ namespace LastSignal {
         readonly MobileFrames mobileFrames=new MobileFrames();
         OnlineListener listener;
         OnlineTransport client;
-        readonly Func<string,OnlineTransport> dial;
+        readonly Func<string,System.Net.CookieContainer,OnlineTransport> dial;
         OnlineTunnel tunnel;
         string key="",publicKey="",username="",resume="",url="",localOrigin="";
         bool liveFrame,localOnly,retrying;
@@ -41,12 +41,41 @@ namespace LastSignal {
         public string ListingStatus{get{return IsListed && (tunnel==null||string.IsNullOrEmpty(tunnel.PublicOrigin))?"Waiting for the public tunnel.":Directory.HostStatus;}}
         public string LocalInvite{get{return localOrigin.Length==0?"":localOrigin+"/#"+key;}}
         public OnlineSession(Game g):this(g,ConnectWebSocket){}
-        internal OnlineSession(Game g,Func<string,OnlineTransport> dialer){game=g;dial=dialer;Phase="idle";Status=Code=Endpoint="";Roster=new string[0];}
-        static OnlineTransport ConnectWebSocket(string url){
+        internal OnlineSession(Game g,Func<string,OnlineTransport> dialer):this(g,(url,access)=>dialer(url)){}
+        internal OnlineSession(Game g,Func<string,System.Net.CookieContainer,OnlineTransport> dialer){game=g;dial=dialer;Phase="idle";Status=Code=Endpoint="";Roster=new string[0];}
+        static OnlineTransport ConnectWebSocket(string url,System.Net.CookieContainer access){
             var connection=new OnlineTransport();
-            try{connection.Connect(url);return connection;}catch{connection.Dispose();throw;}
+            try{connection.Connect(url,access);return connection;}catch{connection.Dispose();throw;}
         }
 
+        bool managed;
+        System.Net.CookieContainer gatewayAccess;
+        public bool IsCaptain {get;private set;}
+        int captain=-1;
+        float finishedAt;
+        int FirstRemoteSeat { get { return managed ? 0 : 1; } }
+
+        internal void HostManaged(){
+            Shutdown();
+            managed=true;localOnly=true;IsHost=true;
+            listener=new OnlineListener();
+            localOrigin="http://127.0.0.1:"+listener.Start(0);
+            key=OnlineWire.Token();
+            EnterLobby();RefreshHost();
+        }
+        void ManagedNextLobby(){
+            for(int i=0;i<seats.Length;i++){
+                var seat=seats[i];seats[i]=null;
+                if(seat==null||seat.Peer<0)continue;
+                listener.SendText(seat.Peer,"ERROR|The arena has ended. Join again for the next round.");
+                listener.Disconnect(seat.Peer);
+            }
+            captain=-1;finishedAt=0;mobileFrames.Clear();EnterLobby();RefreshHost();
+        }
+        void UpdateManagedCaptain(){
+            if(captain>=0&&seats[captain]!=null&&seats[captain].Peer>=0)return;
+            captain=Array.FindIndex(seats,seat=>seat!=null&&seat.Peer>=0);
+        }
         public void Host(string name){Host(name,true);}
         public void Host(string name,bool publish){
             Shutdown();username=OnlineWire.Name(name);localOnly=!publish;
@@ -59,17 +88,18 @@ namespace LastSignal {
                 EnterLobby();RefreshHost();HostAddress();
             }catch(Exception ex){Fail("Could not open the host. "+ex.Message);}
         }
-        public void Join(string invite,string name){
+        public void Join(string invite,string name){Join(invite,name,null);}
+        internal void Join(string invite,string name,System.Net.CookieContainer access){
             string remote,room;
             if(!OnlineWire.Invite(invite,out remote,out room)){Status="Paste the complete invite, including the room key after #.";return;}
-            Shutdown();username=OnlineWire.Name(name);Code=invite.Trim();url=remote;key=room;
+            Shutdown();gatewayAccess=access;username=OnlineWire.Name(name);Code=invite.Trim();url=remote;key=room;
             Endpoint=new Uri(remote).Authority;Phase="connecting";game.Panel="onlineLobby";
             Status="Connecting to host…";deadline=now+18;Connect();
         }
         void Connect(){
             if(client!=null)client.Dispose();
             joinStarted=now;
-            try{client=dial(url);}catch(Exception e){Fail("Could not connect. "+e.GetBaseException().Message);}
+            try{client=dial(url,gatewayAccess);}catch(Exception e){Fail("Could not connect. "+e.GetBaseException().Message);}
         }
         void HostAddress(){
             if(!IsHost)return;
@@ -101,11 +131,20 @@ namespace LastSignal {
             if(Phase=="lobby"&&!IsHost&&client!=null)client.SendText("READY|"+(IsReady?"0":"1"));
         }
         public void StartMatch(){
+            if(!IsHost&&IsCaptain&&Phase=="lobby"&&client!=null){client.SendText("START");return;}
             if(!IsHost||!CanStart||Phase!="lobby")return;
+            if(managed){
+                for(int i=0;i<seats.Length;i++)if(seats[i]!=null&&seats[i].Peer<0)seats[i]=null;
+                RefreshHost();
+            }
             string[] names=new string[8];
             for(int i=0;i<8;i++)if(seats[i]!=null){names[i]=seats[i].Name;seats[i].LastSequence=-1;seats[i].WorldRound=0;}
             round++;int seed=game.ForcedSeed!=0?game.ForcedSeed:((Guid.NewGuid().GetHashCode()&0x3fffffff)+1);
+            // The simulator anchors its default view to contestant zero. Hand that contestant to AI if its player left the lobby.
+            bool vacantAnchor=managed&&names[0]==null;
+            if(vacantAnchor)names[0]="Warden";
             game.StartOnlineRound(names,seed,game.Settings.ArenaId,game.Settings.Difficulty,game.Settings.Hunger,game.Settings.Events);
+            if(vacantAnchor)game.ReleaseOnlineSeat(0);
             mobileFrames.Clear();
             Phase="playing";publicKey="";Directory.Unlist();game.Panel="";CanStart=false;frameElapsed=0;
             ToAll("ROUND|"+round);BroadcastFrame();
@@ -122,12 +161,18 @@ namespace LastSignal {
             if(action.Length>0&&action.Length<=60)commands.Add(action);
         }
         public bool Pump(float dt){
+            // Keep the simulation clock precise even when the laptop waits weeks between matches.
+            if(managed&&Phase=="lobby"&&HumanCount==0&&handshakes.Count==0&&rejected.Count==0)now=0;
             now+=dt;
             if(listener!=null){
-                HostAddress();OnlinePeerPacket p;
+                if(!managed)HostAddress();OnlinePeerPacket p;
                 for(int n=0;n<512&&listener.TryRead(out p);n++)HostMessage(p);
                 Expire();
                 if(Phase=="playing"){
+                    if(managed) {
+                        if(game.Winner!=null&&finishedAt==0)finishedAt=now;
+                        if(HumanCount==0||(finishedAt>0&&now-finishedAt>=10)){ManagedNextLobby();return false;}
+                    }
                     game.Tick(dt);frameElapsed+=dt;
                     if(frameElapsed>=1f/12){frameElapsed-=1f/12;BroadcastFrame();}
                     return true;
@@ -177,17 +222,17 @@ namespace LastSignal {
                 string[] h=m.Text.Split('|');
                 if(h.Length!=5||h[0]!="JOIN"||h[1]!=OnlineWire.Version){Deny(peer,"Install the same version of Last Signal as the host.");return;}
                 bool returning=false;
-                if(h[4].Length==24)for(int i=1;i<8;i++)if(seats[i]!=null&&seats[i].Resume==h[4]){returning=true;break;}
+                if(h[4].Length==24)for(int i=FirstRemoteSeat;i<8;i++)if(seats[i]!=null&&seats[i].Resume==h[4]){returning=true;break;}
                 bool listed=Phase=="lobby"&&IsListed&&publicKey.Length==24&&h[2]==publicKey;
                 if(h[2]!=key&&!listed&&!returning){Deny(peer,"The room invite is invalid or expired.");return;}
                 int open=-1;
                 if(h[4].Length>0){
-                    for(int i=1;i<8;i++)if(seats[i]!=null&&seats[i].Resume==h[4]){open=i;break;}
+                    for(int i=FirstRemoteSeat;i<8;i++)if(seats[i]!=null&&seats[i].Resume==h[4]){open=i;break;}
                     if(open<0){Deny(peer,"Your seat expired. Join again in the next lobby.");return;}
                     int old=seats[open].Peer;if(old>=0){seats[open].Peer=-1;listener.Disconnect(old);}
                 }else{
                     if(Phase!="lobby"){Deny(peer,"Round in progress. Join when the host returns to the lobby.");return;}
-                    for(int i=1;i<8;i++)if(seats[i]==null){open=i;break;}
+                    for(int i=FirstRemoteSeat;i<8;i++)if(seats[i]==null){open=i;break;}
                     if(open<0){Deny(peer,"All eight contestant seats are taken.");return;}
                     seats[open]=new Seat{Name=OnlineWire.Name(h[3]),Resume=OnlineWire.Token()};
                 }
@@ -207,6 +252,7 @@ namespace LastSignal {
             seat.Credit=Math.Min(90,seat.Credit+Math.Max(0,now-seat.ReceivedAt)*60);
             seat.ReceivedAt=now;if(--seat.Credit<0){Deny(peer,"Input rate exceeded.");return;}
             if(m.Kind==OnlinePacketKind.Text){
+                if(managed&&Phase=="lobby"&&id==captain&&m.Text=="START"){StartMatch();return;}
                 if(m.Text=="LEAVE"){DropPeer(peer,true);listener.Disconnect(peer);}
                 else if(Phase=="lobby"&&(m.Text=="READY|0"||m.Text=="READY|1")){seat.Ready=m.Text=="READY|1";RefreshHost();}
                 return;
@@ -229,28 +275,30 @@ namespace LastSignal {
             foreach(var entry in handshakes)if(now>entry.Value)close.Add(entry.Key);
             foreach(var entry in rejected)if(now>entry.Value)close.Add(entry.Key);
             foreach(int peer in close){handshakes.Remove(peer);rejected.Remove(peer);listener.Disconnect(peer);}
-            for(int i=1;i<8;i++)if(seats[i]!=null&&seats[i].Peer<0&&now-seats[i].LostAt>16){
+            for(int i=FirstRemoteSeat;i<8;i++)if(seats[i]!=null&&seats[i].Peer<0&&now-seats[i].LostAt>16){
                 if(Phase=="playing")game.ReleaseOnlineSeat(i);seats[i]=null;RefreshHost();
             }
         }
-        int FindPeer(int peer){for(int i=1;i<seats.Length;i++)if(seats[i]!=null&&seats[i].Peer==peer)return i;return -1;}
+        int FindPeer(int peer){for(int i=FirstRemoteSeat;i<seats.Length;i++)if(seats[i]!=null&&seats[i].Peer==peer)return i;return -1;}
         void Deny(int peer,string why){listener.SendText(peer,"ERROR|"+why);handshakes.Remove(peer);rejected[peer]=now+.3f;}
         void RefreshHost(){
+            if(managed)UpdateManagedCaptain();
             var labels=new List<string>();var parts=new List<string>();CanStart=Phase=="lobby";
             for(int i=0;i<8;i++)if(seats[i]!=null){
-                Seat s=seats[i];if(!s.Ready||(i>0&&s.Peer<0))CanStart=false;
-                string suffix=i==0?"Host":s.Peer<0?"Reconnecting":s.Ready?"Ready":"In lobby";
+                Seat s=seats[i];if(!managed&&(!s.Ready||(i>0&&s.Peer<0)))CanStart=false;
+                string suffix=managed&&i==captain?"Captain":!managed&&i==0?"Host":s.Peer<0?"Reconnecting":s.Ready?"Ready":"In lobby";
                 labels.Add(s.Name+"  ·  "+suffix);parts.Add(i+","+suffix+","+s.Name);
             }
+            if(managed&&captain<0)CanStart=false;
             Roster=labels.ToArray();HumanCount=Roster.Length;
             ToAll((Phase=="lobby"?"LOBBY|":"ROSTER|")+string.Join("|",parts.ToArray()));
         }
         void ToAll(string text){
-            for(int i=1;i<8;i++)if(seats[i]!=null&&seats[i].Peer>=0)listener.SendText(seats[i].Peer,text);
+            for(int i=FirstRemoteSeat;i<8;i++)if(seats[i]!=null&&seats[i].Peer>=0)listener.SendText(seats[i].Peer,text);
         }
         void BroadcastFrame(){
             byte[] frame=null;
-            for(int i=1;i<8;i++)if(seats[i]!=null&&seats[i].Peer>=0){
+            for(int i=FirstRemoteSeat;i<8;i++)if(seats[i]!=null&&seats[i].Peer>=0){
                 if(seats[i].MobileEncoding>0){SendMobileFrame(i,seats[i]);continue;}
                 if(frame==null)frame=OnlineSnapshot.Capture(game);
                 listener.SendLatestBinary(seats[i].Peer,frame);
@@ -275,10 +323,10 @@ namespace LastSignal {
             string[] v=m.Text.Split('|');
             if(v.Length==2&&v[0]=="ERROR"){Fail(v[1]);return;}
             if(v.Length==3&&v[0]=="SEAT"){
-                int i;if(!int.TryParse(v[1],out i)||i<1||i>7||v[2].Length!=24){Fail("Unexpected seat from host.");return;}
+                int i;if(!int.TryParse(v[1],out i)||i<0||i>7||v[2].Length!=24){Fail("Unexpected seat from host.");return;}
                 seatIndex=i;resume=v[2];retrying=false;sequence=0;return;
             }
-            if(seatIndex<1)return;
+            if(seatIndex<0)return;
             if(v.Length==2&&v[0]=="ROUND"){
                 if(!int.TryParse(v[1],out round)){Fail("Unexpected round from host.");return;}
                 Phase="playing";liveFrame=false;commands.Clear();game.Panel="onlineLobby";Status="Entering arena…";joinStarted=now;return;
@@ -288,9 +336,9 @@ namespace LastSignal {
             var list=new List<string>();
             for(int i=1;i<v.Length;i++){
                 string[] p=v[i].Split(',');int s;if(p.Length!=3||!int.TryParse(p[0],out s)||s<0||s>7)continue;
-                list.Add(p[2]+"  ·  "+p[1]);if(s==seatIndex)IsReady=p[1]=="Ready";
+                list.Add(p[2]+"  ·  "+p[1]);if(s==seatIndex){IsReady=p[1]=="Ready";IsCaptain=p[1]=="Captain";}
             }
-            Roster=list.ToArray();HumanCount=Roster.Length;Status=IsReady?"Ready. Waiting for the host.":"Mark yourself ready to join the round.";
+            Roster=list.ToArray();HumanCount=Roster.Length;Status=IsCaptain?"Start the match when your group is ready.":IsReady?"Ready. Waiting for the host.":"Mark yourself ready to join the round.";
         }
         void Reconnect(){
             retrying=true;deadline=now+15;retryAt=now;commands.Clear();liveFrame=false;
@@ -304,6 +352,8 @@ namespace LastSignal {
             if(listener!=null){ToAll("ERROR|The host closed this room.");listener.Dispose();listener=null;}
             if(client!=null){client.Dispose();client=null;}
             if(tunnel!=null){tunnel.Dispose();tunnel=null;}
+            managed=false;captain=-1;finishedAt=0;
+            gatewayAccess=null;IsCaptain=false;
             Array.Clear(seats,0,seats.Length);handshakes.Clear();rejected.Clear();commands.Clear();
             IsHost=IsReady=CanStart=retrying=liveFrame=false;seatIndex=-1;HumanCount=0;
             round=sequence=0;Code=Endpoint=Status=localOrigin=resume=key=url="";Phase="idle";Roster=new string[0];

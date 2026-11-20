@@ -58,7 +58,7 @@ export class MultiplayerClient{
   if(token)headers.Authorization='Bearer '+token;
   if(body!==undefined)headers['Content-Type']='application/json';if(etag)headers['If-None-Match']=etag;
   try{
-   this.metrics.requests++;const response=await this.fetchImpl(this.origin+route,{method,headers,body:body===undefined?undefined:JSON.stringify(body),signal:controller.signal,cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer',keepalive});
+   this.metrics.requests++;const response=await this.fetchImpl(this.origin+route,{method,headers,body:body===undefined?undefined:JSON.stringify(body),signal:controller.signal,cache:'no-store',credentials:'same-origin',referrerPolicy:'no-referrer',keepalive});
    if(response.status===304)return {unchanged:true};
    const content=await response.text();this.metrics.receivedBytes+=new TextEncoder().encode(content).byteLength;
    if(content.length>16*1024*1024)throw new ConnectionError('The host sent an oversized update.');
@@ -77,7 +77,7 @@ export class MultiplayerClient{
   this.onStatus('connecting','Reserving your house…');
   const data=await this.request(hostToken?'/api/host/session':'/api/join',{method:'POST',hostToken,body:{v:PROTOCOL_VERSION,gameVersion:GAME_VERSION,assetVersion:ASSET_VERSION,name,invite,lobbyId}});
   if(generation!==this.generation)throw new ConnectionError('This join request was cancelled.');
-  this.session={token:data.token,team:data.team,sessionId:data.sessionId,host:!!hostToken};this.sequence=data.lastSeq||0;this.lobby=data.lobby;this.remember();this.running=true;
+  this.session={token:data.token,team:data.team,sessionId:data.sessionId,host:!!hostToken||data.host===true};this.sequence=data.lastSeq||0;this.lobby=data.lobby;this.remember();this.running=true;
   await this.poll(true).catch(error=>{if(!this.session)throw error;});
   if(generation!==this.generation||!this.session)throw new ConnectionError('This join request was cancelled.');
   return data;

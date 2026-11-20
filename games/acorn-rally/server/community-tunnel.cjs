@@ -22,7 +22,9 @@ function wait(ms, signal) {
 
 function startQuickTunnel({
   executable, port, probeId, spawnProcess = spawn, fetchImpl = globalThis.fetch,
-  startupMs = 90_000, probeDelayMs = 1200, probeTimeoutMs = 3500
+  startupMs = 90_000, probeDelayMs = 1200, probeTimeoutMs = 3500,
+  probePath = '/api/rooms/version', matchesProbe = info =>
+    info?.game === 'acorn-rally' && info.version === 1 && info.hostId === probeId
 }) {
   const lifetime = new AbortController();
   const { signal } = lifetime;
@@ -73,12 +75,12 @@ function startQuickTunnel({
       const timeout = setTimeout(() => controller.abort(), probeTimeoutMs);
       signal.addEventListener('abort', cancel, { once: true });
       try {
-        response = await fetchImpl(origin + '/api/rooms/version', {
+        response = await fetchImpl(origin + probePath, {
           redirect: 'error', signal: controller.signal, cache: 'no-store'
         });
         if (response.ok) {
           const info = await response.json();
-          if (info?.game === 'acorn-rally' && info.version === 1 && info.hostId === probeId) {
+          if (matchesProbe(info)) {
             clearTimeout(deadline);
             return origin;
           }

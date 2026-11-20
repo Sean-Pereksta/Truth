@@ -33,7 +33,7 @@ function json(req,res,status,body,extra={}){
 
 // The match server evolved from the tested two-seat prototype. Seats and
 // credentials now live separately, and all views come from the maintained game.
-export async function createMatchServer({config={},lobby={},hostToken=secret(),invite=secret(),port=0,publisher=null,clock=Date.now,desktop=null,reservationMs=90000,disconnectMs=15000,heartbeatMs=20000,synchronizationMs=45000,simulation=true}={}){
+export async function createMatchServer({config={},lobby={},hostToken=secret(),invite=secret(),port=0,publisher=null,clock=Date.now,desktop=null,managed=false,reservationMs=90000,disconnectMs=15000,heartbeatMs=20000,synchronizationMs=45000,simulation=true}={}){
   let validatedGame=new Game(validateCampaignConfig(config)),campaign={...validatedGame.config};
   if(lobby.maxHumans!==undefined&&(!Number.isInteger(lobby.maxHumans)||lobby.maxHumans<1||lobby.maxHumans>MAX_HUMANS))throw new Error(`Choose one to ${MAX_HUMANS} human players.`);
   if(lobby.maxHumans>validatedGame.teams.length)throw new Error('The selected campaign has fewer houses than human slots.');
@@ -47,13 +47,15 @@ export async function createMatchServer({config={},lobby={},hostToken=secret(),i
     hostSession={id:randomBytes(12).toString('hex'),token:secret(),team:0,name:hostName,host:true,ready:false,assetsReady:false,synchronized:false,lastSeen:clock(),lastSeq:0,history:new Map()};
     sessions.set(hostSession.token,hostSession);
   }
-  if(!desktop)seatHost();
+  const managedDefaults=managed?{game:validatedGame,capacity:maxHumans,name,publicLobby}:null;
+  let finishedAt=null;
+  if(!desktop&&!managed)seatHost();
   const metrics={requests:0,stateBytes:0,stateWireBytes:0,stateResponses:0,stateEncodeMs:0,stateGzipMs:0,commands:0,simulationSteps:0,simulationMs:0,maxSimulationMs:0,directoryOperations:0};
   const record=()=>{
     const players=[...sessions.values()].map(s=>({id:s.id,name:s.name,team:s.team,host:s.host,ready:s.ready,assetsReady:s.assetsReady,synchronized:s.synchronized,connected:clock()-s.lastSeen<disconnectMs}));
     const houses=validatedGame.teams.map(team=>({team:team.id,name:team.name,house:team.house,alliance:team.alliance,color:team.color}));
     const publicConfig={};for(const key of ['house','enemies','difficulty','scale','mode','landscape','fogOfWar','houses'])if(Object.hasOwn(campaign,key))publicConfig[key]=Array.isArray(campaign[key])?[...campaign[key]]:campaign[key];
-    return {id,matchId,v:PROTOCOL_VERSION,gameVersion:GAME_VERSION,assetVersion:ASSET_VERSION,name,hostName,hostIdentity:'unverified display name',origin,public:publicLobby,directoryManaged:!!publisher,mode:campaign.mode,map:campaign.landscape,config:publicConfig,houses,status:closed?'closed':status==='waiting'&&players.length>=maxHumans?'full':status,phase:status,synchronizationDeadline,revision,players,maxHumans,humanSlots:maxHumans,humans:players.length,availableSeats:status==='waiting'?Math.max(0,maxHumans-players.length):0,aiHouses:validatedGame.teams.length-maxHumans,expiresAt:clock()+heartbeatMs*3,reachable,directoryError,error:fatalError,disconnectPolicy:'Battle continues. Your house stays reserved during the match; reconnect with this browser to recover it.'};
+    return {id,matchId,v:PROTOCOL_VERSION,gameVersion:GAME_VERSION,assetVersion:ASSET_VERSION,name,hostName,hostIdentity:'unverified display name',origin,public:publicLobby,directoryManaged:managed||!!publisher,managed,mode:campaign.mode,map:campaign.landscape,config:publicConfig,houses,status:closed?'closed':status==='waiting'&&players.length>=maxHumans?'full':status,phase:status,synchronizationDeadline,revision,players,maxHumans,humanSlots:maxHumans,humans:players.length,availableSeats:status==='waiting'?Math.max(0,maxHumans-players.length):0,aiHouses:validatedGame.teams.length-(managed&&status!=='waiting'?players.length:maxHumans),expiresAt:clock()+heartbeatMs*3,reachable,directoryError,error:fatalError,disconnectPolicy:'Battle continues. Your house stays reserved during the match; reconnect with this browser to recover it.'};
   };
   function queuePublish(remove=false){
     if(!publisher)return;
@@ -101,7 +103,21 @@ export async function createMatchServer({config={},lobby={},hostToken=secret(),i
       throw error;
     }
   }
-  function prune(){checkSynchronization();if(status!=='waiting')return;let removed=false;for(const [key,s]of sessions)if(!s.host&&clock()-s.lastSeen>reservationMs){sessions.delete(key);removed=true;}if(removed)changed();}
+  function reopenManagedLobby(){
+    retireLobby();
+    id=randomBytes(12).toString('hex');status='waiting';finishedAt=null;
+    validatedGame=managedDefaults.game;campaign={...validatedGame.config};
+    name=managedDefaults.name;publicLobby=managedDefaults.publicLobby;maxHumans=managedDefaults.capacity;hostName='Host';
+  }
+  function prune(){
+    if(managed&&!closed){
+      if(authority?.game.winner!=null&&finishedAt===null)finishedAt=clock();
+      if((finishedAt!==null&&clock()-finishedAt>=15000)||(hostSession&&clock()-hostSession.lastSeen>reservationMs)){
+        reopenManagedLobby();return;
+      }
+    }
+    checkSynchronization();if(status!=='waiting')return;let removed=false;for(const [key,s]of sessions)if(!s.host&&clock()-s.lastSeen>reservationMs){sessions.delete(key);removed=true;}if(removed)changed();
+  }
   function sessionFor(req,hostOnly=false){
     const value=(req.headers.authorization||'').match(/^Bearer ([A-Za-z0-9_-]{20,200})$/)?.[1];
     const isHost=equal(value,hostToken);const found=isHost?hostSession:sessions.get(value);
@@ -121,9 +137,9 @@ export async function createMatchServer({config={},lobby={},hostToken=secret(),i
     if((data.maxHumans??maxHumans)>trial.teams.length)throw new RequestError(400,'human-slots','Add enough participating houses for the configured human slots.');
     if(capacity<1||capacity<sessions.size||[...sessions.values()].some(s=>s.team>=trial.teams.length))throw new RequestError(409,'seats','These settings would remove an occupied house. Ask the affected players to leave first.');
     validatedGame=trial;campaign={...trial.config};maxHumans=capacity;
-    if(Object.hasOwn(data,'name'))name=cleanName(data.name,'Bannerlands lobby');
+    if(!managed&&Object.hasOwn(data,'name'))name=cleanName(data.name,'Bannerlands lobby');
     if(Object.hasOwn(data,'hostName'))hostName=hostSession.name=cleanName(data.hostName,'Host');
-    if(Object.hasOwn(data,'public'))publicLobby=!!data.public;fatalError=null;changed();
+    if(!managed&&Object.hasOwn(data,'public'))publicLobby=!!data.public;fatalError=null;changed();
   }
   async function snapshotFor(session,initial,since){
     if(!authority)return null;const key=session.team;let cached=snapshots.get(key);
@@ -169,16 +185,20 @@ export async function createMatchServer({config={},lobby={},hostToken=secret(),i
     }
     if(url.pathname==='/api/join'&&req.method==='POST'){
       const body=await readBody(req);validVersion(body);checkWaiting();
-      if(body.lobbyId!==undefined&&body.lobbyId!==id)throw new RequestError(409,'lobby','This lobby has closed. Browse for the host’s current lobby.');
-      if(body.invite==null&&!publicLobby)throw new RequestError(403,'invite','This private lobby requires its invitation link.');
+      if(body.lobbyId!==undefined&&body.lobbyId!==id)throw new RequestError(409,'lobby','This lobby has closed. Browse for the current lobby.');
+      // Code-only managed servers enforce admission at their gateway. The native
+      // service listens exclusively on loopback behind that gateway.
+      if(!managed&&body.invite==null&&!publicLobby)throw new RequestError(403,'invite','This private lobby requires its invitation link.');
       if(body.invite!=null&&!equal(body.invite,invite))throw new RequestError(403,'invite','This invitation has expired. Ask the host for the current link.');
       // No await separates checking and inserting a seat: concurrent final-seat
       // requests cannot both succeed in the single authoritative process.
       if(sessions.size>=maxHumans)throw new RequestError(409,'full','This lobby is full.');
       const occupied=new Set([...sessions.values()].map(s=>s.team));const team=validatedGame.teams.find(t=>!occupied.has(t.id))?.id;
       if(team===undefined)throw new RequestError(409,'full','No house is available.');
-      const s={id:randomBytes(12).toString('hex'),token:secret(),team,name:cleanName(body.name,'Guest'),host:false,ready:false,assetsReady:false,synchronized:false,lastSeen:clock(),lastSeq:0,history:new Map()};sessions.set(s.token,s);changed();
-      return json(req,res,201,{ok:true,token:s.token,sessionId:s.id,team:s.team,reconnectUntil:clock()+reservationMs,lobby:record()});
+      const s={id:randomBytes(12).toString('hex'),token:secret(),team,name:cleanName(body.name,'Guest'),host:managed&&!hostSession,ready:false,assetsReady:false,synchronized:false,lastSeen:clock(),lastSeq:0,history:new Map()};
+      if(s.host){hostSession=s;hostName=s.name;}
+      sessions.set(s.token,s);changed();
+      return json(req,res,201,{ok:true,token:s.token,sessionId:s.id,host:s.host,team:s.team,reconnectUntil:clock()+reservationMs,lobby:record()});
     }
     const session=sessionFor(req,['/api/config','/api/start','/api/close','/api/end','/api/visibility','/api/metrics','/api/host/session'].includes(url.pathname));
     if(url.pathname==='/api/host/session'&&req.method==='POST')return json(req,res,200,{ok:true,token:hostSession.token,sessionId:hostSession.id,team:hostSession.team,lobby:record()});
@@ -197,7 +217,7 @@ export async function createMatchServer({config={},lobby={},hostToken=secret(),i
     if(!sessions.has(session.token))throw new RequestError(401,'session','This private session is invalid or expired. Rejoin the lobby.');
     if(url.pathname==='/api/heartbeat')return json(req,res,200,{ok:true,lobby:record(),session:{id:session.id,team:session.team,lastSeq:session.lastSeq}});
     if(url.pathname==='/api/config'){updateConfig(body);return json(req,res,200,{ok:true,lobby:record()});}
-    if(url.pathname==='/api/visibility'){if(typeof body.public!=='boolean')throw new RequestError(400,'visibility','Choose public or private.');publicLobby=body.public;changed();return json(req,res,200,{ok:true,lobby:record()});}
+    if(url.pathname==='/api/visibility'){if(managed)throw new RequestError(409,'managed','Set visibility in Server Manager on the hosting laptop.');if(typeof body.public!=='boolean')throw new RequestError(400,'visibility','Choose public or private.');publicLobby=body.public;changed();return json(req,res,200,{ok:true,lobby:record()});}
     if(url.pathname==='/api/house'){
       checkWaiting();if(!Number.isInteger(body.team)||!validatedGame.teams[body.team])throw new RequestError(400,'house','Choose an available house.');
       if([...sessions.values()].some(s=>s!==session&&s.team===body.team))throw new RequestError(409,'occupied','This house is already occupied.');session.team=body.team;changed();return json(req,res,200,{ok:true,lobby:record(),team:session.team});
@@ -208,7 +228,7 @@ export async function createMatchServer({config={},lobby={},hostToken=secret(),i
     }
     if(url.pathname==='/api/start'){
       checkWaiting();if(body.revision!==revision)throw new RequestError(409,'revision','The lobby changed. Review the current settings.');
-      if(sessions.size<maxHumans)throw new RequestError(409,'empty-seats','Every configured human seat must be occupied. Reduce the human seat count to start with fewer people.');
+      if(!managed&&sessions.size<maxHumans)throw new RequestError(409,'empty-seats','Every configured human seat must be occupied. Reduce the human seat count to start with fewer people.');
       if([...sessions.values()].some(s=>!s.ready||!s.assetsReady||clock()-s.lastSeen>=disconnectMs))throw new RequestError(409,'not-ready','Every player must be connected, fully loaded, and ready.');
       authority=createAuthority(campaign,{humanTeams:[...sessions.values()].map(s=>s.team)});status='starting';matchId=randomBytes(12).toString('hex');synchronizationDeadline=clock()+synchronizationMs;fatalError=null;sequence=1;snapshots.clear();for(const s of sessions.values()){s.history.clear();s.lastSeq=0;s.synchronized=false;}queuePublish(true);return json(req,res,200,{ok:true,lobby:record()});
     }
@@ -223,7 +243,7 @@ export async function createMatchServer({config={},lobby={},hostToken=secret(),i
       const result=authority.command(session.team,body);if(Number.isSafeInteger(result.seq))session.lastSeq=Math.max(session.lastSeq,result.seq);if(result.ok&&!result.duplicate){metrics.commands++;snapshots.clear();sequence++;}return json(req,res,result.ok?200:result.code==='sequence'?409:400,result);
     }
     if(url.pathname==='/api/leave'){
-      if(session.host){if(desktop)await closeInstalledLobby();else await close();return json(req,res,200,{ok:true});}
+      if(session.host){if(managed)reopenManagedLobby();else if(desktop)await closeInstalledLobby();else await close();return json(req,res,200,{ok:true});}
       sessions.delete(session.token);
       if(status==='starting'){
         status='waiting';authority=null;matchId=null;sequence=0;synchronizationDeadline=0;
@@ -233,9 +253,10 @@ export async function createMatchServer({config={},lobby={},hostToken=secret(),i
       return json(req,res,200,{ok:true});
     }
     if(url.pathname==='/api/end'){
+      if(managed&&status!=='waiting'){reopenManagedLobby();return json(req,res,200,{ok:true,lobby:record()});}
       if(!['starting','in-progress','error'].includes(status))throw new RequestError(409,'not-started','There is no active match.');status='waiting';authority=null;matchId=null;sequence=0;synchronizationDeadline=0;fatalError=null;for(const s of sessions.values()){s.history.clear();s.lastSeq=0;}changed();return json(req,res,200,{ok:true,lobby:record()});
     }
-    if(url.pathname==='/api/close'){if(desktop)await closeInstalledLobby();else await close();return json(req,res,200,{ok:true});}
+    if(url.pathname==='/api/close'){if(managed)reopenManagedLobby();else if(desktop)await closeInstalledLobby();else await close();return json(req,res,200,{ok:true});}
     throw new RequestError(404,'not-found','Not found.');
   };
   const server=http.createServer({requestTimeout:10000,headersTimeout:10000,connectionsCheckingInterval:1000,maxHeaderSize:8192},async(req,res)=>{

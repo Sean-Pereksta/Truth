@@ -20,7 +20,8 @@ class FirebaseError extends Error {
 }
 
 function createFirebaseDirectory({
-  dataDir, fetchImpl = globalThis.fetch, config = firebaseConfig, now = Date.now, timeoutMs = 4000
+  dataDir, fetchImpl = globalThis.fetch, config = firebaseConfig, now = Date.now, timeoutMs = 4000,
+  listingCollection = lobbyCollection, joinPath = '/?room=join', listingExtras = () => ({})
 }) {
   const identityPath = path.join(dataDir, 'community-firebase.json');
   const database = 'projects/' + config.projectId + '/databases/(default)/documents';
@@ -142,10 +143,11 @@ function createFirebaseDirectory({
 
   const string = stringValue => ({ stringValue });
   const count = integerValue => ({ integerValue: String(integerValue) });
-  function lobbyFields({ name, visibility, origin, phase, players, capacity, queued }, uid) {
+  function lobbyFields(record, uid) {
+    const { name, visibility, origin, phase, players, capacity, queued } = record;
     return {
       ownerUid: string(uid), name: string(name), visibility: string(visibility), origin: string(origin),
-      joinUrl: string(origin + '/?room=join'), phase: string(phase), players: count(players),
+      ...listingExtras(record), joinUrl: string(origin + joinPath), phase: string(phase), players: count(players),
       capacity: count(capacity), queued: count(queued),
       expiresAt: { timestampValue: new Date(now() + leaseMs).toISOString() }
     };
@@ -162,7 +164,7 @@ function createFirebaseDirectory({
         if (!code || tried.has(code)) code = allocateCode();
         if (tried.has(code)) continue;
         tried.add(code);
-        const doc = lobbyCollection + '/' + code;
+        const doc = listingCollection + '/' + code;
         const previous = await read(doc, identity);
         if (previous && previous.fields?.ownerUid?.stringValue !== identity.uid &&
             !(Date.parse(previous.fields?.expiresAt?.timestampValue) <= now())) continue;
@@ -180,7 +182,7 @@ function createFirebaseDirectory({
     return withAuth(async identity => {
       if (identity.uid !== lease.uid) return null;
       try {
-        const updateTime = await write(lobbyCollection + '/' + lease.code, lobbyFields(record, identity.uid), identity,
+        const updateTime = await write(listingCollection + '/' + lease.code, lobbyFields(record, identity.uid), identity,
           { updateTime: lease.updateTime });
         return { ...lease, updateTime };
       } catch (err) {
@@ -193,7 +195,7 @@ function createFirebaseDirectory({
   async function release(lease) {
     return withAuth(identity => {
       if (identity.uid !== lease.uid) return;
-      const doc = database + '/' + lobbyCollection + '/' + lease.code;
+      const doc = database + '/' + listingCollection + '/' + lease.code;
       return request(firestore + ':commit', {
         method: 'POST', body: { writes: [{ delete: doc, currentDocument: { updateTime: lease.updateTime } }] },
         token: identity.token

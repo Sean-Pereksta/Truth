@@ -15,6 +15,8 @@ namespace LastSignal
         public string Name, Invite, Arena;
         public int Humans;
         internal DateTime Expires;
+        internal string ManagedOrigin, HostId, Visibility, ServerCode, Phase;
+        internal int Capacity, Queued;
     }
 
     // Discovery publishes only a revocable public lobby ID. Private invitations
@@ -50,7 +52,7 @@ namespace LastSignal
             }
         }
 
-        static object Request(string url,string method,object body,string bearer)
+        internal static object Request(string url,string method,object body,string bearer)
         {
             ServicePointManager.SecurityProtocol|=SecurityProtocolType.Tls12;
             var json=new JavaScriptSerializer{MaxJsonLength=512*1024,RecursionLimit=24};
@@ -76,11 +78,11 @@ namespace LastSignal
                 return data.Length==0?null:json.DeserializeObject(data.ToString());
             }
         }
-        static object At(object obj,string key){
+        internal static object At(object obj,string key){
             object value;var row=obj as Dictionary<string,object>;
             return row!=null && row.TryGetValue(key,out value)?value:null;
         }
-        static string S(object obj,string key){return At(obj,key) as string??"";}
+        internal static string S(object obj,string key){return At(obj,key) as string??"";}
         string Authorize(){
             lock(login){
                 if(token!=null && renew>DateTime.UtcNow)return token;
@@ -121,7 +123,7 @@ namespace LastSignal
                 finally{lock(gate)reading=false;}
             });
         }
-        static string Field(object fields,string key,string type){return S(At(fields,key),type);}
+        internal static string Field(object fields,string key,string type){return S(At(fields,key),type);}
         internal static OnlineRoom Parse(object document,DateTime now){
             object f=At(document,"fields");
             string code=Field(f,"publicRoom","stringValue"), site=Field(f,"origin","stringValue");
