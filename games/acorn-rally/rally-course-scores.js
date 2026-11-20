@@ -423,4 +423,25 @@ window.AcornCourseScores={
       ["D2 A3 D4 F#4","D6 A5/F#5 D5 A4 D5 - . ./A4"]
     ]
   },
+  20:{
+    title:"Bells for the Last Lap",bpm:204,beats:4,lead:"organ",answer:"bell",backing:"electric",groove:"rush",
+    bars:[
+      ["C#2 G3 B3 E4","C#5 C#4/D4 G4 . E5/D5 C#5 . G4"],
+      ["D2 A3 C#4 F#4","D5 D4/E4 A4 D5/C#5 A4 - F#4 ./D4"],
+      ["G2 D3 F3 B3","G4 D4/G4 Bb4 B4 ./F5 D5/B4 G4 F4"],
+      ["G#1 D#3 F#3 C4","G#4 ./D#5 G#5 F#5/E5 D#5 C5/G#4 . G#4"],
+      ["C#2 G3 B3 E4","C#5 C#4/D4 G4 . E5/G5 E5 . D5"],
+      ["A1 E3 G3 C#4","A4 E4/A4 C#5 A4/G4 E4 A4/C#5 E5 ."],
+      ["D2 A3 C4 F4","D5 ./F5 E5 D5/C5 A4 F4 D4/F4 A4"],
+      ["G#1 D#3 F#3 C4","G#4 ./C5 D#5 G#5/F#5 D#5 C5 G#4 ./C5"],
+      ["F#2 C#3 A3 E4","A5 - F#5 . C#5 E5/C#5 A4 ."],
+      ["D2 A3 D4 F4","F5 - D5 . A4 D5/F5 E5 ./D5"],
+      ["G2 D3 F3 Bb3","Bb4 D5/Bb4 G4 - F5 D5/Bb4 . G4"],
+      ["G#1 D#3 F#3 C4","C5 ./D#5 F#5 C6 G#5 D#5/C5 . G#4"],
+      ["C#2 G3 B3 E4","C#5 C#4/D4 G4 . E5/D5 C#5 . G4"],
+      ["D2 A3 C#4 F#4","D5 F#5/A5 D6 A5 F#5 D5/C#5 A4 ."],
+      ["G#1 D#3 F#3 C4","G#4 C5/D#5 F#5 D#5 C5/G#4 D#5 F#5/G#5 C6"],
+      ["C#2 G3 B3 E4","C#6 G5/E5 D5 C#5 G4 . C#4 -"]
+    ]
+  },
 };

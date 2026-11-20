@@ -40,6 +40,7 @@
       if (!models[8] && window.AcornSolsticeKart) models[8] = window.AcornSolsticeKart();
       if (!models[9] && window.AcornAuroraKart) models[9] = window.AcornAuroraKart();
       if (!models[10] && window.AcornAngelKart) models[10] = window.AcornAngelKart();
+      if (!models[11] && window.AcornGrimoireKart) models[11] = window.AcornGrimoireKart();
       return window.RallyData.drivers.every((_, index) => models[index]);
     };
     if (ready()) return Promise.resolve(window.AcornKartModels);

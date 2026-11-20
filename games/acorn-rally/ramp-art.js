@@ -12,7 +12,8 @@
     16:['#483976','#665295','#93c7ee','#ffdeb0','#5a517c'],
     17:['#485d4a','#698367','#ffd799','#ffc5d7','#53684a'],
     18:['#3f303e','#58434e','#e98376','#ffe3a8','#554555'],
-    19:['#38556e','#506d80','#e8bb66','#fff4ce','#667580']
+    19:['#38556e','#506d80','#e8bb66','#fff4ce','#667580'],
+    20:['#323644','#45495a','#ad8062','#b9f3db','#414856']
   };
   function trampolineMesh(Mesh,c,r){
     const m=new Mesh();m.roadSections=[];
@@ -39,6 +40,12 @@
         for(let i=0;i<6;i++){
           const x=lane+usable*(i/3-1),y=lane+usable*((i+1)/3-1);
           strip(s,t,x,y,(i+j)%2?warp:weft);
+          if(c.index===20){
+            // Backed grille slots, with a raised bronze lip on the forward edge.
+            const left=x+(y-x)*.18,right=y-(y-x)*.18;
+            strip(s+(t-s)*.35,s+(t-s)*.57,left,right,'#202532',.014);
+            strip(s+(t-s)*.57,s+(t-s)*.62,left,right,'#77706e',.018);
+          }
         }
         for(const side of [-1,1]){
           const edge=lane+side*usable,frame=lane+side*(r.halfWidth-.14);
@@ -101,6 +108,18 @@
           const socket=at(-.08,.04,-.26),knuckle=at(.18,.26,-.04),tip=at(.27,.31,.28);
           m.ring(socket,knuckle,.18,.095,'#c7ae99',6,6);
           m.ring(knuckle,tip,.097,.005,'#f1d4b6',6,6);
+        }else if(c.index===20){
+          // A caged witchlight sits in a four-tined socket on each tension rail.
+          const heel=at(.04,.02,0),bowl=at(.04,.19,0),wick=at(.04,.28,0),flame=at(.07,.65,.05);
+          m.ring(heel,bowl,.19,.125,metal,7,2);
+          m.ring(bowl,wick,.13,.16,'#688a86',7,5);
+          m.ring(wick,flame,.105,.004,thread,7,5);
+          for(let j=0;j<4;j++){
+            const a=j*Math.PI/2,elbow=at(.04+.22*Math.cos(a),.32,.22*Math.sin(a));
+            const tip=at(.04+.13*Math.cos(a),.62,.13*Math.sin(a));
+            m.ring(bowl,elbow,.048,.035,'#665860',5,2);
+            m.ring(elbow,tip,.035,.008,metal,5,2);
+          }
         }else{
           const bottom=at(0,-.01,0),top=at(0,.095,0);
           m.ring(bottom,top,.255,.22,metal,12,5);
@@ -119,6 +138,14 @@
           strip(a,b,lane,x,stone);
           strip(a,b,x,y,warp);
           ribbon(a+.05,a+(b-a)*.64,x,x,.08,n<4?thread:metal,.024);
+          if(c.index===20&&n<6){
+            // Linked silver lozenges draw the eye toward the middle of the catch platform.
+            const center=lane+side*(w-r.shoulder-.46),middle=(a+b)*.5;
+            for(const sign of [-1,1]){
+              ribbon(a+.12,middle,center,center+sign*.15,.035,n<3?thread:metal,.033);
+              ribbon(middle,b-.12,center+sign*.15,center,.035,n<3?thread:metal,.033);
+            }
+          }
           if(!n){
             strip(a,a+.23,lane,x,metal,.028);
             const face=point(a,x);

@@ -6,10 +6,10 @@
   'use strict';
   const BONE_COUNT=16,TAU=Math.PI*2;
   const parents=[0,0,0,0,0,0,5,6,6,5,0,5,5,5,9,14];
-  const names=['Nib','Bristle','Clover','Tumble','Hazel','Ember','Flint','Mica','Solstice','Astra','Aurel'];
-  const tailWeight=[.82,.89,.46,1.24,.46,1.10,.66,.54,.48,.48,.48];
-  const earWeight=[.72,.59,1.95,.77,.39,1.08,.46,.57,.35,1.85,.51];
-  const durations=[1.1,3,.86,2.7,1.05,1.25,1.15,1.12,1.5,2,2];
+  const names=['Nib','Bristle','Clover','Tumble','Hazel','Ember','Flint','Mica','Solstice','Astra','Aurel','Grimoire the Vile'];
+  const tailWeight=[.82,.89,.46,1.24,.46,1.10,.66,.54,.48,.48,.48,1.02];
+  const earWeight=[.72,.59,1.95,.77,.39,1.08,.46,.57,.35,1.85,.51,.93];
+  const durations=[1.1,3,.86,2.7,1.05,1.25,1.15,1.12,1.5,2,2,1.45];
   const cap=(n,lo,hi)=>Math.max(lo,Math.min(hi,n));
   const finite=(n,f=0)=>Number.isFinite(n)?n:f;
   const defaults=[[0,.29,0],[-.526,.29,-.61],[.526,.29,-.61],[-.526,.29,.55],[.526,.29,.55],
@@ -119,6 +119,7 @@
       if(id===6){nod+=(phase<.25?-.26:.39)*action;lift+=(phase<.25?.085:-.062)*action;armBrace=.24*action;ears+=Math.sin(phase*TAU)*.29*action;}
       if(id===7){nod+=.49*action;lift-=.095*action;ears-=.31*action;tailPitch-=.47*action;twist=Math.sin(phase*TAU)*.17*action;}
       if(id===8){lift+=.048*wave*action;head*=1-.55*action;headRoll-=lean*.24*action;armBrace=.11*wave*action;}
+      if(id===11){lean+=direction*.21*wave*action;head+=direction*.28*action;ears-=.32*action;tail-=direction*.32*wave*action;armBrace=.16*action;}
     }
     const vt=finite(a.victory),envelope=vt>0?Math.min(1,vt/.25,Math.max(0,(2.1-vt)/.36)):0,pump=(.83+.17*Math.sin(vt*TAU*1.6))*envelope;
     if(envelope>0){lift+=.064*envelope;nod-=.225*pump;lean-=.20*envelope;head+=.32*Math.sin(vt*4.1)*envelope;

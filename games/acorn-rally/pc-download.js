@@ -15,10 +15,13 @@
     'tracks-expansion.js', 'expansion-world.js', 'minecart-hazards.js', 'hazards.js', 'bullfrog-art.js', 'cosmic-hazards-art.js', 'course-art.js', 'rally-course-scores.js',
     'breakwater-tides.js', 'race-sim.js', 'race-world.js', 'race.js', 'item-art.js', 'item-feedback.js',
     'mythic-world.js', 'mythic-hazards-art.js', 'ramps.js', 'ramp-art.js', 'cup-menu.css', 'horizon.js',
+    'darkness-world.js', 'darkness-hazards-art.js', 'grimoire-kart.js', 'touch-controls.js', 'touch-controls.css',
     'server/host.cjs', 'server/Hosting.txt',
     'art/driver-9.webp', 'art/rear-9.webp', 'art/rear-mask-9.png',
     'art/driver-10.webp', 'art/rear-10.webp', 'art/rear-mask-10.png',
-    ...[13, 14, 15, 16, 17, 18, 19].flatMap(id => [`art/course-${id}.webp`, `art/horizon-${id}.webp`]),
+    'art/driver-11.webp', 'art/rear-11.webp', 'art/rear-mask-11.png',
+    ...[16, 17, 18, 19, 20].map(id => `art/road-${id}.webp`),
+    ...[13, 14, 15, 16, 17, 18, 19, 20].flatMap(id => [`art/course-${id}.webp`, `art/horizon-${id}.webp`]),
     ...fontFiles
   ];
   const crcTable = Uint32Array.from({length: 256}, (_, i) => {
@@ -148,7 +151,7 @@
     edit('style.css', source => fontFiles.reduce((css, name) =>
       css.replace(`url(${name})`, `url(${dataUrl('font/ttf', files.get(name))})`), source));
     const textures = Object.fromEntries([...files]
-      .filter(([name]) => /^art\/(horizon|rear)-/.test(name))
+      .filter(([name]) => /^art\/(horizon|road|rear)-/.test(name))
       .map(([name, bytes]) => [name, dataUrl('image/' + name.split('.').pop(), bytes)]));
     put('file-textures-current.js', 'Object.assign(window.AcornFileTextures,' + JSON.stringify(textures) + ');\n');
     put('Read Me.txt', [
@@ -156,7 +159,8 @@
       'Extract the ZIP and double-click "Start Acorn Rally.cmd" on Windows to start the included PC host.',
       'For solo or local play, you can also open index.html directly.', '',
       'Choose from five cups. Win the original three cups on Hard or Ultimate to unlock Solstice.',
-      'Finish first on all twenty circuits against Ultimate rivals to unlock Aurel and the Sunward Chariot.',
+      'Finish first on all twenty cup circuits against Ultimate rivals to unlock Aurel and the Sunward Chariot.',
+      'Win the standalone Realm of Darkness on Ultimate to unlock Grimoire the Vile and the Blackletter Hearse.',
       'Win the Spectrum Cup on Ultimate to unlock the Aurora Runner. Settings, records and cups save in your browser.', '',
       'For private rooms on macOS or Linux, run node server/host.cjs with Node.js 18 or newer.',
       'See server/Hosting.txt for additional hosting instructions.', ''

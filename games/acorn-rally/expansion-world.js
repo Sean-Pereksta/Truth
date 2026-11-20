@@ -12,7 +12,7 @@
     {sky:'#4b92ac',mist:'#8db7ac',soil:'#936851',edge:'#62605a',land:'#476660',wood:'#775744',accent:'#f6cf91',leaf:['#53754b','#819761','#577e6f'],water:'#346f75'},
     {sky:'#171b43',mist:'#3c3b52',soil:'#5f4b4d',edge:'#58453d',land:'#493a35',wood:'#665050',accent:'#8ceadf',leaf:['#486b74','#395164','#6764a1'],water:'#3d4e46'},
     {sky:'#303e61',mist:'#637282',soil:'#715c56',edge:'#614b40',land:'#334949',wood:'#60483c',accent:'#f8c78b',leaf:['#446966','#556776','#34575b'],water:'#526a79'}
-  ].concat(root.AcornMythicWorld?.palettes||[]);
+  ].concat(root.AcornMythicWorld?.palettes||[],root.AcornDarkWorld?[root.AcornDarkWorld.palette]:[]);
   const roadMaterial = 20, lavaMaterial = 21, prismMaterial = 22, rockMaterial = 23;
   const peatMaterial = 24, spillwaterMaterial = 25, marshWaterMaterial = 26;
   const up = [0, 1, 0];
@@ -73,7 +73,7 @@
     }else{
       const planks=timberDeck(index,a.u,branch);
       const color=index===9?['#b07e59','#bc8c65','#b48a67','#ad7c58'][j%4]:index===13&&planks?'#9d7655':palette.soil;
-      strip(-a.w,a.w,-b.w,b.w,base,color,index>=16?27:planks?2:roadMaterial);
+      strip(-a.w,a.w,-b.w,b.w,base,color,index===20?28:index>=16?27:planks?2:roadMaterial);
     }
     for(const side of [-1,1]){
       const aw=a.w*side,bw=b.w*side;
@@ -82,6 +82,8 @@
       const sharedEdge=insideFork&&Math.hypot(a.x-otherA.x,a.z-otherA.z)<a.w+otherA.w;
       if(!sharedEdge){
         strip(aw-side*.24,aw,bw-side*.24,bw,base+.014,j%8<6?cap:palette.edge,5);
+        if(index>=16&&index<=19)root.AcornMythicWorld.verge(strip,side,aw,bw,base,j,index);
+        if(index===20&&j%7===3)strip(aw-side*.27,aw-side*.78,bw-side*.27,bw-side*.45,base+.021,'#99afa7',5);
         const fascia=index===14||index===15||index===13&&timberDeck(index,a.u,branch);
         m.quad(local(a,aw,base),local(b,bw,base),local(b,bw,base-.7),local(a,aw,base-.7),palette.edge,fascia?2:0);
         if(index===19){
@@ -96,7 +98,7 @@
         const extension=index===8||index===11?8:4.4;
         const slope=index===8||index===11?-.27:-.10;
         const outerA=local(a,aw+side*extension,slope),outerB=local(b,bw+side*extension,slope);
-        const shoulder=index===15?2:index===14?peatMaterial:index===11||index===8?rockMaterial:0;
+        const shoulder=index>=16&&index<=19?29:index===15?2:index===14?peatMaterial:index===11||index===8?rockMaterial:0;
         m.quad(local(a,aw,-.05),local(b,bw,-.05),outerB,outerA,palette.edge,shoulder,up);
         if(index===14){
           const toe=(p,width)=>{
@@ -476,7 +478,9 @@
     }
     const clear=(point,radius)=>lines.every(p=>Math.hypot(p.x-point[0],p.z-point[2])>p.w+radius);
     const scene={index:c.index,pads:[],frogs:[],trees:[],ridges:[],ripples:[],ground:[]};
-    if(c.index>=16){
+    if(c.index===20){
+      scene.darkness=root.AcornDarkWorld.decorate(c,sim,rand,clear);
+    }else if(c.index>=16){
       scene.mythic=root.AcornMythicWorld.decorate(c,sim,rand,clear);
       scene.basin=root.AcornMythicWorld.underworld(c);
     }
@@ -676,7 +680,8 @@
       }else roadSegment(m,a,b,index,pal,j);
     }
     const scene=scenery(c,sim);
-    if(index>=16)root.AcornMythicWorld.build(m,Mesh,scene);
+    if(index===20)root.AcornDarkWorld.build(m,Mesh,scene.darkness);
+    else if(index>=16)root.AcornMythicWorld.build(m,Mesh,scene);
     else [cave,sky,space,volcano,rainbow,spillway,mooncap,tempest][index-8]({m,c,at,rand,clear,scene});
     if(index===root.AcornMinecarts.courseIndex){
       const sampleRoad=(s,x,branch)=>sim.sample(c,s,x,branch);
@@ -746,7 +751,7 @@
       tint=mix(tint*.72,vec3(.29,.22,.16),smoothstep(.28,.78,shallows));
       tint=mix(tint,vec3(.38,.48,.43),smoothstep(.73,1.,ripple)*.23);
       tex=.88+.12*noise(wp.xz*7.8);
-    }`+(root.AcornMythicWorld?.materials||'');
+    }`+(root.AcornMythicWorld?.materials||'')+(root.AcornDarkWorld?.materials||'');
 
   function frogMeshes(Mesh){
     function frog(leap){
@@ -821,6 +826,7 @@
 
   function paintScenery(ctx,scene,time,worldPoint,heading,width){
     if(!scene)return;
+    if(scene.darkness){root.AcornDarkWorld.paint(ctx,scene.darkness,worldPoint,heading,width);return;}
     if(scene.mythic){root.AcornMythicWorld.paint(ctx,scene,worldPoint,heading,width);return;}
     const project=p=>worldPoint(...p);
     const path=(points,col)=>{

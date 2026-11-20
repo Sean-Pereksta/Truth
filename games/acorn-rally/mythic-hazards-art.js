@@ -26,6 +26,14 @@
         m.tri(rim[i],rim[(i+1)%rim.length],ridge,colors[i%colors.length]);
       }
     }
+    const between=(a,b,t)=>a.map((v,i)=>v+(b[i]-v)*t);
+    // Raised lozenges use four triangles for a reflective shaft and two different vanes.
+    function feather(m,start,tip,width,side,light,shade){
+      const mid=between(start,tip,.48),dx=tip[0]-start[0],dz=tip[2]-start[2],n=Math.hypot(dx,dz)||1;
+      const rim=(sign)=>[mid[0]+sign*width*dz/n,mid[1],mid[2]-sign*width*dx/n];
+      const ridge=[mid[0],mid[1]+width*.36,mid[2]];
+      vane(m,[start,rim(side),tip,rim(-side)],ridge,[light,light,shade,shade]);
+    }
     function ringMark(realm){
       const m=make('mythMark'+realm),colors=colorways[realm],sides=simple?20:32;
       const v=(angle,r,y=0)=>[r*Math.cos(angle),y,r*Math.sin(angle)];
@@ -38,11 +46,22 @@
     }
     function leviathan(){
       const m=make('mythLeviathan'),tail=make('mythFlukes');
-      hull(m,[[-.81,.89,.055,.08],[-.55,.90,.31,.37],[-.11,.84,.61,.65],[.34,.82,.69,.71],
-        [.66,.78,.58,.58],[.83,.75,.34,.40],[.92,.76,.025,.04]],['#544b9a','#4266a2','#f0e2d0']);
+      hull(m,[[-.85,.88,.046,.062],[-.62,.90,.23,.25],[-.37,.88,.41,.49],[-.11,.84,.61,.65],[.34,.82,.69,.71],
+        [.60,.80,.62,.64],[.78,.76,.49,.47],[.90,.76,.32,.31],[.96,.74,.075,.11]],['#54549a','#344d80','#e3d5c7']);
       for(const side of [-1,1]){
+        const fin=make('mythLeviathanFin'+side);
         const rim=[[side*.45,.74,.36],[side*.78,.65,.24],[side*1.08,.36,-.37],[side*.87,.37,-.38],[side*.53,.57,-.16]];
-        vane(m,rim,[side*.73,.59,-.03],['#c4bcf0','#7871c3','#7a96da']);
+        const hub=[side*.73,.59,-.03];
+        vane(fin,rim,hub,['#99bbd5','#8071bb','#ad85c6','#526c9c']);
+        [[.72,.63,.18],[.89,.51,.01],[1.03,.4,-.23]].forEach(([x,y,z],i)=>{
+          feather(fin,[side*.58,.68,.28-i*.09],[side*x,y+.025,z],.035,side,'#e1c6b3','#a8a6cc');
+        });
+        // Broad ivory throat pleats sweep from the nose toward the pectoral joint.
+        const lip=[[.10,.69,.976],[.32,.69,.914],[.50,.69,.785],[.59,.68,.62],[.645,.71,.39]];
+        for(let j=1;j<lip.length;j++){
+          const p=lip[j-1],q=lip[j];
+          m.quad([side*p[0],p[1],p[2]],[side*q[0],q[1],q[2]],[side*q[0],q[1]-.034,q[2]],[side*p[0],p[1]-.034,p[2]],'#2d374d');
+        }
         oval(m,side*.598,.95,.45,.053,.075,.084,'#292649');
         oval(m,side*.635,.97,.47,.028,.044,.048,'#ccfff2',5);
         const chain=[[.49,1.14,.55],[.64,1.02,.19],[.52,1.12,-.09],[.46,.96,-.35]];
@@ -50,11 +69,27 @@
           oval(m,side*x,y,z,.033,.041,.034,'#ffecb4',5);
           if(i){const [px,py,pz]=chain[i-1];tube(m,[side*px,py,pz],[side*x,y,z],.009,.009,'#efcc95',5);}
         });
-        for(let i=0;i<3;i++)tube(m,[side*(.47-i*.1),.49,.72],[side*(.45-i*.08),.35,.34],.011,.015,'#958bb0');
+        for(let i=0;i<(simple?3:5);i++){
+          const f=i*.09,a=[side*(.34-f*.55),.54-f*.29,.85],b=[side*(.54-f*.56),.41-f*.38,.62],c=[side*(.61-f*.74),.44-f*.91,.28];
+          const lift=v=>[v[0],v[1]+.016,v[2]];
+          m.quad(a,b,lift(b),lift(a),'#a39ab9');m.quad(b,c,lift(c),lift(b),'#9289aa');
+        }
+        // Faint star clusters follow the curvature of the whaleback.
+        const stars=simple?4:9;
+        for(let i=0;i<stars;i++){
+          const z=-.49+i*.085,y=.99+.08*Math.sin(i*2.36);
+          const x=(z<-.11?.31+(z+.49)*.76:.61+(z+.11)*.15);
+          const size=i%3===0?.039:.022;
+          m.quad([side*x,y+size,z],[side*(x+.007),y,z+size*.55],[side*x,y-size,z],[side*(x+.007),y,z-size*.55],i%3?'#a4d8dc':'#ffdeae',5);
+        }
         vane(tail,[[0,.91,-.65],[side*.27,1.02,-.77],[side*.88,1.14,-.83],[side*.99,1.08,-1.03],[side*.52,.94,-1.0],[0,.83,-.85]],
           [side*.43,.99,-.86],['#7684cf','#9885c8','#d7cce4']);
       }
-      tube(m,[0,1.39,.06],[0,1.75,-.22],.13,.009,'#b5a9e5');
+      vane(m,[[-.076,1.42,.28],[-.05,1.69,.02],[0,1.84,-.21],[0,1.54,-.16],[.066,1.39,-.22]],[0,1.51,.034],['#9e94cc','#ddd2e9','#ad91c3']);
+      for(let i=0;i<(simple?2:4);i++){
+        const z=-.27-i*.105,h=1.36-i*.084;
+        vane(m,[[-.039,h,z],[0,h+.12,z-.095],[.039,h,z]],[0,h+.03,z+.066],['#ada1db','#d5cedf']);
+      }
     }
     function hart(){
       const m=make('mythHart'),legs=make('mythHartLegs');
@@ -91,13 +126,33 @@
           [.72,.48,-.04],[.90,.41,-.29],[.81,.32,-.47],[.48,.28,-.71],[.32,.30,-.94],[.29,.38,-.51],[.17,.41,-.23]];
         const rim=points.map(([x,y,z])=>[d*x,y,z]),hub=[d*.43,.54,.07];
         const colors=['#b7fced','#8ddbc4','#6ba8be','#b39fc6','#efacc8','#f9cc97','#d286a7','#a5b4d0'];
-        vane(w,[root,...rim],hub,colors);
+        // Actual open cells let the racing line show through. Narrow colored
+        // membranes, vein junctions and dark edges carry the wing silhouette.
+        const border=[root,...rim];
+        for(let i=0;i<border.length;i++){
+          const a=border[i],b=border[(i+1)%border.length],col=colors[i%colors.length];
+          const center=[0,1,2].map(k=>(a[k]+b[k]+hub[k])/3),open=i>1&&i<11&&i%3!==0;
+          if(open){
+            const inner=[hub,a,b].map(p=>between(p,center,.52));
+            w.quad(hub,a,inner[1],inner[0],col);w.quad(a,b,inner[2],inner[1],col);w.quad(b,hub,inner[0],inner[2],col);
+          }else w.tri(hub,a,b,col);
+        }
         for(let i=0;i<rim.length;i++){
           tube(w,rim[i],rim[(i+1)%rim.length],.018,.014,'#785b78');
           if(i%2===0)tube(w,hub,rim[i],.012,.009,'#ffe29c');
         }
-        oval(w,d*.69,.625,.48,.094,.027,.136,'#e5a6be');
-        oval(w,d*.69,.652,.48,.052,.019,.086,'#ffe5ba',5);
+        const ocellus=(x,y,z,rx,rz,color)=>{
+          const ring=[],count=simple?7:12;
+          for(let j=0;j<count;j++){const a=tau*j/count;ring.push([d*(x+rx*Math.cos(a)),y+.17*rz*Math.sin(a),z+rz*Math.sin(a)]);}
+          vane(w,ring,[d*x,y+.006,z],[color]);
+        };
+        ocellus(.70,.645,.49,.125,.169,'#66587b');ocellus(.70,.655,.49,.102,.134,'#f2baa9');
+        ocellus(.70,.665,.49,.071,.093,'#5893a0');ocellus(.69,.676,.51,.034,.049,'#fff1c1');
+        ocellus(.60,.454,-.36,.061,.072,'#ae719e');ocellus(.60,.464,-.36,.032,.04,'#fae4b2');
+        for(let i=0;i<4;i++){
+          const t=.22+i*.17,p=[d*(.07+.21*t),.59+.19*t,.50+.35*t];
+          m.tri(p,[p[0]+d*.072,p[1]+.055,p[2]+.009],[p[0]+d*.017,p[1]+.025,p[2]+.041],'#cbae80');
+        }
       }
     }
     function orchid(){
@@ -123,22 +178,45 @@
         ['#413848','#292938','#665464']);
       tube(m,[0,.99,-.65],[.07,1.28,-.88],.115,.065,'#3b3449');
       tube(m,[.07,1.28,-.88],[.06,1.63,-.97],.065,.008,'#a34459');
+      const strides=[make('mythHoundStride0'),make('mythHoundStride1')];
       for(const d of [-1,1])for(const front of [-1,1]){
+        const limb=strides[d===front?0:1];
         const z=front*.39,b=[d*.34,.43,z-.05],foot=[d*.45,.10,z+.18];
-        tube(m,[d*.24,.92,z],b,.17,.097,'#493c4b');tube(m,b,foot,.10,.08,'#403645');
-        oval(m,...foot,.13,.10,.15,'#4c3c4e');
-        for(const k of [-1,1])tube(m,[foot[0]+.052*k,.09,foot[2]+.09],[foot[0]+.064*k,.046,foot[2]+.20],.032,.002,'#d8ac91');
+        tube(limb,[d*.24,.92,z],b,.17,.097,'#493c4b');tube(limb,b,foot,.10,.08,'#403645');
+        oval(limb,...foot,.13,.10,.15,'#4c3c4e');
+        for(const k of [-1,1])tube(limb,[foot[0]+.052*k,.09,foot[2]+.09],[foot[0]+.064*k,.046,foot[2]+.20],.032,.002,'#d8ac91');
       }
       for(let i=0;i<4;i++)tube(m,[0,1.28,-.46+i*.16],[0,1.52+i*.04,-.54+i*.15],.073,.002,'#8b4257');
-      const head=make('mythHoundHead');
+      for(const d of [-1,1])for(let j=0;j<4;j++){
+        const z=.24-j*.125,x=.485-j*.033;
+        const ridge=[d*x,1.14,z],heel=[d*(x-.047),.913,z-.026],end=[d*(x-.11),.79,z+.068];
+        m.quad(ridge,heel,[heel[0],heel[1]+.012,heel[2]+.037],[ridge[0],ridge[1]+.024,ridge[2]+.045],'#996068');
+        m.tri(heel,end,[heel[0],heel[1]+.012,heel[2]+.037],'#f88360',5);
+      }
+      const head=make('mythHoundHead'),jaw=make('mythHoundJaw');
       hull(head,[[-.25,.09,.08,.09],[-.10,.09,.29,.23],[.12,.05,.24,.19],[.31,-.005,.13,.10],[.42,0,.09,.07]],
         ['#615063','#3a3447','#7c5761']);
-      oval(head,0,-.145,.22,.14,.048,.15,'#ae4c53');
-      oval(head,0,-.18,.23,.15,.041,.17,'#534050');
+      hull(jaw,[[-.085,-.075,.075,.04],[.044,-.112,.132,.054],[.19,-.153,.143,.052],[.345,-.133,.108,.037],[.40,-.115,.046,.017]],['#dd776a','#704555','#503f4d']);
+      vane(jaw,[[-.051,-.089,.054],[.049,-.089,.054],[.069,-.109,.241],[0,-.092,.334],[-.065,-.109,.241]],[0,-.076,.21],['#bf555c','#e37a6b']);
+      oval(head,0,.040,.412,.084,.061,.043,'#232431');
       for(const d of [-1,1]){
         vane(head,[[d*.04,.23,-.13],[d*.30,.57,-.24],[d*.31,.17,-.11]],[d*.22,.27,-.07],['#542f49','#7b415b','#3b3446']);
-        oval(head,d*.17,.155,.17,.049,.043,.055,'#ff6747',5);
-        tube(head,[d*.122,-.028,.28],[d*.132,-.176,.31],.042,.003,'#ffdab2');
+        vane(head,[[d*.147,.248,-.099],[d*.274,.477,-.188],[d*.257,.257,-.096]],[d*.226,.293,-.091],['#9f5059','#743e54']);
+        oval(head,d*.178,.141,.18,.057,.043,.059,'#f45643',5);
+        head.tri([d*.15,.133,.225],[d*.199,.155,.19],[d*.18,.125,.206],'#ffedbc',5);
+        vane(head,[[d*.119,.161,.224],[d*.230,.205,.114],[d*.253,.187,.058],[d*.197,.148,.169]],[d*.197,.188,.142],['#6c5367','#7a5a68']);
+        for(let j=0;j<3;j++){
+          const z=.135-j*.069,y=.117-j*.037;
+          vane(head,[[d*.20,y+.067,z],[d*.30,y+.014,z-.074],[d*.336,y-.089,z-.132],[d*.19,y-.039,z-.031]],
+            [d*.269,y+.003,z-.032],['#624759','#855364','#483e4d']);
+        }
+        // Upper canines and smaller lower teeth interlock when the jaws close.
+        tube(head,[d*.119,-.023,.282],[d*.127,-.16,.321],.034,.002,'#ffe0ac');
+        for(let j=0;j<(simple?2:4);j++){
+          const z=.110+j*.045,x=.117+(z<.18?.018:-.007);
+          head.tri([d*x,-.039,z],[d*x,-.039,z+.034],[d*(x-.008),-.092,z+.026],'#dcb793');
+          jaw.tri([d*(x-.011),-.115,z+.014],[d*x,-.066,z+.031],[d*x,-.115,z+.049],'#ffd6a4');
+        }
       }
     }
     function talon(){
@@ -255,19 +333,36 @@
       const m=make('mythEagle');
       hull(m,[[-.75,.41,.04,.06],[-.45,.51,.25,.20],[.06,.52,.28,.28],[.36,.57,.20,.23],[.50,.56,.06,.11]],
         ['#91633c','#ad7849','#e5b768']);
-      oval(m,0,.72,.41,.168,.185,.205,'#f4db9e');
-      tube(m,[0,.72,.55],[0,.68,.71],.094,.052,'#dc993b');tube(m,[0,.68,.71],[0,.59,.71],.057,.003,'#946546');
+      oval(m,0,.72,.41,.171,.188,.215,'#eed8ac');
+      tube(m,[0,.73,.55],[0,.70,.72],.09,.059,'#e2ab4e');tube(m,[0,.70,.72],[0,.599,.699],.06,.005,'#8e623d');
       for(const d of [-1,1]){
-        oval(m,d*.145,.76,.48,.031,.046,.036,'#2c3536');
+        oval(m,d*.145,.76,.48,.033,.045,.040,'#925d28');
+        oval(m,d*.161,.762,.482,.022,.026,.025,'#2a3030');
+        vane(m,[[d*.092,.801,.585],[d*.169,.814,.478],[d*.170,.806,.413],[d*.137,.773,.513]],[d*.145,.808,.504],
+          ['#e5be73','#f3d89f','#d3ac74']);
+        for(let j=0;j<3;j++){
+          const x=.055+j*.042,z=.34-j*.049;
+          vane(m,[[d*x,.714,z],[d*(x+.057),.685,z],[d*(x+.062),.546,z-.082],[d*x,.637,z-.069]],
+            [d*(x+.033),.667,z-.025],['#f2dfb6','#cfaf7f','#e6c591']);
+        }
         tube(m,[d*.123,.36,.15],[d*.224,.15,.10],.051,.038,'#e8b150');
-        for(const j of [-1,1])tube(m,[d*.224,.15,.10],[d*.224+.055*j,.052,.26],.035,.003,'#5b5341');
+        for(const j of [-1,1]){
+          const knuckle=[d*.224+.055*j,.078,.234];
+          tube(m,[d*.224,.15,.10],knuckle,.035,.026,'#d5a04c');tube(m,knuckle,[knuckle[0],.026,.27],.024,.002,'#514335');
+        }
         const w=make('mythEagleWing'+d),p=(x,y,z)=>[d*x,y,z];
         vane(w,[p(.14,.60,.23),p(.47,.75,.46),p(.74,.78,.26),p(.85,.73,-.07),p(.61,.62,-.30),p(.23,.48,-.25)],
           p(.47,.79,.10),['#d5a05b','#bc864c','#a27241','#ebc378']);
-        for(let i=0;i<6;i++){
-          const x=.39+i*.08,z=.34-i*.097;
-          vane(w,[p(x,.68,z),p(x+.12,.72,z+.045),p(Math.min(1.12,x+.34),.63-i*.029,z-.37-i*.036),p(x+.075,.61,z-.23)],
-            p(x+.14,.70,z-.13),[i%2?'#cf9956':'#b7864e','#986a3d','#ecc480']);
+        for(let i=0;i<7;i++){
+          const t=i/6;
+          const start=p(.37+.33*t,.71,.31-.47*t),end=p(1.16-.41*t,.62-.22*t,.35-.98*t);
+          feather(w,start,end,.087,d,i%2?'#bf945a':'#cca562','#79573c');
+          feather(w,between(start,end,.61),end,.046,d,'#715843','#4e483d');
+        }
+        for(let j=0;j<(simple?4:7);j++){
+          const t=j/(simple?3:6);
+          feather(w,p(.255+.275*t,.747,.312-.34*t),p(.676+.19*t,.741,.237-.56*t),.061,d,
+            j%2?'#e5be7c':'#efcb89','#aa8454');
         }
         vane(m,[p(.04,.49,-.44),p(.17,.46,-.55),p(.27,.30,-.91),p(.10,.30,-1.0)],
           p(.13,.42,-.68),['#d6ab63','#977342']);
@@ -299,18 +394,28 @@
       emit(name,h.s+cs*z-sn*x,h.x+cs*x+sn*z,h.bottom+dy,h.yaw+angle,1,alpha,roll,pitch,scale,h.branch);
     };
     switch(h.id){
-      case 14:
-        draw(base,0,0,0,0,.055*bob);
-        draw('mythFlukes',0,-.03*bob,0,0,.16*bob);
+      case 14:{
+        const heave=.053*bob,roll=.038*Math.sin(time*2.1+h.baseS);
+        draw(base,0,0,0,roll,heave);
+        draw('mythFlukes',0,-.03*bob,0,roll,.16*Math.sin(time*3+h.baseS-.30));
+        for(const d of [-1,1]){
+          const stroke=.14*Math.sin(time*2.7+h.baseS+d*.24);
+          draw('mythLeviathanFin'+d,0,-.38*stroke,0,roll+d*stroke,heave);
+        }
         break;
+      }
       case 15:
         draw(base,0,.025*bob);
         draw('mythHartLegs',0,.025*bob,0,0,.22*Math.sin(time*5+h.baseS));
         break;
       case 16:case 21:{
-        draw(base);
-        const bird=h.id===21,beat=bird?.20+.28*Math.sin(time*4+h.baseS):.22+.43*Math.sin(time*7+h.baseS);
-        for(const d of [-1,1])draw(base+'Wing'+d,0,0,0,d*beat);
+        const bird=h.id===21,stroke=Math.sin(time*(bird?4:7)+h.baseS);
+        const dive=bird&&h.active?Math.sin(2*Math.PI*p):0;
+        const beat=bird?.24+.34*stroke+.16*dive:.23+.49*stroke;
+        const bank=(bird?.067:.06)*Math.sin(time*(bird?2.5:3.4)+h.baseS);
+        const pitch=bird?.22*dive:.035*Math.cos(time*7+h.baseS);
+        draw(base,0,0,0,bank,pitch);
+        for(const d of [-1,1])draw(base+'Wing'+d,0,0,0,bank+d*beat,pitch);
         break;
       }
       case 17:{
@@ -322,11 +427,19 @@
         }
         break;
       }
-      case 18:
-        draw(base);
-        for(const d of [-1,1,0])draw('mythHoundHead',d*.42,1.34+(d===0?.18:0)+.055*Math.sin(time*4+d),.36+(d===0?.22:0),
-          d*.11,.10*Math.sin(time*5+d),stretch,d*.28);
+      case 18:{
+        const stride=Math.sin(time*(h.active?8:4)+h.baseS),breath=.024*Math.abs(stride);
+        draw(base,0,breath);
+        draw('mythHoundStride0',0,breath,0,0,stride*.16);
+        draw('mythHoundStride1',0,breath,0,0,-stride*.16);
+        for(const d of [-1,1,0]){
+          const cycle=time*5+d*1.7+h.baseS,headPitch=.07*Math.sin(cycle),y=1.34+(d===0?.18:0)+breath+.045*Math.sin(cycle*.84);
+          const z=.36+(d===0?.22:0),yaw=d*.28,roll=d*.11;
+          draw('mythHoundHead',d*.42,y,z,roll,headPitch,stretch,yaw);
+          draw('mythHoundJaw',d*.42,y,z,roll,headPitch+.29*Math.max(0,Math.sin(cycle))**2,stretch,yaw);
+        }
         break;
+      }
       case 19:
         if(h.reveal>.01)draw(base,0,0,0,0,0,[h.bodyWidth,h.reveal,h.bodyLength],h.reveal*.27);
         break;

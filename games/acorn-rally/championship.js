@@ -13,6 +13,8 @@
   const rewardDriver = 8;
   const spectrumDriver = 9;
   const angelDriver = 10;
+  const wolfDriver = 11;
+  const darknessCircuit = 20;
   const circuits = cups.flatMap(cup => cup.tracks);
   const spectrumCup = cups.findIndex(cup => cup.id === 'spectrum');
   const prefix = 'acorn-rally-championship-v1-';
@@ -39,7 +41,9 @@
     return read('ultimate-first-' + track) === true;
   }
   function creditTrack(track) {
-    if (!hasUltimateWin(track)) save('ultimate-first-' + track, true);
+    const firstWin = !hasUltimateWin(track);
+    if (firstWin) save('ultimate-first-' + track, true);
+    if (track === darknessCircuit) return firstWin;
     if (!isDriverAvailable(angelDriver) && circuits.every(hasUltimateWin)) {
       save('angel-bear-unlocked', true);
       return true;
@@ -48,13 +52,14 @@
   }
   function recordUltimate(result, sharedGrid = false) {
     if (result.difficulty !== 'ultimate' || !['race','single','cup'].includes(result.mode) ||
-        !circuits.includes(result.trackIndex) || !Array.isArray(result.standings) ||
+        (result.trackIndex !== darknessCircuit && !circuits.includes(result.trackIndex)) || !Array.isArray(result.standings) ||
         !result.standings.some(row => !row.human)) return false;
     const winner = result.standings.find(row => row.position === 1);
     if (!winner?.human || !(winner.time > 0) || (!sharedGrid && winner.driverIndex !== result.driverIndex)) return false;
     return creditTrack(result.trackIndex);
   }
   function isDriverAvailable(index) {
+    if (index === wolfDriver) return hasUltimateWin(darknessCircuit);
     if (index === angelDriver) return read('angel-bear-unlocked') === true;
     if (index === rewardDriver) return qualifyingWins() === spectrumCup;
     if (index === spectrumDriver) return goldLevel(spectrumCup) === 'ultimate';
@@ -65,21 +70,23 @@
     return index === spectrumCup ? spectrumDriver : rewardDriver;
   }
   function rewardRequirement(index) {
-    if (index === angelDriver) return 'Win every circuit against Ultimate rivals';
+    if (index === wolfDriver) return 'Win Realm of Darkness against Ultimate rivals';
+    if (index === angelDriver) return 'Win all 20 cup circuits against Ultimate rivals';
     if (index === spectrumDriver) return 'Win Spectrum Cup on Ultimate';
     return 'Win Forest, Horizon and Expedition on Hard or Ultimate';
   }
   function rewardProgress(index) {
+    if (index === wolfDriver) return 'Realm of Darkness on Ultimate';
     if (index === angelDriver) return circuits.filter(hasUltimateWin).length + '/' + circuits.length + ' Ultimate wins';
     return index === rewardDriver ? `${qualifyingWins()}/${spectrumCup} Hard cup wins` : 'Spectrum Cup on Ultimate';
   }
   function validGrid(ids, driver) {
     return Array.isArray(ids) && ids.length === points.length && new Set(ids).size === points.length &&
-      ids.includes(driver) && ids.every(n => Number.isInteger(n) && n >= 0 && n <= angelDriver);
+      ids.includes(driver) && ids.every(n => Number.isInteger(n) && n >= 0 && n <= wolfDriver);
   }
   function validRun(run, index) {
     return run && run.index === index && typeof run.id === 'string' && [50, 100, 150, 200].includes(run.cc) &&
-      levels.includes(run.difficulty) && Number.isInteger(run.driver) && run.driver >= 0 && run.driver <= angelDriver &&
+      levels.includes(run.difficulty) && Number.isInteger(run.driver) && run.driver >= 0 && run.driver <= wolfDriver &&
       Array.isArray(run.rounds) && run.rounds.length < cups[index].tracks.length &&
       run.rounds.every(ids => validGrid(ids, run.driver) && ids.every(n => run.rounds[0].includes(n)));
   }
@@ -136,6 +143,6 @@
       if (ids[0] === run.driver) creditTrack(cup.tracks[round]);
     });
   });
-  root.AcornChampionship = {cups, points, rewardDriver, spectrumDriver, angelDriver, hasUltimateWin, recordUltimate, goldLevel, qualifyingWins,
+  root.AcornChampionship = {cups, points, rewardDriver, spectrumDriver, angelDriver, wolfDriver, darknessCircuit, hasUltimateWin, recordUltimate, goldLevel, qualifyingWins,
     isDriverAvailable, rewardForCup, rewardRequirement, rewardProgress, activeRun, start, standings, record};
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -7,6 +7,8 @@
     if(includeMines)Object.assign(shapes,root.AcornMinecarts.meshes(Mesh,simple));
     if(courseIndex===undefined||courseIndex>=16&&courseIndex<=19)
       Object.assign(shapes,root.AcornMythicHazardsArt.meshes(Mesh,simple,courseIndex));
+    if(courseIndex===undefined||courseIndex===20)
+      Object.assign(shapes,root.AcornDarknessHazardsArt.meshes(Mesh,simple));
     const make=name=>shapes[name]=new Mesh();
     const bar=(m,a,b,r,c,mat=2)=>m.ring(a,b,r,r,c,simple?4:6,mat);
     function disk(m,axis,radius,width,color,count=18){
@@ -386,6 +388,7 @@
   }
 
   function scene(h,time,emit){
+    if(h.id>=22&&h.id<=25)return root.AcornDarknessHazardsArt.scene(h,time,emit);
     if(h.id>=14&&h.id<=21)return root.AcornMythicHazardsArt.scene(h,time,emit);
     const {id,s,x,branch,sourceSide:side,anchorX,halfWidth:w,halfLength:l,bottom,top,progress:p,strength:k}=h;
     const water=id===2||id===6||id===7,warning=h.warning,active=h.active;
@@ -625,7 +628,9 @@
     const mythCues=[[[484,580,.12],[726,890,.17]],[[730,860,.08],[976,1150,.11]],
       [[585,803,.073],[1318,1050,.10]],[[633,821,.13],[493,629,.11]],
       [[172,106,.17],[204,83,.16]],[[331,178,.11],[226,103,.14]],
-      [[218,183,.19],[327,274,.17]],[[829,652,.12],[722,399,.16]]];
+      [[218,183,.19],[327,274,.17]],[[829,652,.12],[722,399,.16]],
+      [[393,355,.21],[493,434,.19]],[[138,77,.20],[235,113,.13]],
+      [[174,170,.30],[263,251,.28]],[[980,701,.18],[740,397,.24]]];
     const signal=id>=14?mythCues[id-14]:id===13?[[503,619,.076],[741,840,.08]]:id===root.AcornMinecarts.id?[[337,434,.09],[337,434,.09]]:cues;
     signal?.forEach(([tone,end,duration],i)=>sound.tone(tone,duration,i?.009:.014,id===4?'square':'triangle',end,i*.082));
   }

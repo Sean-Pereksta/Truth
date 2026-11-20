@@ -10,6 +10,7 @@
   const frog=8,timber=9,fireball=10,freezeBeam=11,lightning=13;
   const aimed=id=>id===fireball||id===freezeBeam||id===lightning;
   const mythic=id=>id>=14&&id<=21;
+  const spectral=id=>id>=22&&id<=25;
   const tips=[
     'Give the rolling log room. Follow the open lane past its end.',
     'When the bamboo pole starts to dip, take the lane opposite its hinge.',
@@ -81,7 +82,46 @@
     }
     if(id===Minecarts.id)return Minecarts.sample(c,cfg,state,p,Math.floor((time+cfg.offset)/cfg.period));
     if(mythic(id))mythicPath(state,c,cfg,time);
+    if(spectral(id))spectralPath(state,c,cfg,time);
     return state;
+  }
+  function spectralPath(h,c,cfg,time){
+    const road=h.branch&&c.branchPoints?c.branchPoints:c.points;
+    const width=road[Math.floor(cfg.u*road.length)].w;
+    const side=Math.floor((time+cfg.offset)/cfg.period)%2?-cfg.side:cfg.side;
+    const lane=side*Math.min(width*.44,Math.max(.3,width-cfg.width-.64));
+    const edge=width+1.7,p=h.active?h.progress:0;
+    const fade=h.active?smooth(p/.11)*smooth((1-p)/.15):0;
+    Object.assign(h,{roadWidth:width,sourceSide:side,safeSide:-side,x:lane,yaw:0,strength:fade,
+      warningX:lane,warningS:h.baseS,warningHalfWidth:cfg.width,warningHalfLength:cfg.length});
+    if(h.id===22){
+      // The funeral line turns back toward the same bank. Each bearer has its own
+      // footprint; the clear space between cloaks is driveable.
+      h.bearers=[0,1,2].map(i=>{
+        const phase=cap((p-i*.11)/.74,0,1),incursion=Math.sin(Math.PI*phase);
+        return {s:h.baseS+(i-1)*2.35+.32*incursion,
+          x:side*(edge-(edge-.20)*incursion),bob:.11*Math.sin(time*3.4+i*2.1)};
+      });
+      h.x=h.bearers[1].x;h.halfWidth=cfg.width*.66;h.halfLength=cfg.length*.58;
+      h.bottom=.12;h.top=2.25;h.warningX=side*(width+.20)*.5;
+      h.warningHalfWidth=(width-.20)*.5+h.halfWidth*.85;h.warningHalfLength=3.35;
+    }else if(h.id===23){
+      h.bottom=0;h.top=2.37*fade;
+    }else if(h.id===24){
+      // Pivot stays above one lane. Swing reverses once before the bell rises.
+      h.rope=4.25;
+      const angle=h.active?.94*Math.cos(p*Math.PI*2):.94;
+      h.angle=angle;h.s=h.baseS+h.rope*Math.sin(angle);
+      h.bottom=.08+h.rope*(1-Math.cos(angle));h.top=h.bottom+1.52;
+      h.warningHalfLength+=h.rope*Math.sin(.94);
+    }else{
+      const dive=Math.sin(Math.PI*p)**1.3;
+      h.x=side*(edge-(edge-Math.abs(lane))*dive);
+      h.s+=h.active?2.55*(2*p-1):h.warning?-2.55:2.55;
+      h.bottom=.13+5.1*(1-dive);h.top=h.bottom+2.55;
+      h.yaw=Math.PI+.40*side*(h.active?Math.cos(p*Math.PI):1);
+      h.warningHalfLength+=2.55;
+    }
   }
   // All poses, collision extents and warning marks derive from race time. Replays,
   // offline races and authoritative hosts therefore see the same open lane.
@@ -216,10 +256,13 @@
     const buried=r.driverIndex===7&&r.active>0;
     for(const f of [.0,.5,1]){
       const h=sampleObstacle(c,st.time-dt*(1-f),cfg);
-      if(!h.active||h.strength<.105&&[2,4,6,7,17,19].includes(h.id))continue;
+      if(!h.active||h.strength<.105&&([2,4,6,7,17,19].includes(h.id)||spectral(h.id)))continue;
       const s=previousS+(r.s-previousS)*f-near-(h.s-base),x=x0+(r.x-x0)*f;
       if(h.id===Minecarts.id){
         if(!Minecarts.overlaps(h,s,x-h.x))continue;
+      }else if(h.id===22){
+        if(!h.bearers.some(ghost=>Math.hypot((x-ghost.x)/(h.halfWidth+.49),
+          (s+h.s-ghost.s)/(h.halfLength+.65))<=1))continue;
       }else if(mythic(h.id)){
         const sn=Math.sin(h.yaw),cs=Math.cos(h.yaw),dx=x-h.x;
         if(Math.hypot((cs*dx-sn*s)/(h.bodyWidth+.55),(sn*dx+cs*s)/(h.bodyLength+.7))>1)continue;
@@ -238,6 +281,10 @@
       if([0,3,4,5,frog,fireball,Minecarts.id,lightning].includes(h.id)&&Math.abs(x-h.x)>.10)direction=Math.sign(x-h.x);
       r.hazardHit={id:h.id,key:h.key,at:st.time,side:direction,blocked:r.guard>0,cross:near,count:(r.hazardHit?.count||0)+1};
       if(r.guard>0){r.guard=0;r.protect=.80;r.notice='Bark Guard absorbed '+h.name;r.noticeTime=1.25;return true;}
+      if(h.id===23){
+        r.freezeUntil=st.time+.42;r.v=0;r.vx=0;r.protect=.96;r.hit=.31;
+        r.notice='Caught by the gravehand';r.noticeTime=1.25;return true;
+      }
       if(h.id===freezeBeam){
         r.freezeUntil=st.time+1;r.v=0;r.vx=0;r.protect=1.2;r.hit=.34;
         r.notice='Frozen by alien beam';r.noticeTime=1.25;return true;
@@ -282,9 +329,9 @@
       }
       return target;
     }
-    const realm=mythic(cfg.style);
+    const realm=mythic(cfg.style)||spectral(cfg.style);
     const extra=cfg.style===frog||cfg.style===timber||aimed(cfg.style)||realm;
-    const pathShift=cfg.style===frog?2.65:realm?2.8:0;
+    const pathShift=cfg.style===frog?2.65:cfg.style===24?3.6:realm?2.8:0;
     if(distance<-(cfg.length+1.35+pathShift)||distance>v*horizon+cfg.length+2+pathShift)return target;
     const live=sampleObstacle(c,st.time,cfg);
     if(!extra&&(live.phase==='clear'||live.phase==='receding'))return target;
@@ -301,12 +348,15 @@
       if(cfg.style===frog&&Math.abs(target-h.x)>h.halfWidth+1.3)continue;
       if(cfg.style===timber&&(h.fallProgress<.48||Math.abs(target-h.x)>h.halfWidth+.65))continue;
       if(aimed(cfg.style)&&Math.abs(target-h.x)>h.halfWidth+.95)continue;
-      if(realm&&(h.strength<.105||Math.abs(target-h.x)>h.halfWidth+.95))continue;
+      if(realm&&h.strength<.105)continue;
+      if(h.id===22){
+        if(!h.bearers.some(ghost=>Math.abs(target-ghost.x)<=h.halfWidth+.95))continue;
+      }else if(realm&&Math.abs(target-h.x)>h.halfWidth+.95)continue;
       danger=h;
     }
     if(!danger)return target;
     const side=extra?danger.safeSide:live.safeSide;
-    const safe=side*(realm?Math.min(3.38,c.points[Math.floor(cfg.u*c.points.length)].w-1):cfg.branch?2.02:3.38);
+    const safe=side*(realm?Math.min(3.38,(danger.roadWidth??c.points[Math.floor(cfg.u*c.points.length)].w)-1):cfg.branch?2.02:3.38);
     // Fast classes may exhaust their lateral grip if a bot steers at full
     // throttle into the sluice bend. Give it time to move onto the clear line.
     if(!miss&&side*(r.x-safe)<-.68&&eta>.18){

@@ -237,7 +237,96 @@
     }
   }
 
-  const models=[[dreamHarp,dreamOrrery,cloudfall],[foxglove,fairySpire,dewLily],[ribs,eyeShrine,crag],[portico,brazier,sacredOlive]];
+  // Rare skyline landmarks are also captured by the angle-cached Canvas painter.
+  function lunarLoom(m){
+    island(m,5.1,['#9e9fc8','#b2a7c6','#c7b5d0'],['#5f628b','#777797','#8481a2']);
+    m.ring([0,.59,0],[0,1.22,0],2.32,2.20,'#9690ae',12,23);
+    m.ring([0,1.22,0],[0,1.53,0],2.11,1.96,'#d8b87d',12,7);
+    m.ring([0,1.51,0],[0,3.83,0],1.85,.77,'#6d81a5',10,22);
+    for(let i=0;i<6;i++){
+      const a=i*tau/6;
+      strut(m,polar(0,1.5,0,1.71,a),polar(0,3.8,0,.76,a),.083,'#d6b884',7);
+    }
+    for(let j=0;j<3;j++){
+      const yaw=j*tau/3+.23,tilt=.20+.27*j,r=3.72+j*.31;
+      const at=t=>[r*(Math.cos(t)*Math.cos(yaw)-Math.sin(t)*Math.sin(yaw)*tilt),
+        6.45+r*Math.sin(t)*Math.sqrt(1-tilt*tilt),r*(Math.cos(t)*Math.sin(yaw)+Math.sin(t)*Math.cos(yaw)*tilt)];
+      for(let k=0;k<30;k++)strut(m,at(k*tau/30),at((k+1)*tau/30),.075,j===1?'#d5d9e8':'#d8b178',7);
+      m.blob(...at(.6+j*1.8),.33,.33,.33,['#a8dddf','#e8bd92','#b0c4ee'][j],8,22);
+    }
+    const corners=(axis,sgn,x,z)=>axis===0?[sgn*.31,x*.33,z*.33]:axis===1?[x*.33,sgn*.31,z*.33]:[x*.33,z*.33,sgn*.31];
+    for(const tip of [[0,2.58,0],[0,-2.35,0],[1.75,0,0],[-1.75,0,0],[0,0,1.75],[0,0,-1.75]]){
+      const axis=tip.findIndex(v=>v!==0),sgn=Math.sign(tip[axis]),center=[0,6.45,0];
+      const shell=[[-1,-1],[1,-1],[1,1],[-1,1]].map(v=>step(center,...corners(axis,sgn,...v)));
+      for(let i=0;i<4;i++)m.tri(shell[i],shell[(i+1)%4],step(center,...tip),i%2?'#d3d1ec':'#fff0c0',5);
+    }
+  }
+  function mushroomHall(m){
+    island(m,5.6,['#899760','#73936a','#97a572'],['#546445','#626b51','#4e6150']);
+    function turret(x,z,size,col){
+      const pos=(a,y,r)=>polar(x,y*size,z,r*size,a),rows=[[4.25,.70],[4.56,2.12],[4.70,2.28],[5.15,1.93],[5.72,1.31],[6.03,.47],[6.05,.01]];
+      m.ring([x,.6*size,z],[x,4.62*size,z],1.15*size,.82*size,'#d6c7a3',12,23);
+      for(let k=0;k<14;k++){
+        const a=k*tau/14,b=(k+1)*tau/14;
+        for(let j=1;j<rows.length;j++)m.quad(pos(a,...rows[j-1]),pos(b,...rows[j-1]),pos(b,...rows[j]),pos(a,...rows[j]),j===1?'#ddc1a1':j===2?'#efd8b3':col,j<=2?23:3);
+        strut(m,pos(a,4.20,.71),pos(a,4.52,2.10),.044*size,'#a58e73',23);
+        if(k%2===0){
+          m.blob(...pos(a,2.68,1.01),size*.26,size*.42,size*.26,'#805d55',7,2);
+          m.blob(...pos(a,2.68,1.07),size*.19,size*.32,size*.19,'#ffd984',7,5);
+          m.blob(...pos(a+.07,5.63,1.44),size*.19,size*.094,size*.17,'#f5c6b0',6,23);
+        }
+      }
+    }
+    turret(-1.35,.05,1.45,'#ae5572');turret(2.23,.97,.87,'#c27a87');turret(1.02,-2.37,.69,'#a1769c');
+    for(let j=0;j<6;j++)petal(m,[-.4,.9,.25],j*tau/6,4.4,.69,1.3,'#77a574','#507957','#a8bc79');
+  }
+  function abbey(m){
+    island(m,4.9,['#56404d','#654856'],['#362d42','#43364a','#53414a']);
+    // A pointed, open lancet window with a caged ember suspended in its tracery.
+    for(const side of [-1,1]){
+      const x=side*2.45;
+      m.box(x,.3,0,1.51,6.03,2.32,0,'#5f505c',23);
+      for(let j=0;j<4;j++)m.box(x,1+j*1.39,0,1.59,.16,2.42,0,'#8d7777',23);
+      for(const z of [-.69,.72]){
+        let p=[x,5.85,z];
+        for(const [xx,yy] of [[2.42,6.67],[2.12,7.52],[1.60,8.14],[.88,8.68],[.02,9.46]]){
+          const q=[side*xx,yy,z];m.ring(p,q,.31,.32,z>0?'#968085':'#745d69',6,23);p=q;
+        }
+      }
+      m.ring([x,6.26,0],[x,9.3,0],.59,.05,'#45384c',5,23);
+      bone(m,[x+side*1.14,.44,.12],[x+side*.42,3.48,.12],.57,.36);
+    }
+    strut(m,[0,8.99,0],[0,5.51,0],.08,'#564153',7);
+    for(const y of [3.96,5.20])m.ring([0,y-.13,0],[0,y+.15,0],.93,.82,'#a78775',8,7);
+    for(let j=0;j<8;j++)strut(m,polar(0,3.99,0,.83,j*tau/8),polar(0,5.2,0,.81,j*tau/8),.073,'#685664',7);
+    m.blob(0,4.50,0,.49,.79,.51,'#e89c80',8,5);
+    m.ring([0,3.81,0],[0,2.94,0],.24,.018,'#a5837b',6,7);
+  }
+  function victoryStatue(m){
+    island(m,5.8,['#c2b6a3','#ada79a','#cfc5af'],['#92898f','#777580','#999096']);
+    for(const [y,w,h,col] of [[.8,5.7,.42,'#ad9b83'],[1.22,5.02,.33,'#dfcbb1'],[1.55,3.95,.32,'#ad8e64'],[1.87,3.65,1.6,'#d2c4aa'],[3.47,4.12,.26,'#e5d9bf']])m.box(0,y,0,w,h,w*.76,0,col,23);
+    const bronze='#b39564',light='#cdb47d',dark='#867449';
+    m.ring([0,3.74,0],[.12,6.65,.02],1.15,.74,bronze,12,7);
+    for(let j=0;j<10;j++){
+      const a=j*tau/10;strut(m,polar(0,3.83,0,1.14,a),polar(.12,6.61,.02,.73,a+.2),.071,light,7);
+    }
+    m.blob(.10,7.05,.06,.83,1.04,.54,bronze,12,7);
+    m.ring([.10,7.73,.06],[.14,8.17,.07],.35,.32,light,9,7);
+    m.blob(.13,8.58,.05,.47,.61,.42,bronze,10,7);m.blob(.11,8.62,.40,.16,.19,.15,light,7,7);
+    for(const s of [-1,1]){
+      const shoulder=[s*.65+.08,7.45,.12],elbow=[s*1.14,7.07,.55],hand=[s*1.41,7.73,.89];
+      m.ring(shoulder,elbow,.25,.21,bronze,7,7);m.ring(elbow,hand,.23,.13,light,7,7);
+      for(let j=0;j<8;j++){
+        const t=j/7,base=[s*(.46+.58*t),7.41+.16*t,-.36-.11*t];
+        const end=[s*(1.70+2.03*t),7.13+4.75*t-.28*t*t,-.63-.38*t];
+        const mid=[(base[0]+end[0])/2,(base[1]+end[1])/2+.28,(base[2]+end[2])/2];
+        const l=step(mid,s*.29,-.11,.03),r=step(mid,-s*.34,.13,0),ridge=step(mid,0,0,.18);
+        m.tri(base,l,ridge,dark,7);m.tri(base,ridge,r,light,7);m.tri(l,end,ridge,bronze,7);m.tri(ridge,end,r,light,7);
+      }
+    }
+  }
+  const models=[[dreamHarp,dreamOrrery,cloudfall,lunarLoom],[foxglove,fairySpire,dewLily,mushroomHall],
+    [ribs,eyeShrine,crag,abbey],[portico,brazier,sacredOlive,victoryStatue]];
   const sceneryRhythm=[
     [1,2,1,0,2,2,1,0,1,2],
     [0,1,0,1,2,2,0,2,1,1],
@@ -266,6 +355,18 @@
       if(clear(center,footprint*size+1.8))instances.push({center,kind,size,yaw:Math.atan2(-side*p.nx,-side*p.nz)+.28*(rand()-.5)});
     }
     // Larger masses occupy the second depth plane, well below and outside the road.
+    const views=[.036,.254,.483,.689,.917];
+    for(let i=0;i<views.length;i++){
+      const p=sim.sample(c,c.length*views[i],0),size=1.22+(i%3)*.13;
+      // Search both verges so the entrance is visible without clipping a second route.
+      for(const side of [i%2?1:-1,i%2?-1:1]){
+        const offset=side*(p.w+7.4*size+7);
+        const center=[p.x+p.nx*offset,p.y-1.15,p.z+p.nz*offset];
+        if(!clear(center,6.1*size)||instances.some(v=>Math.hypot(v.center[0]-center[0],v.center[2]-center[2])<6.3*size+v.size*3.6))continue;
+        instances.push({center,kind:3,size,yaw:Math.atan2(-side*p.nx,-side*p.nz)});
+        break;
+      }
+    }
     for(let i=0;i<15;i++){
       const p=sim.sample(c,c.length*(i+.78)/15,0),side=i%2?1:-1;
       const distance=side*(p.w+33+rand()*27),size=1.6+rand()*1.45;
@@ -365,41 +466,151 @@
       ctx.drawImage(im.canvas,p.x+im.left*k,p.y+im.top*k,im.width*k,im.height*k);
     }
   }
-  // The center ribbons remain readable at racing speed. The patterns are fixed
-  // in world space, so drifting and changing camera direction never moves them.
+  // The bitmap for each world was painted as a periodic physical material.
+  // Both renderers place it in the same world coordinates on banked and forked lanes.
+  const repeats=[12,10,8,9];
+  function surfacePath(index){
+    return index>=16&&index<=19?'art/road-'+index+'.webp':null;
+  }
   const materials=`
-    if(mat>26.5 && mat<27.5){
-      vec2 ground=wp.xz; float detail=noise(ground*1.3);
-      float grain=h(floor(ground*16.));
+    if(trackId>=16. && trackId<20. && mat>26.5 && mat<27.5){
+      float repeatSize=trackId<16.5?12.:trackId<17.5?10.:trackId<18.5?8.:9.;
+      vec2 st=wp.xz/repeatSize;
+      vec4 paint=texture2D(mythosAlbedo,st);
+      // Fade the relief before subpixel highlights can shimmer in a hairpin.
+      float nearDetail=1.-smoothstep(18.,58.,depth);
+      vec3 weights=vec3(.24,.61,.15);
+      float relief=dot(paint.rgb,weights);
+      vec2 slope=vec2(dot(texture2D(mythosAlbedo,st+vec2(.0039,0.)).rgb,weights)-relief,
+                      dot(texture2D(mythosAlbedo,st+vec2(0.,.0039)).rgb,weights)-relief);
+      norm=normalize(norm+vec3(-slope.x,0.,-slope.y)*nearDetail*2.8);
+      tint=mix(col,paint.rgb,paint.a);
+      vec3 viewDir=normalize(eye-wp),halfDir=normalize(viewDir+sun);
+      float shine=max(0.,dot(norm,halfDir));
+      light=.78+.27*max(0.,dot(norm,sun));
       if(trackId<16.5){
-        float fold=sin(dot(ground,vec2(.31,.18))+2.4*noise(ground*.18));
-        tint=mix(tint*vec3(.92,.92,1.02),tint*vec3(1.16,1.03,1.06),.5+.5*fold);
-        float stars=smoothstep(.973,.999,h(floor(ground*2.1)))*(1.-smoothstep(.04,.19,length(fract(ground*2.1)-.5)));
-        tint+=vec3(.62,.56,.38)*stars;tex=.96+.045*grain;light=.87+.17*max(0.,dot(norm,sun));
+        float satin=pow(1.-abs(dot(norm,viewDir)),3.);
+        float foil=smoothstep(.03,.21,tint.r-tint.b);
+        tint+=vec3(.028,.014,.059)*satin;
+        highlight+=nearDetail*(.018*satin+.13*foil*pow(shine,11.));
       }else if(trackId<17.5){
-        float rib=sin(ground.x*1.6+1.75*sin(ground.y*.54)+2.5*noise(ground*.21));
-        tint=mix(tint*vec3(.87,.94,.88),vec3(.57,.69,.46),.26*smoothstep(.75,.99,rib));
-        tex=.88+.14*detail+.075*grain;
+        float blade=smoothstep(.02,.23,tint.g-tint.r);
+        float dapples=noise(wp.xz*.25+vec2(.02,-.014)*clock);
+        light+=.12*(dapples-.48);highlight+=nearDetail*blade*pow(shine,23.)*.13;
       }else if(trackId<18.5){
-        vec2 g=ground*.64;float a=noise(g*.46)+.17*noise(g*1.9);
-        float fissure=1.-smoothstep(.006,.031,abs(a-.57));
-        tint=mix(tint,vec3(.85,.40,.36),fissure*(.53+.34*detail));
-        tex=.86+.13*detail+.09*grain;
-        highlight+=.10*pow(max(0.,dot(reflect(-sun,norm),normalize(eye-wp))),17.);
+        float ember=smoothstep(.12,.57,tint.r-tint.b);
+        tint+=vec3(.14,.027,.006)*ember*(.79+.21*sin(clock*.84+wp.x*.19+wp.z*.26));
+        highlight+=nearDetail*.12*pow(shine,35.);
       }else{
-        float veins=sin(ground.x*.75+ground.y*.17+7.3*noise(ground*.22)+.85*detail);
-        float fine=smoothstep(.89,.99,veins);tint=mix(tint,vec3(.49,.52,.56),fine*.33);
-        tex=.94+.065*detail+.032*grain;
+        float joint=smoothstep(.30,.68,relief);
+        highlight+=nearDetail*joint*(.13*pow(shine,36.)+.024*(1.-viewDir.y));
       }
+    }else if(trackId>=16. && trackId<20. && mat>28.5 && mat<29.5){
+      // The outside apron uses different ground: lunar pebbles, moss, shale, or cut limestone.
+      vec2 cell=trackId<16.5?vec2(1.,0.):trackId<17.5?vec2(2.,2.):trackId<18.5?vec2(3.,3.):vec2(2.,3.);
+      vec2 repeated=abs(fract(wp.xz/7.)*2.-1.)*.99+.005;
+      vec3 stone=texture2D(groundAtlas,(cell+repeated)*.25).rgb;
+      vec3 base=trackId<16.5?vec3(.52,.53,.68):trackId<17.5?vec3(.35,.49,.29):trackId<18.5?vec3(.35,.26,.33):vec3(.64,.57,.47);
+      float raised=dot(stone,vec3(.25,.55,.20));
+      tint=base*clamp(.34+raised*1.38,.42,1.4)+stone*.09;
+      light=.76+.29*max(0.,dot(norm,sun));
     }`;
-  function paintRoad(c,from,to,branch,split,P,quad){
+  const maps=new WeakMap();
+  function mappedSurface(ctx,index){
+    if(!ctx?.createPattern||typeof DOMMatrix==='undefined')return null;
+    let materials=maps.get(ctx);
+    if(!materials){materials=[];maps.set(ctx,materials);}
+    const realm=index-16;
+    if(!materials[realm]){
+      const image=new Image(),file=surfacePath(index)||root.AcornDarkWorld?.surfacePath?.(index);
+      if(!file)return null;
+      const material={image,matrix:new DOMMatrix(),pattern:null};
+      materials[realm]=material;
+      image.onload=()=>{material.pattern=ctx.createPattern(image,'repeat');};
+      image.src=root.AcornFileTextures?.[file]||file;
+    }
+    return materials[realm].pattern?materials[realm]:null;
+  }
+  // Map three world vertices to their projected positions. A separate mapping on
+  // each near triangle keeps the material attached as the road turns under the kart.
+  function textureFace(material,repeat,world,screen){
+    const [w0,w1,w2]=world,[p0,p1,p2]=screen;
+    const x1=w1[0]-w0[0],z1=w1[1]-w0[1],x2=w2[0]-w0[0],z2=w2[1]-w0[1];
+    const inv=1/(x1*z2-z1*x2);
+    if(!Number.isFinite(inv)||Math.abs(inv)>1e4)return;
+    const ax=((p1.x-p0.x)*z2-(p2.x-p0.x)*z1)*inv;
+    const az=((p2.x-p0.x)*x1-(p1.x-p0.x)*x2)*inv;
+    const bx=((p1.y-p0.y)*z2-(p2.y-p0.y)*z1)*inv;
+    const bz=((p2.y-p0.y)*x1-(p1.y-p0.y)*x2)*inv;
+    const m=material.matrix,k=repeat/material.image.width;
+    m.a=ax*k;m.c=az*k;m.b=bx*k;m.d=bz*k;
+    m.e=p0.x-w0[0]*ax-w0[1]*az;m.f=p0.y-w0[0]*bx-w0[1]*bz;
+    material.pattern.setTransform(m);
+  }
+  const shoulders=new WeakMap();
+  const shoulderTint=['#9b9cbf','#799669','#796075','#c9b59a'];
+  function shoulderMaterial(ctx,index){
+    if(!ctx?.createPattern||typeof DOMMatrix==='undefined')return null;
+    let state=shoulders.get(ctx);
+    if(!state){
+      const image=new Image();state={image,tiles:[]};shoulders.set(ctx,state);
+      const path='art/trail-materials.webp';image.src=root.AcornFileTextures?.[path]||path;
+    }
+    const realm=index-16;
+    if(!state.tiles[realm]&&state.image.naturalWidth){
+      const source=state.image,canvas=document.createElement('canvas');
+      const [u,v]=[[1,0],[2,2],[3,3],[2,3]][realm];
+      const side=source.naturalWidth/4;canvas.width=512;canvas.height=512;
+      const painter=canvas.getContext('2d');
+      for(let row=0;row<2;row++)for(let col=0;col<2;col++){
+        const dx=col?1:-1,dy=row?1:-1;
+        painter.setTransform(dx,0,0,dy,256,256);
+        painter.drawImage(source,u*side+1,v*side+1,side-2,side-2,0,0,256,256);
+      }
+      painter.setTransform(1,0,0,1,0,0);painter.globalCompositeOperation='color';
+      painter.fillStyle=shoulderTint[realm];painter.fillRect(0,0,512,512);
+      painter.globalCompositeOperation='source-over';painter.globalAlpha=.34;painter.fillRect(0,0,512,512);
+      state.tiles[realm]={image:canvas,pattern:ctx.createPattern(canvas,'repeat'),matrix:new DOMMatrix()};
+    }
+    return state.tiles[realm];
+  }
+  function fillMapped(material,repeat,world,pts,quad){
+    textureFace(material,repeat,world,pts);
+    quad(...pts,material.pattern);
+    if(pts[0].z<38){
+      textureFace(material,repeat,[world[0],world[2],world[3]],[pts[0],pts[2],pts[3]]);
+      quad(pts[0],pts[2],pts[3],pts[3],material.pattern);
+    }
+  }
+  function paintSurface(ctx,index,a,b,pts,quad,repeat){
+    const material=mappedSurface(ctx,index);
+    if(!material||pts[0].z<=0||pts[1].z<=0)return false;
+    const xz=(road,side)=>[road.x+side*road.w*road.nx,road.z+side*road.w*road.nz];
+    const world=[xz(a,-1),xz(b,-1),xz(b,1),xz(a,1)];
+    fillMapped(material,repeat,world,pts,quad);
+    return true;
+  }
+  function paintRoad(c,from,to,branch,split,P,quad,ctx){
     const realm=c.index-16,pal=palettes[realm],sim=root.AcornSim;
     for(const [s,e] of root.AcornRamps.solidSpans(c,from,to,branch)){
       const a=sim.sample(c,s,0,branch),b=sim.sample(c,e,0,branch);
       const R=(at,lane,y=0)=>P(at,lane,y,branch);
       const strip=(a1,a2,b1,b2,col)=>quad(R(s,a1),R(e,b1),R(e,b2),R(s,a2),col);
       const tile=Math.floor((((s+e)*.5%c.length+c.length)%c.length)/2.75);
-      strip(-a.w,a.w,-b.w,b.w,pal.soil);
+      const pts=[R(s,-a.w),R(e,-b.w),R(e,b.w),R(s,a.w)];
+      if(!a.exposed){
+        const apron=shoulderMaterial(ctx,c.index);
+        for(const side of [-1,1]){
+          if(split&&side===(branch?-1:1))continue;
+          const aw=a.w*side,bw=b.w*side,outer=side*4.4;
+          const edge=[R(s,aw,-.05),R(e,bw,-.05),R(e,bw+outer,-.10),R(s,aw+outer,-.10)];
+          if(apron?.pattern&&edge[0].z>0&&edge[1].z>0){
+            const v=(road,d)=>[road.x+road.nx*d,road.z+road.nz*d];
+            fillMapped(apron,7,[v(a,aw),v(b,bw),v(b,bw+outer),v(a,aw+outer)],edge,quad);
+          }else quad(...edge,pal.edge);
+        }
+      }
+      if(!paintSurface(ctx,c.index,a,b,pts,quad,repeats[realm]))quad(...pts,pal.soil);
       for(const side of [-1,1]){
         const aw=a.w*side,bw=b.w*side;
         if(split&&side===(branch?-1:1)){
@@ -407,21 +618,30 @@
           if(Math.hypot(alt.x-a.x,alt.z-a.z)<a.w+alt.w)continue;
         }
         quad(R(s,aw),R(e,bw),R(e,bw,-.72),R(s,aw,-.72),pal.edge);
-        strip(aw-side*.19,aw,bw-side*.19,bw,tile%6<5?pal.accent:pal.wood);
-        if(realm===3)strip(aw-side*.65,aw-side*.55,bw-side*.65,bw-side*.55,'#a78c61');
-        if(realm===1&&tile%2===0)strip(side*.08,side*.16,.76*bw,.76*bw+side*.12,'#81a780');
-      }
-      const frac=Math.sin(tile*1.73)*.62;
-      if(realm===0&&tile%3===1){
-        const star=a.w*frac,u=(s+e)*.5;
-        quad(R(s,star),R(u,star-.19),R(e,star),R(u,star+.19),'#d2c7bf');
-      }else if(realm===2&&tile%3===0){
-        strip(a.w*frac,a.w*frac+.07,b.w*(frac+.12),b.w*(frac+.12)+.07,'#a67378');
-      }else if(realm===3&&Math.floor(s/4.8)!==Math.floor(e/4.8)){
-        const end=s+Math.sign(e-s)*Math.min(.075,Math.abs(e-s));
-        quad(R(s,-a.w+.72),R(end,-a.w+.72),R(end,a.w-.72),R(s,a.w-.72),'#b3a998');
+        strip(aw-side*.25,aw,bw-side*.25,bw,tile%6<5?pal.accent:pal.wood);
+        const gutter=['#686693','#496e52','#493842','#947c5a'][realm];
+        strip(aw-side*.57,aw-side*.43,bw-side*.57,bw-side*.43,gutter);
       }
     }
   }
-  root.AcornMythicWorld={palettes,materials,decorate,underworld,build,paint,paintRoad};
+  const vergeColors=[['#514f81','#d8c38e'],['#416b4e','#a4bc79'],['#4d3545','#a77167'],['#89734e','#e2c187']];
+  function verge(strip,side,aw,bw,base,j,index){
+    const [ground,inlay]=vergeColors[index-16];
+    const band=(u,v,w,z,col,height)=>strip(aw-side*u,aw-side*v,bw-side*w,bw-side*z,base+height,col,0);
+    band(.65,.31,.65,.31,ground,.017);
+    if(index===19){
+      // A running Greek key with a return leg inside each squared hook.
+      const step=j%8;
+      if(step===1||step===5)band(.62,.34,.62,.34,inlay,.025);
+      else{const line=step<5?.61:.39;band(line,line-.055,line,line-.055,inlay,.025);}
+      if(step>=2&&step<=4)band(.465,.418,.465,.418,inlay,.025);
+    }else if(index===18){
+      if(j%4===0)band(.61,.35,.56,.40,inlay,.025);
+    }else{
+      const edge=n=>.485+.096*Math.sin(n*(index===16?.91:.62));
+      band(edge(j)+.036,edge(j)-.036,edge(j+1)+.036,edge(j+1)-.036,inlay,.025);
+    }
+  }
+  root.AcornMythicWorld={palettes,materials,surfacePath,paintSurface,sprite,verge,decorate,underworld,build,paint,paintRoad};
 })(typeof globalThis==='object'?globalThis:this);
+

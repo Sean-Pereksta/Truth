@@ -59,7 +59,7 @@ def build_sources(base):
     files["file-textures.js"] = texture_script
     additions = {}
     for name in sorted(files):
-        if not (name == "art/trail-materials.webp" or name.startswith(("art/horizon-", "art/rear-"))):
+        if not (name == "art/trail-materials.webp" or name.startswith(("art/horizon-", "art/road-", "art/rear-"))):
             continue
         mime = "image/" + Path(name).suffix[1:]
         url = data_url(GAME / name, mime)

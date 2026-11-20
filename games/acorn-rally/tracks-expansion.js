@@ -280,7 +280,64 @@
     }
   );
 
-  // Project the real Catmull–Rom loop into the menu badge. Equivalent cubic
+
+  // Standalone Ultra circuit. Times are staggered so groups along a sector
+  // enter their warning and strike phases independently.
+  const hauntTypes={
+    22:{name:'Lantern Procession',width:1.10,length:1.40,warn:1.95,live:3.7,speed:.55,push:3.8,slip:.32},
+    23:{name:'Gravehand Gate',width:1.30,length:1.24,warn:1.65,live:2.8,speed:.48,push:3.2},
+    24:{name:'Mourning Bell',width:1.00,length:1.06,warn:1.85,live:3.15,speed:.50,push:4.9,hop:.28},
+    25:{name:'Pale Huntress',width:.90,length:1.40,warn:1.75,live:2.65,speed:.46,push:4.3,slip:.32}
+  };
+  function haunt(style,key,u,side,period,offset){
+    return {...hauntTypes[style],style,key,u,side,period,offset};
+  }
+  courses.push({
+    name:'Realm of Darkness',line:['Realm of','Darkness'],region:'The Black Belltower',place:'The Black Belltower, Beyond the Veil',
+    level:'Ultra',length:2160,surface:'Funerary basalt & lantern glass',
+    feature:'Thread the belltower three times on stacked roads. Follow its broken spiral past the graves, jump the drowned crypt, then descend from the lantern bridge while the Huntress stalks the turns.',
+    anchors:[[-144,-99],[-148,-63],[-134,-39],[-112,-44],[-104,-70],[-82,-82],[-61,-64],[-61,-40],[-45,-22],[-22,-10],[0,0],
+      [24,11],[46,27],[51,55],[34,83],[11,100],[-9,94],[-11,74],[3,59],[4,44],[-15,41],[-35,57],[-59,68],[-80,58],[-80,39],[-59,23],[-29,12],[0,0],
+      [28,-14],[43,-36],[48,-67],[70,-85],[91,-77],[94,-57],[81,-42],[70,-23],[80,-10],[101,-12],[118,-35],[137,-52],[154,-38],[153,-13],[136,13],[116,19],
+      [95,34],[94,55],[111,72],[133,79],[140,99],[123,115],[99,109],[79,87],[73,66],[57,61],[39,72],[23,78],[5,66],[-4,42],[-3,21],[0,0],
+      [2,-23],[-9,-41],[-28,-48],[-35,-68],[-21,-83],[0,-83],[13,-101],[7,-118],[-15,-127],[-38,-113],[-56,-102],[-75,-108],[-93,-123],[-114,-122],[-129,-106]],
+    // At (0,0) the undercroft, gallows and lantern bridge cross at three different elevations.
+    section:[[0,22,6.5],[.028,25,5.6],[.047,25,4.95],[.082,19,4.65],[.112,13,4.45],
+      [.126,12.5,4.8],[.158,12.5,4.8],[.184,16,4.4],[.219,21,4.95],[.244,25,4.5],
+      [.268,28,4.35],[.294,24,4.25],[.319,28,4.85],[.349,36.5,5.1],[.402,36.5,5.1],
+      [.425,31,4.5],[.451,21,4.85],[.484,14,4.3],[.509,16,4.7],[.548,22,4.25],
+      [.569,27,4.65],[.602,21,4.45],[.629,25,4.5],[.657,34,4.8],[.686,39,4.25],
+      [.71,45,4.8],[.744,53,4.55],[.774,60,4.4],[.787,61.5,4.75],[.817,61.5,4.75],
+      [.845,53,4.45],[.866,44,4.6],[.896,35,4.13],[.919,27,4.7],[.949,19,4.35],[.979,19.5,5.35],[1,22,6.5]],
+    fork:[.320,.423,13.2,4.6,3.55],bridge:.808,
+    drops:[[.062,.109],[.115,.169],[.184,.219],[.241,.316],[.327,.429],[.488,.557],[.588,.682],[.716,.845],[.857,.927]],
+    hazard:haunt(22,'dark-lantern-graves',.044,1,10.1,.55),
+    obstacles:[
+      haunt(23,'dark-gate-undercroft',.083,-1,8.3,3.8),
+      haunt(24,'dark-bell-vestry',.192,1,9.6,2.4),
+      haunt(25,'dark-hunt-choir',.246,-1,8.9,6.2),
+      haunt(23,'dark-gate-spiral',.302,1,8.35,5.15),
+      haunt(24,'dark-bell-gallows',.369,-1,9.3,4.0),
+      haunt(22,'dark-lantern-caravan',.448,1,10.6,7.8),
+      haunt(23,'dark-gate-ossuary',.516,-1,8.45,.6),
+      haunt(25,'dark-hunt-coffins',.575,1,8.1,3.9),
+      haunt(24,'dark-bell-sanctum',.643,-1,9.7,6.75),
+      haunt(22,'dark-lantern-choir',.713,1,10.2,1.25),
+      haunt(25,'dark-hunt-descent',.857,-1,8.55,6.9),
+      haunt(24,'dark-bell-last-toll',.923,1,9.2,2.3),
+      haunt(23,'dark-gate-last-rites',.965,-1,8.7,4.8)
+    ],
+    ramps:[
+      {id:'crypt-vault',name:'Crypt vault spring',style:'trampoline',branch:false,u:.130,lane:.1,
+        halfWidth:2.85,landingWidth:3.55,runup:7.3,rise:.84,gap:11.6,landingRise:.60,landingLength:34,minSpeed:8},
+      {id:'gallows-sling',name:'Gallows sling',style:'trampoline',branch:true,u:.367,lane:0,
+        halfWidth:2.50,landingWidth:3.0,runup:6.4,rise:.84,gap:11.3,landingRise:.59,landingLength:32,minSpeed:8},
+      {id:'lantern-span',name:'Lantern bridge spring',style:'trampoline',branch:false,u:.793,lane:-.30,
+        halfWidth:2.75,landingWidth:3.5,runup:7,rise:.89,gap:12,landingRise:.64,landingLength:33,minSpeed:8}
+    ],
+    tip:'Lanterns reveal the procession lane. At the middle crossing, take the gallows fork to skip the swinging bell or stay low to avoid its narrow jump. Center up before the final lantern bridge.'
+  });
+  // Project the real Catmull-Rom loop into the menu badge. Equivalent cubic
   // Bézier handles keep the tight hairpins and the orbital crossover visible.
   function outline(anchors) {
     const count = anchors.length;

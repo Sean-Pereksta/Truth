@@ -20,7 +20,8 @@
   };
   const astraDriver=9;
   const angelDriver=10;
-  const drivers = ['Nib','Bristle','Clover','Tumble','Hazel','Ember','Flint','Mica','Solstice','Astra','Aurel'];
+  const wolfDriver=11;
+  const drivers = ['Nib','Bristle','Clover','Tumble','Hazel','Ember','Flint','Mica','Solstice','Astra','Aurel','Grimoire the Vile'];
   const abilities = Signatures.names, durations=Signatures.durations;
   // Steering, acceleration, corner-load, transition speed, off-road resistance and bump weight.
   const handling=[
@@ -29,7 +30,7 @@
     [1.055,10.15,.96,7.85,.80,1.10],[1.085,11.3,1.085,7.1,1.15,.89],
     [.85,9.95,.83,5.55,.73,1.40],[.995,11.0,.975,7.0,.65,1.03],
     [1.08,11.35,.99,7.65,1.0,1.04],[1.14,10.8,.96,7.35,.95,.87],
-    [.98,11.15,.85,6.3,.86,1.45]
+    [.98,11.15,.85,6.3,.86,1.45],[1.07,11.05,.98,7.6,1.01,.98]
   ];
   const items = ['Seed Kick', 'Sap Sling', 'Burr Patch', 'Bark Guard', 'Thistle Puff', 'Pinecone Skip', 'Tailwind', 'Hawk', 'Tracking Quill', 'Stormburst'];
   const hawkItem=7, quillItem=8, stormItem=9, hawkDistance=.10;
@@ -303,7 +304,7 @@
     const c=track(config.trackIndex), trial=config.mode==='trial', players=clamp(config.players|0 || 1,1,8);
     const humanSeats=config.humanSeats || Array.from({length:players},(_,i)=>i), count=trial?1:clamp((config.gridSize??8)|0,1,8);
     const selection=new Map(humanSeats.filter(i=>i>=0&&i<count).map(i=>[i,mod((config.driverIndices?.[i]??(i===0?config.driverIndex:undefined)??i)|0,drivers.length)]));
-    const picked=new Set(selection.values()),remaining=drivers.map((_,i)=>i).filter(i=>i!==astraDriver&&i!==angelDriver&&!picked.has(i));
+    const picked=new Set(selection.values()),remaining=drivers.map((_,i)=>i).filter(i=>i!==astraDriver&&i!==angelDriver&&i!==wolfDriver&&!picked.has(i));
     const st={trackIndex:c.index, mode:config.mode||'race',cc:normalizeCC(config.cc),difficulty:normalizeDifficulty(config.difficulty),totalLaps:clamp(config.laps|0||3,1,12),time:0,countdown:3,
       seed:(config.seed??0xACE110)>>>0,hazardSeed:(config.seed??0xACE110)>>>0,contacts:{},racers:[],pickups:[],objects:[],done:false,serial:0,nextStormTime:14};
     for(let i=0;i<count;i++){
@@ -625,6 +626,7 @@
       case 8:return Math.abs(r.x)<1.6;
       case astraDriver:return r.prevDrift&&r.drift>.22;
       case angelDriver:return !r.guard && (traffic.chaser||traffic.close);
+      case wolfDriver:return traffic.close;
       default:return false;
     }
   }
@@ -977,6 +979,8 @@
       for(const status of ['sap','burr','puff','pine','spin','confirmFx','contactFx','landingFx'])r[status]=Math.max(0,(r[status]||0)-dt);
       r.contactCarry=Math.max(0,(r.contactCarry||0)-dt*9.8);
       Signatures.advanceBoost(r,dt);
+      if(r.driverIndex===wolfDriver)r.hookReady=r.meter>=.998&&!!Signatures.hookTarget(st,r,c.length,wheelStarts);
+      if(r.signature?.stage==='latched')Signatures.checkHook(st,r,wheelStarts,c.length);
       if(r.finish){r.v=Math.max(0,r.v-dt*5);continue;}
       if(r.fall){recoverFall(r,c,dt);continue;}
       if(locked){
@@ -998,7 +1002,7 @@
         continue;
       }
       r.bank=clamp(r.bank+dt*(r.v>6&&(Math.abs(steer)>.27||Math.abs(road.curve)>.018)?1:-2.5),0,1);
-      if(input.ability&&!r.prevAbility&&!r.spin&&r.meter>=.998&&r.air<=0)Signatures.start(st,r,c.length);
+      if(input.ability&&!r.prevAbility&&!r.spin&&r.meter>=.998&&r.air<=0)Signatures.start(st,r,c.length,wheelStarts);
       Signatures.tick(st,r,dt,c.length,road,input);
       r.prevItem=!!input.item;r.prevAbility=!!input.ability;
       const drifting=slide(r,input,road,dt,st.time);
@@ -1025,9 +1029,12 @@
       const impactGrip=r.contactFx>.23?1-.48*r.contactForce:1;
       r.vx+=(targetX-r.vx)*Math.min(1,dt*(airborne?.91:needle?car[3]*1.55:r.slip>0?1.35:drifting?car[3]*.47:car[3])*grip*impactGrip);
       if(r.burr>0&&r.slip>0)r.vx+=r.burrSide*Math.sin((itemTimes.burr-r.burr)*12)*2.9*dt;
+      const advanceScale=(verge?.925:1)*(r.branch?1+.17*road.peak:1);
+      if(r.signature?.stage==='latched')Signatures.swing(st,r,dt,c.length,road,wheelStarts,advanceScale);
       r.x+=r.vx*dt;
-      r.yaw+=(steeringYaw(r,steer)-r.yaw)*Math.min(1,dt*(drifting?9.5:8));
-      const adv=r.v*(1-(verge?.075:0))*(r.branch?1+.17*road.peak:1);
+      const heading=r.signature?.stage==='latched'?clamp(Math.atan2(r.vx,Math.max(6,r.v)),-.82,.82):steeringYaw(r,steer);
+      r.yaw+=(heading-r.yaw)*Math.min(1,dt*(drifting?9.5:8));
+      const adv=r.v*advanceScale;
       r.s=Math.max(-10,r.s+adv*dt);
       const previous=wheelStarts[r.seat],arrival=resolveRoute(st,r,c,dt,previous);
       if(!arrival)continue;

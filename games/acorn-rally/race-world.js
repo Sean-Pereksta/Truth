@@ -52,7 +52,7 @@
     vec4 world=model*point;wp=world.xyz;normal=mat3(model)*norm;col=c;encodedMaterial=m;uv=m<7.8?texCoord:(m>=12.&&m<13.?vec2(p.z,p.y):p.xz);
     vec4 camera=view*world;depth=-camera.z;gl_Position=proj*camera;
   }`;
-  const fp=`precision highp float;varying vec3 wp,normal,col;varying float encodedMaterial,depth;varying vec2 uv;uniform vec3 fog,eye,driverPoint;uniform float clock,alpha,usingAtlas,trackId;uniform sampler2D kartAtlas,kartSurface;uniform bool skidPass;
+  const fp=`precision highp float;varying vec3 wp,normal,col;varying float encodedMaterial,depth;varying vec2 uv;uniform vec3 fog,eye,driverPoint;uniform float clock,alpha,usingAtlas,trackId;uniform sampler2D kartAtlas,kartSurface,mythosAlbedo;uniform bool skidPass;
   ${root.AcornRig.wheelFragment}
   ${root.AcornSurfaces?.glsl||'vec3 materialGrain(vec3 wp,vec3 normal,float mat,float trackId){return vec3(1.);}'}
   float h(vec2 p){return fract(sin(dot(mod(p,256.),vec2(12.9898,78.233)))*437.58);}
@@ -316,8 +316,8 @@
     const m=new Mesh(),asset=root.AcornKartModels?.[i];
     if(asset){const groups=lod&&asset.lod?.length?asset.lod:asset.groups;m.uvs=[];m.skin=[];for(const g of groups){const pp=g.positions,nn=g.normals;for(const idx of g.indices){const j=idx*3;m.data.push(pp[j],pp[j+1],pp[j+2],nn[j],nn[j+1],nn[j+2],g.color[0],g.color[1],g.color[2],0);if(g.uvs)m.uvs.push(g.uvs[idx*2],g.uvs[idx*2+1]);if(g.rig)m.skin.push(g.rig[idx],Math.round((g.flex?.[idx]??1)*255));}}}
     if(!m.data.length){
-      const hull=['#d17f42','#817b77','#a1a86b','#b88651','#b6994a','#cf6944','#73916a','#7194a0','#164d52','#7363b6','#34569a'][i];
-      const fur=['#ab9479','#9c8b84','#e8e0c8','#c88346','#997e57','#d07b48','#797c71','#77716b','#c8ab83','#d8f0f3','#bc884f'][i];
+      const hull=['#d17f42','#817b77','#a1a86b','#b88651','#b6994a','#cf6944','#73916a','#7194a0','#164d52','#7363b6','#34569a','#514060'][i];
+      const fur=['#ab9479','#9c8b84','#e8e0c8','#c88346','#997e57','#d07b48','#797c71','#77716b','#c8ab83','#d8f0f3','#bc884f','#4a4d5b'][i];
       m.box(0,.36,0,1.19,.35,1.56,0,hull,2);
       for(const x of [-.66,.66])for(const z of [-.57,.55])m.ring([x-.12,.32,z],[x+.12,.32,z],.31,.31,'#373b35',12);
       m.blob(0,.99,-.1,.4,.48,.33,'#628873');m.blob(0,1.53,-.06,.42,.39,.38,fur);
@@ -383,7 +383,7 @@
       this.pr=shader(gl,vp,fp);this.sk=shader(gl,sv,sf);
       const attrs=(p,ns)=>Object.fromEntries(ns.map(n=>[n,gl.getAttribLocation(p,n)]));
       const uniforms=(p,ns)=>Object.fromEntries(ns.map(n=>[n,gl.getUniformLocation(p,n)]));
-      this.at=attrs(this.pr,['p','n','c','m','texCoord','skin']);this.un=uniforms(this.pr,['proj','view','model','fog','clock','alpha','eye','driverPoint','trackId','groundAtlas','kartAtlas','kartSurface','usingAtlas','articulated','bones[0]','wheelExposure','skidPass']);
+      this.at=attrs(this.pr,['p','n','c','m','texCoord','skin']);this.un=uniforms(this.pr,['proj','view','model','fog','clock','alpha','eye','driverPoint','trackId','groundAtlas','kartAtlas','kartSurface','mythosAlbedo','usingAtlas','articulated','bones[0]','wheelExposure','skidPass']);
       this.sa=attrs(this.sk,['p']);this.su=uniforms(this.sk,['sky','fog','dir','aspect','viewHorizon']);
       this.screen=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,this.screen);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
       const bake=m=>{const b=gl.createBuffer();this.buffers.push(b);gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,m.data instanceof Float32Array?m.data:new Float32Array(m.data),gl.STATIC_DRAW);let uv=null;
@@ -403,6 +403,8 @@
           if((im.width&(im.width-1))===0&&(im.height&(im.height-1))===0){gl.generateMipmap(gl.TEXTURE_2D);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);}else{gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);}
           gl.activeTexture(gl.TEXTURE0);if(onload)onload();};im.src=url;};
       load(root.AcornKartTexture,0,[255,255,255,255],()=>{this.atlasReady=true;});load(root.AcornKartSurface,1,[128,128,200,255]);
+      const pavement=root.AcornMythicWorld?.surfacePath(course.index)||root.AcornDarkWorld?.surfacePath?.(course.index);
+      load(pavement&&(root.AcornFileTextures?.[pavement]||pavement),2,[128,128,128,0]);
       if(root.AcornSurfaces)this.textures.push(root.AcornSurfaces.load(gl));if(root.AcornHorizon)this.textures.push(root.AcornHorizon.load(gl,course.index));gl.activeTexture(gl.TEXTURE0);
       this.id=matrix();this.cameras={};this.canvas=canvas;this.poseFrame=0;this.poseCache=new Map();
       this.skids=new root.AcornDriftArt.SkidMarks(course);
@@ -425,7 +427,7 @@
       Object.values(this.at).forEach(i=>gl.disableVertexAttribArray(i));gl.enableVertexAttribArray(this.sa.p);gl.vertexAttribPointer(this.sa.p,2,gl.FLOAT,false,0,0);
       gl.uniform3fv(this.su.sky,rgb(p.sky));gl.uniform3fv(this.su.fog,rgb(p.mist));gl.uniform1f(this.su.dir,cam.angle);gl.uniform1f(this.su.aspect,rect.w/rect.h);gl.uniform1i(this.su.viewHorizon,4);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
       gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.useProgram(this.pr);gl.uniformMatrix4fv(this.un.proj,false,project(rect.w/rect.h,Math.max(.88,Math.min(1.2,.95+(.12*(r.boost>0?1:0))+(rect.w/rect.h<1?.22:0)))));gl.uniformMatrix4fv(this.un.view,false,view(smooth.eye,smooth.target));gl.uniform3fv(this.un.fog,rgb(p.mist));gl.uniform1f(this.un.clock,st.time);gl.uniform1f(this.un.alpha,1);
-      gl.uniform1i(this.un.kartAtlas,0);gl.uniform1i(this.un.kartSurface,1);gl.uniform1i(this.un.groundAtlas,3);gl.uniform1f(this.un.trackId,c.index);gl.uniform3fv(this.un.eye,smooth.eye);
+      gl.uniform1i(this.un.kartAtlas,0);gl.uniform1i(this.un.kartSurface,1);gl.uniform1i(this.un.groundAtlas,3);gl.uniform1i(this.un.mythosAlbedo,2);gl.uniform1f(this.un.trackId,c.index);gl.uniform3fv(this.un.eye,smooth.eye);
       const focus=sim.sample(c,r.s,r.x,r.branch);gl.uniform3f(this.un.driverPoint,focus.x,focus.y+sim.lift(st,r)+.86,focus.z);
       let bound=null,previousModel=null;const draw=(mesh,model,first=0,count=mesh.n)=>{if(mesh!==bound){gl.bindBuffer(gl.ARRAY_BUFFER,mesh.b);
         for(const [key,size,offset] of [['p',3,0],['n',3,12],['c',3,24],['m',1,36]]){const a=this.at[key];gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,size,gl.FLOAT,false,40,offset);}

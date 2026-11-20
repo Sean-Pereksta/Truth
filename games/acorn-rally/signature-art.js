@@ -60,6 +60,22 @@
     bar(sunMark,[0,.06,-.17],[0,.06,.17],.025,'#fff3c9');
     trail(make('sigPrismIce'),1.9,.15,'#72dff0','#f3fdff');
     trail(make('sigPrismViolet'),1.9,.13,'#aa7cfa','#edcaff');
+    const chain=make('sigGraveLink'),turned=make('sigGraveTwist');
+    for(let i=0;i<10;i++){
+      const point=(j,tilt)=>{
+        const a=j*tau/10,w=Math.cos(a)*.105;
+        return [w*Math.cos(tilt),w*Math.sin(tilt),Math.sin(a)*.25];
+      };
+      for(const [m,tilt] of [[chain,.22],[turned,1.23]]){
+        bar(m,point(i,tilt),point(i+1,tilt),.036,i<5?'#dcc3ff':'#8058bd');
+      }
+    }
+    const fang=make('sigGraveClasp');
+    bar(fang,[0,0,-.38],[0,.11,0],.062,'#af8fdf');
+    for(const side of [-1,1]){
+      bar(fang,[0,.11,0],[side*.19,.10,.16],.053,'#d0becf');
+      fang.ring([side*.19,.10,.16],[side*.09,.01,.32],.054,.009,'#efe1fa',6,5);
+    }
     for(const [id,co] of colors.entries()){const ring=make('sigRing'+id);loop(ring,1,.043,.02,co,6,30);loop(ring,.955,.015,.02,'#fff1c3',6,30);}
     return models;
   }
@@ -167,6 +183,25 @@
         here('sigSunMark',-.9-t*2.4,side*(.4+t*.45),.52-t*.38,side*.3,.65,1-t);
       }
     }
+    if(id===11&&s.stage==='latched'){
+      const rival=st.racers[s.target];
+      if(rival&&!rival.fall&&!rival.hawk&&rival.branch===r.branch){
+        const ds=root.AcornSignatures.gap(r.s,rival.s,courseLength),dx=rival.x-r.x;
+        const reach=Math.hypot(ds,dx),heading=Math.atan2(dx,ds);
+        if(reach>1e-4&&reach<9){
+          const links=Math.min(15,Math.max(3,Math.ceil(reach/.44)));
+          for(let i=0;i<links;i++){
+            const t=(i+.5)/links,lift=.60+.095*Math.sin(t*Math.PI*2-time*15)*Math.sin(t*Math.PI);
+            here(i%2?'sigGraveTwist':'sigGraveLink',ds*t,dx*t,lift,heading,1,.98,[1,1,reach/(links*.47)]);
+          }
+          here('sigGraveClasp',ds*.90,dx*.90,.62,heading,1.20,1);
+        }
+      }
+    }
+    if(id===11&&s.stage==='release'&&beat<.40){
+      const t=beat/.40;here('sigRing11',-.35,0,.13,0,.52+t*1.7,1-t);
+      for(const side of [-1,1])here('sigGraveClasp',-.6-t*1.6,side*(.4+t*.45),.5-t*.26,side*.8,1-t*.55,1-t);
+    }
     if(id===7){
       if(r.active>0){here('sigLamp',.77,0,.15,0,1.42,.98);here('sigRing7',.25,0,.08,0,.75,.55,[1,1,1.46]);
         for(let j=0;j<8;j++){const t=(time*2.7+j/8)%1,sign=j%2?1:-1;
@@ -177,7 +212,8 @@
   }
   // Project large ground effects on the road; a billboard ring can cross the horizon.
   function groundGlyph(ctx,name,s,x,height,angle,size,alpha,stretch,project){
-    const ring=name.startsWith('sigRing');if(!ring&&name!=='sigFault')return false;
+    const chain=name==='sigGraveLink'||name==='sigGraveTwist';
+    const ring=name.startsWith('sigRing');if(!ring&&!chain&&name!=='sigFault')return false;
     const point=(a,f)=>{
       const dx=Math.sin(a)*size*f*(stretch?.[0]||1),ds=Math.cos(a)*size*f*(stretch?.[2]||1),co=Math.cos(angle),si=Math.sin(angle);
       return project(s+ds*co-dx*si,x+dx*co+ds*si,height);
@@ -188,7 +224,14 @@
       ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.stroke();
     }
     ctx.save();ctx.globalAlpha=clamp(alpha);ctx.lineCap='round';
-    if(ring)for(let i=0;i<36;i++){if(i%6===5)continue;line(point(tau*i/36,1),point(tau*(i+1)/36,1),colors[Number(name.slice('sigRing'.length))],.035);}
+    if(chain){
+      const ds=Math.cos(angle),dx=Math.sin(angle),tilt=name==='sigGraveLink'?.22:1.23;
+      const vertex=i=>{
+        const a=i*tau/10,w=Math.cos(a)*.105,along=Math.sin(a)*.25*(stretch?.[2]||1);
+        return project(s+ds*along-dx*w*Math.cos(tilt),x+dx*along+ds*w*Math.cos(tilt),height+w*Math.sin(tilt));
+      };
+      for(let i=0;i<10;i++)line(vertex(i),vertex(i+1),i<5?'#e0c7ff':'#8c61c6',.040);
+    }else if(ring)for(let i=0;i<36;i++){if(i%6===5)continue;line(point(tau*i/36,1),point(tau*(i+1)/36,1),colors[Number(name.slice('sigRing'.length))],.035);}
     else for(let i=0;i<14;i++){const a=tau*i/14,b=point(a+.045,.8);line(point(a,.58),b,'#776444',.027);line(b,point(a-.025,1),'#dfd59e',.018);}
     ctx.restore();return true;
   }
@@ -204,7 +247,8 @@
     else if(name==='sigPaw'){ctx.fillStyle='#eccdff';for(const [xx,yy,rr] of [[0,0,.22],[-.16,-.24,.075],[0,-.29,.08],[.16,-.24,.075]]){ctx.beginPath();ctx.arc(xx,yy,rr,0,tau);ctx.fill();}}
     else if(name==='sigLamp'||name==='sigDirt'){ctx.fillStyle=name==='sigLamp'?'#ffdf9c':'#af8863';ctx.beginPath();ctx.ellipse(0,0,name==='sigLamp'?.12:.24,.16,angle,0,tau);ctx.fill();}
     else{ctx.rotate(-angle);ctx.beginPath();
-      if(name==='sigChevron'){ctx.strokeStyle='#ffaf7f';ctx.lineWidth=.09;ctx.moveTo(-.52,.22);ctx.lineTo(0,-.27);ctx.lineTo(.52,.22);ctx.stroke();}
+      if(name==='sigGraveClasp'){ctx.strokeStyle='#ead7fb';ctx.lineWidth=.075;ctx.moveTo(0,.38);ctx.lineTo(0,0);ctx.lineTo(-.18,-.16);ctx.lineTo(-.09,-.32);ctx.moveTo(0,0);ctx.lineTo(.18,-.16);ctx.lineTo(.09,-.32);ctx.stroke();}
+      else if(name==='sigChevron'){ctx.strokeStyle='#ffaf7f';ctx.lineWidth=.09;ctx.moveTo(-.52,.22);ctx.lineTo(0,-.27);ctx.lineTo(.52,.22);ctx.stroke();}
       else{const color={sigSpine:'#ffe17d',sigNeedle:'#e2fff8',sigThread:'#89ece8',sigLeaf:'#85f2ae',sigBerm:'#55e1ac',sigEmber:'#ff8568',sigSunMark:'#ffcd70',sigPrismIce:'#72dff0',sigPrismViolet:'#aa7cfa'}[name]||'#fff3ba';
         const length=name==='sigEmber'?1.65:name==='sigSpine'?.81:1.03;ctx.fillStyle=color;ctx.moveTo(0,-length*.61);ctx.lineTo(.12,0);ctx.lineTo(.02,length*.72);ctx.lineTo(-.095,0);ctx.closePath();ctx.fill();}}
     ctx.restore();

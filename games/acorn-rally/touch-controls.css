@@ -1,0 +1,42 @@
+.rally-touch-plane,.rr-touch.rally-live-pad {
+  position:absolute;
+  inset:calc(max(6px,env(safe-area-inset-top)) + 92px) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
+  pointer-events:none;
+}
+.rr-touch.rally-live-pad { display:block; z-index:2; }
+.rr-touch.rally-live-pad[hidden] { display:none; }
+.rally-touch-plane .rally-touch-button {
+  position:absolute; box-sizing:border-box; padding:0; margin:0; display:grid; place-content:center;
+  border:1px solid #dfd5b08c; border-radius:26%; color:#fff8de;
+  background:linear-gradient(155deg,#24322ee8,#13221ce3);
+  box-shadow:inset 0 1px 0 #fff3,0 2px 5px #10170e44;
+  pointer-events:auto; touch-action:none; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
+  font:700 14px/1 DM,Arial,sans-serif;
+}
+.rally-touch-plane [data-touch-action="brake"] { border-bottom:3px solid #ed9c7b; }
+.rally-touch-plane [data-touch-action="drift"] { border-bottom:3px solid #e8c56d; }
+.rally-touch-plane [data-touch-action="item"],.rally-touch-plane [data-touch-action="ability"] { border-bottom:3px solid #9bcab1; }
+.rally-touch-plane .rally-touch-button.on,.rally-editor-plane [aria-pressed="true"] {
+  background:#d69a57f2; color:#231e15; outline:2px solid #fff0cc; outline-offset:1px;
+}
+dialog.rally-touch-editor {
+  position:fixed; inset:0; margin:0; width:100%; max-width:none; height:100%; height:100dvh; max-height:none;
+  padding:0; overflow:hidden; box-sizing:border-box; border:0; border-radius:0; background:#14211cdd; color:#fff8e8;
+  font:600 14px/1.25 DM,Arial,sans-serif;
+}
+dialog.rally-touch-editor::backdrop { background:#09150e45; backdrop-filter:none; }
+.rally-editor-head,.rally-editor-tools { display:flex; align-items:center; gap:10px; padding-inline:max(12px,env(safe-area-inset-left)) max(12px,env(safe-area-inset-right)); }
+.rally-editor-head { padding-top:max(6px,env(safe-area-inset-top)); height:40px; box-sizing:content-box; justify-content:space-between; }
+.rally-editor-head h2 { font:700 clamp(19px,4vw,28px)/1 Condensed,Arial,sans-serif; margin:0; }
+.rally-editor-head div { display:flex; gap:4px; }
+.rally-editor-head button,.rally-editor-tools select { font:inherit; border:1px solid #59695b; color:inherit; background:#26362d; border-radius:6px; padding:7px 9px; }
+.rally-editor-head [data-save] { color:#1e231a; background:#f6bf77; border-color:#ffdaa3; }
+.rally-editor-tools { height:46px; flex-wrap:nowrap; justify-content:flex-start; }
+.rally-editor-tools label { display:flex; align-items:center; gap:6px; min-width:0; }
+.rally-editor-tools select { padding:4px; max-width:110px; font-size:16px; }
+.rally-editor-tools input { width:clamp(50px,17vw,160px); accent-color:#f6bf77; }
+.rally-editor-tools output { color:#f4cf98; font-variant-numeric:tabular-nums; min-width:3em; }
+.rally-editor-plane { border:1px dashed #e2d4aa45; border-radius:5px; }
+.rally-editor-tip { position:absolute; top:calc(max(6px,env(safe-area-inset-top)) + 99px); width:100%; margin:0; text-align:center; color:#d3dbd2; font-size:12px; pointer-events:none; z-index:-1; }
+.touch-layout-setting { margin-top:12px; }
+@media (max-width:350px) { .rally-editor-head,.rally-editor-tools {gap:5px;} .rally-editor-tools {font-size:12px;} }

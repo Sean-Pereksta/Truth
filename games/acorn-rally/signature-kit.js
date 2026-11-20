@@ -4,9 +4,10 @@
   else root.AcornSignatures=api;
 })(typeof globalThis==='object'?globalThis:this,function(){
   'use strict';
-  const names=['Needle Turn','Shoulder Through','Springstep','Berm Burst','Quill Fan','Slipstream Dash','Ground Pound','Tunnel Dash','Golden Hour','Prism Wake','Halo Counter'];
-  const durations=[1.45,3,.86,2.7,1.05,1.25,1.15,1.12,1.5,2,2];
-  const colors=['#90e6ed','#f0ac59','#d5a2ff','#65eab5','#ffe16c','#ff775e','#b3df6d','#69d9ff','#ffcd70','#8debfa','#ffdb87'];
+  const names=['Needle Turn','Shoulder Through','Springstep','Berm Burst','Quill Fan','Slipstream Dash','Ground Pound','Tunnel Dash','Golden Hour','Prism Wake','Halo Counter','Gravehook Swing'];
+  const durations=[1.45,3,.86,2.7,1.05,1.25,1.15,1.12,1.5,2,2,1.45];
+  const colors=['#90e6ed','#f0ac59','#d5a2ff','#65eab5','#ffe16c','#ff775e','#b3df6d','#69d9ff','#ffcd70','#8debfa','#ffdb87','#c79bff'];
+  const hookRange=6.2, swingArc=Math.PI*.96;
   const groundPound={core:3.9,radius:11.4,travel:.27};
   const quillFan={core:2.75,radius:8.8,travel:.18};
   const cap=(v,low,high)=>Math.max(low,Math.min(high,v));
@@ -88,8 +89,73 @@
     }
     sig.waveRadius=radius;
   }
-  function start(st,r,length){
+  function hookable(st,r){
+    return r && grounded(r) && !r.hawk && !r.spin && !(r.freezeUntil>st.time);
+  }
+  function hookTarget(st,r,length,starts){
+    if(!hookable(st,r)||!starts)return null;
+    const origin=starts[r.seat];
+    let best=null,nearest=hookRange;
+    for(const other of st.racers){
+      if(other===r||!hookable(st,other)||other.protect>0||other.branch!==r.branch)continue;
+      const point=starts[other.seat],along=gap(origin.progress,point.progress,length);
+      // Both checks matter on hairpins, overpasses and forks whose road ribbons touch.
+      if(Math.abs(along)>hookRange+1 || Math.abs(origin.contactY-point.contactY)>2.15)continue;
+      const d=Math.hypot(origin.x-point.x,origin.contactY-point.contactY,origin.z-point.z);
+      if(d<nearest){nearest=d;best=other;}
+    }
+    return best;
+  }
+  function releaseHook(st,r,label,clean){
+    beat(r,st,label,clean?'release':'cut');r.active=0;r.fx=clean?.46:.22;
+    if(clean)r.contactCarry=Math.max(r.contactCarry||0,r.v);
+  }
+  function blockHook(st,r,other){
+    other.guard=0;other.protect=.65;
+    other.signatureHit={id:11,at:st.time,side:Math.sign(other.x-r.x)||1,blocked:true};
+    tell(other,'Guard broke the gravehook');releaseHook(st,r,'Gravehook deflected',false);
+  }
+  function checkHook(st,r,starts,length){
+    const sig=r.signature;
+    if(sig?.stage!=='latched')return;
+    const other=st.racers[sig.target],a=starts[r.seat],b=starts[sig.target];
+    if(!hookable(st,r)||!hookable(st,other)||other.protect>0||!b||
+       other.driverIndex!==sig.targetDriver||r.human!==sig.pilot||other.human!==sig.targetPilot||
+       r.branch!==sig.branch||other.branch!==sig.branch||
+       Math.abs(gap(a.progress,b.progress,length))>hookRange+2.2||
+       Math.hypot(a.x-b.x,a.contactY-b.contactY,a.z-b.z)>hookRange+2.2||Math.abs(a.contactY-b.contactY)>2.65){
+      releaseHook(st,r,'Chain broken',false);return;
+    }
+    if(other.guard>0)blockHook(st,r,other);
+  }
+  function swing(st,r,dt,length,road,starts,advanceScale){
+    const sig=r.signature;
+    if(sig?.stage!=='latched')return;
+    const other=st.racers[sig.target],pivot=starts[sig.target],start=starts[r.seat];
+    const omega=sig.turn*(2.55+.28*r.steer*sig.side);
+    sig.arc+=Math.abs(omega)*dt;sig.angle+=omega*dt;
+    const sn=Math.sin(sig.angle),cs=Math.cos(sig.angle),radius=sig.radius;
+    const lane=pivot.lane+sn*radius,room=road.w-.65;
+    if(Math.abs(lane)>room && Math.abs(r.x)>room-.2 && Math.sign(lane)===Math.sign(r.x)){
+      releaseHook(st,r,'Released at the edge',true);return;
+    }
+    // A velocity constraint follows the moving pivot. Normal track integration below
+    // still resolves branch changes, ramp lips, collisions and lap crossings.
+    const alongError=gap(start.progress,pivot.progress,length)+cs*radius;
+    const forward=other.v+(-sn*radius*omega+alongError*7)/advanceScale;
+    const lateral=other.vx+cs*radius*omega+(lane-r.x)*7;
+    r.v+=cap(forward-r.v,-82*dt,82*dt);
+    r.v=cap(r.v,-3.8,Math.max(12,other.v+12));
+    r.vx+=cap(cap(lateral,-14,14)-r.vx,-92*dt,92*dt);
+    r.contactCarry=Math.max(r.contactCarry||0,r.v);
+    // A gentle outward nudge. The hooked kart keeps its throttle and steering.
+    other.vx-=sn*2.1*dt;
+    if(sig.arc>=swingArc||r.active<=0)releaseHook(st,r,'Gravehook slingshot',true);
+  }
+  function start(st,r,length,starts){
     const id=r.driverIndex, duration=durations[id];
+    const hooked=id===11?hookTarget(st,r,length,starts):null;
+    if(id===11&&!hooked){tell(r,'Move closer to a rival');return;}
     if(id===3&&r.bank<.15){tell(r,'Hold a turn to arm');return;}
     if(id===9&&!r.prevDrift){tell(r,'Start a drift to arm');return;}
     const sig=r.signature={stage:'active',label:names[id],since:st.time,until:st.time+duration,beat:st.time,s:r.s,x:r.x,branch:r.branch,mask:0,hits:0,charge:0,side:Math.abs(r.steer)>.22?Math.sign(r.steer):0,target:-1};
@@ -113,6 +179,18 @@
     if(id===8){sig.label='Follow the gold line';tell(r,sig.label);}
     if(id===9){sig.label='Charge and release your drift';tell(r,sig.label);}
     if(id===10){r.guard=Math.max(r.guard,duration);sig.previousGuard=r.guard;}
+    if(id===11){
+      if(hooked.guard>0){blockHook(st,r,hooked);return;}
+      const a=starts[r.seat],b=starts[hooked.seat],ds=gap(b.progress,a.progress,length),dx=a.lane-b.lane;
+      sig.side=sig.side||((Math.abs(dx)>.55?Math.sign(dx):-Math.sign(b.lane))||1);
+      sig.angle=Math.atan2(dx,ds);
+      // Behind a rival, steering right swings via their right flank. Starting alongside
+      // favors the forward tangent rather than forcing the racer back into the pack.
+      sig.turn=Math.abs(ds)>.75*Math.abs(dx)?sig.side*(Math.sign(ds)||-1):-Math.sign(dx)||sig.side;
+      sig.radius=cap(Math.hypot(ds,dx),2.55,3.55);sig.arc=0;
+      sig.target=hooked.seat;sig.targetDriver=hooked.driverIndex;sig.targetPilot=hooked.human;sig.pilot=r.human;
+      beat(r,st,'Latched · tap to release','latched');tell(hooked,'Grimoire latched on');
+    }
   }
   function tick(st,r,dt,length,road,input){
     const hit=r.signatureHit;
@@ -127,6 +205,7 @@
     const age=st.time-sig.since, sinceBeat=st.time-sig.beat, id=r.driverIndex;
     const linger=id===8&&sig.stage==='release'&&r.guard>0?3:1.25;
     if(st.time>sig.until+linger){delete r.signature;return;}
+    if(id===11&&sig.stage==='latched'&&input.ability&&!r.prevAbility&&age>0)releaseHook(st,r,'Chain released',true);
     if(id===10&&sig.stage==='active'){
       if(r.guard<=0&&sig.previousGuard>dt+.0001&&st.time<=sig.until){
         beat(r,st,'Halo counterboost','release');boost(r,1.15,8.1);
@@ -201,5 +280,5 @@
     if(impact(st,r,rival,17.5,1.05,.16,r.x,36))r.signature.hits++;
     boost(r,.72,6.8);return true;
   }
-  return {names,durations,colors,groundPound,quillFan,gap,start,tick,brace,boost,advanceBoost};
+  return {names,durations,colors,groundPound,quillFan,gap,start,tick,brace,boost,advanceBoost,hookTarget,checkHook,swing};
 });
