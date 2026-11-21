@@ -431,7 +431,7 @@
       }
     }
     beginFrame(){this.poseFrame++;}
-    render(st,seat,rect,scale,back,ghost,dt,postFinishTime=0){
+    render(st,seat,rect,scale,back,ghost,dt,postFinishTime=0,frameHazards=null){
       const gl=this.gl, c=this.course,p=this.pal,r=st.racers[seat]||st.racers[0];
       gl.enable(gl.SCISSOR_TEST);const v=[Math.round(rect.x*scale),Math.round((this.canvas.height/scale-rect.y-rect.h)*scale),Math.round(rect.w*scale),Math.round(rect.h*scale)];
       gl.viewport(...v);gl.scissor(...v);gl.clearColor(...rgb(p.mist),1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
@@ -491,7 +491,7 @@
         itemEffects.stamp(name,[q.x,q.y+height,q.z],Math.atan2(q.tx,q.tz)+angle,size,alpha,roll,pitch,stretch);
       };
       root.AcornExpansionWorld.drawWildlife(this.courseScenery,st.time,itemEffects.distance,itemEffects.stamp);
-      const hazards=root.AcornHazards.samples(c,st.time);
+      const hazards=frameHazards??root.AcornHazards.samples(c,st.time);
       root.AcornCourseArt.cosmic(c,hazards,st.time,itemEffects.sample,(name,point,...pose)=>{
         const range=name.startsWith('lavaTitan')?260:200;
         if(itemEffects.distance({x:point[0],z:point[2]})<range)itemEffects.stamp(name,point,...pose);

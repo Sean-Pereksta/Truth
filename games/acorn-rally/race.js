@@ -131,7 +131,7 @@
   }
   class CanvasWorld{
     constructor(canvas,c){this.ctx=canvas.getContext('2d');this.canvas=canvas;this.c=c;this.painter=root.AcornRig.spritePainter();this.courseScenery=root.AcornExpansionWorld.scenery(c,Sim);this.p=root.AcornWorld?.palettes[c.index]||{sky:'#bad1b8',mist:'#a2cfa9',land:'#40653e',soil:'#a1794c',edge:'#668349',wood:'#67513a',leaf:['#3a6539','#8a9e5b','#548144']};}
-    render(st,seat,rect,k,back,ghost,dt,postFinishTime=0){
+    render(st,seat,rect,k,back,ghost,dt,postFinishTime=0,frameHazards=null){
       const ctx=this.ctx,c=this.c,p=this.p,r=st.racers[seat],w=rect.w,h=rect.h;
       ctx.save();ctx.setTransform(k,0,0,k,rect.x*k,rect.y*k);ctx.beginPath();ctx.rect(0,0,w,h);ctx.clip();
       const me=Sim.sample(c,r.s,0,r.branch), f=h*1.02, direction=back?-1:1;
@@ -154,7 +154,7 @@
       this.skids||=new root.AcornDriftArt.SkidMarks(c);
       this.skids.update(st);const skidRows=this.skids.canvasRows(st,r.s,direction,worldPoint);
       const racers=st.racers.concat(ghost?[ghost]:[]);
-      const obstaclesByRow=new Map(),worldByRow=new Map(),hazards=root.AcornHazards.samples(c,st.time);
+      const obstaclesByRow=new Map(),worldByRow=new Map(),hazards=frameHazards??root.AcornHazards.samples(c,st.time);
       const tideRows=new Map();
       if(c.index===tides.courseIndex){
         if(this.tideTime!==st.time){
@@ -497,7 +497,8 @@
     const music=root.AcornMusic;
     function syncMusic(){music?.setEnabled(sound.enabled && settings.music!==false && !document.hidden);}
     syncMusic();music?.setScene('race',c.index);music?.setPaused(false);
-    const seat=net?.seat??0;let alive=true,paused=false,help=false,endDelay=0,raf=0,prev=performance.now(),timeBank=0,lastSnap=null,lastSend=-1,trace=[],lastTrace=-1,oldLap=0,ghost=loadedGhost,trialBest=loadedGhost?.time||Infinity,snapshotTime=0;
+    const seat=net?.seat??0;let alive=true,paused=false,help=false,endDelay=0,raf=0,prev=performance.now(),timeBank=0,lastSnap=null,trace=[],lastTrace=-1,oldLap=0,ghost=loadedGhost,trialBest=loadedGhost?.time||Infinity,snapshotTime=0;
+    const remoteMotion=net&&root.AcornOnlineMotion?.create(Sim);
     let snapshotInterval=50,snapshotJitter=0,frameCount=0,fpsSince=prev;
     let lastCount=4,lastItem=-1,lastBoost=0,lastHit=0,lastUseFx=0,lastHitFx=0,lastSkill=0,lastConfirm=0,previousPad=[],padMap=[],lastDims={},drawScale=1,hudScale=1;
     const padReservations=Array.from({length:players},(_,i)=>options.padSeats?.[i]?{...options.padSeats[i]}:null);
@@ -635,7 +636,7 @@
           else if(frameMean<(players>1?.01655:.0169))quality=Math.min(1,quality+.035);budgetClock=0;}}
       const inputs={};for(let i=0;i<players;i++)inputs[net?seat:i]=paused?{}:input(i,pads);
       if(net){
-        if(now-lastSend>36){net.sendInput(inputs[seat]);lastSend=now;}
+        net.sendInput(inputs[seat]);
         frameCount++;
         if(now-fpsSince>=1000){net.reportFps?.(frameCount*1000/(now-fpsSince));fpsSince=now;frameCount=0;}
         const snap=net.getState();
@@ -657,6 +658,10 @@
             }else if(Math.abs(a.s-r.s)>alongTrackLimit||Math.abs(a.x-r.x)>5)continue;
             const v=(r.seat===seat?.55:.64)*(!!a.flight!==!!r.flight?.28:1);
             r.x+=(previous.x-r.x)*v;r.s+=(previous.s-r.s)*v;
+            if(r.seat===seat&&a.branch===r.branch&&!r.fall&&!r.finish&&!a.finish){
+              const turn=(a.yaw||0)-(r.yaw||0);
+              r.yaw=(r.yaw||0)+Math.atan2(Math.sin(turn),Math.cos(turn))*v;
+            }
             if(a.flight&&r.flight&&a.flight.id===r.flight.id&&Math.abs(a.flight.lipS-r.flight.lipS)<.5){
               r.flight.y+=(a.flight.y-r.flight.y)*v;r.flight.vy+=(a.flight.vy-r.flight.vy)*v;
             }
@@ -665,6 +670,11 @@
           if(old?.countdown<=0&&st.countdown<=0&&!st.done){
             // Keep the displayed clocks and animated hazards moving forward across late snapshots.
             st.time=Math.max(st.time,Math.min(old.time,st.time+.3));
+          }
+          const local=st.racers[seat];
+          if(local&&!st.done&&st.countdown<=0&&!local.finish&&!local.fall&&!local.hawk&&!Sim.isFrozen(st,local)){
+            local.steer=(inputs[seat].steer||0)*(1-.87*clamp((local.spin||0)/.48,0,1));
+            local.yaw+=(Sim.steeringYaw(local,local.steer)-local.yaw)*Math.min(1,frame*12);
           }
         }else if(snap&&!st.done&&now-snapshotTime<clamp(snapshotInterval*2+snapshotJitter*2,180,500)){
           const dt=Math.min(frame,.045);if(st.countdown<=0)st.time+=dt;
@@ -744,8 +754,9 @@
       sound.update(r,paused||st.countdown>0,r.branch?'wet':'dry');
       const {w,h}=dimensions();ctx.setTransform(hudScale,0,0,hudScale,0,0);ctx.clearRect(0,0,w,h);const ghostKart=trial();
       const touchActive=players===1&&!touchbar.hidden;
+      const viewState=remoteMotion?.view(st,seat,net.getMotionSnapshots?.(),now)??st;
       renderer.beginFrame?.();
-      views(w,h).forEach((rect,i)=>{const id=net?seat:i;if(!st.racers[id])return;renderer.render(st,id,rect,drawScale,!!inputs[id]?.lookBack,ghostKart,frame,endDelay);
+      views(w,h).forEach((rect,i)=>{const id=net?seat:i;if(!st.racers[id])return;renderer.render(viewState,id,rect,drawScale,!!inputs[id]?.lookBack,ghostKart,frame,endDelay,obstacles);
         const b=keysets[i]||defaults,gamepad=!!padMap[i];
         hud(ctx,st,c,id,rect,{map,obstacles,multi:players>1,localIndex:i,touch:touchActive,autoTouch:touchDriving,cupRoundLabel:options.cupRoundLabel,keyGas:gamepad?padLabel('accelerate',true):label(b.accelerate),keyAbility:gamepad?padLabel('ability',true):label(b.ability),keyItem:gamepad?padLabel('item',true):label(b.item),gridStatus});});
       if(!gridReadySignalled&&net?.gridReady&&st.racers[seat]){gridReadySignalled=true;net.gridReady();}

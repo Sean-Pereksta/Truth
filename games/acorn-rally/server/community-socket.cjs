@@ -184,10 +184,11 @@ function createRaceSockets({ server, onHello, onInput, onMetrics, onClose, runti
   server.on('upgrade', upgrade);
   server.once('close', close);
 
-  function publish(room, type, value) {
+  function publish(room, type, value, encodedValue) {
     const members = rooms.get(room);
     if (!members?.size) return;
-    const json = encode(type, value);
+    const json = encodedValue === undefined ? encode(type, value)
+      : '{"type":' + JSON.stringify(type) + ',"value":' + encodedValue + '}';
     const maySkip = discardable(type, value);
     for (const record of members) {
       if (activeSeats.get(record.seat) === record) send(record, json, maySkip);
