@@ -202,6 +202,7 @@ function openRooms(liveJoin=false){
  modal='rooms';dc.replaceChildren();if(!dialog.open)dialog.showModal();document.body.style.overflow='hidden';
  window.RallyRooms.open({container:dc,trackIndex:track,driverIndex:driver,cc:engineClass,difficulty:cpuLevel,settings,liveJoin,
   startRace:o=>{roomSession=o.network;launch({...o,mode:'race'})},
+   onStartCancelled:()=>{roomSession=null;detachRace();modal='rooms';document.body.style.overflow='hidden'},
   onRetired:hasResults=>{
    roomSession=null;
    if(!hasResults&&running){detachRace();closeModal();nav('hub');notice('The race room closed before results arrived.')}
@@ -246,7 +247,12 @@ async function launch(options){
  if(!options.network&&!driverAvailable(options.driverIndex)){notice(championship.rewardRequirement(options.driverIndex)+' to unlock this driver.');return}
  lastRun=options;running=true;closeModal();race.hidden=false;app.inert=true;document.body.style.overflow='hidden';
  race.innerHTML=`<div class="grid-loading" style="background-image:linear-gradient(0deg,#121712ec,#12171233),url(art/course-${options.trackIndex}.webp)"><div><span class="hero-kicker eyebrow"><span class="checker"></span>${options.cupRoundLabel||'Preparing starting grid'}</span><h2>${tracks[options.trackIndex].name}</h2><div class="load-progress"></div></div></div>`;
- try{await window.KartViewer.loadModels();if(!running||lastRun!==options)return;race.replaceChildren();window.AcornRace.start({...options,container:race,settings:{...settings,bindings:{...settings.bindings}},onExit:leaveRace,onFinish:finish,onSoundChange:enabled=>{settings.sound=enabled;pref()},onPadPresetChange:id=>{settings.padPreset=id;pref()}})}catch(err){console.error(err);leaveRace();notice('The race could not start. Refresh the game and try again.')}
+ try{
+   // Online grids can render the in-engine karts without fetching the full garage collection.
+   if(!options.network)await window.KartViewer.loadModels();
+   if(!running||lastRun!==options)return;
+   race.replaceChildren();window.AcornRace.start({...options,container:race,settings:{...settings,bindings:{...settings.bindings}},onExit:leaveRace,onFinish:finish,onSoundChange:enabled=>{settings.sound=enabled;pref()},onPadPresetChange:id=>{settings.padPreset=id;pref()}});
+ }catch(err){console.error(err);leaveRace();notice('The race could not start. Refresh the game and try again.')}
 }
 function detachRace(){running=false;window.AcornRace?.stop();race.hidden=true;app.inert=false;document.body.style.overflow=''}
 function returnRoom(){const net=roomSession;roomSession=null;closeModal();modal='rooms';net.returnToLobby();document.body.style.overflow='hidden'}

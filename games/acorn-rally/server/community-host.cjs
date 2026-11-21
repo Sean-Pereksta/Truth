@@ -26,7 +26,11 @@ function createCommunityHost({
   const directory = directoryFactory({ dataDir });
   const lifecycle = new AbortController();
   let localCode = String(randomInt(10_000)).padStart(4, '0');
-  let started = false, tunnel, lease, last;
+  let started = false, tunnel, lease, last, tunnelStatus = 'starting', directoryStatus = 'pending';
+
+  function diagnostics() {
+    return { tunnelStatus, directoryStatus, ...tunnel?.diagnostics?.() };
+  }
 
   function report(status, extra = {}) {
     const next = { status, name, visibility, ...extra };
@@ -57,9 +61,11 @@ function createCommunityHost({
         if (!lease && !signal.aborted) lease = await directory.reserve(state, localCode);
         if (signal.aborted || lifecycle.signal.aborted) return;
         localCode = lease.code;
+        directoryStatus = 'listed';
         report('online', { origin });
       } catch {
         if (signal.aborted || lifecycle.signal.aborted) return;
+        directoryStatus = 'unavailable';
         report('lan-only', { message: 'The lobby directory is unavailable. Same-Wi-Fi play is available.' });
         nextDelay = directoryRetryMs;
       }
@@ -70,10 +76,13 @@ function createCommunityHost({
   async function serve() {
     let retryMs = 1000;
     while (!lifecycle.signal.aborted) {
+      tunnelStatus = 'starting';
+      directoryStatus = 'pending';
       report('starting', { message: 'Opening the public game connection.' });
       try {
         tunnel = tunnelFactory({ executable, port, probeId });
         const origin = await tunnel.ready;
+        tunnelStatus = 'ready';
         retryMs = 1000;
         await advertise(origin, tunnel.signal);
       } catch { /* Keep the local game available while the public connection recovers. */ }
@@ -86,6 +95,8 @@ function createCommunityHost({
         }
       }
       if (lifecycle.signal.aborted) return;
+      tunnelStatus = 'reconnecting';
+      directoryStatus = 'pending';
       report('lan-only', { message: 'The public connection is unavailable. Same-Wi-Fi play is available while it reconnects.' });
       await wait(retryMs, lifecycle.signal).catch(() => {});
       retryMs = Math.min(retryMs * 2, 30_000);
@@ -96,6 +107,8 @@ function createCommunityHost({
     if (started || lifecycle.signal.aborted) return;
     started = true;
     if (typeof probeId !== 'string' || !probeId || !path.isAbsolute(executable) || !fs.existsSync(executable)) {
+      tunnelStatus = 'unavailable';
+      directoryStatus = 'disabled';
       report('lan-only', { message: 'The public tunnel is unavailable. Same-Wi-Fi play is available.' });
       return;
     }
@@ -109,7 +122,7 @@ function createCommunityHost({
     report('offline');
   }
 
-  return { start, close, getCode: () => localCode, queueStore: directory.queueStore };
+  return { start, close, diagnostics, getCode: () => localCode, queueStore: directory.queueStore };
 }
 
 module.exports = { createCommunityHost };

@@ -5,21 +5,27 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const os = require('node:os');
-const { performance } = require('node:perf_hooks');
+const { monitorEventLoopDelay, performance } = require('node:perf_hooks');
 
 const root = path.resolve(__dirname, '..');
 const raceSim = require('../race-sim.js');
 const { createRaceQueue } = require('./race-queue.cjs');
 const { createRacePolling } = require('./community-poll.cjs');
+const { createRaceSockets } = require('./community-socket.cjs');
 const names = raceSim.drivers;
 const earnedDrivers = new Set([names.indexOf('Astra'), names.indexOf('Aurel'), names.indexOf('Grimoire the Vile')]);
 const neutral = Object.freeze({ steer: 0, gas: 0, brake: 0, drift: false, item: false, ability: false, lookBack: false });
 const idleLimit = 15 * 60 * 1000;
 const lobbyIdleLimit = 2 * 60 * 1000;
 const admissionTimeout = 25_000;
+const gridLoadTimeout = 60_000;
+const emptyRaceGrace = 20_000;
 const queueTokenPattern = /^[0-9a-f]{64}$/;
+const gridClientPattern = /^[0-9a-f]{16}$/;
 const capacity = 8;
 const stepSeconds = 1 / 60;
+const snapshotIntervalTicks = 3;
+const transports = new Set(['websocket', 'events', 'poll']);
 const mime = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.webp': 'image/webp',
@@ -75,10 +81,14 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
   community = null, visibility = 'public', name = 'Acorn Rally', hostId = '', operatorOrigin = '',
   raceQueue = singleRoom ? createRaceQueue(community ? { community: true, store: community.queueStore } : {}) : null } = {}) {
   const polling = createRacePolling(lobby);
-  const { connected } = polling;
+  function connected(seat) { return Boolean(seat.socket?.isOpen()) || polling.connected(seat); }
   const privateCodes = new Map();
   const rooms = new Map();
+  const loopDelay = community && automatic ? monitorEventLoopDelay({ resolution: 20 }) : null;
+  loopDelay?.enable();
+  let snapshotCount = 0, snapshotBytes, diagnosticsAt = performance.now();
   function members(room) { return room.seats.filter(Boolean); }
+  function inProgress(room) { return room?.phase === 'loading' || room?.phase === 'racing'; }
   function activeRoom() {
     const room = rooms.values().next().value;
     if (room && !members(room).some(connected) && Date.now() - room.touched > lobbyIdleLimit) {
@@ -89,7 +99,7 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
   }
   function status() {
     const room = activeRoom();
-    return { phase: !room || room.phase === 'lobby' ? 'waiting' : room.phase,
+    return { phase: inProgress(room) ? 'racing' : room?.phase === 'finished' ? 'finished' : 'waiting',
       players: room ? members(room).length : 0, capacity,
       ...(raceQueue && { queueEnabled: true, waiting: raceQueue.size() }) };
   }
@@ -101,10 +111,16 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
     return seat;
   }
   function lobby(room) {
+    const loading = room.phase === 'loading' ? loadDrivers(room) : null;
     return { code: room.code, host: room.host, trackIndex: room.trackIndex, botFill: room.botFill,
       laps: room.laps, cc: room.cc, difficulty: room.difficulty, phase: room.phase, round: room.round, tick: room.tick,
+      ...(room.startNotice && { startNotice: room.startNotice }),
+      ...(loading && { loading: { ready: loading.filter(seat => seat.loadedAt && connected(seat)).length,
+        expected: loading.length, timeoutMs: Math.max(0, room.load.deadline - Date.now()) } }),
       seats: members(room).map(s => ({ index: s.index, kartIndex: s.kartIndex, name: s.name, driverIndex: s.driverIndex,
-        ready: s.ready, connected: connected(s) })) };
+        ready: s.ready, connected: connected(s),
+        ...(loading && { loadState: !loading.includes(s) ? 'reserve' :
+          !connected(s) ? 'reconnecting' : s.loadedAt ? 'ready' : 'loading' }) })) };
   }
   function emit(seat, event, json) {
     const stream = seat.stream;
@@ -113,12 +129,22 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
     stream.write('event: ' + event + '\ndata: ' + json + '\n\n');
   }
   function publish(room, event, value) {
+    if (community && event === 'snapshot') {
+      snapshotCount++;
+      if (snapshotBytes === undefined || snapshotCount % 12 === 0) {
+        snapshotBytes = Buffer.byteLength(JSON.stringify(value));
+      }
+    }
     if (community) polling.changed(room, event, value);
+    raceSockets?.publish(room, event, value);
     const listeners = members(room).filter(seat => seat.stream);
     if (listeners.length) {
       const json = JSON.stringify(value);
       for (const seat of listeners) emit(seat, event, json);
     }
+  }
+  function raceSnapshot(room) {
+    return { round: room.round, tick: room.tick, intervalTicks: snapshotIntervalTicks, state: room.state };
   }
   function announce(room) { publish(room, 'room', lobby(room)); }
   function gridDrivers(occupied, gridSize) {
@@ -129,8 +155,42 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
     return grid.map(driver => driver === null ? spare[next++] : driver);
   }
   function setHuman(room, seat, flag) {
-    const kart = room.phase === 'racing' && room.state?.racers?.[seat.kartIndex];
+    const kart = inProgress(room) && room.state?.racers?.[seat.kartIndex];
     if (kart) kart.human = flag;
+  }
+  function loadDrivers(room) {
+    return members(room).filter(seat => seat.driving && room.load.participants.has(seat.index));
+  }
+  function setGridClient(room, seat, client) {
+    if (typeof client !== 'string' || !gridClientPattern.test(client) || client === seat.loadBarrier) return false;
+    seat.loadBarrier = client;
+    if (room.phase !== 'loading' || !seat.loadedAt) return false;
+    seat.loadedAt = null;
+    seat.clientLoadMs = null;
+    return true;
+  }
+  function returnToGrid(room, message) {
+    room.phase = 'lobby';
+    room.state = null;
+    room.pollSnapshot = null;
+    room.load = null;
+    room.emptySince = null;
+    room.startNotice = message;
+    announce(room);
+  }
+  function advanceGrid(room, now) {
+    const expected = loadDrivers(room);
+    const pending = expected.filter(seat => !seat.loadedAt || !connected(seat));
+    if (!expected.length) {
+      returnToGrid(room, 'The starting grid emptied. Start another race when ready.');
+    } else if (now >= room.load.deadline && pending.length) {
+      const names = pending.map(seat => seat.name).join(', ');
+      returnToGrid(room, 'Race start canceled. Still loading or reconnecting: ' + names + '.');
+    } else if (!pending.length) {
+      room.phase = 'racing';
+      room.load.finishedAt = now;
+      announce(room);
+    }
   }
   function removeSeat(room, seat) {
     seat.finishPoll?.();
@@ -138,9 +198,16 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
     const stream = seat.stream;
     seat.stream = null;
     if (stream) stream.end();
+    const socket = seat.socket;
+    seat.socket = null;
+    socket?.close();
     room.seats[seat.index] = null;
     const remaining = members(room);
-    if (!remaining.length) { rooms.delete(room.code); return; }
+    if (!remaining.length) {
+      if (inProgress(room)) retireRoom(room, 'abandoned');
+      else rooms.delete(room.code);
+      return;
+    }
     if (room.host === seat.index) {
       room.host = (remaining.find(connected) || remaining[0]).index;
       room.seats[room.host].ready = true;
@@ -148,13 +215,17 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
     announce(room);
   }
   function begin(room) {
-    if (room.phase === 'racing') fail(409, 'The race has already started.');
+    if (inProgress(room)) fail(409, 'The race has already started preparing.');
     const occupied = members(room);
     if (!singleRoom && !occupied.every(s => s.stream && (s.index === room.host || s.ready)))
       fail(409, 'Every driver must be connected and ready.');
+    const participants = occupied.filter(connected);
+    if (!participants.length) fail(409, 'Wait for a driver to connect before starting.');
+    const outdated = participants.filter(seat => !seat.loadBarrier);
+    if (outdated.length) fail(409, 'Refresh Acorn Rally before starting: ' + outdated.map(seat => seat.name).join(', ') + '.');
     // Lobby identities survive rematches. Empty slots collapse when AI filling is disabled.
     occupied.forEach((s, i) => { s.kartIndex = room.botFill ? s.index : i; });
-    const humanSeats = occupied.filter(s => !singleRoom || connected(s)).map(s => s.kartIndex);
+    const humanSeats = participants.map(s => s.kartIndex);
     const gridSize = room.botFill ? capacity : occupied.length;
     const drivers = gridDrivers(occupied, gridSize);
     const state = sim.create({ trackIndex: room.trackIndex, mode: 'single', players: 1,
@@ -164,28 +235,47 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
     for (const s of occupied) {
       if (singleRoom) state.racers[s.kartIndex].name = s.name;
       s.seq = -1; s.driving = true; s.input = { ...neutral }; s.pulses = {}; s.inputAt = 0;
+      s.loadedAt = null; s.clientLoadMs = null;
     }
-    room.state = state; room.tick = 0; room.phase = 'racing'; room.round += 1;
+    const startedAt = Date.now();
+    room.load = { startedAt, deadline: startedAt + gridLoadTimeout,
+      participants: new Set(participants.map(seat => seat.index)) };
+    room.state = state; room.tick = 0; room.phase = 'loading'; room.round += 1;
+    room.emptySince = null; room.startNotice = null;
     announce(room);
-    publish(room, 'snapshot', { round: room.round, tick: room.tick, state: room.state });
+    publish(room, 'snapshot', raceSnapshot(room));
   }
-  function retireRoom(room) {
+  function retireRoom(room, reason = 'finished') {
     rooms.delete(room.code);
-    publish(room, 'retired', { code: room.code, round: room.round });
+    publish(room, 'retired', { code: room.code, round: room.round, reason });
     for (const seat of members(room)) {
       const stream = seat.stream;
       seat.stream = null;
       stream?.end();
+      const socket = seat.socket;
+      seat.socket = null;
+      socket?.close();
     }
   }
   function tick() {
     const now = Date.now();
     for (const room of rooms.values()) {
-      if (room.phase !== 'racing') continue;
+      if (!inProgress(room)) continue;
+      const driving = members(room).filter(seat => seat.driving);
+      if (driving.some(connected)) room.emptySince = null;
+      else {
+        room.emptySince ??= now;
+        if (now - room.emptySince >= emptyRaceGrace) retireRoom(room, 'abandoned');
+        continue;
+      }
+      if (room.phase === 'loading') {
+        advanceGrid(room, now);
+        continue;
+      }
       const inputs = {};
       for (const seat of members(room)) {
         if (!connected(seat)) {
-          if (seat.lastPoll) setHuman(room, seat, false);
+          setHuman(room, seat, false);
           continue;
         }
         inputs[seat.kartIndex] = now - seat.inputAt > 800 ? neutral : { ...seat.input, ...seat.pulses };
@@ -204,8 +294,8 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
         room.phase = 'finished';
         for (const s of members(room)) s.ready = s.index === room.host;
       }
-      if (room.tick % 3 === 0 || room.state.done)
-        publish(room, 'snapshot', { round: room.round, tick: room.tick, state: room.state });
+      if (room.tick % snapshotIntervalTicks === 0 || room.state.done)
+        publish(room, 'snapshot', raceSnapshot(room));
       if (room.state.done) {
         if (singleRoom) retireRoom(room);
         else announce(room);
@@ -239,6 +329,49 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
       'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer' });
     res.end(JSON.stringify(value));
   }
+  function acceptInput(room, seat, body) {
+    if (room.phase !== 'racing' || body.round !== room.round) return { accepted: false };
+    const seq = integer(body.seq, 0, Number.MAX_SAFE_INTEGER, -1);
+    if (seq > seat.seq) {
+      const raw = body.input || {};
+      seat.seq = seq; seat.inputAt = Date.now();
+      seat.input = { steer: scalar(raw.steer, -1), gas: scalar(raw.gas, 0), brake: scalar(raw.brake, 0),
+        drift: Boolean(raw.drift), item: Boolean(raw.item), ability: Boolean(raw.ability), lookBack: Boolean(raw.lookBack) };
+      if (seat.input.item) seat.pulses.item = true;
+      if (seat.input.ability) seat.pulses.ability = true;
+    }
+    return { accepted: true, tick: room.tick };
+  }
+  function recordMetrics(room, seat, body, transport) {
+    const now = Date.now();
+    if (seat.metrics && room.round === seat.metrics.round && now - seat.metrics.at < 1000) return;
+    const metric = (name, max) => Number.isFinite(body[name]) ? Math.min(max, Math.max(0, body[name])) : null;
+    seat.metrics = { at: now, round: room.round, transport, rttMs: metric('rttMs', 15000),
+      jitterMs: metric('jitterMs', 15000), snapshotAgeMs: metric('snapshotAgeMs', 60000),
+      snapshotGapPct: metric('snapshotGapPct', 100), fps: metric('fps', 240) };
+  }
+  function diagnostics() {
+    const room = activeRoom(), now = performance.now(), wallTime = Date.now();
+    const snapshotRateHz = snapshotCount * 1000 / Math.max(1, now - diagnosticsAt);
+    diagnosticsAt = now; snapshotCount = 0;
+    const eventLoopLagMs = loopDelay?.count ? Math.max(0, loopDelay.percentile(95) / 1e6 - 20) : null;
+    loopDelay?.reset();
+    const publicRoom = room && lobby(room);
+    const players = room ? members(room).map(seat => {
+      const info = publicRoom.seats.find(player => player.index === seat.index);
+      const metrics = seat.metrics?.round === room.round && wallTime - seat.metrics.at < 10_000 ? seat.metrics : {};
+      const transport = seat.socket?.isOpen() ? 'websocket' : seat.stream ? 'events' : seat.lastPoll ? 'poll' : null;
+      return { name: seat.name, transport,
+        rttMs: metrics.rttMs ?? seat.socket?.rttMs, jitterMs: metrics.jitterMs, snapshotAgeMs: metrics.snapshotAgeMs,
+        snapshotGapPct: metrics.snapshotGapPct, fps: metrics.fps, snapshotBacklog: seat.socket?.bufferedAmount,
+        loadState: info.connected ? info.loadState || publicRoom.phase : 'reconnecting',
+        loadMs: seat.clientLoadMs };
+    }) : [];
+    return { phase: publicRoom?.phase || 'waiting', playerCount: players.length, players, eventLoopLagMs,
+      readyPlayers: publicRoom?.loading?.ready, expectedPlayers: publicRoom?.loading?.expected,
+      snapshotRateHz, snapshotBytes,
+      skippedSnapshots: room ? members(room).reduce((total, seat) => total + (seat.socket?.skippedSnapshots || 0), 0) : 0 };
+  }
   function createRoom(body) {
     if (rooms.size >= 64) fail(503, 'The host is full. Try again later.');
     const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -253,7 +386,7 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
     return { seat: seat.index, token: seat.token, room: lobby(room) };
   }
   function joinRoom(room, body) {
-    if (room.phase === 'racing') fail(409, 'A race is underway. Join after it finishes.');
+    if (inProgress(room)) fail(409, 'A race is underway. Join after it finishes.');
     const index = Array.from({ length: capacity }, (_, i) => i).find(i => !room.seats[i]);
     if (index === undefined) fail(409, 'All eight seats are taken.');
     const seat = newSeat(index, body, members(room)); room.seats[index] = seat; room.touched = Date.now();
@@ -299,7 +432,7 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
     if (seat) return { admission: { seat: seat.index, token: seat.token, room: lobby(room) } };
     const place = raceQueue.enter(token);
     if (!place) fail(503, 'The race queue is full. Try joining again in a moment.');
-    const phase = room?.phase === 'racing' ? 'racing' : 'waiting';
+    const phase = inProgress(room) ? 'racing' : 'waiting';
     if (place.position !== 1 || phase === 'racing' || (room && members(room).length >= capacity))
       return { ...place, phase };
     const name = typeof body.name === 'string' ? displayName(body.name) : '';
@@ -347,7 +480,8 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
         const localSocket = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
         const localHost = /^(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/i.test(req.headers.host || '');
         return returnJson(res, { game: 'acorn-rally', version: 1, singleRoom, queueEnabled: singleRoom,
-          ...(community && { transport: 'poll', hostId, name, visibility }),
+          connectionMetrics: true,
+          ...(community && { transport: 'poll', socketTransport: raceSockets?.available === true, hostId, name, visibility }),
           addresses: localSocket && localHost ? localUrls(server.address().port) : [] });
       }
       if (singleRoom && url.pathname === '/api/rooms/status' && req.method === 'GET')
@@ -367,7 +501,7 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
           return returnJson(res, createRoom(body), 201);
         }
       }
-      const match = /^\/api\/rooms\/([A-Z2-9]{5})\/(join|events|poll|resume|control|input|ready|driver|config|start|leave)$/.exec(url.pathname);
+      const match = /^\/api\/rooms\/([A-Z2-9]{5})\/(join|events|poll|resume|control|input|metrics|ready|driver|config|start|loaded|leave)$/.exec(url.pathname);
       const room = match && (rooms.get(match[1]) || (community && match[2] === 'poll' && polling.results(match[1])));
       if (!room) fail(404, 'No room on this host matches that code.');
       const action = match[2];
@@ -382,25 +516,27 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
         if (!room.retired) {
           const wasConnected = connected(seat);
           seat.lastPoll = Date.now(); seat.joinedStream = true;
+          const newGridClient = setGridClient(room, seat, url.searchParams.get('grid'));
           setHuman(room, seat, seat.driving);
-          if (!wasConnected) announce(room);
+          if (!wasConnected || newGridClient) announce(room);
         }
         return polling.poll(res, room, seat, url.searchParams.get('after'), returnJson);
       }
       if (action === 'events' && req.method === 'GET') {
         const previous = seat.stream;
         seat.stream = res; seat.joinedStream = true;
+        setGridClient(room, seat, url.searchParams.get('grid'));
         if (previous && previous !== res) previous.end();
         req.socket.setNoDelay(true);
         res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store, no-transform',
           Connection: 'keep-alive', 'X-Accel-Buffering': 'no', 'Referrer-Policy': 'no-referrer' });
         res.write('retry: 700\n\n'); setHuman(room, seat, seat.driving);
         announce(room);
-        if (room.state) emit(seat, 'snapshot', JSON.stringify({ round: room.round, tick: room.tick, state: room.state }));
+        if (room.state) emit(seat, 'snapshot', JSON.stringify(raceSnapshot(room)));
         res.on('close', () => {
           if (seat.stream !== res) return;
           seat.stream = null; seat.touched = room.touched = Date.now(); seat.input = { ...neutral }; seat.pulses = {};
-          setHuman(room, seat, false);
+          setHuman(room, seat, seat.driving && connected(seat));
           announce(room);
         });
         return;
@@ -411,23 +547,40 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
         seat.driving = Boolean(body.driving);
         setHuman(room, seat, seat.driving && connected(seat));
         seat.input = { ...neutral }; seat.pulses = {};
+        if (inProgress(room) && !members(room).some(s => s.driving)) {
+          if (singleRoom) retireRoom(room, 'abandoned');
+          else returnToGrid(room, 'Everyone left the race. The grid is open for another.');
+        }
+        else if (room.phase === 'loading') {
+          announce(room);
+          advanceGrid(room, Date.now());
+        }
         return returnJson(res, { driving: seat.driving });
       }
-      if (action === 'input') {
-        if (room.phase !== 'racing' || body.round !== room.round) return returnJson(res, { accepted: false });
-        const seq = integer(body.seq, 0, Number.MAX_SAFE_INTEGER, -1);
-        if (seq > seat.seq) {
-          const raw = body.input || {};
-          seat.seq = seq; seat.inputAt = Date.now();
-          seat.input = { steer: scalar(raw.steer, -1), gas: scalar(raw.gas, 0), brake: scalar(raw.brake, 0),
-            drift: Boolean(raw.drift), item: Boolean(raw.item), ability: Boolean(raw.ability), lookBack: Boolean(raw.lookBack) };
-          if (seat.input.item) seat.pulses.item = true;
-          if (seat.input.ability) seat.pulses.ability = true;
+      if (action === 'input') return returnJson(res, acceptInput(room, seat, body));
+      if (action === 'metrics') {
+        if (transports.has(body.transport)) recordMetrics(room, seat, body, body.transport);
+        return returnJson(res, { ok: true });
+      }
+      if (action === 'loaded') {
+        const now = Date.now();
+        if (!seat.loadBarrier || body.grid !== seat.loadBarrier || body.round !== room.round ||
+            !room.load?.participants.has(seat.index))
+          return returnJson(res, { accepted: false });
+        if (seat.loadedAt) return returnJson(res, { accepted: true });
+        if (room.phase !== 'loading') return returnJson(res, { accepted: false });
+        if (now >= room.load.deadline) {
+          advanceGrid(room, now);
+          return returnJson(res, { accepted: false });
         }
-        return returnJson(res, { accepted: true, tick: room.tick });
+        seat.loadedAt = now;
+        seat.clientLoadMs = integer(body.loadMs, 0, gridLoadTimeout, null);
+        announce(room);
+        advanceGrid(room, now);
+        return returnJson(res, { accepted: true });
       }
       if (action === 'leave') { removeSeat(room, seat); return returnJson(res, { left: true }); }
-      if (room.phase === 'racing') fail(409, 'Finish the race before changing the grid.');
+      if (inProgress(room)) fail(409, 'Finish the race before changing the grid.');
       if (action === 'ready') seat.ready = body.ready !== false || seat.index === room.host;
       if (action === 'driver') {
         const wanted = integer(body.driverIndex, 0, names.length - 1, -1);
@@ -455,9 +608,37 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
       else returnJson(res, { error: err.status ? err.message : 'The host could not process this request.' }, err.status || 500);
     }
   });
-  return { server, rooms, tick, localUrls, status, close() {
+  const raceSockets = community ? createRaceSockets({
+    server,
+    onHello(code, token, peer, hello) {
+      const room = rooms.get(code);
+      if (!room) fail(404, 'No room on this host matches that code.');
+      const seat = authenticate(room, token);
+      const previous = seat.socket;
+      seat.socket = peer; seat.joinedStream = true;
+      setGridClient(room, seat, hello.grid);
+      previous?.close();
+      setHuman(room, seat, seat.driving);
+      peer.send('room', lobby(room));
+      if (room.state) peer.send('snapshot', raceSnapshot(room));
+      announce(room);
+      return { room, seat };
+    },
+    onInput: acceptInput,
+    onMetrics: (room, seat, body) => recordMetrics(room, seat, body, 'websocket'),
+    onClose(room, seat, peer) {
+      if (seat.socket !== peer) return;
+      seat.socket = null; seat.touched = room.touched = Date.now();
+      seat.input = { ...neutral }; seat.pulses = {};
+      setHuman(room, seat, seat.driving && connected(seat));
+      if (rooms.get(room.code) === room) announce(room);
+    }
+  }) : null;
+  return { server, rooms, tick, localUrls, status, diagnostics, close() {
     if (timer) clearInterval(timer);
     clearInterval(cleanup);
+    loopDelay?.disable();
+    raceSockets?.close();
     raceQueue?.close();
     polling.close();
     for (const room of rooms.values()) for (const seat of members(room)) {
@@ -487,11 +668,13 @@ if (require.main === module) {
   const host = createRallyServer({ singleRoom, community, visibility, name, hostId,
     operatorOrigin: process.env.ACORN_RALLY_PUBLIC_ORIGIN });
   let publisher;
+  let diagnosticsTimer;
   let shuttingDown = false;
   async function shutdown() {
     if (shuttingDown) return;
     shuttingDown = true;
     publisher?.close();
+    clearInterval(diagnosticsTimer);
     await host.close();
     if (community) await community.close();
     if (process.connected) process.disconnect();
@@ -520,6 +703,15 @@ if (require.main === module) {
     else if (singleRoom && process.env.ACORN_RALLY_PUBLIC_ORIGIN) {
       const { createFirebaseLobbyPublisher } = require('./firebase-lobby.cjs');
       publisher = createFirebaseLobbyPublisher({ getStatus: host.status });
+    }
+    if (community && process.connected) {
+      const sendDiagnostics = () => {
+        if (process.connected) process.send({ type: 'rally-host-diagnostics',
+          diagnostics: { ...host.diagnostics(), ...community.diagnostics(), localStatus: 'ready' } }, () => {});
+      };
+      sendDiagnostics();
+      diagnosticsTimer = setInterval(sendDiagnostics, 3000);
+      diagnosticsTimer.unref();
     }
     if (process.argv.includes('--open') && process.platform === 'win32') {
       require('node:child_process').execFile('rundll32.exe', ['url.dll,FileProtocolHandler', local + '/?room=join'], () => {});
