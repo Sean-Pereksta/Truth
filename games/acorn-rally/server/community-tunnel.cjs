@@ -1,6 +1,7 @@
 'use strict';
 
 const { spawn } = require('node:child_process');
+const { performance } = require('node:perf_hooks');
 
 const quickOrigin = /^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/;
 const outputAddress = /https:\/\/[a-z0-9-]+\.trycloudflare\.com(?=[\s|"'\x1b]|$)/i;
@@ -28,6 +29,7 @@ function startQuickTunnel({
 }) {
   const lifetime = new AbortController();
   const { signal } = lifetime;
+  let lastRtt = null, jitter = null, samples = 0, failures = 0;
   const child = spawnProcess(executable, ['tunnel', '--no-autoupdate', '--url', 'http://127.0.0.1:' + port], {
     windowsHide: true, stdio: ['ignore', 'pipe', 'pipe']
   });
@@ -66,29 +68,50 @@ function startQuickTunnel({
     signal.addEventListener('abort', cancel, { once: true });
   });
 
+  async function probe(origin) {
+    if (signal.aborted) return false;
+    const started = performance.now();
+    const controller = new AbortController();
+    const cancel = () => controller.abort(signal.reason);
+    const timeout = setTimeout(() => controller.abort(), probeTimeoutMs);
+    signal.addEventListener('abort', cancel, { once: true });
+    try {
+      const response = await fetchImpl(origin + probePath, {
+        redirect: 'error', signal: controller.signal, cache: 'no-store'
+      });
+      if (response.ok && matchesProbe(await response.json())) {
+        const rtt = performance.now() - started;
+        if (lastRtt !== null) {
+          const difference = Math.abs(rtt - lastRtt);
+          jitter = (jitter ?? difference) * .75 + difference * .25;
+        }
+        lastRtt = rtt;
+        samples++;
+        return true;
+      }
+    } catch { /* A failed probe is recorded for the local diagnostics. */ }
+    finally {
+      clearTimeout(timeout);
+      signal.removeEventListener('abort', cancel);
+    }
+    if (!signal.aborted) { samples++; failures++; }
+    return false;
+  }
+
+  async function monitor(origin) {
+    while (!signal.aborted) {
+      await wait(10000, signal);
+      await probe(origin);
+    }
+  }
+
   const ready = (async () => {
     const origin = await address;
     while (!signal.aborted) {
-      let response;
-      const controller = new AbortController();
-      const cancel = () => controller.abort(signal.reason);
-      const timeout = setTimeout(() => controller.abort(), probeTimeoutMs);
-      signal.addEventListener('abort', cancel, { once: true });
-      try {
-        response = await fetchImpl(origin + probePath, {
-          redirect: 'error', signal: controller.signal, cache: 'no-store'
-        });
-        if (response.ok) {
-          const info = await response.json();
-          if (matchesProbe(info)) {
-            clearTimeout(deadline);
-            return origin;
-          }
-        }
-      } catch { /* Wait for the public address to reach this game instance. */ }
-      finally {
-        clearTimeout(timeout);
-        signal.removeEventListener('abort', cancel);
+      if (await probe(origin)) {
+        clearTimeout(deadline);
+        void monitor(origin).catch(() => {});
+        return origin;
       }
       await wait(probeDelayMs, signal);
     }
@@ -97,6 +120,7 @@ function startQuickTunnel({
 
   return {
     ready, signal,
+    diagnostics: () => ({ tunnelRttMs: lastRtt, tunnelJitterMs: jitter, tunnelProbeSamples: samples, tunnelProbeFailures: failures }),
     close() { lifetime.abort(new Error('Hosting stopped.')); }
   };
 }

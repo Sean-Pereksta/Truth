@@ -13,6 +13,10 @@ or enter a code. Live Join in the game menu first tries available public
 servers where the race has yet to start. Each laptop controls its own
 queue and races independently. Firebase stores directory listings and
 the host's queue. The launcher opens an outbound tunnel for game traffic.
+Use Diagnostics next to Acorn Rally in Server Manager to see the tunnel,
+directory, player ping and jitter, snapshot timing, and track loading.
+Snapshot gaps count missed game updates, including updates skipped when
+the connection falls behind.
 
 Keep one LAN lobby running on a laptop
 
@@ -95,8 +99,10 @@ For the operator-managed fixed-host option, configure a named Cloudflare
 Tunnel with rally.catnmice.com pointing to http://127.0.0.1:8791.
 Use https://rally.catnmice.com/?room=join for guests. The game streams
 race state with Server-Sent Events, so the tunnel must support SSE.
-Community servers opened by Server Manager use HTTP polling through
-their own Quick Tunnel. The standalone fixed-address host uses SSE.
+Community servers opened by Server Manager stream compressed race
+updates over WebSocket through their own Quick Tunnel, with HTTP
+polling available if the socket cannot connect. The standalone
+fixed-address host uses SSE.
 
 Optional Firebase queue and listing for the fixed-address host
 
@@ -122,4 +128,9 @@ tab reconnects with its saved seat automatically. Refreshing the tab
 restores the invite and seat as long as the host is still running. Use
 Leave room when you are finished. In private room mode, inactive rooms
 expire after 15 minutes.
+The host holds the starting grid until players have rendered the track.
+If someone is still loading after 60 seconds, the group can retry from
+the lobby. A managed race closes when its last player leaves. If all
+players lose their connection, the host waits briefly for reconnects
+before reopening the queue. The server stays available for the next race.
 Stopping the host window closes its rooms.

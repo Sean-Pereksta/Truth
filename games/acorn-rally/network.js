@@ -118,10 +118,14 @@
     container.replaceChildren(root);
     const localHost = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
     const staticPages = location.hostname === 'sean-pereksta.github.io' && location.pathname.startsWith('/Truth/games/acorn-rally/');
+    const gridClient = createQueueToken().slice(0, 16);
     let seat = -1, key = '', source = null, support = staticPages || location.protocol === 'file:' ? false : null;
     let inRace = false, playedRound = -1, snapshot = null, snapTick = -1, lastRoomRound = -1;
+    let gridReportTimer = 0;
     let seq = Date.now() * 8, latest = {}, pulses = {}, lastSent = 0, lastSerial = '';
     let sender = 0, busy = false, connecting = false, disconnected = false, outbound = 0;
+    let telemetryTimer = 0, telemetryPending = false;
+    const connection = { rtt: null, jitter: null, lastSnapshot: null, expected: 0, skipped: 0, fps: null };
     let queueToken = '', queueTimer = 0, playerName = storedPlayerName(), serverCode = '';
     let discoveryCleanup, liveJoin = opts.liveJoin === true;
     let statusText = '', statusError = false, connectionNote = null;
@@ -273,14 +277,15 @@
     function showLobby() {
       if (active !== context || !getRoom()) return;
       unmountDiscovery();
-      if (inRace && getRoom().phase === 'racing') void request(target('control'), { driving: false }, key).catch(() => {});
+      if (inRace && ['loading', 'racing'].includes(getRoom().phase))
+        void request(target('control'), { driving: false }, key).catch(() => {});
       inRace = false; connectionNote?.remove(); connectionNote = null; attach();
       const focused = root.contains(document.activeElement) ? document.activeElement : null;
       const refocus = focused?.dataset.driverId !== undefined ? '[data-driver-id="' + focused.dataset.driverId + '"]' : focused?.name ? '[name="' + focused.name + '"]' :
         focused?.dataset.rr ? '[data-rr="' + focused.dataset.rr + '"]' : null;
       const room = getRoom(), me = room.seats.find(s => s.index === seat);
       if (!me) return;
-      const owner = seat === room.host, locked = room.phase === 'racing';
+      const owner = seat === room.host, preparing = room.phase === 'loading', locked = preparing || room.phase === 'racing';
       const reserved = new Set(room.seats.filter(s => s.index !== seat).map(s => s.driverIndex));
       const portraits = drivers.map((driver,i) => {
         if(!window.AcornChampionship.isDriverAvailable(i))
@@ -293,7 +298,8 @@
       const grid = room.seats.map(s => '<li><img src="art/driver-' + s.driverIndex + '.webp" alt=""><span><strong>' + escape(s.name) +
         (s.index === seat ? ' <small>YOU</small>' : '') + '</strong><em>' + escape(drivers[s.driverIndex].species) + '</em></span><b class="' +
         (s.connected && (s.ready || s.index === room.host) ? 'rr-ready' : '') + '">' +
-        (!s.connected ? 'Reconnecting' : s.index === room.host ? 'Host' : s.ready ? 'Ready' : 'In garage') + '</b></li>').join('');
+        (preparing ? ({ ready: 'Grid ready', loading: 'Loading course', reconnecting: 'Reconnecting', reserve: 'Rejoining' })[s.loadState] :
+          !s.connected ? 'Reconnecting' : s.index === room.host ? 'Host' : s.ready ? 'Ready' : 'In garage') + '</b></li>').join('');
       const cc=window.AcornSim.normalizeCC(room.cc), difficulty=window.AcornSim.normalizeDifficulty(room.difficulty);
       const sharedSelect=(name,label,values,current,toLabel)=>'<label>'+label+'<select name="'+name+'"'+(locked?' disabled':'')+'>'+values.map(v=>'<option value="'+v+'"'+(current===v?' selected':'')+'>'+toLabel(v)+'</option>').join('')+'</select></label>';
       const skillLabel=value=>value[0].toUpperCase()+value.slice(1);
@@ -301,7 +307,8 @@
         sharedSelect('cc','Engine class',window.AcornSim.engineClasses,cc,v=>v+' cc')+sharedSelect('difficulty','AI difficulty',window.AcornSim.difficulties,difficulty,skillLabel)+
         '<label class="rr-toggle"><input name="fill" type="checkbox"' + (room.botFill ? ' checked' : '') + (locked ? ' disabled' : '') + '>Fill empty seats with AI</label>' :
         '<p class="rr-track-readout">' + icon('track') + escape(track.name) + ' · ' + room.laps + ' laps · '+cc+' cc · '+skillLabel(difficulty)+' AI</p>';
-      const action = locked ? '<button class="rr-primary" data-rr="rejoin">Return to race ' + icon('arrow') + '</button>' :
+      const action = preparing ? '<button class="rr-primary" data-rr="rejoin">Return to starting grid ' + icon('arrow') + '</button>' :
+        locked ? '<button class="rr-primary" data-rr="rejoin">Return to race ' + icon('arrow') + '</button>' :
         owner ? '<button class="rr-primary" data-rr="start"' + (!canStart ? ' disabled' : '') + '>' + icon('flag') + (room.phase === 'finished' ? 'Start rematch' : 'Start race') + '</button>' :
           '<button class="' + (me.ready ? 'rr-secondary' : 'rr-primary') + '" data-rr="ready">' + (me.ready ? 'Cancel ready' : 'Ready to race') + '</button>';
       const invite = new URL(location.href);
@@ -328,22 +335,48 @@
     }
     function receiveRoom(room) {
       if (active !== context) return;
+      const prior = getRoom();
       if (room.round !== lastRoomRound) {
         snapshot = null; snapTick = -1; lastRoomRound = room.round;
+        connection.lastSnapshot = null; connection.expected = 0; connection.skipped = 0;
       }
       context.room = room;
+      if (room.startNotice && room.startNotice !== prior?.startNotice) {
+        status(room.startNotice, true);
+        if (inRace && room.phase === 'lobby') {
+          inRace = false;
+          snapshot = null;
+          snapTick = -1;
+          connection.lastSnapshot = null; connection.expected = 0; connection.skipped = 0;
+          clearTimeout(gridReportTimer);
+          opts.onStartCancelled?.();
+        }
+      }
       if (!inRace) showLobby();
+    }
+    function reportGridReady(round, loadMs) {
+      const room = getRoom();
+      if (active !== context || !inRace || room?.round !== round || room.phase !== 'loading' ||
+          room.seats.find(s => s.index === seat)?.loadState === 'reserve') return;
+      void request(target('loaded'), { round, grid: gridClient, loadMs }, key).catch(() => {
+        if (active !== context || !inRace || getRoom()?.round !== round || getRoom().phase !== 'loading') return;
+        gridReportTimer = setTimeout(() => reportGridReady(round, loadMs), 600);
+      });
     }
     function beginRace(force = false, terminal = false) {
       const room = getRoom();
-      if (!snapshot || !room || (!terminal && room.phase !== 'racing') || (!force && playedRound === room.round)) return;
+      if (!snapshot || !room || (!terminal && room.phase !== 'racing' && room.phase !== 'loading') ||
+          (!force && playedRound === room.round)) return;
       const me = room.seats.find(s => s.index === seat);
       if (!me) return;
       playedRound = room.round; inRace = true; latest = {}; pulses = {}; lastSerial = ''; lastSent = 0;
       const raceSeat = me.kartIndex;
       if (!terminal) void request(target('control'), { driving: true }, key).catch(() => {});
-      const network = { seat: raceSeat, sendInput, getState: () => snapshot, returnToLobby: showLobby, leave,
-        queueMode: support.queueEnabled === true, isConnected: () => !disconnected };
+      const startedLoading = performance.now();
+      const network = { seat: raceSeat, sendInput, getState: () => snapshot, returnToLobby, leave,
+        gridStatus: () => getRoom()?.round === room.round ? getRoom().loading : null,
+        gridReady: () => reportGridReady(room.round, Math.round(performance.now() - startedLoading)),
+        queueMode: support.queueEnabled === true, isConnected: () => !disconnected, reportFps };
       if (dialog?.open) dialog.close();
       opts.startRace({ trackIndex: room.trackIndex, driverIndex: me.driverIndex,
         driverIndices: snapshot.racers.map(r => r.driverIndex),
@@ -357,33 +390,53 @@
     }
     async function pump() {
       const room = getRoom();
-      if (active !== context || !inRace || disconnected || room?.phase !== 'racing' || outbound >= 3) return;
+      if (active !== context || !inRace || disconnected || room?.phase !== 'racing') return;
+      if (source?.transport === 'websocket' ? !source.canSend() : outbound >= 2) return;
       const input = { steer: Number(latest.steer) || 0, gas: Number(latest.gas) || 0, brake: Number(latest.brake) || 0,
         drift: Boolean(latest.drift), item: Boolean(latest.item || pulses.item),
         ability: Boolean(latest.ability || pulses.ability), lookBack: Boolean(latest.lookBack) };
       const serial = JSON.stringify(input), now = performance.now();
       if (serial === lastSerial && now - lastSent < 220) return;
+      const payload = { round: room.round, seq: ++seq, input };
+      if (source?.transport === 'websocket') {
+        if (!source.send('input', payload)) return;
+        lastSerial = serial; lastSent = now; pulses = {};
+        return;
+      }
       lastSerial = serial; lastSent = now; pulses = {}; outbound++;
-      try { await request(target('input'), { round: room.round, seq: ++seq, input }, key); }
+      try { await request(target('input'), payload, key); }
       catch { lastSerial = ''; } finally { outbound--; }
     }
-    function retireRoom() {
-      if (active !== context) return;
-      const racing = inRace;
+    function clearRoom() {
       source?.close();
       source = null;
       clearInterval(sender);
+      clearInterval(telemetryTimer);
+      clearTimeout(gridReportTimer);
       connectedNote(false);
       remember(null);
       urlCode(null);
       context.room = null;
       key = '';
       inRace = false;
+    }
+    function returnToLobby() {
+      if (!support.queueEnabled || !getRoom() || !inRace) { showLobby(); return; }
+      void request(target('leave'), {}, key).catch(() => {});
+      clearRoom();
+      status('You left the race. Join the queue for another.');
+      setup();
+      attach();
+    }
+    function retireRoom() {
+      if (active !== context) return;
+      const racing = inRace;
+      clearRoom();
       if (racing) {
         destroy();
         opts.onRetired?.(snapshot?.done === true);
       } else {
-        status('This room has closed. Join the queue for another race.');
+        status(support.queueEnabled ? 'This room has closed. Join the queue for another race.' : 'This room has closed.');
         setup();
       }
     }
@@ -395,12 +448,108 @@
       disconnected = true; connectedNote(true); status('Reconnecting to the host…');
     }
     function receiveSnapshot(data, terminal = false) {
-      if (data.round !== getRoom()?.round || data.tick <= snapTick) return;
+      const room = getRoom();
+      if (!room || data.round !== room.round || room.phase === 'lobby' || data.tick <= snapTick) return;
+      if (snapTick >= 0) {
+        const steps = Math.max(1, Math.round((data.tick - snapTick) / (data.intervalTicks || 3)));
+        connection.expected += steps;
+        connection.skipped += steps - 1;
+      }
+      connection.lastSnapshot = performance.now();
       snapshot = data.state; snapTick = data.tick;
       beginRace(false, terminal && snapshot.done);
     }
+    function reportFps(fps) { connection.fps = fps; }
+    function recordRtt(rtt) {
+      if (connection.rtt !== null) {
+        const change = Math.abs(rtt - connection.rtt);
+        connection.jitter = (connection.jitter ?? change) * .75 + change * .25;
+      }
+      connection.rtt = rtt;
+    }
+    function connectionMetrics(transport) {
+      return { transport, rttMs: connection.rtt, jitterMs: connection.jitter, fps: connection.fps,
+        snapshotAgeMs: connection.lastSnapshot === null ? null : performance.now() - connection.lastSnapshot,
+        snapshotGapPct: connection.expected ? 100 * connection.skipped / connection.expected : null };
+    }
+    async function reportConnection() {
+      const currentSource = source;
+      if (!getRoom() || !currentSource || disconnected || !support.connectionMetrics) return;
+      if (currentSource.transport === 'websocket') {
+        currentSource.ping();
+        currentSource.send('metrics', connectionMetrics('websocket'));
+        return;
+      }
+      if (telemetryPending) return;
+      telemetryPending = true;
+      const started = performance.now();
+      try {
+        await request('/api/rooms/version');
+        if (source !== currentSource || !getRoom()) return;
+        recordRtt(performance.now() - started);
+        await request(target('metrics'), connectionMetrics(currentSource.transport), key);
+      } catch { /* Diagnostics are independent of the game connection. */ }
+      finally { telemetryPending = false; }
+    }
+    function subscribeSocket() {
+      const address = new URL(target('socket'), location.href);
+      address.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      let socket;
+      try { socket = new WebSocket(address); }
+      catch { subscribePoll(); return; }
+      let timeout;
+      let pendingPing = null, lastMessage = performance.now();
+      const subscription = {
+        transport: 'websocket',
+        canSend: () => socket.readyState === WebSocket.OPEN && socket.bufferedAmount < 16 * 1024,
+        send(type, data) {
+          if (!this.canSend()) return false;
+          socket.send(JSON.stringify({ ...data, type }));
+          return true;
+        },
+        ping() {
+          if (performance.now() - lastMessage > 9000) { fallback(); return; }
+          const id = Math.round(performance.now());
+          if (this.send('ping', { id })) pendingPing = id;
+        },
+        close() { clearTimeout(timeout); socket.close(); }
+      };
+      const current = () => active === context && source === subscription;
+      function fallback() {
+        if (!current()) return;
+        source = null;
+        subscription.close();
+        markDisconnected();
+        subscribePoll();
+      }
+      source = subscription;
+      timeout = setTimeout(fallback, 2800);
+      socket.onopen = () => {
+        if (current()) subscription.send('hello', { token: key, grid: gridClient });
+      };
+      socket.onmessage = event => {
+        if (!current()) return;
+        let message;
+        try { message = JSON.parse(event.data); } catch { return; }
+        lastMessage = performance.now();
+        if (message.type === 'room') {
+          clearTimeout(timeout);
+          markConnected();
+          receiveRoom(message.value);
+        } else if (message.type === 'snapshot') {
+          receiveSnapshot(message.value);
+        } else if (message.type === 'retired') {
+          retireRoom();
+        } else if (message.type === 'pong' && pendingPing !== null && message.value?.id === pendingPing) {
+          recordRtt(performance.now() - pendingPing);
+          pendingPing = null;
+        }
+      };
+      socket.onclose = fallback;
+    }
     function subscribeEvents() {
-      const stream = new EventSource(target('events') + '?seatKey=' + encodeURIComponent(key));
+      const stream = new EventSource(target('events') + '?seatKey=' + encodeURIComponent(key) + '&grid=' + gridClient);
+      stream.transport = 'events';
       source = stream;
       stream.addEventListener('room', event => {
         if (source !== stream) return;
@@ -410,23 +559,23 @@
       stream.addEventListener('snapshot', event => {
         if (active === context && source === stream) receiveSnapshot(JSON.parse(event.data));
       });
-      if (support.queueEnabled) stream.addEventListener('retired', () => { if (source === stream) retireRoom(); });
+      stream.addEventListener('retired', () => { if (source === stream) retireRoom(); });
       stream.onerror = () => {
         if (active !== context || source !== stream) return;
-        if (support.queueEnabled && (snapshot?.done || stream.readyState === EventSource.CLOSED)) return retireRoom();
+        if (stream.readyState === EventSource.CLOSED || (support.queueEnabled && snapshot?.done)) return retireRoom();
         markDisconnected();
       };
     }
     function subscribePoll() {
       let revision = 0, retryMs = 400, timer = 0, pending;
       const path = target('poll'), token = key;
-      const subscription = { close() { clearTimeout(timer); pending?.abort(); } };
+      const subscription = { transport: 'poll', close() { clearTimeout(timer); pending?.abort(); } };
       const current = () => active === context && source === subscription;
       source = subscription;
       async function poll() {
         pending = new AbortController();
         try {
-          const update = await request(path + '?after=' + revision, undefined, token, pending);
+          const update = await request(path + '?after=' + revision + '&grid=' + gridClient, undefined, token, pending);
           if (!current()) return;
           markConnected();
           if (update.room) receiveRoom(update.room);
@@ -450,18 +599,22 @@
       if (active !== context) return;
       seat = value.seat; key = value.token; context.room = value.room; lastRoomRound = value.room.round;
       snapshot = null; snapTick = -1; playedRound = -1;
+      Object.assign(connection, { rtt: null, jitter: null, lastSnapshot: null, expected: 0, skipped: 0, fps: null });
       remember({ code: value.room.code, key }); urlCode(value.room.code); status(value.assignment || '');
       showLobby();
       source?.close();
-      if (support.transport === 'poll') subscribePoll();
+      if (support.socketTransport === true) subscribeSocket();
+      else if (support.transport === 'poll') subscribePoll();
       else subscribeEvents();
       clearInterval(sender); sender = setInterval(pump, 40);
+      clearInterval(telemetryTimer); telemetryTimer = setInterval(reportConnection, 3000);
     }
     function destroy() {
       unmountDiscovery();
       stopQueue(true);
       if (dialogGuard) dialog.removeEventListener('cancel', onCancel);
-      source?.close(); clearInterval(sender); connectionNote?.remove(); root.remove();
+      source?.close(); clearInterval(sender); clearInterval(telemetryTimer); clearTimeout(gridReportTimer);
+      connectionNote?.remove(); root.remove();
       if (active === context) active = null;
     }
     async function leave() {
