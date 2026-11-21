@@ -48,6 +48,12 @@
     ['Basalt Breakwater',1100,[[-89,-36],[-62,0],[-73,22],[-42,49],[-4,58],[47,60],[84,34],[73,-5],[41,-18],[20,0],[-5,-14],[13,-42],[-23,-57],[-47,-40],[-68,-56]]]
   ];
   const surfaces = ['Forest soil','Wet timber','Dry brick','Slickrock','Salt crust','Chalkstone','River stone','Basalt gravel'];
+  const canopyIndex=6;
+  // Split, merge, spread, elevation change, and half-width of the separated deck.
+  const separatedForks={
+    1:[.475,.635,18,-.25,2.7],
+    [canopyIndex]:[.30,.52,16,3.5,2.7]
+  };
   const cache = [];
   function orientRoad(points,length){
     const n=points.length;
@@ -56,6 +62,35 @@
       p.tx=(b.x-a.x)/dist;p.tz=(b.z-a.z)/dist;p.nx=p.tz;p.nz=-p.tx;
     }
     for(let j=0;j<n;j++){const p=points[j],b=points[(j+1)%n];p.curve=Math.asin(clamp(p.tz*b.tx-p.tx*b.tz,-1,1))/(length/n);}
+  }
+  function forkPeak(u,start,end){
+    return Math.sin(Math.PI*clamp((u-start)/(end-start),0,1))**2;
+  }
+  function separatedBranch(points,[start,end,spread,rise,halfWidth]){
+    const offsetRoad=points.map((p,j)=>{
+      const u=j/points.length;
+      if(u<=start||u>=end)return {...p,peak:0};
+      const peak=forkPeak(u,start,end);
+      // Use the direction of the bend as a whole to keep the inside deck from folding at the apex.
+      const a=points[j-16],b=points[j+16],dx=b.x-a.x,dz=b.z-a.z;
+      const offset=spread*peak/Math.hypot(dx,dz);
+      return {...p,x:p.x+dz*offset,z:p.z-dx*offset,w:p.w+(halfWidth-p.w)*peak,peak};
+    });
+    return offsetRoad.map((p,j)=>{
+      if(!p.peak)return p;
+      let x=0,z=0,weight=0;
+      for(let k=-14;k<=14;k++){
+        const q=offsetRoad[j+k],w=15-Math.abs(k);
+        x+=q.x*w;z+=q.z*w;weight+=w;
+      }
+      x=p.x+(x/weight-p.x)*p.peak;
+      z=p.z+(z/weight-p.z)*p.peak;
+      // Change elevation once the decks clear each other so both junctions stay level.
+      let gap=Infinity;
+      for(const q of points)gap=Math.min(gap,Math.hypot(x-q.x,z-q.z)-p.w-q.w);
+      const grade=clamp((gap-.8)/6,0,1);
+      return {...p,x,y:p.y+rise*grade*grade*(3-2*grade),z};
+    });
   }
   function track(index=0) {
     index = clamp(index | 0,0,definitions.length+Expansion.courses.length-1);
@@ -76,7 +111,9 @@
     const points=[], n=extra?960:640, scale=length/arc, elev=[1.9,2.2,2.2,4,.35,6,5,4][index];
     const bridgeAnchor=[4,6,11,8,4,8,4,11][index];
     const bridgeS=extra?extra.bridge:raw[bridgeAnchor*40].arc/arc;
-    const branchA=extra?extra.fork[0]:[.47,.46,.31,.48,.32,.42,.31,.34][index],branchB=extra?extra.fork[1]:branchA+.16;
+    const separatedFork=separatedForks[index],fork=extra?.fork||separatedFork;
+    const branchA=fork?.[0]??[.47,.46,.31,.48,.32,.42,.31,.34][index];
+    const branchB=fork?.[1]??branchA+.16;
     for(let j=0, k=0;j<n;j++){
       const s=arc*j/n;
       while(raw[k+1].arc<s) k++;
@@ -100,7 +137,7 @@
       const [, ,spread,rise,narrowWidth]=extra.fork;
       branchPoints=points.map((p,j)=>{
         const u=j/n,inside=u>branchA&&u<branchB;
-        const peak=inside?Math.sin(Math.PI*(u-branchA)/(branchB-branchA))**2:0;
+        const peak=inside?forkPeak(u,branchA,branchB):0;
         const offset=peak*spread,w=p.w+(narrowWidth-p.w)*peak;
         const edgeGap=offset-p.w-w,clearance=clamp(edgeGap/Math.max(1,spread-p.w-w),0,1);
         if(inside&&edgeGap<0)p.exposed=false;
@@ -108,16 +145,19 @@
         const grade=clearance*clearance*(3-2*clearance);
         return {x:p.x+p.nx*offset,y:p.y+rise*grade,z:p.z+p.nz*offset,w,exposed:p.exposed};
       });
-      orientRoad(branchPoints,length);
+    }else if(separatedFork){
+      branchPoints=separatedBranch(points,separatedFork);
     }
-    return cache[index]={index,name,length,points,branchPoints,branchA,branchB,bridgeS,surface:extra?extra.surface:surfaces[index]};
+    if(branchPoints)orientRoad(branchPoints,length);
+    const boostPad=index===canopyIndex?{s:.452*length,branch:true,halfLength:2.1,halfWidth:2.25}:null;
+    return cache[index]={index,name,length,points,branchPoints,branchA,branchB,bridgeS,boostPad,surface:extra?extra.surface:surfaces[index]};
   }
   function sample(course,distance,lane=0,branch=false) {
     const u=mod(distance,course.length)/course.length, a=u*course.points.length, i=Math.floor(a),f=a-i;
     const road=branch&&course.branchPoints?course.branchPoints:course.points;
     const p=road[i],q=road[(i+1)%road.length];
     const mix=k=>p[k]+(q[k]-p[k])*f;
-    const b=clamp((u-course.branchA)/(course.branchB-course.branchA),0,1), peak=Math.sin(Math.PI*b)**2;
+    const peak=forkPeak(u,course.branchA,course.branchB);
     const legacyFork=branch&&!course.branchPoints,offset=legacyFork?peak*12:0;
     const nx=mix('nx'),nz=mix('nz'),w=legacyFork?mix('w')-peak*2.7:mix('w');
     const bank=course.index===Breakwater.courseIndex?mix('bank'):0;
@@ -325,6 +365,17 @@
   }
   function notify(r,msg){r.notice=msg;r.noticeTime=1.5;}
   function boost(r,time,power,style=''){Signatures.boost(r,time,power,style);}
+  function boostPadStep(r,c,previous,burrowing){
+    const pad=c.boostPad;
+    if(!pad||r.branch!==pad.branch||previous.branch!==r.branch||r.air>0||r.flight||burrowing)return;
+    const advance=r.s-previous.progress;
+    const entry=Signatures.gap(previous.progress,pad.s-pad.halfLength,c.length);
+    if(entry<=0||entry>advance)return;
+    const lane=previous.lane+(r.x-previous.lane)*entry/advance;
+    if(Math.abs(lane)>pad.halfWidth)return;
+    boost(r,1.15,6.4,'pad');
+    notify(r,'Boost pad');
+  }
   const driftRewards=[
     {charge:.42,time:.66,power:6.1,label:'Mini-turbo'},
     {charge:1.15,time:1.15,power:7.8,label:'Super mini-turbo'},
@@ -1048,6 +1099,7 @@
       }
       rampStep(st,r,c,dt,previous);
       if(r.fall)continue;
+      boostPadStep(r,c,previous,burrowing);
       const from=previous.branch===r.branch?{s:prevS,x:previous.lane}:projectRoute(c,prevS,previous.x,previous.z,r.branch);
       const caught=Hazards.contact(st,r,c,from.s,from.x,dt,lift(st,r));
       if(caught&&r.flight&&r.hazardHop?.at===st.time){r.hazardHop=null;}

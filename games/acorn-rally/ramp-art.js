@@ -231,10 +231,37 @@
     deck(r.startS,r.lipS,r.halfWidth,false);deck(r.landingS,r.endS,r.landingWidth,true);
     return m;
   }
+  function boostPadMesh(Mesh,c,pad){
+    const m=new Mesh();m.roadSections=[];
+    const {s,halfLength,halfWidth,branch}=pad;
+    const point=(s,x,lift)=>{
+      const q=root.AcornSim.groundSample(c,s,x,branch);
+      return [q.x,q.y+lift,q.z];
+    };
+    const span=2*halfLength/3;
+    for(let i=0;i<3;i++){
+      const a=s-halfLength+i*span,b=a+span,mid=(a+b)/2;
+      const inner=halfWidth-.17;
+      const strip=(x,y,color)=>m.quad(point(a,x,.07),point(b,x,.07),point(b,y,.07),point(a,y,.07),color,5,[0,1,0]);
+      let begin=m.data.length;
+      strip(-inner,inner,'#176c65');
+      strip(-halfWidth,-inner,'#e9b856');
+      strip(inner,halfWidth,'#e9b856');
+      m.roadSections.push({s:mid,begin,end:m.data.length});
+      begin=m.data.length;
+      for(const side of [-1,1]){
+        const wing=side*inner*.77;
+        m.quad(point(a+.19,wing,.10),point(b-.39,0,.10),point(b-.10,0,.10),point(a+.48,wing,.10),'#c3ffde',5,[0,1,0]);
+      }
+      m.roadSections.push({s:mid,begin,end:m.data.length});
+    }
+    return m;
+  }
   function drawing(Mesh,c){
     const result=[];
-    for(const r of root.AcornRamps.list(c)){
-      const m=rampMesh(Mesh,c,r);
+    const decks=root.AcornRamps.list(c).map(r=>({branch:r.branch,m:rampMesh(Mesh,c,r)}));
+    if(c.boostPad)decks.push({branch:c.boostPad.branch,m:boostPadMesh(Mesh,c,c.boostPad)});
+    for(const {branch,m} of decks){
       for(const seg of m.roadSections){
         const faces=[];
         for(let j=seg.begin;j<seg.end;j+=30){
@@ -242,7 +269,7 @@
           const color='rgb('+m.data.slice(j+6,j+9).map(x=>Math.round(Math.min(1,x*sun)*255)).join(',')+')';
           faces.push([m.data.slice(j,j+3),m.data.slice(j+10,j+13),m.data.slice(j+20,j+23),color]);
         }
-        result.push({s:seg.s,branch:r.branch,faces});
+        result.push({s:seg.s,branch,faces});
       }
     }
     return result;
@@ -254,5 +281,5 @@
     faces.sort((a,b)=>b[4]-a[4]);
     for(const [p,q,r,color] of faces){ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.lineTo(r.x,r.y);ctx.closePath();ctx.fill();}
   }
-  root.AcornRampArt={rampMesh,drawing,paint};
+  root.AcornRampArt={rampMesh,boostPadMesh,drawing,paint};
 })(typeof globalThis==='object'?globalThis:this);

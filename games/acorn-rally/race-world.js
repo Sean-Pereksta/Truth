@@ -240,7 +240,18 @@
     for(let k=0;k<14;k++){const x=-gate.w+(k+.5)*gate.w/7,a=local(gate,x-.32,4.8),b=local(gate,x+.32,4.8),d=local(gate,x,4.07);
       m.tri(a,b,d,['#e9b652','#e1d5a7','#cf6b3f','#69816a'][k%4],5);}
     // Turn boards, race poles, rocks and thousands of discrete fronds.
-    const clearance=(x,z,minY=-1e3)=>{let best=1e9;for(let j=0;j<count;j+=3){const a=p[j];if(Math.abs(a.y-minY)>6&&minY>-900)continue;const d=(a.x-x)**2+(a.z-z)**2;if(d<best)best=d;}return Math.sqrt(best);};
+    const clearance=(x,z,minY=-1e3)=>{
+      let best=1e9;
+      for(let j=0;j<count;j+=3){
+        const a=p[j];
+        if(minY<=-900||Math.abs(a.y-minY)<=6)best=Math.min(best,(a.x-x)**2+(a.z-z)**2);
+        if(course.branchPoints&&j>=course.branchA*count&&j<=course.branchB*count){
+          const b=course.branchPoints[j];
+          if(minY<=-900||Math.abs(b.y-minY)<=6)best=Math.min(best,(b.x-x)**2+(b.z-z)**2);
+        }
+      }
+      return Math.sqrt(best);
+    };
     for(let j=0;j<count;j+=3){
       const a=p[j],u=j/count,bridge=Math.abs(u-course.bridgeS)<.04,br=u>course.branchA-.008&&u<course.branchB+.008;
       const yaw=Math.atan2(a.tx,a.tz);
@@ -308,6 +319,10 @@
       for(let k=0;k<12;k++){const x=pt[0]-5+k*.78,top=14.8+.7*Math.sin(k),z=pt[2]+6;m.quad([x,top,z],[x,1,z+1.4],[x+.83,1,z+1.4],[x+.83,top,z],k%3?'#8ed3cf':'#c8e6dc',4);}}
     for(const ramp of root.AcornRamps.list(course)){
       const deck=root.AcornRampArt.rampMesh(Mesh,course,ramp);
+      for(const value of deck.data)m.data.push(value);
+    }
+    if(course.boostPad){
+      const deck=root.AcornRampArt.boostPadMesh(Mesh,course,course.boostPad);
       for(const value of deck.data)m.data.push(value);
     }
     return {mesh:m,mov};
