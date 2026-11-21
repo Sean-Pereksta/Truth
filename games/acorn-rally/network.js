@@ -1,5 +1,105 @@
 'use strict';
 (() => {
+  function createInputScheduler({ getTransport, write, now = () => performance.now(),
+    schedule = setTimeout, cancel = clearTimeout }) {
+    const intervalMs = 34, edgeIntervalMs = 17, keepAliveMs = 220, actionLifetimeMs = 700;
+    const same = (a, b) => b && a.steer === b.steer && a.gas === b.gas && a.brake === b.brake &&
+      a.drift === b.drift && a.item === b.item && a.ability === b.ability && a.lookBack === b.lookBack;
+    const axis = (value, minimum = 0) => Math.round(Math.max(minimum, Math.min(1, Number(value) || 0)) * 100) / 100;
+    let latest, sent, sentAt = -Infinity, retryAt = -Infinity, pendingItem, pendingAbility;
+    let timer = null, timerAt = Infinity, httpPending = 0, generation = 0;
+
+    function clearTimer() {
+      if (timer !== null) cancel(timer);
+      timer = null;
+      timerAt = Infinity;
+    }
+    function arm(due) {
+      if (timerAt <= due) return;
+      clearTimer();
+      timerAt = due;
+      timer = schedule(() => {
+        timer = null;
+        timerAt = Infinity;
+        flush();
+      }, Math.max(0, Math.ceil(due - now())));
+    }
+    function reset() {
+      clearTimer();
+      generation++;
+      latest = sent = pendingItem = pendingAbility = undefined;
+      sentAt = retryAt = -Infinity;
+      httpPending = 0;
+    }
+    function pause() {
+      clearTimer();
+      sent = undefined;
+    }
+    function flush() {
+      const transport = getTransport();
+      if (!transport || !latest) { clearTimer(); return; }
+      const timestamp = now();
+      if (pendingItem && timestamp - pendingItem.at >= actionLifetimeMs) pendingItem = undefined;
+      if (pendingAbility && timestamp - pendingAbility.at >= actionLifetimeMs) pendingAbility = undefined;
+      const packet = { ...latest, item: latest.item || Boolean(pendingItem), ability: latest.ability || Boolean(pendingAbility) };
+      const changed = !same(packet, sent);
+      const socket = transport === 'websocket';
+      const edge = sent && (packet.item !== sent.item || packet.ability !== sent.ability ||
+        (packet.brake === 0) !== (sent.brake === 0));
+      const interval = socket && edge ? edgeIntervalMs : intervalMs;
+      const due = Math.max(retryAt, sentAt + (changed ? interval : keepAliveMs));
+      if (timestamp < due) { arm(due); return; }
+      if (!socket && httpPending >= 2) { clearTimer(); return; }
+
+      clearTimer();
+      const item = pendingItem, ability = pendingAbility, version = generation;
+      const delivered = write(packet, transport);
+      if (delivered === false) {
+        retryAt = timestamp + intervalMs;
+        arm(retryAt);
+        return;
+      }
+      sent = packet;
+      sentAt = timestamp;
+      function acknowledge() {
+        if (pendingItem === item) pendingItem = undefined;
+        if (pendingAbility === ability) pendingAbility = undefined;
+      }
+      if (socket) {
+        acknowledge();
+      } else {
+        httpPending++;
+        const settle = accepted => {
+          if (version !== generation) return;
+          httpPending--;
+          // Repeat unacknowledged edges on newer HTTP inputs. The host can
+          // see newer sequence numbers first when its requests are in flight.
+          if (accepted) acknowledge();
+          else if (sent === packet) sent = undefined;
+          flush();
+        };
+        delivered.then(settle, () => settle(false));
+      }
+      // Follow a short tap with its release, even without another frame.
+      const released = socket && !same(packet, latest);
+      arm(timestamp + (released ? edgeIntervalMs : keepAliveMs));
+    }
+    function submit(input) {
+      const item = Boolean(input.item), ability = Boolean(input.ability);
+      if (item && !latest?.item) pendingItem = { at: now() };
+      if (ability && !latest?.ability) pendingAbility = { at: now() };
+      latest = { steer: axis(input.steer, -1), gas: axis(input.gas), brake: axis(input.brake),
+        drift: Boolean(input.drift), item, ability, lookBack: Boolean(input.lookBack) };
+      flush();
+    }
+    return { submit, wake: flush, pause, reset };
+  }
+
+  if (typeof module === 'object' && module.exports) {
+    module.exports = { createInputScheduler };
+    return;
+  }
+
   const drivers = window.RallyData.drivers;
   const tracks = window.RallyData.tracks;
   const roomPattern = /^[A-Z2-9]{5}$/;
@@ -121,9 +221,10 @@
     const gridClient = createQueueToken().slice(0, 16);
     let seat = -1, key = '', source = null, support = staticPages || location.protocol === 'file:' ? false : null;
     let inRace = false, playedRound = -1, snapshot = null, snapTick = -1, lastRoomRound = -1;
+    const motionSnapshots = [];
     let gridReportTimer = 0;
-    let seq = Date.now() * 8, latest = {}, pulses = {}, lastSent = 0, lastSerial = '';
-    let sender = 0, busy = false, connecting = false, disconnected = false, outbound = 0;
+    let seq = Date.now() * 8;
+    let busy = false, connecting = false, disconnected = false;
     let telemetryTimer = 0, telemetryPending = false;
     const connection = { rtt: null, jitter: null, lastSnapshot: null, expected: 0, skipped: 0, fps: null };
     let queueToken = '', queueTimer = 0, playerName = storedPlayerName(), serverCode = '';
@@ -131,6 +232,16 @@
     let statusText = '', statusError = false, connectionNote = null;
     const getRoom = () => context.room;
     const target = action => '/api/rooms/' + getRoom().code + '/' + action;
+    const inputScheduler = createInputScheduler({
+      getTransport: () => active === context && inRace && !disconnected && getRoom()?.phase === 'racing'
+        ? source?.transport : null,
+      write(input, transport) {
+        if (transport === 'websocket' && !source.canSend()) return false;
+        const payload = { round: getRoom().round, seq: ++seq, input };
+        if (transport === 'websocket') return source.send('input', payload);
+        return request(target('input'), payload, key).then(result => result.accepted === true);
+      }
+    });
     const field = name => root.querySelector('[name="' + name + '"]');
     const dialog = container.closest('dialog');
     let dialogGuard = false;
@@ -338,6 +449,7 @@
       const prior = getRoom();
       if (room.round !== lastRoomRound) {
         snapshot = null; snapTick = -1; lastRoomRound = room.round;
+        motionSnapshots.length = 0;
         connection.lastSnapshot = null; connection.expected = 0; connection.skipped = 0;
       }
       context.room = room;
@@ -345,13 +457,16 @@
         status(room.startNotice, true);
         if (inRace && room.phase === 'lobby') {
           inRace = false;
+          inputScheduler.reset();
           snapshot = null;
           snapTick = -1;
+          motionSnapshots.length = 0;
           connection.lastSnapshot = null; connection.expected = 0; connection.skipped = 0;
           clearTimeout(gridReportTimer);
           opts.onStartCancelled?.();
         }
       }
+      inputScheduler.wake();
       if (!inRace) showLobby();
     }
     function reportGridReady(round, loadMs) {
@@ -369,11 +484,13 @@
           (!force && playedRound === room.round)) return;
       const me = room.seats.find(s => s.index === seat);
       if (!me) return;
-      playedRound = room.round; inRace = true; latest = {}; pulses = {}; lastSerial = ''; lastSent = 0;
+      playedRound = room.round; inRace = true;
+      inputScheduler.reset();
       const raceSeat = me.kartIndex;
       if (!terminal) void request(target('control'), { driving: true }, key).catch(() => {});
       const startedLoading = performance.now();
       const network = { seat: raceSeat, sendInput, getState: () => snapshot, returnToLobby, leave,
+        getMotionSnapshots: () => motionSnapshots,
         gridStatus: () => getRoom()?.round === room.round ? getRoom().loading : null,
         gridReady: () => reportGridReady(room.round, Math.round(performance.now() - startedLoading)),
         queueMode: support.queueEnabled === true, isConnected: () => !disconnected, reportFps };
@@ -384,33 +501,12 @@
     }
     function sendInput(input) {
       if (!input || !inRace || active !== context) return;
-      latest = { ...input };
-      if (input.item) pulses.item = true;
-      if (input.ability) pulses.ability = true;
-    }
-    async function pump() {
-      const room = getRoom();
-      if (active !== context || !inRace || disconnected || room?.phase !== 'racing') return;
-      if (source?.transport === 'websocket' ? !source.canSend() : outbound >= 2) return;
-      const input = { steer: Number(latest.steer) || 0, gas: Number(latest.gas) || 0, brake: Number(latest.brake) || 0,
-        drift: Boolean(latest.drift), item: Boolean(latest.item || pulses.item),
-        ability: Boolean(latest.ability || pulses.ability), lookBack: Boolean(latest.lookBack) };
-      const serial = JSON.stringify(input), now = performance.now();
-      if (serial === lastSerial && now - lastSent < 220) return;
-      const payload = { round: room.round, seq: ++seq, input };
-      if (source?.transport === 'websocket') {
-        if (!source.send('input', payload)) return;
-        lastSerial = serial; lastSent = now; pulses = {};
-        return;
-      }
-      lastSerial = serial; lastSent = now; pulses = {}; outbound++;
-      try { await request(target('input'), payload, key); }
-      catch { lastSerial = ''; } finally { outbound--; }
+      inputScheduler.submit(input);
     }
     function clearRoom() {
       source?.close();
       source = null;
-      clearInterval(sender);
+      inputScheduler.reset();
       clearInterval(telemetryTimer);
       clearTimeout(gridReportTimer);
       connectedNote(false);
@@ -441,22 +537,28 @@
       }
     }
     function markConnected() {
+      const reconnecting = disconnected;
       disconnected = false; connectedNote(false);
       if (statusText === 'Reconnecting to the host…') status('');
+      if (reconnecting) inputScheduler.wake();
     }
     function markDisconnected() {
       disconnected = true; connectedNote(true); status('Reconnecting to the host…');
+      inputScheduler.pause();
     }
     function receiveSnapshot(data, terminal = false) {
       const room = getRoom();
       if (!room || data.round !== room.round || room.phase === 'lobby' || data.tick <= snapTick) return;
       if (snapTick >= 0) {
-        const steps = Math.max(1, Math.round((data.tick - snapTick) / (data.intervalTicks || 3)));
+        const interval = data.intervalTicks || 3;
+        const steps = Math.max(1, Math.floor(data.tick / interval) - Math.floor(snapTick / interval));
         connection.expected += steps;
         connection.skipped += steps - 1;
       }
       connection.lastSnapshot = performance.now();
       snapshot = data.state; snapTick = data.tick;
+      motionSnapshots.push({ tick: snapTick, receivedAt: connection.lastSnapshot, state: snapshot });
+      if (motionSnapshots.length > 12) motionSnapshots.shift();
       beginRace(false, terminal && snapshot.done);
     }
     function reportFps(fps) { connection.fps = fps; }
@@ -597,8 +699,10 @@
     }
     function connect(value) {
       if (active !== context) return;
+      inputScheduler.reset();
       seat = value.seat; key = value.token; context.room = value.room; lastRoomRound = value.room.round;
       snapshot = null; snapTick = -1; playedRound = -1;
+      motionSnapshots.length = 0;
       Object.assign(connection, { rtt: null, jitter: null, lastSnapshot: null, expected: 0, skipped: 0, fps: null });
       remember({ code: value.room.code, key }); urlCode(value.room.code); status(value.assignment || '');
       showLobby();
@@ -606,14 +710,13 @@
       if (support.socketTransport === true) subscribeSocket();
       else if (support.transport === 'poll') subscribePoll();
       else subscribeEvents();
-      clearInterval(sender); sender = setInterval(pump, 40);
       clearInterval(telemetryTimer); telemetryTimer = setInterval(reportConnection, 3000);
     }
     function destroy() {
       unmountDiscovery();
       stopQueue(true);
       if (dialogGuard) dialog.removeEventListener('cancel', onCancel);
-      source?.close(); clearInterval(sender); clearInterval(telemetryTimer); clearTimeout(gridReportTimer);
+      source?.close(); inputScheduler.reset(); clearInterval(telemetryTimer); clearTimeout(gridReportTimer);
       connectionNote?.remove(); root.remove();
       if (active === context) active = null;
     }

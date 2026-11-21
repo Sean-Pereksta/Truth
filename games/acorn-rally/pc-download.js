@@ -13,7 +13,7 @@
     'index.html', 'style.css', 'rooms.css', 'community-servers.css', 'community-servers.js', 'app.js', 'network.js', 'local-grid.js', 'data.js', 'championship.js', 'garage-view.js',
     'kart-rig.js', 'aurora-kart.js', 'angel-kart.js', 'signature-kit.js', 'signature-art.js',
     'tracks-expansion.js', 'expansion-world.js', 'minecart-hazards.js', 'hazards.js', 'bullfrog-art.js', 'cosmic-hazards-art.js', 'course-art.js', 'rally-course-scores.js',
-    'breakwater-tides.js', 'race-sim.js', 'race-world.js', 'race.js', 'item-art.js', 'item-feedback.js',
+    'breakwater-tides.js', 'race-sim.js', 'race-world.js', 'online-motion.js', 'race.js', 'item-art.js', 'item-feedback.js',
     'mythic-world.js', 'mythic-hazards-art.js', 'ramps.js', 'ramp-art.js', 'cup-menu.css', 'horizon.js',
     'darkness-world.js', 'darkness-hazards-art.js', 'grimoire-kart.js', 'touch-controls.js', 'touch-controls.css',
     'server/host.cjs', 'server/Hosting.txt', 'server/lobby-supervisor.cjs', 'server/Start Acorn Rally Lobby.cmd', 'server/firebase-lobby.cjs', 'server/race-queue.cjs',

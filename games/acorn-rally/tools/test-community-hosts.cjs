@@ -181,6 +181,49 @@ test('a vanished grid pauses briefly for reconnect and expires when everyone is 
   assert.equal(retired.body.retired.reason, 'abandoned');
 });
 
+test('catch-up publishes one latest frame and polling preserves the snapshot for its tick', async t => {
+  const pub = fixture('public', 'Timing recovery');
+  t.after(() => pub.host.close());
+  const { live, action, loaded, rivalSeat } = await prepare(pub);
+  await loaded();
+  await loaded(rivalSeat.token, rivalGrid);
+  const poll = () => action('poll?after=-1&grid=' + hostGrid);
+  const before = (await poll()).body;
+
+  pub.host.tick(11);
+  const caughtUp = (await poll()).body;
+  assert.equal(caughtUp.revision, before.revision + 1);
+  assert.equal(caughtUp.snapshot.tick, 11);
+  assert.equal(caughtUp.snapshot.state.countdown, live.state.countdown);
+
+  pub.host.tick();
+  const published = (await poll()).body.snapshot;
+  pub.host.tick(2);
+  const cached = (await poll()).body.snapshot;
+  assert.equal(published.tick, 12);
+  assert.ok(live.state.countdown < published.state.countdown);
+  assert.deepEqual(cached, published);
+});
+
+test('a finish during catch-up publishes its terminal snapshot before retirement', async t => {
+  const pub = fixture('public', 'Catch-up finish');
+  t.after(() => pub.host.close());
+  const { live, action, loaded, rivalSeat } = await prepare(pub);
+  await loaded();
+  await loaded(rivalSeat.token, rivalGrid);
+  const revision = live.revision;
+  live.state.countdown = 0;
+  live.state.time = 12 * 60 - .075;
+
+  pub.host.tick(10);
+  assert.equal(pub.host.rooms.size, 0);
+  const final = (await action('poll?after=-1&grid=' + hostGrid)).body;
+  assert.equal(final.revision, revision + 2);
+  assert.equal(final.snapshot.tick, 5);
+  assert.equal(final.snapshot.state.done, true);
+  assert.equal(final.retired.reason, 'finished');
+});
+
 test('a streamed player and a polling player share the same loading barrier and inputs', { timeout: 5000 }, async t => {
   const pub = fixture('public', 'Mixed connections');
   t.after(() => pub.host.close());
@@ -214,6 +257,10 @@ test('a streamed player and a polling player share the same loading barrier and 
   assert.equal(pub.host.diagnostics().expectedPlayers, 2);
   await action('loaded', rival.token, { round, grid: rivalGrid });
   await nextMessage('room', room => room.phase === 'racing');
+  pub.host.tick(7);
+  const streamed = await nextMessage('snapshot', snapshot => snapshot.tick === 7);
+  const polled = (await action('poll?after=-1&grid=' + rivalGrid, rival.token)).body.snapshot;
+  assert.deepEqual(streamed, polled);
   send('input', { round, seq: 1, input: { gas: 1 } });
   assert.equal((await nextMessage('input')).accepted, true);
   const live = pub.host.rooms.get(driver.room.code);

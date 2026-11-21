@@ -8,12 +8,12 @@ function createRacePolling(lobby) {
   function connected(seat) {
     return Boolean(seat.stream) || (seat.lastPoll || 0) > Date.now() - presenceMs;
   }
-  function changed(room, event, value) {
+  function changed(room, event, value, encodedValue) {
     room.revision = (room.revision || 0) + 1;
     if (event === 'room') room.roomRevision = room.revision;
     if (event === 'snapshot') {
       room.snapshotRevision = room.revision;
-      room.pollSnapshot = value;
+      room.pollSnapshot = encodedValue;
     }
     if (event === 'retired') {
       room.retired = value;
@@ -36,7 +36,7 @@ function createRacePolling(lobby) {
   function prune() {
     for (const code of retiredRooms.keys()) results(code);
   }
-  function poll(res, room, seat, rawAfter, send) {
+  function poll(res, room, seat, rawAfter, sendEncodedJson) {
     const parsed = Number(rawAfter);
     const after = rawAfter !== null && Number.isSafeInteger(parsed) && parsed <= room.revision ? parsed : -1;
     seat.finishPoll?.();
@@ -51,10 +51,12 @@ function createRacePolling(lobby) {
       if (res.destroyed || res.writableEnded) return;
       const response = { revision: room.revision || 0 };
       if (after < 0 || room.retired || room.roomRevision > after) response.room = lobby(room);
-      if (room.pollSnapshot && (after < 0 || room.retired || room.snapshotRevision > after))
-        response.snapshot = room.pollSnapshot;
       if (room.retired) response.retired = room.retired;
-      send(res, response);
+      const json = JSON.stringify(response);
+      // The snapshot already contains serialized JSON with the exact state for
+      // its tick. Appending it keeps every poll from re-encoding the race state.
+      const snapshot = room.pollSnapshot && (after < 0 || room.retired || room.snapshotRevision > after);
+      sendEncodedJson(res, snapshot ? json.slice(0, -1) + ',"snapshot":' + room.pollSnapshot + '}' : json);
     }
     if (room.retired || after !== (room.revision || 0)) return finish();
     seat.finishPoll = finish;

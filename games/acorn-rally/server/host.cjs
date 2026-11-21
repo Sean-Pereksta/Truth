@@ -129,19 +129,16 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
     stream.write('event: ' + event + '\ndata: ' + json + '\n\n');
   }
   function publish(room, event, value) {
+    const json = JSON.stringify(value);
     if (community && event === 'snapshot') {
       snapshotCount++;
       if (snapshotBytes === undefined || snapshotCount % 12 === 0) {
-        snapshotBytes = Buffer.byteLength(JSON.stringify(value));
+        snapshotBytes = Buffer.byteLength(json);
       }
     }
-    if (community) polling.changed(room, event, value);
-    raceSockets?.publish(room, event, value);
-    const listeners = members(room).filter(seat => seat.stream);
-    if (listeners.length) {
-      const json = JSON.stringify(value);
-      for (const seat of listeners) emit(seat, event, json);
-    }
+    if (community) polling.changed(room, event, value, json);
+    raceSockets?.publish(room, event, value, json);
+    for (const seat of members(room)) emit(seat, event, json);
   }
   function raceSnapshot(room) {
     return { round: room.round, tick: room.tick, intervalTicks: snapshotIntervalTicks, state: room.state };
@@ -257,8 +254,7 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
       socket?.close();
     }
   }
-  function tick() {
-    const now = Date.now();
+  function stepRooms(now, pendingSnapshots) {
     for (const room of rooms.values()) {
       if (!inProgress(room)) continue;
       const driving = members(room).filter(seat => seat.driving);
@@ -293,13 +289,22 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
       if (room.state.done) {
         room.phase = 'finished';
         for (const s of members(room)) s.ready = s.index === room.host;
-      }
-      if (room.tick % snapshotIntervalTicks === 0 || room.state.done)
+        pendingSnapshots.delete(room);
         publish(room, 'snapshot', raceSnapshot(room));
-      if (room.state.done) {
         if (singleRoom) retireRoom(room);
         else announce(room);
+      } else if (room.tick % snapshotIntervalTicks === 0) {
+        pendingSnapshots.add(room);
       }
+    }
+  }
+  function tick(steps = 1) {
+    const now = Date.now(), pendingSnapshots = new Set();
+    for (let step = 0; step < steps; step++) stepRooms(now, pendingSnapshots);
+    // A late timer may run several simulation steps at once. Publish only the
+    // newest periodic snapshot from that batch, with its matching simulation tick.
+    for (const room of pendingSnapshots) {
+      if (rooms.get(room.code) === room && room.phase === 'racing') publish(room, 'snapshot', raceSnapshot(room));
     }
   }
   function collect() {
@@ -321,14 +326,18 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
   const timer = automatic && setInterval(() => {
     const current = performance.now();
     accumulator += Math.min((current - last) / 1000, 0.25); last = current;
-    while (accumulator >= stepSeconds) { tick(); accumulator -= stepSeconds; }
+    const steps = Math.floor(accumulator / stepSeconds);
+    if (steps === 0) return;
+    accumulator -= steps * stepSeconds;
+    tick(steps);
   }, 8);
   const cleanup = setInterval(collect, 15000);
-  function returnJson(res, value, status = 200) {
+  function returnEncodedJson(res, json, status = 200) {
     res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store',
       'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer' });
-    res.end(JSON.stringify(value));
+    res.end(json);
   }
+  function returnJson(res, value, status = 200) { returnEncodedJson(res, JSON.stringify(value), status); }
   function acceptInput(room, seat, body) {
     if (room.phase !== 'racing' || body.round !== room.round) return { accepted: false };
     const seq = integer(body.seq, 0, Number.MAX_SAFE_INTEGER, -1);
@@ -520,7 +529,7 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
           setHuman(room, seat, seat.driving);
           if (!wasConnected || newGridClient) announce(room);
         }
-        return polling.poll(res, room, seat, url.searchParams.get('after'), returnJson);
+        return polling.poll(res, room, seat, url.searchParams.get('after'), returnEncodedJson);
       }
       if (action === 'events' && req.method === 'GET') {
         const previous = seat.stream;
