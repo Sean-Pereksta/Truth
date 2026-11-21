@@ -310,8 +310,9 @@
           quad(route(s,side*(a.w-.23)),route(e,side*(a.w-.23)),route(e,side*a.w),route(s,side*a.w),edge);
         }
         }
-        const spacing=expansion?(c.index===9?38:15):4.2,j=Math.floor(mod(s,c.length)/spacing);
-        if(Math.floor(mod(e,c.length)/spacing)!==j&&i>0){const side=j%2?-1:1,pt=route(s,side*(a.w+1.1+(j%4)*.9)),sz=pt.k;
+        const spacing=expansion?(c.index===9?38:15):4.2,j=Math.floor(mod(s,c.length)/spacing),side=j%2?-1:1;
+        const betweenDecks=!expansion&&split&&c.branchPoints&&side===(branch?-1:1);
+        if(Math.floor(mod(e,c.length)/spacing)!==j&&i>0&&!betweenDecks){const pt=route(s,side*(a.w+1.1+(j%4)*.9)),sz=pt.k;
           if(expansion){if(c.index<13)deckLandmark(ctx,c.index,route,s,side,a.w,j);}
           else{
           ctx.fillStyle=p.wood;ctx.fillRect(pt.x-sz*.18,pt.y-sz*3,sz*.36,sz*3);
