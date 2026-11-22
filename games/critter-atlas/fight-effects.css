@@ -1,0 +1,46 @@
+.cb-cell .cb-creature > .critter-sprite {
+  animation: cfx-breathe 2.9s steps(9,end) infinite;
+  transform-origin: 50% 90%;
+}
+.cb-cell:nth-child(3n) .cb-creature > .critter-sprite { animation-delay: -.9s; }
+.cb-cell:nth-child(3n+1) .cb-creature > .critter-sprite { animation-delay: -1.65s; }
+.cb-active .cb-creature > .critter-sprite { animation-duration: 1.95s; }
+@keyframes cfx-breathe {
+  0%, 100% { transform: translateY(0) scale(1,1); }
+  50% { transform: translateY(-1px) scale(.99,1.035); }
+}
+.cfx-layer {
+  position: absolute; inset: 0; z-index: 12; pointer-events: none;
+  user-select: none; overflow: visible; isolation: isolate;
+}
+.cfx-canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; z-index: 2; }
+.cfx-avatar {
+  position: absolute; z-index: 1; display: block; pointer-events: none;
+  filter: drop-shadow(0 2px 1px #11221bab); will-change: transform;
+}
+.cfx-facing { display: block; width: 100%; height: 100%; }
+.cfx-replaced .cb-creature, .cfx-replaced .cb-fx { visibility: hidden; }
+.cfx-playing .cb-hp > b { transition: width 160ms ease-out; }
+.cfx-playing .cb-cell .cb-creature > .critter-sprite { animation-play-state: paused; }
+.cfx-label {
+  position: absolute; z-index: 3; display: flex; align-items: center; flex-direction: column;
+  gap: 2px; transform: translate(-50%,-65%); font: 700 clamp(9px,1.1vw,14px)/1.12 var(--sans,sans-serif);
+  white-space: nowrap; filter: drop-shadow(0 2px 1px #12211da6);
+}
+.cfx-pill {
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 1.35em;
+  border: 1px solid #96a77e; border-radius: 4px; padding: 1px 5px; color: #ffefc9; background: #22372ded;
+}
+.cfx-pill svg, .cfx-pill .fight-icon { flex: 0 0 auto; width: 1.12em; height: 1.12em; }
+.cfx-pill[data-effect="damage"], .cfx-pill[data-effect="escaped"], .cfx-pill[data-effect="hurt"],
+.cfx-pill[data-effect="burn"], .cfx-pill[data-effect="exposed"] { border-color: #e6a480; background: #542f32f0; color: #fff2dc; }
+.cfx-pill[data-effect="heal"], .cfx-pill[data-effect="cover"] { border-color: #92cc9a; color: #e3ffd5; background: #244735f0; }
+.cfx-pill[data-effect="caught"], .cfx-pill[data-effect="flank"], .cfx-pill[data-effect="victory"] {
+  border-color: #f2c877; background: #453827f0; color: #ffdf91;
+}
+.cfx-pill[data-effect="damage"], .cfx-pill[data-effect="heal"] { font-size: 1.12em; }
+.cfx-cast { font-size: clamp(8px,1vw,12px); transform: translate(-50%,0); }
+.cfx-cast .cfx-pill { border-color: #a9b8a1; color: #e6edda; background: #1e2d2be8; }
+@media(prefers-reduced-motion:reduce) {
+  .cb-cell .cb-creature > .critter-sprite { animation: none; }
+}

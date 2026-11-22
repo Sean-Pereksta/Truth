@@ -1,6 +1,7 @@
 import { SPECIES, REGIONS, EVOLUTION_LEVELS, MAX_LEVEL, PARTY_LIMIT, getStats, getAbilities, getForm, xpToNext } from './catalog.js';
 import { newJournal, loadJournal, saveJournal, getParty, setParty, addCapture, awardXP } from './journal.js';
 import { sprite } from './art.js';
+import { FIGHT_ICONS, fightIcon, abilityIconKey } from './fight-icons.js';
 import { freshWorld, mountWorld, completeEncounter } from './world.js';
 import { mountBattle } from './battle.js';
 
@@ -29,7 +30,9 @@ dialog.addEventListener('click', event => { if (event.target === dialog) {
 document.querySelector('#help-button').addEventListener('click', () => showDialog('How to play', `
   <ol class="help-list">
     <li><b>Explore.</b> Tap a landmark on the map to travel there. At your destination, choose the action below the map.</li>
-    <li><b>Battle.</b> When a companion takes its turn, pick a reachable hex to move. Choose an ability and a highlighted target, or guard. Cover can protect a Critter. Marked hazards affect whoever ends a turn there.</li>
+    <li><b>Battle.</b> Pick a lit hex to move, then choose an ability. The number over each target shows the expected damage or healing. Guard to brace against incoming attacks.</li>
+    <li><b>Time your attack.</b> ${fightIcon('wait','')} Wait lets a Critter act later in the same round. Use it before moving to let a companion get beside a foe. A melee hit with both allies beside the target gains a flank bonus.</li>
+    <li><b>Read the terrain.</b> Cover reduces ranged damage. A hazard triggers when a Critter ends its turn there. The battle’s effects key explains the symbols.</li>
     <li><b>Capture.</b> Move within three hexes, choose Capture, then select a wild Critter. Lower its health or apply a status to improve the displayed odds. A capture attempt uses the turn.</li>
     <li><b>Build your party.</b> Take up to four companions. Captures fill spare slots and then go to your reserve. Switch companions in Party between battles. Everyone recovers their health after a fight.</li>
     <li><b>Find new regions.</b> Win both tribe encounters and challenge the regional warden. Investigate landmarks and follow the tracks to find the region’s legendary.</li>
@@ -204,11 +207,14 @@ function showDetail(s, member) {
   const form = getForm(sample), stats = getStats(sample);
   const abilities = getAbilities({ ...sample, level:MAX_LEVEL });
   showDialog(form.name, `<div class="detail-head"><span class="detail-sprite">${sprite(s.id, form.stage)}</span><div>
-      <span class="micro">${roleNames[s.role]} · ${s.rarity}</span><p class="field-note">${REGIONS[s.region].name}<br>${s.lore}</p></div></div>
-    <div class="detail-stats"><span>Lv. ${sample.level}</span><span>${stats.maxHp} HP</span><span>${stats.attack} attack</span><span>${stats.defense} defense</span><span>${stats.move} move</span></div>
+      <span class="micro">${fightIcon(s.role,'')} ${roleNames[s.role]} · ${s.rarity}</span><p class="field-note">${REGIONS[s.region].name}<br>${s.lore}</p></div></div>
+    <div class="detail-stats"><span>Lv. ${sample.level}</span><span>${fightIcon('hp','')} ${stats.maxHp} HP</span><span>${fightIcon('melee','')} ${stats.attack} attack</span><span>${fightIcon('guard','')} ${stats.defense} defense</span><span>${fightIcon('move','')} ${stats.move} move</span></div>
     ${member ? `<div class="companion-text">${meter(member)}</div>` : ''}
     <h3 class="dialog-section">Evolution</h3><div class="evolution-row">${s.forms.map((name, stage) => `<div class="evolution-step"><span class="evo-sprite">${sprite(s.id, stage)}</span><b>${name}</b>Lv. ${[1,...EVOLUTION_LEVELS][stage]}</div>`).join('')}</div>
-    <h3 class="dialog-section">Abilities</h3><ul class="ability-list">${abilities.map(a => `<li><b>${a.name}</b> · Lv. ${a.learnLevel}<small>${a.description}</small></li>`).join('')}</ul>`);
+    <h3 class="dialog-section">Abilities</h3><ul class="ability-list">${abilities.map(a => {
+      const condition = a.status ? `<span class="ability-condition">${fightIcon(a.status,'')} ${FIGHT_ICONS[a.status].label}</span>` : '';
+      return `<li><span class="ability-glyph">${fightIcon(abilityIconKey(a,s),'')}</span><div><b>${a.name}</b> · Lv. ${a.learnLevel}<small>${a.description}</small>${condition}</div></li>`;
+    }).join('')}</ul>`);
 }
 game.addEventListener('click', event => {
   const button = event.target.closest('button');

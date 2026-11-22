@@ -1,0 +1,29 @@
+/* Columns are regional palettes. Rows distinguish obstacles, cover and hazards. */
+.cb-arena[data-region="0"] { --ground-x: 0%; }
+.cb-arena[data-region="1"] { --ground-x: 14.285714%; }
+.cb-arena[data-region="2"] { --ground-x: 28.571429%; }
+.cb-arena[data-region="3"] { --ground-x: 42.857143%; }
+.cb-arena[data-region="4"] { --ground-x: 57.142857%; }
+.cb-arena[data-region="5"] { --ground-x: 71.428571%; }
+.cb-arena[data-region="6"] { --ground-x: 85.714286%; }
+.cb-arena[data-region="7"] { --ground-x: 100%; }
+.cb-rock { --ground-y: 0%; }
+.cb-cover { --ground-y: 50%; }
+.cb-hazard { --ground-y: 100%; }
+.cb-terrain-art {
+  position: absolute;
+  left: 18%;
+  top: 18%;
+  width: 64%;
+  aspect-ratio: 1;
+  background-image: url("./assets/battle-terrain.webp");
+  background-position: var(--ground-x, 0%) var(--ground-y);
+  background-size: 800% 300%;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 2px 1px #11201b99);
+  image-rendering: pixelated;
+  pointer-events: none;
+}
+.cb-rock .cb-terrain-art { top: 5%; left: 10%; width: 80%; }
+.cb-occupied .cb-terrain-art { top: 35%; left: 53%; width: 40%; opacity: .82; }
+.cb-rock .cb-terrain-mark { left: 15%; top: 57%; }

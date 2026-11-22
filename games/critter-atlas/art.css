@@ -39,3 +39,15 @@
 .sprite-volcano { --sprite-sheet: url("./assets/creatures-volcano.webp"); }
 .sprite-ruins { --sprite-sheet: url("./assets/creatures-ruins.webp"); }
 .sprite-astral { --sprite-sheet: url("./assets/creatures-astral.webp"); }
+
+/* The renderer swaps to the painted action frame after anticipation. */
+.sprite-forest { --pose-sheet: url("./assets/poses-forest.webp"); }
+.sprite-marsh { --pose-sheet: url("./assets/poses-marsh.webp"); }
+.sprite-caves { --pose-sheet: url("./assets/poses-caves.webp"); }
+.sprite-coast { --pose-sheet: url("./assets/poses-coast.webp"); }
+.sprite-mountains { --pose-sheet: url("./assets/poses-mountains.webp"); }
+.sprite-volcano { --pose-sheet: url("./assets/poses-volcano.webp"); }
+.sprite-ruins { --pose-sheet: url("./assets/poses-ruins.webp"); }
+.sprite-astral { --pose-sheet: url("./assets/poses-astral.webp"); }
+.cf-strike-pose .critter-sprite::before,
+.critter-sprite.cf-strike-pose::before { background-image: var(--pose-sheet); }

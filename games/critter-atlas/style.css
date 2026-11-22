@@ -141,3 +141,8 @@ dialog::backdrop{background:rgb(5 17 14 / .78)}
   .trail-progress{display:none}
 }
 @media(prefers-reduced-motion:reduce){*,*::after,*::before{scroll-behavior:auto!important;transition-duration:0s!important;animation-duration:.01ms!important}}
+
+.ability-list li { display: flex; gap: 10px; align-items: flex-start; }
+.ability-glyph { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 5px; background: #152a23; }
+.ability-glyph .fight-icon { width: 24px; height: 24px; }
+.ability-condition { display: inline-flex; gap: 4px; align-items: center; margin-top: 4px; font-size: .78rem; color: #e5d2a2; }
