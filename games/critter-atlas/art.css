@@ -19,7 +19,7 @@
   transform: translate(-50%, -50%);
   background-image: var(--sprite-sheet);
   background-position: var(--sprite-x) var(--sprite-y);
-  background-size: 700% 400%;
+  background-size: var(--sprite-width, 700%) 400%;
   background-repeat: no-repeat;
   image-rendering: pixelated;
 }
@@ -49,5 +49,10 @@
 .sprite-volcano { --pose-sheet: url("./assets/poses-volcano.webp"); }
 .sprite-ruins { --pose-sheet: url("./assets/poses-ruins.webp"); }
 .sprite-astral { --pose-sheet: url("./assets/poses-astral.webp"); }
+.sprite-frontier-1 { --sprite-sheet: url("./assets/creatures-frontier-1.webp"); --pose-sheet: url("./assets/poses-frontier-1.webp"); }
+.sprite-frontier-2 { --sprite-sheet: url("./assets/creatures-frontier-2.webp"); --pose-sheet: url("./assets/poses-frontier-2.webp"); }
+.sprite-frontier-3 { --sprite-sheet: url("./assets/creatures-frontier-3.webp"); --pose-sheet: url("./assets/poses-frontier-3.webp"); }
+.sprite-frontier-4 { --sprite-sheet: url("./assets/creatures-frontier-4.webp"); --pose-sheet: url("./assets/poses-frontier-4.webp"); }
+.sprite-frontier-5 { --sprite-sheet: url("./assets/creatures-frontier-5.webp"); --pose-sheet: url("./assets/poses-frontier-5.webp"); }
 .cf-strike-pose .critter-sprite::before,
 .critter-sprite.cf-strike-pose::before { background-image: var(--pose-sheet); }

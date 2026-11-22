@@ -1,4 +1,5 @@
 import { SPECIES, getForm } from './catalog.js';
+import { spriteAtlas } from './art.js';
 import { fightIcon, abilityIconKey, hazardIconKey } from './fight-icons.js';
 
 // Draw effects on a low-resolution plane. The creature actors themselves keep their
@@ -17,17 +18,17 @@ const ROSE = ['#954653','#ff987f','#ffe6b4'];
 const VIOLET = ['#78518e','#dda4ff','#fff6dd'];
 const BLUE = ['#4e82aa','#9bdcfe','#f1fffc'];
 const atlases = new Map();
-const REGION_SHEETS = ['forest','marsh','caves','coast','mountains','volcano','ruins','astral'];
 const poseAtlases = new Map();
-function warmPose(region) {
-  if (!REGION_SHEETS[region] || typeof Image === 'undefined') return;
-  if (!poseAtlases.has(region)) {
+function warmPose(speciesId) {
+  const sheet = spriteAtlas(speciesId)?.sheet;
+  if (!sheet || typeof Image === 'undefined') return;
+  if (!poseAtlases.has(sheet)) {
     const img=new Image();
-    try { img.src=new URL('./assets/poses-'+REGION_SHEETS[region]+'.webp',import.meta.url).href; }
+    try { img.src=new URL('./assets/poses-'+sheet+'.webp',import.meta.url).href; }
     catch { return; }
-    poseAtlases.set(region,img);
+    poseAtlases.set(sheet,img);
   }
-  return poseAtlases.get(region);
+  return poseAtlases.get(sheet);
 }
 const clamp = (n,lo=0,hi=1) => Math.max(lo, Math.min(hi,n));
 const mix = (a,b,t) => a + (b-a)*t;
@@ -48,7 +49,7 @@ function atlas(name) {
 export function warmFightEffects(units = []) {
   atlas('actions');
   atlas('regions');
-  for (const unit of units) warmPose(SPECIES[unit.member.speciesId].region);
+  for (const unit of units) warmPose(unit.member.speciesId);
 }
 
 function paintFrame(ctx, name, row, t, point, size, facing=1) {
@@ -130,8 +131,12 @@ const SIGNATURE_MOTIONS = [
   ['fracture','volley','slash','wave','rush','lance','rush'],
   ['rush','volley','rush','lance','cloud','rush','fracture'],
   ['volley','shower','sigil','lance','volley','rush','sigil'],
-  ['slash','cloud','bind','rush','volley','sigil','wave']
-];
+  ['slash','cloud','bind','rush','volley','sigil','wave'],
+  ['cloud','slash','fracture','volley','rush'],
+  ['rush','slash','bind','wave','lance'],
+  ['wave','rush','fracture','bind','shower'],
+  ['rush','cloud','sigil','sigil','rush']
+].flat();
 const SPECIAL_MOTIONS = { 'Pinning Shot':'bind', Feint:'slash', Faultline:'fracture', Sightline:'lance', Crosscut:'slash' };
 
 function drawMotion(ctx,motion,src,p,t,tone,dir,apex) {
@@ -281,7 +286,7 @@ function createScene(board, battle, sprite) {
     if (cell && orig) { originals.add(cell); cell.classList.add('cfx-replaced'); }
     const homeFacing=unit?.team==='wild'||cell?.classList.contains('cb-wild')?-1:1;
     const species=unit && SPECIES[unit.member.speciesId];
-    const poseAtlas=species && warmPose(species.region);
+    const poseAtlas=species && warmPose(species.id);
     const ghost={
       element:visual, facing:homeFacing, species,
       pose(p,opts={}) {
@@ -322,7 +327,7 @@ function playEvent(scene,e,reduced) {
   const palette=PALETTES[region]??GOLD;
   const isSignature=e.skillId==='signature'||e.skillId==='apex';
   const isApex=e.skillId==='apex';
-  const motion=isSignature && species ? SIGNATURE_MOTIONS[species.region][species.id%7] : SPECIAL_MOTIONS[e.skillName];
+  const motion=isSignature && species ? SIGNATURE_MOTIONS[species.id] : SPECIAL_MOTIONS[e.skillName];
   const heavy = species?.role === 'defender';
   const attackImpact = e.style === 'ranged' ? 0.58 : 0.44;
   const feedbackAt = {capture: 0.72, attack: attackImpact, heal: 0.53, hazard: 0.19}[e.type] ?? 0.06;
@@ -411,6 +416,10 @@ function playEvent(scene,e,reduced) {
         if (bloom>0) {
           target?.pose({x:dest.x,y:dest.y-wave(bloom)*3},{strike:actor===target&&t>.14&&t<.63,light:1+wave(bloom)*.42});
           paintFrame(ctx,'actions',2,bloom,dest,e.skillId==='specialty'?68:55);
+          if (isSignature) {
+            paintFrame(ctx,'regions',region,bloom,dest,isApex?55:38,dir);
+            drawMotion(ctx,motion,src,dest,bloom,palette,dir,isApex);
+          }
           ring(ctx,{x:dest.x,y:dest.y+10},6+15*bloom,MINT,.28);
           for (let i=0;i<5;i++) {
             const a=t*4+i*TAU/5;

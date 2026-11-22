@@ -87,7 +87,7 @@ const glyphs = [
 
 for (const family of SPECIES) {
   glyphs.push(['signature-' + family.id, family.signature,
-    family.name + '’s signature attack.']);
+    family.name + '’s signature ability.']);
 }
 for (const family of SPECIES) {
   glyphs.push(['apex-' + family.id, family.signature + ' II',
@@ -137,5 +137,5 @@ export function fightIcon(key, label) {
   const semantics = label === '' ? 'aria-hidden="true"' :
     'role="img" aria-label="' + escapeAttr(label ?? icon.label) + '" title="' + escapeAttr(label ?? icon.label) + '"';
   return '<span class="fight-icon" data-fight-icon="' + key + '" ' + semantics +
-    ' style="background-position:' + x + '% ' + y + '%"></span>';
+    ' style="--fight-icon-rows:' + (rows * 100) + '%;background-position:' + x + '% ' + y + '%"></span>';
 }

@@ -4,16 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#162823">
-  <meta name="description" content="Explore eight wild regions, collect original Critters, and lead your party in turn-based tactical battles.">
+  <meta name="description" content="Explore eight regions, trade in local markets, fight in regional arenas, and open paths to rare and legendary Critters.">
   <title>Critter Atlas · Catnmice Games</title>
   <link rel="icon" type="image/webp" href="./assets/cover.webp">
-  <link rel="stylesheet" href="./style.css?v=combat-2">
-  <link rel="stylesheet" href="./world.css">
-  <link rel="stylesheet" href="./battle.css?v=combat-2">
-  <link rel="stylesheet" href="./art.css?v=combat-2">
-  <link rel="stylesheet" href="./fight-icons.css">
-  <link rel="stylesheet" href="./fight-terrain.css">
+  <link rel="stylesheet" href="./style.css?v=frontiers-1">
+  <link rel="stylesheet" href="./world.css?v=frontiers-1">
+  <link rel="stylesheet" href="./battle.css?v=frontiers-1">
+  <link rel="stylesheet" href="./art.css?v=frontiers-1">
+  <link rel="stylesheet" href="./fight-icons.css?v=frontiers-1">
+  <link rel="stylesheet" href="./fight-terrain.css?v=frontiers-1">
   <link rel="stylesheet" href="./fight-effects.css">
+  <link rel="stylesheet" href="./market.css">
 </head>
 <body>
   <div class="app-shell">
@@ -26,6 +27,20 @@
   </div>
   <dialog id="info-dialog" aria-labelledby="dialog-title"><div class="dialog-header"><h2 id="dialog-title"></h2><button id="dialog-close" aria-label="Close dialog">×</button></div><div id="dialog-body"></div></dialog>
   <noscript>This game needs JavaScript to run.</noscript>
-  <script type="module" src="./app.js?v=combat-2"></script>
+  <script type="importmap">
+{
+  "imports": {
+    "./app.js": "./app.js?v=frontiers-1",
+    "./art.js": "./art.js?v=frontiers-1",
+    "./battle.js": "./battle.js?v=frontiers-1",
+    "./catalog.js": "./catalog.js?v=frontiers-1",
+    "./fight-effects.js": "./fight-effects.js?v=frontiers-1",
+    "./fight-icons.js": "./fight-icons.js?v=frontiers-1",
+    "./journal.js": "./journal.js?v=frontiers-1",
+    "./world.js": "./world.js?v=frontiers-1"
+  }
+}
+  </script>
+  <script type="module" src="./app.js?v=frontiers-1"></script>
 </body>
 </html>

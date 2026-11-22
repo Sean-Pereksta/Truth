@@ -62,6 +62,23 @@
   content: ""; position: absolute; z-index: -1; inset: 0; pointer-events: none;
   background: linear-gradient(0deg, #13252269, #152b2308 50%, #172a2038);
 }
+.cb-arena.cb-built-arena {
+  padding:4% 7%; background-image: var(--venue); background-position:center;
+  background-size:100% 100%; background-repeat:no-repeat;
+}
+.cb-venue-tactic {
+  display:flex; align-items:center; gap:7px; margin:0; padding:5px 10px 7px;
+  color:#e9d5a4; background:#24342b; font-size:12px; line-height:1.4;
+}
+.cb-venue-tactic .fight-icon { flex:none; }
+.cb-pack { grid-column:1/-1; border-top:1px solid var(--cb-line); margin-top:3px; }
+.cb-pack summary { cursor:pointer; padding:8px 3px; color:var(--cb-market); font-size:13px; font-weight:700; }
+.cb-pack > div { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px; }
+.cb-outcome p.cb-coin-reward { color:var(--cb-market); font-weight:700; }
+.cb-coin-reward::before {
+  content:""; display:inline-block; width:.8em; height:.8em; margin-right:.4em;
+  background:#bf903f; border:2px solid #f5d47c; border-radius:50%; box-shadow:1px 1px #765526;
+}
 .cb-board { position: relative; width: 100%; aspect-ratio: 1.67; isolation: isolate; }
 .cb-cell {
   position: absolute; left: var(--x); top: var(--y); width: 13.333333%; height: 25%;
@@ -232,6 +249,7 @@
   .cb-command-art { width:20px; height:24px; font-size:16px; }
 }
 @media (max-width:520px) {
+  .cb-arena.cb-built-arena { padding:3.5% 4.5%; }
   .cb-panel { grid-template-columns:minmax(0,1fr); }
   .cb-commands { grid-column:1; grid-row:2; grid-template-columns:repeat(3,minmax(0,1fr)); padding:6px; }
   .cb-inspect { grid-column:1; grid-row:4; border-left:0; border-top:1px solid var(--cb-line); padding:6px; margin:0 6px; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:center; gap:1px 8px; }

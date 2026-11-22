@@ -3,6 +3,7 @@ import {
   getAbilities, getForm, makeMember, xpToNext
 } from './catalog.js';
 import { freshWorld } from './world.js';
+import { freshEconomy, restoreEconomy } from './economy.js';
 
 const SAVE_KEY = 'catnmice.critter-atlas.expedition.v1';
 const VERSION = 1;
@@ -60,7 +61,7 @@ export function newJournal(starterId = 0) {
   const roster = [makeMember(lead, 3), makeMember((lead + 1) % 3, 3)];
   return {
     version: VERSION, roster, party: roster.map(m => m.uid), seen: roster.map(m => m.speciesId),
-    wins: REGIONS.map(() => 0), region: 0, unlocked: 0, world: freshWorld()
+    wins: REGIONS.map(() => 0), region: 0, unlocked: 0, world: freshWorld(), economy: freshEconomy()
   };
 }
 
@@ -89,7 +90,7 @@ export function loadJournal(storage) {
       version: VERSION, roster, party,
       seen: [...new Set([...seen, ...roster.map(m => m.speciesId)])],
       wins: REGIONS.map((_, index) => nonnegative(data.wins?.[index])),
-      region: world.region, unlocked: world.unlocked, world
+      region: world.region, unlocked: world.unlocked, world, economy: restoreEconomy(data.economy)
     };
   } catch {
     return null;

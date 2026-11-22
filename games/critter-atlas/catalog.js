@@ -1,3 +1,5 @@
+import { FRONTIER_SPECIES } from './frontier-species.js';
+
 // Region, species, and combat definitions shared by the trail, party, and arena.
 const regionRows = [
   ['Mossbell Wood', 'forest', 2, 'Mossbell Foragers', 'Bramble Ring', 'Thorns', '#79b977'],
@@ -90,7 +92,7 @@ export const SPECIES = lineages.map(([names, animal, role, color, signature, eff
   const captureRate = Number((captureSlots[slot] - region * (slot === 6 ? .002 : .008)).toFixed(3));
   return { id, name: forms[0], forms, region, role, animal, color, signature, effect, lore,
     rarity: raritySlots[slot], legendary: slot === 6, captureRate };
-});
+}).concat(FRONTIER_SPECIES);
 
 export const MAX_LEVEL = 45;
 export const EVOLUTION_LEVELS = [6, 12, 20];
@@ -156,9 +158,11 @@ export function getAbilities(member) {
   const [strike, utility, kind, power, reach, status, description] = roleBasics[species.role];
   const basic = ability('strike', strike, 'attack', 1, range, null, 'Deal damage within ' + range + (range === 1 ? ' space.' : ' spaces.'), 1);
   const support = ability('utility', utility, kind, power, reach, status, description, 1);
-  const signatureReach = species.role === 'striker' ? 2 : range;
-  const signature = ability('signature', species.signature, 'attack', 1.12, signatureReach, species.effect,
-    'A signature attack that ' + statusDescriptions[species.effect] + '.', 6);
+  const technique = species.technique ?? { kind: 'attack', power: 1.12, range: species.role === 'striker' ? 2 : range };
+  const healing = technique.kind === 'heal';
+  const signature = ability('signature', species.signature, technique.kind, technique.power, technique.range, species.effect,
+    healing ? 'Restore health to an ally within ' + technique.range + ' spaces.' :
+      'A signature attack that ' + statusDescriptions[species.effect] + '.', 6);
   let specialty;
   if (species.role === 'healer') {
     specialty = ability('specialty', 'Greater Mend', 'heal', 1.8, 4, null, 'Restore more health from up to four spaces.', 12);
@@ -169,8 +173,10 @@ export function getAbilities(member) {
   } else {
     specialty = ability('specialty', 'Crosscut', 'attack', 1.5, 1, null, 'A powerful close-range strike.', 12);
   }
-  const apex = ability('apex', species.signature + ' II', 'attack', 1.55, signatureReach + 1, species.effect,
-    'An evolved signature with extra reach that ' + statusDescriptions[species.effect] + '.', 20);
+  const apexPower = Number((technique.power + .43).toFixed(2));
+  const apex = ability('apex', species.signature + ' II', technique.kind, apexPower, technique.range + 1, species.effect,
+    healing ? 'Restore more health to an ally within ' + (technique.range + 1) + ' spaces.' :
+      'An evolved signature with extra reach that ' + statusDescriptions[species.effect] + '.', 20);
   return [basic, support, signature, specialty, apex].filter(move => move.learnLevel <= member.level);
 }
 
@@ -184,18 +190,24 @@ export function captureChance(member, hpFraction, hasStatus = false) {
   return odds / (1 + odds);
 }
 
-// Ordinary trails can roll any non-legendary family in their region. Relative
-// weights are independent of capture odds; sanctuaries alone roll legendaries.
+// Ordinary patrols draw from the original six local families. Only a tracked
+// frontier sighting can add a rare or legendary leader from its exact habitat.
 const encounterWeights = [8, 8, 6, 5, 3, 2];
-export function rollEncounter(region, { legendary = false, challenge = false, level, leadSpeciesId, rng = Math.random } = {}) {
+export function rollEncounter(region, { legendary = false, challenge = false, level, habitatId, leadSpeciesId, rng = Math.random } = {}) {
   const area = REGIONS[region];
   if (!area) throw new RangeError('Unknown region');
   const strongest = clamp(Math.floor(Number(level) || area.minLevel), 1, MAX_LEVEL);
-  const packSize = legendary ? 2 : challenge ? (region > 2 ? 4 : 3) : (region > 0 && rng() < .65 ? 3 : 2);
+  const sighted = SPECIES[leadSpeciesId];
+  const habitatMatch = sighted?.habitatId && sighted.habitatId === habitatId && sighted.region === region;
+  const legacyLegend = legendary && (!habitatId || habitatId === 'hollow');
+  const legendaryPack = legacyLegend || (habitatMatch && sighted.legendary);
+  const packSize = legendaryPack ? 2 : challenge ? (region > 2 ? 4 : 3) : (region > 0 && rng() < .65 ? 3 : 2);
   const available = encounterWeights.map((weight, slot) => ({ id: region * 7 + slot, weight }));
   const pack = [];
   const leadIndex = available.findIndex(item => item.id === leadSpeciesId);
-  if (legendary) {
+  if (habitatMatch) {
+    pack.push(makeMember(sighted.id, strongest));
+  } else if (legacyLegend) {
     pack.push(makeMember(region * 7 + 6, strongest));
   } else if (leadIndex >= 0) {
     available.splice(leadIndex, 1);
