@@ -3,7 +3,7 @@ import { newJournal, loadJournal, saveJournal, getParty, setParty, addCapture, a
 import { sprite } from './art.js';
 import { FIGHT_ICONS, fightIcon, abilityIconKey } from './fight-icons.js';
 import { freshWorld, mountWorld, completeEncounter } from './world.js';
-import { mountBattle } from './battle.js';
+import { mountBattle } from './battle.js?v=combat-2';
 
 const game = document.querySelector('#game');
 const dialog = document.querySelector('#info-dialog');
