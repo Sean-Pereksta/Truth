@@ -1,0 +1,41 @@
+.critter-sprite {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  container-type: size;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+.critter-sprite::before {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -50%);
+  background-image: var(--sprite-sheet);
+  background-position: var(--sprite-x) var(--sprite-y);
+  background-size: 700% 400%;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+}
+
+@supports (width: 1cqw) {
+  .critter-sprite::before {
+    width: min(100cqw, 100cqh);
+    height: min(100cqw, 100cqh);
+  }
+}
+
+.sprite-forest { --sprite-sheet: url("./assets/creatures-forest.webp"); }
+.sprite-marsh { --sprite-sheet: url("./assets/creatures-marsh.webp"); }
+.sprite-caves { --sprite-sheet: url("./assets/creatures-caves.webp"); }
+.sprite-coast { --sprite-sheet: url("./assets/creatures-coast.webp"); }
+.sprite-mountains { --sprite-sheet: url("./assets/creatures-mountains.webp"); }
+.sprite-volcano { --sprite-sheet: url("./assets/creatures-volcano.webp"); }
+.sprite-ruins { --sprite-sheet: url("./assets/creatures-ruins.webp"); }
+.sprite-astral { --sprite-sheet: url("./assets/creatures-astral.webp"); }
