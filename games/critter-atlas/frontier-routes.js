@@ -3,7 +3,7 @@
 export const DISTRICTS = [
   ['camp','town','grove','ford','outpost','pass'],
   ['entry','ridge','lookout','habitat','trial','highpass','rookery'],
-  ['farpost','warden','hollow','sentinel','vault','den']
+  ['farpost','warden','hollow','sentinel','vault','den','wonder']
 ];
 export const SITE_IDS = DISTRICTS.flat();
 const LOCATIONS = [
@@ -70,19 +70,35 @@ const LAND = [
     travel:['Trade caravans tether their wagons to slabs of moonstone.','Floating causeways orbit a court suspended between meteors.','Bridges of fallen starlight connect the ring to the last observatory.']
   }
 ];
+export const WONDERS = {
+  0: { name:'Moonveil Bower', point:[17,22], approach:'hollow', patrols:['rookery','den','sentinel'],
+    clue:'A silver cocoon has split high in the canopy. Follow the glowing strands between the nesting grounds and the briar walls.' },
+  2: { name:'The Singing Siphon', point:[16,23], approach:'farpost', patrols:['habitat','ridge','den'],
+    clue:'The geode has begun to sing after the last rail cart passes. Three galleries carry different notes of the same chord.' },
+  3: { name:'Keelshade Anchorage', point:[18,19], approach:'hollow', patrols:['ridge','rookery','sentinel'],
+    clue:'A salt-soaked logbook washed ashore. Its ink draws a line between three headlands whenever the tide falls.' },
+  5: { name:'Crucible Belfry', point:[19,23], approach:'farpost', patrols:['habitat','den','sentinel'],
+    clue:'A glass bell is ringing inside the crater. The rangers found cloven tracks in three separate beds of warm ash.' },
+  7: { name:'Parallax Orrery', point:[18,22], approach:'hollow', patrols:['ridge','rookery','den'],
+    clue:'A new moon appeared on the old star chart. Its shadow moves when patrols cross the three outlying orbits.' }
+};
 const TYPES = {
   camp:'camp',town:'town',grove:'tribe',ford:'sign',outpost:'guardian',pass:'pass',
   entry:'pass',ridge:'tribe',lookout:'sign',habitat:'habitat',trial:'arena',highpass:'pass',rookery:'habitat',
-  farpost:'pass',warden:'warden',hollow:'hollow',sentinel:'guardian',vault:'vault',den:'guardian'
+  farpost:'pass',warden:'warden',hollow:'hollow',sentinel:'guardian',vault:'vault',den:'guardian',wonder:'wonder'
 };
 export const siteType = site => TYPES[site];
+export const hasSite = (region, site) => SITE_IDS.includes(site) && (site !== 'wonder' || !!WONDERS[region]);
+export function sitesFor(region, district) {
+  return (district === undefined ? SITE_IDS : DISTRICTS[district]).filter(site => hasSite(region,site));
+}
 export const districtOf = site => DISTRICTS.findIndex(sites => sites.includes(site));
 export const districtName = (region, district) => LAND[region].districts[district];
 export const districtDescription = (region, district) => LAND[region].travel[district];
-export const siteName = (region, site) => LAND[region].names[SITE_IDS.indexOf(site)];
+export const siteName = (region, site) => site === 'wonder' ? WONDERS[region]?.name : LAND[region].names[SITE_IDS.indexOf(site)];
 export const signText = (region, site) => LAND[region].signs[site === 'ford' ? 0 : 1];
 export function point(region, site) {
-  const [x,y] = LOCATIONS[SITE_IDS.indexOf(site)];
+  const [x,y] = site === 'wonder' ? WONDERS[region].point : LOCATIONS[SITE_IDS.indexOf(site)];
   return {x,y};
 }
 export const keyFor = (region,site) => region+'/'+site;
@@ -107,7 +123,11 @@ const SHORTCUTS = [
   [['town','grove'],['ford','pass'],['entry','trial'],['ridge','lookout'],['hollow','vault']],
   [['camp','outpost'],['town','grove'],['lookout','trial'],['rookery','highpass'],['farpost','hollow']]
 ];
-export function linksFor(region) { return [...LINKS,...SHORTCUTS[region]]; }
+export function linksFor(region) {
+  const links = [...LINKS,...SHORTCUTS[region]];
+  if (WONDERS[region]) links.push(['vault','wonder'],[WONDERS[region].approach,'wonder']);
+  return links;
+}
 
 // Routes pass through the same checks as direct clicks, cross-district walks,
 // keyboard movement and encounter creation. A prior warden crest honors the
@@ -122,9 +142,10 @@ export function requirements(world, region, site) {
   if (site === 'trial' && !secured) wins.push('ridge');
   if (site === 'habitat') wins.push('outpost');
   if ((site === 'rookery' || site === 'highpass') && !secured) wins.push('trial');
-  if (site === 'den' || site === 'hollow' || site === 'sentinel' || site === 'vault') wins.push('warden');
-  if (site === 'sentinel' || site === 'vault') wins.push('den');
-  if (site === 'vault') wins.push('sentinel');
+  if (['den','hollow','sentinel','vault','wonder'].includes(site)) wins.push('warden');
+  if (['sentinel','vault','wonder'].includes(site)) wins.push('den');
+  if (site === 'vault' || site === 'wonder') wins.push('sentinel');
+  if (site === 'wonder') wins.push('vault');
   const missing = wins.filter(id => !has(world.cleared,region,id));
   if (site === 'hollow') {
     for (const id of ['ford','lookout']) if (!has(world.clues,region,id)) missing.push(id);
@@ -133,10 +154,11 @@ export function requirements(world, region, site) {
 }
 export function unlockedSites(world, region = world.region) {
   if (region > world.unlocked) return [];
-  return SITE_IDS.filter(site => !requirements(world,region,site).length);
+  return sitesFor(region).filter(site => !requirements(world,region,site).length);
 }
 export function routeHint(region, site) {
   const name = key => siteName(region,key);
+  if (site === 'wonder' && WONDERS[region]) return 'Win at '+name('vault')+' to uncover '+name(site)+'. Alternate patrol victories at '+WONDERS[region].patrols.map(name).join(', ')+' to reveal fresh tracks. The twelfth search always finds them.';
   if (site === 'habitat') return 'Defeat the guardian at '+name('outpost')+' and the tribe at '+name('grove')+' to reach '+name(site)+'.';
   if (site === 'rookery') return 'Beat the '+name('trial')+' qualifier to open '+name(site)+'.';
   if (site === 'vault') return 'Earn the warden’s crest, clear '+name('den')+' and defeat '+name('sentinel')+' to enter '+name(site)+'.';
@@ -149,7 +171,7 @@ export function adjacent(world,site) {
     .filter(next => !requirements(world,region,next).length);
 }
 export function routeTo(world,target) {
-  if (!SITE_IDS.includes(target) || requirements(world,world.region,target).length) return [];
+  if (!hasSite(world.region,target) || requirements(world,world.region,target).length) return [];
   const queue = [[world.node]], seen = new Set([world.node]);
   for (const path of queue) {
     const current = path.at(-1);

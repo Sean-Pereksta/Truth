@@ -77,7 +77,7 @@ function atMarket(state, region) {
 export function awardCoins(state, encounter, firstClear = false) {
   const area = REGIONS[encounter?.region];
   if (!area) return 0;
-  const bonus = {warden:22, arena:16, legendary:24}[encounter.kind] ??
+  const bonus = {warden:22, arena:16, legendary:24, wonder:36}[encounter.kind] ??
     (['outpost','den','sentinel'].includes(encounter.node) ? 9 : 0);
   const reward = 10 + area.id * 3 + bonus + (firstClear ? 7 : 0);
   const amount = Math.min(reward, Number.MAX_SAFE_INTEGER - state.economy.coins);
@@ -129,7 +129,7 @@ export function sellItem(state, region, id) {
   return success('Sold one ' + ITEMS[id].name + ' for ' + price + ' coins.');
 }
 
-const rarityValue = {Common:12, Uncommon:19, Scarce:30, Rare:47, Legendary:95};
+const rarityValue = {Common:12, Uncommon:19, Scarce:30, Rare:47, Legendary:95, 'Hyper Rare':225};
 function critterValue(member) {
   const species = SPECIES[member.speciesId];
   return rarityValue[species.rarity] + 3 * member.level + 6 * getForm(member).stage;

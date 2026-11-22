@@ -1,11 +1,11 @@
 import { REGIONS, SPECIES, getForm } from './catalog.js';
-import { DISTRICTS, SITE_IDS, siteName, siteType, districtName, districtOf, districtDescription, signText,
+import { DISTRICTS, SITE_IDS, WONDERS, sitesFor, hasSite, siteName, siteType, districtName, districtOf, districtDescription, signText,
   keyFor, mark, has, point, requirements, routeHint, unlockedSites, adjacent, linksFor, routeTo } from './frontier-routes.js';
 
 export { REGIONS, siteName, routeHint, unlockedSites };
 
 export function freshWorld() {
-  return { region: 0, unlocked: 0, node: 'camp', cleared: [], clues: [], hunts: [], visits: 0, sightings: {}, patrols: {} };
+  return { region: 0, unlocked: 0, node: 'camp', cleared: [], clues: [], hunts: [], visits: 0, sightings: {}, patrols: {}, wonders: {} };
 }
 
 function regionIndex(n) {
@@ -15,10 +15,11 @@ function regionIndex(n) {
 export function ensureWorld(world) {
   world.unlocked = regionIndex(world.unlocked);
   world.region = Math.min(regionIndex(world.region), world.unlocked);
-  if (!SITE_IDS.includes(world.node)) world.node = 'camp';
+  if (!hasSite(world.region,world.node)) world.node = 'camp';
   for (const key of ['cleared', 'clues', 'hunts']) if (!Array.isArray(world[key])) world[key] = [];
   if (!world.sightings || typeof world.sightings !== 'object') world.sightings = {};
   if (!world.patrols || typeof world.patrols !== 'object') world.patrols = {};
+  if (!world.wonders || typeof world.wonders !== 'object') world.wonders = {};
   if (!Number.isInteger(world.visits) || world.visits < 0) world.visits = 0;
   // An old expedition can be parked beyond a gate introduced by the expansion.
   // Return it to the nearest open district entrance without fabricating victories.
@@ -32,10 +33,49 @@ export function ensureWorld(world) {
 function hasTrail(world, region = world.region) {
   return requirements(world,region,'hollow').length === 0;
 }
-export function completeEncounter(world, encounter, won) {
+
+const SEARCH_LIMIT = 12;
+export function restoreWonderTrails(data) {
+  const trails = {};
+  for (const [region,landmark] of Object.entries(WONDERS)) {
+    const saved = data?.[region];
+    if (!saved || typeof saved !== 'object' || Array.isArray(saved)) continue;
+    const progress = Number.isSafeInteger(saved.progress) ? Math.min(SEARCH_LIMIT,Math.max(0,saved.progress)) : 0;
+    trails[region] = {
+      progress, ready: saved.ready === true || progress === SEARCH_LIMIT,
+      lastSite: landmark.patrols.includes(saved.lastSite) ? saved.lastSite : null
+    };
+  }
+  return trails;
+}
+export function wonderProgress(world,region = world.region) {
+  const landmark = WONDERS[region];
+  if (!landmark) return null;
+  const trail = world.wonders?.[region];
+  const progress = trail?.progress ?? 0;
+  return {
+    name:landmark.name, clue:landmark.clue, patrols:landmark.patrols,
+    open:region <= world.unlocked && !requirements(world,region,'wonder').length,
+    ready:trail?.ready === true, lastSite:trail?.lastSite ?? null, progress,
+    chance:progress >= SEARCH_LIMIT-1 ? 1 : (4+progress*2)/100
+  };
+}
+export function completeEncounter(world, encounter, won, captured = [], rng = Math.random) {
   ensureWorld(world);
-  if (!won || !encounter || !SITE_IDS.includes(encounter.node)) return world;
+  if (!encounter || !hasSite(encounter.region,encounter.node)) return world;
   const region = regionIndex(encounter.region), site = encounter.node;
+  const trail = wonderProgress(world,region);
+  if (site === 'wonder') {
+    const secured = captured.some(member => member.speciesId === encounter.leadSpeciesId);
+    if (!trail?.open || !trail.ready || (!won && !secured)) return world;
+    delete world.wonders[region];
+    mark(world.hunts,region,site);
+  } else if (won && encounter.kind === 'tribe' && trail?.open && !trail.ready &&
+      trail.patrols.includes(site) && trail.lastSite !== site) {
+    const progress = trail.progress + 1;
+    world.wonders[region] = {progress, lastSite:site, ready:progress >= SEARCH_LIMIT || rng() < trail.chance};
+  }
+  if (!won) return world;
   mark(world.cleared,region,site);
   const key = keyFor(region,site);
   world.patrols[key] = (Number(world.patrols[key]) || 0) + 1;
@@ -63,6 +103,7 @@ SYMBOLS.pass = ['..yyy.....yyy..','..yty.....yty..','..yyyyyyyyyyy..','..ytootoo
 SYMBOLS.arena = ['.yy....y....yy.','.tyy..yyy..yyt.','.tyyyyyyyyyyyt.','..tyyyyyyyyyt..','...tyoooyyyt...','....tyyyyyt....','......tyt......','.....yyyyy.....'];
 SYMBOLS.habitat = SYMBOLS.tribe;
 SYMBOLS.vault = SYMBOLS.hollow;
+SYMBOLS.wonder = ['.....y...y.....','.....ty.yt.....','..y...yyy...y..','..tyyoyyyoyyt..','....oytytyo....','..yyyytotyyyy..','....oytytyo....','..tyyoyyyoyyt..','..y...yyy...y..','.....ty.yt.....','.....y...y.....'];
 const RANGER = [
   '......kkk......','.....kmmmkk....','.....kmgmgk....','....kmmmmmkk...','...kmmmgggggk..','.....kffftk....',
   '.....kfyffk....','....kktttkk....','...kccyyycck...','..kcccoyoccck..','..kcccoyocctk..','.kcccmoyomctk..',
@@ -105,6 +146,7 @@ const venueLevels = {
 };
 const trailOffsets = { outpost: 1, ridge: 1, habitat: 2, rookery: 3, hollow: 3 };
 function combatLevel(region, site) {
+  if (site === 'wonder') return Math.min(45,venueLevels.vault[region]+2);
   if (region === 0 && site === 'grove') return 1;
   return venueLevels[site]?.[region] ?? REGIONS[region].minLevel + (trailOffsets[site] || 0);
 }
@@ -114,17 +156,23 @@ function leadSpecies(world,site) {
   const r = world.region, wins = countWins(world,site), oldBase = r*7;
   if (site === 'hollow') return oldBase + 6;
   const resident = newResident(r,site);
-  if (resident && (site === 'vault' || wins % 3 === 0)) return resident.id;
+  if (resident && (site === 'vault' || site === 'wonder' || wins % 3 === 0)) return resident.id;
   if (['outpost','den','sentinel','rookery'].includes(site)) return oldBase + (wins % 2 ? 4 : 5);
   return oldBase + (r + (site === 'grove' ? 3 : 0) + wins) % 6;
 }
 function legendaryPresent(world,site) {
   return site === 'vault' ? countWins(world,'sentinel') > countWins(world,'vault') : world.sightings[world.region] === -1;
 }
-export function encounterAt(world,site) {
+export function encounterAt(world,site,{youngling=false} = {}) {
   if (site !== world.node || !unlockedSites(world).includes(site)) return null;
   const type = siteType(site), region = world.region;
-  if (!['tribe','guardian','habitat','arena','warden','vault','hollow'].includes(type)) return null;
+  if (!['tribe','guardian','habitat','arena','warden','vault','hollow','wonder'].includes(type)) return null;
+  if (type === 'wonder') {
+    const resident = newResident(region,site);
+    if (!wonderProgress(world,region)?.ready || !resident) return null;
+    return {region,kind:'wonder',node:site,name:siteName(region,site),level:combatLevel(region,site),
+      habitatId:site,leadSpeciesId:resident.id,youngling:youngling === true};
+  }
   const legendary = type === 'hollow' || type === 'vault';
   if (legendary && !legendaryPresent(world,site)) return null;
   const kind = legendary ? 'legendary' : type === 'warden' ? 'warden' : type === 'arena' ? 'arena' : 'tribe';
@@ -145,7 +193,7 @@ function trailPoint(region, a, b, t) {
 export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, onEncounter, onCamp, onMarket, onRegion, sprite } = {}) {
   ensureWorld(world);
   let dead = false, walking = false, frame = 0, atlasOpen = false, notice = '';
-  let target = SITE_IDS.includes(inspectSite) ? inspectSite : world.node;
+  let target = hasSite(world.region,inspectSite) ? inspectSite : world.node;
   let page = districtOf(target), primaryAction = null, dragStart = null;
   const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const panel = element('section','ca-world');
@@ -169,15 +217,16 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
   const rose = element('span','cw-compass','N'); rose.setAttribute('aria-hidden','true');
   stage.append(art,rails,locations,ranger,rose);
   const detail = element('div','cw-detail'), summary = element('div','cw-summary');
+  const wonderScene = element('div','cw-wonder-scene'); wonderScene.hidden=true; wonderScene.setAttribute('aria-hidden','true');
   const kicker = element('span','cw-kicker'), name = element('h3','cw-site-title'), desc = element('p','cw-desc');
   summary.append(kicker,name,desc);
-  const actions = element('div','cw-actions'); detail.append(summary,actions);
+  const actions = element('div','cw-actions'); detail.append(wonderScene,summary,actions);
   const status = element('div','cw-status'); status.setAttribute('role','status');
   panel.append(heading,atlas,districtNav,stage,detail,status); root.replaceChildren(panel);
   const landmark = site => siteName(world.region,site);
   const did = site => has(world.cleared,world.region,site);
   const open = site => !requirements(world,world.region,site).length;
-  const typeNames = {camp:'Trail camp',town:'Market town',tribe:'Tribal ground',guardian:'Route guardian',sign:'Trail sign',pass:'District crossing',habitat:'Wild habitat',arena:'Qualifier arena',warden:'Warden arena',hollow:'Legendary habitat',vault:'Legendary sanctuary'};
+  const typeNames = {camp:'Trail camp',town:'Market town',tribe:'Tribal ground',guardian:'Route guardian',sign:'Trail sign',pass:'District crossing',habitat:'Wild habitat',arena:'Qualifier arena',warden:'Warden arena',hollow:'Legendary habitat',vault:'Legendary sanctuary',wonder:'Hyper Rare lair'};
 
   function placeRanger(p) { ranger.style.left=p.x+'%'; ranger.style.top=p.y+'%'; }
   function paintRails() {
@@ -190,6 +239,7 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
     ctx.scale(scale,scale); ctx.lineJoin='round'; ctx.lineCap='round';
     for (const [a,b] of linksFor(world.region)) {
       if (districtOf(a)!==page || districtOf(b)!==page) continue;
+      if ((a==='wonder'||b==='wonder') && !open('wonder') && target!=='wonder') continue;
       const locked=!open(a)||!open(b);
       ctx.beginPath();
       for(let j=0;j<=22;j++){
@@ -202,7 +252,8 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
   }
   function drawDistrictNav() {
     districtNav.replaceChildren();
-    DISTRICTS.forEach((sites,i) => {
+    DISTRICTS.forEach((_,i) => {
+      const sites = sitesFor(world.region,i);
       const accessible=sites.some(open), here=districtOf(world.node)===i;
       const item=button('cw-district','',() => {
         if (walking || page===i) return;
@@ -223,8 +274,9 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
   }
   function fillLocations() {
     locations.replaceChildren();
-    for (const site of DISTRICTS[page]) {
+    for (const site of sitesFor(world.region,page)) {
       const type=siteType(site), p=point(world.region,site), cleared=did(site)||has(world.clues,world.region,site), locked=!open(site);
+      if (site==='wonder' && locked && target!==site) continue;
       const label=landmark(site);
       const el=button('cw-node cw-node-'+type+(locked?' cw-locked':''),'',() => go(site));
       el.dataset.site=site;el.style.left=p.x+'%';el.style.top=p.y+'%';
@@ -234,14 +286,16 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
       el.setAttribute('aria-label',el.title+(world.node===site?', current location':inspecting?', selected landmark':''));
       el.setAttribute('aria-current',world.node===site?'location':'false');
       const token=element('span','cw-token'), glyph=element('canvas','cw-node-glyph');
-      const palette={y: type==='vault'||type==='hollow'?'#b8fae1':'#ffe3a6',t:'#d49763',o:'#8d6549'};
+      const palette=type==='wonder' ? {y:'#fff2ab',t:'#72eff0',o:'#e194fa'} :
+        {y: type==='vault'||type==='hollow'?'#b8fae1':'#ffe3a6',t:'#d49763',o:'#8d6549'};
       stamp(glyph,SYMBOLS[type],palette,15,SYMBOLS[type].length);
       token.append(glyph);
       if (locked) { const lock=element('span','cw-lock');lock.setAttribute('aria-hidden','true');token.append(lock); }
       else if(cleared) token.append(element('span','cw-clear-mark','✓'));
       const caption=element('span','cw-node-name',label);
       el.append(token,caption);
-      const isWild=['tribe','habitat','guardian'].includes(type) || (['hollow','vault'].includes(type) && legendaryPresent(world,site));
+      const isWild=['tribe','habitat','guardian'].includes(type) || (['hollow','vault'].includes(type) && legendaryPresent(world,site)) ||
+        (type==='wonder' && wonderProgress(world)?.ready);
       if(sprite && !locked && isWild) {
         const speciesId=leadSpecies(world,site), form=getForm({speciesId,level:combatLevel(world.region,site)});
         const creature=element('span','cw-roamer');creature.setAttribute('aria-hidden','true');
@@ -269,15 +323,36 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
   function viewHere() {
     page=districtOf(world.node);target=world.node;notice='';render();
   }
-  function challenge() {
-    const encounter=encounterAt(world,world.node);
+  function challenge(options) {
+    const encounter=encounterAt(world,world.node,options);
     if(!dead && !walking && encounter) onEncounter?.(encounter);
   }
   function details() {
     actions.replaceChildren();primaryAction=null;
+    wonderScene.hidden=true;
     const r=world.region,site=target,type=siteType(site);
     if(!open(site)) {inspectClosed(site);return;}
     name.textContent=landmark(site);kicker.textContent=typeNames[type];
+    if(type==='wonder') {
+      const trail=wonderProgress(world), resident=newResident(r,site);
+      wonderScene.hidden=false;
+      wonderScene.style.backgroundPosition='center '+(Object.keys(WONDERS).indexOf(String(r))*25)+'%';
+      if(trail.ready && resident) {
+        kicker.textContent+=' · Fresh tracks';
+        desc.textContent=resident.name+' is here. Track the local form at level '+combatLevel(r,site)+' or follow a level 3 youngling with a strong local escort.';
+        if (site===world.node) {
+          addAction('Track '+resident.name,challenge);
+          addAction('Track a youngling · Lv. 3',() => challenge({youngling:true}),true);
+        } else addAction('Travel here',() => go(site));
+      } else {
+        kicker.textContent+=' · Search '+trail.progress+' / '+SEARCH_LIMIT;
+        desc.textContent=trail.clue+' Alternate between marked patrols. Your next victory there has a '+Math.round(trail.chance*100)+'% chance of revealing tracks. Tracks are certain by search '+SEARCH_LIMIT+'.';
+        const available=trail.patrols.filter(id => id!==trail.lastSite && open(id));
+        available.forEach((id,index) => addAction('Search '+landmark(id),() => go(id),index>0));
+        if (site!==world.node) addAction('Travel here',() => go(site),true);
+      }
+      return;
+    }
     if(site!==world.node) {
       desc.textContent=districtDescription(r,page);
       addAction('Travel here',() => go(site));addAction('Your location',viewHere,true);return;
@@ -313,6 +388,17 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
       if(did(site) && site==='outpost' && open('habitat')) addAction('Visit habitat',() => go('habitat'),true);
       if(did(site) && site==='den') addAction('Find sentinel',() => go('sentinel'),true);
       if(did(site) && site==='sentinel') addAction('Visit sanctuary',() => go('vault'),true);
+      const trail=wonderProgress(world,r);
+      if (trail?.open && trail.patrols.includes(site)) {
+        if (trail.ready) {
+          desc.textContent+=' Fresh tracks lead to '+trail.name+'.';
+          addAction('Follow fresh tracks',() => go('wonder'),true);
+        } else if (trail.lastSite===site) {
+          const next=trail.patrols.find(id => id!==site && open(id));
+          desc.textContent+=' Search '+trail.progress+'/'+SEARCH_LIMIT+'. Pick up the trail at another marked patrol.';
+          if (next) addAction('Search '+landmark(next),() => go(next),true);
+        } else desc.textContent+=' A victory here advances the search at '+trail.name+'.';
+      }
     } else if(type==='sign') {
       const studied=has(world.clues,r,site);
       desc.textContent=studied?signText(r,site):'Unusual tracks point toward a hidden regional legend. Study the marks to record a clue.';
@@ -340,6 +426,7 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
         desc.textContent=site==='vault'?'The sanctuary is quiet. Defeat '+landmark('sentinel')+' again to draw out its guardian.':'The trail is quiet. Win a local battle to draw the legendary out. Fresh tracks appear within three victories.';
         addAction(site==='vault'?'Visit sentinel':'Patrol the trail',() => go(site==='vault'?'sentinel':'ridge'));
       }
+      if(site==='vault' && wonderProgress(world,r)?.open) addAction('Explore '+landmark('wonder'),() => go('wonder'),true);
     }
   }
   function updateAtlas() {
@@ -381,7 +468,7 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
     onRegion?.(r);onChange?.(world);if(!dead) render();
   }
   function go(site) {
-    if(dead || walking || atlasOpen || !SITE_IDS.includes(site)) return;
+    if(dead || walking || atlasOpen || !hasSite(world.region,site)) return;
     if(!open(site)) {page=districtOf(site);target=site;notice=missingText(site);render();return;}
     if(site===world.node) {viewHere();return;}
     const path=routeTo(world,site);

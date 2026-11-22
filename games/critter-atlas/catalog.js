@@ -1,4 +1,5 @@
 import { FRONTIER_SPECIES } from './frontier-species.js';
+import { HYPER_SPECIES } from './hyper-species.js';
 
 // Region, species, and combat definitions shared by the trail, party, and arena.
 const regionRows = [
@@ -92,7 +93,7 @@ export const SPECIES = lineages.map(([names, animal, role, color, signature, eff
   const captureRate = Number((captureSlots[slot] - region * (slot === 6 ? .002 : .008)).toFixed(3));
   return { id, name: forms[0], forms, region, role, animal, color, signature, effect, lore,
     rarity: raritySlots[slot], legendary: slot === 6, captureRate };
-}).concat(FRONTIER_SPECIES);
+}).concat(FRONTIER_SPECIES, HYPER_SPECIES);
 
 export const MAX_LEVEL = 45;
 export const EVOLUTION_LEVELS = [6, 12, 20];
@@ -127,7 +128,7 @@ export function getStats(member) {
   const species = SPECIES[member.speciesId];
   const base = roleStats[species.role];
   const { stage } = getForm(member);
-  const weight = species.legendary ? 1.13 : 1;
+  const weight = species.hyperRare ? 1.19 : species.legendary ? 1.13 : 1;
   const level = member.level;
   return {
     maxHp: Math.round((base.hp + level * 3.5 + stage * 6 + member.speciesId % 3) * weight),
@@ -191,7 +192,7 @@ export function captureChance(member, hpFraction, hasStatus = false) {
 }
 
 // Ordinary patrols draw from the original six local families. Only a tracked
-// frontier sighting can add a rare or legendary leader from its exact habitat.
+// sighting can add a rare, legendary, or hyper-rare leader from its exact habitat.
 const encounterWeights = [8, 8, 6, 5, 3, 2];
 export function rollEncounter(region, { legendary = false, challenge = false, level, habitatId, leadSpeciesId, rng = Math.random } = {}) {
   const area = REGIONS[region];
@@ -200,8 +201,8 @@ export function rollEncounter(region, { legendary = false, challenge = false, le
   const sighted = SPECIES[leadSpeciesId];
   const habitatMatch = sighted?.habitatId && sighted.habitatId === habitatId && sighted.region === region;
   const legacyLegend = legendary && (!habitatId || habitatId === 'hollow');
-  const legendaryPack = legacyLegend || (habitatMatch && sighted.legendary);
-  const packSize = legendaryPack ? 2 : challenge ? (region > 2 ? 4 : 3) : (region > 0 && rng() < .65 ? 3 : 2);
+  const specialPair = legacyLegend || (habitatMatch && (sighted.legendary || sighted.hyperRare));
+  const packSize = specialPair ? 2 : challenge ? (region > 2 ? 4 : 3) : (region > 0 && rng() < .65 ? 3 : 2);
   const available = encounterWeights.map((weight, slot) => ({ id: region * 7 + slot, weight }));
   const pack = [];
   const leadIndex = available.findIndex(item => item.id === leadSpeciesId);

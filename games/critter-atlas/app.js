@@ -2,7 +2,7 @@ import { SPECIES, REGIONS, EVOLUTION_LEVELS, MAX_LEVEL, PARTY_LIMIT, getStats, g
 import { newJournal, loadJournal, saveJournal, getParty, setParty, addCapture, awardXP } from './journal.js';
 import { sprite } from './art.js';
 import { FIGHT_ICONS, fightIcon, abilityIconKey } from './fight-icons.js';
-import { mountWorld, completeEncounter, routeHint, siteName, unlockedSites } from './world.js';
+import { mountWorld, completeEncounter, routeHint, siteName, unlockedSites, wonderProgress } from './world.js';
 import { awardCoins, battleSupplies, spendSupply } from './economy.js';
 import { mountMarket, mountBag } from './market.js';
 import { mountBattle } from './battle.js';
@@ -40,6 +40,7 @@ document.querySelector('#help-button').addEventListener('click', () => showDialo
     <li><b>Capture.</b> Move within three hexes, choose Capture, then select a wild Critter. Lower its health or apply a status to improve the displayed odds. A capture attempt uses the turn.</li>
     <li><b>Build your party.</b> Take up to four companions. Captures fill spare slots and then go to your reserve. Switch companions in Party between battles. Everyone recovers their health after a fight.</li>
     <li><b>Open new paths.</b> Beat the trail tribes, win the local arena trial, then take on the warden to enter the next region. Optional guardians open rare habitats. Each new family’s Field guide entry names its habitat and the victory that opens it.</li>
+    <li><b>Track a Hyper Rare.</b> In five regions, a vault victory uncovers a clue. Alternate between the named patrols to find tracks, then follow them to the lair. The Field guide records the trail and all four forms.</li>
   </ol><p class="field-note">Your trail and completed encounters save on this browser. The Field guide records all ${SPECIES.length} families and their evolutions.</p>`));
 
 function persist() {
@@ -151,7 +152,8 @@ function beginBattle(encounter) {
     const prior = state.world.unlocked;
     const firstClear = won && !state.world.cleared.includes(encounter.region+'/'+encounter.node);
     const oldSites = firstClear ? new Set(unlockedSites(state.world, encounter.region)) : null;
-    completeEncounter(state.world, encounter, won);
+    const oldTrail = wonderProgress(state.world,encounter.region);
+    completeEncounter(state.world, encounter, won, outcome.captured);
     let coins = 0;
     if (won) {
       state.wins[encounter.region]++;
@@ -163,6 +165,9 @@ function beginBattle(encounter) {
       const names = opened.map(id => siteName(encounter.region, id));
       if (names.length) notices.push(`Route opened to ${names.join(', ')}.`);
     }
+    const trail = wonderProgress(state.world,encounter.region);
+    if (trail?.open && !oldTrail?.open) notices.push(trail.clue);
+    if (trail?.ready && !oldTrail?.ready) notices.push(`Fresh tracks lead to ${trail.name}. The Hyper Rare is there now.`);
     if (outcome.xp > 0) {
       notices.push(`Traveling party earned ${outcome.xp} XP each.`, ...awardXP(state, outcome.xp, participants));
     }
@@ -207,6 +212,23 @@ function editRoster(index) {
   persist(); showParty();
 }
 dialog.addEventListener('click', event => {
+  const formChoice = event.target.closest('[data-show-form]');
+  const poseChoice = event.target.closest('[data-show-pose]');
+  if (formChoice || poseChoice) {
+    const portrait = dialog.querySelector('[data-wonder-family]');
+    const family = SPECIES[Number(portrait.dataset.wonderFamily)];
+    if (formChoice) {
+      const stage = Number(formChoice.dataset.showForm);
+      portrait.querySelector('.wonder-specimen').innerHTML = sprite(family.id,stage);
+      portrait.querySelector('.wonder-form-name').textContent = family.forms[stage];
+      dialog.querySelectorAll('[data-show-form]').forEach(b => b.setAttribute('aria-pressed',String(b === formChoice)));
+    } else {
+      const attacking = portrait.classList.toggle('show-action-pose');
+      poseChoice.setAttribute('aria-pressed', String(attacking));
+      poseChoice.textContent = attacking ? 'Show idle pose' : 'Show battle pose';
+    }
+    return;
+  }
   const locate = event.target.closest('[data-locate]');
   if (locate) {
     dialog.close();
@@ -244,7 +266,7 @@ function updateGuide() {
   const filtered = SPECIES.filter(s => (regionFilter === '' || s.region === Number(regionFilter)) && (!rarityFilter || s.rarity === rarityFilter) &&
     [...s.forms, roleNames[s.role], s.rarity].some(value => value.toLowerCase().includes(term)));
   const collected = new Set(state.seen);
-  game.querySelector('.guide-grid').innerHTML = filtered.length ? filtered.map(s => `<button class="guide-entry" data-species="${s.id}">
+  game.querySelector('.guide-grid').innerHTML = filtered.length ? filtered.map(s => `<button class="guide-entry${s.hyperRare ? ' guide-wonder' : ''}" data-species="${s.id}">
     ${collected.has(s.id) ? '<span class="owned-symbol" aria-label="Collected">✓</span>' : ''}<span class="guide-portrait">${sprite(s.id, 0)}</span><strong>${s.name}</strong><small>${s.rarity} · ${roleNames[s.role]}</small></button>`).join('') : '<p class="field-note">No matching families.</p>';
 }
 function showDetail(s, member) {
@@ -252,14 +274,26 @@ function showDetail(s, member) {
   const form = getForm(sample), stats = getStats(sample);
   const abilities = getAbilities({ ...sample, level:MAX_LEVEL });
   const habitat = s.habitatId || (s.legendary ? 'hollow' : null);
+  const trail = s.hyperRare ? wonderProgress(state.world,s.region) : null;
+  const plate = s.hyperRare ? [0,2,3,5,7].indexOf(s.region) : -1;
+  const artwork = plate >= 0 ? `<div class="wonder-portrait" data-wonder-family="${s.id}" style="--lair-y:${plate*25}%">
+    <div class="wonder-rarity"><span aria-hidden="true">✧</span> Hyper Rare</div>
+    <span class="wonder-specimen">${sprite(s.id,form.stage)}</span>
+    <b class="wonder-form-name" aria-live="polite">${form.name}</b><button type="button" class="wonder-pose" data-show-pose aria-pressed="false">Show battle pose</button></div>` : '';
+  const trailStatus = trail?.open ? (trail.ready ? 'Fresh tracks are waiting at the lair.' :
+    `${trail.clue} · ${trail.progress} / 12 patrol victories recorded.`) : '';
   const locate = habitat && s.region === state.world.region
     ? `<button class="link-action" data-locate="${habitat}">Locate on trail map →</button>` : '';
-  showDialog(form.name, `<div class="detail-head"><span class="detail-sprite">${sprite(s.id, form.stage)}</span><div>
+  showDialog(form.name, `${artwork}<div class="detail-head">${artwork ? '' : `<span class="detail-sprite">${sprite(s.id, form.stage)}</span>`}<div>
       <span class="micro">${fightIcon(s.role,'')} ${roleNames[s.role]} · ${s.rarity}</span><p class="field-note">${REGIONS[s.region].name}<br>${s.lore}</p></div></div>
-    ${habitat ? `<div class="habitat-note"><b>Habitat · ${siteName(s.region,habitat)}</b><span>${routeHint(s.region,habitat)}</span>${locate}</div>` : ''}
+    ${habitat ? `<div class="habitat-note"><b>Habitat · ${siteName(s.region,habitat)}</b><span>${routeHint(s.region,habitat)}</span>${s.hyperRare ? '<span>Track a level 3 youngling at an active lair to raise it through all three evolutions. A local escort protects it.</span>' : ''}${trailStatus ? `<span class="wonder-tracks">${trailStatus}</span>` : ''}${locate}</div>` : ''}
     <div class="detail-stats"><span>Lv. ${sample.level}</span><span>${fightIcon('hp','')} ${stats.maxHp} HP</span><span>${fightIcon('melee','')} ${stats.attack} attack</span><span>${fightIcon('guard','')} ${stats.defense} defense</span><span>${fightIcon('move','')} ${stats.move} move</span></div>
     ${member ? `<div class="companion-text">${meter(member)}</div>` : ''}
-    <h3 class="dialog-section">Evolution</h3><div class="evolution-row">${s.forms.map((name, stage) => `<div class="evolution-step"><span class="evo-sprite">${sprite(s.id, stage)}</span><b>${name}</b>Lv. ${[1,...EVOLUTION_LEVELS][stage]}</div>`).join('')}</div>
+    <h3 class="dialog-section">Evolution</h3><div class="evolution-row">${s.forms.map((name, stage) => {
+      const content = `<span class="evo-sprite">${sprite(s.id, stage)}</span><b>${name}</b>Lv. ${[1,...EVOLUTION_LEVELS][stage]}`;
+      return s.hyperRare ? `<button type="button" class="evolution-step" data-show-form="${stage}" aria-label="Show ${name}" aria-pressed="${stage === form.stage}">${content}</button>` :
+        `<div class="evolution-step">${content}</div>`;
+    }).join('')}</div>
     <h3 class="dialog-section">Abilities</h3><ul class="ability-list">${abilities.map(a => {
       const condition = a.status ? `<span class="ability-condition">${fightIcon(a.status,'')} ${FIGHT_ICONS[a.status].label}</span>` : '';
       return `<li><span class="ability-glyph">${fightIcon(abilityIconKey(a,s),'')}</span><div><b>${a.name}</b> · Lv. ${a.learnLevel}<small>${a.description}</small>${condition}</div></li>`;

@@ -1,18 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SPECIES, REGIONS, EVOLUTION_LEVELS, getAbilities, captureChance, makeMember, rollEncounter } from '../catalog.js';
+import { SPECIES, REGIONS, EVOLUTION_LEVELS, MAX_LEVEL, getForm, getStats, getAbilities, captureChance, makeMember, rollEncounter } from '../catalog.js';
 import { newJournal, addCapture, loadJournal, saveJournal } from '../journal.js';
 
-const frontier = SPECIES.slice(56);
+const frontier = SPECIES.slice(56, 76);
 const always = () => .5;
 
 test('frontier catalog adds 12 rare and 8 legendary families with distinct moves and evolutions', () => {
-  assert.equal(SPECIES.length, 76);
+  assert.equal(frontier.length, 20);
   assert.equal(frontier.filter(s => s.rarity === 'Rare').length, 12);
   assert.equal(frontier.filter(s => s.legendary).length, 8);
-  assert.equal(new Set(SPECIES.flatMap(s => s.forms)).size, 304);
-  assert.equal(new Set(SPECIES.map(s => s.captureRate)).size, 76);
-  assert.equal(new Set(SPECIES.map(s => s.signature)).size, 76);
+  assert.equal(new Set(SPECIES.flatMap(s => s.forms)).size, 4 * SPECIES.length);
+  assert.equal(new Set(SPECIES.map(s => s.captureRate)).size, SPECIES.length);
+  assert.equal(new Set(SPECIES.map(s => s.signature)).size, SPECIES.length);
   for (const { id } of REGIONS) {
     const local = frontier.filter(s => s.region === id);
     assert.equal(local.filter(s => s.legendary).length, 1);
@@ -59,4 +59,48 @@ test('the same saved roster can hold established and frontier families', () => {
   const reloaded = loadJournal(storage);
   assert.deepEqual(reloaded.roster, state.roster);
   assert.deepEqual(reloaded.party, state.party);
+});
+
+test('the five wonders have four evolving forms, distinct low capture odds, and one resident each', () => {
+  const wonders = SPECIES.filter(s => s.hyperRare);
+  assert.equal(SPECIES.length, 81);
+  assert.equal(SPECIES.filter(s => s.legendary).length, 16);
+  assert.deepEqual(wonders.map(s => [s.id, s.name, s.region]), [
+    [76, 'Veilkit', 0], [77, 'Chordcoil', 2], [78, 'Keelwisp', 3],
+    [79, 'Crucibex', 5], [80, 'Prismarch', 7]
+  ]);
+  const lowestLegendaryRate = Math.min(...SPECIES.filter(s => s.legendary).map(s => s.captureRate));
+  for (const family of wonders) {
+    assert.equal(family.rarity, 'Hyper Rare');
+    assert.equal(family.habitatId, 'wonder');
+    assert.ok(family.captureRate < lowestLegendaryRate);
+    const base = makeMember(family.id);
+    for (const [stage, level] of [1, ...EVOLUTION_LEVELS].entries()) {
+      const member = {...base, level};
+      assert.deepEqual(getForm(member), {name: family.forms[stage], stage});
+      assert.ok(getStats(member).maxHp >= getStats(base).maxHp);
+      if (stage > 0) {
+        const signature = getAbilities(member).find(a => a.id === 'signature');
+        assert.equal(signature.name, family.signature);
+        assert.equal(signature.kind, family.technique.kind);
+      }
+    }
+    for (const level of [1, MAX_LEVEL]) {
+      const member = {...base, level};
+      const full = captureChance(member, 1);
+      const weak = captureChance(member, .1);
+      assert.ok(full >= .01 && full <= .020001);
+      assert.ok(full < weak && weak < captureChance(member, .1, true));
+    }
+    const sighting = {habitatId:'wonder', leadSpeciesId:family.id, rng:always};
+    const group = rollEncounter(family.region, sighting);
+    assert.equal(group.length, 2);
+    assert.equal(group[0].speciesId, family.id);
+    assert.ok(group[1].speciesId < 56 && !SPECIES[group[1].speciesId].legendary);
+    for (const habitatId of [undefined, 'habitat', 'rookery', 'hollow', 'vault']) {
+      assert.ok(rollEncounter(family.region, {...sighting, habitatId}).every(m => !SPECIES[m.speciesId].hyperRare));
+    }
+    assert.ok(rollEncounter(family.region, {habitatId:'wonder', rng:always}).every(m => !SPECIES[m.speciesId].hyperRare));
+    assert.ok(rollEncounter((family.region + 1) % REGIONS.length, sighting).every(m => !SPECIES[m.speciesId].hyperRare));
+  }
 });

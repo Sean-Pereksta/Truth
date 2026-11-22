@@ -159,6 +159,19 @@
 .cw-node-arena .cw-token { background:#694a6b; border-radius:5px 5px 12px 12px; border-color:#ffc5a6; }
 .cw-node-habitat .cw-token { background:#465b38; border-color:#d5ed94; }
 .cw-node-vault .cw-token { background:#574767; border-color:#9feed8; }
+.cw-node-wonder .cw-token {
+  background:#45334e; border-color:#b5fff2;
+  box-shadow:0 0 0 2px #4d4453,0 0 0 4px #e5acdb70,inset 0 0 9px #bd8fcf55;
+}
+.cw-wonder-scene {
+  flex:0 0 auto; width:clamp(104px,14vw,160px); aspect-ratio:16/9; border:1px solid #92869e;
+  border-radius:4px; background-image:url('./assets/hyper-lairs.webp'); background-size:100% 500%; background-repeat:no-repeat;
+  image-rendering:pixelated;
+}
+@media (max-width:720px) {
+  .cw-wonder-scene { float:right; margin:0 0 8px 12px; }
+  .cw-wonder-scene:not([hidden]) ~ .cw-actions { clear:both; }
+}
 .cw-node.cw-locked .cw-token { background:#344040; border-color:#9da89a; }
 .cw-node.cw-locked .cw-node-glyph { filter:grayscale(.9); opacity:.72; }
 .cw-node.cw-locked .cw-node-name { color:#d8dfd3; background:#25332eed; }

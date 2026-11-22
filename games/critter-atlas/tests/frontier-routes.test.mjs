@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { REGIONS, SPECIES, rollEncounter } from '../catalog.js';
-import { freshWorld, ensureWorld, completeEncounter, encounterAt } from '../world.js';
-import { DISTRICTS, SITE_IDS, linksFor, routeTo, unlockedSites, siteName, districtName } from '../frontier-routes.js';
+import { freshWorld, ensureWorld, completeEncounter, encounterAt, wonderProgress, restoreWonderTrails } from '../world.js';
+import { DISTRICTS, SITE_IDS, linksFor, routeTo, unlockedSites, siteName, districtName, sitesFor, WONDERS } from '../frontier-routes.js';
 
 function walk(world, node) {
   const route = routeTo(world,node);
@@ -25,7 +25,8 @@ test('all eight regions have connected districts with distinct branches and enfo
     const world = {...freshWorld(),region:id,unlocked:id};
     layouts.add(JSON.stringify(linksFor(id)));
     for (let i=0;i<3;i++) districtNames.add(districtName(id,i));
-    assert.equal(new Set(SITE_IDS.map(site => siteName(id,site))).size,19);
+    const regionalSites = sitesFor(id);
+    assert.equal(new Set(regionalSites.map(site => siteName(id,site))).size,regionalSites.length);
     assert.equal(DISTRICTS.length,3);
     const checkReachable = () => {
       const passable = unlockedSites(world);
@@ -63,10 +64,84 @@ test('all eight regions have connected districts with distinct branches and enfo
     assert.deepEqual(routeTo(world,'hollow'),[]);
     world.clues.push(id+'/ford',id+'/lookout');
     walk(world,'hollow'); checkReachable();
-    assert.equal(unlockedSites(world).length,19);
+    assert.equal(unlockedSites(world).length,regionalSites.length);
   }
   assert.equal(layouts.size,8);
   assert.equal(districtNames.size,24);
+  assert.equal(REGIONS.reduce((total,{id})=>total+sitesFor(id).length,0),157);
+});
+
+test('Five Hyper Rare hunts respect regional gates, local alternating patrols and a twelve-win limit', () => {
+  let found = 0;
+  for (const {id} of REGIONS) {
+    const world = {...freshWorld(),region:id,unlocked:id};
+    const wonder = WONDERS[id];
+    assert.equal(sitesFor(id,2).includes('wonder'),!!wonder);
+    assert.deepEqual(routeTo(world,'wonder'),[]);
+    assert.equal(encounterAt({...world,node:'wonder'},'wonder'),null);
+    if (!wonder) {
+      assert.equal(wonderProgress(world),null);
+      assert.ok(linksFor(id).every(link=>!link.includes('wonder')));
+      assert.equal(ensureWorld({...world,node:'wonder'}).node,'camp');
+      continue;
+    }
+    function resolve(site, won, roll) {
+      walk(world,site);
+      const encounter = encounterAt(world,site);
+      assert.ok(encounter);
+      completeEncounter(world,encounter,won,[],() => roll);
+    }
+    for (const site of ['grove','outpost','ridge','trial','warden','den','sentinel']) {
+      win(world,site);
+      assert.equal(wonderProgress(world).open,false);
+      assert.deepEqual(world.wonders,{});
+    }
+    win(world,'vault');
+    walk(world,'wonder');
+    assert.equal(wonderProgress(world).open,true);
+    assert.equal(wonderProgress(world).chance,.04);
+    assert.equal(encounterAt(world,'wonder'),null);
+    const [a,b] = wonder.patrols;
+    resolve('grove',true,0);
+    resolve(a,false,0);
+    assert.equal(wonderProgress(world).progress,0);
+    for (let i=0;i<12;i++) {
+      const site = i%2 ? b : a;
+      resolve(site,true,1);
+      assert.equal(wonderProgress(world).progress,i+1);
+      assert.equal(wonderProgress(world).ready,i===11);
+      resolve(site,true,1);
+      assert.equal(wonderProgress(world).progress,i+1,'same patrol does not roll again');
+    }
+    walk(world,'wonder');
+    const adult = encounterAt(world,'wonder');
+    const young = encounterAt(world,'wonder',{youngling:true});
+    assert.equal(young.youngling,true); assert.equal(adult.youngling,false);
+    assert.equal(adult.leadSpeciesId,76+found);
+    assert.equal(adult.kind,'wonder');
+    assert.equal(adult.habitatId,'wonder');
+    assert.equal(young.level,adult.level);
+    assert.deepEqual(restoreWonderTrails(JSON.parse(JSON.stringify(world.wonders))),world.wonders);
+    completeEncounter(world,adult,false,[]);
+    assert.equal(wonderProgress(world).ready,true,'untouched target remains after retreat');
+    completeEncounter(world,young,false,[{speciesId:young.leadSpeciesId}]);
+    assert.equal(wonderProgress(world).ready,false,'capturing then retreating consumes the sighting');
+    assert.ok(world.hunts.includes(id+'/wonder'));
+    resolve(a,true,.03);
+    assert.equal(wonderProgress(world).ready,true,'a new hunt can succeed on its first patrol');
+    walk(world,'wonder');
+    completeEncounter(world,encounterAt(world,'wonder'),true);
+    assert.equal(wonderProgress(world).progress,0,'winning the confrontation starts a new hunt');
+    found++;
+  }
+  assert.equal(found,5);
+});
+
+test('wonder trail migration rejects foreign regions, bad counters and invalid patrols', () => {
+  assert.deepEqual(restoreWonderTrails(undefined),{});
+  assert.deepEqual(restoreWonderTrails({0:{progress:-3,ready:'yes',lastSite:'town'},1:{ready:true},7:{progress:18,lastSite:'ridge'}}),{
+    0:{progress:0,ready:false,lastSite:null},7:{progress:12,ready:true,lastSite:'ridge'}
+  });
 });
 
 test('each frontier family leads a real battle only inside its unlocked habitat', () => {

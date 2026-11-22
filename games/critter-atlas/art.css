@@ -54,5 +54,6 @@
 .sprite-frontier-3 { --sprite-sheet: url("./assets/creatures-frontier-3.webp"); --pose-sheet: url("./assets/poses-frontier-3.webp"); }
 .sprite-frontier-4 { --sprite-sheet: url("./assets/creatures-frontier-4.webp"); --pose-sheet: url("./assets/poses-frontier-4.webp"); }
 .sprite-frontier-5 { --sprite-sheet: url("./assets/creatures-frontier-5.webp"); --pose-sheet: url("./assets/poses-frontier-5.webp"); }
+.sprite-wonders { --sprite-sheet: url("./assets/creatures-wonders.webp"); --pose-sheet: url("./assets/poses-wonders.webp"); }
 .cf-strike-pose .critter-sprite::before,
 .critter-sprite.cf-strike-pose::before { background-image: var(--pose-sheet); }

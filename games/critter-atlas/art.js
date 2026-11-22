@@ -2,6 +2,7 @@ import { SPECIES } from './catalog.js';
 
 const REGION_SHEETS = ['forest', 'marsh', 'caves', 'coast', 'mountains', 'volcano', 'ruins', 'astral'];
 const ORIGINAL_FAMILIES = 56;
+const FIRST_WONDER = 76;
 
 // The first paintings keep their original seven-column regional sheets. Frontier
 // families span habitats, so their paired idle and strike sheets use four columns.
@@ -9,6 +10,9 @@ export function spriteAtlas(speciesId) {
   if (!Number.isInteger(speciesId) || !SPECIES[speciesId]) return null;
   if (speciesId < ORIGINAL_FAMILIES) {
     return { sheet: REGION_SHEETS[Math.floor(speciesId / 7)], columns: 7, column: speciesId % 7 };
+  }
+  if (speciesId >= FIRST_WONDER) {
+    return { sheet: 'wonders', columns: 5, column: speciesId - FIRST_WONDER };
   }
   const offset = speciesId - ORIGINAL_FAMILIES;
   return { sheet: 'frontier-' + (Math.floor(offset / 4) + 1), columns: 4, column: offset % 4 };

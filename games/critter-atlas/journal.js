@@ -2,7 +2,7 @@ import {
   SPECIES, REGIONS, EVOLUTION_LEVELS, MAX_LEVEL, PARTY_LIMIT,
   getAbilities, getForm, makeMember, xpToNext
 } from './catalog.js';
-import { freshWorld } from './world.js';
+import { freshWorld, restoreWonderTrails } from './world.js';
 import { freshEconomy, restoreEconomy } from './economy.js';
 
 const SAVE_KEY = 'catnmice.critter-atlas.expedition.v1';
@@ -35,6 +35,7 @@ function readMember(data) {
 function restoreWorld(data, region, unlocked) {
   const fresh = freshWorld();
   if (!data || typeof data !== 'object' || Array.isArray(data)) data = {};
+  fresh.wonders = restoreWonderTrails(data.wonders);
   fresh.unlocked = validRegion(data.unlocked) ? data.unlocked : (validRegion(unlocked) ? unlocked : 0);
   fresh.region = Math.min(fresh.unlocked, validRegion(data.region) ? data.region : (validRegion(region) ? region : 0));
   if (typeof data.node === 'string' && /^[a-z]{1,20}$/.test(data.node)) fresh.node = data.node;

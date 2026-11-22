@@ -105,3 +105,24 @@ export function arenaCourse(encounter) {
     return (encounter.arenaId || encounter.kind) === 'warden' ? arena?.warden : arena?.trial;
   }
 }
+
+// Panel numbers follow the painted lair atlas. The lead appears on hex 1.
+const lairs = {
+  0: { panel:0, omen:'Silver dust falls from a cocoon. Two moonlit wings open under the trees.',
+    terrain:['B.c.c.2', '.ch#...', 'A..c.1.', 'D.#.hc.', 'C..c...'] },
+  2: { panel:1, omen:'A note rises from the water. The crystal forks answer in harmony.',
+    terrain:['B..#.2.', 'D.c.c..', 'A.h#..1', '..c.h..', 'C...c..'] },
+  3: { panel:2, omen:'Mist slips through the wreck. A ragged sail turns against the wind.',
+    terrain:['.B.c.2.', '..#h...', 'A.c..1.', 'D.h.#..', 'C..c...'] },
+  5: { panel:3, omen:'One glass bell rings. Sparks tumble from a pair of glowing horns.',
+    terrain:['B.h.c.2', '.c#..h.', 'A..c.1.', 'D.h.#..', 'C...h..'] },
+  7: { panel:4, omen:'The orrery clicks into eclipse. A dark wing crosses the star dial.',
+    terrain:['.B.c..2', 'D.h.#..', 'A.c..1.', '..#h.c.', 'C..c...'] }
+};
+
+export function huntLair(encounter, lead) {
+  if (encounter.kind === 'wonder' && encounter.habitatId === 'wonder' &&
+      lead?.hyperRare && lead.region === encounter.region && lead.id === encounter.leadSpeciesId) {
+    return lairs[encounter.region];
+  }
+}

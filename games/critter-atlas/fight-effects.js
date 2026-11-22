@@ -135,8 +135,16 @@ const SIGNATURE_MOTIONS = [
   ['cloud','slash','fracture','volley','rush'],
   ['rush','slash','bind','wave','lance'],
   ['wave','rush','fracture','bind','shower'],
-  ['rush','cloud','sigil','sigil','rush']
+  ['rush','cloud','sigil','sigil','rush'],
+  ['moondust','chord','broadside','peal','eclipse']
 ].flat();
+const WONDER_TONES = {
+  moondust: ['#476770','#a1f5bc','#ffe59b'],
+  chord: ['#9259ac','#ffc3eb','#fff2ff'],
+  broadside: ['#355d84','#8affdb','#edfaff'],
+  peal: ['#77352b','#ff952c','#fff3a1'],
+  eclipse: ['#3c2865','#d0a0ff','#ffe897']
+};
 const SPECIAL_MOTIONS = { 'Pinning Shot':'bind', Feint:'slash', Faultline:'fracture', Sightline:'lance', Crosscut:'slash' };
 
 function drawMotion(ctx,motion,src,p,t,tone,dir,apex) {
@@ -144,6 +152,51 @@ function drawMotion(ctx,motion,src,p,t,tone,dir,apex) {
   const size=apex?25:19;
   ctx.save(); ctx.globalAlpha*=Math.min(1,1.35*(1-t));
   switch (motion) {
+    case 'moondust':
+      for (let i=0;i<6;i++) {
+        const angle=(i-2.5)*.38, reach=(.32+t)*size;
+        const x=p.x+dir*Math.cos(angle)*reach, y=p.y+Math.sin(angle)*reach;
+        line(ctx,[{x:x-dir*4,y:y-3},{x:x-dir*5,y},{x:x-dir*2,y:y+3},{x:x+dir*2,y:y+2}],tone[i%2+1],2);
+        sparkle(ctx,x-dir*7,y-4,1,tone);
+      }
+      break;
+    case 'chord':
+      for (let i=0;i<3;i++) {
+        const rise=(1+t)*i*4, width=size*(.25+.55*t);
+        ring(ctx,{x:p.x,y:p.y-rise},width+i*2,tone,.34);
+        sparkle(ctx,p.x+(i-1)*8,p.y-size*t-rise,2,tone);
+      }
+      break;
+    case 'broadside':
+      for (let i=-1;i<=1;i++) {
+        const f=clamp(t*1.35-Math.abs(i)*.16);
+        const a={x:src.x,y:src.y+i*5}, b={x:p.x+dir*i*4,y:p.y+i*7};
+        const shot=streak(ctx,a,b,f,tone,6-i*3);
+        ring(ctx,shot,3+f*3,tone,.55,t*2);
+      }
+      break;
+    case 'peal':
+      for (let i=0;i<3;i++) {
+        const radius=(i+t+.3)*size*.42;
+        const pts=[{x:p.x-radius,y:p.y},{x:p.x,y:p.y-radius*.58},{x:p.x+radius,y:p.y},
+          {x:p.x,y:p.y+radius*.58},{x:p.x-radius,y:p.y}];
+        line(ctx,pts,tone[(i+1)%3],2);
+        sparkle(ctx,p.x+radius,p.y,2,tone);
+      }
+      break;
+    case 'eclipse': {
+      const head={x:p.x,y:p.y-size*.56};
+      const radius=size*(.24+.2*t);
+      ctx.fillStyle=tone[0];ctx.beginPath();ctx.arc(head.x,head.y,radius,0,TAU);ctx.fill();
+      ring(ctx,head,radius,tone,1,t);
+      const prisms=['#adeefa','#b4efb1','#ffe395','#ffb9cf','#b6abff','#8ad3ee'];
+      prisms.forEach((color,i)=>{
+        const x=(i-2.5)*size*.37, top={x:head.x+x*.55,y:head.y+radius};
+        const tip={x:p.x+x,y:p.y+2+t*size*.74-Math.abs(x)*.25};
+        line(ctx,[top,tip,{x:tip.x-dir*2,y:tip.y-5}],color,2);
+      });
+      break;
+    }
     case 'wave':
     case 'bind':
       for(let i=0;i<3;i++) {
@@ -324,10 +377,10 @@ function playEvent(scene,e,reduced) {
   const actor=scene.actor(e.actorId,e.from), target=scene.actor(e.targetId,e.to);
   const species=actor?.species, dir=Math.sign(dest.x-src.x)||actor?.facing||1;
   const region=species?.region??e.region;
-  const palette=PALETTES[region]??GOLD;
   const isSignature=e.skillId==='signature'||e.skillId==='apex';
   const isApex=e.skillId==='apex';
   const motion=isSignature && species ? SIGNATURE_MOTIONS[species.id] : SPECIAL_MOTIONS[e.skillName];
+  const palette=WONDER_TONES[motion]??PALETTES[region]??GOLD;
   const heavy = species?.role === 'defender';
   const attackImpact = e.style === 'ranged' ? 0.58 : 0.44;
   const feedbackAt = {capture: 0.72, attack: attackImpact, heal: 0.53, hazard: 0.19}[e.type] ?? 0.06;
