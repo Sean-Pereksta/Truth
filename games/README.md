@@ -11,6 +11,7 @@ Current playable editions imported from the supplied desktop game folders. Each 
 | Academy Standards · The Banner Trial | [Play](https://sean-pereksta.github.io/Truth/games/academy-standards/) | `academy-standards/index.html` |
 | Operation Whiskerfall · MeowQuest | [Play](https://sean-pereksta.github.io/Truth/games/operation-whiskerfall/) | `operation-whiskerfall/index.html` |
 | Acorn Rally | [Play](https://sean-pereksta.github.io/Truth/games/acorn-rally/) | `acorn-rally/index.html` |
+| Critter Atlas | [Play](https://sean-pereksta.github.io/Truth/games/critter-atlas/) | `critter-atlas/index.html` |
 
 The Catnmice lobby in `Sean-Pereksta/Magic`, at `lobby/lobby.html`, links to these public pages. Local two-player options are managed within the games; these imports do not use Catnmice online hosted lobbies.
 
