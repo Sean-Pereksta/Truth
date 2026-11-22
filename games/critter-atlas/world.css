@@ -142,3 +142,52 @@
   .cw-walking .cw-figure, .cw-roamer { animation: none; }
   .cw-token { transition: none; }
 }
+
+.cw-art { background-size: 100% 300%; }
+.cw-district-nav { display:flex; gap:5px; padding:0 16px 12px; }
+.cw-district {
+  display:inline-flex; align-items:center; gap:5px; padding:5px 10px; min-height:34px;
+  border:1px solid #546b5b; border-radius:4px; color:#dce3c8; background:#23382e;
+  font:700 12px/1.16 var(--sans,sans-serif); text-align:left;
+}
+.cw-district[aria-current=page] { background:#4b4e34; border-color:#ddc789; color:#fff0c2; }
+.cw-district-state { color:#edc878; font-size:10px; }
+.cw-district.cw-closed:not([aria-current=page]) { border-style:dashed; color:#bac5b9; }
+.cw-node-town .cw-token { background:#78552e; border-radius:6px; border-color:#ffdf8b; }
+.cw-node-pass .cw-token { background:#24576a; border-radius:5px; border-color:#cbe4df; }
+.cw-node-guardian .cw-token { background:#67403c; }
+.cw-node-arena .cw-token { background:#694a6b; border-radius:5px 5px 12px 12px; border-color:#ffc5a6; }
+.cw-node-habitat .cw-token { background:#465b38; border-color:#d5ed94; }
+.cw-node-vault .cw-token { background:#574767; border-color:#9feed8; }
+.cw-node-wonder .cw-token {
+  background:#45334e; border-color:#b5fff2;
+  box-shadow:0 0 0 2px #4d4453,0 0 0 4px #e5acdb70,inset 0 0 9px #bd8fcf55;
+}
+.cw-wonder-scene {
+  flex:0 0 auto; width:clamp(104px,14vw,160px); aspect-ratio:16/9; border:1px solid #92869e;
+  border-radius:4px; background-image:url('./assets/hyper-lairs.webp'); background-size:100% 500%; background-repeat:no-repeat;
+  image-rendering:pixelated;
+}
+@media (max-width:720px) {
+  .cw-wonder-scene { float:right; margin:0 0 8px 12px; }
+  .cw-wonder-scene:not([hidden]) ~ .cw-actions { clear:both; }
+}
+.cw-node.cw-locked .cw-token { background:#344040; border-color:#9da89a; }
+.cw-node.cw-locked .cw-node-glyph { filter:grayscale(.9); opacity:.72; }
+.cw-node.cw-locked .cw-node-name { color:#d8dfd3; background:#25332eed; }
+.cw-node.cw-inspecting .cw-token { outline:2px solid #ffda81; outline-offset:4px; }
+.cw-node.cw-inspecting .cw-node-name { color:#fff4cb; box-shadow:0 0 0 1px #ead58c; }
+.cw-lock {
+  position:absolute; width:13px; height:11px; right:-6px; bottom:-3px;
+  border:2px solid #2c3833; border-radius:3px; background:#d9bb7c;
+}
+.cw-lock::before { content:''; position:absolute; width:5px; height:5px; left:0; right:0; margin:auto; top:-7px; border:2px solid #d9bb7c; border-bottom:0; border-radius:5px 5px 0 0; }
+.cw-node[data-site=highpass] .cw-node-name,.cw-node[data-site=pass] .cw-node-name,.cw-node[data-site=vault] .cw-node-name { left:auto; right:-14px; transform:none; }
+.cw-node[data-site=vault] .cw-roamer { left:auto; right:calc(100% - 8px); }
+@media (max-width:510px) {
+  .cw-district-nav { padding:0 8px 8px; gap:4px; }
+  .cw-district { min-height:38px; flex:1; font-size:11px; padding:4px 5px; }
+  .cw-roamer { width:29px; height:29px; left:70%; bottom:54%; }
+  .cw-node-name { white-space:normal; width:max-content; max-width:86px; }
+  .cw-node:is([data-site=camp],[data-site=entry],[data-site=farpost]) .cw-node-name { left:2px; transform:none; }
+}

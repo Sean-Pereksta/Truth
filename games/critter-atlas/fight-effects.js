@@ -1,4 +1,5 @@
 import { SPECIES, getForm } from './catalog.js';
+import { spriteAtlas } from './art.js';
 import { fightIcon, abilityIconKey, hazardIconKey } from './fight-icons.js';
 
 // Draw effects on a low-resolution plane. The creature actors themselves keep their
@@ -17,17 +18,17 @@ const ROSE = ['#954653','#ff987f','#ffe6b4'];
 const VIOLET = ['#78518e','#dda4ff','#fff6dd'];
 const BLUE = ['#4e82aa','#9bdcfe','#f1fffc'];
 const atlases = new Map();
-const REGION_SHEETS = ['forest','marsh','caves','coast','mountains','volcano','ruins','astral'];
 const poseAtlases = new Map();
-function warmPose(region) {
-  if (!REGION_SHEETS[region] || typeof Image === 'undefined') return;
-  if (!poseAtlases.has(region)) {
+function warmPose(speciesId) {
+  const sheet = spriteAtlas(speciesId)?.sheet;
+  if (!sheet || typeof Image === 'undefined') return;
+  if (!poseAtlases.has(sheet)) {
     const img=new Image();
-    try { img.src=new URL('./assets/poses-'+REGION_SHEETS[region]+'.webp',import.meta.url).href; }
+    try { img.src=new URL('./assets/poses-'+sheet+'.webp',import.meta.url).href; }
     catch { return; }
-    poseAtlases.set(region,img);
+    poseAtlases.set(sheet,img);
   }
-  return poseAtlases.get(region);
+  return poseAtlases.get(sheet);
 }
 const clamp = (n,lo=0,hi=1) => Math.max(lo, Math.min(hi,n));
 const mix = (a,b,t) => a + (b-a)*t;
@@ -48,7 +49,7 @@ function atlas(name) {
 export function warmFightEffects(units = []) {
   atlas('actions');
   atlas('regions');
-  for (const unit of units) warmPose(SPECIES[unit.member.speciesId].region);
+  for (const unit of units) warmPose(unit.member.speciesId);
 }
 
 function paintFrame(ctx, name, row, t, point, size, facing=1) {
@@ -130,8 +131,20 @@ const SIGNATURE_MOTIONS = [
   ['fracture','volley','slash','wave','rush','lance','rush'],
   ['rush','volley','rush','lance','cloud','rush','fracture'],
   ['volley','shower','sigil','lance','volley','rush','sigil'],
-  ['slash','cloud','bind','rush','volley','sigil','wave']
-];
+  ['slash','cloud','bind','rush','volley','sigil','wave'],
+  ['cloud','slash','fracture','volley','rush'],
+  ['rush','slash','bind','wave','lance'],
+  ['wave','rush','fracture','bind','shower'],
+  ['rush','cloud','sigil','sigil','rush'],
+  ['moondust','chord','broadside','peal','eclipse']
+].flat();
+const WONDER_TONES = {
+  moondust: ['#476770','#a1f5bc','#ffe59b'],
+  chord: ['#9259ac','#ffc3eb','#fff2ff'],
+  broadside: ['#355d84','#8affdb','#edfaff'],
+  peal: ['#77352b','#ff952c','#fff3a1'],
+  eclipse: ['#3c2865','#d0a0ff','#ffe897']
+};
 const SPECIAL_MOTIONS = { 'Pinning Shot':'bind', Feint:'slash', Faultline:'fracture', Sightline:'lance', Crosscut:'slash' };
 
 function drawMotion(ctx,motion,src,p,t,tone,dir,apex) {
@@ -139,6 +152,51 @@ function drawMotion(ctx,motion,src,p,t,tone,dir,apex) {
   const size=apex?25:19;
   ctx.save(); ctx.globalAlpha*=Math.min(1,1.35*(1-t));
   switch (motion) {
+    case 'moondust':
+      for (let i=0;i<6;i++) {
+        const angle=(i-2.5)*.38, reach=(.32+t)*size;
+        const x=p.x+dir*Math.cos(angle)*reach, y=p.y+Math.sin(angle)*reach;
+        line(ctx,[{x:x-dir*4,y:y-3},{x:x-dir*5,y},{x:x-dir*2,y:y+3},{x:x+dir*2,y:y+2}],tone[i%2+1],2);
+        sparkle(ctx,x-dir*7,y-4,1,tone);
+      }
+      break;
+    case 'chord':
+      for (let i=0;i<3;i++) {
+        const rise=(1+t)*i*4, width=size*(.25+.55*t);
+        ring(ctx,{x:p.x,y:p.y-rise},width+i*2,tone,.34);
+        sparkle(ctx,p.x+(i-1)*8,p.y-size*t-rise,2,tone);
+      }
+      break;
+    case 'broadside':
+      for (let i=-1;i<=1;i++) {
+        const f=clamp(t*1.35-Math.abs(i)*.16);
+        const a={x:src.x,y:src.y+i*5}, b={x:p.x+dir*i*4,y:p.y+i*7};
+        const shot=streak(ctx,a,b,f,tone,6-i*3);
+        ring(ctx,shot,3+f*3,tone,.55,t*2);
+      }
+      break;
+    case 'peal':
+      for (let i=0;i<3;i++) {
+        const radius=(i+t+.3)*size*.42;
+        const pts=[{x:p.x-radius,y:p.y},{x:p.x,y:p.y-radius*.58},{x:p.x+radius,y:p.y},
+          {x:p.x,y:p.y+radius*.58},{x:p.x-radius,y:p.y}];
+        line(ctx,pts,tone[(i+1)%3],2);
+        sparkle(ctx,p.x+radius,p.y,2,tone);
+      }
+      break;
+    case 'eclipse': {
+      const head={x:p.x,y:p.y-size*.56};
+      const radius=size*(.24+.2*t);
+      ctx.fillStyle=tone[0];ctx.beginPath();ctx.arc(head.x,head.y,radius,0,TAU);ctx.fill();
+      ring(ctx,head,radius,tone,1,t);
+      const prisms=['#adeefa','#b4efb1','#ffe395','#ffb9cf','#b6abff','#8ad3ee'];
+      prisms.forEach((color,i)=>{
+        const x=(i-2.5)*size*.37, top={x:head.x+x*.55,y:head.y+radius};
+        const tip={x:p.x+x,y:p.y+2+t*size*.74-Math.abs(x)*.25};
+        line(ctx,[top,tip,{x:tip.x-dir*2,y:tip.y-5}],color,2);
+      });
+      break;
+    }
     case 'wave':
     case 'bind':
       for(let i=0;i<3;i++) {
@@ -281,7 +339,7 @@ function createScene(board, battle, sprite) {
     if (cell && orig) { originals.add(cell); cell.classList.add('cfx-replaced'); }
     const homeFacing=unit?.team==='wild'||cell?.classList.contains('cb-wild')?-1:1;
     const species=unit && SPECIES[unit.member.speciesId];
-    const poseAtlas=species && warmPose(species.region);
+    const poseAtlas=species && warmPose(species.id);
     const ghost={
       element:visual, facing:homeFacing, species,
       pose(p,opts={}) {
@@ -319,10 +377,10 @@ function playEvent(scene,e,reduced) {
   const actor=scene.actor(e.actorId,e.from), target=scene.actor(e.targetId,e.to);
   const species=actor?.species, dir=Math.sign(dest.x-src.x)||actor?.facing||1;
   const region=species?.region??e.region;
-  const palette=PALETTES[region]??GOLD;
   const isSignature=e.skillId==='signature'||e.skillId==='apex';
   const isApex=e.skillId==='apex';
-  const motion=isSignature && species ? SIGNATURE_MOTIONS[species.region][species.id%7] : SPECIAL_MOTIONS[e.skillName];
+  const motion=isSignature && species ? SIGNATURE_MOTIONS[species.id] : SPECIAL_MOTIONS[e.skillName];
+  const palette=WONDER_TONES[motion]??PALETTES[region]??GOLD;
   const heavy = species?.role === 'defender';
   const attackImpact = e.style === 'ranged' ? 0.58 : 0.44;
   const feedbackAt = {capture: 0.72, attack: attackImpact, heal: 0.53, hazard: 0.19}[e.type] ?? 0.06;
@@ -411,6 +469,10 @@ function playEvent(scene,e,reduced) {
         if (bloom>0) {
           target?.pose({x:dest.x,y:dest.y-wave(bloom)*3},{strike:actor===target&&t>.14&&t<.63,light:1+wave(bloom)*.42});
           paintFrame(ctx,'actions',2,bloom,dest,e.skillId==='specialty'?68:55);
+          if (isSignature) {
+            paintFrame(ctx,'regions',region,bloom,dest,isApex?55:38,dir);
+            drawMotion(ctx,motion,src,dest,bloom,palette,dir,isApex);
+          }
           ring(ctx,{x:dest.x,y:dest.y+10},6+15*bloom,MINT,.28);
           for (let i=0;i<5;i++) {
             const a=t*4+i*TAU/5;

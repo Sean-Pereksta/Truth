@@ -5,6 +5,44 @@ import { createHash } from 'node:crypto';
 import test from 'node:test';
 import { REGIONS, SPECIES, MAX_LEVEL, getAbilities } from '../catalog.js';
 import { FIGHT_ICONS, fightIcon, abilityIconKey, hazardIconKey } from '../fight-icons.js';
+import { sprite, spriteAtlas } from '../art.js';
+import { warmFightEffects } from '../fight-effects.js';
+
+test('frontier forms use matching idle and action sheets independently of habitat', () => {
+  const css = readFileSync(new URL('../art.css', import.meta.url), 'utf8');
+  for (const family of SPECIES.slice(56)) {
+    const { sheet, columns, column } = spriteAtlas(family.id);
+    const wonder = family.id >= 76;
+    assert.equal(columns, wonder ? 5 : 4);
+    assert.equal(column, wonder ? family.id - 76 : (family.id - 56) % 4);
+    assert.equal(sheet, wonder ? 'wonders' : 'frontier-' + (1 + Math.floor((family.id - 56) / 4)));
+    for (const type of ['creatures', 'poses']) {
+      const filename = type + '-' + sheet + '.webp';
+      assert.ok(css.includes(filename));
+      const bytes = readFileSync(new URL('../assets/' + filename, import.meta.url));
+      assert.equal(bytes.toString('ascii', 8, 16), 'WEBPVP8X');
+      assert.equal(bytes.readUIntLE(24, 3) + 1, 128 * columns);
+      assert.equal(bytes.readUIntLE(27, 3) + 1, 512);
+    }
+    family.forms.forEach((name, stage) => {
+      assert.ok(sprite(family.id, stage).includes('sprite-' + sheet));
+      assert.ok(sprite(family.id, stage).includes('aria-label="' + name + '"'));
+    });
+  }
+  const assets = [];
+  const OriginalImage = globalThis.Image;
+  try {
+    globalThis.Image = class { set src(url) { assets.push(url.split('/').at(-1)); } };
+    const mixedParty = [0, 56, 57, 75, 76, 80].map(speciesId => ({member: {speciesId}}));
+    warmFightEffects(mixedParty);
+    warmFightEffects(mixedParty);
+    assert.deepEqual(assets.filter(name => name.startsWith('poses-')).sort(),
+      ['poses-forest.webp', 'poses-frontier-1.webp', 'poses-frontier-5.webp', 'poses-wonders.webp']);
+  } finally {
+    if (OriginalImage === undefined) delete globalThis.Image;
+    else globalThis.Image = OriginalImage;
+  }
+});
 
 test('all region hazards and learned abilities have labeled icons, including each signature and apex', () => {
   const signatures = new Set();
@@ -59,7 +97,7 @@ function readAtlas(file) {
 }
 
 test('every named symbol maps to a distinct painted, nonempty atlas cell', () => {
-  const { width, height, pixels } = readAtlas(new URL('../assets/fight-icons.png', import.meta.url));
+  const { width, height, pixels } = readAtlas(new URL('../assets/fight-icons-wonders.png', import.meta.url));
   const cell = 20, columns = 8;
   const entries = Object.entries(FIGHT_ICONS);
   assert.equal(width, columns * cell);

@@ -1,0 +1,50 @@
+.mk-market,.mk-bag{--mk-line:#496052;--mk-accent:#93bc8b;color:var(--text)}
+.mk-scene{position:relative;isolation:isolate;min-height:clamp(115px,17vw,165px);display:flex;align-items:flex-end;overflow:hidden;border:1px solid var(--mk-line);border-radius:9px;background:#293f33}
+.mk-scene::before{position:absolute;inset:0;z-index:-2;content:"";background-image:url("./assets/frontier-markets.webp");background-size:200% 400%;background-position:var(--mk-x) var(--mk-y);image-rendering:pixelated}
+.mk-scene::after{position:absolute;inset:0;z-index:-1;content:"";background:linear-gradient(10deg,#0c1d1bf5 1%,#10251cb8 30%,transparent 70%)}
+.mk-scene>div{padding:clamp(14px,2.8vw,32px);text-shadow:0 2px 4px #14211b}
+.mk-scene h1,.mk-bag-heading h1{margin:0;color:#fff0ce;font:700 clamp(1.65rem,4vw,2.75rem)/1.03 var(--serif);letter-spacing:-.04em}
+.mk-scene small,.mk-card-head small{color:#d8ddb9;font:700 .72rem/1.4 var(--mono);letter-spacing:.035em}
+.mk-scene small{color:#f1d191}
+.mk-toolbar,.mk-bag-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0}
+.mk-bag-heading{margin:16px 0 18px}
+.mk-wallet{display:inline-flex;align-items:center;gap:5px;color:#f5dba1;font-size:.95rem}
+.mk-coin{position:relative;display:inline-block;width:15px;height:15px;border:2px solid #e7ba5d;border-radius:50%;box-shadow:inset 0 0 0 2px #8f6032;background:#ecc472;margin-right:3px;flex:none}
+.mk-coin::after{position:absolute;content:"";width:3px;height:7px;background:#93682e;top:2px;left:4px}
+.mk-tabs{display:flex;gap:3px;flex-wrap:wrap;border-bottom:1px solid var(--mk-line);margin:5px 0 14px}
+.mk-tabs button,.mk-trade,.mk-buy,.mk-confirm button,.mk-recipient{border:1px solid var(--mk-line);border-radius:5px;background:#293f33;color:#f6ecd2;min-height:38px;padding:6px 13px;font-weight:700}
+.mk-tabs button{color:var(--muted);border:0;border-bottom:3px solid transparent;border-radius:4px 4px 0 0;background:transparent}
+.mk-tabs button[aria-pressed=true]{color:#f6e0a3;border-bottom-color:#d9b66d;background:#2c4335}
+.mk-market button:disabled,.mk-bag button:disabled{opacity:.56}
+.mk-buy{color:#1d2a20;background:#e6c17c;border-color:#edd29f}
+.mk-trade:hover:not(:disabled),.mk-confirm button:hover,.mk-recipient:hover:not(:disabled){background:#385342;border-color:var(--mk-accent)}
+.mk-buy:hover:not(:disabled){background:#f7d595}
+.mk-feedback:not(:empty){margin:8px 0 14px;padding:8px 12px;border-left:3px solid #b6bc79;background:#2c4333;color:#f0e9c8;border-radius:2px}
+.mk-demand,.mk-empty{margin:10px 0 17px;color:#c4d3c0}
+.mk-demand strong{color:#edcf89}
+.mk-subhead,.mk-feed h2{margin:14px 0 8px;font:700 1.35rem/1.18 var(--serif);letter-spacing:-.027em}
+.mk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(265px,100%),1fr));gap:10px}
+.mk-card{min-width:0;display:flex;flex-direction:column;gap:9px;padding:15px;border:1px solid var(--mk-line);border-radius:7px;background:linear-gradient(135deg,#253b30,#1a3028)}
+.mk-card-head{display:flex;align-items:center;gap:12px}
+.mk-card-head h3,.mk-recipient b{margin:0;font:700 1.33rem/1.18 var(--serif);letter-spacing:-.03em}
+.mk-card p,.mk-role,.mk-card-foot small,.mk-recipient small{margin:0;color:#bbcdbc;font-size:.92rem}
+.mk-item-badge{flex:none;width:44px;height:44px;display:grid;place-items:center;border-radius:6px;background:#2e4234;outline:1px solid #5e7154;outline-offset:-1px}
+.mk-item-badge .fight-icon{width:27px;height:27px}
+.mk-item-badge.mk-capture{background:#3b393c;outline-color:#6b6472}
+.mk-item-badge.mk-food{background:#443f2b;outline-color:#756844}
+.mk-portrait{width:62px;height:62px;display:grid;place-items:center;flex:none;background:radial-gradient(#4c64443d,transparent 70%)}
+.mk-card-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding-top:7px}
+.mk-card-foot b{color:#e5cd92}
+.mk-card-foot:has(>:only-child){justify-content:flex-end}
+.mk-confirm{border-top:1px solid #73734d;padding-top:8px}
+.mk-confirm p{color:#efe3be;margin:0 0 8px}
+.mk-confirm>div{display:flex;flex-wrap:wrap;gap:9px}
+.mk-confirm .mk-sale{border-color:#b58362;background:#643b2e;color:#fff0d4}
+.mk-selected{border-color:#ad8c56}
+.mk-feed{margin:12px 0;border-top:1px solid var(--mk-line)}
+.mk-recipient{display:flex;align-items:center;gap:10px;text-align:left;padding:8px 12px}
+.mk-recipient small{display:block}
+@media(max-width:650px){.mk-card{padding:12px}.mk-grid{gap:8px}.mk-tabs{margin-bottom:10px}.mk-grid:has(.mk-recipient){grid-template-columns:repeat(auto-fit,minmax(min(170px,100%),1fr))}.mk-buy,.mk-trade,.mk-confirm button,.mk-tabs button{min-height:42px}}
+.mk-item-badge{position:relative;width:52px;height:52px}
+.mk-item-art{display:block;width:48px;height:48px;background-image:url("./assets/frontier-supplies.webp");background-size:600% 300%;background-repeat:no-repeat;image-rendering:pixelated}
+.mk-item-badge .fight-icon{position:absolute;right:-2px;bottom:-2px;width:15px;height:15px;filter:drop-shadow(0 1px 1px #0f1d17)}

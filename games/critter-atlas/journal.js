@@ -2,7 +2,8 @@ import {
   SPECIES, REGIONS, EVOLUTION_LEVELS, MAX_LEVEL, PARTY_LIMIT,
   getAbilities, getForm, makeMember, xpToNext
 } from './catalog.js';
-import { freshWorld } from './world.js';
+import { freshWorld, restoreWonderTrails } from './world.js';
+import { freshEconomy, restoreEconomy } from './economy.js';
 
 const SAVE_KEY = 'catnmice.critter-atlas.expedition.v1';
 const VERSION = 1;
@@ -34,6 +35,7 @@ function readMember(data) {
 function restoreWorld(data, region, unlocked) {
   const fresh = freshWorld();
   if (!data || typeof data !== 'object' || Array.isArray(data)) data = {};
+  fresh.wonders = restoreWonderTrails(data.wonders);
   fresh.unlocked = validRegion(data.unlocked) ? data.unlocked : (validRegion(unlocked) ? unlocked : 0);
   fresh.region = Math.min(fresh.unlocked, validRegion(data.region) ? data.region : (validRegion(region) ? region : 0));
   if (typeof data.node === 'string' && /^[a-z]{1,20}$/.test(data.node)) fresh.node = data.node;
@@ -60,7 +62,7 @@ export function newJournal(starterId = 0) {
   const roster = [makeMember(lead, 3), makeMember((lead + 1) % 3, 3)];
   return {
     version: VERSION, roster, party: roster.map(m => m.uid), seen: roster.map(m => m.speciesId),
-    wins: REGIONS.map(() => 0), region: 0, unlocked: 0, world: freshWorld()
+    wins: REGIONS.map(() => 0), region: 0, unlocked: 0, world: freshWorld(), economy: freshEconomy()
   };
 }
 
@@ -89,7 +91,7 @@ export function loadJournal(storage) {
       version: VERSION, roster, party,
       seen: [...new Set([...seen, ...roster.map(m => m.speciesId)])],
       wins: REGIONS.map((_, index) => nonnegative(data.wins?.[index])),
-      region: world.region, unlocked: world.unlocked, world
+      region: world.region, unlocked: world.unlocked, world, economy: restoreEconomy(data.economy)
     };
   } catch {
     return null;

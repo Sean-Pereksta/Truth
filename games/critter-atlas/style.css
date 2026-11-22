@@ -146,3 +146,32 @@ dialog::backdrop{background:rgb(5 17 14 / .78)}
 .ability-glyph { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 5px; background: #152a23; }
 .ability-glyph .fight-icon { width: 24px; height: 24px; }
 .ability-condition { display: inline-flex; gap: 4px; align-items: center; margin-top: 4px; font-size: .78rem; color: #e5d2a2; }
+
+.expedition-stats { margin-left:auto; display:flex; align-items:center; gap:12px; padding-right:8px; white-space:nowrap; }
+.expedition-stats .trail-progress { margin:0; }
+.coin-balance { display:inline-flex; align-items:center; gap:4px; color:#efd18a; font:700 .78rem/1.2 var(--mono); }
+.coin-balance i { width:11px; height:11px; margin-right:2px; border:2px solid #edc76e; background:#a97530; border-radius:40%; box-shadow:inset 2px 0 #f5d68b, 1px 1px #473921; }
+.habitat-note { display:grid; gap:4px; padding:10px 12px; margin:8px 0 14px; background:#182e26; border-left:3px solid var(--gold); font-size:.88rem; }
+.habitat-note span { color:var(--muted); }
+.habitat-note .link-action { justify-self:start; }
+.guide-wonder { border-color:#aa8fbf; background:linear-gradient(155deg,#383249,#24362f 78%); }
+.guide-wonder small { color:#ead0fc; }
+.wonder-portrait { position:relative; height:clamp(140px,26vw,216px); display:grid; place-items:end center; border:1px solid #8b7295; border-radius:5px; background-image:url('./assets/hyper-lairs.webp'); background-size:100% 500%; background-position:center var(--lair-y); overflow:hidden; isolation:isolate; margin:4px 0 12px; }
+.wonder-portrait::before { content:''; position:absolute; inset:0; z-index:-1; background:linear-gradient(0deg,#1d162c72,transparent 35%); }
+.wonder-rarity { position:absolute; left:10px; top:9px; display:flex; align-items:center; gap:5px; border:1px solid #d0afdb; border-radius:3px; padding:4px 7px; color:#faebff; background:#221b34e8; font:700 .75rem/1.2 var(--mono); }
+.wonder-rarity span { color:#edc5fc; font-size:1rem; }
+.wonder-specimen { display:block; height:90%; aspect-ratio:1; filter:drop-shadow(0 3px 2px #261936bb); }
+.wonder-form-name, .wonder-pose { position:absolute; bottom:8px; background:#211b31e8; border-radius:3px; color:#fff2ff; }
+.wonder-form-name { left:8px; max-width:48%; padding:4px 6px; font-size:.8rem; }
+.wonder-pose { right:8px; padding:6px 8px; border:1px solid #c7a9cf; font:700 .72rem/1.2 var(--mono); }
+.wonder-portrait.show-action-pose .critter-sprite::before { background-image:var(--pose-sheet); }
+.evolution-step[data-show-form] { color:inherit; cursor:pointer; }
+.evolution-step[data-show-form][aria-pressed=true] { border-color:#d4aedf; background:#392f44; }
+.habitat-note .wonder-tracks { color:#e7caec; }
+@media(max-width:560px) {
+  .expedition-stats .trail-progress { display:none; }
+  .game-tabs { flex-wrap:wrap; }
+  .game-tab { padding-inline:8px; }
+  .expedition-stats { padding-right:4px; }
+  .coin-balance { font-size:.68rem; }
+}

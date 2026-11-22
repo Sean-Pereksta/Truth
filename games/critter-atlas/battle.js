@@ -1,8 +1,9 @@
 import {
-  SPECIES, MAX_LEVEL, getForm, getStats, getAbilities, xpToNext, captureChance, rollEncounter
+  SPECIES, REGIONS, MAX_LEVEL, getForm, getStats, getAbilities, xpToNext, captureChance, rollEncounter, makeMember
 } from "./catalog.js";
 
 import { playFightEffects, warmFightEffects } from "./fight-effects.js";
+import { arenaCourse, huntLair } from "./arena-courses.js";
 import { createFightSound } from "./fight-sound.js";
 import { FIGHT_ICONS, fightIcon, abilityIconKey, hazardIconKey } from "./fight-icons.js";
 
@@ -53,6 +54,9 @@ export function takeBattleEvents(battle) {
   return events;
 }
 const percent = rate => Math.round(rate * 100);
+export function capturePercent(rate) {
+  return rate < .1 ? (rate * 100).toFixed(2) : String(Number((rate * 100).toFixed(1)));
+}
 const escape = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 
 export function hexDistance(a, b) {
@@ -107,15 +111,47 @@ function buildUnit(member, team, slot, id) {
   };
 }
 
+export function encounterOpponents(encounter, rng = Math.random) {
+  const course = arenaCourse(encounter);
+  if (course) {
+    const level = encounter.level || REGIONS[encounter.region].minLevel;
+    return course.lineup.map((speciesId, slot) => makeMember(
+      speciesId, Math.max(1, level - Math.min(slot, 2))
+    ));
+  }
+  const pack = rollEncounter(encounter.region, {
+    level: encounter.level, leadSpeciesId: encounter.leadSpeciesId, habitatId: encounter.habitatId,
+    legendary: encounter.kind === "legendary", rng
+  });
+  if (encounter.youngling && huntLair(encounter, SPECIES[pack[0].speciesId])) {
+    for (const escort of pack.slice(1)) escort.level = pack[0].level;
+    pack[0].level = 3;
+  }
+  return pack;
+}
+
 export function createBattle(encounter, party, opponents, rng = Math.random) {
   const region = Math.max(0, Math.min(BIOMES.length-1, Number(encounter.region) || 0));
   const biome = BIOMES[region];
   const mirror = [...String(encounter.node ?? "")].reduce((n, c) => n + c.charCodeAt(0), 0) % 2;
-  const tiles = biome.pattern.flatMap(row => (mirror ? [...row].reverse() : [...row]).map(t => GROUND[t] || "plain"));
+  const course = arenaCourse(encounter);
+  const lair = huntLair(encounter, SPECIES[opponents[0]?.speciesId]);
+  const formation = course || lair;
+  const ground = formation ? formation.terrain.join("") :
+    biome.pattern.map(row => mirror ? [...row].reverse().join("") : row).join("");
+  const tiles = [...ground].map(t => GROUND[t] || "plain");
   const units = [...party.map((m,i) => buildUnit(m,"you",i,i)), ...opponents.map((m,i) => buildUnit(m,"wild",i,party.length+i))];
-  units.forEach(u => { tiles[u.key] = "plain"; });
-  const battle = { encounter, region, biome, tiles, units, rng, order: [], round: 0, cursor: -1,
+  units.forEach((unit, index) => {
+    if (formation) {
+      const mark = index < party.length ? "ABCD"[index] : String(index - party.length + 1);
+      const start = ground.indexOf(mark);
+      if (start >= 0) unit.key = start;
+    }
+    tiles[unit.key] = "plain";
+  });
+  const battle = { encounter, region, biome, course, lair, tiles, units, rng, order: [], round: 0, cursor: -1,
     result: null, log: [], logIcons: [], events: [] };
+  if (lair) log(battle, lair.omen, "forecast");
   nextTurn(battle);
   return battle;
 }
@@ -306,6 +342,18 @@ function capturePreview(actor, target) {
   return { type: "capture", chance: captureOdds(target) };
 }
 
+function supplyPreview(actor, target, item) {
+  if (actor.team !== "you" || !target || !living(target) || !item || !(item.count > 0) ||
+      !Number.isFinite(item.power) || item.power <= 0 || hexDistance(actor.key, target.key) > CAPTURE_RANGE) return null;
+  if (item.kind === "capture" && target.team === "wild") {
+    const baseChance = captureOdds(target);
+    return {type:"capture", chance:Math.min(.99, baseChance + item.power), baseChance, supplyId:item.id, supplyName:item.name};
+  }
+  if (item.kind !== "heal" || target.team !== actor.team || target.hp >= target.stats.maxHp) return null;
+  const amount = Math.min(item.power, target.stats.maxHp - target.hp);
+  return {type:"heal", amount, hpAfter:target.hp + amount, supplyId:item.id, supplyName:item.name};
+}
+
 export function previewAction(battle, mode, key) {
   if (battle.result || !Number.isInteger(key) || key < 0 || key >= battle.tiles.length) return null;
   const actor = activeUnit(battle);
@@ -316,6 +364,7 @@ export function previewAction(battle, mode, key) {
   const target = unitAt(battle, key);
   if (mode === "guard") return actor === target ? { type: "guard" } : null;
   if (mode === "capture") return capturePreview(actor, target);
+  if (typeof mode === "object") return supplyPreview(actor, target, mode);
   return Number.isInteger(mode) ? skillPreview(battle, actor, target, actor.abilities[mode]) : null;
 }
 
@@ -364,10 +413,31 @@ export function attemptCapture(battle, target) {
   const actor = activeUnit(battle);
   const preview = capturePreview(actor, target);
   if (!preview) return false;
+  resolveCapture(battle, actor, target, preview);
+  finishTurn(battle, actor);
+  return true;
+}
+
+function resolveCapture(battle, actor, target, preview) {
   target.caught = battle.rng() < preview.chance;
-  record(battle, "capture", actor, target, { chance: preview.chance, success: target.caught });
-  log(battle, target.caught ? nameOf(target) + " joined your force!" : nameOf(target) + " escaped the capture (" + percent(preview.chance) + "% chance).",
+  record(battle, "capture", actor, target, { ...preview, success: target.caught });
+  const intro = preview.supplyName ? preview.supplyName + " used. " : "";
+  log(battle, intro + (target.caught ? nameOf(target) + " joined your force!" : nameOf(target) + " escaped the capture (" + capturePercent(preview.chance) + "% chance)."),
     target.caught ? "caught" : "escaped");
+}
+
+export function useBattleSupply(battle, item, target, spend) {
+  if (battle.result || !battle.units.includes(target)) return false;
+  const actor = activeUnit(battle);
+  const preview = supplyPreview(actor, target, item);
+  if (!preview || spend?.(item.id) !== true) return false;
+  if (preview.type === "capture") {
+    resolveCapture(battle, actor, target, preview);
+  } else {
+    target.hp = preview.hpAfter;
+    record(battle, "heal", actor, target, preview);
+    log(battle, item.name + " restored " + preview.amount + " HP to " + nameOf(target) + ".", "heal");
+  }
   finishTurn(battle, actor);
   return true;
 }
@@ -432,24 +502,25 @@ const effectsOn = unit => Object.keys(unit.status).filter(effect => unit.status[
 const turns = count => count + (count === 1 ? " turn" : " turns");
 const hexes = count => count + (count === 1 ? " hex" : " hexes");
 
-export function mountBattle(root, { encounter, party, sprite, onFinish, onResolved }) {
-  const opponents = rollEncounter(encounter.region, {
-    level: encounter.level, leadSpeciesId: encounter.leadSpeciesId,
-    legendary: encounter.kind === "legendary", challenge: encounter.kind === "warden"
-  });
+export function mountBattle(root, { encounter, party, sprite, onFinish, onResolved, getSupplies = () => [], spendSupply }) {
+  const opponents = encounterOpponents(encounter);
   const battle = createBattle(encounter, party, opponents);
+  const quarry = battle.lair ? battle.units.find(u => u.team === "wild" && SPECIES[u.member.speciesId].hyperRare) : null;
   const regionHazard = hazardIconKey(battle.region);
   warmFightEffects(battle.units);
   const sound = createFightSound();
   const face = unit => sprite(unit.member.speciesId, getForm(unit.member).stage);
   const isPlayer = () => !battle.result && activeUnit(battle).team === "you";
-  let mode = "move", inspectedKey = null, note = "", focusKey = activeUnit(battle).key;
-  let logOpen = false, keyOpen = false, retreat = false, disposed = false, timer = 0;
+  const animateArrival = Boolean(quarry) && !root.ownerDocument.defaultView?.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  let opening = animateArrival;
+  let mode = "move", inspectedKey = quarry?.key ?? null, note = "", focusKey = activeUnit(battle).key;
+  let logOpen = false, keyOpen = false, packOpen = false, retreat = false, disposed = false, timer = 0;
   let playback = null, resolution = null;
   function saveResult() {
     if (battle.result && !resolution) {
       resolution = outcome(battle);
-      onResolved?.(resolution);
+      const rewards = onResolved?.(resolution);
+      if (Number.isSafeInteger(rewards?.coins) && rewards.coins > 0) resolution.coins = rewards.coins;
     }
   }
   function terrainIcon(tile) { return tile === "hazard" ? regionHazard : tile; }
@@ -465,7 +536,7 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
   }
   function forecastText(prediction) {
     if (!prediction) return "";
-    if (prediction.type === "capture") return percent(prediction.chance) + "% capture";
+    if (prediction.type === "capture") return capturePercent(prediction.chance) + "% capture";
     if (prediction.type === "heal") return "+" + prediction.amount + " HP";
     if (prediction.type === "attack") return "−" + prediction.amount + " HP";
     if (prediction.type === "move") return hexes(prediction.path.length - 1);
@@ -483,7 +554,8 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
         for (const modifier of prediction.modifiers || []) extras.push(icon(modifier) + escape(FIGHT_ICONS[modifier].label));
         if (prediction.effect) extras.push(icon(prediction.effect) + escape(STATUS[prediction.effect] || prediction.effect));
       } else if (prediction.type === "capture") {
-        extras.push(percent(captureChance(u.member, 1, false)) + "% at full HP");
+        extras.push(capturePercent(captureChance(u.member, 1, false)) + "% at full HP");
+        if (prediction.supplyName) extras.push(escape(prediction.supplyName) + " · " + capturePercent(prediction.baseChance) + "% without charm");
         if (u.hp < u.stats.maxHp) extras.push(icon("damage") + "Weakened");
         if (effectsOn(u).length) extras.push(icon("status") + "Status bonus");
       } else if (prediction.type === "move" && prediction.hazard) {
@@ -499,11 +571,11 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     if (!u) return '<div class="cb-inspect">'+terrainLine+forecast+'</div>';
     const species = SPECIES[u.member.speciesId], isWild = u.team === "wild";
     return '<div class="cb-inspect"><div class="cb-ident"><span class="cb-portrait">'+face(u)+'</span><div><small>'+
-      (isWild ? "WILD" : "ALLY")+' · LV '+u.member.level+'</small><strong>'+escape(nameOf(u))+'</strong><span>'+
+      (isWild ? "WILD" : "ALLY")+(species.hyperRare ? " · HYPER RARE" : "")+' · LV '+u.member.level+'</small><strong>'+escape(nameOf(u))+'</strong><span>'+
       icon(species.role === "ranged" ? "archer" : species.role)+escape(ROLE_NAME[species.role])+'</span></div></div>'+
       '<div class="cb-stat"><span>'+icon("hp")+'Health</span><b>'+u.hp+' / '+u.stats.maxHp+'</b></div>'+
       '<div class="cb-meter"><i style="width:'+100*u.hp/u.stats.maxHp+'%"></i></div>'+
-      (isWild ? '<div class="cb-stat cb-odds"><span>'+icon("capture")+'Capture</span><b>'+percent(captureOdds(u))+'%</b></div>' :
+      (isWild ? '<div class="cb-stat cb-odds"><span>'+icon("capture")+'Free capture</span><b>'+capturePercent(captureOdds(u))+'%</b></div>' :
         '<div class="cb-stat"><span>'+icon("xp")+'XP</span><b>'+(u.member.level >= MAX_LEVEL ? "MAX" : u.member.xp+' / '+xpToNext(u.member.level))+'</b></div>')+
       activeEffects(u)+(tile !== "plain" ? terrainLine : "")+forecast+'</div>';
   }
@@ -517,11 +589,12 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     const cellName = String.fromCharCode(65+x)+(y+1);
     const parts = ["cb-cell","cb-"+tile];
     if (u) parts.push("cb-occupied","cb-"+u.team);
+    if (u && u === quarry) parts.push("cb-quarry");
     if (active) parts.push("cb-active");
     if (moving) parts.push("cb-reach");
     if (targeting) parts.push("cb-target","cb-target-"+forecast.type);
     if (inspectedKey === key) parts.push("cb-selected");
-    const occupant = u ? [nameOf(u), u.team === "you" ? "Ally" : "Wild", u.hp+"/"+u.stats.maxHp+" HP",
+    const occupant = u ? [nameOf(u), u.team === "you" ? "Ally" : "Wild", ...(u === quarry ? ["Hyper Rare"] : []), u.hp+"/"+u.stats.maxHp+" HP",
       ...effectsOn(u).map(effect => STATUS[effect]+" "+turns(u.status[effect])), ...(u.guarded ? ["Guarding"] : [])].join(" · ")+". " : "";
     const title = cellName+". "+occupant+terrain+". "+hint;
     const ground = tile === "plain" ? "" : '<span class="cb-terrain-art" aria-hidden="true"></span><span class="cb-terrain-mark">'+icon(terrainIcon(tile))+'</span>';
@@ -529,9 +602,10 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     if (u) {
       content += '<span class="cb-creature" aria-hidden="true">'+face(u)+'</span>'+
         '<i class="cb-hp"><b style="width:'+Math.ceil(100*u.hp/u.stats.maxHp)+'%"></b></i>'+activeEffects(u,true);
+      if (u === quarry) content += '<i class="cb-quarry-sigil" aria-hidden="true"></i>';
       if (active) content += '<span class="cb-cursor">'+icon("turn")+'</span>';
       if (targeting) {
-        const amount = forecast.type === "capture" ? percent(forecast.chance)+"%" : (forecast.type === "heal" ? "+" : "−")+forecast.amount;
+        const amount = forecast.type === "capture" ? capturePercent(forecast.chance)+"%" : (forecast.type === "heal" ? "+" : "−")+forecast.amount;
         content += '<b class="cb-amount cb-amount-'+forecast.type+'">'+amount+'</b>';
       }
     }
@@ -540,7 +614,7 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
   }
   function command(action, glyph, label, caption, selected, disabled, tip, effect = null) {
     const pressed = ["guard", "wait"].includes(action) ? "" : ' aria-pressed="'+Boolean(selected)+'"';
-    return '<button type="button" data-act="'+action+'" class="cb-command'+(selected ? ' chosen' : '')+'"'+pressed+
+    return '<button type="button" data-act="'+escape(action)+'" class="cb-command'+(selected ? ' chosen' : '')+'"'+pressed+
       (disabled ? ' disabled' : '')+(tip ? ' title="'+escape(tip)+'"' : '')+'><span class="cb-command-art">'+icon(glyph)+'</span>'+
       '<span class="cb-command-text"><b>'+escape(label)+'</b><small>'+escape(caption)+(effect ? ' '+icon(effect) : '')+'</small></span></button>';
   }
@@ -552,13 +626,21 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
       return command('skill-'+i,resting ? "cooldown" : abilityIconKey(a,SPECIES[actor.member.speciesId]),a.name,
         resting ? "Rest · 1 turn" : hexes(a.range),mode === i,!interactive || resting,a.description,a.status);
     });
+    const supplies = getSupplies();
+    const pack = supplies.length ? '<details class="cb-pack"'+(packOpen ? ' open' : '')+'><summary>Battle bag · '+
+      supplies.reduce((sum, item) => sum + item.count, 0)+'</summary><div>'+supplies.map(item =>
+      command("supply-"+item.id,item.kind,item.name,
+        "×"+item.count+" · "+(item.kind === "heal" ? "+"+item.power+" HP" : "+"+percent(item.power)+" pts"),
+        mode?.id === item.id,!interactive,item.description)
+    ).join("")+'</div></details>' : "";
     return [
       command("move","move","Move",actor.moved ? "Already moved" : hexes(Math.max(1,actor.stats.move-(actor.status.slow ? 1 : 0))),
         mode === "move",!interactive || actor.moved,"Move along a lit path before acting."),
       ...skills,
       command("capture","capture","Capture","3 hexes",mode === "capture",!interactive,"Select a marked wild Critter to attempt capture."),
       command("guard","guard",actor.abilities.find(a => a.kind === "guard")?.name || "Guard","End turn",false,!interactive,"Reduce incoming damage until your next turn."),
-      command("wait","wait","Wait","Act later",false,!interactive || !canWait(battle),"Before moving, act after the remaining Critters this round. Once per round.")
+      command("wait","wait","Wait","Act later",false,!interactive || !canWait(battle),"Before moving, act after the remaining Critters this round. Once per round."),
+      pack
     ].join("");
   }
   function legendList(keys) {
@@ -585,6 +667,18 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     return '<button type="button" data-act="sound" aria-label="Battle sound" aria-pressed="'+enabled+'" title="'+(enabled ? "Mute effects" : "Enable sound effects")+'">'+
       icon(enabled ? "sound-on" : "sound-off")+'<span>'+(enabled ? "Sound on" : "Sound off")+'</span></button>';
   }
+  function huntArrival() {
+    if (!quarry || !opening) return "";
+    const {x,y} = xy(quarry.key);
+    return '<span class="cb-hunt-arrival" aria-hidden="true" style="--quarry-x:'+((x + (y%2)*.5 + .5)/7.5*100)+'%;--quarry-y:'+(y*18.75 + 12.5)+'%">'+
+      '<i class="cb-lair-wave"></i><i class="cb-lair-wave cb-second-wave"></i><i class="cb-lair-motes"></i></span>';
+  }
+  function quarryStrip() {
+    if (!quarry) return "";
+    const condition = quarry.caught ? "Captured" : !living(quarry) ? "Defeated" : "Lv. " + quarry.member.level;
+    return '<div class="cb-quarry-strip"><i class="cb-quarry-sigil" aria-hidden="true"></i><strong>'+
+      escape(nameOf(quarry))+'</strong><span>Hyper Rare'+(encounter.youngling ? ' youngling' : '')+'</span><b>'+condition+'</b></div>';
+  }
   function draw() {
     if (disposed) return;
     const focus = root.contains(document.activeElement) ? document.activeElement.dataset : {};
@@ -594,6 +688,7 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     const turnOrder = battle.order.slice(battle.cursor).map(id => battle.units[id]).filter(living);
     let hint = "Move on a lit hex, then choose an action.";
     if (mode === "capture") hint = "Tap a marked Critter to attempt capture at the displayed chance.";
+    if (mode?.id) hint = mode.description + " Choose a marked " + (mode.kind === "heal" ? "ally." : "opponent.");
     if (selectedSkill) hint = selectedSkill.description + " Tap a marked "+(selectedSkill.kind === "heal" ? "ally." : "opponent.");
     if (!interactive) hint = retreat ? "Confirm or cancel retreat." : "The wild tribe is taking its turn.";
     if (note) hint = note;
@@ -602,28 +697,33 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     const outcomeGlyph = {won:"victory", lost:"defeat", fled:"retreat"};
     const outcomeBody = end ? '<section class="cb-outcome" aria-live="polite"><div><span class="cb-outcome-seal">'+icon(outcomeGlyph[end.result])+'</span><h3>'+resultName[end.result]+'</h3>'+
       (end.xp ? '<p>'+icon("xp")+'+'+end.xp+' XP for each party member.</p>' : '')+
-      (end.captured.length ? '<p>'+icon("caught")+'Captured '+end.captured.map(m => escape(getForm(m).name)).join(", ")+'.</p>' : '')+
+      (end.coins ? '<p class="cb-coin-reward">+'+end.coins+' coins</p>' : '')+
+      (end.captured.length ? '<p>'+icon("caught")+'Captured '+end.captured.map(m => escape(getForm(m).name)+(SPECIES[m.speciesId].hyperRare ? ' (Hyper Rare)' : '')).join(", ")+'.</p>' : '')+
       (!end.xp && !end.captured.length ? '<p>Your party regroups on the trail.</p>' : '')+
       '<button type="button" data-act="return">Return to trail</button></div></section>' : "";
     const orders = turnOrder.map((u,index) => {
-      const title = (index === 0 ? "Acting now" : "Upcoming") + " · " + nameOf(u) + (u.team === "you" ? " · Ally" : " · Wild");
+      const title = (index === 0 ? "Acting now" : "Upcoming") + " · " + nameOf(u) + (u.team === "you" ? " · Ally" : " · Wild") + (u === quarry ? " · Hyper Rare" : "");
       return '<span class="cb-order-token cb-order-'+u.team+'" title="'+escape(title)+'" aria-label="'+escape(title)+'" role="img"><span aria-hidden="true">'+face(u)+'</span></span>';
     }).join("");
     const logLines = battle.log.slice(-12).reverse().map((line,i) => '<li>'+icon(battle.logIcons?.[battle.log.length-1-i] || "turn")+'<span>'+escape(line)+'</span></li>').join("");
     root.innerHTML = '<section class="cb-shell" aria-busy="false" aria-label="Tactical encounter"><header class="cb-heading"><div><small>'+
-      icon(encounter.kind || "tribe")+({tribe:"WILD TRIBE",warden:"WARDEN ARENA",legendary:"LEGENDARY ENCOUNTER"}[encounter.kind] || "ENCOUNTER")+
+      (quarry ? '<i class="cb-quarry-sigil" aria-hidden="true"></i> HYPER RARE HUNT' :
+        icon(encounter.kind === "arena" ? "warden" : encounter.kind || "tribe")+({tribe:"WILD TRIBE",arena:"ARENA TRIAL",warden:"WARDEN ARENA",legendary:"LEGENDARY ENCOUNTER"}[encounter.kind] || "ENCOUNTER"))+
       '</small><h2>'+escape(encounter.name || "Wild tribe")+'</h2></div><div class="cb-toolbar">'+soundControl()+
       '<button type="button" data-act="pace" aria-label="Animation speed '+playbackSpeed+' times" title="Change animation speed">'+icon("speed")+playbackSpeed+'×</button>'+
       '<button type="button" data-act="retreat" '+(end ? 'disabled' : '')+'>'+icon("retreat")+'Retreat</button></div></header>'+
       (retreat && !end ? '<div class="cb-retreat" role="group" aria-label="Confirm retreat"><span>Leave this encounter?</span><button data-act="flee">Leave</button><button data-act="stay">Stay</button></div>' : '')+
       '<div class="cb-layout"><div class="cb-main"><div class="cb-turnline"><span>Round <b>'+battle.round+'</b></span><span>'+icon("initiative")+'Turn order</span><div class="cb-order">'+orders+'</div></div>'+
-      '<div class="cb-arena" data-region="'+battle.region+'" style="--atlas-x:'+(battle.region%2*100)+'%;--atlas-y:'+(Math.floor(battle.region/2)*100/3)+'%">'+
-      '<div class="cb-board" role="group" aria-label="Tactical hex grid">'+cells+'</div>'+outcomeBody+'</div>'+
+      (battle.course ? '<p class="cb-venue-tactic">'+icon("warden")+escape(battle.course.tactic)+'</p>' : '')+quarryStrip()+
+      '<div class="cb-arena'+(battle.course ? ' cb-built-arena' : quarry ? ' cb-hunt-arena' : '')+'" data-region="'+battle.region+'" style="'+
+      (quarry ? '--hunt-panel:'+battle.lair.panel*25+'%;' : '')+'--venue:url(./assets/frontier-arena-'+battle.region+'.webp);--atlas-x:'+(battle.region%2*100)+'%;--atlas-y:'+(Math.floor(battle.region/2)*100/3)+'%">'+
+      '<div class="cb-board" role="group" aria-label="Tactical hex grid">'+cells+huntArrival()+'</div>'+outcomeBody+'</div>'+
       '<div class="cb-news"><p class="cb-latest" role="status">'+icon(battle.logIcons?.at(-1) || "flank")+escape(battle.log.at(-1) || "Two allies beside one opponent deal 20% more melee damage.")+'</p>'+
       '<button type="button" data-act="skipfx" hidden>'+icon("skip")+'Skip animation</button></div>'+keyMarkup()+'</div>'+
       '<aside class="cb-panel"><div class="cb-panel-title"><small>'+(end ? "ENCOUNTER COMPLETE" : isPlayer() ? "YOUR TURN" : "WILD TURN")+'</small><strong>'+escape(end ? resultName[end.result] : nameOf(actor))+'</strong></div>'+
       '<div class="cb-commands">'+commands(actor,interactive)+'</div><p class="cb-hint" aria-live="polite">'+escape(end ? "Encounter complete." : hint)+'</p>'+
       inspectPanel(inspectedKey ?? actor.key)+'<details class="cb-log"'+(logOpen ? ' open' : '')+'><summary>Battle log</summary><ol>'+logLines+'</ol></details></aside></div></section>';
+    opening = false;
     restoreFocus(focus);
   }
   function lockControls() {
@@ -659,7 +759,7 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     if (disposed) return;
     newTurn(); draw(); scheduleEnemy();
   }
-  function scheduleEnemy() {
+  function scheduleEnemy(delay = 330) {
     clearTimeout(timer);
     if (disposed || battle.result || isPlayer() || retreat || playback) return;
     timer = setTimeout(async () => {
@@ -672,7 +772,7 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
       }
       if (plan.i === null || !useAbility(battle,plan.i,plan.target)) guard(battle);
       void endAction();
-    }, 330 / playbackSpeed);
+    }, delay / playbackSpeed);
   }
   function finish() {
     if (disposed || !resolution || playback) return;
@@ -695,6 +795,15 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     } else if (mode === "capture") {
       if (attemptCapture(battle,u)) { void endAction(); return; }
       note = "Choose a wild Critter within three hexes.";
+    } else if (mode?.id) {
+      const item = getSupplies().find(item => item.id === mode.id);
+      if (useBattleSupply(battle,item,u,spendSupply)) { void endAction(); return; }
+      if (!item) {
+        mode = "move";
+        note = "This supply is no longer in your bag.";
+      } else {
+        note = "Choose " + (item.kind === "heal" ? "a wounded ally" : "a wild Critter") + " within three hexes.";
+      }
     } else if (typeof mode === "number") {
       if (useAbility(battle,mode,u)) { void endAction(); return; }
       note = actorHint(activeUnit(battle).abilities[mode]);
@@ -756,11 +865,17 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     }
     if (act === "move" || act === "capture") mode = act;
     else if (act?.startsWith("skill-")) mode = Number(act.slice(6));
+    else if (act?.startsWith("supply-")) {
+      const item = getSupplies().find(item => item.id === act.slice(7));
+      if (!item) { draw(); return; }
+      mode = item;
+      packOpen = true;
+    }
     else return;
     note = "";
     if (mode !== "move") {
       const actor = activeUnit(battle);
-      if (!battle.units.some(u => living(u) && previewAction(battle,mode,u.key))) note = typeof mode === "number" && actor.abilities[mode].kind === "heal" ?
+      if (!battle.units.some(u => living(u) && previewAction(battle,mode,u.key))) note = (typeof mode === "number" && actor.abilities[mode].kind === "heal") || mode?.kind === "heal" ?
         "No wounded allies in reach." : actor.moved ? "No target in reach. Guard to end the turn." : "No target in reach. Move closer first.";
     }
     draw();
@@ -768,6 +883,7 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
   function onToggle(event) {
     if (event.target.matches?.(".cb-log")) logOpen = event.target.open;
     if (event.target.matches?.(".cb-key")) keyOpen = event.target.open;
+    if (event.target.matches?.(".cb-pack")) packOpen = event.target.open;
   }
   function keys(event) {
     if (document.querySelector("dialog[open]") || disposed || playback) return;
@@ -791,6 +907,7 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
   root.addEventListener("click",click); root.addEventListener("keydown",keys);
   root.addEventListener("pointerover",hover); root.addEventListener("focusin",hover);
   root.addEventListener("toggle",onToggle,true);
-  draw(); scheduleEnemy();
+  draw();
+  scheduleEnemy(animateArrival ? 1150 : 330);
   return cleanup;
 }
