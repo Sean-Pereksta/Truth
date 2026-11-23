@@ -348,6 +348,7 @@
       setup();
       root.querySelector('[data-rr="queue-leave"]')?.focus();
       void pollQueue(token);
+      opts.preloadRaceGraphics?.();
     }
     async function pollQueue(token) {
       try {
@@ -711,6 +712,7 @@
       else if (support.transport === 'poll') subscribePoll();
       else subscribeEvents();
       clearInterval(telemetryTimer); telemetryTimer = setInterval(reportConnection, 3000);
+      opts.preloadRaceGraphics?.();
     }
     function destroy() {
       unmountDiscovery();
