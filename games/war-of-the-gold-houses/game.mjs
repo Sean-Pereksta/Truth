@@ -1,9 +1,11 @@
 import {
   HOUSES, PLANETS, REGIONS, BUILDINGS, SHIPS, COLORS, OPERATIONS, DOCTRINES,
-  STARTING_ARMIES, STARTING_RESOURCES, RESOURCE_KEYS, RESOURCE_LABELS, SKIRMISHES, WORLD_ECONOMIES, PLANET_GROUPS,
+  STARTING_ARMIES, GRAND_STARTING_ARMIES, GRAND_STARTING_HOLDINGS, GRAND_STARTING_BUILDINGS, HOUSE_HOMEWORLDS,
+  STARTING_RESOURCES, RESOURCE_KEYS, RESOURCE_LABELS,
+  SKIRMISHES, WORLD_ECONOMIES, PLANET_GROUPS,
 } from "./content.mjs";
 import { UNIT_TYPES, createSquad, createBattle, tickBattle, issueOrder, addReinforcements } from "./battle.mjs";
-import { fleetPower, transport, sail, fleetOrder, blockade, tickFleets } from "./fleets.mjs";
+import { fleetPower, quoteTransport, transport, sail, fleetOrder, blockade, tickFleets } from "./fleets.mjs";
 
 export { fleetPower };
 
@@ -18,6 +20,7 @@ const CAMPAIGN_DEFAULTS = { credits: 480, materials: 325, supplies: 235, influen
 const ADVANCED_UNITS = new Set(["raider", "obsidian", "razor", "commander", "engineer", "electronic", "medic", "transport", "tank"]);
 const ok = (message) => ({ ok: true, message });
 const fail = (message) => ({ ok: false, message });
+const blockedPurchase = (reason, cost = {}) => ({ eligible: false, reason, cost });
 const nextId = (state, prefix) => `${prefix}-${++state.serial}`;
 const population = (army) => army.squads.reduce((sum, squad) => sum + squad.soldiers, 0);
 const regionAt = (state, regionId) => state.planets[REGIONS[regionId]?.planetId]?.regions[regionId];
@@ -58,26 +61,33 @@ function newFleet(state, houseId, regionId, ships) {
   return fleet;
 }
 
-function addWorlds(state) {
+function addWorlds(state, { concentrated = false } = {}) {
   const added = new Set();
   for (const definition of Object.values(PLANETS)) {
     const { id, regionIds } = definition;
     if (!regionIds.length || state.planets[id] || (state.mode === "planetary" && id !== state.planetId)) continue;
     const regions = Object.fromEntries(regionIds.map((regionId) => {
       const region = REGIONS[regionId];
-      return [regionId, { id: regionId, owner: region.houseId ?? null, buildings: { ...region.buildings }, operations: {}, rally: null }];
+      const owner = concentrated ? GRAND_STARTING_HOLDINGS[regionId] : region.houseId;
+      const buildings = { ...region.buildings, ...(concentrated ? GRAND_STARTING_BUILDINGS[regionId] : {}) };
+      return [regionId, { id: regionId, owner: owner ?? null, buildings, operations: {}, rally: null }];
     }));
     state.planets[id] = { id, regions };
     added.add(id);
   }
-  for (const template of Object.values(STARTING_ARMIES)) {
+  for (const template of concentrated ? GRAND_STARTING_ARMIES : STARTING_ARMIES) {
     if (added.has(REGIONS[template.regionId].planetId) && !state.armies[template.id]) newArmy(state, template);
   }
   return added;
 }
 
-function giveStartingFleets(state, worlds) {
+function giveStartingFleets(state, worlds, concentrated = false) {
   for (const houseId of HOUSE_IDS) {
+    if (concentrated) {
+      const home = HOUSE_HOMEWORLDS[houseId];
+      newFleet(state, houseId, home.regionId, { transport: 2, corvette: 2, assault: 1 });
+      continue;
+    }
     const fleets = Object.values(state.fleets).filter((fleet) => fleet.houseId === houseId);
     const ports = Object.values(state.armies).filter((army) => army.houseId === houseId
       && worlds.has(army.planetId) && regionAt(state, army.regionId)?.buildings.spaceport);
@@ -94,11 +104,12 @@ function giveStartingFleets(state, worlds) {
 }
 
 export function createGame({
-  houseId = "augustus", mode = "grand", planetId = "mars", terrain, enemyHouseId, difficulty = "standard", seed = 2718,
+  houseId = "augustus", mode = "grand", planetId, terrain, enemyHouseId, difficulty = "standard", seed = 2718,
 } = {}) {
   houseId = HOUSES[houseId] ? houseId : HOUSE_IDS[0];
   mode = ["grand", "planetary", "skirmish"].includes(mode) ? mode : "grand";
-  planetId = PLANETS[planetId]?.regionIds?.length ? planetId : "mars";
+  const homePlanetId = HOUSE_HOMEWORLDS[houseId].planetId;
+  planetId = mode === "grand" ? homePlanetId : PLANETS[planetId]?.regionIds?.length ? planetId : "mars";
   const state = {
     version: SAVE_VERSION, houseId, mode, difficulty, seed: Number.isFinite(seed) ? seed : 2718,
     planetId, elapsed: 0, tick: 0, carry: 0, serial: 0, speed: 1,
@@ -123,7 +134,7 @@ export function createGame({
     startBattle(state, null, a, b, preset.terrain, preset.name);
     return state;
   }
-  const added = addWorlds(state);
+  const added = addWorlds(state, { concentrated: mode === "grand" });
   if (mode === "planetary" && !Object.values(state.armies).some((army) => army.houseId === houseId)) {
     const regions = Object.values(state.planets[planetId].regions);
     const base = regions.find((r) => r.owner === houseId) ?? regions.find((r) => !r.owner) ?? regions[0];
@@ -137,8 +148,8 @@ export function createGame({
     }
     newArmy(state, { houseId, regionId: base.id, squads: ["commander", "rifle", "rifle", "raider", "engineer", "medic"] });
   }
-  if (mode === "grand") giveStartingFleets(state, added);
-  notify(state, `${HOUSES[houseId].name} is ready to march.`);
+  if (mode === "grand") giveStartingFleets(state, added, true);
+  notify(state, mode === "grand" ? `${HOUSES[houseId].name} mustered on ${PLANETS[homePlanetId].name}.` : `${HOUSES[houseId].name} is ready to march.`);
   return state;
 }
 
@@ -342,6 +353,11 @@ function captureRegion(state, region, houseId) {
   region.owner = houseId;
   region.rally = null;
   region.operations = {};
+  state.projects = state.projects.filter((project) => {
+    if (project.regionId !== region.id || project.houseId === houseId) return true;
+    reportCanceledProject(state, project);
+    return false;
+  });
   if (houseId === state.houseId || old === state.houseId) notify(state, `${REGIONS[region.id].name} now answers to ${HOUSES[houseId].name}.`);
 }
 
@@ -422,65 +438,158 @@ function tickArmies(state) {
   }
 }
 
-function spend(state, houseId, cost, multiplier = 1) {
+function spend(state, houseId, cost) {
   const resources = state.resources[houseId];
-  const entries = Object.entries(cost).map(([key, value]) => [key, Math.ceil(value * multiplier)]);
+  const entries = Object.entries(cost);
   if (entries.some(([key, amount]) => resources[key] < amount)) return false;
   for (const [key, amount] of entries) resources[key] -= amount;
   return true;
 }
 
-function queueProject(state, houseId, { type, regionId, armyId, buildingId, unitType, shipType }) {
+const TREATY_COSTS = {
+  war: {}, betray: {}, truce: { influence: 13 }, ceasefire: { influence: 13 }, trade: { influence: 10 },
+  alliance: { influence: 30 }, access: { influence: 12 }, marriage: { influence: 22 },
+  vassal: { influence: 40 }, concession: { influence: 32, credits: 40 },
+};
+
+function treatyCost(houseId, deal) {
+  return quotedCost(TREATY_COSTS[deal], HOUSES[houseId].bonus.diplomacyCost);
+}
+
+function operationCost(houseId, colorId) {
+  return quotedCost(OPERATIONS[colorId]?.cost, colorId === "pink" ? HOUSES[houseId].bonus.intelCost : 1);
+}
+
+function quotedCost(cost = {}, multiplier = 1) {
+  return Object.fromEntries(Object.entries(cost).map(([key, amount]) => [key, Math.ceil(amount * multiplier)]));
+}
+
+function recruitmentAvailability(state, houseId, region) {
+  if (!region || region.owner !== houseId) return "Choose a territory you control.";
+  if (!region.buildings.barracks) return "Build a Barracks to recruit troops here.";
+  if (state.projects.filter((p) => p.regionId === region.id).length >= 5) return "This territory has five projects queued.";
+  if (Object.values(state.battles).some((battle) => battle.regionId === region.id && battle.winner === null)) {
+    return "Recruitment is paused while this territory is under attack.";
+  }
+  return "";
+}
+
+function recruitmentOption(state, houseId, region, id, blocked = "") {
+  const unit = UNIT_TYPES[id];
+  const specialist = ADVANCED_UNITS.has(id);
+  const cost = {
+    credits: Math.ceil(Math.ceil(17 + unit.maxSoldiers * 0.7 + unit.hp * 0.27) * (HOUSES[houseId].bonus.recruit?.[id] ?? 1)),
+    materials: ["tank", "transport"].includes(id) ? 28 : 3,
+    supplies: 6,
+  };
+  const duration = (specialist ? 6 : 4) / Math.sqrt(region?.buildings.barracks || 1);
+  let reason = blocked;
+  if (!reason && specialist && !region.buildings.workshop && !REGIONS[region.id].colors.includes(unit.color.toLowerCase())) {
+    reason = `Requires a Workshop or local ${unit.color} specialists.`;
+  }
+  if (!reason && Object.entries(cost).some(([key, amount]) => state.resources[houseId][key] < amount)) reason = "Insufficient resources.";
+  return { id, name: unit.name, cost, duration, eligible: !reason, reason };
+}
+
+const projectLane = (type) => type === "build" ? "construction" : type === "buildShip" ? "shipyard" : "barracks";
+
+function reportCanceledProject(state, project) {
+  if (project.houseId === state.houseId && projectLane(project.type) === "barracks") {
+    notify(state, `${REGIONS[project.regionId].name}: Training lost after enemy capture.`);
+  }
+}
+
+export function getRecruitmentOptions(state, regionId) {
+  const houseId = state.houseId;
+  const region = regionAt(state, regionId);
+  const reason = recruitmentAvailability(state, houseId, region);
+  const queuedSeconds = state.projects.filter((p) => p.regionId === regionId && projectLane(p.type) === "barracks")
+    .reduce((seconds, p) => seconds + p.remaining, 0);
+  return {
+    eligible: !reason, reason, queuedSeconds,
+    options: Object.keys(UNIT_TYPES).map((id) => recruitmentOption(state, houseId, region, id, reason)),
+  };
+}
+
+function availableAt(army, regionId, houseId) {
+  return army && army.houseId === houseId && army.regionId === regionId
+    && !army.destroyed && !army.garrison && !army.fleetId && !army.battleId && !army.transit && !army.orders.length;
+}
+
+function describeProject(state, houseId, { type, regionId, armyId, buildingId, unitType, shipType }) {
   const army = state.armies[armyId];
   const targetRegion = type === "recruit" || type === "replenish" ? army?.regionId : regionId;
   const region = regionAt(state, targetRegion);
-  if (!region || region.owner !== houseId) return fail("Choose a territory you control.");
-  if (army && (army.houseId !== houseId || army.transit || army.battleId || army.fleetId || army.destroyed)) return fail("The army must be stationary and available.");
-  if (state.projects.filter((p) => p.regionId === targetRegion).length >= 5) return fail("This territory has five projects queued.");
+  if (!region || region.owner !== houseId) return blockedPurchase("Choose a territory you control.");
+  if (army && (army.houseId !== houseId || army.transit || army.battleId || army.fleetId || army.destroyed)) return blockedPurchase("The army must be stationary and available.");
+  if (type === "recruitAt" && armyId && !availableAt(army, targetRegion, houseId)) return blockedPurchase("Select a stationary army in this territory or recruit to its reserves.");
+  const packedQueue = projectLane(type) !== "barracks" && state.projects.filter((p) => p.regionId === targetRegion).length >= 5;
   let item;
   let cost;
   let duration;
   if (type === "build") {
     item = buildingId;
     const building = BUILDINGS[item];
-    if (!building) return fail("Unknown building.");
+    if (!building) return blockedPurchase("Unknown building.");
     const level = (region.buildings[item] ?? 0) + state.projects.filter((p) => p.regionId === targetRegion && p.type === type && p.item === item).length;
-    if (level >= building.maxLevel) return fail(`${building.name} has reached its final tier.`);
-    if (state.mode !== "grand" && item === "spaceport") return fail("Shipyards operate in Grand Conquest.");
+    if (level >= building.maxLevel) return blockedPurchase(`${building.name} has reached its final tier.`);
+    if (state.mode !== "grand" && item === "spaceport") return blockedPurchase("Shipyards operate in Grand Conquest.", building.cost);
     cost = Object.fromEntries(Object.entries(building.cost).map(([k, v]) => [k, v * (level + 1)]));
     duration = (5 + level * 3) * (HOUSES[houseId].bonus.construction ?? 1);
     if (REGIONS[targetRegion].colors.includes("orange")) duration *= 0.72;
   } else if (type === "buildShip") {
     item = shipType;
-    if (!SHIPS[item] || !region.buildings.spaceport || state.mode !== "grand") return fail("A spaceport is required to build that ship.");
-    if (["battleship", "carrier"].includes(item) && region.buildings.spaceport < 2) return fail("This ship requires a tier 2 spaceport.");
-    cost = SHIPS[item].cost;
+    cost = SHIPS[item]?.cost;
+    if (!cost || !region.buildings.spaceport || state.mode !== "grand") return blockedPurchase("A spaceport is required to build that ship.", cost);
+    if (["battleship", "carrier"].includes(item) && region.buildings.spaceport < 2) return blockedPurchase("This ship requires a tier 2 spaceport.", cost);
     duration = 6 + SHIPS[item].power * 0.1;
     if (REGIONS[targetRegion].colors.includes("blue")) duration *= 0.78;
   } else if (type === "replenish") {
-    if (!army || !region.buildings.barracks) return fail("Move the army to a friendly barracks.");
+    const blocked = recruitmentAvailability(state, houseId, region);
+    if (blocked) return blockedPurchase(blocked);
     const missing = army.squads.reduce((total, s) => total + Math.max(0, UNIT_TYPES[s.type].maxSoldiers - s.soldiers), 0);
-    if (!missing && !army.squads.some((s) => s.wounds > 0)) return fail("This force is already at full strength.");
-    if (state.projects.some((p) => p.type === type && p.armyId === armyId)) return fail("Recovery is already queued.");
+    if (!missing && !army.squads.some((s) => s.wounds > 0)) return blockedPurchase("This force is already at full strength.");
+    if (state.projects.some((p) => p.type === type && p.armyId === armyId)) return blockedPurchase("Recovery is already queued.");
     item = "Squad recovery";
     cost = { credits: 10 + missing, supplies: 6 + Math.ceil(missing / 2) };
     duration = REGIONS[targetRegion].colors.includes("yellow") ? 4 : 8;
   } else {
     item = unitType;
-    const unit = UNIT_TYPES[item];
-    if (!unit || !region.buildings.barracks) return fail("A barracks is required to recruit this squad.");
-    if (type === "dispatch" && !region.rally) return fail("Set a rally point before dispatching squads.");
-    if (ADVANCED_UNITS.has(item) && !(region.buildings.workshop || REGIONS[targetRegion].colors.includes(String(unit.color).toLowerCase()))) {
-      return fail("This specialist requires a workshop or its matching Color population.");
+    if (!UNIT_TYPES[item]) return blockedPurchase("Choose a valid squad.");
+    const recruitment = recruitmentOption(state, houseId, region, item, recruitmentAvailability(state, houseId, region));
+    if (!recruitment.eligible) return blockedPurchase(recruitment.reason, recruitment.cost);
+    if (type === "dispatch" && !region.rally) return blockedPurchase("Set a rally point before dispatching squads.", recruitment.cost);
+    if (type === "recruit" && army.squads.length + state.projects.filter((p) => p.armyId === armyId).length >= ARMY_SQUAD_LIMIT) {
+      return blockedPurchase("An army holds up to 16 squads.", recruitment.cost);
     }
-    if ((army?.squads.length ?? 0) + state.projects.filter((p) => p.armyId === armyId && armyId).length >= 16) return fail("An army holds up to 16 squads.");
-    cost = { credits: Math.ceil(17 + unit.maxSoldiers * 0.7 + unit.hp * 0.27), supplies: 6, materials: ["tank", "transport"].includes(item) ? 28 : 3 };
-    const discount = HOUSES[houseId].bonus.recruit?.[item] ?? 1;
-    cost.credits *= discount;
-    duration = (ADVANCED_UNITS.has(item) ? 6 : 4) / Math.sqrt(region.buildings.barracks);
+    ({ cost, duration } = recruitment);
   }
+  if (packedQueue) return blockedPurchase("This territory has five projects queued.", cost);
+  const affordable = Object.entries(cost).every(([key, amount]) => state.resources[houseId][key] >= amount);
+  return { eligible: affordable, reason: affordable ? "" : "Insufficient resources for this project.", cost, duration, item, regionId: targetRegion };
+}
+
+export function getPurchaseQuote(state, action) {
+  if (action.type === "transport") {
+    const { cost, eligible, reason } = quoteTransport(state, state.houseId, action, fleetHelpers);
+    return { cost, eligible, reason };
+  }
+  if (action.type === "operation" || action.type === "diplomacy") {
+    const cost = action.type === "operation" ? operationCost(state.houseId, action.colorId) : treatyCost(state.houseId, action.deal);
+    const eligible = Object.entries(cost).every(([key, amount]) => state.resources[state.houseId][key] >= amount);
+    return { cost, eligible, reason: eligible ? "" : "Insufficient resources." };
+  }
+  if (!["build", "buildShip", "replenish", "recruit", "recruitAt", "dispatch"].includes(action.type)) {
+    return blockedPurchase("Choose an available purchase.");
+  }
+  return describeProject(state, state.houseId, action);
+}
+
+function queueProject(state, houseId, action) {
+  const { eligible, reason, cost, duration, item, regionId } = describeProject(state, houseId, action);
+  if (!eligible) return fail(reason);
   if (!spend(state, houseId, cost)) return fail("Insufficient resources for this project.");
-  state.projects.push({ id: nextId(state, "project"), houseId, regionId: targetRegion, armyId: armyId ?? null, type, item, duration, remaining: duration });
+  state.projects.push({ id: nextId(state, "project"), houseId, regionId, armyId: action.armyId ?? null, type: action.type, item, duration, remaining: duration });
   return ok(`${BUILDINGS[item]?.name ?? SHIPS[item]?.name ?? UNIT_TYPES[item]?.name ?? item} queued.`);
 }
 
@@ -503,17 +612,19 @@ function completeProject(state, p, region) {
       army.peakStrength = Math.max(army.peakStrength, population(army));
     } else {
       const squad = createSquad(p.item, nextId(state, "squad"));
-      if (!army || army.destroyed || army.regionId !== region.id || army.fleetId || army.transit || army.battleId || army.squads.length >= 16) {
-        if (p.type === "dispatch" && region.rally) {
-          army = Object.values(state.armies).find((a) => a.houseId === p.houseId && a.regionId === region.id
-            && !a.destroyed && !a.battleId && !a.fleetId && !a.transit && a.orders.at(-1) === region.rally && a.squads.length < 16);
-        } else {
-          army = Object.values(state.armies).find((a) => a.houseId === p.houseId && a.regionId === region.id
-            && !a.destroyed && !a.battleId && !a.fleetId && !a.transit && !a.orders.length && a.squads.length < 16);
-        }
+      const eligible = (candidate) => candidate.houseId === p.houseId && candidate.regionId === region.id
+        && !candidate.destroyed && !candidate.garrison && !candidate.battleId && !candidate.fleetId && !candidate.transit
+        && candidate.squads.length < ARMY_SQUAD_LIMIT;
+      if (!army || !eligible(army) || army.orders.length) {
+        const nearby = Object.values(state.armies).filter(eligible);
+        army = p.type === "dispatch" && region.rally
+          ? nearby.find((candidate) => candidate.orders.at(-1) === region.rally)
+          : nearby.filter((candidate) => !candidate.orders.length).sort((a, b) => population(b) - population(a))[0];
       }
       if (army) army.squads.push(squad);
-      else army = newArmy(state, { houseId: p.houseId, regionId: region.id, squads: [squad] });
+      else army = newArmy(state, {
+        houseId: p.houseId, regionId: region.id, squads: [squad], name: `${REGIONS[region.id].name} Reserves`,
+      });
       army.peakStrength = Math.max(army.peakStrength, population(army));
       if (p.type === "dispatch" && region.rally) queueMove(state, p.houseId, { armyId: army.id, regionId: region.rally });
     }
@@ -524,11 +635,16 @@ function completeProject(state, p, region) {
 function tickProjects(state) {
   const worked = new Set();
   const pending = [];
+  const contested = new Set(Object.values(state.battles).filter((battle) => battle.winner === null).map((battle) => battle.regionId));
   for (const p of state.projects) {
     const region = regionAt(state, p.regionId);
-    if (!region || region.owner !== p.houseId) continue;
-    const queue = `${p.regionId}:${p.type === "build" ? "construction" : p.type === "buildShip" ? "shipyard" : "barracks"}`;
-    if (worked.has(queue)) {
+    const lane = projectLane(p.type);
+    if (!region || region.owner !== p.houseId) {
+      reportCanceledProject(state, p);
+      continue;
+    }
+    const queue = `${p.regionId}:${lane}`;
+    if (worked.has(queue) || (lane === "barracks" && contested.has(p.regionId))) {
       pending.push(p);
       continue;
     }
@@ -665,26 +781,26 @@ function diplomacy(state, a, { houseId: b, deal, regionId }) {
     notify(state, `${HOUSES[a].name} declared war on ${HOUSES[b].name}.`);
     return ok("War declared.");
   }
+  const cost = treatyCost(a, deal);
   if (["truce", "ceasefire"].includes(deal)) {
     if (terms.stance !== "war") return fail("A ceasefire requires an ongoing war.");
-    if (!spend(state, a, { influence: 13 }, HOUSES[a].bonus.diplomacyCost)) return fail("Insufficient influence to sign a ceasefire.");
+    if (!spend(state, a, cost)) return fail("Insufficient influence to sign a ceasefire.");
     Object.assign(terms, { stance: "truce", truceUntil: state.elapsed + 75, trust: Math.max(35, terms.trust) });
   } else if (deal === "vassal") {
     if (terms.stance === "vassal" || strength(state, a) < Math.max(1, strength(state, b)) * 1.55) return fail("Submission requires a decisive military advantage over the rival.");
-    if (!spend(state, a, { influence: 40 }, HOUSES[a].bonus.diplomacyCost)) return fail("Insufficient influence for a submission treaty.");
+    if (!spend(state, a, cost)) return fail("Insufficient influence for a submission treaty.");
     Object.assign(terms, { stance: "vassal", liege: a, access: true, trade: true, trust: 85, truceUntil: 0 });
   } else if (deal === "concession") {
     const region = regionAt(state, regionId);
     if (!region || region.owner !== b || terms.stance === "war" || strength(state, a) < strength(state, b) * 1.25) return fail("Select a rival territory while at peace and establish a military advantage.");
     if (Object.values(state.armies).some((army) => !army.destroyed && army.regionId === regionId && army.houseId === b)) return fail("The rival has troops stationed in that territory.");
-    if (!spend(state, a, { influence: 32, credits: 40 }, HOUSES[a].bonus.diplomacyCost)) return fail("Insufficient resources for a territory concession.");
+    if (!spend(state, a, cost)) return fail("Insufficient resources for a territory concession.");
     captureRegion(state, region, a);
   } else {
     if (terms.stance === "war") return fail("Negotiate a ceasefire before proposing that agreement.");
-    const price = { trade: 10, alliance: 30, access: 12, marriage: 22 }[deal];
     if ((deal === "alliance" && ["alliance", "vassal"].includes(terms.stance)) || terms[deal] === true) return fail("That agreement is already in effect.");
     if (deal === "alliance" && terms.trust < 50) return fail("Build trust with other agreements before requesting an alliance.");
-    if (!spend(state, a, { influence: price }, HOUSES[a].bonus.diplomacyCost)) return fail("Insufficient influence for that agreement.");
+    if (!spend(state, a, cost)) return fail("Insufficient influence for that agreement.");
     if (deal === "alliance") Object.assign(terms, { stance: "alliance", truceUntil: 0, access: true });
     else terms[deal] = true;
     terms.trust = Math.min(100, terms.trust + (deal === "marriage" ? 22 : 12));
@@ -718,8 +834,7 @@ function operation(state, houseId, { regionId, colorId, targetId }) {
     && !a.destroyed && !a.battleId && !a.fleetId && !a.transit) : null;
   if (colorId === "violet" && !army) return fail("Station a friendly army here before refitting.");
   if (target.operations[colorId] > state.elapsed) return fail("This operation is already active.");
-  const cost = HOUSES[houseId].bonus.intelCost && colorId === "pink" ? HOUSES[houseId].bonus.intelCost : 1;
-  if (!spend(state, houseId, def.cost, cost)) return fail("Insufficient resources for this operation.");
+  if (!spend(state, houseId, operationCost(houseId, colorId))) return fail("Insufficient resources for this operation.");
   target.operations[colorId] = state.elapsed + (def.duration ?? 35);
   if (colorId === "pink") {
     terms.scoutedUntil = target.operations[colorId];
@@ -887,6 +1002,7 @@ export function command(state, action) {
       return ok("Doctrine updated.");
     }
     case "recruit":
+    case "recruitAt":
     case "train":
     case "replenish":
     case "dispatch":

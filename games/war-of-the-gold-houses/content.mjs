@@ -706,6 +706,90 @@ export const STARTING_ARMIES = [
     ['commander', 'heavy', 'raider', 'obsidian']),
 ];
 
+export const HOUSE_HOMEWORLDS = {
+  augustus: { planetId: 'mars', regionId: 'mars-arsia-port' },
+  bellona: { planetId: 'earth', regionId: 'earth-atlantic' },
+  grimmus: { planetId: 'jupiter', regionId: 'jupiter-red-eye' },
+  raa: { planetId: 'saturn', regionId: 'saturn-ringstead' },
+  'valii-rath': { planetId: 'venus', regionId: 'venus-aurelia' },
+};
+
+const grandClaims = {
+  augustus: [
+    'mars-arsia-port', 'mars-olympus', 'mars-tharsis', 'mars-valles', 'mars-sirenum', 'mars-argyre',
+    'luna-dawn-port', 'earth-andean',
+  ],
+  bellona: [
+    'earth-atlantic', 'earth-orion', 'earth-equator', 'earth-bosporus',
+    'luna-cassini-port', 'mars-elysium', 'jupiter-shearline', 'venus-maat',
+  ],
+  grimmus: [
+    'jupiter-red-eye', 'jupiter-stormwatch', 'jupiter-zephyr', 'jupiter-saffron',
+    'luna-black-glass', 'mars-hellas', 'io-ember-port', 'neptune-darkspot',
+  ],
+  raa: [
+    'saturn-ringstead', 'saturn-shepherd', 'saturn-glassward', 'saturn-hexagon',
+    'luna-coldwater', 'io-peles', 'titan-kraken', 'uranus-cryocrown',
+  ],
+  'valii-rath': [
+    'venus-aurelia', 'venus-ishtar', 'venus-aphrodite', 'venus-cloudharbor',
+    'luna-silk-docks', 'mars-isidis', 'saturn-gilt', 'luna-concord',
+  ],
+};
+
+export const GRAND_STARTING_HOLDINGS = {
+  ...Object.fromEntries(territories.map(({ id }) => [id, null])),
+  ...Object.fromEntries(Object.entries(grandClaims)
+    .flatMap(([houseId, regions]) => regions.map(regionId => [regionId, houseId]))),
+};
+
+export const GRAND_STARTING_BUILDINGS = {
+  'mars-arsia-port': { barracks: 2 },
+  'mars-olympus': { barracks: 1 },
+  'earth-atlantic': { barracks: 2 },
+  'earth-equator': { barracks: 1 },
+  'jupiter-red-eye': { barracks: 2 },
+  'jupiter-shearline': { fortress: 1 },
+  'saturn-ringstead': { barracks: 2 },
+  'saturn-glassward': { barracks: 1 },
+  'saturn-gilt': { fortress: 1 },
+  'venus-aurelia': { barracks: 2 },
+  'venus-maat': { fortress: 1 },
+};
+
+export const GRAND_STARTING_ARMIES = [
+  army('augustus-mars', 'Arsia Standard', 'augustus', 'mars-arsia-port',
+    ['commander', 'rifle', 'rifle', 'heavy', 'raider', 'medic']),
+  army('augustus-olympus', 'Olympus Watch', 'augustus', 'mars-olympus',
+    ['commander', 'rifle', 'marksman', 'medic'], commander('Cassia au Augustus', 74, 78, 62, 80, 94)),
+  army('augustus-tharsis', 'Tharsis Reserve', 'augustus', 'mars-tharsis',
+    ['rifle', 'raider', 'engineer', 'transport']),
+  army('bellona-earth', 'Atlantic Guard', 'bellona', 'earth-atlantic',
+    ['commander', 'rifle', 'rifle', 'heavy', 'marksman', 'medic']),
+  army('bellona-orion', 'Orion Regiment', 'bellona', 'earth-orion',
+    ['commander', 'rifle', 'heavy', 'engineer'], commander('Lucan au Bellona', 81, 76, 80, 88, 88)),
+  army('bellona-equator', 'Equatorial Line', 'bellona', 'earth-equator',
+    ['rifle', 'marksman', 'medic', 'transport']),
+  army('grimmus-jupiter', 'Red Eye Cohort', 'grimmus', 'jupiter-red-eye',
+    ['commander', 'rifle', 'obsidian', 'heavy', 'engineer', 'tank']),
+  army('grimmus-stormwatch', 'Stormwatch Guard', 'grimmus', 'jupiter-stormwatch',
+    ['commander', 'rifle', 'raider', 'heavy'], commander('Cyra au Grimmus', 76, 80, 91, 73, 84)),
+  army('grimmus-zephyr', 'Zephyr Landing Corps', 'grimmus', 'jupiter-zephyr',
+    ['rifle', 'raider', 'medic', 'transport']),
+  army('raa-saturn', 'Ringstead Guard', 'raa', 'saturn-ringstead',
+    ['commander', 'rifle', 'marksman', 'obsidian', 'heavy', 'medic']),
+  army('raa-shepherd', 'Shepherd Watch', 'raa', 'saturn-shepherd',
+    ['commander', 'rifle', 'marksman', 'engineer'], commander('Alaric au Raa', 78, 88, 46, 90, 93)),
+  army('raa-glassward', 'Glassward Reserve', 'raa', 'saturn-glassward',
+    ['rifle', 'raider', 'medic', 'transport']),
+  army('valii-rath-venus', 'Aurelia Watch', 'valii-rath', 'venus-aurelia',
+    ['commander', 'rifle', 'marksman', 'raider', 'electronic', 'medic']),
+  army('valii-rath-ishtar', 'Ishtar Veil', 'valii-rath', 'venus-ishtar',
+    ['commander', 'rifle', 'heavy', 'electronic'], commander('Tavia au Valii-Rath', 73, 91, 58, 74, 79)),
+  army('valii-rath-aphrodite', 'Aphrodite Reserve', 'valii-rath', 'venus-aphrodite',
+    ['rifle', 'marksman', 'raider', 'transport']),
+];
+
 export const SKIRMISHES = {
   basin: {
     id: 'basin', name: 'Dust Basin', terrain: 'desert',

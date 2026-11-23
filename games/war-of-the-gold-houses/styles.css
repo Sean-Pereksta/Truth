@@ -138,6 +138,31 @@ kbd { display: inline-block; color: var(--gold); border: 1px solid #685b47; back
 .row > :last-child { flex-shrink: 0 }
 .row > :only-child { flex: 1 1 auto }
 .row button, .row select, .roster button { font-size: .72rem }
+.purchase-item { display: grid; gap: .12rem; font-size: .72rem; line-height: 1.28 }
+.purchase-item strong { color: var(--text); font-weight: 650; overflow-wrap: anywhere }
+.purchase-item > span, .recruit-cost { color: var(--gold); font-size: .72rem; line-height: 1.35 }
+.purchase-item small, .recruit-unavailable { color: var(--danger); font-size: .68rem }
+.recruit-card {
+  margin: .5rem 0;
+  padding: .58rem;
+  border: 1px solid #a5814b;
+  background: linear-gradient(142deg, #2e2a22c9, #172433dd 46%, #161c27e8);
+  box-shadow: inset 0 0 0 2px #151923, inset 0 0 0 3px #9d754733;
+}
+.recruit-card:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px }
+.recruit-heading, .recruit-queue-heading { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: .16rem .45rem }
+.recruit-heading h3 { margin: 0; color: var(--gold) }
+.recruit-heading > span, .recruit-queue-heading > span { color: var(--dim); font-size: .68rem; font-variant-numeric: tabular-nums }
+.recruit-picker { display: grid; grid-template-columns: 3rem minmax(0, 1fr); align-items: start; gap: .5rem; margin: .47rem 0 }
+.recruit-picker select { width: 100%; font-size: .72rem }
+.recruit-picker p { margin-top: .2rem }
+.recruit-portrait { width: 3rem; height: 3rem; background: #142033; border: 1px solid #6d624f }
+.recruit-queue-heading { font-size: .72rem; margin-top: .48rem; padding-top: .38rem; border-top: 1px solid #7a674e }
+.recruit-queue { margin: .2rem 0 0; padding: 0; list-style: none }
+.recruit-queue li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .08rem .32rem; padding: .25rem 0; font-size: .68rem }
+.recruit-queue li + li { border-top: 1px solid #534e4a }
+.recruit-queue li > :last-child { color: var(--dim); font-variant-numeric: tabular-nums }
+.home-tag { display: inline-block; margin-top: .25rem; padding: .1rem .24rem; color: var(--gold); border: 1px solid #7f6546; background: #34281e; font-size: .62rem }
 .align-right { text-align: right }
 .stats { width: 100%; margin: .4rem 0 0; line-height: 1.45; display: grid; grid-template-columns: max-content 1fr; gap: .14rem .7rem; font-size: .73rem }
 .stats dt { color: var(--dim) }
@@ -218,6 +243,7 @@ kbd { display: inline-block; color: var(--gold); border: 1px solid #685b47; back
 .battle-card > .ui-icon { --icon-size: 1.5rem; position: absolute; left: .5rem; top: 50%; transform: translateY(-50%) }
 .battle-card > span:not(.ui-icon) { display: block; color: var(--dim); font-size: .67rem; line-height: 1.4 }
 .battle-card[aria-pressed="true"] > span:not(.ui-icon) { color: #32251b }
+.invasion-card { border-color: #a27d4b }
 .dispatch-panel ol { list-style: none; padding: .16rem .6rem; margin: 0; max-height: 9rem; overflow: auto }
 .dispatch-panel li { border-top: 1px solid var(--edge); padding: .35rem 0; line-height: 1.35; font-size: .71rem }
 .dispatch-panel li:first-child { border-top: 0 }
@@ -234,6 +260,8 @@ dialog::backdrop { background: #080c16df }
 .menu-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem }
 .menu-grid label { display: grid; grid-template-rows: max-content 1fr; gap: .23rem; min-width: 0; color: var(--dim); font-size: .75rem }
 .menu-grid select { width: 100%; font-size: .86rem }
+.menu-home { display: grid; align-content: start; gap: .2rem; padding-left: .52rem; border-left: 2px solid #9b754c; color: var(--dim); font-size: .75rem }
+.menu-home strong { color: var(--gold); font-size: .86rem }
 .menu-line { padding-top: .65rem }
 .save-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: .35rem; padding: .25rem 0 }
 .save-row > span { font-size: .75rem; color: var(--dim); overflow-wrap: anywhere }
