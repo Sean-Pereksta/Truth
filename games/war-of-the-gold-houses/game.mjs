@@ -1,6 +1,6 @@
 import {
   HOUSES, PLANETS, REGIONS, BUILDINGS, SHIPS, COLORS, OPERATIONS, DOCTRINES,
-  STARTING_ARMIES, STARTING_RESOURCES, RESOURCE_KEYS, SKIRMISHES,
+  STARTING_ARMIES, STARTING_RESOURCES, RESOURCE_KEYS, RESOURCE_LABELS, SKIRMISHES, WORLD_ECONOMIES, PLANET_GROUPS,
 } from "./content.mjs";
 import { UNIT_TYPES, createSquad, createBattle, tickBattle, issueOrder, addReinforcements } from "./battle.mjs";
 import { fleetPower, transport, sail, fleetOrder, blockade, tickFleets } from "./fleets.mjs";
@@ -8,8 +8,11 @@ import { fleetPower, transport, sail, fleetOrder, blockade, tickFleets } from ".
 export { fleetPower };
 
 const STEP = 0.1;
-const SAVE_VERSION = 1;
+const SAVE_VERSION = 2;
 const SAVE_SLOTS = ["auto", 1, 2, 3];
+const CONTROL_INTERVAL = 30;
+const CONTROL_TICKS = CONTROL_INTERVAL / STEP;
+const ARMY_SQUAD_LIMIT = 16;
 const HOUSE_IDS = Object.keys(HOUSES);
 const CAMPAIGN_DEFAULTS = { credits: 480, materials: 325, supplies: 235, influence: 150 };
 const ADVANCED_UNITS = new Set(["raider", "obsidian", "razor", "commander", "engineer", "electronic", "medic", "transport", "tank"]);
@@ -55,6 +58,41 @@ function newFleet(state, houseId, regionId, ships) {
   return fleet;
 }
 
+function addWorlds(state) {
+  const added = new Set();
+  for (const definition of Object.values(PLANETS)) {
+    const { id, regionIds } = definition;
+    if (!regionIds.length || state.planets[id] || (state.mode === "planetary" && id !== state.planetId)) continue;
+    const regions = Object.fromEntries(regionIds.map((regionId) => {
+      const region = REGIONS[regionId];
+      return [regionId, { id: regionId, owner: region.houseId ?? null, buildings: { ...region.buildings }, operations: {}, rally: null }];
+    }));
+    state.planets[id] = { id, regions };
+    added.add(id);
+  }
+  for (const template of Object.values(STARTING_ARMIES)) {
+    if (added.has(REGIONS[template.regionId].planetId) && !state.armies[template.id]) newArmy(state, template);
+  }
+  return added;
+}
+
+function giveStartingFleets(state, worlds) {
+  for (const houseId of HOUSE_IDS) {
+    const fleets = Object.values(state.fleets).filter((fleet) => fleet.houseId === houseId);
+    const ports = Object.values(state.armies).filter((army) => army.houseId === houseId
+      && worlds.has(army.planetId) && regionAt(state, army.regionId)?.buildings.spaceport);
+    const luna = ports.find((army) => army.planetId === "luna");
+    if (luna && !fleets.some((fleet) => fleet.planetId === "luna")) {
+      newFleet(state, houseId, luna.regionId, { transport: 2, corvette: 1, assault: 1 });
+    }
+    const expedition = ports.find((army) => army.planetId !== "luna"
+      && !["mars", "mercury", "io"].includes(army.planetId)) ?? (!fleets.length ? ports.find((army) => army !== luna) : null);
+    if (expedition && !fleets.some((fleet) => fleet.planetId === expedition.planetId)) {
+      newFleet(state, houseId, expedition.regionId, { transport: 1, corvette: 1, assault: 1 });
+    }
+  }
+}
+
 export function createGame({
   houseId = "augustus", mode = "grand", planetId = "mars", terrain, enemyHouseId, difficulty = "standard", seed = 2718,
 } = {}) {
@@ -85,20 +123,7 @@ export function createGame({
     startBattle(state, null, a, b, preset.terrain, preset.name);
     return state;
   }
-  for (const definition of Object.values(PLANETS)) {
-    if (!definition.regionIds?.length || (mode === "planetary" && definition.id !== planetId)) continue;
-    state.planets[definition.id] = { id: definition.id, regions: {} };
-    for (const id of definition.regionIds) {
-      const region = REGIONS[id];
-      state.planets[definition.id].regions[id] = {
-        id, owner: region.houseId ?? null, buildings: { ...region.buildings }, operations: {}, rally: null,
-      };
-    }
-  }
-  for (const template of Object.values(STARTING_ARMIES)) {
-    if (!regionAt(state, template.regionId)) continue;
-    newArmy(state, template);
-  }
+  const added = addWorlds(state);
   if (mode === "planetary" && !Object.values(state.armies).some((army) => army.houseId === houseId)) {
     const regions = Object.values(state.planets[planetId].regions);
     const base = regions.find((r) => r.owner === houseId) ?? regions.find((r) => !r.owner) ?? regions[0];
@@ -112,15 +137,45 @@ export function createGame({
     }
     newArmy(state, { houseId, regionId: base.id, squads: ["commander", "rifle", "rifle", "raider", "engineer", "medic"] });
   }
-  if (mode === "grand") {
-    for (const id of HOUSE_IDS) {
-      const portArmy = Object.values(state.armies).find((a) => a.houseId === id && a.planetId === "luna" && regionAt(state, a.regionId)?.buildings.spaceport)
-        ?? Object.values(state.armies).find((a) => a.houseId === id && regionAt(state, a.regionId)?.buildings.spaceport);
-      if (portArmy) newFleet(state, id, portArmy.regionId, { transport: 2, corvette: 1, assault: 1 });
-    }
-  }
+  if (mode === "grand") giveStartingFleets(state, added);
   notify(state, `${HOUSES[houseId].name} is ready to march.`);
   return state;
+}
+
+export function getPlanetControl(state, planetId) {
+  const regions = {};
+  const counts = {};
+  for (const region of Object.values(state.planets[planetId]?.regions ?? {})) {
+    regions[region.id] = region.owner;
+    if (region.owner) counts[region.owner] = (counts[region.owner] ?? 0) + 1;
+  }
+  const total = Object.keys(regions).length;
+  const disputed = Object.values(state.battles).some((battle) => battle.planetId === planetId && battle.winner === null);
+  const owner = total && !disputed ? Object.keys(counts).find((id) => counts[id] === total) ?? null : null;
+  return { owner, regions, total, counts };
+}
+
+export function getGroupControl(state, groupId) {
+  const memberIds = PLANET_GROUPS[groupId]?.worldIds ?? [];
+  const counts = {};
+  const worlds = Object.fromEntries(memberIds.map((planetId) => {
+    const { owner } = getPlanetControl(state, planetId);
+    if (owner) counts[owner] = (counts[owner] ?? 0) + 1;
+    return [planetId, owner];
+  }));
+  const total = memberIds.length;
+  const owner = total ? Object.keys(counts).find((id) => counts[id] === total) ?? null : null;
+  return { owner, total, counts, worlds };
+}
+
+export function getControlBonusStatus(state, houseId = state.houseId) {
+  const cycle = Math.floor(state.tick / CONTROL_TICKS);
+  return {
+    interval: CONTROL_INTERVAL, cycle,
+    secondsRemaining: ((cycle + 1) * CONTROL_TICKS - state.tick) * STEP,
+    worlds: Object.keys(state.planets).filter((id) => getPlanetControl(state, id).owner === houseId),
+    groups: Object.keys(PLANET_GROUPS).filter((id) => getGroupControl(state, id).owner === houseId),
+  };
 }
 
 function pathStep(origin, destination) {
@@ -488,16 +543,18 @@ function tickProjects(state) {
 function economy(state) {
   const income = Object.fromEntries(HOUSE_IDS.map((id) => [id, { credits: 0, materials: 0, supplies: 0, influence: 0 }]));
   for (const planet of Object.values(state.planets)) {
+    const rates = WORLD_ECONOMIES[planet.id].multipliers;
     for (const region of Object.values(planet.regions)) {
       if (!region.owner) continue;
       const colors = REGIONS[region.id].colors;
       const earnings = income[region.owner];
-      earnings.credits += 1.2 + (colors.includes("silver") ? 2 : 0) + (colors.includes("copper") ? 1 : 0);
-      earnings.materials += (region.buildings.mine ?? 0) * (colors.includes("red") ? 3 : 1.7);
-      earnings.supplies += colors.includes("brown") ? 3.5 : 1;
-      earnings.influence += colors.includes("white") ? 1.6 : 0.4;
-      if (region.operations.silver > state.elapsed) earnings.credits += 5;
-      if (region.operations.brown > state.elapsed) earnings.supplies += 3;
+      const trade = (colors.includes("silver") ? 2 : 0) + (colors.includes("copper") ? 1 : 0);
+      const contract = region.operations.silver > state.elapsed ? 5 : 0;
+      const cache = region.operations.brown > state.elapsed ? 3 : 0;
+      earnings.credits += (1.2 + trade + contract) * rates.credits;
+      earnings.materials += (region.buildings.mine ?? 0) * (colors.includes("red") ? 3 : 1.7) * rates.materials;
+      earnings.supplies += ((colors.includes("brown") ? 3.5 : 1) + cache) * rates.supplies;
+      earnings.influence += (colors.includes("white") ? 1.6 : 0.4) * rates.influence;
       for (const colorId of Object.keys(region.operations)) if (region.operations[colorId] <= state.elapsed) delete region.operations[colorId];
     }
   }
@@ -536,6 +593,59 @@ function economy(state) {
       for (const squad of army.squads) squad.wounds = Math.max(0, (squad.wounds ?? 0) - UNIT_TYPES[squad.type].hp * 0.05);
     }
   }
+}
+
+function musterControlSquads(state, houseId, worldId, squads) {
+  const regionId = WORLD_ECONOMIES[worldId].musterRegionId;
+  // A depleted or deployed army can never receive strategic reinforcements mid-battle or in orbit.
+  let army = Object.values(state.armies).find((candidate) => candidate.houseId === houseId
+    && candidate.regionId === regionId && !candidate.destroyed && !candidate.transit && !candidate.fleetId
+    && !candidate.battleId && !candidate.orders.length && candidate.squads.length < ARMY_SQUAD_LIMIT);
+  for (const [type, amount] of Object.entries(squads)) {
+    for (let i = 0; i < amount; i++) {
+      const squad = createSquad(type, nextId(state, "squad"));
+      if (!army || army.squads.length >= ARMY_SQUAD_LIMIT) {
+        army = newArmy(state, { houseId, regionId, squads: [squad], name: `${PLANETS[worldId].name} Reserves` });
+      } else {
+        army.squads.push(squad);
+        army.peakStrength = Math.max(army.peakStrength, population(army));
+      }
+    }
+  }
+}
+
+function payControlBonuses(state) {
+  const control = Object.fromEntries(Object.keys(state.planets).map((id) => [id, getPlanetControl(state, id).owner]));
+  const awards = [];
+  for (const [id, houseId] of Object.entries(control)) {
+    if (houseId) awards.push({ houseId, name: PLANETS[id].name, reward: WORLD_ECONOMIES[id].reward, musterWorldId: id });
+  }
+  for (const group of Object.values(PLANET_GROUPS)) {
+    const houseId = control[group.worldIds[0]];
+    if (houseId && group.worldIds.every((id) => control[id] === houseId)) {
+      awards.push({ houseId, name: group.name, reward: group.reward, musterWorldId: group.musterWorldId ?? group.worldIds[0] });
+    }
+  }
+  const claimed = [];
+  const resources = {};
+  const reinforcements = {};
+  for (const { houseId, name, reward, musterWorldId } of awards) {
+    const { resources: payment, squads } = reward;
+    for (const [key, amount] of Object.entries(payment)) {
+      state.resources[houseId][key] += amount;
+      if (houseId === state.houseId) resources[key] = (resources[key] ?? 0) + amount;
+    }
+    if (squads) musterControlSquads(state, houseId, musterWorldId, squads);
+    if (houseId !== state.houseId) continue;
+    claimed.push(name);
+    for (const [type, amount] of Object.entries(squads ?? {})) reinforcements[type] = (reinforcements[type] ?? 0) + amount;
+  }
+  if (!claimed.length) return;
+  const values = [
+    ...Object.entries(resources).map(([key, amount]) => `+${amount} ${RESOURCE_LABELS[key]}`),
+    ...Object.entries(reinforcements).map(([type, amount]) => `+${amount} ${UNIT_TYPES[type].name} squads`),
+  ];
+  notify(state, `Control cycle ${state.tick / CONTROL_TICKS} • ${claimed.join(", ")} awarded ${values.join(", ")}.`);
 }
 
 const strength = (state, houseId) => Object.values(state.armies).filter((a) => a.houseId === houseId && !a.destroyed)
@@ -637,6 +747,9 @@ function tickAI(state) {
   const houseId = rivals[state.aiTurn++ % rivals.length];
   const personality = HOUSES[houseId];
   const armies = Object.values(state.armies).filter((a) => a.houseId === houseId && !a.garrison && !a.destroyed && !a.transit && !a.battleId && !a.fleetId && !a.orders.length);
+  // Rotate through fronts so new expeditions have a chance to act while older armies are still active.
+  const front = armies.length ? Math.floor((state.aiTurn - 1) / rivals.length) % armies.length : 0;
+  const activeFronts = [...armies.slice(front), ...armies.slice(0, front)];
   const home = Object.values(state.planets).flatMap((p) => Object.values(p.regions)).filter((r) => r.owner === houseId);
   const buildAt = home.find((r) => !r.buildings.mine && !state.projects.some((p) => p.regionId === r.id && p.item === "mine"));
   if (buildAt && state.resources[houseId].materials > 100) queueProject(state, houseId, { type: "build", regionId: buildAt.id, buildingId: "mine" });
@@ -663,7 +776,7 @@ function tickAI(state) {
     }
   }
   let started = 0;
-  for (const army of armies) {
+  for (const army of activeFronts) {
     if (started >= (rapid ? 3 : 2)) break;
     const local = regionAt(state, army.regionId);
     const nearby = REGIONS[army.regionId].neighbors.map((id) => regionAt(state, id)).filter(Boolean);
@@ -683,9 +796,22 @@ function tickAI(state) {
     if (threatened && force > 35 && queueMove(state, houseId, { armyId: army.id, regionId: threatened.id }).ok) started++;
     else if (targets[0] && force >= (local?.owner === houseId ? 34 : 25) && queueMove(state, houseId, { armyId: army.id, regionId: targets[0].id }).ok) started++;
     else if (state.mode === "grand" && state.elapsed > 32 && local?.buildings.spaceport && force > 45) {
-      const enemyPort = Object.values(state.planets).filter((p) => p.id !== army.planetId).flatMap((p) => Object.values(p.regions))
-        .filter((r) => !r.owner || hostile(state, houseId, r.owner)).sort((a, b) => (a.buildings.fortress ?? 0) - (b.buildings.fortress ?? 0))[0];
-      if (enemyPort && transport(state, houseId, { armyId: army.id, planetId: REGIONS[enemyPort.id].planetId, regionId: enemyPort.id, landing: "rain" }, fleetHelpers).ok) started++;
+      const source = PLANETS[army.planetId];
+      const landingSites = Object.values(state.planets).filter((p) => p.id !== army.planetId).flatMap((p) => {
+        const world = PLANETS[p.id];
+        const regions = Object.values(p.regions);
+        const distance = Math.hypot(source.x - world.x, source.y - world.y);
+        const foothold = regions.some((r) => r.owner === houseId) ? 7 : 0;
+        return regions.filter((r) => !r.owner || hostile(state, houseId, r.owner)).map((r) => ({
+          region: r, planetId: p.id,
+          score: (r.buildings.spaceport ?? 0) * 5 - (r.buildings.fortress ?? 0) * 11 - distance * 19 + foothold,
+        }));
+      });
+      const destination = landingSites.sort((a, b) => b.score - a.score)[0];
+      if (destination && transport(state, houseId, {
+        armyId: army.id, planetId: destination.planetId, regionId: destination.region.id,
+        landing: !destination.region.owner && destination.region.buildings.spaceport ? "spaceport" : "rain",
+      }, fleetHelpers).ok) started++;
     }
   }
   if (state.mode === "grand" && state.elapsed > 45) {
@@ -726,6 +852,7 @@ export function advance(state, seconds) {
       if (battle.winner !== null) finishBattle(state, battle);
     }
     if (state.mode === "skirmish") continue;
+    if (state.tick % CONTROL_TICKS === 0) payControlBonuses(state);
     tickAI(state);
     if (state.tick % 10 === 0) checkVictory(state);
     if (state.tick % 100 === 0) {
@@ -816,14 +943,21 @@ function readSlot(storage, slot) {
   if (!SAVE_SLOTS.includes(slot) || !storage?.getItem) return null;
   try {
     const record = JSON.parse(storage.getItem(saveKey(slot)));
-    return record?.state?.version === SAVE_VERSION && HOUSES[record.state.houseId] && record.state.armies && record.state.battles ? record : null;
+    const state = record?.state;
+    return [1, SAVE_VERSION].includes(state?.version) && HOUSES[state.houseId] && state.armies && state.battles ? record : null;
   } catch {
     return null;
   }
 }
 
 export function loadGame(storage, slot = 1) {
-  return readSlot(storage, slot)?.state ?? null;
+  const state = readSlot(storage, slot)?.state;
+  if (!state) return null;
+  if (state.version === 1) {
+    if (state.mode === "grand") giveStartingFleets(state, addWorlds(state));
+    state.version = SAVE_VERSION;
+  }
+  return state;
 }
 
 export function getSaveSlots(storage) {
