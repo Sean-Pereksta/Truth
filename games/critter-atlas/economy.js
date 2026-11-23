@@ -20,7 +20,13 @@ const items = [
   ['sunwafer', 'Sunfruit wafer', 'food', 108, 47],
   ['nectar', 'Mosaic nectar', 'heal', 92, 44],
   ['cometpear', 'Candied comet pear', 'food', 128, 53],
-  ['starweave', 'Starweave ribbon', 'capture', .25, 49]
+  ['starweave', 'Starweave ribbon', 'capture', .25, 49],
+  ['milletbake', 'Honey millet bake', 'food', 150, 58, 2],
+  ['stormbraid', 'Stormbraid loop', 'capture', .27, 55, 9],
+  ['saltfig', 'Crystallized salt fig', 'food', 178, 64, 12],
+  ['brinesalve', 'Brinespring salve', 'heal', 125, 60, 3],
+  ['polarpear', 'Northlight pear', 'food', 210, 73, 16],
+  ['aurorasilk', 'Aurora silk', 'capture', .30, 65, 17]
 ];
 
 function description(kind, power) {
@@ -29,8 +35,8 @@ function description(kind, power) {
   return 'Add ' + Math.round(power * 100) + ' percentage points to one capture within 3 hexes.';
 }
 
-export const ITEMS = Object.freeze(Object.fromEntries(items.map(([id, name, kind, power, value], artIndex) =>
-  [id, Object.freeze({id, name, kind, power, value, artIndex, description:description(kind, power)})])));
+export const ITEMS = Object.freeze(Object.fromEntries(items.map(([id, name, kind, power, value, sourceArtIndex], index) =>
+  [id, Object.freeze({id, name, kind, power, value, artIndex:sourceArtIndex ?? index, description:description(kind, power)})])));
 
 // The two common travel supplies have local prices. The other two stocks and the
 // pair of species for sale belong to this region. Den and sanctuary families stay wild.
@@ -42,7 +48,10 @@ const towns = [
   ['High Pass Co-op', 'Summit caravans seek defenders for the high crossing.', 'defender', 'snowbalm','pinecake', [29,31], 10,20],
   ['Ember Kiln', 'The kiln crews need healers in the furnace district.', 'healer', 'cinderseal','hearthfig', [35,38], 14,17],
   ['Mosaic Bazaar', 'The court’s search parties hire keen ranged attackers.', 'ranged', 'nectar','sunwafer', [43,46], 11,16],
-  ['Comet Caravan', 'Star couriers hire fast strikers to cross the moving bridges.', 'striker', 'starweave','cometpear', [49,53], 13,21]
+  ['Comet Caravan', 'Star couriers hire fast strikers to cross the moving bridges.', 'striker', 'starweave','cometpear', [49,53], 13,21],
+  ['Kitewheel Exchange', 'Herdsmen hire defenders to patrol gaps in the windbreak.', 'defender', 'stormbraid','milletbake', [81,83], 12,19],
+  ['Whitepan Caravanserai', 'Caravan crews pay extra for healers who can tend salt burns.', 'healer', 'brinesalve','saltfig', [90,92], 14,20],
+  ['Beacon Sound Storehouse', 'Beacon keepers seek ranged Critters to defend the floe crossings.', 'ranged', 'aurorasilk','polarpear', [99,100], 15,22]
 ];
 export const MARKETS = towns.map(([name, demandNote, demand, specialty, food, speciesIds, tonic, thread], region) => ({
   region, name, demand, demandNote,
@@ -129,7 +138,7 @@ export function sellItem(state, region, id) {
   return success('Sold one ' + ITEMS[id].name + ' for ' + price + ' coins.');
 }
 
-const rarityValue = {Common:12, Uncommon:19, Scarce:30, Rare:47, Legendary:95, 'Hyper Rare':225};
+const rarityValue = {Common:12, Uncommon:19, Scarce:30, Rare:47, Legendary:95, 'Hyper Rare':228};
 function critterValue(member) {
   const species = SPECIES[member.speciesId];
   return rarityValue[species.rarity] + 3 * member.level + 6 * getForm(member).stage;

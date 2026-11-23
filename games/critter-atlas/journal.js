@@ -2,7 +2,8 @@ import {
   SPECIES, REGIONS, EVOLUTION_LEVELS, MAX_LEVEL, PARTY_LIMIT,
   getAbilities, getForm, makeMember, xpToNext
 } from './catalog.js';
-import { freshWorld, restoreWonderTrails } from './world.js';
+import { ensureWorld, freshWorld, restoreWonderTrails } from './world.js';
+import { hasSite } from './frontier-routes.js';
 import { freshEconomy, restoreEconomy } from './economy.js';
 
 const SAVE_KEY = 'catnmice.critter-atlas.expedition.v1';
@@ -38,9 +39,12 @@ function restoreWorld(data, region, unlocked) {
   fresh.wonders = restoreWonderTrails(data.wonders);
   fresh.unlocked = validRegion(data.unlocked) ? data.unlocked : (validRegion(unlocked) ? unlocked : 0);
   fresh.region = Math.min(fresh.unlocked, validRegion(data.region) ? data.region : (validRegion(region) ? region : 0));
-  if (typeof data.node === 'string' && /^[a-z]{1,20}$/.test(data.node)) fresh.node = data.node;
+  if (hasSite(fresh.region, data.node)) fresh.node = data.node;
   fresh.visits = nonnegative(data.visits);
-  const isSite = value => typeof value === 'string' && /^[0-7]\/[a-z]{1,20}$/.test(value);
+  const isSite = value => {
+    const match = typeof value === 'string' && /^(0|[1-9]\d*)\/([a-z]+)$/.exec(value);
+    return !!match && validRegion(Number(match[1])) && hasSite(Number(match[1]), match[2]);
+  };
   for (const key of ['cleared', 'clues', 'hunts']) {
     if (Array.isArray(data[key])) fresh[key] = [...new Set(data[key].filter(isSite))];
   }
@@ -51,25 +55,25 @@ function restoreWorld(data, region, unlocked) {
   }
   if (data.sightings && typeof data.sightings === 'object') {
     for (const [key, count] of Object.entries(data.sightings)) {
-      if (/^[0-7]$/.test(key)) fresh.sightings[key] = count === -1 ? -1 : nonnegative(count);
+      if (/^(0|[1-9]\d*)$/.test(key) && validRegion(Number(key))) {
+        fresh.sightings[key] = count === -1 ? -1 : nonnegative(count);
+      }
     }
   }
-  return fresh;
+  return ensureWorld(fresh);
 }
 
 export function newJournal(starterId = 0) {
   const lead = [0, 1, 2].includes(starterId) ? starterId : 0;
   const roster = [makeMember(lead, 3), makeMember((lead + 1) % 3, 3)];
   return {
-    version: VERSION, roster, party: roster.map(m => m.uid), seen: roster.map(m => m.speciesId),
+    version: VERSION, roster, party: roster.map(m => m.uid), seen: roster.map(m => m.speciesId), savedAt: 0,
     wins: REGIONS.map(() => 0), region: 0, unlocked: 0, world: freshWorld(), economy: freshEconomy()
   };
 }
 
-export function loadJournal(storage) {
+export function parseJournal(saved) {
   try {
-    const saved = (storage ?? globalThis.localStorage)?.getItem(SAVE_KEY);
-    if (!saved) return null;
     const data = JSON.parse(saved);
     if (data?.version !== VERSION || !Array.isArray(data.roster)) return null;
     const roster = [];
@@ -88,7 +92,7 @@ export function loadJournal(storage) {
     const seen = Array.isArray(data.seen) ? data.seen.filter(isSpecies) : [];
     const world = restoreWorld(data.world, data.region, data.unlocked);
     return {
-      version: VERSION, roster, party,
+      version: VERSION, roster, party, savedAt: Math.min(8.64e15, nonnegative(data.savedAt)),
       seen: [...new Set([...seen, ...roster.map(m => m.speciesId)])],
       wins: REGIONS.map((_, index) => nonnegative(data.wins?.[index])),
       region: world.region, unlocked: world.unlocked, world, economy: restoreEconomy(data.economy)
@@ -98,11 +102,25 @@ export function loadJournal(storage) {
   }
 }
 
+export function loadJournal(storage) {
+  try {
+    return parseJournal((storage ?? globalThis.localStorage)?.getItem(SAVE_KEY));
+  } catch {
+    return null;
+  }
+}
+
+export function serializeJournal(state, savedAt = Date.now()) {
+  return JSON.stringify({ ...state, savedAt });
+}
+
 export function saveJournal(state, storage) {
   try {
     const target = storage ?? globalThis.localStorage;
     if (!target) return false;
-    target.setItem(SAVE_KEY, JSON.stringify(state));
+    const savedAt = Date.now();
+    target.setItem(SAVE_KEY, serializeJournal(state, savedAt));
+    state.savedAt = savedAt;
     return true;
   } catch {
     return false;

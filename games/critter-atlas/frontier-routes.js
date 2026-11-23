@@ -1,3 +1,5 @@
+import { EXPANSION_REGIONS } from './expansion-regions.js';
+
 // The three sheets meet at pass/entry and highpass/farpost. Site IDs also appear
 // in expedition journals; keep the seven original IDs stable across releases.
 export const DISTRICTS = [
@@ -68,8 +70,9 @@ const LAND = [
       'Zenith Port','The Zenith Ring','The Last Star','Starlock Watch','Aster Crucible','Meteor Teeth'],
     signs:['A single constellation moves across the glass.','The mirror reflects a star hidden beneath your feet.'],
     travel:['Trade caravans tether their wagons to slabs of moonstone.','Floating causeways orbit a court suspended between meteors.','Bridges of fallen starlight connect the ring to the last observatory.']
-  }
+  }, ...EXPANSION_REGIONS.map(region => region.land)
 ];
+const EXPANSION_START = LAND.length - EXPANSION_REGIONS.length;
 export const WONDERS = {
   0: { name:'Moonveil Bower', point:[17,22], approach:'hollow', patrols:['rookery','den','sentinel'],
     clue:'A silver cocoon has split high in the canopy. Follow the glowing strands between the nesting grounds and the briar walls.' },
@@ -88,7 +91,7 @@ const TYPES = {
   farpost:'pass',warden:'warden',hollow:'hollow',sentinel:'guardian',vault:'vault',den:'guardian',wonder:'wonder'
 };
 export const siteType = site => TYPES[site];
-export const hasSite = (region, site) => SITE_IDS.includes(site) && (site !== 'wonder' || !!WONDERS[region]);
+export const hasSite = (region, site) => !!LAND[region] && SITE_IDS.includes(site) && (site !== 'wonder' || !!WONDERS[region]);
 export function sitesFor(region, district) {
   return (district === undefined ? SITE_IDS : DISTRICTS[district]).filter(site => hasSite(region,site));
 }
@@ -98,7 +101,8 @@ export const districtDescription = (region, district) => LAND[region].travel[dis
 export const siteName = (region, site) => site === 'wonder' ? WONDERS[region]?.name : LAND[region].names[SITE_IDS.indexOf(site)];
 export const signText = (region, site) => LAND[region].signs[site === 'ford' ? 0 : 1];
 export function point(region, site) {
-  const [x,y] = site === 'wonder' ? WONDERS[region].point : LOCATIONS[SITE_IDS.indexOf(site)];
+  const coordinates = EXPANSION_REGIONS[region - EXPANSION_START]?.points ?? LOCATIONS;
+  const [x,y] = site === 'wonder' ? WONDERS[region].point : coordinates[SITE_IDS.indexOf(site)];
   return {x,y};
 }
 export const keyFor = (region,site) => region+'/'+site;
@@ -121,7 +125,8 @@ const SHORTCUTS = [
   [['town','grove'],['outpost','pass'],['ridge','lookout'],['habitat','trial'],['warden','sentinel']],
   [['ford','grove'],['outpost','pass'],['lookout','trial'],['habitat','highpass'],['farpost','den']],
   [['town','grove'],['ford','pass'],['entry','trial'],['ridge','lookout'],['hollow','vault']],
-  [['camp','outpost'],['town','grove'],['lookout','trial'],['rookery','highpass'],['farpost','hollow']]
+  [['camp','outpost'],['town','grove'],['lookout','trial'],['rookery','highpass'],['farpost','hollow']],
+  ...EXPANSION_REGIONS.map(region => region.shortcuts)
 ];
 export function linksFor(region) {
   const links = [...LINKS,...SHORTCUTS[region]];

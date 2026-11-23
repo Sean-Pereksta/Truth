@@ -88,9 +88,10 @@ export function mountMarket(root, {state, region, sprite, onChange, onExit}) {
       <div class="mk-card-foot"><button class="mk-trade" data-market-action="sell-item" data-id="${item.id}">Sell one · ${itemOffer(region,item.id)} coins</button></div></article>`).join('')}</div>` : ''}`;
   }
   function draw() {
-    const x = region % 2 ? 100 : 0, y = Math.floor(region / 2) * 100 / 3;
-    root.innerHTML = `<section class="mk-market" aria-label="${store.name}" style="--mk-accent:${REGIONS[region].color}">
-      <header class="mk-scene" style="--mk-x:${x}%;--mk-y:${y}%"><div><small>${REGIONS[region].name}</small><h1>${store.name}</h1></div></header>
+    const area = REGIONS[region];
+    const x = area.artRegion % 2 ? 100 : 0, y = Math.floor(area.artRegion / 2) * 100 / 3;
+    root.innerHTML = `<section class="mk-market" aria-label="${store.name}" style="--mk-accent:${area.color}">
+      <header class="mk-scene" style="--mk-x:${x}%;--mk-y:${y}%;--mk-filter:${area.artFilter}"><div><small>${area.name}</small><h1>${store.name}</h1></div></header>
       <div class="mk-toolbar">${wallet(state.economy.coins)}<button class="link-action" type="button" data-market-action="leave">Return to town →</button></div>
       <div class="mk-tabs" role="group" aria-label="Market counters">${[['supplies','Buy supplies'],['critters','Buy Critters'],['sell','Sell']].map(([id,label]) =>
         `<button type="button" data-market-action="counter" data-id="${id}" aria-pressed="${tab === id}">${label}</button>`).join('')}</div>

@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { REGIONS, SPECIES, rollEncounter } from '../catalog.js';
+import { MAX_LEVEL, REGIONS, SPECIES, makeMember, rollEncounter } from '../catalog.js';
 import { freshWorld, ensureWorld, completeEncounter, encounterAt, wonderProgress, restoreWonderTrails } from '../world.js';
 import { DISTRICTS, SITE_IDS, linksFor, routeTo, unlockedSites, siteName, districtName, sitesFor, WONDERS } from '../frontier-routes.js';
+import { addCapture, newJournal, parseJournal } from '../journal.js';
 
 function walk(world, node) {
   const route = routeTo(world,node);
@@ -19,7 +20,7 @@ function win(world,node) {
   return encounter;
 }
 
-test('all eight regions have connected districts with distinct branches and enforce their regional gates', () => {
+test('all regions have connected districts with distinct branches and enforce their regional gates', () => {
   const layouts = new Set(), districtNames = new Set();
   for (const {id} of REGIONS) {
     const world = {...freshWorld(),region:id,unlocked:id};
@@ -54,7 +55,7 @@ test('all eight regions have connected districts with distinct branches and enfo
     assert.equal(world.unlocked,id);
     checkReachable();
     assert.equal(win(world,'warden').arenaId,'warden');
-    assert.equal(world.unlocked,Math.min(id+1,7));
+    assert.equal(world.unlocked,Math.min(id+1,REGIONS.length-1));
     assert.deepEqual(routeTo(world,'vault'),[]);
     checkReachable();
     win(world,'den'); checkReachable();
@@ -66,9 +67,9 @@ test('all eight regions have connected districts with distinct branches and enfo
     walk(world,'hollow'); checkReachable();
     assert.equal(unlockedSites(world).length,regionalSites.length);
   }
-  assert.equal(layouts.size,8);
-  assert.equal(districtNames.size,24);
-  assert.equal(REGIONS.reduce((total,{id})=>total+sitesFor(id).length,0),157);
+  assert.equal(layouts.size,REGIONS.length);
+  assert.equal(districtNames.size,REGIONS.length * DISTRICTS.length);
+  assert.equal(REGIONS.reduce((total,{id})=>total+sitesFor(id).length,0),214);
 });
 
 test('Five Hyper Rare hunts respect regional gates, local alternating patrols and a twelve-win limit', () => {
@@ -144,7 +145,7 @@ test('wonder trail migration rejects foreign regions, bad counters and invalid p
   });
 });
 
-test('each frontier family leads a real battle only inside its unlocked habitat', () => {
+test('frontier families lead real battles only inside their unlocked habitat', () => {
   const found = new Set();
   for (const {id} of REGIONS) {
     const world = {...freshWorld(),region:id,unlocked:id};
@@ -155,14 +156,14 @@ test('each frontier family leads a real battle only inside its unlocked habitat'
       const party = rollEncounter(id,{...encounter,legendary:encounter.kind==='legendary',rng:() => .5});
       assert.equal(party[0].speciesId,encounter.leadSpeciesId);
       const species = SPECIES[party[0].speciesId];
-      if (species.id >= 56) {
+      if (species.habitatId) {
         assert.equal(species.habitatId,site);
         assert.equal(species.region,id);
         found.add(species.id);
       }
     }
   }
-  assert.equal(found.size,20);
+  assert.equal(found.size,26);
 });
 
 test('legacy crests keep previously explored warden and legendary routes open', () => {
@@ -185,7 +186,29 @@ test('returning expeditions on newly gated routes start at their closest open di
   assert.equal(ensureWorld(oldSave('ridge',['0/grove'])).node,'ridge');
 });
 
-test('fixed venue levels rise through each region and culminate in a level-45 vault', () => {
+test('the Starfall crest opens expansion travel for older journals and new journeys persist', () => {
+  const journal = newJournal();
+  Object.assign(journal.world,{region:7,unlocked:7,node:'warden'});
+  journal.world.cleared = ['7/warden'];
+  const restored = parseJournal(JSON.stringify(journal));
+  assert.equal(restored.world.region,7);
+  assert.equal(restored.world.node,'warden');
+  assert.equal(restored.world.unlocked,8);
+  assert.equal(restored.unlocked,8);
+  assert.equal(unlockedSites(restored.world,9).length,0);
+
+  Object.assign(restored.world,{region:8,node:'camp'});
+  for (const site of ['grove','ridge','trial','warden']) win(restored.world,site);
+  Object.assign(restored.world,{region:9,node:'camp'});
+  walk(restored.world,'town');
+  const recruit = addCapture(restored,makeMember(92,49));
+  const reloaded = parseJournal(JSON.stringify(restored));
+  assert.deepEqual(reloaded.world,restored.world);
+  assert.equal(reloaded.region,9);
+  assert.deepEqual(reloaded.roster.find(member => member.uid === recruit.uid),recruit);
+});
+
+test('fixed venue levels rise through each region and culminate at the level cap', () => {
   const venues = ['trial', 'warden', 'den', 'sentinel', 'vault'];
   let previous = [];
   for (const {id} of REGIONS) {
@@ -197,11 +220,12 @@ test('fixed venue levels rise through each region and culminate in a level-45 va
     for (let i = 0; i < ranks.length; i++) {
       if (i) assert.ok(ranks[i] > ranks[i - 1], venues[i] + ' exceeds the previous gate');
       if (id) assert.ok(ranks[i] > previous[i], venues[i] + ' exceeds its previous regional rank');
-      assert.ok(ranks[i] <= 45);
+      assert.ok(ranks[i] <= MAX_LEVEL);
     }
     assert.equal(win(world, 'warden').level, ranks[1], 'rematches retain the same rank');
     if (id === 0) assert.deepEqual(ranks, [4, 5, 6, 7, 8]);
-    if (id === REGIONS.length - 1) assert.deepEqual(ranks, [35, 38, 41, 43, 45]);
+    if (id === 7) assert.deepEqual(ranks, [35, 38, 41, 43, 45]);
+    if (id === REGIONS.length - 1) assert.deepEqual(ranks, [51, 55, 57, 59, MAX_LEVEL]);
     previous = ranks;
   }
 });

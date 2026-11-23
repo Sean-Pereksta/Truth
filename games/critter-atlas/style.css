@@ -146,6 +146,13 @@ dialog::backdrop{background:rgb(5 17 14 / .78)}
 .ability-glyph { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 5px; background: #152a23; }
 .ability-glyph .fight-icon { width: 24px; height: 24px; }
 .ability-condition { display: inline-flex; gap: 4px; align-items: center; margin-top: 4px; font-size: .78rem; color: #e5d2a2; }
+.save-actions { display:flex; flex-wrap:wrap; gap:8px; }
+[data-load-confirm] { padding-top:8px; border-top:1px solid var(--edge); }
+.affinity-label { display:inline-flex; align-items:center; gap:3px; white-space:nowrap; }
+.affinity-chart { width:100%; border-collapse:collapse; text-align:left; font-size:.85rem; }
+.affinity-chart th,.affinity-chart td { padding:6px 4px; border-bottom:1px solid var(--edge); vertical-align:top; }
+.affinity-chart thead th { color:#e5d2a2; }
+.affinity-chart td .affinity-label { margin-right:5px; }
 
 .expedition-stats { margin-left:auto; display:flex; align-items:center; gap:12px; padding-right:8px; white-space:nowrap; }
 .expedition-stats .trail-progress { margin:0; }
@@ -174,4 +181,10 @@ dialog::backdrop{background:rgb(5 17 14 / .78)}
   .game-tab { padding-inline:8px; }
   .expedition-stats { padding-right:4px; }
   .coin-balance { font-size:.68rem; }
+}
+@media(max-width:365px) {
+  .masthead { gap:2px 8px; height:auto; min-height:56px; flex-wrap:wrap; padding-block:8px; }
+  .masthead nav { gap:7px; }
+  .top-link { white-space:nowrap; }
+  .lobby-link { padding-left:7px; }
 }

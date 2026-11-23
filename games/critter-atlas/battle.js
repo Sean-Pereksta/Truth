@@ -1,11 +1,13 @@
 import {
-  SPECIES, REGIONS, MAX_LEVEL, getForm, getStats, getAbilities, xpToNext, captureChance, rollEncounter, makeMember
+  SPECIES, REGIONS, MAX_LEVEL, AFFINITIES, BUFFS, affinityMultiplier,
+  getForm, getStats, getAbilities, xpToNext, captureChance, rollEncounter, makeMember
 } from "./catalog.js";
 
 import { playFightEffects, warmFightEffects } from "./fight-effects.js";
 import { arenaCourse, huntLair } from "./arena-courses.js";
 import { createFightSound } from "./fight-sound.js";
-import { FIGHT_ICONS, fightIcon, abilityIconKey, hazardIconKey } from "./fight-icons.js";
+import { FIGHT_ICONS, fightIcon, abilityIconKey, affinityIconKey, hazardIconKey } from "./fight-icons.js";
+import { EXPANSION_BIOMES } from "./expansion-regions.js";
 
 const COLS = 7;
 const ROWS = 5;
@@ -18,11 +20,13 @@ const BIOMES = [
   { cover: "Snowbank", hazard: "Black ice", effect: "slow", pattern: ["..c.#..", "...h...", "..#..c.", ".h..#..", "...c..."] },
   { cover: "Ash plume", hazard: "Lava vent", effect: "burn", pattern: ["..#....", "...hc..", "..h.h..", ".c.h...", "....#.."] },
   { cover: "Pillar shade", hazard: "Rune trap", effect: "exposed", pattern: ["..c.h..", "..#.#..", "...c...", "..#.#..", "..h.c.."] },
-  { cover: "Star mist", hazard: "Starfall", effect: "burn", pattern: ["...c...", "..h.#..", ".c.h.c.", "..#.h..", "...c..."] }
+  { cover: "Star mist", hazard: "Starfall", effect: "burn", pattern: ["...c...", "..h.#..", ".c.h.c.", "..#.h..", "...c..."] },
+  ...EXPANSION_BIOMES
 ];
 const GROUND = { c: "cover", h: "hazard", "#": "rock" };
 const STATUS = { slow: "Slowed", exposed: "Exposed", stun: "Stunned" };
 const STATUS_TIP = { slow: "Moves one fewer hex next turn.", exposed: "Takes 25% more damage until its next turn ends.", stun: "Misses its next turn." };
+const CONDITIONS = Object.keys(STATUS);
 const ROLE_NAME = { defender: "Defender", ranged: "Ranged attacker", striker: "Fast striker", healer: "Healer" };
 const keyOf = (x, y) => y * COLS + x;
 const xy = key => ({ x: key % COLS, y: Math.floor(key / COLS) });
@@ -77,7 +81,7 @@ function adjacent(key) {
 export function reachable(battle, unit = activeUnit(battle), parents) {
   const visited = new Map([[unit.key, 0]]);
   const queue = [unit.key];
-  const limit = Math.max(1, unit.stats.move - (unit.status.slow ? 1 : 0));
+  const limit = movementAllowance(unit);
   for (let i = 0; i < queue.length; i++) {
     const key = queue[i], steps = visited.get(key);
     if (steps >= limit || unit.moved) continue;
@@ -89,6 +93,10 @@ export function reachable(battle, unit = activeUnit(battle), parents) {
     }
   }
   return visited;
+}
+
+function movementAllowance(unit) {
+  return Math.max(1, unit.stats.move - (unit.status.slow ? 1 : 0) + (unit.status.haste ? BUFFS.haste.amount : 0));
 }
 
 function movementPath(battle, actor, destination) {
@@ -107,7 +115,7 @@ function buildUnit(member, team, slot, id) {
   return {
     id, member: {...member}, team, key: keyOf(team === "you" ? edge : COLS-1-edge, lane),
     stats, hp: stats.maxHp, abilities: getAbilities(member), status: {},
-    guarded: false, moved: false, caught: false, waitRound: 0, recovery: { heal: 0, stun: 0 }
+    guarded: false, moved: false, caught: false, waitRound: 0, recovery: { heal: 0, stun: 0, support: 0 }
   };
 }
 
@@ -188,8 +196,15 @@ function hazardAt(battle, unit, key) {
   return { name, effect, amount, hpAfter: Math.max(0, unit.hp - amount) };
 }
 
-function finishTile(battle, unit) {
+function finishTile(battle, unit, freshBuff) {
+  if (unit.status.regen && freshBuff !== "regen" && unit.hp < unit.stats.maxHp) {
+    const amount = Math.min(unit.stats.maxHp - unit.hp, Math.max(1, Math.round(unit.stats.maxHp * BUFFS.regen.amount)));
+    unit.hp += amount;
+    record(battle, "heal", unit, unit, { amount, hpAfter: unit.hp, buff: "regen" });
+    log(battle, nameOf(unit) + " regenerated " + amount + " HP.", "regen");
+  }
   for (const status of Object.keys(unit.status)) {
+    if (status === freshBuff) continue;
     if (--unit.status[status] <= 0) {
       delete unit.status[status];
       record(battle, "status", unit, unit, { effect: status, phase: "expire" });
@@ -256,8 +271,8 @@ export function waitTurn(battle) {
   return true;
 }
 
-function finishTurn(battle, actor) {
-  if (!checkOutcome(battle)) finishTile(battle, actor);
+function finishTurn(battle, actor, freshBuff) {
+  if (!checkOutcome(battle)) finishTile(battle, actor, freshBuff);
   if (!checkOutcome(battle)) nextTurn(battle);
 }
 
@@ -274,7 +289,7 @@ export function moveUnit(battle, key) {
 }
 
 function captureOdds(unit) {
-  return captureChance(unit.member, unit.hp / unit.stats.maxHp, Object.values(unit.status).some(Boolean));
+  return captureChance(unit.member, unit.hp / unit.stats.maxHp, CONDITIONS.some(effect => unit.status[effect]));
 }
 
 function flank(battle, actor, target, from) {
@@ -286,6 +301,19 @@ function flank(battle, actor, target, from) {
 function damageFor(battle, actor, target, skill, from, modifiers) {
   const distance = hexDistance(from, target.key);
   let amount = Math.max(3, actor.stats.attack * skill.power - target.stats.defense * 0.42);
+  const affinity = affinityMultiplier(skill.affinity, SPECIES[target.member.speciesId].affinity);
+  if (affinity !== 1) {
+    amount *= affinity;
+    modifiers?.push(affinity > 1 ? "effective" : "resisted");
+  }
+  if (actor.status.power) {
+    amount *= 1 + BUFFS.power.amount;
+    modifiers?.push("power");
+  }
+  if (target.status.ward) {
+    amount *= 1 - BUFFS.ward.amount;
+    modifiers?.push("ward");
+  }
   if (distance > 1 && battle.tiles[target.key] === "cover") {
     amount *= 0.72;
     modifiers?.push("cover");
@@ -309,6 +337,7 @@ function healingFor(actor, skill) {
 }
 function recoveryGroup(skill) {
   if (skill.kind === "heal") return "heal";
+  if (skill.kind === "support") return "support";
   return skill.status === "stun" ? "stun" : null;
 }
 function recovering(actor, skill) {
@@ -316,9 +345,22 @@ function recovering(actor, skill) {
 }
 function validTarget(actor, target, skill, from = actor.key) {
   if (recovering(actor, skill)) return false;
-  if (!target || !living(target) || hexDistance(from, target.key) > skill.range) return false;
+  if (!target || !living(target) || (target !== actor && hexDistance(from, target.key) > skill.range)) return false;
   if (skill.kind === "guard") return target === actor;
-  return skill.kind === "heal" ? target.team === actor.team && target.hp < target.stats.maxHp : target.team !== actor.team;
+  if (skill.kind === "support") return target.team === actor.team && Boolean(BUFFS[skill.buff]);
+  if (skill.kind === "heal") return target.team === actor.team && target.hp < target.stats.maxHp;
+  return target.team !== actor.team;
+}
+
+function supportTargets(battle, actor, target, skill, from) {
+  const position = unit => unit === actor ? from : unit.key;
+  return battle.units.filter(unit => {
+    if (unit.team !== actor.team || !living(unit)) return false;
+    if (unit !== target && (!skill.area || hexDistance(position(target), position(unit)) > skill.area)) return false;
+    if (skill.buff === "cleanse") return CONDITIONS.some(effect => unit.status[effect]);
+    if (skill.buff === "regen" && unit.hp === unit.stats.maxHp) return false;
+    return !unit.status[skill.buff];
+  });
 }
 
 function skillPreview(battle, actor, target, skill) {
@@ -329,11 +371,19 @@ function skillPreview(battle, actor, target, skill) {
     const amount = Math.min(healingFor(actor, skill), target.stats.maxHp - target.hp);
     return { type: "heal", ...move, amount, hpAfter: target.hp + amount };
   }
+  if (skill.kind === "support") {
+    const recipients = supportTargets(battle, actor, target, skill, actor.key).map(unit => ({
+      id: unit.id, key: unit.key, name: nameOf(unit),
+      removed: skill.buff === "cleanse" ? CONDITIONS.filter(effect => unit.status[effect]) : []
+    }));
+    const duration = skill.duration ?? BUFFS[skill.buff].duration;
+    return recipients.length ? { type: "support", ...move, buff: skill.buff, duration, recipients } : null;
+  }
   const modifiers = [];
   const amount = damageFor(battle, actor, target, skill, actor.key, modifiers);
   const hpAfter = Math.max(0, target.hp - amount);
   return { type: "attack", ...move, style: skill.range > 1 ? "ranged" : "melee",
-    amount, hpAfter, modifiers, effect: hpAfter ? skill.status : null };
+    amount, hpAfter, modifiers, affinity: skill.affinity, effect: hpAfter ? skill.status : null };
 }
 
 function capturePreview(actor, target) {
@@ -369,7 +419,7 @@ export function previewAction(battle, mode, key) {
 }
 
 export function useAbility(battle, index, target) {
-  if (battle.result) return false;
+  if (battle.result || !battle.units.includes(target)) return false;
   const actor = activeUnit(battle);
   const skill = actor.abilities[index];
   const preview = skillPreview(battle, actor, target, skill);
@@ -380,8 +430,18 @@ export function useAbility(battle, index, target) {
   if (skill.kind === "heal") {
     target.hp = preview.hpAfter;
     log(battle, nameOf(actor) + " used " + skill.name + " and restored " + preview.amount + " HP to " + nameOf(target) + ".", "heal");
+  } else if (skill.kind === "support") {
+    for (const recipient of preview.recipients) {
+      const unit = battle.units[recipient.id];
+      if (skill.buff === "cleanse") {
+        for (const effect of recipient.removed) delete unit.status[effect];
+      } else {
+        unit.status[skill.buff] = preview.duration;
+      }
+    }
+    log(battle, nameOf(actor) + " used " + skill.name + " on " + preview.recipients.map(recipient => recipient.name).join(", ") + ".", skill.buff);
   } else {
-    const bonus = preview.modifiers.length ? " (" + preview.modifiers.join(", ") + ")" : "";
+    const bonus = preview.modifiers.length ? " (" + preview.modifiers.map(key => FIGHT_ICONS[key].label.toLowerCase()).join(", ") + ")" : "";
     log(battle, nameOf(actor) + " used " + skill.name + " on " + nameOf(target) + " for " + preview.amount + bonus + ".", preview.style);
     wound(battle, target, preview.amount);
     if (preview.effect) {
@@ -394,7 +454,7 @@ export function useAbility(battle, index, target) {
     actor.recovery[recovery] = 2;
     record(battle, "recovery", actor, actor, { effect: recovery, phase: "apply" });
   }
-  finishTurn(battle, actor);
+  finishTurn(battle, actor, skill.buff);
   return true;
 }
 
@@ -442,13 +502,40 @@ export function useBattleSupply(battle, item, target, spend) {
   return true;
 }
 
-function enemyPlan(battle) {
+function supportValue(battle, actor, target, skill, from, opponents) {
+  const buff = BUFFS[skill.buff];
+  const duration = skill.duration ?? buff.duration;
+  const durationValue = buff.duration && skill.buff !== "regen" ? duration / buff.duration : 1;
+  return supportTargets(battle, actor, target, skill, from).reduce((total, unit) => {
+    const position = unit === actor ? from : unit.key;
+    const distance = Math.min(...opponents.map(opponent => hexDistance(position, opponent.key)));
+    const range = Math.max(...unit.abilities.filter(a => a.kind === "attack").map(a => a.range));
+    const attack = unit.stats.attack;
+    const threatened = opponents.some(opponent => hexDistance(position, opponent.key) <= opponent.stats.move + opponent.stats.range);
+    switch (skill.buff) {
+      case "power":
+        return total + (distance <= range + movementAllowance(unit) ? attack * buff.amount * (unit === actor ? 1.1 : 1.65) : 0);
+      case "ward":
+        return total + (threatened ? unit.stats.maxHp * buff.amount * (unit.hp < unit.stats.maxHp / 2 ? .65 : .38) : 0);
+      case "haste":
+        return total + (distance > range && distance <= range + movementAllowance(unit) + 2 ? attack * .5 : 0);
+      case "cleanse":
+        return total + attack * ((unit.status.stun ? 1 : 0) + (unit.status.exposed && threatened ? .35 : 0) + (unit.status.slow && distance > range ? .3 : 0));
+      case "regen":
+        return total + Math.min(unit.stats.maxHp - unit.hp, unit.stats.maxHp * buff.amount * duration) * (threatened ? .7 : 1);
+      default:
+        return total;
+    }
+  }, 0) * durationValue;
+}
+
+export function planEnemyTurn(battle) {
   const actor = activeUnit(battle), options = reachable(battle, actor);
-  const friends = battle.units.filter(u => u.team !== actor.team && living(u));
+  const opponents = battle.units.filter(u => u.team !== actor.team && living(u));
   const reach = Math.max(1, ...actor.abilities.filter(s => s.kind === "attack").map(s => s.range));
   let best = { score: -Infinity };
   for (const [key, steps] of options) {
-    const distance = Math.min(...friends.map(e => hexDistance(key, e.key)));
+    const distance = Math.min(...opponents.map(e => hexDistance(key, e.key)));
     const tile = battle.tiles[key];
     const ground = (tile === "cover" ? 1.6 : tile === "hazard" ? -6 : 0);
     // Ranged species seek firing distance. A tiny movement cost keeps equivalent choices stable.
@@ -463,10 +550,13 @@ function enemyPlan(battle) {
           const restored = Math.min(healingFor(actor,skill), target.stats.maxHp-target.hp);
           const urgency = target.hp / target.stats.maxHp < 0.4 ? 1.65 : 0.9;
           consider(position + restored * urgency, i, target);
+        } else if (skill.kind === "support") {
+          const value = supportValue(battle, actor, target, skill, key, opponents);
+          if (value > 0) consider(position + value, i, target);
         } else {
           const dmg = damageFor(battle,actor,target,skill,key);
           const finisher = target.hp <= dmg ? 14 : 0;
-          const status = skill.status && !target.status[skill.status] ? (skill.status === "stun" ? 7 : 3) : 0;
+          const status = !finisher && skill.status && !target.status[skill.status] ? (skill.status === "stun" ? 7 : 3) : 0;
           consider(position + Math.min(dmg,target.hp) + finisher + status, i, target);
         }
       });
@@ -499,14 +589,24 @@ function terrainInfo(battle, tile) {
 let playbackSpeed = 1;
 const icon = key => fightIcon(key, "");
 const effectsOn = unit => Object.keys(unit.status).filter(effect => unit.status[effect] > 0);
+const effectName = effect => STATUS[effect] ?? BUFFS[effect].name;
 const turns = count => count + (count === 1 ? " turn" : " turns");
 const hexes = count => count + (count === 1 ? " hex" : " hexes");
+const affinityName = affinity => AFFINITIES[affinity]?.name ?? "Neutral";
+
+function targetPrompt(skill) {
+  if (skill.kind === "heal" || skill.buff === "regen") return "a wounded ally";
+  if (skill.buff === "cleanse") return skill.area ? "an ally near a debuffed companion" : "an ally with a harmful condition";
+  if (skill.kind === "support") return skill.range ? "an ally" : "this Critter";
+  return "an opponent";
+}
 
 export function mountBattle(root, { encounter, party, sprite, onFinish, onResolved, getSupplies = () => [], spendSupply }) {
   const opponents = encounterOpponents(encounter);
   const battle = createBattle(encounter, party, opponents);
   const quarry = battle.lair ? battle.units.find(u => u.team === "wild" && SPECIES[u.member.speciesId].hyperRare) : null;
   const regionHazard = hazardIconKey(battle.region);
+  const area = REGIONS[battle.region], artRegion = area.artRegion ?? battle.region;
   warmFightEffects(battle.units);
   const sound = createFightSound();
   const face = unit => sprite(unit.member.speciesId, getForm(unit.member).stage);
@@ -526,7 +626,7 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
   function terrainIcon(tile) { return tile === "hazard" ? regionHazard : tile; }
   function activeEffects(unit, compact = false) {
     const effects = effectsOn(unit).map(effect => ({
-      key: effect, label: STATUS[effect] + " · " + turns(unit.status[effect]), tip: STATUS_TIP[effect]
+      key: effect, label: effectName(effect) + " · " + turns(unit.status[effect]), tip: STATUS_TIP[effect] ?? BUFFS[effect].tip
     }));
     if (unit.guarded) effects.push({key:"guard", label:"Guarding", tip:"Reduces damage until this Critter’s next turn."});
     if (!effects.length) return "";
@@ -538,7 +638,11 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     if (!prediction) return "";
     if (prediction.type === "capture") return capturePercent(prediction.chance) + "% capture";
     if (prediction.type === "heal") return "+" + prediction.amount + " HP";
-    if (prediction.type === "attack") return "−" + prediction.amount + " HP";
+    if (prediction.type === "attack") {
+      const matchup = prediction.modifiers.find(key => key === "effective" || key === "resisted");
+      return "−" + prediction.amount + " HP" + (matchup ? " · " + FIGHT_ICONS[matchup].label : "");
+    }
+    if (prediction.type === "support") return BUFFS[prediction.buff].name;
     if (prediction.type === "move") return hexes(prediction.path.length - 1);
     return "";
   }
@@ -551,13 +655,18 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
       const extras = [];
       if (prediction.type === "attack" || prediction.type === "heal") {
         extras.push(prediction.hpAfter + " / " + u.stats.maxHp + " HP after");
+        if (prediction.type === "attack") extras.push(icon(affinityIconKey(prediction.affinity)) + escape(affinityName(prediction.affinity)));
         for (const modifier of prediction.modifiers || []) extras.push(icon(modifier) + escape(FIGHT_ICONS[modifier].label));
         if (prediction.effect) extras.push(icon(prediction.effect) + escape(STATUS[prediction.effect] || prediction.effect));
+      } else if (prediction.type === "support") {
+        if (prediction.duration) extras.push(turns(prediction.duration));
+        extras.push(...prediction.recipients.map(({name, removed}) => escape(name) +
+          (removed.length ? " (clears " + escape(removed.map(effectName).join(", ")) + ")" : "")));
       } else if (prediction.type === "capture") {
         extras.push(capturePercent(captureChance(u.member, 1, false)) + "% at full HP");
         if (prediction.supplyName) extras.push(escape(prediction.supplyName) + " · " + capturePercent(prediction.baseChance) + "% without charm");
         if (u.hp < u.stats.maxHp) extras.push(icon("damage") + "Weakened");
-        if (effectsOn(u).length) extras.push(icon("status") + "Status bonus");
+        if (effectsOn(u).some(effect => CONDITIONS.includes(effect))) extras.push(icon("status") + "Harmful condition bonus");
       } else if (prediction.type === "move" && prediction.hazard) {
         extras.push(icon(regionHazard) + escape(prediction.hazard.name));
         if (prediction.hazard.amount) extras.push("−" + prediction.hazard.amount + " HP at turn end");
@@ -573,6 +682,7 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     return '<div class="cb-inspect"><div class="cb-ident"><span class="cb-portrait">'+face(u)+'</span><div><small>'+
       (isWild ? "WILD" : "ALLY")+(species.hyperRare ? " · HYPER RARE" : "")+' · LV '+u.member.level+'</small><strong>'+escape(nameOf(u))+'</strong><span>'+
       icon(species.role === "ranged" ? "archer" : species.role)+escape(ROLE_NAME[species.role])+'</span></div></div>'+
+      '<div class="cb-stat"><span>'+icon(affinityIconKey(species.affinity))+'Affinity</span><b>'+escape(affinityName(species.affinity))+'</b></div>'+
       '<div class="cb-stat"><span>'+icon("hp")+'Health</span><b>'+u.hp+' / '+u.stats.maxHp+'</b></div>'+
       '<div class="cb-meter"><i style="width:'+100*u.hp/u.stats.maxHp+'%"></i></div>'+
       (isWild ? '<div class="cb-stat cb-odds"><span>'+icon("capture")+'Free capture</span><b>'+capturePercent(captureOdds(u))+'%</b></div>' :
@@ -594,8 +704,9 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     if (moving) parts.push("cb-reach");
     if (targeting) parts.push("cb-target","cb-target-"+forecast.type);
     if (inspectedKey === key) parts.push("cb-selected");
-    const occupant = u ? [nameOf(u), u.team === "you" ? "Ally" : "Wild", ...(u === quarry ? ["Hyper Rare"] : []), u.hp+"/"+u.stats.maxHp+" HP",
-      ...effectsOn(u).map(effect => STATUS[effect]+" "+turns(u.status[effect])), ...(u.guarded ? ["Guarding"] : [])].join(" · ")+". " : "";
+    const occupant = u ? [nameOf(u), u.team === "you" ? "Ally" : "Wild", ...(u === quarry ? ["Hyper Rare"] : []),
+      affinityName(SPECIES[u.member.speciesId].affinity), u.hp+"/"+u.stats.maxHp+" HP",
+      ...effectsOn(u).map(effect => effectName(effect)+" "+turns(u.status[effect])), ...(u.guarded ? ["Guarding"] : [])].join(" · ")+". " : "";
     const title = cellName+". "+occupant+terrain+". "+hint;
     const ground = tile === "plain" ? "" : '<span class="cb-terrain-art" aria-hidden="true"></span><span class="cb-terrain-mark">'+icon(terrainIcon(tile))+'</span>';
     let content = '<span class="cb-floor"></span>'+ground+(moving ? '<span class="cb-step"></span>' : '');
@@ -605,26 +716,33 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
       if (u === quarry) content += '<i class="cb-quarry-sigil" aria-hidden="true"></i>';
       if (active) content += '<span class="cb-cursor">'+icon("turn")+'</span>';
       if (targeting) {
-        const amount = forecast.type === "capture" ? capturePercent(forecast.chance)+"%" : (forecast.type === "heal" ? "+" : "−")+forecast.amount;
-        content += '<b class="cb-amount cb-amount-'+forecast.type+'">'+amount+'</b>';
+        const matchup = forecast.modifiers?.find(key => key === "effective" || key === "resisted");
+        let amount = "";
+        if (forecast.type === "capture") amount = capturePercent(forecast.chance)+"%";
+        if (forecast.type === "heal") amount = "+"+forecast.amount;
+        if (forecast.type === "attack") amount = (matchup ? icon(matchup) : "")+"−"+forecast.amount;
+        if (forecast.type === "support") amount = icon(forecast.buff)+(forecast.recipients.length > 1 ? forecast.recipients.length : "");
+        if (amount) content += '<b class="cb-amount cb-amount-'+forecast.type+(matchup ? ' cb-amount-'+matchup : '')+'">'+amount+'</b>';
       }
     }
     return '<button type="button" data-cell="'+key+'" '+(u ? 'data-unit-id="'+u.id+'" ' : '')+'class="'+parts.join(" ")+'" tabindex="'+
       (key === focusKey ? 0 : -1)+'" style="--x:'+((x+(y%2)*.5)/7.5*100)+'%;--y:'+(y*18.75)+'%" title="'+escape(title)+'" aria-label="'+escape(title)+'">'+content+'</button>';
   }
-  function command(action, glyph, label, caption, selected, disabled, tip, effect = null) {
+  function command(action, glyph, label, caption, selected, disabled, tip, markers = []) {
     const pressed = ["guard", "wait"].includes(action) ? "" : ' aria-pressed="'+Boolean(selected)+'"';
     return '<button type="button" data-act="'+escape(action)+'" class="cb-command'+(selected ? ' chosen' : '')+'"'+pressed+
       (disabled ? ' disabled' : '')+(tip ? ' title="'+escape(tip)+'"' : '')+'><span class="cb-command-art">'+icon(glyph)+'</span>'+
-      '<span class="cb-command-text"><b>'+escape(label)+'</b><small>'+escape(caption)+(effect ? ' '+icon(effect) : '')+'</small></span></button>';
+    '<span class="cb-command-text"><b>'+escape(label)+'</b><small>'+escape(caption)+markers.map(effect => ' '+fightIcon(effect)).join('')+'</small></span></button>';
   }
   function commands(actor, interactive) {
     if (!actor || battle.result) return "";
     const skills = actor.abilities.flatMap((a,i) => {
       if (a.kind === "guard") return [];
       const resting = recovering(actor,a);
+      const caption = a.range ? hexes(a.range) : "Self";
+      const markers = a.kind === "attack" ? [affinityIconKey(a.affinity), a.status].filter(Boolean) : a.buff ? [a.buff] : [];
       return command('skill-'+i,resting ? "cooldown" : abilityIconKey(a,SPECIES[actor.member.speciesId]),a.name,
-        resting ? "Rest · 1 turn" : hexes(a.range),mode === i,!interactive || resting,a.description,a.status);
+        resting ? "Rest · 1 turn" : caption,mode === i,!interactive || resting,a.description,markers);
     });
     const supplies = getSupplies();
     const pack = supplies.length ? '<details class="cb-pack"'+(packOpen ? ' open' : '')+'><summary>Battle bag · '+
@@ -634,7 +752,7 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
         mode?.id === item.id,!interactive,item.description)
     ).join("")+'</div></details>' : "";
     return [
-      command("move","move","Move",actor.moved ? "Already moved" : hexes(Math.max(1,actor.stats.move-(actor.status.slow ? 1 : 0))),
+      command("move","move","Move",actor.moved ? "Already moved" : hexes(movementAllowance(actor)),
         mode === "move",!interactive || actor.moved,"Move along a lit path before acting."),
       ...skills,
       command("capture","capture","Capture","3 hexes",mode === "capture",!interactive,"Select a marked wild Critter to attempt capture."),
@@ -649,7 +767,7 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
   }
   const arenaKeys = battle.units.flatMap(u => u.abilities.map(a => abilityIconKey(a, SPECIES[u.member.speciesId])));
   const glossary = legendList(["move","wait","melee","ranged","heal","guard","capture","caught","escaped","faint","flank","cover","rock",regionHazard,
-    battle.biome.effect,"slow","stun","exposed","clear","cooldown","skip",...arenaKeys]);
+    battle.biome.effect,"slow","stun","exposed","effective","resisted","neutral",...Object.keys(BUFFS),"clear","cooldown","skip",...arenaKeys]);
   function keyMarkup() {
     return '<details class="cb-key"'+(keyOpen ? ' open' : '')+'><summary><b>Effect key</b><span>'+
       icon("cover")+'Cover</span><span>'+icon(regionHazard)+escape(battle.biome.hazard)+'</span><span>'+icon("rock")+'Blocked</span></summary><div class="cb-glossary">'+glossary+'</div></details>';
@@ -689,7 +807,7 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     let hint = "Move on a lit hex, then choose an action.";
     if (mode === "capture") hint = "Tap a marked Critter to attempt capture at the displayed chance.";
     if (mode?.id) hint = mode.description + " Choose a marked " + (mode.kind === "heal" ? "ally." : "opponent.");
-    if (selectedSkill) hint = selectedSkill.description + " Tap a marked "+(selectedSkill.kind === "heal" ? "ally." : "opponent.");
+    if (selectedSkill) hint = selectedSkill.description + " Choose " + targetPrompt(selectedSkill) + ".";
     if (!interactive) hint = retreat ? "Confirm or cancel retreat." : "The wild tribe is taking its turn.";
     if (note) hint = note;
     const end = resolution;
@@ -715,8 +833,8 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
       (retreat && !end ? '<div class="cb-retreat" role="group" aria-label="Confirm retreat"><span>Leave this encounter?</span><button data-act="flee">Leave</button><button data-act="stay">Stay</button></div>' : '')+
       '<div class="cb-layout"><div class="cb-main"><div class="cb-turnline"><span>Round <b>'+battle.round+'</b></span><span>'+icon("initiative")+'Turn order</span><div class="cb-order">'+orders+'</div></div>'+
       (battle.course ? '<p class="cb-venue-tactic">'+icon("warden")+escape(battle.course.tactic)+'</p>' : '')+quarryStrip()+
-      '<div class="cb-arena'+(battle.course ? ' cb-built-arena' : quarry ? ' cb-hunt-arena' : '')+'" data-region="'+battle.region+'" style="'+
-      (quarry ? '--hunt-panel:'+battle.lair.panel*25+'%;' : '')+'--venue:url(./assets/frontier-arena-'+battle.region+'.webp);--atlas-x:'+(battle.region%2*100)+'%;--atlas-y:'+(Math.floor(battle.region/2)*100/3)+'%">'+
+      '<div class="cb-arena'+(battle.course ? ' cb-built-arena' : quarry ? ' cb-hunt-arena' : '')+'" data-region="'+battle.region+'" data-art-region="'+artRegion+'" style="'+
+      (quarry ? '--hunt-panel:'+battle.lair.panel*25+'%;' : '')+'--arena-filter:'+(area.artFilter ?? 'none')+';--venue:url(./assets/frontier-arena-'+artRegion+'.webp);--atlas-x:'+(artRegion%2*100)+'%;--atlas-y:'+(Math.floor(artRegion/2)*100/3)+'%">'+
       '<div class="cb-board" role="group" aria-label="Tactical hex grid">'+cells+huntArrival()+'</div>'+outcomeBody+'</div>'+
       '<div class="cb-news"><p class="cb-latest" role="status">'+icon(battle.logIcons?.at(-1) || "flank")+escape(battle.log.at(-1) || "Two allies beside one opponent deal 20% more melee damage.")+'</p>'+
       '<button type="button" data-act="skipfx" hidden>'+icon("skip")+'Skip animation</button></div>'+keyMarkup()+'</div>'+
@@ -764,7 +882,7 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     if (disposed || battle.result || isPlayer() || retreat || playback) return;
     timer = setTimeout(async () => {
       if (disposed || retreat || playback) return;
-      const plan = enemyPlan(battle);
+      const plan = planEnemyTurn(battle);
       if (moveUnit(battle,plan.key)) {
         await playChanges();
         if (disposed) return;
@@ -811,7 +929,7 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     draw();
   }
   function actorHint(skill) {
-    return "Choose "+(skill.kind === "heal" ? "a wounded ally" : "an opponent")+" within "+hexes(skill.range)+".";
+    return "Choose "+targetPrompt(skill)+(skill.range ? " within "+hexes(skill.range) : "")+".";
   }
   function hover(event) {
     const cell = event.target.closest?.("[data-cell]");
@@ -875,8 +993,12 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     note = "";
     if (mode !== "move") {
       const actor = activeUnit(battle);
-      if (!battle.units.some(u => living(u) && previewAction(battle,mode,u.key))) note = (typeof mode === "number" && actor.abilities[mode].kind === "heal") || mode?.kind === "heal" ?
-        "No wounded allies in reach." : actor.moved ? "No target in reach. Guard to end the turn." : "No target in reach. Move closer first.";
+      if (!battle.units.some(u => living(u) && previewAction(battle,mode,u.key))) {
+        const ability = typeof mode === "number" ? actor.abilities[mode] : mode;
+        if (ability?.kind === "heal") note = "No wounded allies in reach.";
+        else if (ability?.kind === "support") note = "No allies in reach can benefit from " + ability.name + ".";
+        else note = actor.moved ? "No target in reach. Guard to end the turn." : "No target in reach. Move closer first.";
+      }
     }
     draw();
   }

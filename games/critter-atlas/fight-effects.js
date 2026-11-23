@@ -1,6 +1,6 @@
-import { SPECIES, getForm } from './catalog.js';
+import { REGIONS, SPECIES, getForm } from './catalog.js';
 import { spriteAtlas } from './art.js';
-import { fightIcon, abilityIconKey, hazardIconKey } from './fight-icons.js';
+import { FIGHT_ICONS, fightIcon, abilityIconKey, hazardIconKey } from './fight-icons.js';
 
 // Draw effects on a low-resolution plane. The creature actors themselves keep their
 // original painted sprites and are positioned in percentages for responsive boards.
@@ -17,6 +17,8 @@ const MINT = ['#368e76','#8deab4','#edffbc'];
 const ROSE = ['#954653','#ff987f','#ffe6b4'];
 const VIOLET = ['#78518e','#dda4ff','#fff6dd'];
 const BLUE = ['#4e82aa','#9bdcfe','#f1fffc'];
+const SUPPORT_TONES = { power: GOLD, ward: BLUE, haste: ROSE, cleanse: VIOLET, regen: MINT };
+const artRegion = region => REGIONS[region]?.artRegion ?? region;
 const atlases = new Map();
 const poseAtlases = new Map();
 function warmPose(speciesId) {
@@ -257,15 +259,16 @@ function drawMotion(ctx,motion,src,p,t,tone,dir,apex) {
 function badgeInfo(e) {
   switch(e.type) {
     case 'move': return [];
-    case 'attack': return [['damage','−'+e.amount],...e.modifiers.map(m=>[m,({guard:'Guard',cover:'Cover',exposed:'Exposed',flank:'Flank'})[m]])];
-    case 'heal': return [['heal','+'+e.amount]];
+    case 'attack': return [['damage','−'+e.amount],...e.modifiers.map(m=>[m,FIGHT_ICONS[m].label])];
+    case 'heal': return [[e.buff ?? 'heal','+'+e.amount]];
+    case 'support': return [[e.buff,FIGHT_ICONS[e.buff].label + (e.recipients.length > 1 ? ' ×' + e.recipients.length : '')]];
     case 'guard': return [['guard','Guard']];
     case 'wait': return [['wait','Wait']];
     case 'capture': return [[e.success?'caught':'escaped',e.success?'Caught!':'Escaped']];
     case 'faint': return [['faint','Fainted']];
     case 'hazard': return [[hazardIconKey(e.region),e.name + (e.amount?' −'+e.amount:'')]];
     case 'status': {
-      const name={guard:'Guard',stun:'Stun',slow:'Slow',exposed:'Exposed'}[e.effect] ?? e.effect;
+      const name=FIGHT_ICONS[e.effect]?.label ?? e.effect;
       return [[e.effect,e.phase==='expire'?name+' ended':e.phase==='skip'?'Turn skipped':name]];
     }
     case 'recovery': return [['cooldown',e.phase==='expire'?'Ability ready':'Cooling down']];
@@ -369,27 +372,28 @@ function createScene(board, battle, sprite) {
   };
 }
 
-const DURATIONS={attack:530,heal:540,capture:770,guard:310,wait:260,faint:400,hazard:360,status:235,recovery:185,outcome:330};
+const DURATIONS={attack:530,heal:540,support:510,capture:770,guard:310,wait:260,faint:400,hazard:360,status:235,recovery:185,outcome:330};
 
 function playEvent(scene,e,reduced) {
   const {ctx,layer}=scene;
   const src=scene.point(e.from), dest=scene.point(e.to);
   const actor=scene.actor(e.actorId,e.from), target=scene.actor(e.targetId,e.to);
   const species=actor?.species, dir=Math.sign(dest.x-src.x)||actor?.facing||1;
-  const region=species?.region??e.region;
+  const affinityRegion=REGIONS.find(area => area.biome === e.affinity)?.id;
+  const region=affinityRegion ?? artRegion(species?.region ?? e.region);
   const isSignature=e.skillId==='signature'||e.skillId==='apex';
   const isApex=e.skillId==='apex';
-  const motion=isSignature && species ? SIGNATURE_MOTIONS[species.id] : SPECIAL_MOTIONS[e.skillName];
+  const motion=isSignature && species ? SIGNATURE_MOTIONS[species.baseSpeciesId ?? species.id] : SPECIAL_MOTIONS[e.skillName];
   const palette=WONDER_TONES[motion]??PALETTES[region]??GOLD;
   const heavy = species?.role === 'defender';
   const attackImpact = e.style === 'ranged' ? 0.58 : 0.44;
-  const feedbackAt = {capture: 0.72, attack: attackImpact, heal: 0.53, hazard: 0.19}[e.type] ?? 0.06;
+  const feedbackAt = {capture: 0.72, attack: attackImpact, heal: 0.53, support: 0.43, hazard: 0.19}[e.type] ?? 0.06;
   const duration=e.type==='move'?135+Math.max(0,e.path.length-1)*116:(DURATIONS[e.type]??180);
   const label=makeLabel(layer,badgeInfo(e));
   const bar=Number.isFinite(e.hpAfter) ? layer.parentElement.querySelector('[data-cell="'+e.to+'"] .cb-hp > b') : null;
   const maxHp=scene.battle?.units[e.targetId]?.stats.maxHp;
   let hpChanged=false;
-  const skillIcon=e.skillName && abilityIconKey({id:e.skillId,name:e.skillName,kind:e.type,range:e.style==='ranged'?3:1},species);
+  const skillIcon=e.skillName && abilityIconKey({id:e.skillId,name:e.skillName,kind:e.type,buff:e.buff,range:e.style==='ranged'?3:1},species);
   const cast=e.skillName?makeLabel(layer,[[skillIcon,e.skillName]]):null;
   if (cast) cast.classList.add('cfx-cast');
   const witnesses = e.type === 'outcome' && !reduced
@@ -450,14 +454,15 @@ function playEvent(scene,e,reduced) {
         if(t>=hit) {
           const reach=isApex?69:(heavy?57:48);
           const flank=e.modifiers.includes('flank');
-          const color=isSignature?palette:ROSE;
+          const color=isSignature || e.affinity ? palette : ROSE;
           burst(ctx,dest,impact,color,flank||isApex?13:8,reach*.46);
           paintFrame(ctx,'actions',flank?7:ranged?1:0,impact,dest,reach,dir);
           if (isSignature) paintFrame(ctx,'regions',region,impact,{x:dest.x-dir*5,y:dest.y-5},reach*.83,dir);
           drawMotion(ctx,motion,src,dest,impact,isSignature?palette:color,dir,isApex);
-          if (e.modifiers.includes('guard')||e.modifiers.includes('cover')) {
+          if (e.modifiers.some(modifier => ['guard','cover','ward','resisted'].includes(modifier))) {
             paintFrame(ctx,'actions',3,impact,{x:dest.x-dir*7,y:dest.y+2},34,dir);
           }
+          if (e.modifiers.includes('effective')) ring(ctx,{x:dest.x,y:dest.y+7},6+16*impact,color,.55);
         }
         break;
       }
@@ -478,6 +483,23 @@ function playEvent(scene,e,reduced) {
             const a=t*4+i*TAU/5;
             sparkle(ctx,dest.x+Math.cos(a)*12,dest.y+7-i*3-bloom*13,1+(i%2),MINT);
           }
+        }
+        break;
+      }
+      case 'support': {
+        const color = SUPPORT_TONES[e.buff];
+        const castProgress = part(t,.08,.43), pulse = part(t,.38,1);
+        actor?.pose({x:src.x,y:src.y-wave(t)*3},{face:dir,strike:t>.12&&t<.68,light:1+wave(t)*.35});
+        for (const recipient of e.recipients) {
+          const point = scene.point(recipient.key);
+          if (e.actorId !== recipient.id && castProgress > 0 && castProgress < 1) streak(ctx,src,point,castProgress,color,9);
+          if (pulse <= 0) continue;
+          const ally = scene.actor(recipient.id,recipient.key);
+          ally?.pose({x:point.x,y:point.y-wave(pulse)*2},{light:1+wave(pulse)*.36});
+          ring(ctx,{x:point.x,y:point.y+9},8+14*pulse,color,.32);
+          if (e.buff === 'ward') paintFrame(ctx,'actions',3,pulse,{x:point.x,y:point.y+1},42);
+          else if (e.buff === 'regen') paintFrame(ctx,'actions',2,pulse,point,42);
+          else burst(ctx,point,pulse,color,e.buff === 'cleanse' ? 12 : 7,20);
         }
         break;
       }
@@ -517,15 +539,15 @@ function playEvent(scene,e,reduced) {
         break;
       }
       case 'hazard': {
-        const tone=PALETTES[e.region]??ROSE;
-        paintFrame(ctx,'regions',e.region,t,dest,54);
+        const hazardRegion=artRegion(e.region), tone=PALETTES[hazardRegion]??ROSE;
+        paintFrame(ctx,'regions',hazardRegion,t,dest,54);
         ring(ctx,{x:dest.x,y:dest.y+10},5+17*t,tone,.35);
         burst(ctx,dest,t,tone,7,18);
         target?.pose({x:dest.x+wave(t)*2,y:dest.y-wave(t)*2},{light:1+wave(t)*.5});
         break;
       }
       case 'status': {
-        const color=e.effect==='slow'?BLUE:e.effect==='guard'?MINT:e.effect==='exposed'?ROSE:VIOLET;
+        const color=SUPPORT_TONES[e.effect]??(e.effect==='slow'?BLUE:e.effect==='guard'?MINT:e.effect==='exposed'?ROSE:VIOLET);
         if (e.phase==='expire') {
           burst(ctx,dest,t,color,5,14);
         } else if (e.effect==='stun') {

@@ -21,6 +21,7 @@
   background-position: var(--sprite-x) var(--sprite-y);
   background-size: var(--sprite-width, 700%) 400%;
   background-repeat: no-repeat;
+  filter: var(--sprite-filter,none);
   image-rendering: pixelated;
 }
 

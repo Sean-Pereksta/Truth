@@ -5,6 +5,13 @@ const cues = {
   melee:   { wave: 'sawtooth', notes: [[270,73,47,5],[112,48,56,0]] },
   ranged:  { wave: 'triangle', notes: [[460,1150,62,8],[940,250,62,0]] },
   heal:    { wave: 'sine', notes: [[523,540,74,12],[659,675,76,12],[784,815,104,0]] },
+  power:   { wave: 'triangle', notes: [[330,392,54,9],[494,590,65,8],[698,790,90,0]] },
+  ward:    { wave: 'square', notes: [[252,182,38,14],[380,355,82,0]] },
+  haste:   { wave: 'sine', notes: [[625,915,47,5],[910,1260,47,0]] },
+  cleanse: { wave: 'sine', notes: [[840,740,60,8],[650,570,56,8],[500,520,76,0]] },
+  regen:   { wave: 'sine', notes: [[392,420,60,12],[581,625,78,0]] },
+  effective: { wave: 'triangle', notes: [[520,920,54,7],[780,1040,76,0]] },
+  resisted:  { wave: 'triangle', notes: [[429,180,68,10],[280,170,58,0]] },
   guard:   { wave: 'square', notes: [[235,192,35,15],[352,294,105,0]] },
   wait:    { wave: 'triangle', notes: [[760,680,29,55],[760,680,29,0]] },
   caught:  { wave: 'triangle', notes: [[392,440,55,7],[523,554,64,8],[784,830,120,0]] },
@@ -24,7 +31,9 @@ const cues = {
 
 function cueFor(event) {
   switch (event.type) {
-    case 'attack': return event.style;
+    case 'attack': return event.modifiers?.find(modifier => modifier === 'effective' || modifier === 'resisted') ?? event.style;
+    case 'support': return event.buff;
+    case 'heal': return event.buff ?? 'heal';
     case 'capture': return event.success ? 'caught' : 'escaped';
     case 'hazard': return event.effect;
     case 'status': return event.phase === 'expire' ? 'clear' : event.phase === 'skip' ? 'skip' : event.effect;
