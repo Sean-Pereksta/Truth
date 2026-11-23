@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { MAX_LEVEL, REGIONS, SPECIES, makeMember, rollEncounter } from '../catalog.js';
 import { freshWorld, ensureWorld, completeEncounter, encounterAt, wonderProgress, restoreWonderTrails } from '../world.js';
-import { DISTRICTS, SITE_IDS, linksFor, routeTo, unlockedSites, siteName, districtName, sitesFor, WONDERS } from '../frontier-routes.js';
+import { DISTRICTS, SITE_IDS, linksFor, routeTo, unlockedSites, siteName, districtName, districtOf, routeHint, sitesFor, WONDERS } from '../frontier-routes.js';
 import { addCapture, newJournal, parseJournal } from '../journal.js';
 
 function walk(world, node) {
@@ -69,7 +69,7 @@ test('all regions have connected districts with distinct branches and enforce th
   }
   assert.equal(layouts.size,REGIONS.length);
   assert.equal(districtNames.size,REGIONS.length * DISTRICTS.length);
-  assert.equal(REGIONS.reduce((total,{id})=>total+sitesFor(id).length,0),214);
+  assert.equal(REGIONS.reduce((total,{id})=>total+sitesFor(id).length,0),236);
 });
 
 test('Five Hyper Rare hunts respect regional gates, local alternating patrols and a twelve-win limit', () => {
@@ -164,6 +164,36 @@ test('frontier families lead real battles only inside their unlocked habitat', (
     }
   }
   assert.equal(found.size,26);
+});
+
+test('each region has two gated side habitats with repeatable exclusive encounters', () => {
+  for (const {id} of REGIONS) {
+    const world = {...freshWorld(), region:id, unlocked:id};
+    const discover = (site, district, gate) => {
+      assert.equal(districtOf(site), district);
+      assert.ok(routeHint(id, site).includes(siteName(id, gate)));
+      assert.deepEqual(routeTo(world, site), []);
+      assert.equal(encounterAt({...world, node:site}, site), null);
+      win(world, gate);
+      const first = win(world, site);
+      const next = encounterAt(world, site);
+      const family = SPECIES[first.leadSpeciesId];
+      assert.equal(first.habitatId, site);
+      assert.equal(family.region, id);
+      assert.equal(family.habitatId, site);
+      assert.equal(next.leadSpeciesId, family.id);
+      assert.equal(rollEncounter(id, next)[0].speciesId, family.id);
+      assert.ok(rollEncounter(id, {...next, habitatId:'grove'}).every(member => member.speciesId !== family.id));
+    };
+    win(world, 'grove');
+    discover('glade', 1, 'outpost');
+    win(world, 'ridge');
+    win(world, 'trial');
+    discover('refuge', 2, 'warden');
+    const journal = newJournal();
+    journal.world = world;
+    assert.deepEqual(parseJournal(JSON.stringify(journal)).world, world);
+  }
 });
 
 test('legacy crests keep previously explored warden and legendary routes open', () => {

@@ -1,6 +1,6 @@
 import {
   SPECIES, REGIONS, EVOLUTION_LEVELS, MAX_LEVEL, PARTY_LIMIT,
-  getAbilities, getForm, makeMember, xpToNext
+  getAbilities, getAura, getForm, makeMember, xpToNext
 } from './catalog.js';
 import { ensureWorld, freshWorld, restoreWonderTrails } from './world.js';
 import { hasSite } from './frontier-routes.js';
@@ -169,6 +169,8 @@ export function awardXP(state, amount, participantUids = state.party) {
     const learned = getAbilities(member).filter(move => move.learnLevel > previous.level).map(move => move.name);
     const learnedText = learned.length ? ' Learned ' + learned.join(', ') + '.' : '';
     notices.push(form.name + ' reached Lv. ' + member.level + '.' + learnedText);
+    const aura = getAura(member);
+    if (aura && !getAura(previous)) notices.push(form.name + ' unlocked ' + aura.name + '.');
   }
   return notices;
 }

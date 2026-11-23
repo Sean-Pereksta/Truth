@@ -28,6 +28,7 @@ export function sprite(speciesId, stage = 0) {
   const x = atlas.column * 100 / (atlas.columns - 1);
   const y = form * 100 / 3;
   const name = species.forms[form].replaceAll('&', '&amp;').replaceAll('"', '&quot;');
-  const tint = species.baseSpeciesId === undefined ? '' : `;--sprite-filter:${REGIONS[species.region].artFilter}`;
+  const filter = species.spriteFilter ?? (species.baseSpeciesId === undefined ? '' : REGIONS[species.region].artFilter);
+  const tint = filter ? `;--sprite-filter:${filter}` : '';
   return `<span class="critter-sprite sprite-${atlas.sheet}" role="img" aria-label="${name}" style="--sprite-width:${atlas.columns * 100}%;--sprite-x:${x}%;--sprite-y:${y}%${tint}"></span>`;
 }

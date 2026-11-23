@@ -3,8 +3,8 @@ import { readFileSync } from 'node:fs';
 import { inflateSync } from 'node:zlib';
 import { createHash } from 'node:crypto';
 import test from 'node:test';
-import { AFFINITIES, BUFFS, REGIONS, SPECIES, MAX_LEVEL, getAbilities } from '../catalog.js';
-import { FIGHT_ICONS, fightIcon, abilityIconKey, affinityIconKey, hazardIconKey } from '../fight-icons.js';
+import { AFFINITIES, AURAS, BUFFS, REGIONS, SPECIES, MAX_LEVEL, getAbilities } from '../catalog.js';
+import { FIGHT_ICONS, fightIcon, abilityIconKey, affinityIconKey, auraIconKey, hazardIconKey } from '../fight-icons.js';
 import { sprite, spriteAtlas } from '../art.js';
 import { warmFightEffects } from '../fight-effects.js';
 
@@ -80,6 +80,12 @@ test('all region hazards and learned abilities have labeled icons, including eac
   for (const buff of Object.keys(BUFFS)) {
     assert.match(fightIcon(buff), /class="fight-icon fight-symbol"/);
     assert.equal(FIGHT_ICONS[buff].label, BUFFS[buff].name);
+  }
+  for (const id of Object.keys(AURAS)) {
+    const key = auraIconKey(id);
+    assert.match(fightIcon(key), /role="img" aria-label="[^"]+"/);
+    assert.equal(FIGHT_ICONS[key].label, AURAS[id].name);
+    assert.equal(FIGHT_ICONS[key].description, AURAS[id].tip);
   }
   assert.match(fightIcon('capture','Aim at "Bramblit"'), /Aim at &quot;Bramblit&quot;/);
 });

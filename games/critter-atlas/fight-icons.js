@@ -1,4 +1,4 @@
-import { BUFFS, SPECIES } from './catalog.js';
+import { AURAS, BUFFS, SPECIES } from './catalog.js';
 import { EXPANSION_BIOMES } from './expansion-regions.js';
 
 // Atlas cells run left to right. Semantic names keep the same glyph in the
@@ -119,6 +119,13 @@ for (const [id, symbol, color] of [
   icons[id] = { label: BUFFS[id].name, description: BUFFS[id].tip, symbol, color };
 }
 
+for (const [id, symbol, color] of [
+  ['rally', '⬆', '#ffcb81'], ['bulwark', '⬟', '#a6c8ff'], ['tailwind', '≻', '#a0eee4'],
+  ['renewal', '✚', '#abe7ac'], ['dread', '◈', '#f4a8dc']
+]) {
+  icons['aura-' + id] = { label: AURAS[id].name, description: AURAS[id].tip, symbol, color };
+}
+
 const symbols = [
   ['effective', 'Effective', 'This affinity deals 50% more attack damage.', '▲', '#a0f6b3'],
   ['resisted', 'Resisted', 'The target’s affinity reduces attack damage by 35%.', '▼', '#ffd0a1'],
@@ -144,6 +151,10 @@ export function hazardIconKey(region) {
 
 export function affinityIconKey(affinity) {
   return biomes.includes(affinity) ? 'affinity-' + affinity : 'neutral';
+}
+
+export function auraIconKey(id) {
+  return 'aura-' + id;
 }
 
 const namedSkills = {

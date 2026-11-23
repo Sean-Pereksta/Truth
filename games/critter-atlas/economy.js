@@ -1,4 +1,5 @@
-import { MAX_LEVEL, REGIONS, SPECIES, getForm, makeMember } from './catalog.js';
+import { BUFFS, MAX_LEVEL, REGIONS, SPECIES, getForm, makeMember } from './catalog.js';
+import { keyFor, requirements } from './frontier-routes.js';
 import { addCapture, awardXP } from './journal.js';
 
 // Each local item is sold by its home settlement. Items can travel in the bag.
@@ -26,19 +27,58 @@ const items = [
   ['saltfig', 'Crystallized salt fig', 'food', 178, 64, 12],
   ['brinesalve', 'Brinespring salve', 'heal', 125, 60, 3],
   ['polarpear', 'Northlight pear', 'food', 210, 73, 16],
-  ['aurorasilk', 'Aurora silk', 'capture', .30, 65, 17]
+  ['aurorasilk', 'Aurora silk', 'capture', .30, 65, 17],
+  ['barksigil', 'Barkskin sigil', 'support', 0, 24, 3, {buff:'ward'}],
+  ['purereed', 'Purereed sachet', 'support', 0, 26, 8, {buff:'cleanse'}],
+  ['resonance', 'Resonance shard', 'support', 0, 30, 7, {buff:'power'}],
+  ['tidecord', 'Tidecord knot', 'support', 0, 29, 9, {buff:'regen'}],
+  ['windpin', 'Windrunner pin', 'support', 0, 31, 5, {buff:'haste'}],
+  ['firecask', 'Furnace signal', 'support', 0, 48, 13, {buff:'power', area:1}],
+  ['sunwater', 'Sunwater flask', 'support', 0, 42, 15, {buff:'cleanse', area:1}],
+  ['starbell', 'Starlight bell', 'support', 0, 54, 17, {buff:'regen', area:1}],
+  ['winddrum', 'Gallop drum', 'support', 0, 50, 7, {buff:'haste', area:1}],
+  ['glassshield', 'Saltglass shield', 'support', 0, 55, 5, {buff:'ward', area:1}],
+  ['northbeacon', 'Northlight beacon', 'support', 0, 64, 16, {buff:'regen', area:1, duration:3}]
 ];
 
-function description(kind, power) {
-  if (kind === 'food') return 'Feed from your bag to give one Critter ' + power + ' XP.';
-  if (kind === 'heal') return 'Restore up to ' + power + ' HP to one ally within 3 hexes.';
-  return 'Add ' + Math.round(power * 100) + ' percentage points to one capture within 3 hexes.';
+// Each row pairs a trade good (id, name, value, art, customer region) with a local tactical supply.
+const trails = [
+  [['briarresin','Briar resin',28,3,2],'barksigil'],
+  [['bogamber','Bog amber',31,7,5],'purereed'],
+  [['echogeode','Echo geode',34,7,6],'resonance'],
+  [['tidepearl','Tide pearl',37,9,1],'tidecord'],
+  [['whistledown','Whistledown plume',40,5,8],'windpin'],
+  [['kilnobsidian','Kiln obsidian',43,13,2],'firecask'],
+  [['mosaicchips','Gilded tesserae',46,15,3],'sunwater'],
+  [['starglass','Star glass fragment',49,17,10],'starbell'],
+  [['brassseed','Brassmane seeds',52,2,0],'winddrum'],
+  [['mirrorsalt','Mirror salt',55,6,4],'glassshield'],
+  [['borealglass','Boreal iceglass',58,16,7],'northbeacon']
+];
+const tradeGoods = trails.map(([[id, name, value, artIndex, demandRegion]]) =>
+  [id, name, 'trade', 0, value, artIndex, {demandRegion}]);
+
+function describeItem({kind, power, buff, area, duration, demandRegion}) {
+  if (kind === 'food') return `Feed from your bag to give one Critter ${power} XP.`;
+  if (kind === 'heal') return `Restore up to ${power} HP to one ally within 3 hexes.`;
+  if (kind === 'capture') return `Add ${Math.round(power * 100)} percentage points to one capture within 3 hexes.`;
+  if (kind === 'trade') return `Sell at a market. ${REGIONS[demandRegion].name} pays the highest price.`;
+  const effect = BUFFS[buff];
+  const turns = duration ?? effect.duration;
+  const splash = area ? ' Also affects allies within 1 hex of the target.' : '';
+  const durationText = turns ? ` Lasts ${turns} turns.` : '';
+  return `${effect.tip}${durationText} Target an ally within 3 hexes.${splash}`;
 }
 
-export const ITEMS = Object.freeze(Object.fromEntries(items.map(([id, name, kind, power, value, sourceArtIndex], index) =>
-  [id, Object.freeze({id, name, kind, power, value, artIndex:sourceArtIndex ?? index, description:description(kind, power)})])));
+export const ITEMS = Object.freeze(Object.fromEntries(items.concat(tradeGoods).map(([id, name, kind, power, value, artIndex, options], index) => {
+  const item = {id, name, kind, power, value, artIndex:artIndex ?? index, ...options};
+  if (kind === 'support') item.range = 3;
+  return [id, Object.freeze({...item, description:describeItem(item)})];
+})));
+const trailFinds = Object.freeze(Object.fromEntries(trails.flatMap(([[tradeId], supplyId], region) =>
+  [[keyFor(region,'ford'), tradeId], [keyFor(region,'lookout'), supplyId]])));
 
-// The two common travel supplies have local prices. The other two stocks and the
+// The two common travel supplies have local prices. The other stocks and the
 // pair of species for sale belong to this region. Den and sanctuary families stay wild.
 const towns = [
   ['Mossbell Seed Exchange', 'The orchard hires defenders to guard its bee trees.', 'defender', 'salve','honeyroll', [3,4], 10,18],
@@ -53,17 +93,21 @@ const towns = [
   ['Whitepan Caravanserai', 'Caravan crews pay extra for healers who can tend salt burns.', 'healer', 'brinesalve','saltfig', [90,92], 14,20],
   ['Beacon Sound Storehouse', 'Beacon keepers seek ranged Critters to defend the floe crossings.', 'ranged', 'aurorasilk','polarpear', [99,100], 15,22]
 ];
-export const MARKETS = towns.map(([name, demandNote, demand, specialty, food, speciesIds, tonic, thread], region) => ({
-  region, name, demand, demandNote,
-  stock: {[specialty]:ITEMS[specialty].value, [food]:ITEMS[food].value, tonic, thread},
-  speciesIds
-}));
+export const MARKETS = towns.map(([name, demandNote, demand, specialty, food, speciesIds, tonic, thread], region) => {
+  const [, tactical] = trails[region];
+  return {
+    region, name, demand, demandNote,
+    stock: {[specialty]:ITEMS[specialty].value, [tactical]:ITEMS[tactical].value, [food]:ITEMS[food].value, tonic, thread},
+    speciesIds
+  };
+});
 
 const startCoins = 64;
 const safeCount = value => Number.isSafeInteger(value) && value > 0 ? value : 0;
 const failure = message => ({ok:false, message});
 const success = message => ({ok:true, message});
 const itemEntry = id => Object.hasOwn(ITEMS, id) ? ITEMS[id] : null;
+const battleSupplyKinds = new Set(['heal','capture','support']);
 
 export function freshEconomy() {
   return {coins:startCoins, bag:{tonic:1}};
@@ -75,7 +119,31 @@ export function restoreEconomy(raw) {
     const count = safeCount(raw.bag?.[id]);
     if (count) bag[id] = count;
   }
-  return {coins:safeCount(raw.coins), bag};
+  const economy = {coins:safeCount(raw.coins), bag};
+  if (Array.isArray(raw.found)) {
+    const found = [...new Set(raw.found.filter(key => typeof key === 'string' && Object.hasOwn(trailFinds,key)))];
+    if (found.length) economy.found = found;
+  }
+  return economy;
+}
+
+export function trailFind(state, region, site) {
+  const key = keyFor(region,site);
+  return Object.hasOwn(trailFinds,key) && !state.economy.found?.includes(key) ? ITEMS[trailFinds[key]] : null;
+}
+
+export function gatherTrailFind(state, region, site) {
+  const {world, economy} = state;
+  if (world.region !== region || world.node !== site || region > world.unlocked || requirements(world,region,site).length) {
+    return failure('Reach the trail sign to gather the find.');
+  }
+  const item = trailFind(state,region,site);
+  if (!item) return failure('There is nothing left to gather here.');
+  const count = economy.bag[item.id] ?? 0;
+  if (!Number.isSafeInteger(count + 1)) return failure('Your bag cannot hold another.');
+  economy.bag[item.id] = count + 1;
+  (economy.found ??= []).push(keyFor(region,site));
+  return success(`Gathered ${item.name}. Added to your bag.`);
 }
 
 function atMarket(state, region) {
@@ -94,7 +162,7 @@ export function awardCoins(state, encounter, firstClear = false) {
   return amount;
 }
 export function battleSupplies(state) {
-  return Object.values(ITEMS).filter(item => item.kind !== 'food' && state.economy.bag[item.id] > 0)
+  return Object.values(ITEMS).filter(item => battleSupplyKinds.has(item.kind) && state.economy.bag[item.id] > 0)
     .map(item => ({...item, count:state.economy.bag[item.id]}));
 }
 
@@ -106,7 +174,7 @@ function removeItem(state, id) {
 }
 export function spendSupply(state, id) {
   const item = itemEntry(id);
-  return !!item && item.kind !== 'food' && removeItem(state, id);
+  return !!item && battleSupplyKinds.has(item.kind) && removeItem(state, id);
 }
 
 export function buyItem(state, region, id) {
@@ -125,6 +193,7 @@ export function buyItem(state, region, id) {
 export function itemOffer(region, id) {
   const item = itemEntry(id), market = MARKETS[region];
   if (!item || !market) return 0;
+  if (item.kind === 'trade') return item.demandRegion === region ? item.value : Math.floor(item.value * .65);
   // Supplies imported from other regions command better resale prices.
   return Math.max(1, Math.floor(item.value * (Object.hasOwn(market.stock, id) ? .40 : .60)));
 }

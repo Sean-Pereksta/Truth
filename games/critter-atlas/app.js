@@ -1,10 +1,10 @@
-import { SPECIES, REGIONS, EVOLUTION_LEVELS, MAX_LEVEL, PARTY_LIMIT, AFFINITIES, AFFINITY_DAMAGE, BUFFS,
-  getStats, getAbilities, getForm, xpToNext } from './catalog.js';
+import { SPECIES, REGIONS, EVOLUTION_LEVELS, MAX_LEVEL, PARTY_LIMIT, AFFINITIES, AFFINITY_DAMAGE, BUFFS, AURAS,
+  getStats, getAbilities, getAura, getForm, xpToNext } from './catalog.js';
 import { newJournal, loadJournal, saveJournal, parseJournal, serializeJournal, getParty, setParty, addCapture, awardXP } from './journal.js';
 import { sprite } from './art.js';
-import { FIGHT_ICONS, fightIcon, abilityIconKey, affinityIconKey } from './fight-icons.js';
+import { FIGHT_ICONS, fightIcon, abilityIconKey, affinityIconKey, auraIconKey } from './fight-icons.js';
 import { mountWorld, completeEncounter, routeHint, siteName, unlockedSites, wonderProgress } from './world.js';
-import { awardCoins, battleSupplies, spendSupply } from './economy.js';
+import { awardCoins, battleSupplies, gatherTrailFind, spendSupply, trailFind } from './economy.js';
 import { mountMarket, mountBag } from './market.js';
 import { mountBattle } from './battle.js';
 
@@ -12,6 +12,13 @@ const game = document.querySelector('#game');
 const dialog = document.querySelector('#info-dialog');
 const saveButton = document.querySelector('#save-button');
 const roleNames = { striker: 'Fast striker', defender: 'Defender', healer: 'Healer', ranged: 'Ranged attacker' };
+const guideSkills = SPECIES.map(({id}) => {
+  const evolved = {speciesId:id, level:MAX_LEVEL};
+  return {
+    supports: getAbilities(evolved).some(move => move.kind === 'support' || move.kind === 'heal'),
+    aura: getAura(evolved)
+  };
+});
 let state = loadJournal();
 let savedLocally = Boolean(state);
 let view = state ? 'map' : 'start';
@@ -21,6 +28,7 @@ let notices = [];
 let regionFilter = '';
 let rarityFilter = '';
 let affinityFilter = '';
+let supportFilter = '';
 let search = '';
 let pendingSwap = null;
 let pendingLoad = null;
@@ -39,10 +47,10 @@ dialog.addEventListener('click', event => { if (event.target === dialog) {
 }});
 document.querySelector('#help-button').addEventListener('click', () => showDialog('How to play', `
   <ol class="help-list">
-    <li><b>Explore.</b> Tap a landmark to walk there. Each region has three districts. Select a locked destination to learn which victory opens the route.</li>
-    <li><b>Trade.</b> Visit the local market to buy supplies or Critters, or sell one from your roster. Each settlement carries its own stock and pays extra for different Critters. Use training food from your Bag and combat supplies during a fight.</li>
+    <li><b>Explore.</b> Drag the map to look around, or use Shift + arrow keys while the map is focused. Fit map shows the whole district and Find ranger returns to your location. Tap a landmark to walk there or see what opens a locked trail.</li>
+    <li><b>Gather and trade.</b> Look for finds at trail signs. Use tactical supplies in battle, feed training food from your Bag, and sell regional trade goods where they fetch the best price. Visit markets to buy and sell Critters.</li>
     <li><b>Battle.</b> Pick a lit hex to move, then choose an ability. Check targets for predicted damage or healing. A matching weakness raises damage, while resistance reduces it. The Field guide lists every affinity matchup.</li>
-    <li><b>Support allies.</b> Use wards to absorb part of an incoming hit, boosts to strengthen an ally’s next attacks, and cleansing to remove harmful effects. Guard to brace when a Critter is out of position.</li>
+    <li><b>Support allies.</b> Use wards, boosts, and cleansing to help companions. Auras work automatically within the listed range and move with their source. Bring the right Critters together and check the Field guide for aura unlock levels.</li>
     <li><b>Time your attack.</b> ${fightIcon('wait','')} Wait lets a Critter act later in the same round. Use it before moving to let a companion get beside a foe. A melee hit with both allies beside the target gains a flank bonus.</li>
     <li><b>Read the terrain.</b> Cover reduces ranged damage. A hazard triggers when a Critter ends its turn there. The battle’s effects key explains the symbols.</li>
     <li><b>Capture.</b> Move within three hexes, choose Capture, then select a wild Critter. Lower its health or apply a status to improve the displayed odds. A capture attempt uses the turn.</li>
@@ -190,13 +198,19 @@ function meter(m) {
 }
 function companionTile(m) {
   const f = getForm(m);
-  return `<button class="companion-tile" data-member="${state.roster.indexOf(m)}"><span class="line-portrait">${sprite(m.speciesId, f.stage)}</span><span class="companion-text"><strong>${f.name}</strong><small>Lv. ${m.level} · ${roleNames[SPECIES[m.speciesId].role]} · ${getStats(m).maxHp} HP</small>${meter(m)}</span></button>`;
+  return `<button class="companion-tile" data-member="${state.roster.indexOf(m)}"><span class="line-portrait">${sprite(m.speciesId, f.stage)}</span><span class="companion-text"><strong>${f.name}</strong><small>Lv. ${m.level} · ${roleNames[SPECIES[m.speciesId].role]} · ${getStats(m).maxHp} HP</small>${companionAura(m)}${meter(m)}</span></button>`;
+}
+function companionAura(member) {
+  const aura = getAura(member);
+  return aura ? `<small class="companion-aura">${auraLabel(aura)}</small>` : '';
 }
 function showMap(inspectSite) {
   const main = shell('map');
   main.innerHTML = `<div id="map-panel"></div><section class="explore-party"><div class="subhead"><h2>Traveling party</h2><button class="link-action" data-view="party">Manage party →</button></div><div class="companion-strip">${getParty(state).map(companionTile).join('')}</div></section>`;
   cleanup = mountWorld(main.querySelector('#map-panel'), {
     world: state.world, sprite, inspectSite, onChange: persist, onCamp: () => showParty(), onEncounter: beginBattle, onMarket: showMarket,
+    getFind: (region, site) => trailFind(state, region, site),
+    onGather: (region, site) => gatherTrailFind(state, region, site),
     onRegion(id) { game.querySelector('.trail-progress').textContent = `Region ${id + 1} / ${REGIONS.length}`; }
   });
 }
@@ -260,7 +274,7 @@ function beginBattle(encounter) {
 }
 function rosterCard(m, active) {
   const s = SPECIES[m.speciesId], f = getForm(m), index = state.roster.indexOf(m);
-  return `<article class="roster-card"><span class="slot-portrait">${sprite(s.id, f.stage)}</span><div class="companion-text"><strong class="roster-name">${f.name}</strong><small>Lv. ${m.level} · ${roleNames[s.role]} · ${getStats(m).maxHp} HP</small>${meter(m)}</div>
+  return `<article class="roster-card"><span class="slot-portrait">${sprite(s.id, f.stage)}</span><div class="companion-text"><strong class="roster-name">${f.name}</strong><small>Lv. ${m.level} · ${roleNames[s.role]} · ${getStats(m).maxHp} HP</small>${companionAura(m)}${meter(m)}</div>
     <div class="roster-tools"><button class="small-action" data-member="${index}">Details</button>
     <button class="small-action" data-roster="${index}" ${active && state.party.length === 1 ? 'disabled' : ''}>${active ? 'Send to reserve' : state.party.length >= PARTY_LIMIT ? 'Swap into party' : 'Add to party'}</button></div></article>`;
 }
@@ -347,10 +361,11 @@ dialog.addEventListener('click', event => {
 function showGuide() {
   const main = shell('guide');
   main.innerHTML = `<div class="guide-intro"><h1>Field guide</h1><p>${new Set(state.seen).size} / ${SPECIES.length} families collected</p><button class="secondary-action" data-affinity-chart>Affinity matchups</button></div>
-    <div class="guide-tools"><label>Search families<input type="search" id="guide-search" placeholder="Name, role, or affinity"></label>
+    <div class="guide-tools"><label>Search families<input type="search" id="guide-search" placeholder="Name, role, or aura"></label>
     <label>Region<select id="guide-region"><option value="">All regions</option>${REGIONS.map(r => `<option value="${r.id}">${r.name}</option>`).join('')}</select></label>
     <label>Rarity<select id="guide-rarity"><option value="">Any rarity</option>${[...new Set(SPECIES.map(s => s.rarity))].map(r => `<option>${r}</option>`).join('')}</select></label>
-    <label>Affinity<select id="guide-affinity"><option value="">Any affinity</option>${Object.entries(AFFINITIES).map(([id, affinity]) => `<option value="${id}">${affinity.name}</option>`).join('')}</select></label></div>
+    <label>Affinity<select id="guide-affinity"><option value="">Any affinity</option>${Object.entries(AFFINITIES).map(([id, affinity]) => `<option value="${id}">${affinity.name}</option>`).join('')}</select></label>
+    <label>Support<select id="guide-support"><option value="">All families</option><option value="support">Active support</option><option value="aura">Any aura</option>${Object.values(AURAS).map(aura => `<option value="${aura.id}">${aura.name}</option>`).join('')}</select></label></div>
     <div class="guide-grid"></div>`;
   main.querySelector('#guide-search').value = search;
   main.querySelector('#guide-region').value = regionFilter;
@@ -360,12 +375,18 @@ function showGuide() {
   const affinity = main.querySelector('#guide-affinity');
   affinity.value = affinityFilter;
   affinity.addEventListener('change', e => {affinityFilter = e.target.value; updateGuide();});
+  const support = main.querySelector('#guide-support');
+  support.value = supportFilter;
+  support.addEventListener('change', e => {supportFilter = e.target.value; updateGuide();});
   main.querySelector('#guide-search').addEventListener('input', e => {search = e.target.value; updateGuide();});
   main.querySelector('#guide-region').addEventListener('change', e => {regionFilter = e.target.value; updateGuide();});
   updateGuide();
 }
 function affinityLabel(id) {
   return `<span class="affinity-label">${fightIcon(affinityIconKey(id), '')} ${AFFINITIES[id]?.name ?? 'Neutral'}</span>`;
+}
+function auraLabel(aura) {
+  return `<span class="affinity-label">${fightIcon(auraIconKey(aura.id), '')} ${aura.name}</span>`;
 }
 function showAffinityChart() {
   const { effective, resisted, neutral } = AFFINITY_DAMAGE;
@@ -375,17 +396,23 @@ function showAffinityChart() {
 }
 function updateGuide() {
   const term = search.trim().toLowerCase();
-  const filtered = SPECIES.filter(s => (regionFilter === '' || s.region === Number(regionFilter)) && (!rarityFilter || s.rarity === rarityFilter) &&
-    (!affinityFilter || s.affinity === affinityFilter) &&
-    [...s.forms, roleNames[s.role], s.rarity, AFFINITIES[s.affinity].name].some(value => value.toLowerCase().includes(term)));
+  const filtered = SPECIES.filter(s => {
+    const {aura, supports} = guideSkills[s.id];
+    const matchesSupport = !supportFilter || (supportFilter === 'support' && supports) ||
+      (supportFilter === 'aura' && aura) || supportFilter === aura?.id;
+    return (regionFilter === '' || s.region === Number(regionFilter)) && (!rarityFilter || s.rarity === rarityFilter) &&
+      (!affinityFilter || s.affinity === affinityFilter) && matchesSupport &&
+      [...s.forms, roleNames[s.role], s.rarity, AFFINITIES[s.affinity].name, aura?.name ?? ''].some(value => value.toLowerCase().includes(term));
+  });
   const collected = new Set(state.seen);
   game.querySelector('.guide-grid').innerHTML = filtered.length ? filtered.map(s => `<button class="guide-entry${s.hyperRare ? ' guide-wonder' : ''}" data-species="${s.id}">
-    ${collected.has(s.id) ? '<span class="owned-symbol" aria-label="Collected">✓</span>' : ''}<span class="guide-portrait">${sprite(s.id, 0)}</span><strong>${s.name}</strong><small>${s.rarity} · ${roleNames[s.role]}</small><small>${affinityLabel(s.affinity)}</small></button>`).join('') : '<p class="field-note">No matching families.</p>';
+    ${collected.has(s.id) ? '<span class="owned-symbol" aria-label="Collected">✓</span>' : ''}<span class="guide-portrait">${sprite(s.id, 0)}</span><strong>${s.name}</strong><small>${s.rarity} · ${roleNames[s.role]}</small><small>${affinityLabel(s.affinity)}</small>${guideSkills[s.id].aura ? `<small class="guide-aura">${auraLabel(guideSkills[s.id].aura)}</small>` : ''}</button>`).join('') : '<p class="field-note">No matching families.</p>';
 }
 function showDetail(s, member) {
   const sample = member ?? {speciesId:s.id, level:1, xp:0};
   const form = getForm(sample), stats = getStats(sample);
   const abilities = getAbilities({ ...sample, level:MAX_LEVEL });
+  const aura = guideSkills[s.id].aura;
   const habitat = s.habitatId || (s.legendary ? 'hollow' : null);
   const trail = s.hyperRare ? wonderProgress(state.world,s.region) : null;
   const plate = s.hyperRare ? [0,2,3,5,7].indexOf(s.region) : -1;
@@ -403,6 +430,7 @@ function showDetail(s, member) {
   showDialog(form.name, `${artwork}<div class="detail-head">${artwork ? '' : `<span class="detail-sprite">${sprite(s.id, form.stage)}</span>`}<div>
       <span class="micro">${fightIcon(s.role,'')} ${roleNames[s.role]} · ${s.rarity}</span><p class="field-note">${REGIONS[s.region].name}<br>${s.lore}</p></div></div>
     <div class="habitat-note"><b>${affinityLabel(s.affinity)} affinity</b><span>Weak to ${weakTo.map(([id]) => affinityLabel(id)).join(' ')}</span><span>Resists ${resists.map(([id]) => affinityLabel(id)).join(' ')}</span></div>
+    ${aura ? `<div class="habitat-note aura-note"><b>${auraLabel(aura)} · Passive</b><span>${aura.tip}</span><span>Range ${aura.radius} ${aura.radius === 1 ? 'hex' : 'hexes'} · ${member && getAura(member) ? 'Unlocked' : `Unlocks at Lv. ${s.aura.unlockLevel}`}</span></div>` : ''}
     ${habitat ? `<div class="habitat-note"><b>Habitat · ${siteName(s.region,habitat)}</b><span>${routeHint(s.region,habitat)}</span>${s.hyperRare ? '<span>Track a level 3 youngling at an active lair to raise it through all three evolutions. A local escort protects it.</span>' : ''}${trailStatus ? `<span class="wonder-tracks">${trailStatus}</span>` : ''}${locate}</div>` : ''}
     <div class="detail-stats"><span>Lv. ${sample.level}</span><span>${fightIcon('hp','')} ${stats.maxHp} HP</span><span>${fightIcon('melee','')} ${stats.attack} attack</span><span>${fightIcon('guard','')} ${stats.defense} defense</span><span>${fightIcon('move','')} ${stats.move} move</span></div>
     ${member ? `<div class="companion-text">${meter(member)}</div>` : ''}

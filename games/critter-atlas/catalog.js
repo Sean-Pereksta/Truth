@@ -2,9 +2,10 @@ import { FRONTIER_SPECIES } from './frontier-species.js';
 import { HYPER_SPECIES } from './hyper-species.js';
 import { EXPANSION_REGIONS } from './expansion-regions.js';
 import { expansionSpecies } from './expansion-species.js';
-import { AFFINITIES, BUFFS, BATTLE_KITS, getSpeciesAffinity } from './combat-catalog.js';
+import { trailSpecies } from './trail-species.js';
+import { AFFINITIES, AURAS, BUFFS, BATTLE_KITS, getSpeciesAffinity, getSpeciesAura } from './combat-catalog.js';
 
-export { AFFINITIES, AFFINITY_DAMAGE, BUFFS, affinityMultiplier } from './combat-catalog.js';
+export { AFFINITIES, AFFINITY_DAMAGE, AURAS, BUFFS, affinityMultiplier } from './combat-catalog.js';
 
 // Region, species, and combat definitions shared by the trail, party, and arena.
 const regionRows = [
@@ -100,8 +101,10 @@ const establishedSpecies = lineages.map(([names, animal, role, color, signature,
   return { id, name: forms[0], forms, region, role, animal, color, signature, effect, lore,
     rarity: raritySlots[slot], legendary: slot === 6, captureRate };
 }).concat(FRONTIER_SPECIES, HYPER_SPECIES);
-export const SPECIES = establishedSpecies.concat(expansionSpecies(establishedSpecies))
-  .map(species => ({ ...species, affinity: getSpeciesAffinity(species) }));
+const frontierFamilies = establishedSpecies.concat(expansionSpecies(establishedSpecies));
+export const SPECIES = frontierFamilies.concat(trailSpecies(frontierFamilies)).map(species => ({
+  ...species, affinity: getSpeciesAffinity(species), aura: getSpeciesAura(species)
+}));
 
 export const MAX_LEVEL = 60;
 export const EVOLUTION_LEVELS = [6, 12, 20];
@@ -120,6 +123,12 @@ export function makeMember(speciesId, level = 1) {
 export function getForm(member) {
   const stage = EVOLUTION_LEVELS.filter(level => member.level >= level).length;
   return { stage, name: SPECIES[member.speciesId].forms[stage] };
+}
+export function getAura(member) {
+  const ability = SPECIES[member.speciesId]?.aura;
+  if (!ability || member.level < ability.unlockLevel) return null;
+  const aura = AURAS[ability.id];
+  return ability.radius === undefined || ability.radius === aura.radius ? aura : { ...aura, radius: ability.radius };
 }
 export function xpToNext(level) {
   return 12 + 4 * level;

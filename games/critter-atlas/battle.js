@@ -1,12 +1,12 @@
 import {
-  SPECIES, REGIONS, MAX_LEVEL, AFFINITIES, BUFFS, affinityMultiplier,
-  getForm, getStats, getAbilities, xpToNext, captureChance, rollEncounter, makeMember
+  SPECIES, REGIONS, MAX_LEVEL, AFFINITIES, AURAS, BUFFS, affinityMultiplier,
+  getForm, getStats, getAbilities, getAura, xpToNext, captureChance, rollEncounter, makeMember
 } from "./catalog.js";
 
 import { playFightEffects, warmFightEffects } from "./fight-effects.js";
 import { arenaCourse, huntLair } from "./arena-courses.js";
 import { createFightSound } from "./fight-sound.js";
-import { FIGHT_ICONS, fightIcon, abilityIconKey, affinityIconKey, hazardIconKey } from "./fight-icons.js";
+import { FIGHT_ICONS, fightIcon, abilityIconKey, affinityIconKey, auraIconKey, hazardIconKey } from "./fight-icons.js";
 import { EXPANSION_BIOMES } from "./expansion-regions.js";
 
 const COLS = 7;
@@ -78,10 +78,31 @@ function adjacent(key) {
     .map(([a,b]) => keyOf(a,b));
 }
 
+function aurasAffecting(battle, unit, movedUnit = unit, destination = movedUnit.key) {
+  const effects = {};
+  const position = critter => critter === movedUnit ? destination : critter.key;
+  for (const source of battle.units) {
+    const aura = source.aura;
+    if (!aura || source === unit || !living(source) || (aura.target === "ally") !== (source.team === unit.team)) continue;
+    if (hexDistance(position(source), position(unit)) <= aura.radius) effects[aura.id] ??= source;
+  }
+  return effects;
+}
+
+function auraChanges(battle, mover, destination) {
+  return battle.units.filter(living).flatMap(unit => {
+    const before = aurasAffecting(battle, unit);
+    const after = aurasAffecting(battle, unit, mover, destination);
+    return Object.keys(AURAS).filter(id => Boolean(before[id]) !== Boolean(after[id])).map(id => ({
+      id, unitId: unit.id, enters: Boolean(after[id])
+    }));
+  });
+}
+
 export function reachable(battle, unit = activeUnit(battle), parents) {
   const visited = new Map([[unit.key, 0]]);
   const queue = [unit.key];
-  const limit = movementAllowance(unit);
+  const limit = movementAllowance(battle, unit);
   for (let i = 0; i < queue.length; i++) {
     const key = queue[i], steps = visited.get(key);
     if (steps >= limit || unit.moved) continue;
@@ -95,8 +116,11 @@ export function reachable(battle, unit = activeUnit(battle), parents) {
   return visited;
 }
 
-function movementAllowance(unit) {
-  return Math.max(1, unit.stats.move - (unit.status.slow ? 1 : 0) + (unit.status.haste ? BUFFS.haste.amount : 0));
+function movementAllowance(battle, unit, movedUnit, destination) {
+  const slow = unit.status.slow ? 1 : 0;
+  const haste = unit.status.haste ? BUFFS.haste.amount : 0;
+  const tailwind = aurasAffecting(battle, unit, movedUnit, destination).tailwind ? AURAS.tailwind.amount : 0;
+  return Math.max(1, unit.stats.move - slow + haste + tailwind);
 }
 
 function movementPath(battle, actor, destination) {
@@ -114,7 +138,7 @@ function buildUnit(member, team, slot, id) {
   const edge = Math.floor(slot / ROWS);
   return {
     id, member: {...member}, team, key: keyOf(team === "you" ? edge : COLS-1-edge, lane),
-    stats, hp: stats.maxHp, abilities: getAbilities(member), status: {},
+    stats, hp: stats.maxHp, abilities: getAbilities(member), aura: getAura(member), status: {},
     guarded: false, moved: false, caught: false, waitRound: 0, recovery: { heal: 0, stun: 0, support: 0 }
   };
 }
@@ -202,6 +226,13 @@ function finishTile(battle, unit, freshBuff) {
     unit.hp += amount;
     record(battle, "heal", unit, unit, { amount, hpAfter: unit.hp, buff: "regen" });
     log(battle, nameOf(unit) + " regenerated " + amount + " HP.", "regen");
+  }
+  const renewal = aurasAffecting(battle, unit).renewal;
+  if (renewal && unit.hp < unit.stats.maxHp) {
+    const amount = Math.min(unit.stats.maxHp - unit.hp, Math.max(1, Math.round(unit.stats.maxHp * AURAS.renewal.amount)));
+    unit.hp += amount;
+    record(battle, "heal", renewal, unit, { amount, hpAfter: unit.hp, aura: "renewal" });
+    log(battle, nameOf(renewal) + "’s " + AURAS.renewal.name + " restored " + amount + " HP to " + nameOf(unit) + ".", auraIconKey("renewal"));
   }
   for (const status of Object.keys(unit.status)) {
     if (status === freshBuff) continue;
@@ -314,6 +345,20 @@ function damageFor(battle, actor, target, skill, from, modifiers) {
     amount *= 1 - BUFFS.ward.amount;
     modifiers?.push("ward");
   }
+  const attackAuras = aurasAffecting(battle, actor, actor, from);
+  const targetAuras = aurasAffecting(battle, target, actor, from);
+  if (attackAuras.rally) {
+    amount *= 1 + AURAS.rally.amount;
+    modifiers?.push(auraIconKey("rally"));
+  }
+  if (attackAuras.dread) {
+    amount *= 1 - AURAS.dread.amount;
+    modifiers?.push(auraIconKey("dread"));
+  }
+  if (targetAuras.bulwark) {
+    amount *= 1 - AURAS.bulwark.amount;
+    modifiers?.push(auraIconKey("bulwark"));
+  }
   if (distance > 1 && battle.tiles[target.key] === "cover") {
     amount *= 0.72;
     modifiers?.push("cover");
@@ -363,6 +408,31 @@ function supportTargets(battle, actor, target, skill, from) {
   });
 }
 
+function supportPreview(battle, actor, target, skill) {
+  const effect = BUFFS[skill.buff];
+  if (!effect || target.team !== actor.team) return null;
+  const recipients = supportTargets(battle, actor, target, skill, actor.key).map(unit => ({
+    id: unit.id, key: unit.key, name: nameOf(unit),
+    removed: skill.buff === "cleanse" ? CONDITIONS.filter(condition => unit.status[condition]) : []
+  }));
+  const duration = skill.duration ?? effect.duration;
+  return recipients.length ? { type: "support", buff: skill.buff, duration, recipients } : null;
+}
+
+function applySupport(battle, actor, preview) {
+  for (const recipient of preview.recipients) {
+    const unit = battle.units[recipient.id];
+    if (preview.buff === "cleanse") {
+      for (const effect of recipient.removed) delete unit.status[effect];
+    } else {
+      unit.status[preview.buff] = preview.duration;
+    }
+  }
+  const skillName = preview.skillName ?? preview.supplyName;
+  log(battle, nameOf(actor) + " used " + skillName + " on " + preview.recipients.map(recipient => recipient.name).join(", ") + ".", preview.buff);
+  return preview.recipients.some(recipient => recipient.id === actor.id) ? preview.buff : undefined;
+}
+
 function skillPreview(battle, actor, target, skill) {
   if (!skill || !validTarget(actor, target, skill)) return null;
   const move = { skillId: skill.id, skillName: skill.name };
@@ -372,12 +442,8 @@ function skillPreview(battle, actor, target, skill) {
     return { type: "heal", ...move, amount, hpAfter: target.hp + amount };
   }
   if (skill.kind === "support") {
-    const recipients = supportTargets(battle, actor, target, skill, actor.key).map(unit => ({
-      id: unit.id, key: unit.key, name: nameOf(unit),
-      removed: skill.buff === "cleanse" ? CONDITIONS.filter(effect => unit.status[effect]) : []
-    }));
-    const duration = skill.duration ?? BUFFS[skill.buff].duration;
-    return recipients.length ? { type: "support", ...move, buff: skill.buff, duration, recipients } : null;
+    const preview = supportPreview(battle, actor, target, skill);
+    return preview ? { ...preview, ...move } : null;
   }
   const modifiers = [];
   const amount = damageFor(battle, actor, target, skill, actor.key, modifiers);
@@ -392,16 +458,22 @@ function capturePreview(actor, target) {
   return { type: "capture", chance: captureOdds(target) };
 }
 
-function supplyPreview(actor, target, item) {
+function supplyPreview(battle, actor, target, item) {
   if (actor.team !== "you" || !target || !living(target) || !item || !(item.count > 0) ||
-      !Number.isFinite(item.power) || item.power <= 0 || hexDistance(actor.key, target.key) > CAPTURE_RANGE) return null;
+      hexDistance(actor.key, target.key) > (item.range ?? CAPTURE_RANGE)) return null;
+  const supply = {supplyId:item.id, supplyName:item.name};
+  if (item.kind === "support") {
+    const preview = supportPreview(battle, actor, target, item);
+    return preview ? { ...preview, ...supply } : null;
+  }
+  if (!Number.isFinite(item.power) || item.power <= 0) return null;
   if (item.kind === "capture" && target.team === "wild") {
     const baseChance = captureOdds(target);
-    return {type:"capture", chance:Math.min(.99, baseChance + item.power), baseChance, supplyId:item.id, supplyName:item.name};
+    return {type:"capture", chance:Math.min(.99, baseChance + item.power), baseChance, ...supply};
   }
   if (item.kind !== "heal" || target.team !== actor.team || target.hp >= target.stats.maxHp) return null;
   const amount = Math.min(item.power, target.stats.maxHp - target.hp);
-  return {type:"heal", amount, hpAfter:target.hp + amount, supplyId:item.id, supplyName:item.name};
+  return {type:"heal", amount, hpAfter:target.hp + amount, ...supply};
 }
 
 export function previewAction(battle, mode, key) {
@@ -409,12 +481,12 @@ export function previewAction(battle, mode, key) {
   const actor = activeUnit(battle);
   if (mode === "move") {
     const path = movementPath(battle, actor, key);
-    return path ? { type: "move", path, hazard: hazardAt(battle, actor, key) } : null;
+    return path ? { type: "move", path, hazard: hazardAt(battle, actor, key), auraChanges: auraChanges(battle, actor, key) } : null;
   }
   const target = unitAt(battle, key);
   if (mode === "guard") return actor === target ? { type: "guard" } : null;
   if (mode === "capture") return capturePreview(actor, target);
-  if (typeof mode === "object") return supplyPreview(actor, target, mode);
+  if (typeof mode === "object") return supplyPreview(battle, actor, target, mode);
   return Number.isInteger(mode) ? skillPreview(battle, actor, target, actor.abilities[mode]) : null;
 }
 
@@ -426,20 +498,13 @@ export function useAbility(battle, index, target) {
   if (!preview) return false;
   if (skill.kind === "guard") return guard(battle);
   const recovery = recoveryGroup(skill);
+  let freshBuff;
   record(battle, preview.type, actor, target, preview);
   if (skill.kind === "heal") {
     target.hp = preview.hpAfter;
     log(battle, nameOf(actor) + " used " + skill.name + " and restored " + preview.amount + " HP to " + nameOf(target) + ".", "heal");
   } else if (skill.kind === "support") {
-    for (const recipient of preview.recipients) {
-      const unit = battle.units[recipient.id];
-      if (skill.buff === "cleanse") {
-        for (const effect of recipient.removed) delete unit.status[effect];
-      } else {
-        unit.status[skill.buff] = preview.duration;
-      }
-    }
-    log(battle, nameOf(actor) + " used " + skill.name + " on " + preview.recipients.map(recipient => recipient.name).join(", ") + ".", skill.buff);
+    freshBuff = applySupport(battle, actor, preview);
   } else {
     const bonus = preview.modifiers.length ? " (" + preview.modifiers.map(key => FIGHT_ICONS[key].label.toLowerCase()).join(", ") + ")" : "";
     log(battle, nameOf(actor) + " used " + skill.name + " on " + nameOf(target) + " for " + preview.amount + bonus + ".", preview.style);
@@ -454,7 +519,7 @@ export function useAbility(battle, index, target) {
     actor.recovery[recovery] = 2;
     record(battle, "recovery", actor, actor, { effect: recovery, phase: "apply" });
   }
-  finishTurn(battle, actor, skill.buff);
+  finishTurn(battle, actor, freshBuff);
   return true;
 }
 
@@ -489,16 +554,20 @@ function resolveCapture(battle, actor, target, preview) {
 export function useBattleSupply(battle, item, target, spend) {
   if (battle.result || !battle.units.includes(target)) return false;
   const actor = activeUnit(battle);
-  const preview = supplyPreview(actor, target, item);
+  const preview = supplyPreview(battle, actor, target, item);
   if (!preview || spend?.(item.id) !== true) return false;
+  let freshBuff;
   if (preview.type === "capture") {
     resolveCapture(battle, actor, target, preview);
+  } else if (preview.type === "support") {
+    record(battle, "support", actor, target, preview);
+    freshBuff = applySupport(battle, actor, preview);
   } else {
     target.hp = preview.hpAfter;
     record(battle, "heal", actor, target, preview);
     log(battle, item.name + " restored " + preview.amount + " HP to " + nameOf(target) + ".", "heal");
   }
-  finishTurn(battle, actor);
+  finishTurn(battle, actor, freshBuff);
   return true;
 }
 
@@ -509,16 +578,16 @@ function supportValue(battle, actor, target, skill, from, opponents) {
   return supportTargets(battle, actor, target, skill, from).reduce((total, unit) => {
     const position = unit === actor ? from : unit.key;
     const distance = Math.min(...opponents.map(opponent => hexDistance(position, opponent.key)));
-    const range = Math.max(...unit.abilities.filter(a => a.kind === "attack").map(a => a.range));
+    const range = attackReach(unit);
     const attack = unit.stats.attack;
     const threatened = opponents.some(opponent => hexDistance(position, opponent.key) <= opponent.stats.move + opponent.stats.range);
     switch (skill.buff) {
       case "power":
-        return total + (distance <= range + movementAllowance(unit) ? attack * buff.amount * (unit === actor ? 1.1 : 1.65) : 0);
+        return total + (distance <= range + movementAllowance(battle, unit, actor, from) ? attack * buff.amount * (unit === actor ? 1.1 : 1.65) : 0);
       case "ward":
         return total + (threatened ? unit.stats.maxHp * buff.amount * (unit.hp < unit.stats.maxHp / 2 ? .65 : .38) : 0);
       case "haste":
-        return total + (distance > range && distance <= range + movementAllowance(unit) + 2 ? attack * .5 : 0);
+        return total + (distance > range && distance <= range + movementAllowance(battle, unit, actor, from) + 2 ? attack * .5 : 0);
       case "cleanse":
         return total + attack * ((unit.status.stun ? 1 : 0) + (unit.status.exposed && threatened ? .35 : 0) + (unit.status.slow && distance > range ? .3 : 0));
       case "regen":
@@ -529,17 +598,41 @@ function supportValue(battle, actor, target, skill, from, opponents) {
   }, 0) * durationValue;
 }
 
+const attackReach = unit => Math.max(1, ...unit.abilities.filter(skill => skill.kind === "attack").map(skill => skill.range));
+
+function auraPositionValue(battle, actor, destination, opponents) {
+  if (destination === actor.key) return 0;
+  return auraChanges(battle, actor, destination).reduce((total, {id, unitId, enters}) => {
+    const unit = battle.units[unitId];
+    const position = unit === actor ? destination : unit.key;
+    const range = attackReach(unit);
+    const distance = Math.min(...opponents.map(opponent => hexDistance(position, opponent.key)));
+    const nearCombat = distance <= range + movementAllowance(battle, unit, actor, destination);
+    const aura = AURAS[id];
+    let value = 0;
+    switch (id) {
+      case "rally": value = nearCombat ? unit.stats.attack * aura.amount * .65 : 0; break;
+      case "bulwark": value = nearCombat ? unit.stats.maxHp * aura.amount * .32 : 0; break;
+      case "tailwind": value = distance > range && nearCombat ? 2.5 : 0; break;
+      case "renewal": value = Math.min(unit.stats.maxHp - unit.hp, unit.stats.maxHp * aura.amount) * .8; break;
+      // Either bringing an enemy into Dread or stepping out of enemy Dread helps this team.
+      case "dread": value = unit.stats.attack * aura.amount * (unit === actor ? -.55 : .65); break;
+    }
+    return total + value * (enters ? 1 : -1);
+  }, 0);
+}
+
 export function planEnemyTurn(battle) {
   const actor = activeUnit(battle), options = reachable(battle, actor);
   const opponents = battle.units.filter(u => u.team !== actor.team && living(u));
-  const reach = Math.max(1, ...actor.abilities.filter(s => s.kind === "attack").map(s => s.range));
+  const reach = attackReach(actor);
   let best = { score: -Infinity };
   for (const [key, steps] of options) {
     const distance = Math.min(...opponents.map(e => hexDistance(key, e.key)));
     const tile = battle.tiles[key];
     const ground = (tile === "cover" ? 1.6 : tile === "hazard" ? -6 : 0);
     // Ranged species seek firing distance. A tiny movement cost keeps equivalent choices stable.
-    const position = ground - Math.abs(distance-reach)*1.7 - steps*0.06;
+    const position = ground - Math.abs(distance-reach)*1.7 - steps*.06 + auraPositionValue(battle, actor, key, opponents);
     const consider = (score, i, target) => { if (score > best.score) best = { score, key, i, target }; };
     consider(position, null, null);
     actor.abilities.forEach((skill,i) => {
@@ -595,7 +688,8 @@ const hexes = count => count + (count === 1 ? " hex" : " hexes");
 const affinityName = affinity => AFFINITIES[affinity]?.name ?? "Neutral";
 
 function targetPrompt(skill) {
-  if (skill.kind === "heal" || skill.buff === "regen") return "a wounded ally";
+  if (skill.kind === "heal") return "a wounded ally";
+  if (skill.buff === "regen") return skill.area ? "an ally near a wounded companion" : "a wounded ally";
   if (skill.buff === "cleanse") return skill.area ? "an ally near a debuffed companion" : "an ally with a harmful condition";
   if (skill.kind === "support") return skill.range ? "an ally" : "this Critter";
   return "an opponent";
@@ -624,11 +718,19 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     }
   }
   function terrainIcon(tile) { return tile === "hazard" ? regionHazard : tile; }
+  function auraDescription(unit) {
+    const { aura } = unit;
+    return aura ? '<p class="cb-aura-detail">'+icon(auraIconKey(aura.id))+'<span><b>'+escape(aura.name)+
+      ' · '+hexes(aura.radius)+'</b><small>'+escape(aura.tip)+'</small></span></p>' : '';
+  }
   function activeEffects(unit, compact = false) {
     const effects = effectsOn(unit).map(effect => ({
       key: effect, label: effectName(effect) + " · " + turns(unit.status[effect]), tip: STATUS_TIP[effect] ?? BUFFS[effect].tip
     }));
     if (unit.guarded) effects.push({key:"guard", label:"Guarding", tip:"Reduces damage until this Critter’s next turn."});
+    for (const [id, source] of Object.entries(aurasAffecting(battle, unit))) {
+      effects.push({key: auraIconKey(id), label: AURAS[id].name, tip: `From ${nameOf(source)}. ${AURAS[id].tip}`});
+    }
     if (!effects.length) return "";
     return '<span class="'+(compact ? "cb-pips" : "cb-effects")+'">'+effects.map(e =>
       '<span class="cb-effect" title="'+escape(e.label + ". " + e.tip)+'">'+icon(e.key)+(compact ? "" : escape(e.label))+'</span>'
@@ -667,10 +769,15 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
         if (prediction.supplyName) extras.push(escape(prediction.supplyName) + " · " + capturePercent(prediction.baseChance) + "% without charm");
         if (u.hp < u.stats.maxHp) extras.push(icon("damage") + "Weakened");
         if (effectsOn(u).some(effect => CONDITIONS.includes(effect))) extras.push(icon("status") + "Harmful condition bonus");
-      } else if (prediction.type === "move" && prediction.hazard) {
-        extras.push(icon(regionHazard) + escape(prediction.hazard.name));
-        if (prediction.hazard.amount) extras.push("−" + prediction.hazard.amount + " HP at turn end");
-        else extras.push(escape(tip));
+      } else if (prediction.type === "move") {
+        if (prediction.hazard) {
+          extras.push(icon(regionHazard) + escape(prediction.hazard.name));
+          if (prediction.hazard.amount) extras.push("−" + prediction.hazard.amount + " HP at turn end");
+          else extras.push(escape(tip));
+        }
+        for (const {id, unitId, enters} of prediction.auraChanges) {
+          extras.push(icon(auraIconKey(id)) + escape(nameOf(battle.units[unitId]) + (enters ? " gains " : " loses ") + AURAS[id].name));
+        }
       }
       forecast = '<div class="cb-forecast">'+icon("forecast")+'<div><b>'+escape(forecastText(prediction))+'</b>'+
         (extras.length ? '<small>'+extras.join(' · ')+'</small>' : '')+'</div></div>';
@@ -687,9 +794,20 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
       '<div class="cb-meter"><i style="width:'+100*u.hp/u.stats.maxHp+'%"></i></div>'+
       (isWild ? '<div class="cb-stat cb-odds"><span>'+icon("capture")+'Free capture</span><b>'+capturePercent(captureOdds(u))+'%</b></div>' :
         '<div class="cb-stat"><span>'+icon("xp")+'XP</span><b>'+(u.member.level >= MAX_LEVEL ? "MAX" : u.member.xp+' / '+xpToNext(u.member.level))+'</b></div>')+
-      activeEffects(u)+(tile !== "plain" ? terrainLine : "")+forecast+'</div>';
+      auraDescription(u)+activeEffects(u)+(tile !== "plain" ? terrainLine : "")+forecast+'</div>';
   }
-  function cellMarkup(key, actor) {
+  function auraZone(key, actor) {
+    if (battle.result || retreat) return null;
+    const inspected = unitAt(battle, key);
+    if (inspected?.aura) return { aura: inspected.aura, key: inspected.key };
+    if (!actor.aura) return null;
+    const couldMove = isPlayer() && mode === "move" && Number.isInteger(key) && movementPath(battle, actor, key);
+    return { aura: actor.aura, key: couldMove ? key : actor.key };
+  }
+  function zoneAttribute(zone, key) {
+    return zone && hexDistance(zone.key, key) <= zone.aura.radius ? zone.aura.id : null;
+  }
+  function cellMarkup(key, actor, zone) {
     const tile = battle.tiles[key], u = unitAt(battle,key), {x,y} = xy(key);
     const [terrain, terrainTip] = terrainInfo(battle,tile);
     const forecast = isPlayer() && !retreat ? previewAction(battle, mode, key) : null;
@@ -706,15 +824,18 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     if (inspectedKey === key) parts.push("cb-selected");
     const occupant = u ? [nameOf(u), u.team === "you" ? "Ally" : "Wild", ...(u === quarry ? ["Hyper Rare"] : []),
       affinityName(SPECIES[u.member.speciesId].affinity), u.hp+"/"+u.stats.maxHp+" HP",
+      ...(u.aura ? ["Emits " + u.aura.name + " within " + hexes(u.aura.radius)] : []),
+      ...Object.entries(aurasAffecting(battle, u)).map(([id, source]) => AURAS[id].name + " from " + nameOf(source)),
       ...effectsOn(u).map(effect => effectName(effect)+" "+turns(u.status[effect])), ...(u.guarded ? ["Guarding"] : [])].join(" · ")+". " : "";
     const title = cellName+". "+occupant+terrain+". "+hint;
     const ground = tile === "plain" ? "" : '<span class="cb-terrain-art" aria-hidden="true"></span><span class="cb-terrain-mark">'+icon(terrainIcon(tile))+'</span>';
-    let content = '<span class="cb-floor"></span>'+ground+(moving ? '<span class="cb-step"></span>' : '');
+    let content = '<span class="cb-floor"></span><span class="cb-aura-range" aria-hidden="true"></span>'+ground+(moving ? '<span class="cb-step"></span>' : '');
     if (u) {
       content += '<span class="cb-creature" aria-hidden="true">'+face(u)+'</span>'+
         '<i class="cb-hp"><b style="width:'+Math.ceil(100*u.hp/u.stats.maxHp)+'%"></b></i>'+activeEffects(u,true);
       if (u === quarry) content += '<i class="cb-quarry-sigil" aria-hidden="true"></i>';
       if (active) content += '<span class="cb-cursor">'+icon("turn")+'</span>';
+      if (u.aura) content += '<span class="cb-aura-source" aria-hidden="true">'+icon(auraIconKey(u.aura.id))+'</span>';
       if (targeting) {
         const matchup = forecast.modifiers?.find(key => key === "effective" || key === "resisted");
         let amount = "";
@@ -725,7 +846,9 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
         if (amount) content += '<b class="cb-amount cb-amount-'+forecast.type+(matchup ? ' cb-amount-'+matchup : '')+'">'+amount+'</b>';
       }
     }
-    return '<button type="button" data-cell="'+key+'" '+(u ? 'data-unit-id="'+u.id+'" ' : '')+'class="'+parts.join(" ")+'" tabindex="'+
+    const zoneId = zoneAttribute(zone, key);
+    return '<button type="button" data-cell="'+key+'" '+(u ? 'data-unit-id="'+u.id+'" ' : '')+
+      (zoneId ? 'data-aura-zone="'+zoneId+'" ' : '')+'class="'+parts.join(" ")+'" tabindex="'+
       (key === focusKey ? 0 : -1)+'" style="--x:'+((x+(y%2)*.5)/7.5*100)+'%;--y:'+(y*18.75)+'%" title="'+escape(title)+'" aria-label="'+escape(title)+'">'+content+'</button>';
   }
   function command(action, glyph, label, caption, selected, disabled, tip, markers = []) {
@@ -746,13 +869,14 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     });
     const supplies = getSupplies();
     const pack = supplies.length ? '<details class="cb-pack"'+(packOpen ? ' open' : '')+'><summary>Battle bag · '+
-      supplies.reduce((sum, item) => sum + item.count, 0)+'</summary><div>'+supplies.map(item =>
-      command("supply-"+item.id,item.kind,item.name,
-        "×"+item.count+" · "+(item.kind === "heal" ? "+"+item.power+" HP" : "+"+percent(item.power)+" pts"),
-        mode?.id === item.id,!interactive,item.description)
-    ).join("")+'</div></details>' : "";
+      supplies.reduce((sum, item) => sum + item.count, 0)+'</summary><div>'+supplies.map(item => {
+        const effect = item.kind === "support" ? BUFFS[item.buff].name :
+          item.kind === "heal" ? "+"+item.power+" HP" : "+"+percent(item.power)+" pts";
+        return command("supply-"+item.id,item.buff ?? item.kind,item.name,"×"+item.count+" · "+effect,
+          mode?.id === item.id,!interactive,item.description);
+      }).join("")+'</div></details>' : "";
     return [
-      command("move","move","Move",actor.moved ? "Already moved" : hexes(movementAllowance(actor)),
+      command("move","move","Move",actor.moved ? "Already moved" : hexes(movementAllowance(battle, actor)),
         mode === "move",!interactive || actor.moved,"Move along a lit path before acting."),
       ...skills,
       command("capture","capture","Capture","3 hexes",mode === "capture",!interactive,"Select a marked wild Critter to attempt capture."),
@@ -765,12 +889,17 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     return [...new Set(keys)].filter(key => FIGHT_ICONS[key]).map(key => '<div>'+icon(key)+'<div><b>'+
       escape(FIGHT_ICONS[key].label)+'</b><small>'+escape(FIGHT_ICONS[key].description)+'</small></div></div>').join("");
   }
-  const arenaKeys = battle.units.flatMap(u => u.abilities.map(a => abilityIconKey(a, SPECIES[u.member.speciesId])));
+  const arenaKeys = battle.units.flatMap(u => [
+    ...u.abilities.map(a => abilityIconKey(a, SPECIES[u.member.speciesId])),
+    ...(u.aura ? [auraIconKey(u.aura.id)] : [])
+  ]);
   const glossary = legendList(["move","wait","melee","ranged","heal","guard","capture","caught","escaped","faint","flank","cover","rock",regionHazard,
     battle.biome.effect,"slow","stun","exposed","effective","resisted","neutral",...Object.keys(BUFFS),"clear","cooldown","skip",...arenaKeys]);
   function keyMarkup() {
     return '<details class="cb-key"'+(keyOpen ? ' open' : '')+'><summary><b>Effect key</b><span>'+
-      icon("cover")+'Cover</span><span>'+icon(regionHazard)+escape(battle.biome.hazard)+'</span><span>'+icon("rock")+'Blocked</span></summary><div class="cb-glossary">'+glossary+'</div></details>';
+      icon("cover")+'Cover</span><span>'+icon(regionHazard)+escape(battle.biome.hazard)+'</span><span>'+icon("rock")+'Blocked</span></summary>'+
+      (battle.units.some(unit => unit.aura) ? '<p class="cb-aura-key">Inspect an aura carrier to see its range. Positioning controls who benefits, and auras of the same kind never stack.</p>' : '')+
+      '<div class="cb-glossary">'+glossary+'</div></details>';
   }
   function restoreFocus(old) {
     const {cell,act} = old;
@@ -802,11 +931,12 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     const focus = root.contains(document.activeElement) ? document.activeElement.dataset : {};
     const actor = activeUnit(battle), interactive = isPlayer() && !retreat;
     const selectedSkill = typeof mode === "number" && actor ? actor.abilities[mode] : null;
-    const cells = battle.tiles.map((_,key) => cellMarkup(key,actor)).join("");
+    const zone = auraZone(inspectedKey, actor);
+    const cells = battle.tiles.map((_,key) => cellMarkup(key,actor,zone)).join("");
     const turnOrder = battle.order.slice(battle.cursor).map(id => battle.units[id]).filter(living);
     let hint = "Move on a lit hex, then choose an action.";
     if (mode === "capture") hint = "Tap a marked Critter to attempt capture at the displayed chance.";
-    if (mode?.id) hint = mode.description + " Choose a marked " + (mode.kind === "heal" ? "ally." : "opponent.");
+    if (mode?.id) hint = mode.description + " Choose a marked " + (mode.kind === "capture" ? "opponent." : "ally.");
     if (selectedSkill) hint = selectedSkill.description + " Choose " + targetPrompt(selectedSkill) + ".";
     if (!interactive) hint = retreat ? "Confirm or cancel retreat." : "The wild tribe is taking its turn.";
     if (note) hint = note;
@@ -920,7 +1050,8 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
         mode = "move";
         note = "This supply is no longer in your bag.";
       } else {
-        note = "Choose " + (item.kind === "heal" ? "a wounded ally" : "a wild Critter") + " within three hexes.";
+        note = item.kind === "support" ? actorHint(item) :
+          "Choose " + (item.kind === "heal" ? "a wounded ally" : "a wild Critter") + " within three hexes.";
       }
     } else if (typeof mode === "number") {
       if (useAbility(battle,mode,u)) { void endAction(); return; }
@@ -949,6 +1080,12 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     }
     const panel = root.querySelector(".cb-inspect");
     if (panel) panel.outerHTML = inspectPanel(key);
+    const zone = auraZone(key, activeUnit(battle));
+    for (const tile of root.querySelectorAll("[data-cell]")) {
+      const id = zoneAttribute(zone, Number(tile.dataset.cell));
+      if (id) tile.dataset.auraZone = id;
+      else delete tile.dataset.auraZone;
+    }
     root.querySelector(".cb-selected")?.classList.remove("cb-selected");
     cell.classList.add("cb-selected");
   }

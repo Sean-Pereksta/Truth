@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { AFFINITIES, BUFFS, REGIONS, makeMember, SPECIES } from '../catalog.js';
+import { AFFINITIES, AURAS, BUFFS, REGIONS, makeMember, SPECIES } from '../catalog.js';
 import {
   createBattle, previewAction, takeBattleEvents, reachable, hexDistance, moveUnit,
   useAbility, guard, attemptCapture, retreatBattle, canWait, waitTurn, planEnemyTurn
@@ -174,7 +174,7 @@ test('typed attack previews and events multiply exact damage for effectiveness a
   }
 });
 
-test('area regeneration forecasts recipients and its evolved duration, then ticks once at turn end', () => {
+test('evolved area Regeneration forecasts its recipients and ticks once alongside Renewal Aura', () => {
   const b = createBattle({ region: 0 }, [makeMember(6, 20), member(1), member(2), member(3)], [member(0)]);
   b.tiles.fill('plain');
   b.order = b.units.map(unit => unit.id);
@@ -202,9 +202,13 @@ test('area regeneration forecasts recipients and its evolved duration, then tick
   assert.equal(target.status.regen, 3);
   guard(b);
   const ticks = takeBattleEvents(b).filter(e => e.type === 'heal' && e.targetId === target.id);
-  assert.equal(ticks.length, 1);
+  assert.equal(ticks.length, 2);
+  assert.equal(ticks[0].buff, 'regen');
   assert.equal(ticks[0].amount, Math.round(target.stats.maxHp * BUFFS.regen.amount));
-  assert.equal(target.hp, initialHp + ticks[0].amount);
+  assert.equal(ticks[1].aura, 'renewal');
+  assert.equal(ticks[1].actorId, caster.id);
+  assert.equal(ticks[1].amount, Math.round(target.stats.maxHp * AURAS.renewal.amount));
+  assert.equal(target.hp, initialHp + ticks[0].amount + ticks[1].amount);
   assert.equal(target.status.regen, 2);
 });
 
@@ -226,6 +230,69 @@ test('self-cast haste lasts through two turns and adds reachable hexes', () => {
     assert.equal(actor.status.haste ?? 0, i);
   }
   assert.ok(takeBattleEvents(b).some(e => e.type === 'status' && e.effect === 'haste' && e.phase === 'expire'));
+});
+
+test('positioned auras change exact attack damage, do not double up, and end when the source leaves', () => {
+  const b = arena([3, 112, 112], [0, 109, 111]);
+  const [actor, rally, reserve, foe, bulwark, dread] = b.units;
+  [actor.key, rally.key, reserve.key, foe.key, bulwark.key, dread.key] = [14, 8, 7, 16, 17, 15];
+  first(b, actor);
+  const neutral = Math.max(3, actor.stats.attack - foe.stats.defense * .42);
+  let forecast = previewAction(b, 0, foe.key);
+  assert.deepEqual(forecast.modifiers, ['aura-rally', 'aura-dread', 'aura-bulwark']);
+  assert.equal(forecast.amount, Math.round(neutral * (1 + AURAS.rally.amount) * (1 - AURAS.dread.amount) * (1 - AURAS.bulwark.amount)));
+  assert.ok(useAbility(b, 0, foe));
+  assert.deepEqual(takeBattleEvents(b).find(event => event.type === 'attack').modifiers, forecast.modifiers);
+
+  first(b, actor);
+  reserve.key = 34;
+  dread.caught = true;
+  bulwark.hp = 0;
+  forecast = previewAction(b, 0, foe.key);
+  assert.deepEqual(forecast.modifiers, ['aura-rally']);
+  rally.key = 32;
+  forecast = previewAction(b, 0, foe.key);
+  assert.deepEqual(forecast.modifiers, []);
+  assert.equal(forecast.amount, Math.round(neutral));
+});
+
+test('Tailwind extends an ally’s movement and the forecast tracks aura recipients when the carrier moves', () => {
+  const b = arena([1, 110, 0], [3]);
+  const [actor, carrier, distant, foe] = b.units;
+  [actor.key, carrier.key, distant.key, foe.key] = [14, 8, 18, 34];
+  first(b, actor);
+  assert.equal(Math.max(...reachable(b).values()), actor.stats.move + AURAS.tailwind.amount);
+  assert.equal(Math.max(...reachable(b, carrier).values()), carrier.stats.move);
+  carrier.key = 32;
+  assert.equal(Math.max(...reachable(b).values()), actor.stats.move);
+
+  carrier.key = 8;
+  first(b, carrier);
+  const forecast = previewAction(b, 'move', 11);
+  assert.deepEqual(forecast.auraChanges, [
+    { id: 'tailwind', unitId: actor.id, enters: false },
+    { id: 'tailwind', unitId: distant.id, enters: true }
+  ]);
+  assert.ok(moveUnit(b, 11));
+  assert.equal(Math.max(...reachable(b, actor).values()), actor.stats.move);
+  assert.equal(Math.max(...reachable(b, distant).values()), distant.stats.move + AURAS.tailwind.amount);
+});
+
+test('enemy movement values bringing injured allies into Renewal Aura range', () => {
+  const b = arena([1], [108, 1]);
+  const [opponent, carrier, wounded] = b.units;
+  [opponent.key, carrier.key, wounded.key] = [34, 14, 2];
+  first(b, carrier);
+  // Two legal neighboring steps are equally far from the opposing unit.
+  b.tiles.fill('rock');
+  for (const key of [14, 15, 21]) b.tiles[key] = 'plain';
+  assert.equal(hexDistance(opponent.key, 15), hexDistance(opponent.key, 21));
+  b.tiles[21] = 'cover';
+  wounded.hp -= 20;
+  carrier.abilities = carrier.abilities.filter(skill => skill.id === 'strike');
+  assert.equal(planEnemyTurn(b).key, 15);
+  carrier.aura = null;
+  assert.equal(planEnemyTurn(b).key, 21);
 });
 
 test('might and ward stack with attack affinity and cleanse only removes harmful effects', () => {

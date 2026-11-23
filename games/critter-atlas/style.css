@@ -149,6 +149,8 @@ dialog::backdrop{background:rgb(5 17 14 / .78)}
 .save-actions { display:flex; flex-wrap:wrap; gap:8px; }
 [data-load-confirm] { padding-top:8px; border-top:1px solid var(--edge); }
 .affinity-label { display:inline-flex; align-items:center; gap:3px; white-space:nowrap; }
+.companion-text .companion-aura,.guide-entry .guide-aura { color:#ecdda1; }
+.aura-note { border-left-color:#ad9dd5; }
 .affinity-chart { width:100%; border-collapse:collapse; text-align:left; font-size:.85rem; }
 .affinity-chart th,.affinity-chart td { padding:6px 4px; border-bottom:1px solid var(--edge); vertical-align:top; }
 .affinity-chart thead th { color:#e5d2a2; }

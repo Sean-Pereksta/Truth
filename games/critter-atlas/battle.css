@@ -179,6 +179,22 @@
 .cb-cell:focus-visible .cb-floor, .cb-cell:hover .cb-floor { background: #fff2b9; }
 .cb-cell:focus-visible .cb-floor::before { inset: 7%; }
 .cb-active .cb-floor::before { background: #66824eb0; }
+.cb-aura-range { display:none; position:absolute; inset:6%; pointer-events:none; }
+.cb-cell[data-aura-zone] .cb-aura-range {
+  display:block; background:var(--cb-aura-glow,#ffcb81);
+  opacity:.65;
+  clip-path:polygon(evenodd,50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%,50% 0,
+    50% 6%,6% 28%,6% 72%,50% 94%,94% 72%,94% 28%,50% 6%);
+}
+.cb-cell[data-aura-zone="bulwark"] { --cb-aura-glow:#a6c8ff; }
+.cb-cell[data-aura-zone="tailwind"] { --cb-aura-glow:#a0eee4; }
+.cb-cell[data-aura-zone="renewal"] { --cb-aura-glow:#abe7ac; }
+.cb-cell[data-aura-zone="dread"] { --cb-aura-glow:#f4a8dc; }
+.cb-aura-source {
+  position:absolute; right:18%; top:16%; display:grid; place-items:center;
+  border-radius:50%; padding:2px; background:#15251de8; border:1px solid #e4d7a481;
+  font-size:clamp(9px,1.5vw,16px); line-height:1; pointer-events:none;
+}
 /* Keep the terrain token visible even beneath an occupied hex. */
 .cb-terrain-mark {
   position:absolute; left:7%; top:42%; display:grid; place-items:center;
@@ -220,6 +236,7 @@
 .cb-key[open] summary::before { content:'▾'; }
 .cb-key summary b { color:var(--cb-text); }
 .cb-key summary span { display:inline-flex; align-items:center; gap:4px; }
+.cb-aura-key { padding:0 10px; margin:0 0 5px; color:#e5dcbf; }
 .cb-glossary { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(175px,100%),1fr)); gap:10px 16px; padding:10px 12px 14px; border-top:1px solid var(--cb-line); }
 .cb-glossary > div,.cb-ground-tip,.cb-forecast { display:flex; gap:7px; align-items:flex-start; }
 .cb-glossary > div > .fight-icon,.cb-ground-tip > .fight-icon,.cb-forecast > .fight-icon { font-size:17px; flex-shrink:0; }
@@ -301,6 +318,12 @@
 .cb-stat span > .fight-icon,.cb-ident div > span > .fight-icon,.cb-latest > .fight-icon,.cb-outcome p > .fight-icon { margin-right:4px; }
 .cb-forecast,.cb-ground-tip { margin-top:7px; padding:5px 6px; border-left:2px solid #647967; background:#193029; }
 .cb-forecast { border-left-color:#e6be72; background:#383c2d; color:#f4d796; }
+.cb-aura-detail {
+  display:flex; align-items:flex-start; gap:6px; margin:6px 0 0; padding:5px 6px;
+  background:#273b32; border-left:2px solid #c6c28c; color:#eff1d0; font-size:12px;
+}
+.cb-aura-detail .fight-icon { flex:none; margin-top:2px; }
+.cb-aura-detail small { display:block; color:var(--cb-dim); font-size:11px; }
 .cb-inspect > .cb-ground-tip:first-child { margin-top:0; }
 .cb-log li { display:flex; align-items:flex-start; gap:6px; }
 .cb-log li > .fight-icon { margin-top:1px; flex-shrink:0; }
@@ -321,7 +344,7 @@
   .cb-commands { grid-column:1; grid-row:2; grid-template-columns:repeat(3,minmax(0,1fr)); padding:6px; }
   .cb-inspect { grid-column:1; grid-row:4; border-left:0; border-top:1px solid var(--cb-line); padding:6px; margin:0 6px; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:center; gap:1px 8px; }
   .cb-inspect .cb-ident { grid-row:span 3; flex-wrap:nowrap; }
-  .cb-inspect .cb-effects,.cb-inspect .cb-forecast,.cb-inspect .cb-ground-tip { grid-column:1/-1; }
+  .cb-inspect .cb-effects,.cb-inspect .cb-forecast,.cb-inspect .cb-ground-tip,.cb-inspect .cb-aura-detail { grid-column:1/-1; }
   .cb-command-text b { font-size:12px; }
   .cb-command-text small { font-size:9px; }
   .cb-key summary { gap:3px 6px; }

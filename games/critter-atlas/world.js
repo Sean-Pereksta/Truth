@@ -1,5 +1,6 @@
 import { MAX_LEVEL, REGIONS, SPECIES, getForm, localFamilies } from './catalog.js';
 import { EXPANSION_REGIONS } from './expansion-regions.js';
+import { TRAIL_HABITATS } from './trail-species.js';
 import { DISTRICTS, SITE_IDS, WONDERS, sitesFor, hasSite, siteName, siteType, districtName, districtOf, districtDescription, signText,
   keyFor, mark, has, point, requirements, routeHint, unlockedSites, adjacent, linksFor, routeTo } from './frontier-routes.js';
 
@@ -151,7 +152,8 @@ function combatLevel(region, site) {
   if (site === 'wonder') return Math.min(45,venueLevels.vault[region]+2);
   if (region === 0 && site === 'grove') return 1;
   const expansion = EXPANSION_REGIONS[region - venueLevels.trial.length];
-  return expansion?.levels[site] ?? venueLevels[site]?.[region] ?? Math.min(MAX_LEVEL, REGIONS[region].minLevel + (trailOffsets[site] || 0));
+  const offset = TRAIL_HABITATS[site]?.levelOffset ?? trailOffsets[site] ?? 0;
+  return expansion?.levels[site] ?? venueLevels[site]?.[region] ?? Math.min(MAX_LEVEL, REGIONS[region].minLevel + offset);
 }
 function countWins(world,site) { return world.patrols[keyFor(world.region,site)] || 0; }
 const newResident = (r,site) => SPECIES.find(s => s.region === r && s.habitatId === site);
@@ -159,7 +161,7 @@ function leadSpecies(world,site) {
   const r = world.region, wins = countWins(world,site), local = localFamilies(r);
   if (site === 'hollow') return local[6].id;
   const resident = newResident(r,site);
-  if (resident && (site === 'vault' || site === 'wonder' || wins % 3 === 0)) return resident.id;
+  if (resident && (site === 'vault' || site === 'wonder' || TRAIL_HABITATS[site] || wins % 3 === 0)) return resident.id;
   if (['outpost','den','sentinel','rookery'].includes(site)) return local[wins % 2 ? 4 : 5].id;
   return local[(r + (site === 'grove' ? 3 : 0) + wins) % 6].id;
 }
@@ -193,11 +195,13 @@ function trailPoint(region, a, b, t) {
   return { x:p.x+(q.x-p.x)*t - (q.y-p.y)*bend, y:p.y+(q.y-p.y)*t + (q.x-p.x)*bend };
 }
 
-export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, onEncounter, onCamp, onMarket, onRegion, sprite } = {}) {
+export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, onEncounter, onCamp, onMarket, onRegion, sprite, getFind, onGather } = {}) {
   ensureWorld(world);
   let dead = false, walking = false, frame = 0, atlasOpen = false, notice = '';
   let target = hasSite(world.region,inspectSite) ? inspectSite : world.node;
-  let page = districtOf(target), primaryAction = null, dragStart = null;
+  let page = districtOf(target), primaryAction = null;
+  let camera = { x: 0, y: 0 }, cameraKey, fitMap = false, pointer = null, suppressClick = false, rangerPoint;
+  const districtCameras = new Map();
   const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const panel = element('section','ca-world');
   panel.setAttribute('aria-label','Exploration map');
@@ -209,31 +213,84 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
   heading.append(titleBlock,atlasButton);
   const atlas = element('div','cw-atlas'); atlas.hidden = true;
   const districtNav = element('nav','cw-district-nav'); districtNav.setAttribute('aria-label','District maps');
+  const mapControls = element('div','cw-map-controls');
+  const mapHint = element('span','cw-map-hint','Drag to explore');
+  const findRanger = button('cw-map-action','Find ranger', () => {
+    if (walking) revealCamera(rangerPoint, true);
+    else viewHere();
+  });
+  const zoomButton = button('cw-map-action','Fit map', () => {
+    fitMap = !fitMap;
+    stage.classList.toggle('cw-fit-map', fitMap);
+    zoomButton.textContent = fitMap ? 'Zoom in' : 'Fit map';
+    mapHint.textContent = fitMap ? 'District overview' : 'Drag to explore';
+    if (fitMap) setCamera(0,0);
+    else restoreDistrictCamera();
+    paintRails();
+  });
+  mapControls.append(mapHint,zoomButton,findRanger);
   const stage = element('div','cw-stage');
+  stage.setAttribute('role','group');
   stage.tabIndex = 0;
-  stage.setAttribute('aria-label','Trail map. Tap a landmark to walk, or use arrow keys and Enter.');
+  stage.setAttribute('aria-label','Trail map. Drag or press Shift and an arrow key to pan. Select a landmark or use the arrow keys to walk.');
+  const sheet = element('div','cw-map-sheet');
   const art = element('div','cw-art'), rails = element('canvas','cw-trails'), locations = element('div','cw-locations');
   rails.setAttribute('aria-hidden','true');
   const ranger = element('div','cw-ranger'); ranger.setAttribute('aria-hidden','true');
   const figure = element('canvas','cw-figure');
   stamp(figure,RANGER,RANGER_PALETTE,15,17); ranger.append(figure);
   const rose = element('span','cw-compass','N'); rose.setAttribute('aria-hidden','true');
-  stage.append(art,rails,locations,ranger,rose);
+  sheet.append(art,rails,locations,ranger);
+  stage.append(sheet,rose);
   const detail = element('div','cw-detail'), summary = element('div','cw-summary');
   const wonderScene = element('div','cw-wonder-scene'); wonderScene.hidden=true; wonderScene.setAttribute('aria-hidden','true');
   const kicker = element('span','cw-kicker'), name = element('h3','cw-site-title'), desc = element('p','cw-desc');
   summary.append(kicker,name,desc);
   const actions = element('div','cw-actions'); detail.append(wonderScene,summary,actions);
   const status = element('div','cw-status'); status.setAttribute('role','status');
-  panel.append(heading,atlas,districtNav,stage,detail,status); root.replaceChildren(panel);
+  panel.append(heading,atlas,districtNav,mapControls,stage,detail,status); root.replaceChildren(panel);
   const landmark = site => siteName(world.region,site);
   const did = site => has(world.cleared,world.region,site);
   const open = site => !requirements(world,world.region,site).length;
   const typeNames = {camp:'Trail camp',town:'Market town',tribe:'Tribal ground',guardian:'Route guardian',sign:'Trail sign',pass:'District crossing',habitat:'Wild habitat',arena:'Qualifier arena',warden:'Warden arena',hollow:'Legendary habitat',vault:'Legendary sanctuary',wonder:'Hyper Rare lair'};
 
-  function placeRanger(p) { ranger.style.left=p.x+'%'; ranger.style.top=p.y+'%'; }
+  function setCamera(x,y) {
+    const width = stage.clientWidth, height = stage.clientHeight;
+    if (!width || !height) return;
+    camera = {
+      x: Math.max(0,Math.min(x,sheet.clientWidth-width)),
+      y: Math.max(0,Math.min(y,sheet.clientHeight-height))
+    };
+    if (!fitMap) districtCameras.set(cameraKey,camera);
+    sheet.style.translate = -camera.x+'px '+(-camera.y)+'px';
+  }
+  function revealCamera(p, center = false) {
+    if (!p || fitMap) return;
+    const width = stage.clientWidth, height = stage.clientHeight;
+    const x = p.x * sheet.clientWidth / 100, y = p.y * sheet.clientHeight / 100;
+    const padX = Math.min(68,width/4), padY = Math.min(58,height/4);
+    const nextX = center ? x-width/2 : Math.min(x-padX,Math.max(x-width+padX,camera.x));
+    const nextY = center ? y-height/2 : Math.min(y-padY,Math.max(y-height+padY,camera.y));
+    setCamera(nextX,nextY);
+  }
+  function restoreDistrictCamera(focus) {
+    const previous = districtCameras.get(cameraKey);
+    setCamera(previous?.x ?? 0,previous?.y ?? 0);
+    if (focus || !previous) {
+      const site = [target,world.node].find(site => districtOf(site)===page) ?? sitesFor(world.region,page)[0];
+      revealCamera(focus ?? point(world.region,site),true);
+    }
+  }
+  function syncCamera(focus) {
+    const key = world.region+'/'+page;
+    if (key!==cameraKey || focus) {
+      cameraKey=key;
+      restoreDistrictCamera(focus);
+    }
+  }
+  function placeRanger(p) { rangerPoint=p; ranger.style.left=p.x+'%'; ranger.style.top=p.y+'%'; }
   function paintRails() {
-    const width=stage.clientWidth, height=stage.clientHeight;
+    const width=sheet.clientWidth, height=sheet.clientHeight;
     if (dead || !width || !height) return;
     const scale=Math.min(window.devicePixelRatio || 1,2);
     rails.width=Math.round(width*scale); rails.height=Math.round(height*scale);
@@ -297,6 +354,12 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
       else if(cleared) token.append(element('span','cw-clear-mark','✓'));
       const caption=element('span','cw-node-name',label);
       el.append(token,caption);
+      const find=!locked && getFind?.(world.region,site);
+      if (find) {
+        const cache=element('span','cw-find');cache.setAttribute('aria-hidden','true');token.append(cache);
+        el.title+=' · '+find.name+' available';
+        el.setAttribute('aria-label',el.getAttribute('aria-label')+', '+find.name+' available');
+      }
       const isWild=['tribe','habitat','guardian'].includes(type) || (['hollow','vault'].includes(type) && legendaryPresent(world,site)) ||
         (type==='wonder' && wonderProgress(world)?.ready);
       if(sprite && !locked && isWild) {
@@ -324,7 +387,7 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
     addAction('Your location',() => viewHere(),true);
   }
   function viewHere() {
-    page=districtOf(world.node);target=world.node;notice='';render();
+    page=districtOf(world.node);target=world.node;notice='';render(point(world.region,world.node));
   }
   function challenge(options) {
     const encounter=encounterAt(world,world.node,options);
@@ -380,7 +443,8 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
       const lid=leadSpecies(world,site), leader=getForm({speciesId:lid,level:combatLevel(r,site)}).name, resident=newResident(r,site);
       const unlock={grove:districtName(r,1),ridge:landmark('trial'),outpost:landmark('habitat'),den:landmark('sentinel'),sentinel:landmark('vault')};
       kicker.textContent+= ' · Lv. '+combatLevel(r,site);
-      if(type==='habitat') desc.textContent=resident
+      if(TRAIL_HABITATS[site]) desc.textContent=leader+' leads a patrol in this habitat. Return here to find another if it slips away.';
+      else if(type==='habitat') desc.textContent=resident
         ? (lid===resident.id?'A rare '+resident.name+' is here. Encounter its group to try a capture.':'Tracks of '+resident.name+' lead through this habitat. Win local patrols to find it. '+leader+' is here now.')
         : leader+' is nesting here. These sheltered grounds attract scarce local families.';
       else if(unlock[site]) desc.textContent=leader+' leads this group. '+(did(site)?'The route to '+unlock[site]+' is open.':'Victory opens '+unlock[site]+'.');
@@ -410,6 +474,16 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
         const next=hasTrail(world)?'hollow':!has(world.clues,r,site==='ford'?'lookout':'ford')?(site==='ford'?'lookout':'ford'):'warden';
         addAction('Trace the legend',() => go(next));
       }
+      const find=getFind?.(r,site);
+      if (find && onGather) addAction('Gather '+find.name,() => {
+        if (dead || walking) return;
+        const result=onGather(r,site);
+        if (!result) return;
+        notice=result.message;
+        if (result.ok) onChange?.(world);
+        render();
+        actions.querySelector('button')?.focus({preventScroll:true});
+      },true);
     } else if(type==='arena'||type==='warden') {
       const trial=type==='arena';
       const nextRegion=REGIONS[r+1];
@@ -449,11 +523,11 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
   }
   function toggleAtlas(opened) {
     if(walking) return;
-    atlasOpen=opened;atlas.hidden=!opened;stage.hidden=opened;detail.hidden=opened;districtNav.hidden=opened;
+    atlasOpen=opened;atlas.hidden=!opened;stage.hidden=opened;detail.hidden=opened;districtNav.hidden=opened;mapControls.hidden=opened;
     atlasButton.textContent=opened?'Back to trail':'Regions';atlasButton.setAttribute('aria-expanded',String(opened));
-    if(opened) updateAtlas(); else {paintRails();atlasButton.focus({preventScroll:true});}
+    if(opened) updateAtlas(); else {resizeMap();atlasButton.focus({preventScroll:true});}
   }
-  function render() {
+  function render(focus) {
     const r=world.region, area=REGIONS[r];
     eyebrow.textContent='Region '+String(r+1).padStart(2,'0')+' / '+REGIONS.length+' · Lv. '+combatLevel(r,'grove')+'+';
     title.textContent=area.name;
@@ -462,6 +536,7 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
     art.style.filter=area.artFilter;
     art.classList.toggle('cw-art-variant',r!==area.artRegion);
     stage.dataset.biome=String(r);stage.dataset.district=String(page);
+    syncCamera(focus);
     drawDistrictNav();fillLocations();paintRails();
     ranger.hidden=districtOf(world.node)!==page;
     if(!ranger.hidden) placeRanger(point(r,world.node));
@@ -477,7 +552,7 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
   }
   function go(site) {
     if(dead || walking || atlasOpen || !hasSite(world.region,site)) return;
-    if(!open(site)) {page=districtOf(site);target=site;notice=missingText(site);render();return;}
+    if(!open(site)) {page=districtOf(site);target=site;notice=missingText(site);render(point(world.region,site));return;}
     if(site===world.node) {viewHere();return;}
     const path=routeTo(world,site);
     if(path.length<2) {notice='This trail is closed.';status.textContent=notice;return;}
@@ -496,10 +571,11 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
           page=districtOf(b);
           drawDistrictNav();fillLocations();
           art.style.backgroundPosition='center '+page*50+'%'; stage.dataset.district=String(page);
-          paintRails();ranger.hidden=false;placeRanger(q);
+          syncCamera(q);paintRails();ranger.hidden=false;placeRanger(q);
         }
       } else {
         placeRanger(trailPoint(r,a,b,t));figure.classList.toggle('cw-facing-left',q.x<p.x);
+        if(!pointer) revealCamera(rangerPoint);
       }
       if(t<1) {frame=requestAnimationFrame(step);return;}
       leg++;startTime=now;
@@ -513,7 +589,7 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
   function moveDirection(dx,dy) {
     if(walking || atlasOpen) return;
     if(page!==districtOf(world.node)) {viewHere();return;}
-    const r=world.region,start=point(r,world.node),sx=stage.clientWidth/100,sy=stage.clientHeight/100;
+    const r=world.region,start=point(r,world.node),sx=sheet.clientWidth/100,sy=sheet.clientHeight/100;
     const options=adjacent(world,world.node).map(site => {
       const destination=point(r,site),d=districtOf(site)-page;
       const x=(d ? Math.sign(d)*100 : destination.x-start.x)*sx, y=d ? 0 : (destination.y-start.y)*sy;
@@ -528,22 +604,62 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
     if(document.querySelector('dialog[open], [aria-modal=true]:not([hidden])')) return;
     if(e.key==='Escape' && atlasOpen) {e.preventDefault();toggleAtlas(false);return;}
     if(atlasOpen) return;
-    if(keys[e.key]) {e.preventDefault();if(!e.repeat || !walking) moveDirection(...keys[e.key]);}
+    const direction=keys[e.key];
+    if(e.shiftKey && direction && e.key.startsWith('Arrow') && stage.contains(e.target)) {
+      e.preventDefault();
+      const [dx,dy]=direction;
+      setCamera(camera.x+dx*64,camera.y+dy*64);
+      return;
+    }
+    if(direction) {e.preventDefault();if(!e.repeat || !walking) moveDirection(...direction);}
     if((e.key==='Enter' || e.key===' ') && !e.target.closest?.('button,a')) {e.preventDefault();if(!e.repeat) primaryAction?.();}
   }
-  stage.addEventListener('pointerdown',e => {if(!e.target.closest('button')) dragStart=[e.clientX,e.clientY];});
-  stage.addEventListener('pointerup',e => {
-    if(!dragStart) return;
-    const x=e.clientX-dragStart[0],y=e.clientY-dragStart[1];dragStart=null;
-    if(Math.hypot(x,y)>26) moveDirection(...(Math.abs(x)>Math.abs(y)?[Math.sign(x),0]:[0,Math.sign(y)]));
+  stage.addEventListener('pointerdown',e => {
+    if (e.button!==0 || pointer || !e.isPrimary) return;
+    suppressClick=false;
+    if (!fitMap) pointer={id:e.pointerId,x:e.clientX,y:e.clientY,camera,dragging:false};
   });
-  stage.addEventListener('pointercancel',() => {dragStart=null;});
+  stage.addEventListener('pointermove',e => {
+    if (pointer?.id!==e.pointerId) return;
+    const dx=e.clientX-pointer.x, dy=e.clientY-pointer.y;
+    if (!pointer.dragging) {
+      if (Math.hypot(dx,dy)<7) return;
+      pointer.dragging=true;
+      stage.setPointerCapture(e.pointerId);
+      stage.classList.add('cw-panning');
+    }
+    setCamera(pointer.camera.x-dx,pointer.camera.y-dy);
+  });
+  function stopPan(e) {
+    if (pointer?.id!==e.pointerId) return;
+    suppressClick=pointer.dragging;
+    pointer=null;
+    stage.classList.remove('cw-panning');
+  }
+  stage.addEventListener('pointerup',stopPan);
+  stage.addEventListener('pointercancel',stopPan);
+  stage.addEventListener('lostpointercapture',e => {if(e.target===stage) stopPan(e);});
+  stage.addEventListener('pointerleave',e => {if(!pointer?.dragging) stopPan(e);});
+  stage.addEventListener('click',e => {
+    if (!suppressClick || !e.detail) return;
+    suppressClick=false;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+  },true);
+  stage.addEventListener('focusin',e => {
+    const site=e.target.closest('[data-site]')?.dataset.site;
+    if (site && !pointer) revealCamera(point(world.region,site));
+  });
+  function resizeMap() {
+    setCamera(camera.x,camera.y);
+    paintRails();
+  }
   window.addEventListener('keydown',keydown);
-  const observer=typeof ResizeObserver==='function'?new ResizeObserver(paintRails):null;
-  observer?.observe(stage);window.addEventListener('resize',paintRails);
+  const observer=typeof ResizeObserver==='function'?new ResizeObserver(resizeMap):null;
+  observer?.observe(stage);window.addEventListener('resize',resizeMap);
   render();
   return () => {
     dead=true;cancelAnimationFrame(frame);observer?.disconnect();
-    window.removeEventListener('resize',paintRails);window.removeEventListener('keydown',keydown);
+    window.removeEventListener('resize',resizeMap);window.removeEventListener('keydown',keydown);
   };
 }

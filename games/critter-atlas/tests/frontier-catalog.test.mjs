@@ -51,9 +51,12 @@ test('each frontier sighting needs its native region, matching site, and tracked
   }
 });
 
-test('the same saved roster can hold established and frontier families', () => {
+test('the same saved roster can hold established, frontier, and side habitat families', () => {
   const state = newJournal();
-  for (const family of frontier) addCapture(state, makeMember(family.id, 12));
+  const sideHabitatFamilies = SPECIES.filter(family => ['glade', 'refuge'].includes(family.habitatId));
+  assert.deepEqual(sideHabitatFamilies.map(family => [family.id, family.region, family.habitatId]),
+    REGIONS.flatMap(({id}) => [[108 + id * 2, id, 'glade'], [109 + id * 2, id, 'refuge']]));
+  for (const family of [...frontier, ...sideHabitatFamilies]) addCapture(state, makeMember(family.id, 12));
   let json;
   const storage = { setItem: (_, value) => { json = value; }, getItem: () => json };
   assert.equal(saveJournal(state, storage), true);
@@ -64,7 +67,6 @@ test('the same saved roster can hold established and frontier families', () => {
 
 test('the five wonders have four evolving forms, distinct low capture odds, and one resident each', () => {
   const wonders = SPECIES.filter(s => s.hyperRare);
-  assert.equal(SPECIES.length, 108);
   assert.equal(SPECIES.filter(s => s.legendary).length, 2 * REGIONS.length);
   assert.deepEqual(wonders.map(s => [s.id, s.name, s.region]), [
     [76, 'Veilkit', 0], [77, 'Chordcoil', 2], [78, 'Keelwisp', 3],
