@@ -1,3 +1,5 @@
+import { EXPANSION_REGIONS } from './expansion-regions.js';
+
 // A–D and 1–4 mark the two teams' starting positions, in party order.
 // Each course's lineup names established locals so gated habitat species stay wild.
 export const ARENA_COURSES = [
@@ -96,7 +98,7 @@ export const ARENA_COURSES = [
       lineup: [49, 53, 51, 50],
       tactic: 'Two banks of starfall split the orrery. Reach the jellyfish before it restores the front line.'
     }
-  }
+  }, ...EXPANSION_REGIONS.map(region => region.courses)
 ];
 
 export function arenaCourse(encounter) {

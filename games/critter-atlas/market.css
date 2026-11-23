@@ -1,6 +1,6 @@
 .mk-market,.mk-bag{--mk-line:#496052;--mk-accent:#93bc8b;color:var(--text)}
 .mk-scene{position:relative;isolation:isolate;min-height:clamp(115px,17vw,165px);display:flex;align-items:flex-end;overflow:hidden;border:1px solid var(--mk-line);border-radius:9px;background:#293f33}
-.mk-scene::before{position:absolute;inset:0;z-index:-2;content:"";background-image:url("./assets/frontier-markets.webp");background-size:200% 400%;background-position:var(--mk-x) var(--mk-y);image-rendering:pixelated}
+.mk-scene::before{position:absolute;inset:0;z-index:-2;content:"";background-image:url("./assets/frontier-markets.webp");background-size:200% 400%;background-position:var(--mk-x) var(--mk-y);filter:var(--mk-filter,none);image-rendering:pixelated}
 .mk-scene::after{position:absolute;inset:0;z-index:-1;content:"";background:linear-gradient(10deg,#0c1d1bf5 1%,#10251cb8 30%,transparent 70%)}
 .mk-scene>div{padding:clamp(14px,2.8vw,32px);text-shadow:0 2px 4px #14211b}
 .mk-scene h1,.mk-bag-heading h1{margin:0;color:#fff0ce;font:700 clamp(1.65rem,4vw,2.75rem)/1.03 var(--serif);letter-spacing:-.04em}

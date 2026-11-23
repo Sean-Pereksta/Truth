@@ -47,7 +47,7 @@ test('all regional trials and wardens have distinct, connected courts and local 
       assert.equal(reachable(battle, explorer).size, battle.tiles.filter(t => t !== 'rock').length);
     }
   }
-  assert.equal(floors.size, 16);
+  assert.equal(floors.size,2 * REGIONS.length);
 });
 
 test('off-court encounters retain sanctuary and habitat leaders', () => {

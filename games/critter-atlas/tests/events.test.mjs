@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { makeMember, SPECIES } from '../catalog.js';
+import { AFFINITIES, BUFFS, REGIONS, makeMember, SPECIES } from '../catalog.js';
 import {
   createBattle, previewAction, takeBattleEvents, reachable, hexDistance, moveUnit,
-  useAbility, guard, attemptCapture, retreatBattle, canWait, waitTurn
+  useAbility, guard, attemptCapture, retreatBattle, canWait, waitTurn, planEnemyTurn
 } from '../battle.js';
 
 const member = id => makeMember(id, 12);
@@ -122,7 +122,7 @@ test('healing caps at full HP and shows its shared recovery', () => {
 });
 
 test('each biome hazard preview and event use the same damage or status', () => {
-  for (let region = 0; region < 8; region++) {
+  for (const {id: region} of REGIONS) {
     const b = arena([0], [1], region);
     const [actor] = b.units;
     b.tiles[15] = 'hazard';
@@ -146,6 +146,137 @@ test('each biome hazard preview and event use the same damage or status', () => 
   guard(b);
   assert.deepEqual(takeBattleEvents(b).map(e => e.type), ['guard','hazard','faint','outcome']);
   assert.equal(b.result, 'lost');
+});
+
+test('typed attack previews and events multiply exact damage for effectiveness and resistance', () => {
+  for (const [affinity, multiplier, modifier] of [
+    [AFFINITIES.forest.strongAgainst[0], 1.5, 'effective'],
+    ['forest', .65, 'resisted']
+  ]) {
+    const species = SPECIES.find(family => family.affinity === affinity);
+    const b = arena([0], [species.id]);
+    const [actor, foe] = b.units;
+    first(b, actor);
+    actor.key = 14;
+    foe.key = 15;
+    const signature = actor.abilities.findIndex(skill => skill.id === 'signature');
+    const skill = actor.abilities[signature];
+    const base = Math.max(3, actor.stats.attack * skill.power - foe.stats.defense * .42);
+    const forecast = previewAction(b, signature, foe.key);
+    assert.deepEqual(forecast.modifiers, [modifier]);
+    assert.equal(forecast.amount, Math.round(base * multiplier));
+    assert.deepEqual(previewAction(b, 0, foe.key).modifiers, []);
+    assert.ok(useAbility(b, signature, foe));
+    const [event] = takeBattleEvents(b);
+    assert.equal(event.affinity, 'forest');
+    assert.equal(event.hpAfter, foe.hp);
+    assert.deepEqual(event.modifiers, [modifier]);
+  }
+});
+
+test('area regeneration forecasts recipients and its evolved duration, then ticks once at turn end', () => {
+  const b = createBattle({ region: 0 }, [makeMember(6, 20), member(1), member(2), member(3)], [member(0)]);
+  b.tiles.fill('plain');
+  b.order = b.units.map(unit => unit.id);
+  const [caster, target, nearby, distant, foe] = b.units;
+  [caster.key, target.key, nearby.key, distant.key, foe.key] = [14, 15, 16, 34, 20];
+  for (const unit of [target, nearby, distant]) unit.hp -= 30;
+  const index = caster.abilities.findIndex(skill => skill.id === 'apex');
+  const initialHp = target.hp;
+  const forecast = previewAction(b, index, target.key);
+  assert.deepEqual(forecast.recipients.map(unit => unit.id), [target.id, nearby.id]);
+  assert.equal(forecast.duration, 3);
+  assert.equal(previewAction(b, index, foe.key), null);
+  assert.ok(useAbility(b, index, target));
+  assert.equal(target.status.regen, 3);
+  assert.equal(nearby.status.regen, 3);
+  assert.equal(distant.status.regen, undefined);
+  assert.equal(target.hp, initialHp);
+  const [event] = takeBattleEvents(b);
+  assert.deepEqual(event.recipients, forecast.recipients);
+  assert.equal(event.type, 'support');
+  assert.equal(active(b), target);
+  assert.ok(waitTurn(b));
+  while (active(b) !== target) guard(b);
+  assert.equal(target.hp, initialHp);
+  assert.equal(target.status.regen, 3);
+  guard(b);
+  const ticks = takeBattleEvents(b).filter(e => e.type === 'heal' && e.targetId === target.id);
+  assert.equal(ticks.length, 1);
+  assert.equal(ticks[0].amount, Math.round(target.stats.maxHp * BUFFS.regen.amount));
+  assert.equal(target.hp, initialHp + ticks[0].amount);
+  assert.equal(target.status.regen, 2);
+});
+
+test('self-cast haste lasts through two turns and adds reachable hexes', () => {
+  const b = arena([8], [1]);
+  const [actor, foe] = b.units;
+  first(b, actor);
+  [actor.key, foe.key] = [14, 20];
+  const normal = Math.max(...reachable(b, actor).values());
+  const index = actor.abilities.findIndex(skill => skill.buff === 'haste');
+  assert.ok(useAbility(b, index, actor));
+  assert.equal(actor.status.haste, 2);
+  assert.equal(Math.max(...reachable(b, actor).values()), normal + 1);
+  for (let i = 1; i >= 0; i--) {
+    assert.equal(active(b), foe);
+    guard(b);
+    assert.equal(active(b), actor);
+    guard(b);
+    assert.equal(actor.status.haste ?? 0, i);
+  }
+  assert.ok(takeBattleEvents(b).some(e => e.type === 'status' && e.effect === 'haste' && e.phase === 'expire'));
+});
+
+test('might and ward stack with attack affinity and cleanse only removes harmful effects', () => {
+  const b = arena([0, 27], [1]);
+  const [striker, caster, foe] = b.units;
+  [striker.key, caster.key, foe.key] = [14, 8, 15];
+  first(b, striker);
+  const attack = striker.abilities.findIndex(skill => skill.id === 'signature');
+  striker.status.power = 1;
+  foe.status.ward = 2;
+  const skill = striker.abilities[attack];
+  let forecast = previewAction(b, attack, foe.key);
+  assert.deepEqual(forecast.modifiers, ['resisted', 'power', 'ward', 'flank']);
+  assert.equal(forecast.amount, Math.round(Math.max(3, striker.stats.attack * skill.power - foe.stats.defense * .42) *
+    .65 * (1 + BUFFS.power.amount) * (1 - BUFFS.ward.amount) * 1.2));
+  const captureWithWard = previewAction(b, 'capture', foe.key).chance;
+  foe.status.slow = 1;
+  assert.ok(previewAction(b, 'capture', foe.key).chance > captureWithWard);
+  delete foe.status.slow;
+  delete foe.status.ward;
+  assert.equal(previewAction(b, 'capture', foe.key).chance, captureWithWard);
+
+  striker.status.slow = 1;
+  striker.status.stun = 1;
+  first(b, caster);
+  const cleanse = caster.abilities.findIndex(skill => skill.buff === 'cleanse');
+  forecast = previewAction(b, cleanse, striker.key);
+  assert.deepEqual(forecast.recipients[0].removed, ['slow', 'stun']);
+  assert.ok(useAbility(b, cleanse, striker));
+  assert.deepEqual(striker.status, { power: 1 });
+});
+
+test('enemy tactics choose useful area buffs and switch attacks against resistant targets', () => {
+  const charge = arena([3], [41, 5, 0]);
+  const [defender, commander, firstAlly, secondAlly] = charge.units;
+  first(charge, commander);
+  [defender.key, commander.key, firstAlly.key, secondAlly.key] = [20, 14, 15, 16];
+  const boost = planEnemyTurn(charge);
+  assert.equal(commander.abilities[boost.i].buff, 'power');
+  if (boost.key !== commander.key) assert.ok(moveUnit(charge, boost.key));
+  assert.ok(previewAction(charge, boost.i, boost.target.key).recipients.length > 1);
+  assert.ok(useAbility(charge, boost.i, boost.target));
+
+  for (const [defenderId, expectedAbility] of [[7, 'signature'], [1, 'strike']]) {
+    const b = arena([defenderId], [0]);
+    const [opponent, attacker] = b.units;
+    first(b, attacker);
+    [opponent.key, attacker.key] = [14, 15];
+    const plan = planEnemyTurn(b);
+    assert.equal(attacker.abilities[plan.i].id, expectedAbility);
+  }
 });
 
 test('capture rolls once against the preview, retains target sprite identity and branches on result', () => {

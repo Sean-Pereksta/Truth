@@ -48,12 +48,16 @@
 .cw-stage[data-biome="5"] { background-color: #8c554b; }
 .cw-stage[data-biome="6"] { background-color: #69715c; }
 .cw-stage[data-biome="7"] { background-color: #454165; }
+.cw-stage[data-biome="8"] { background-color: #766b3f; }
+.cw-stage[data-biome="9"] { background-color: #8b8178; }
+.cw-stage[data-biome="10"] { background-color: #4c7483; }
 .cw-art, .cw-trails, .cw-locations { width: 100%; height: 100%; position: absolute; inset: 0; }
 .cw-art, .cw-region-thumb {
   background-image: url('./assets/regions.webp');
   background-repeat: no-repeat; background-size: 200% 400%; image-rendering: pixelated;
 }
 .cw-art { z-index: -2; }
+.cw-art-variant { transform: scaleX(-1); }
 .cw-art::after { content:''; position: absolute; inset: 0; background: linear-gradient(0deg,#12272344,transparent 22%,transparent 84%,#1931273b); box-shadow: inset 0 0 0 2px #f2db9715; }
 .cw-trails { z-index: -1; pointer-events: none; }
 .cw-locations { pointer-events: none; }
@@ -117,6 +121,7 @@
 .cw-region:disabled { cursor: default; color: #bebfaf; background: #22332c; }
 .cw-region:disabled .cw-region-thumb { filter: grayscale(.85) brightness(.64); }
 .cw-region-thumb { width: 68px; border-radius: 2px; flex: 0 0 auto; background-color: #526754; background-image: url('./assets/panoramas.webp'); }
+.cw-region:not(:disabled) .cw-region-thumb { filter: var(--region-filter,none); }
 .cw-region-info { display: flex; justify-content: center; flex-direction: column; padding: 5px 4px 5px 0; }
 .cw-region-info b { font: 700 17px/1.1 Georgia, serif; }
 .cw-region-info small { font-size: 11px; margin-top: 3px; line-height: 1.25; }

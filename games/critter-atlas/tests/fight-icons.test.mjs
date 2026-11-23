@@ -3,14 +3,14 @@ import { readFileSync } from 'node:fs';
 import { inflateSync } from 'node:zlib';
 import { createHash } from 'node:crypto';
 import test from 'node:test';
-import { REGIONS, SPECIES, MAX_LEVEL, getAbilities } from '../catalog.js';
-import { FIGHT_ICONS, fightIcon, abilityIconKey, hazardIconKey } from '../fight-icons.js';
+import { AFFINITIES, BUFFS, REGIONS, SPECIES, MAX_LEVEL, getAbilities } from '../catalog.js';
+import { FIGHT_ICONS, fightIcon, abilityIconKey, affinityIconKey, hazardIconKey } from '../fight-icons.js';
 import { sprite, spriteAtlas } from '../art.js';
 import { warmFightEffects } from '../fight-effects.js';
 
 test('frontier forms use matching idle and action sheets independently of habitat', () => {
   const css = readFileSync(new URL('../art.css', import.meta.url), 'utf8');
-  for (const family of SPECIES.slice(56)) {
+  for (const family of SPECIES.slice(56).filter(s => s.baseSpeciesId === undefined)) {
     const { sheet, columns, column } = spriteAtlas(family.id);
     const wonder = family.id >= 76;
     assert.equal(columns, wonder ? 5 : 4);
@@ -28,6 +28,21 @@ test('frontier forms use matching idle and action sheets independently of habita
       assert.ok(sprite(family.id, stage).includes('sprite-' + sheet));
       assert.ok(sprite(family.id, stage).includes('aria-label="' + name + '"'));
     });
+  }
+  for (const family of SPECIES.filter(s => s.baseSpeciesId !== undefined)) {
+    const atlas = spriteAtlas(family.id);
+    assert.deepEqual(atlas, spriteAtlas(family.baseSpeciesId));
+    family.forms.forEach((name, stage) => {
+      const art = sprite(family.id, stage);
+      assert.ok(art.includes('sprite-' + atlas.sheet));
+      assert.ok(art.includes('aria-label="' + name + '"'));
+      assert.ok(art.includes('--sprite-filter:'));
+    });
+    for (const id of ['signature', 'apex']) {
+      const {alias} = FIGHT_ICONS[`${id}-${family.id}`];
+      assert.equal(alias, `${id}-${family.baseSpeciesId}`);
+      assert.ok(Number.isInteger(FIGHT_ICONS[alias].index));
+    }
   }
   const assets = [];
   const OriginalImage = globalThis.Image;
@@ -58,7 +73,14 @@ test('all region hazards and learned abilities have labeled icons, including eac
   }
   assert.equal(signatures.size, SPECIES.length * 2);
   assert.deepEqual(REGIONS.map(r => FIGHT_ICONS[hazardIconKey(r.id)].label),
-    ['Hookbriar','Sour bog','Loose shale','Riptide','Black ice','Lava vent','Rune trap','Starfall']);
+    ['Hookbriar','Sour bog','Loose shale','Riptide','Black ice','Lava vent','Rune trap','Starfall','Bristlegrass','Salt glare','Cold vent']);
+  for (const affinity of Object.keys(AFFINITIES)) {
+    assert.equal(FIGHT_ICONS[affinityIconKey(affinity)].label, AFFINITIES[affinity].name);
+  }
+  for (const buff of Object.keys(BUFFS)) {
+    assert.match(fightIcon(buff), /class="fight-icon fight-symbol"/);
+    assert.equal(FIGHT_ICONS[buff].label, BUFFS[buff].name);
+  }
   assert.match(fightIcon('capture','Aim at "Bramblit"'), /Aim at &quot;Bramblit&quot;/);
 });
 
@@ -96,10 +118,10 @@ function readAtlas(file) {
   return { width, height, pixels };
 }
 
-test('every named symbol maps to a distinct painted, nonempty atlas cell', () => {
+test('every painted icon maps to a distinct, nonempty atlas cell', () => {
   const { width, height, pixels } = readAtlas(new URL('../assets/fight-icons-wonders.png', import.meta.url));
   const cell = 20, columns = 8;
-  const entries = Object.entries(FIGHT_ICONS);
+  const entries = Object.entries(FIGHT_ICONS).filter(([, icon]) => Number.isInteger(icon.index));
   assert.equal(width, columns * cell);
   assert.equal(height, Math.ceil(entries.length / columns) * cell);
   const fingerprints = new Set();

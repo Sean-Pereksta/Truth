@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SPECIES, REGIONS, EVOLUTION_LEVELS, MAX_LEVEL, getForm, getStats, getAbilities, captureChance, makeMember, rollEncounter } from '../catalog.js';
+import { SPECIES, REGIONS, EVOLUTION_LEVELS, MAX_LEVEL, getForm, getStats, getAbilities, captureChance, makeMember, rollEncounter, localFamilies } from '../catalog.js';
 import { newJournal, addCapture, loadJournal, saveJournal } from '../journal.js';
 
 const frontier = SPECIES.slice(56, 76);
@@ -13,7 +13,7 @@ test('frontier catalog adds 12 rare and 8 legendary families with distinct moves
   assert.equal(new Set(SPECIES.flatMap(s => s.forms)).size, 4 * SPECIES.length);
   assert.equal(new Set(SPECIES.map(s => s.captureRate)).size, SPECIES.length);
   assert.equal(new Set(SPECIES.map(s => s.signature)).size, SPECIES.length);
-  for (const { id } of REGIONS) {
+  for (const { id } of REGIONS.slice(0,8)) {
     const local = frontier.filter(s => s.region === id);
     assert.equal(local.filter(s => s.legendary).length, 1);
     assert.ok(local.some(s => s.rarity === 'Rare'));
@@ -41,11 +41,12 @@ test('each frontier sighting needs its native region, matching site, and tracked
     for (const changed of [{ habitatId: undefined }, { habitatId: 'grove' }, { leadSpeciesId: undefined }]) {
       assert.ok(rollEncounter(family.region, { ...options, ...changed }).every(m => m.speciesId < 56));
     }
-    assert.ok(rollEncounter((family.region + 1) % REGIONS.length, options).every(m => m.speciesId < 56));
+    assert.ok(rollEncounter(family.region + 1, options).every(m => SPECIES[m.speciesId].region === family.region + 1 && !SPECIES[m.speciesId].habitatId));
   }
   for (const region of REGIONS) {
-    assert.equal(rollEncounter(region.id, { legendary: true, rng: always })[0].speciesId, region.id * 7 + 6);
-    assert.equal(rollEncounter(region.id, { habitatId: 'hollow', legendary: true, rng: always })[0].speciesId, region.id * 7 + 6);
+    const legend = localFamilies(region.id).find(species => species.legendary);
+    assert.equal(rollEncounter(region.id, { legendary: true, rng: always })[0].speciesId, legend.id);
+    assert.equal(rollEncounter(region.id, { habitatId: 'hollow', legendary: true, rng: always })[0].speciesId, legend.id);
     assert.ok(rollEncounter(region.id, { habitatId: 'vault', legendary: true, rng: always }).every(m => !SPECIES[m.speciesId].legendary));
   }
 });
@@ -63,8 +64,8 @@ test('the same saved roster can hold established and frontier families', () => {
 
 test('the five wonders have four evolving forms, distinct low capture odds, and one resident each', () => {
   const wonders = SPECIES.filter(s => s.hyperRare);
-  assert.equal(SPECIES.length, 81);
-  assert.equal(SPECIES.filter(s => s.legendary).length, 16);
+  assert.equal(SPECIES.length, 108);
+  assert.equal(SPECIES.filter(s => s.legendary).length, 2 * REGIONS.length);
   assert.deepEqual(wonders.map(s => [s.id, s.name, s.region]), [
     [76, 'Veilkit', 0], [77, 'Chordcoil', 2], [78, 'Keelwisp', 3],
     [79, 'Crucibex', 5], [80, 'Prismarch', 7]

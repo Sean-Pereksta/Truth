@@ -1,12 +1,12 @@
 /* Columns are regional palettes. Rows distinguish obstacles, cover and hazards. */
-.cb-arena[data-region="0"] { --ground-x: 0%; }
-.cb-arena[data-region="1"] { --ground-x: 14.285714%; }
-.cb-arena[data-region="2"] { --ground-x: 28.571429%; }
-.cb-arena[data-region="3"] { --ground-x: 42.857143%; }
-.cb-arena[data-region="4"] { --ground-x: 57.142857%; }
-.cb-arena[data-region="5"] { --ground-x: 71.428571%; }
-.cb-arena[data-region="6"] { --ground-x: 85.714286%; }
-.cb-arena[data-region="7"] { --ground-x: 100%; }
+.cb-arena[data-art-region="0"] { --ground-x: 0%; }
+.cb-arena[data-art-region="1"] { --ground-x: 14.285714%; }
+.cb-arena[data-art-region="2"] { --ground-x: 28.571429%; }
+.cb-arena[data-art-region="3"] { --ground-x: 42.857143%; }
+.cb-arena[data-art-region="4"] { --ground-x: 57.142857%; }
+.cb-arena[data-art-region="5"] { --ground-x: 71.428571%; }
+.cb-arena[data-art-region="6"] { --ground-x: 85.714286%; }
+.cb-arena[data-art-region="7"] { --ground-x: 100%; }
 .cb-rock { --ground-y: 0%; }
 .cb-cover { --ground-y: 50%; }
 .cb-hazard { --ground-y: 100%; }

@@ -53,22 +53,25 @@
 .cb-arena {
   position: relative; isolation: isolate; padding: 3% 2.5% 2.5%; overflow: hidden;
   background-color: #334b3f;
-  background-image: url("./assets/arenas.webp");
-  background-size: 200% 400%; background-position: var(--atlas-x) var(--atlas-y);
+  --arena-art: url("./assets/arenas.webp");
+  --arena-size: 200% 400%; --arena-position: var(--atlas-x) var(--atlas-y);
   border-block: 1px solid #506653;
   image-rendering: pixelated;
 }
 .cb-arena::before {
   content: ""; position: absolute; z-index: -1; inset: 0; pointer-events: none;
-  background: linear-gradient(0deg, #13252269, #152b2308 50%, #172a2038);
+  background-image: linear-gradient(0deg, #13252269, #152b2308 50%, #172a2038), var(--arena-art);
+  background-size: 100% 100%, var(--arena-size); background-position: center, var(--arena-position);
+  background-repeat: no-repeat;
+  filter: var(--arena-filter, none);
 }
 .cb-arena.cb-built-arena {
-  padding:4% 7%; background-image: var(--venue); background-position:center;
-  background-size:100% 100%; background-repeat:no-repeat;
+  padding:4% 7%; --arena-art: var(--venue); --arena-position:center;
+  --arena-size:100% 100%;
 }
 .cb-arena.cb-hunt-arena {
-  padding:4% 5.5%; background-image:url("./assets/hyper-lairs.webp");
-  background-size:100% 500%; background-position:50% var(--hunt-panel); background-repeat:no-repeat;
+  padding:4% 5.5%; --arena-art:url("./assets/hyper-lairs.webp");
+  --arena-size:100% 500%; --arena-position:50% var(--hunt-panel);
   --omen:#ceefad; --mote:#f4e4ac; --rise:-25px;
 }
 .cb-hunt-arena[data-region="2"] { --omen:#c7c5ff; --mote:#8ff4ff; --rise:-11px; }
@@ -198,8 +201,13 @@
 }
 .cb-amount-heal { border-color:#95d8b1; background:#204638f2; color:#d7ffe5; }
 .cb-amount-capture { border-color:#efd28c; background:#43391df2; color:#ffe99c; }
+.cb-amount-support { border-color:#a5c6fb; background:#263a57f2; color:#deecff; }
+.cb-amount-effective { border-color:#a3df99; }
+.cb-amount-resisted { border-color:#efc196; }
+.cb-amount > .fight-symbol { font-size:.8em; }
 .cb-target-heal .cb-floor::before { background:#467b60b8; }
 .cb-target-capture .cb-floor::before { background:#8a792ea8; }
+.cb-target-support .cb-floor::before { background:#395c90c2; }
 .cb-pips { position:absolute; right:7%; top:35%; display:grid; gap:1px; font-size:clamp(9px,1.2vw,15px); line-height:1; }
 .cb-pips .cb-effect { display:grid; place-items:center; border-radius:4px; background:#162924e8; }
 .cb-news { display:flex; align-items:center; min-height:37px; border-bottom:1px solid var(--cb-line); }

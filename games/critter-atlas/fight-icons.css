@@ -10,3 +10,10 @@
   image-rendering: pixelated;
   pointer-events: none;
 }
+.fight-symbol {
+  text-align: center;
+  background: none;
+  color: var(--fight-symbol-color);
+  font: bold 1em/1 system-ui, sans-serif;
+  text-shadow: 0 1px 2px #15221d;
+}

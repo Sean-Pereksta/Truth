@@ -1,4 +1,5 @@
-import { REGIONS, SPECIES, getForm } from './catalog.js';
+import { MAX_LEVEL, REGIONS, SPECIES, getForm, localFamilies } from './catalog.js';
+import { EXPANSION_REGIONS } from './expansion-regions.js';
 import { DISTRICTS, SITE_IDS, WONDERS, sitesFor, hasSite, siteName, siteType, districtName, districtOf, districtDescription, signText,
   keyFor, mark, has, point, requirements, routeHint, unlockedSites, adjacent, linksFor, routeTo } from './frontier-routes.js';
 
@@ -14,9 +15,10 @@ function regionIndex(n) {
 
 export function ensureWorld(world) {
   world.unlocked = regionIndex(world.unlocked);
+  for (const key of ['cleared', 'clues', 'hunts']) if (!Array.isArray(world[key])) world[key] = [];
+  while (world.unlocked < REGIONS.length - 1 && has(world.cleared,world.unlocked,'warden')) world.unlocked++;
   world.region = Math.min(regionIndex(world.region), world.unlocked);
   if (!hasSite(world.region,world.node)) world.node = 'camp';
-  for (const key of ['cleared', 'clues', 'hunts']) if (!Array.isArray(world[key])) world[key] = [];
   if (!world.sightings || typeof world.sightings !== 'object') world.sightings = {};
   if (!world.patrols || typeof world.patrols !== 'object') world.patrols = {};
   if (!world.wonders || typeof world.wonders !== 'object') world.wonders = {};
@@ -148,17 +150,18 @@ const trailOffsets = { outpost: 1, ridge: 1, habitat: 2, rookery: 3, hollow: 3 }
 function combatLevel(region, site) {
   if (site === 'wonder') return Math.min(45,venueLevels.vault[region]+2);
   if (region === 0 && site === 'grove') return 1;
-  return venueLevels[site]?.[region] ?? REGIONS[region].minLevel + (trailOffsets[site] || 0);
+  const expansion = EXPANSION_REGIONS[region - venueLevels.trial.length];
+  return expansion?.levels[site] ?? venueLevels[site]?.[region] ?? Math.min(MAX_LEVEL, REGIONS[region].minLevel + (trailOffsets[site] || 0));
 }
 function countWins(world,site) { return world.patrols[keyFor(world.region,site)] || 0; }
 const newResident = (r,site) => SPECIES.find(s => s.region === r && s.habitatId === site);
 function leadSpecies(world,site) {
-  const r = world.region, wins = countWins(world,site), oldBase = r*7;
-  if (site === 'hollow') return oldBase + 6;
+  const r = world.region, wins = countWins(world,site), local = localFamilies(r);
+  if (site === 'hollow') return local[6].id;
   const resident = newResident(r,site);
   if (resident && (site === 'vault' || site === 'wonder' || wins % 3 === 0)) return resident.id;
-  if (['outpost','den','sentinel','rookery'].includes(site)) return oldBase + (wins % 2 ? 4 : 5);
-  return oldBase + (r + (site === 'grove' ? 3 : 0) + wins) % 6;
+  if (['outpost','den','sentinel','rookery'].includes(site)) return local[wins % 2 ? 4 : 5].id;
+  return local[(r + (site === 'grove' ? 3 : 0) + wins) % 6].id;
 }
 function legendaryPresent(world,site) {
   return site === 'vault' ? countWins(world,'sentinel') > countWins(world,'vault') : world.sightings[world.region] === -1;
@@ -409,10 +412,11 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
       }
     } else if(type==='arena'||type==='warden') {
       const trial=type==='arena';
+      const nextRegion=REGIONS[r+1];
       kicker.textContent+=' · Lv. '+combatLevel(r,site);
       if(trial) desc.textContent='Win the qualifier in this regional stadium. Its pennant opens '+districtName(r,2)+' and '+landmark('rookery')+'.';
-      else desc.textContent=did(site)?'Your crest opens the elite den'+(r<7?' and the next region.':'.'):'Defeat the warden in the stadium to open '+landmark('den')+(r<7?' and '+REGIONS[r+1].name+'.':'.');
-      if(did(site) && !trial && r<7) {addAction('Next region',() => travel(r+1));addAction('Rematch warden',challenge,true);}
+      else desc.textContent=did(site)?'Your crest opens the elite den'+(nextRegion?' and the next region.':'.'):'Defeat the warden in the stadium to open '+landmark('den')+(nextRegion?' and '+nextRegion.name+'.':'.');
+      if(did(site) && !trial && nextRegion) {addAction('Next region',() => travel(r+1));addAction('Rematch warden',challenge,true);}
       else addAction(trial?(did(site)?'Rematch qualifier':'Enter qualifier'):(did(site)?'Rematch warden':'Challenge warden'),challenge);
       if(did(site)) addAction(trial?'Take the high pass':'Find elite den',() => go(trial?'farpost':'den'),true);
     } else {
@@ -435,7 +439,9 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
       const allowed=i<=world.unlocked;
       const row=button('cw-region','',() => travel(i));row.disabled=!allowed;
       row.setAttribute('aria-current',i===world.region?'location':'false');
-      const thumb=element('span','cw-region-thumb');thumb.style.backgroundPosition=(i%2*100)+'% '+(Math.floor(i/2)*100/3)+'%';
+      const thumb=element('span','cw-region-thumb'), source=item.artRegion;
+      thumb.style.backgroundPosition=(source%2*100)+'% '+(Math.floor(source/2)*100/3)+'%';
+      if(item.artFilter!=='none') thumb.style.setProperty('--region-filter',item.artFilter);
       const info=element('span','cw-region-info');
       info.append(element('b','',item.name),element('small','',allowed?(i===world.region?'Exploring':'Level '+combatLevel(i,'grove')+'+'):'Earn the '+REGIONS[i-1].name+' crest'));
       row.append(thumb,info);atlas.append(row);
@@ -448,11 +454,13 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
     if(opened) updateAtlas(); else {paintRails();atlasButton.focus({preventScroll:true});}
   }
   function render() {
-    const r=world.region;
-    eyebrow.textContent='Region '+String(r+1).padStart(2,'0')+' / 08 · Lv. '+combatLevel(r,'grove')+'+';
-    title.textContent=REGIONS[r].name;
-    art.style.backgroundImage='url("'+new URL('./assets/frontier-map-'+r+'.webp',import.meta.url).href+'")';
+    const r=world.region, area=REGIONS[r];
+    eyebrow.textContent='Region '+String(r+1).padStart(2,'0')+' / '+REGIONS.length+' · Lv. '+combatLevel(r,'grove')+'+';
+    title.textContent=area.name;
+    art.style.backgroundImage='url("'+new URL('./assets/frontier-map-'+area.artRegion+'.webp',import.meta.url).href+'")';
     art.style.backgroundPosition='center '+page*50+'%';
+    art.style.filter=area.artFilter;
+    art.classList.toggle('cw-art-variant',r!==area.artRegion);
     stage.dataset.biome=String(r);stage.dataset.district=String(page);
     drawDistrictNav();fillLocations();paintRails();
     ranger.hidden=districtOf(world.node)!==page;

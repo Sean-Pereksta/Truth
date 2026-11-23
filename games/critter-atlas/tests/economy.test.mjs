@@ -25,7 +25,7 @@ test('a legacy save receives starting supplies while zero balances and known bag
   assert.equal(restoreEconomy({coins:Infinity,bag:{}}).coins,0);
 });
 
-test('all eight trading posts have unique local recruits and goods, with affordable starting options', () => {
+test('all trading posts have unique local recruits and goods, with affordable starting options', () => {
   const species = new Set(), foods = new Set(), battleItems = new Set();
   for (const region of REGIONS) {
     const s=visit(region.id), stock=critterStock(region.id);
@@ -33,7 +33,7 @@ test('all eight trading posts have unique local recruits and goods, with afforda
     for (const offer of stock) {
       assert.equal(SPECIES[offer.speciesId].region,region.id);
       assert.equal(SPECIES[offer.speciesId].legendary,false);
-      assert.ok(offer.speciesId < 56);
+      assert.equal(SPECIES[offer.speciesId].habitatId,undefined);
       species.add(offer.speciesId);
       const member=makeMember(offer.speciesId,offer.level);
       addCapture(s,member);
@@ -46,7 +46,9 @@ test('all eight trading posts have unique local recruits and goods, with afforda
       else if (!['tonic','thread'].includes(id)) battleItems.add(id);
     }
   }
-  assert.equal(species.size,16); assert.equal(foods.size,8); assert.equal(battleItems.size,8);
+  assert.equal(species.size,2 * REGIONS.length);
+  assert.equal(foods.size,REGIONS.length);
+  assert.equal(battleItems.size,REGIONS.length);
   assert.ok(critterStock(0)[0].price <= freshEconomy().coins);
 });
 

@@ -1,4 +1,5 @@
-import { SPECIES } from './catalog.js';
+import { BUFFS, SPECIES } from './catalog.js';
+import { EXPANSION_BIOMES } from './expansion-regions.js';
 
 // Atlas cells run left to right. Semantic names keep the same glyph in the
 // arena, action bar, combat log and field guide.
@@ -85,11 +86,12 @@ const glyphs = [
   ['affinity-astral', 'Astral', 'The wild magic of Starfall Reach.']
 ];
 
-for (const family of SPECIES) {
+const paintedFamilies = SPECIES.filter(family => family.baseSpeciesId === undefined);
+for (const family of paintedFamilies) {
   glyphs.push(['signature-' + family.id, family.signature,
     family.name + '’s signature ability.']);
 }
-for (const family of SPECIES) {
+for (const family of paintedFamilies) {
   glyphs.push(['apex-' + family.id, family.signature + ' II',
     'The evolved signature of ' + family.forms[3] + '.']);
 }
@@ -99,15 +101,49 @@ glyphs.push(
   ['sound-off', 'Sound off', 'Battle sounds are muted.']
 );
 
-export const FIGHT_ICONS = Object.freeze(Object.fromEntries(glyphs.map(([key, label, description], index) =>
-  [key, Object.freeze({ label, description, index })]
-)));
+const icons = Object.fromEntries(glyphs.map(([key, label, description], index) => [key, { label, description, index }]));
+
+for (const family of SPECIES.filter(family => family.baseSpeciesId !== undefined)) {
+  icons['signature-' + family.id] = {
+    label: family.signature, description: family.name + '’s signature ability.', alias: 'signature-' + family.baseSpeciesId
+  };
+  icons['apex-' + family.id] = {
+    label: family.signature + ' II', description: 'The evolved signature of ' + family.forms[3] + '.', alias: 'apex-' + family.baseSpeciesId
+  };
+}
+
+for (const [id, symbol, color] of [
+  ['power', '↑', '#ffe394'], ['ward', '◆', '#9bdbff'], ['haste', '»', '#fddba0'],
+  ['cleanse', '✦', '#e2baff'], ['regen', '+', '#a0f6b3']
+]) {
+  icons[id] = { label: BUFFS[id].name, description: BUFFS[id].tip, symbol, color };
+}
+
+const symbols = [
+  ['effective', 'Effective', 'This affinity deals 50% more attack damage.', '▲', '#a0f6b3'],
+  ['resisted', 'Resisted', 'The target’s affinity reduces attack damage by 35%.', '▼', '#ffd0a1'],
+  ['neutral', 'Neutral', 'This attack deals its normal damage against any affinity.', '•', '#dfdec3'],
+  ...EXPANSION_BIOMES.map(({ hazard }, i) => [
+    'hazard-expansion-' + i, hazard,
+    ['Bristles slow Critters that end their turn here.', 'Bright glare leaves Critters exposed.', 'Frigid air damages Critters that end their turn here.'][i],
+    ['≋', '✧', '❄'][i], ['#e9cc89', '#fff2d3', '#a9eaff'][i]
+  ])
+];
+for (const [id, label, description, symbol, color] of symbols) icons[id] = { label, description, symbol, color };
+
+export const FIGHT_ICONS = Object.freeze(Object.fromEntries(Object.entries(icons).map(([id, icon]) => [id, Object.freeze(icon)])));
 const columns = 8;
 const rows = Math.ceil(glyphs.length / columns);
 const biomes = ['forest','marsh','cave','coast','mountains','volcanic','ruins','astral'];
 
 export function hazardIconKey(region) {
-  return biomes[region] ? 'hazard-' + biomes[region] : 'hazard';
+  if (biomes[region]) return 'hazard-' + biomes[region];
+  const expansion = 'hazard-expansion-' + (region - biomes.length);
+  return FIGHT_ICONS[expansion] ? expansion : 'hazard';
+}
+
+export function affinityIconKey(affinity) {
+  return biomes.includes(affinity) ? 'affinity-' + affinity : 'neutral';
 }
 
 const namedSkills = {
@@ -122,6 +158,7 @@ export function abilityIconKey(ability, species) {
     const id = typeof species === 'number' ? species : species?.id ?? species?.speciesId;
     if (Number.isInteger(id) && SPECIES[id]) return ability.id + '-' + id;
   }
+  if (ability.kind === 'support') return ability.buff;
   return namedSkills[ability.name] ?? (ability.kind === 'attack' ? (ability.range > 1 ? 'ranged' : 'melee') : ability.kind);
 }
 
@@ -132,10 +169,15 @@ const escapeAttr = text => String(text).replace(/[&<>"']/g, char =>
 export function fightIcon(key, label) {
   if (!Object.hasOwn(FIGHT_ICONS, key)) return '';
   const icon = FIGHT_ICONS[key];
-  const x = (icon.index % columns) * 100 / (columns - 1);
-  const y = Math.floor(icon.index / columns) * 100 / (rows - 1);
   const semantics = label === '' ? 'aria-hidden="true"' :
     'role="img" aria-label="' + escapeAttr(label ?? icon.label) + '" title="' + escapeAttr(label ?? icon.label) + '"';
+  if (icon.symbol) {
+    return '<span class="fight-icon fight-symbol" data-fight-icon="' + key + '" ' + semantics +
+      ' style="--fight-symbol-color:' + icon.color + '">' + icon.symbol + '</span>';
+  }
+  const index = icon.index ?? FIGHT_ICONS[icon.alias].index;
+  const x = (index % columns) * 100 / (columns - 1);
+  const y = Math.floor(index / columns) * 100 / (rows - 1);
   return '<span class="fight-icon" data-fight-icon="' + key + '" ' + semantics +
     ' style="--fight-icon-rows:' + (rows * 100) + '%;background-position:' + x + '% ' + y + '%"></span>';
 }
