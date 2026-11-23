@@ -391,7 +391,7 @@
   const capAir=n=>Math.max(0,Math.min(6,n));
   function clampValue(v,a,b){return Math.max(a,Math.min(b,v));}
   class World {
-    constructor(canvas,course){
+    constructor(canvas,course,kartTextures){
       const gl=canvas.getContext('webgl',{alpha:false,antialias:true,depth:true,powerPreference:'high-performance'})||canvas.getContext('experimental-webgl');
       if(!gl)throw Error('WebGL unavailable');
       this.gl=gl;this.course=course;this.pal=palettes[course.index];this.buffers=[];
@@ -412,12 +412,15 @@
       if(course.index>=8)root.AcornExpansionWorld.themeHazards(courseParts,course.index);
       this.karts=sim.drivers.map((_,i)=>model(i));this.kartLOD=sim.drivers.map((_,i)=>root.AcornKartModels?.[i]?.lod?.length?model(i,true):this.karts[i]);this.parts=Object.fromEntries(Object.entries({...extras(),...root.AcornSignatureArt.meshes(Mesh),...courseParts}).map(([key,m])=>[key,bake(m)]));
       this.textures=[];this.atlasReady=false;
-      const load=(url,unit,pixel,onload)=>{const tex=gl.createTexture();this.textures.push(tex);gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,tex);
+      const load=(url,unit,pixel,onload,image)=>{const tex=gl.createTexture();this.textures.push(tex);gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,tex);
         gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array(pixel));gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
-        if(!url)return;const im=new Image();im.onload=()=>{if(gl.isContextLost()||!gl.isTexture(tex))return;gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,tex);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,im);
+        const upload=im=>{if(gl.isContextLost()||!gl.isTexture(tex))return;gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,tex);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,im);
           if((im.width&(im.width-1))===0&&(im.height&(im.height-1))===0){gl.generateMipmap(gl.TEXTURE_2D);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);}else{gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);}
-          gl.activeTexture(gl.TEXTURE0);if(onload)onload();};im.src=url;};
-      load(root.AcornKartTexture,0,[255,255,255,255],()=>{this.atlasReady=true;});load(root.AcornKartSurface,1,[128,128,200,255]);
+          gl.activeTexture(gl.TEXTURE0);onload?.();};
+        if(image)upload(image);
+        else if(url){const im=new Image();im.onload=()=>upload(im);im.src=url;}};
+      load(root.AcornKartTexture,0,[255,255,255,255],()=>{this.atlasReady=true;},kartTextures?.atlas);
+      load(root.AcornKartSurface,1,[128,128,200,255],null,kartTextures?.surface);
       const pavement=root.AcornMythicWorld?.surfacePath(course.index)||root.AcornDarkWorld?.surfacePath?.(course.index);
       load(pavement&&(root.AcornFileTextures?.[pavement]||pavement),2,[128,128,128,0]);
       if(root.AcornSurfaces)this.textures.push(root.AcornSurfaces.load(gl));if(root.AcornHorizon)this.textures.push(root.AcornHorizon.load(gl,course.index));gl.activeTexture(gl.TEXTURE0);

@@ -3,7 +3,7 @@ const {tracks,drivers,icons}=window.RallyData;
 const one=s=>document.querySelector(s);
 const all=s=>Array.from(document.querySelectorAll(s));
 const app=one('#app'),main=one('#main'),dialog=one('#dialog'),dc=one('#dialogContent'),race=one('#race');
-const defaults={sound:true,music:true,autoAccel:false,deadzone:0.15,padStyle:'xbox',padPreset:'trigger',bindings:{accelerate:'KeyW',brake:'KeyS',left:'KeyA',right:'KeyD',drift:'Space',item:'KeyE',ability:'KeyQ',lookBack:'KeyC'}};
+const defaults={sound:true,music:true,graphics:'full',autoAccel:false,deadzone:0.15,padStyle:'xbox',padPreset:'trigger',bindings:{accelerate:'KeyW',brake:'KeyS',left:'KeyA',right:'KeyD',drift:'Space',item:'KeyE',ability:'KeyQ',lookBack:'KeyC'}};
 const read=(key,fallback)=>{try{return JSON.parse(localStorage.getItem('acorn-rally-'+key))??fallback}catch{return fallback}};
 const write=(key,value)=>{try{localStorage.setItem('acorn-rally-'+key,JSON.stringify(value))}catch{}};
 const opts=read('settings',{});
@@ -190,7 +190,7 @@ function setup(m=mode){mode=m;
  ${saved?`<div class="cup-resume"><div><strong>Continue ${cups[cupIndex].name}</strong><small>Race ${saved.rounds.length+1} of 4 · ${drivers[saved.driver].name} · ${saved.cc} cc · ${skillLabel(saved.difficulty)}</small></div><button type="button" class="action primary" data-action="resumeCup">Resume${icon('arrow')}</button></div>`:''}
  <div class="modal-bottom">${local?`<button class="action secondary" data-action="rooms">${icon('globe')}Private room</button>`:''}<button class="action ${saved?'secondary':'primary'}" data-action="go">${saved?'Start a new cup':local?'Choose drivers':'Choose driver'}${icon('arrow')}</button></div>`);
 }
-function settingsPanel(){modalView('settings','Settings',`<label class="settings-row">Game audio<input type="checkbox" class="switch" data-pref="sound" ${settings.sound?'checked':''}></label><label class="settings-row">Music<input type="checkbox" class="switch" data-pref="music" ${settings.music?'checked':''}></label><label class="settings-row">Auto-accelerate with keyboard or controller<input type="checkbox" class="switch" data-pref="autoAccel" ${settings.autoAccel?'checked':''}></label><label class="settings-row">Stick dead zone <span><output id="dz">${Math.round(settings.deadzone*100)}%</output> <input type="range" min="0" max="75" value="${Math.round(settings.deadzone*100)}" data-pref="deadzone"></span></label>${presetPicker()}<label class="settings-row">Controller prompts<select data-pref="padStyle" data-focus-id="pad-style" class="control"><option value="xbox" ${settings.padStyle==='xbox'?'selected':''}>Xbox</option><option value="ps" ${settings.padStyle==='ps'?'selected':''}>PlayStation</option></select></label>
+function settingsPanel(){modalView('settings','Settings',`<label class="settings-row">Graphics<select class="control" data-pref="graphics"><option value="full" ${settings.graphics!=='performance'?'selected':''}>Full</option><option value="performance" ${settings.graphics==='performance'?'selected':''}>Performance</option></select></label><label class="settings-row">Game audio<input type="checkbox" class="switch" data-pref="sound" ${settings.sound?'checked':''}></label><label class="settings-row">Music<input type="checkbox" class="switch" data-pref="music" ${settings.music?'checked':''}></label><label class="settings-row">Auto-accelerate with keyboard or controller<input type="checkbox" class="switch" data-pref="autoAccel" ${settings.autoAccel?'checked':''}></label><label class="settings-row">Stick dead zone <span><output id="dz">${Math.round(settings.deadzone*100)}%</output> <input type="range" min="0" max="75" value="${Math.round(settings.deadzone*100)}" data-pref="deadzone"></span></label>${presetPicker()}<label class="settings-row">Controller prompts<select data-pref="padStyle" data-focus-id="pad-style" class="control"><option value="xbox" ${settings.padStyle==='xbox'?'selected':''}>Xbox</option><option value="ps" ${settings.padStyle==='ps'?'selected':''}>PlayStation</option></select></label>
  <button type="button" class="action secondary touch-layout-setting" data-action="touchLayout">Edit touch controls</button>
  <p class="form-note">Touch driving accelerates automatically. Hold Brake to slow down and release it to accelerate again.</p>
  <div class="modal-bottom"><button class="action secondary" data-action="bindings">${icon('keyboard')}Controls</button><button class="action primary" data-action="close">Done</button></div>
@@ -201,6 +201,7 @@ function openRooms(liveJoin=false){
  if(!window.RallyRooms){notice('Private rooms could not load. Refresh to try again.');return}
  modal='rooms';dc.replaceChildren();if(!dialog.open)dialog.showModal();document.body.style.overflow='hidden';
  window.RallyRooms.open({container:dc,trackIndex:track,driverIndex:driver,cc:engineClass,difficulty:cpuLevel,settings,liveJoin,
+  preloadRaceGraphics:()=>{void window.KartViewer.loadRaceGraphics().catch(()=>{});},
   startRace:o=>{roomSession=o.network;launch({...o,mode:'race'})},
    onStartCancelled:()=>{roomSession=null;detachRace();modal='rooms';document.body.style.overflow='hidden'},
   onRetired:hasResults=>{
@@ -246,13 +247,21 @@ async function launch(options){
  if(running)return;
  if(!options.network&&!driverAvailable(options.driverIndex)){notice(championship.rewardRequirement(options.driverIndex)+' to unlock this driver.');return}
  lastRun=options;running=true;closeModal();race.hidden=false;app.inert=true;document.body.style.overflow='hidden';
- race.innerHTML=`<div class="grid-loading" style="background-image:linear-gradient(0deg,#121712ec,#12171233),url(art/course-${options.trackIndex}.webp)"><div><span class="hero-kicker eyebrow"><span class="checker"></span>${options.cupRoundLabel||'Preparing starting grid'}</span><h2>${tracks[options.trackIndex].name}</h2><div class="load-progress"></div></div></div>`;
+ race.innerHTML=`<div class="grid-loading" style="background-image:linear-gradient(0deg,#121712ec,#12171233),url(art/course-${options.trackIndex}.webp)"><div><span class="hero-kicker eyebrow"><span class="checker"></span>${options.cupRoundLabel||'Preparing starting grid'}</span><h2>${tracks[options.trackIndex].name}</h2><p role="status">Loading kart graphics…</p><div class="load-progress"></div></div></div>`;
+ let kartTextures;
  try{
-   // Online grids can render the in-engine karts without fetching the full garage collection.
-   if(!options.network)await window.KartViewer.loadModels();
+   kartTextures=await window.KartViewer.loadRaceGraphics();
    if(!running||lastRun!==options)return;
-   race.replaceChildren();window.AcornRace.start({...options,container:race,settings:{...settings,bindings:{...settings.bindings}},onExit:leaveRace,onFinish:finish,onSoundChange:enabled=>{settings.sound=enabled;pref()},onPadPresetChange:id=>{settings.padPreset=id;pref()}});
- }catch(err){console.error(err);leaveRace();notice('The race could not start. Refresh the game and try again.')}
+   race.replaceChildren();window.AcornRace.start({
+     ...options,container:race,kartTextures,settings:{...settings,bindings:{...settings.bindings}},
+     onExit:leaveRace,onFinish:finish,onSoundChange:enabled=>{settings.sound=enabled;pref()},
+     onPadPresetChange:id=>{settings.padPreset=id;pref()},onGraphicsChange:graphics=>{settings.graphics=graphics;pref()}
+   });
+ }catch(err){
+   if(!running||lastRun!==options)return;
+   console.error(err);leaveRace();
+   notice(kartTextures?'The race could not start. Refresh the game and try again.':'Kart graphics could not load. Check your connection and try again.');
+ }
 }
 function detachRace(){running=false;window.AcornRace?.stop();race.hidden=true;app.inert=false;document.body.style.overflow=''}
 function returnRoom(){const net=roomSession;roomSession=null;closeModal();modal='rooms';net.returnToLobby();document.body.style.overflow='hidden'}

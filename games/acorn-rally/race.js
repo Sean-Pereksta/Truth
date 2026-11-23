@@ -491,7 +491,7 @@
     const stage=document.createElement('div');stage.className='rr-stage';stage.tabIndex=-1;container.hidden=false;container.replaceChildren(stage);
     stage.innerHTML='<canvas class="rr-world" aria-label="Kart race"></canvas><canvas class="rr-hud" aria-hidden="true"></canvas><div class="rr-corner"><button class="rr-btn rr-sound" aria-label="Toggle race sound"></button><button class="rr-btn rr-pause" aria-label="Pause race" title="Pause (Esc)">'+svg('pause')+'</button></div><div class="rr-menu" role="dialog" aria-modal="true" aria-label="Race menu"><div class="rr-sheet"></div></div><div class="rr-touch"></div>';
     let wc=stage.querySelector('.rr-world'),hc=stage.querySelector('.rr-hud'),ctx=hc.getContext('2d'),renderer;
-    try{renderer=new root.AcornWorld.World(wc,c);}catch(error){console.info('Acorn Rally is using its canvas renderer.',error.message);const rep=wc.cloneNode();wc.replaceWith(rep);wc=rep;renderer=new CanvasWorld(wc,c);}
+    try{renderer=new root.AcornWorld.World(wc,c,options.kartTextures);}catch(error){console.info('Acorn Rally is using its canvas renderer.',error.message);const rep=wc.cloneNode();wc.replaceWith(rep);wc=rep;renderer=new CanvasWorld(wc,c);}
     const ghostKey='acorn-rally-ghost-'+c.index+(st.cc===100?'':'-'+st.cc);
     const sound=new Sound(settings.sound!==false),menu=stage.querySelector('.rr-menu'),sheet=stage.querySelector('.rr-sheet'),touchbar=stage.querySelector('.rr-touch'),keys=new Set(),touch=new Set(),listeners=[],loadedGhost=safeRead(ghostKey,null);
     const music=root.AcornMusic;
@@ -504,6 +504,7 @@
     const padReservations=Array.from({length:players},(_,i)=>options.padSeats?.[i]?{...options.padSeats[i]}:null);
     const driverCues=new Map(),approachCues=new Map(),stormCues=new Map();let lastApproach=-2,lastStormCue=-2;
     let quality=1,frameMean=1/60,budgetClock=0;
+    const graphicsScale=()=>settings.graphics==='performance'?.75:1;
     const on=(obj,type,fn,opts)=>{obj.addEventListener(type,fn,opts);listeners.push(()=>obj.removeEventListener(type,fn,opts));};
     const readPads=root.AcornLocalPads.read;
     // The same Menu press can start a local race. Require a new press to pause it.
@@ -539,6 +540,14 @@
         presetButton.dataset.preset='true';
         const hint=document.createElement('p');hint.className='rr-keys';
         hint.textContent='Hold drift while turning. Release after the tires spark for a boost.';sheet.append(hint);
+      }
+      if(!help){
+        const graphicsButton=button('Graphics · '+(settings.graphics==='performance'?'Performance':'Full'),()=>{
+          settings.graphics=settings.graphics==='performance'?'full':'performance';
+          options.onGraphicsChange?.(settings.graphics);
+          makeMenu();sheet.querySelector('[data-graphics]')?.focus();
+        });
+        graphicsButton.dataset.graphics='true';
       }
       if(players===1&&root.AcornTouch.show())button('Edit touch controls',()=>{
         root.AcornTouch.edit(()=>{if(alive){touchControls.update();makeMenu();}});
@@ -586,10 +595,10 @@
         if(!sound.ctx&&p.buttons.some(b=>b.pressed))sound.unlock();previousPad[p.index]=mask;});return pads;
     }
     function dimensions(){
-      const w=Math.max(1,stage.clientWidth),h=Math.max(1,stage.clientHeight),dpr=window.devicePixelRatio||1;
-      if(w!==lastDims.w||h!==lastDims.h||dpr!==lastDims.dpr||quality!==lastDims.quality){
-        drawScale=Math.min(dpr,players>2?.92:1.5,Math.sqrt((players>2?840000:players>1?1450000:1800000)/(w*h)))*quality;hudScale=Math.min(2,dpr);
-        wc.width=Math.max(1,Math.round(w*drawScale));wc.height=Math.max(1,Math.round(h*drawScale));if(hc.width!==Math.round(w*hudScale)||hc.height!==Math.round(h*hudScale)){hc.width=Math.round(w*hudScale);hc.height=Math.round(h*hudScale);}lastDims={w,h,dpr,quality};
+      const w=Math.max(1,stage.clientWidth),h=Math.max(1,stage.clientHeight),dpr=window.devicePixelRatio||1,scale=graphicsScale();
+      if(w!==lastDims.w||h!==lastDims.h||dpr!==lastDims.dpr||quality!==lastDims.quality||scale!==lastDims.scale){
+        drawScale=Math.min(dpr,players>2?.92:1.5,Math.sqrt((players>2?840000:players>1?1450000:1800000)/(w*h)))*quality*scale;hudScale=Math.min(2,dpr);
+        wc.width=Math.max(1,Math.round(w*drawScale));wc.height=Math.max(1,Math.round(h*drawScale));if(hc.width!==Math.round(w*hudScale)||hc.height!==Math.round(h*hudScale)){hc.width=Math.round(w*hudScale);hc.height=Math.round(h*hudScale);}lastDims={w,h,dpr,quality,scale};
       }return {w,h};
     }
     function views(w,h){

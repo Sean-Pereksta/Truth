@@ -60,8 +60,16 @@
   function loadImage(url) {
     if (!imageCache.has(url)) imageCache.set(url,new Promise((resolve,reject)=>{
       const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=url;
-    }));
+    }).catch(error=>{imageCache.delete(url);throw error;}));
     return imageCache.get(url);
+  }
+  async function loadRaceGraphics() {
+    await loadModels();
+    const loadTexture = url => url ? loadImage(url).catch(() => null) : null;
+    const [atlas, surface] = await Promise.all([
+      loadTexture(window.AcornKartTexture), loadTexture(window.AcornKartSurface)
+    ]);
+    return {atlas, surface};
   }
 
   function makePlatform() {
@@ -525,5 +533,5 @@
     current=()=>{dispose=true;listeners.abort();resize.disconnect();visible.disconnect();cancelAnimationFrame(frame);clearTimeout(idleTimer);renderer.dispose();};
     invalidate();
   }
-  window.KartViewer={mount,stop,loadModels};
+  window.KartViewer={mount,stop,loadModels,loadRaceGraphics};
 })();
