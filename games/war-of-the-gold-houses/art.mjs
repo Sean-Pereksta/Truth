@@ -32,6 +32,8 @@ const paintedAssets = new Map();
 const squadMotion = new WeakMap();
 const UNIT_FRAME_COUNT = 6;
 const ATTACK_FRAME = 5;
+const ATMOSPHERES = new Set(['earth', 'venus', 'jupiter', 'saturn', 'titan', 'uranus', 'neptune']);
+const FORMATION_TYPES = ['assault', 'transport', 'battleship', 'carrier', 'destroyer', 'corvette'];
 let stars;
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -220,16 +222,25 @@ function progress(transit) {
   return clamp((transit.elapsed ?? 0) / Math.max(transit.duration ?? 1, .001), 0, 1);
 }
 
-function fleetTrack(fleet) {
-  const from = mapPoint(PLANETS[fleet.transit.from]);
-  const to = mapPoint(PLANETS[fleet.transit.to]);
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
+function fleetTrack(fleet, fromId = fleet.transit.from, toId = fleet.transit.to) {
+  const departure = PLANETS[fromId];
+  const arrival = PLANETS[toId];
+  const origin = mapPoint(departure);
+  const destination = mapPoint(arrival);
+  const dx = destination.x - origin.x;
+  const dy = destination.y - origin.y;
   const distance = Math.hypot(dx, dy) || 1;
-  const bend = clamp(distance * .22, 19, 102);
+  const bend = clamp(distance * .2, 20, 94);
   const tilt = hash(fleet.id) % 2 ? 1 : -1;
-  const control = { x: (from.x + to.x) / 2 + dy / distance * bend * tilt,
-    y: clamp((from.y + to.y) / 2 - dx / distance * bend * tilt, 24, MAP_HEIGHT - 24) };
+  const control = { x: (origin.x + destination.x) / 2 + dy / distance * bend * tilt,
+    y: clamp((origin.y + destination.y) / 2 - dx / distance * bend * tilt, 36, MAP_HEIGHT - 36) };
+  const anchor = (point, planet) => {
+    const length = Math.hypot(control.x - point.x, control.y - point.y) || 1;
+    const offset = Math.min((planet?.radius ?? 24) + 20, length * .85);
+    return { x: point.x + (control.x - point.x) * offset / length, y: point.y + (control.y - point.y) * offset / length };
+  };
+  const from = anchor(origin, departure);
+  const to = anchor(destination, arrival);
   return { from, to, control };
 }
 
@@ -238,8 +249,17 @@ function onTrack({ from, to, control }, amount) {
     y: lerp(lerp(from.y, control.y, amount), lerp(control.y, to.y, amount), amount) };
 }
 
+function flightProgress(state, fleet) {
+  const { transit } = fleet;
+  const carry = fleet.engagement ? 0 : state.carry ?? 0;
+  const delta = transit.returning ? -carry : carry;
+  return clamp((transit.elapsed + delta) / Math.max(transit.duration, .001), 0, 1);
+}
+
 export function fleetPoint(state, fleet) {
-  if (fleet.transit) return onTrack(fleetTrack(fleet), progress(fleet.transit));
+  if (fleet.transit) return onTrack(fleetTrack(fleet), flightProgress(state, fleet));
+  const previous = fleet.lastPort?.planetId;
+  if (fleet.landing && previous && previous !== fleet.planetId) return fleetTrack(fleet, previous, fleet.planetId).to;
   const planet = PLANETS[fleet.planetId];
   const center = mapPoint(planet);
   const peers = Object.values(state.fleets).filter((candidate) => !candidate.transit &&
@@ -247,7 +267,7 @@ export function fleetPoint(state, fleet) {
   const slot = peers.findIndex((candidate) => candidate.id === fleet.id);
   const angle = .36 + Math.max(slot, 0) * .76;
   const radius = (planet?.radius ?? 22) + 23 + Math.floor(slot / 7) * 9;
-  return { x: center.x + Math.cos(angle) * radius, y: center.y + Math.sin(angle) * radius * .62 };
+  return { x: center.x + Math.cos(angle) * radius, y: center.y + Math.sin(angle) * radius * .88 };
 }
 
 export function armyPoint(state, army) {
@@ -315,15 +335,28 @@ function paintStars(ctx) {
   }
 }
 
-function drawPlanetSprite(ctx, planet, x, y) {
+function drawPlanetSprite(ctx, planet, x, y, time) {
   const radius = planet.radius ?? 26;
   const painting = paintedAsset(`planets/${planet.id}`);
-  if (painting) {
-    drawPainting(ctx, painting, Math.round(x - radius), Math.round(y - radius), radius * 2, radius * 2);
-    return;
-  }
-  const size = radius * 2 + 6;
   const seed = hash(planet.id);
+  const phase = time * (planet.style === 'gas' ? .72 : .36) + (seed % 628) / 100;
+  const rings = planet.style === 'rings';
+  if (rings && !painting) planetRing(ctx, { x, y }, radius, '#998d73', true);
+  ctx.save();
+  ctx.translate(x, y);
+  if (!rings) ctx.rotate(Math.sin(phase) * (ATMOSPHERES.has(planet.id) ? .15 : .19));
+  if (painting) {
+    drawPainting(ctx, painting, -radius, -radius, radius * 2, radius * 2);
+  } else {
+    drawProceduralPlanet(ctx, planet, radius, seed);
+  }
+  ctx.restore();
+  if (ATMOSPHERES.has(planet.id)) drawAtmosphericBands(ctx, x, y, radius * (rings ? .59 : .87), time, seed, planet);
+  if (rings && !painting) planetRing(ctx, { x, y }, radius, '#bbaa81', false);
+}
+
+function drawProceduralPlanet(ctx, planet, radius, seed) {
+  const size = radius * 2 + 6;
   drawCached(ctx, planetSprites, planet.id, size, size, (canvas) => {
     const colors = planet.palette ?? ['#3c5568', '#648297', '#a0b5b2'];
     const styles = ['gas', 'rings'];
@@ -349,7 +382,29 @@ function drawPlanetSprite(ctx, planet, x, y) {
         paint(canvas, color, px, py, 2, 2);
       }
     }
-  }, Math.round(x - size / 2), Math.round(y - size / 2));
+  }, -Math.round(size / 2), -Math.round(size / 2));
+}
+
+function drawAtmosphericBands(ctx, x, y, globe, time, seed, planet) {
+  const bandCount = planet.style === 'gas' || planet.style === 'rings' ? 4 : 3;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(planet.style === 'rings' ? -.39 : -.17);
+  ctx.beginPath();
+  ctx.ellipse(0, 0, globe, globe, 0, 0, TAU);
+  ctx.clip();
+  for (let band = 0; band < bandCount; band += 1) {
+    const latitude = -.64 + band * .35;
+    const width = Math.sqrt(1 - latitude * latitude) * globe;
+    const drift = wrap(time * (.27 + band * .035) + noise(band, 14, seed) * 3.1, 3.1) - 1.55;
+    ctx.beginPath();
+    ctx.ellipse(drift * width, latitude * globe, width * (.33 + band * .033), globe * .08, .06, Math.PI * .12, Math.PI * .95);
+    ctx.strokeStyle = '#fff4df';
+    ctx.globalAlpha = .14 + ((band + seed) % 3) * .035;
+    ctx.lineWidth = bandCount === 4 ? 1.6 : 1.1;
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 
 function planetRing(ctx, point, radius, color, back) {
@@ -368,7 +423,7 @@ function planetRing(ctx, point, radius, color, back) {
   ctx.restore();
 }
 
-function fleetIcon(ctx, x, y, heading, houseId, type, time, scale = 1) {
+function fleetIcon(ctx, x, y, heading, houseId, type, time, scale = 1, thrust = true) {
   const faction = house(houseId);
   ctx.save();
   ctx.translate(Math.round(x), Math.round(y));
@@ -376,13 +431,16 @@ function fleetIcon(ctx, x, y, heading, houseId, type, time, scale = 1) {
   ctx.scale(scale, scale);
   const transport = type === 'transport';
   const span = transport ? 4 : type === 'battleship' || type === 'carrier' ? 6 : 3;
-  const length = transport || type === 'battleship' ? 12 : 9;
-  const exhaust = 2 + Math.floor(wrap(time * 10 + x, 5));
-  paint(ctx, '#234759', -length - exhaust, -2, exhaust + 2, 4);
-  paint(ctx, '#90cbd0', -length - Math.floor(exhaust / 2), -1, exhaust, 2);
+  const length = transport || type === 'battleship' ? 16 : 13;
+  if (thrust) {
+    const exhaust = 9 + Math.floor(wrap(time * 18 + x, 8));
+    paint(ctx, '#284651', -length - exhaust - 5, -2, exhaust + 5, 4);
+    paint(ctx, '#468e9b', -length - exhaust, -2, exhaust, 4);
+    paint(ctx, '#c1f0ec', -length - Math.floor(exhaust / 2), -1, exhaust / 2 + 3, 2);
+  }
   const painting = type && paintedAsset(`ships/${type}`);
   if (painting) {
-    fitPainting(ctx, painting, { x: 0, y: 0, width: length * 2 + 12, height: span * 2 + 11, foot: .5 });
+    fitPainting(ctx, painting, { x: 0, y: 0, width: length * 2 + 9, height: span * 2 + 13, foot: .5 });
     paint(ctx, '#202b3d', -3, -1, 7, 3);
     paint(ctx, faction.color, -2, 0, 5, 1);
     ctx.restore();
@@ -406,63 +464,176 @@ function saveLineStyle(ctx) {
   ctx.setLineDash([4, 6]);
 }
 
-function drawFleet(ctx, state, fleet, ui, time) {
-  const point = fleetPoint(state, fleet);
-  const selected = ui.selectedFleetId === fleet.id;
-  const faction = house(fleet.houseId);
+function fleetLayout(state, fleet, selected = false) {
+  const track = fleet.transit ? fleetTrack(fleet) : null;
+  const amount = track ? flightProgress(state, fleet) : 0;
+  const point = track ? onTrack(track, amount) : fleetPoint(state, fleet);
+  const direction = fleet.transit?.returning ? -1 : 1;
+  const active = Boolean(track || fleet.landing || fleet.engagement);
   let heading = -.2;
-  if (fleet.transit) {
-    const track = fleetTrack(fleet);
-    const amount = progress(fleet.transit);
-    const before = onTrack(track, Math.max(0, amount - .02));
-    const after = onTrack(track, Math.min(1, amount + .02));
-    heading = Math.atan2(after.y - before.y, after.x - before.x);
-    if (fleet.transit.returning) heading += Math.PI;
-    saveLineStyle(ctx);
-    ctx.strokeStyle = selected ? '#eed98f' : faction.color;
-    ctx.globalAlpha = selected ? .9 : .52;
-    ctx.lineWidth = selected ? 2 : 1;
-    ctx.lineDashOffset = -time * 7;
-    ctx.beginPath();
-    ctx.moveTo(track.from.x, track.from.y);
-    ctx.quadraticCurveTo(track.control.x, track.control.y, track.to.x, track.to.y);
-    ctx.stroke();
-    ctx.restore();
+  if (track) {
+    const { x, y } = trackTangent(track, amount);
+    heading = Math.atan2(y * direction, x * direction);
+  } else if (fleet.landing) {
+    const target = mapPoint(PLANETS[fleet.planetId]);
+    heading = Math.atan2(target.y - point.y, target.x - point.x);
   }
-  const ships = Object.entries(fleet.ships ?? {}).filter(([, count]) => count > 0);
-  const primaryType = ships.some(([type]) => type === 'transport') ? 'transport' : ships[0]?.[0];
-  const fleetSize = ships.reduce((total, [, count]) => total + count, 0);
-  if (fleet.transit || selected) {
-    const escorts = Math.min(6, Math.max(0, fleetSize - 1));
-    for (let slot = 0; slot < escorts; slot += 1) {
-      const across = (slot % 2 ? -1 : 1) * (8 + Math.floor(slot / 2) * 6);
-      const trailing = 9 + Math.floor(slot / 2) * 5;
-      const wing = ships.find(([type]) => type !== primaryType)?.[0] ?? primaryType;
-      fleetIcon(ctx, point.x - Math.cos(heading) * trailing - Math.sin(heading) * across,
-        point.y - Math.sin(heading) * trailing + Math.cos(heading) * across,
-        heading, fleet.houseId, wing, time, .65);
+  const roster = FORMATION_TYPES.map((type) => ({ type, count: fleet.ships?.[type] ?? 0 })).filter((ship) => ship.count > 0);
+  const assault = fleet.armyId && (fleet.transit?.landing ?? fleet.landing?.type) === 'rain';
+  const flagship = (fleet.armyId && roster.find(({ type }) => type === (assault ? 'assault' : 'transport'))) || roster[0];
+  const ships = [];
+  if (flagship) {
+    ships.push({ ...point, type: flagship.type, scale: active ? 1.23 : .82 });
+    flagship.count -= 1;
+    if (active || selected) {
+      while (ships.length < 7 && roster.some(({ count }) => count > 0)) {
+        for (const ship of roster) {
+          if (ship.count <= 0 || ships.length >= 7) continue;
+          const slot = ships.length - 1;
+          const row = Math.floor(slot / 2);
+          const across = (slot % 2 ? -1 : 1) * (16 + row * 7);
+          const behind = 21 + row * 12;
+          ships.push({ x: point.x - Math.cos(heading) * behind - Math.sin(heading) * across,
+            y: point.y - Math.sin(heading) * behind + Math.cos(heading) * across, type: ship.type, scale: .78 });
+          ship.count -= 1;
+        }
+      }
     }
   }
-  fleetIcon(ctx, point.x, point.y, heading, fleet.houseId, primaryType, time, fleet.transit ? 1.12 : .8);
-  if (selected) brackets(ctx, point.x, point.y, 20, 14, '#eee3a3');
-  if (fleet.engagement) brackets(ctx, point.x, point.y, 24, 16, '#fe7b5d', 5);
+  let badge = null;
+  if (active && (fleet.armyId || selected)) {
+    const target = PLANETS[fleet.transit ? (direction === 1 ? fleet.transit.to : fleet.transit.from) : fleet.planetId];
+    const operation = fleet.engagement ? 'ENGAGED' : direction < 0 ? 'RETURNING' : assault ? 'INVASION'
+      : fleet.landing ? 'LANDING' : fleet.armyId ? 'TROOP CONVOY' : 'IN FLIGHT';
+    const title = `${operation} · ${target?.name.toUpperCase() ?? 'ORBIT'}`;
+    const width = title.length * 6 + 21;
+    badge = { title, width, x: clamp(point.x, width / 2 + 5, MAP_WIDTH - width / 2 - 5),
+      y: Math.max(22, point.y - 33), color: assault ? '#ffad72' : house(fleet.houseId).accent };
+  }
+  return { point, heading, ships, track, amount, direction, active, assault, badge };
+}
+
+export function fleetAtPoint(state, point, includeRoutes = false, selectedId = null) {
+  let closest = null;
+  let minimum = Infinity;
+  const lanes = [];
+  for (const fleet of Object.values(state.fleets)) {
+    const layout = fleetLayout(state, fleet, fleet.id === selectedId);
+    const { ships, heading, badge, track, active } = layout;
+    const along = Math.cos(heading);
+    const across = Math.sin(heading);
+    for (const ship of ships) {
+      const dx = point.x - ship.x;
+      const dy = point.y - ship.y;
+      const forward = Math.abs(dx * along + dy * across);
+      const sideways = Math.abs(-dx * across + dy * along);
+      const distance = Math.hypot(dx, dy);
+      if (forward > 24 * ship.scale + 3 || sideways > 12 * ship.scale + 3 || distance >= minimum) continue;
+      minimum = distance;
+      closest = fleet;
+    }
+    if (badge && Math.abs(point.x - badge.x) <= badge.width / 2 && Math.abs(point.y - badge.y) <= 9) {
+      const distance = Math.hypot(point.x - badge.x, point.y - badge.y) + 10;
+      if (distance < minimum) {
+        minimum = distance;
+        closest = fleet;
+      }
+    }
+    if (includeRoutes && active && track) lanes.push({ fleet, layout });
+  }
+  if (closest || !includeRoutes) return closest;
+  minimum = 8;
+  for (const { fleet, layout: { track, amount, direction } } of lanes) {
+    const destination = direction === 1 ? 1 : 0;
+    let before = onTrack(track, amount);
+    for (let step = 1; step <= 16; step += 1) {
+      const after = onTrack(track, lerp(amount, destination, step / 16));
+      const distance = segmentDistance(point, before, after);
+      if (distance < minimum) {
+        closest = fleet;
+        minimum = distance;
+      }
+      before = after;
+    }
+  }
+  return closest;
+}
+
+function segmentDistance(point, a, b) {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const along = clamp(((point.x - a.x) * dx + (point.y - a.y) * dy) / (dx * dx + dy * dy || 1), 0, 1);
+  return Math.hypot(point.x - (a.x + dx * along), point.y - (a.y + dy * along));
+}
+
+function trackTangent({ from, to, control }, at) {
+  return { x: lerp(control.x - from.x, to.x - control.x, at), y: lerp(control.y - from.y, to.y - control.y, at) };
+}
+
+function trackSegment(ctx, track, start, end) {
+  const first = onTrack(track, start);
+  const last = onTrack(track, end);
+  const tangent = trackTangent(track, start);
+  ctx.beginPath();
+  ctx.moveTo(first.x, first.y);
+  ctx.quadraticCurveTo(first.x + tangent.x * (end - start), first.y + tangent.y * (end - start), last.x, last.y);
+  ctx.stroke();
+}
+
+function drawFleetTrack(ctx, fleet, visual, selected, time) {
+  const { track, amount, direction, assault } = visual;
+  if (!track) return;
+  const faction = house(fleet.houseId);
+  ctx.save();
+  ctx.strokeStyle = '#142539';
+  ctx.lineWidth = selected || assault ? 4 : 3;
+  trackSegment(ctx, track, 0, 1);
+  ctx.setLineDash(assault ? [7, 5] : [4, 5]);
+  ctx.lineDashOffset = -time * 16 * direction;
+  ctx.strokeStyle = selected ? '#f4dc98' : assault ? '#f59862' : faction.accent;
+  ctx.globalAlpha = selected || assault ? .89 : .66;
+  ctx.lineWidth = selected || assault ? 2 : 1.4;
+  trackSegment(ctx, track, amount, direction === 1 ? 1 : 0);
+  ctx.restore();
+}
+
+function drawFleet(ctx, fleet, visual, selected, time) {
+  const { point, heading, ships, active, badge, assault } = visual;
+  for (const ship of [...ships].reverse()) {
+    fleetIcon(ctx, ship.x, ship.y, heading, fleet.houseId, ship.type, time, ship.scale, active && !fleet.engagement);
+  }
+  if (selected || assault) brackets(ctx, point.x, point.y, 27, 17, selected ? '#f6e8a8' : '#eea069');
+  if (fleet.engagement) brackets(ctx, point.x, point.y, 30, 20, '#fe7b5d', 5);
   if (fleet.blockading) ellipse(ctx, point.x, point.y, 18, 12, '#e89164', 2);
   if (fleet.landing) drawOrbitalLanding(ctx, fleet, point, time);
+  if (badge) {
+    const { title, x, y, width, color } = badge;
+    line(ctx, x, y + 8, point.x, point.y - 14, color);
+    paint(ctx, '#1b2839', x - width / 2, y - 9, width, 17);
+    paint(ctx, '#101a2b', x - width / 2 + 1, y - 8, width - 2, 15);
+    paint(ctx, color, x - width / 2 + 1, y - 8, 2, 15);
+    label(ctx, title, x, y, { size: 10, color });
+  }
 }
 
 function drawOrbitalLanding(ctx, fleet, origin, time) {
   const target = mapPoint(PLANETS[fleet.planetId]);
+  const amount = progress(fleet.landing);
   if (fleet.landing.type !== 'rain') {
-    const point = { x: lerp(origin.x, target.x, wrap(time * .6, 1)), y: lerp(origin.y, target.y, wrap(time * .6, 1)) };
-    fleetIcon(ctx, point.x, point.y, Math.atan2(target.y - origin.y, target.x - origin.x), fleet.houseId, 'transport', time, .44);
+    const point = { x: lerp(origin.x, target.x, amount), y: lerp(origin.y, target.y, amount) };
+    fleetIcon(ctx, point.x, point.y, Math.atan2(target.y - origin.y, target.x - origin.x), fleet.houseId, 'transport', time, .52);
     return;
   }
   for (let slot = 0; slot < 8; slot += 1) {
-    const fraction = wrap(time * 1.1 + slot * .16, 1);
-    const x = lerp(origin.x, target.x, fraction) + Math.sin(slot * 9) * fraction * 17;
-    const y = lerp(origin.y, target.y, fraction) + Math.cos(slot * 12) * fraction * 11;
-    line(ctx, lerp(origin.x, x, .71), lerp(origin.y, y, .71), x, y, '#ae6246', 2);
-    paint(ctx, '#fff0af', x - 1, y - 1, 3, 3);
+    const fraction = amount * 1.95 - slot * .12;
+    if (fraction < 0 || fraction >= 1) continue;
+    const drop = { x: target.x + Math.sin(slot * 9) * 17, y: target.y + Math.cos(slot * 12) * 11 };
+    const x = lerp(origin.x, drop.x, fraction);
+    const y = lerp(origin.y, drop.y, fraction);
+    const trail = Math.max(0, fraction - .3);
+    line(ctx, lerp(origin.x, drop.x, trail), lerp(origin.y, drop.y, trail), x, y, '#b96448', 3);
+    paint(ctx, '#ff9e64', x - 2, y - 2, 5, 5);
+    paint(ctx, '#fff0af', x - 1, y - 1, 2, 2);
   }
 }
 
@@ -525,7 +696,7 @@ function drawMoonLinks(ctx, planets) {
   ctx.restore();
 }
 
-function drawSolarLegend(ctx) {
+function drawSolarLegend(ctx, hasFlight) {
   ellipse(ctx, 60, 501, 5, 5, '#d6c5a6', 2);
   label(ctx, 'SECURED WORLD', 72, 501, { color: '#b6c9cc', size: 11, align: 'left' });
   ctx.save();
@@ -533,23 +704,33 @@ function drawSolarLegend(ctx) {
   ellipse(ctx, 193, 501, 5, 5, '#a3afbc', 2);
   ctx.restore();
   label(ctx, 'DIVIDED CONTROL', 205, 501, { color: '#b6c9cc', size: 11, align: 'left' });
+  if (hasFlight) {
+    const x = 340;
+    line(ctx, x, 501, x + 11, 501, '#e89c67', 2);
+    label(ctx, 'FLEET ROUTE', x + 17, 501, { color: '#b6c9cc', size: 11, align: 'left' });
+  }
 }
 
 export function drawSolar(ctx, state, ui = {}) {
   starField(ctx);
-  const time = simTime(state, ui);
+  const time = (state.elapsed ?? 0) + (state.carry ?? 0);
   const selectedPlanet = ui.selectedPlanetId ?? ui.planetId;
   const planets = Object.values(PLANETS).filter(({ id }) => state.planets[id]);
+  const fleets = Object.values(state.fleets).map((fleet) => {
+    const selected = ui.selectedFleetId === fleet.id;
+    return { fleet, selected, visual: fleetLayout(state, fleet, selected) };
+  });
+  const priority = ({ visual, selected }) => selected ? 3 : visual.assault ? 2 : Number(visual.active);
+  fleets.sort((a, b) => priority(a) - priority(b));
   const controls = new Map(planets.map(({ id }) => [id, getPlanetControl(state, id)]));
   drawMoonLinks(ctx, planets);
+  for (const { fleet, selected, visual } of fleets) drawFleetTrack(ctx, fleet, visual, selected, time);
   for (const planet of planets) {
     const point = mapPoint(planet);
     const radius = planet.radius ?? 26;
     const active = Object.values(state.battles).filter((battle) => battle.planetId === planet.id && !battle.winner);
     const control = controls.get(planet.id);
-    if (planet.style === 'rings') planetRing(ctx, point, radius, '#998d73', true);
-    drawPlanetSprite(ctx, planet, point.x, point.y);
-    if (planet.style === 'rings') planetRing(ctx, point, radius, '#bbaa81', false);
+    drawPlanetSprite(ctx, planet, point.x, point.y, time);
     drawControlRing(ctx, point, radius + 5, control);
     if (active.length) {
       const pulse = .5 + Math.sin(time * 5) * .25;
@@ -558,17 +739,13 @@ export function drawSolar(ctx, state, ui = {}) {
       ctx.globalAlpha = 1;
     }
     if (selectedPlanet === planet.id) brackets(ctx, point.x, point.y, radius + 10, radius + 9, '#f2d88f');
-  }
-  for (const fleet of Object.values(state.fleets)) drawFleet(ctx, state, fleet, ui, time);
-  for (const planet of planets) {
-    const point = mapPoint(planet);
-    const radius = planet.radius ?? 26;
-    const { owner } = controls.get(planet.id);
+    const { owner } = control;
     if (owner) flag(ctx, point.x + radius - 5, point.y - radius - 4, owner, time);
     label(ctx, planet.name.toUpperCase(), point.x, point.y + radius + 17, { color: '#eae1c4', size: 12 });
   }
+  for (const { fleet, selected, visual } of fleets) drawFleet(ctx, fleet, visual, selected, time);
   drawSolarGroups(ctx, state, controls, time);
-  drawSolarLegend(ctx);
+  drawSolarLegend(ctx, fleets.some(({ visual }) => visual.track));
 }
 
 function sectorLayout(planet, regions) {

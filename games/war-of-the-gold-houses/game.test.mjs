@@ -3,13 +3,14 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
   advance, command, createGame, getControlBonusStatus, getGroupControl, getPlanetControl,
-  getSaveSlots, getSupplyStatus, loadGame, previewRoute, saveGame,
+  getPurchaseQuote, getRecruitmentOptions, getSaveSlots, getSupplyStatus, loadGame, previewRoute, saveGame,
 } from "./game.mjs";
 import {
-  COLORS, FLEET_ROUTES, HOUSES, PLANET_GROUPS, PLANETS, REGIONS, RESOURCE_KEYS,
-  SHIPS, STARTING_ARMIES, WORLD_ECONOMIES,
+  BUILDINGS, COLORS, FLEET_ROUTES, GRAND_STARTING_ARMIES, HOUSES, HOUSE_HOMEWORLDS, PLANET_GROUPS,
+  PLANETS, REGIONS, RESOURCE_KEYS, SHIPS, STARTING_ARMIES, WORLD_ECONOMIES,
 } from "./content.mjs";
 import { UNIT_TYPES, createBattle, createSquad, issueOrder, tickBattle } from "./battle.mjs";
+import { transportSupplyCost } from "./fleets.mjs";
 
 const seed = 314159;
 const legacyWorldIds = ["mercury", "luna", "mars", "io"];
@@ -102,6 +103,10 @@ function playerArmies(state) {
   return Object.values(state.armies).filter(
     (army) => army.houseId === state.houseId && army.planetId && army.regionId,
   );
+}
+
+function fieldArmiesAt(state, regionId) {
+  return playerArmies(state).filter((army) => army.regionId === regionId && !army.destroyed);
 }
 
 function isolatedControl(ownedWorlds = []) {
@@ -204,11 +209,228 @@ test("campaign roads connect each world and starting rosters reference valid def
     }
     assert.deepEqual([...visited].sort(), [...planet.regionIds].sort());
   }
-  for (const army of Object.values(STARTING_ARMIES)) {
+  for (const army of [...STARTING_ARMIES, ...GRAND_STARTING_ARMIES]) {
     assert.ok(HOUSES[army.houseId]);
     assert.ok(REGIONS[army.regionId]);
     assert.ok(army.squads.every((type) => UNIT_TYPES[type]));
   }
+});
+
+test("each House starts Grand Conquest with troops and a transport fleet on its homeworld", () => {
+  assert.equal(new Set(Object.values(HOUSE_HOMEWORLDS).map(({ planetId }) => planetId)).size, Object.keys(HOUSES).length);
+  for (const houseId of Object.keys(HOUSES)) {
+    const state = createGame({ mode: "grand", houseId, planetId: "neptune", seed });
+    const { planetId, regionId } = HOUSE_HOMEWORLDS[houseId];
+    assert.equal(state.planetId, planetId, houseId);
+    const allArmies = playerArmies(state);
+    const localArmies = allArmies.filter((army) => army.planetId === planetId);
+    const soldiers = (armies) => armies.flatMap((army) => army.squads).reduce((count, squad) => count + squad.soldiers, 0);
+    assert.ok(localArmies.length >= 2, houseId);
+    assert.ok(soldiers(localArmies) >= soldiers(allArmies) * 0.75, houseId);
+    assert.ok(localArmies.every((army) => friendlyRegion(state, army.regionId)), houseId);
+    assert.ok(friendlyRegion(state, regionId), houseId);
+    assert.ok(state.planets[planetId].regions[regionId].buildings.barracks, houseId);
+    assert.ok(state.planets[planetId].regions[regionId].buildings.spaceport, houseId);
+    assert.ok(localArmies.some((army) => army.regionId === regionId), houseId);
+    const homeFleet = Object.values(state.fleets).find((fleet) =>
+      fleet.houseId === houseId && fleet.planetId === planetId && fleet.regionId === regionId,
+    );
+    assert.ok(homeFleet?.ships.transport > 0 && homeFleet?.ships.assault > 0, houseId);
+  }
+});
+
+function musterFixture() {
+  const state = isolatedControl();
+  const regionId = HOUSE_HOMEWORLDS[state.houseId].regionId;
+  const region = state.planets[REGIONS[regionId].planetId].regions[regionId];
+  region.owner = state.houseId;
+  region.buildings.barracks = 1;
+  return { state, region, regionId };
+}
+
+function rifleOption(state, regionId) {
+  return getRecruitmentOptions(state, regionId).options.find(({ id }) => id === "rifle");
+}
+
+function assertPaid(after, before, cost) {
+  for (const key of RESOURCE_KEYS) assertClose(after[key], before[key] - (cost[key] ?? 0), key);
+}
+
+test("recruitment at an empty territory charges the displayed price and musters a local army", () => {
+  const { state, regionId } = musterFixture();
+  const options = getRecruitmentOptions(state, regionId);
+  const entry = rifleOption(state, regionId);
+  assert.ok(options.eligible && entry?.eligible);
+  assert.ok(entry.duration > 0);
+  assert.deepEqual(fieldArmiesAt(state, regionId), []);
+  const resources = { ...state.resources[state.houseId] };
+  issue(state, { type: "recruitAt", regionId, unitType: entry.id });
+  assertPaid(state.resources[state.houseId], resources, entry.cost);
+  const [project] = state.projects;
+  assert.equal(project.regionId, regionId);
+  assert.equal(project.item, entry.id);
+  assertClose(project.remaining, entry.duration, "displayed duration");
+  assert.deepEqual(fieldArmiesAt(state, regionId), []);
+  advanceUntil(state, () => fieldArmiesAt(state, regionId).length > 0, entry.duration + 2);
+  const [army] = fieldArmiesAt(state, regionId);
+  assert.equal(army.planetId, REGIONS[regionId].planetId);
+  const rifle = army.squads.find(({ type }) => type === "rifle");
+  assert.equal(rifle?.soldiers, UNIT_TYPES.rifle.maxSoldiers);
+  assert.equal(state.projects.some(({ id }) => id === project.id), false);
+});
+
+test("territory recruitment explains unmet ownership, barracks, and resource requirements before charging", () => {
+  const { state, region, regionId } = musterFixture();
+  const action = { type: "recruitAt", regionId, unitType: "rifle" };
+  const wallet = state.resources[state.houseId];
+  const original = { ...wallet };
+  region.owner = "bellona";
+  assert.equal(getRecruitmentOptions(state, regionId).eligible, false);
+  assert.equal(command(state, action).ok, false);
+  region.owner = state.houseId;
+  region.buildings.barracks = 0;
+  const withoutBarracks = getRecruitmentOptions(state, regionId);
+  assert.equal(withoutBarracks.eligible, false);
+  assert.match(withoutBarracks.reason, /barracks/i);
+  assert.equal(command(state, action).ok, false);
+  assert.deepEqual(wallet, original);
+  issue(state, { type: "build", regionId, buildingId: "barracks" });
+  advanceUntil(state, () => region.buildings.barracks > 0, 20);
+  assert.equal(rifleOption(state, regionId)?.eligible, true);
+  const expense = rifleOption(state, regionId).cost;
+  const key = RESOURCE_KEYS.find((resource) => expense[resource] > 0);
+  assert.ok(key);
+  wallet[key] = 0;
+  const balance = { ...wallet };
+  const unaffordable = rifleOption(state, regionId);
+  assert.equal(unaffordable.eligible, false);
+  assert.ok(unaffordable.reason);
+  assert.equal(command(state, action).ok, false);
+  assert.deepEqual(wallet, balance);
+  assert.deepEqual(state.projects, []);
+});
+
+test("construction and ship quotes match the charge, including the next queued building tier", () => {
+  const { state, region, regionId } = musterFixture();
+  const wallet = state.resources[state.houseId];
+  const construction = { type: "build", regionId, buildingId: "barracks" };
+  const upgrade = getPurchaseQuote(state, construction);
+  const tierCost = (tier) => Object.fromEntries(Object.entries(BUILDINGS.barracks.cost).map(([key, amount]) => [key, amount * tier]));
+  assert.ok(upgrade.eligible && upgrade.duration > 0);
+  assert.deepEqual(upgrade.cost, tierCost(2));
+  const initial = { ...wallet };
+  issue(state, construction);
+  assertPaid(wallet, initial, upgrade.cost);
+  const next = getPurchaseQuote(state, construction);
+  assert.deepEqual(next.cost, tierCost(3));
+  assert.ok(next.duration > upgrade.duration);
+
+  const shipbuilding = { type: "buildShip", regionId, shipType: "corvette" };
+  const ship = getPurchaseQuote(state, shipbuilding);
+  assert.ok(ship.eligible && ship.duration > 0);
+  assert.deepEqual(ship.cost, SHIPS.corvette.cost);
+  const remaining = { ...wallet };
+  issue(state, shipbuilding);
+  assertPaid(wallet, remaining, ship.cost);
+  assertClose(state.projects.find(({ item }) => item === "corvette").duration, ship.duration, "ship quote duration");
+  advanceUntil(state, () => state.projects.length === 0, Math.max(upgrade.duration, ship.duration) + 2);
+  assert.equal(region.buildings.barracks, 2);
+  assert.equal(Object.values(state.fleets).find((fleet) => fleet.regionId === regionId)?.ships.corvette, 1);
+});
+
+test("a queued squad joins a stationary local army after save and reload", () => {
+  const { state, regionId } = musterFixture();
+  const action = { type: "recruitAt", regionId, unitType: "rifle" };
+  issue(state, action);
+  advanceUntil(state, () => fieldArmiesAt(state, regionId).length > 0, 15);
+  const [army] = fieldArmiesAt(state, regionId);
+  const squadCount = army.squads.length;
+  issue(state, { ...action, armyId: army.id });
+  advance(state, 0.5);
+  const [pending] = state.projects;
+  assert.ok(pending.remaining > 0);
+  const storage = storageFixture();
+  assert.equal(saveGame(state, storage).ok, true);
+  const restored = loadGame(storage);
+  assert.deepEqual(restored.projects, state.projects);
+  advance(restored, pending.remaining + 0.5);
+  advance(state, pending.remaining + 0.5);
+  assert.deepEqual(restored.armies, state.armies);
+  assert.deepEqual(restored.resources, state.resources);
+  assert.equal(fieldArmiesAt(restored, regionId).length, 1);
+  assert.equal(restored.armies[army.id].squads.length, squadCount + 1);
+  assert.deepEqual(restored.projects, []);
+});
+
+test("the advertised queue time includes earlier squads at the same barracks", () => {
+  const { state, regionId } = musterFixture();
+  const option = rifleOption(state, regionId);
+  const action = { type: "recruitAt", regionId, unitType: option.id };
+  assert.equal(getRecruitmentOptions(state, regionId).queuedSeconds, 0);
+  issue(state, action);
+  advance(state, 0.4);
+  issue(state, action);
+  const [first, second] = state.projects;
+  assertClose(getRecruitmentOptions(state, regionId).queuedSeconds, first.remaining + second.remaining, "queued time");
+  const waiting = second.remaining;
+  advance(state, 0.1);
+  assertClose(second.remaining, waiting, "second squad waits its turn");
+  advanceUntil(state, () => state.projects.length === 0, option.duration * 2 + 2);
+  assert.equal(fieldArmiesAt(state, regionId).length, 1);
+  assert.equal(fieldArmiesAt(state, regionId)[0].squads.filter(({ type }) => type === option.id).length, 2);
+});
+
+test("recruits stay at their territory if their assigned army marches away", () => {
+  const { state, regionId } = musterFixture();
+  const action = { type: "recruitAt", regionId, unitType: "rifle" };
+  issue(state, action);
+  advanceUntil(state, () => fieldArmiesAt(state, regionId).length > 0, 15);
+  const [army] = fieldArmiesAt(state, regionId);
+  const roster = structuredClone(army.squads);
+  const destinationId = REGIONS[regionId].neighbors[0];
+  const world = state.planets[REGIONS[regionId].planetId];
+  world.regions[destinationId].owner = state.houseId;
+  issue(state, { ...action, armyId: army.id });
+  issue(state, { type: "move", armyId: army.id, regionId: destinationId });
+  advanceUntil(state, () => army.regionId === destinationId && state.projects.length === 0, 15);
+  assert.deepEqual(army.squads, roster);
+  const replacements = fieldArmiesAt(state, regionId);
+  assert.equal(replacements.length, 1);
+  assert.notEqual(replacements[0].id, army.id);
+  assert.ok(replacements[0].squads.some(({ type }) => type === "rifle"));
+});
+
+test("losing a territory cancels its recruitment even if the former owner recaptures it", () => {
+  const { state, region, regionId } = musterFixture();
+  issue(state, { type: "recruitAt", regionId, unitType: "rifle" });
+  advance(state, 0.5);
+  region.owner = "bellona";
+  advance(state, 0.1);
+  assert.deepEqual(state.projects, []);
+  assert.ok(state.alerts.some(({ message }) => message.includes("Training lost after enemy capture")));
+  region.owner = state.houseId;
+  advance(state, 9);
+  assert.deepEqual(fieldArmiesAt(state, regionId), []);
+});
+
+test("a live battle pauses a territory's queued recruits until control is secure", () => {
+  const { state, regionId } = musterFixture();
+  issue(state, { type: "recruitAt", regionId, unitType: "rifle" });
+  advance(state, 0.4);
+  const workRemaining = state.projects[0].remaining;
+  const battle = createBattle({
+    id: "muster-siege", planetId: REGIONS[regionId].planetId, regionId, terrain: REGIONS[regionId].terrain, seed,
+    armies: [
+      { id: "defenders", houseId: state.houseId, squads: [createSquad("rifle", "defending-rifle")] },
+      { id: "attackers", houseId: "bellona", squads: [createSquad("rifle", "attacking-rifle")] },
+    ],
+  });
+  state.battles[battle.id] = battle;
+  advance(state, 0.8);
+  assert.equal(battle.winner, null);
+  assertClose(state.projects[0].remaining, workRemaining, "paused training");
+  battle.winner = state.houseId;
+  advanceUntil(state, () => fieldArmiesAt(state, regionId).length > 0, workRemaining + 2);
 });
 
 test("campaign, planetary, and skirmish modes initialize distinct playable states", () => {
@@ -388,12 +610,20 @@ test("a live battle disputes control even before a territory changes owners", ()
 
 test("pre-expansion Grand Conquest saves gain new worlds and preserve active transports", () => {
   const state = createGame({ mode: "grand", seed });
+  const { army, fleet } = launchFixture(state);
+  const oldPort = "luna-dawn-port";
+  delete state.armies[army.id];
+  army.id = "augustus-luna";
+  state.armies[army.id] = army;
+  army.planetId = fleet.planetId = "luna";
+  army.regionId = fleet.regionId = oldPort;
+  state.planets.luna.regions[oldPort].owner = state.houseId;
   issue(state, {
-    type: "transport", armyId: "augustus-luna", planetId: "mars", regionId: "mars-arsia-port",
-    landing: "spaceport",
+    type: "transport", armyId: army.id, fleetId: fleet.id,
+    planetId: "mars", regionId: "mars-arsia-port", landing: "spaceport",
   });
   advance(state, 0.6);
-  const carrier = Object.values(state.fleets).find((fleet) => fleet.transit && fleet.armyId === "augustus-luna");
+  const carrier = state.fleets[fleet.id];
   assert.ok(carrier);
   const legacy = Object.fromEntries([
     "version", "houseId", "mode", "difficulty", "seed", "planetId", "elapsed", "tick", "carry", "serial", "speed",
@@ -523,13 +753,13 @@ function launchFixture(state) {
   const army = playerArmies(state).find((candidate) =>
     Object.values(state.fleets).some((fleet) =>
       fleet.houseId === state.houseId && fleet.planetId === candidate.planetId &&
-      !fleet.transit && (fleet.ships.transport ?? 0) > 0,
+      fleet.regionId === candidate.regionId && !fleet.transit && (fleet.ships.transport ?? 0) > 0,
     ) && state.planets[candidate.planetId].regions[candidate.regionId].buildings.spaceport,
   );
   assert.ok(army, "A starting army and an orbital transport fleet need a common friendly port");
   const fleet = Object.values(state.fleets).find((candidate) =>
     candidate.houseId === state.houseId && candidate.planetId === army.planetId &&
-    !candidate.transit && (candidate.ships.transport ?? 0) > 0,
+    candidate.regionId === army.regionId && !candidate.transit && (candidate.ships.transport ?? 0) > 0,
   );
   const friendlyPort = Object.values(state.planets)
     .filter((planet) => planet.id !== army.planetId)
@@ -546,11 +776,7 @@ function launchFixture(state) {
 
 test("a fleet can land a ground force at a Neptune spaceport and the army can continue overland", () => {
   const state = createGame({ mode: "grand", seed });
-  const army = state.armies["augustus-luna"];
-  const fleet = Object.values(state.fleets).find((entry) =>
-    entry.houseId === state.houseId && entry.regionId === army.regionId && entry.ships.transport > 0,
-  );
-  assert.ok(fleet);
+  const { army, fleet } = launchFixture(state);
   state.fleets = { [fleet.id]: fleet };
   state.armies = { [army.id]: army };
   for (const world of Object.values(state.planets)) {
@@ -596,7 +822,9 @@ test("ships enforce capacity and transports resume their recorded position on re
   assert.deepEqual(state.resources[state.houseId], startingResources);
   fleet.ships = originalShips;
 
+  const quotedSupplies = transportSupplyCost(state, army, landing);
   issue(state, action);
+  assert.equal(state.resources[state.houseId].supplies, startingResources.supplies - quotedSupplies);
   assert.ok(fleet.transit);
   assert.notEqual(army.planetId, action.planetId);
   advance(state, 0.6);
@@ -620,11 +848,13 @@ test("ships enforce capacity and transports resume their recorded position on re
   assert.ok(!restored.fleets[fleet.id].armyId);
 });
 
-test("a Mars ground battle continues during a Luna fleet transfer", () => {
+test("a Mars ground battle continues while a fleet carries another army to Luna", () => {
   const state = createGame({ mode: "grand", houseId: "augustus", seed });
-  const marsArmy = state.armies["augustus-mars"];
-  const lunaArmy = state.armies["augustus-luna"];
+  const { army: invasionArmy, fleet } = launchFixture(state);
+  const marsArmy = playerArmies(state).find((army) => army.id !== invasionArmy.id && army.planetId === "mars");
+  assert.ok(marsArmy);
   const front = "mars-elysium";
+  state.planets.mars.regions[front].owner = "bellona";
   const route = previewRoute(state, marsArmy.id, front);
   assert.ok(route?.eta > 0);
   issue(state, { type: "move", armyId: marsArmy.id, regionId: front });
@@ -640,10 +870,10 @@ test("a Mars ground battle continues during a Luna fleet transfer", () => {
   issue(state, { type: "orderSquads", battleId: battle.id, squadIds: [squad.id], order });
   const battleTime = battle.elapsed;
   issue(state, {
-    type: "transport", armyId: lunaArmy.id, planetId: "mars", regionId: "mars-arsia-port",
-    landing: "spaceport",
+    type: "transport", armyId: invasionArmy.id, fleetId: fleet.id, planetId: "luna",
+    regionId: "luna-dawn-port", landing: "spaceport",
   });
-  const carrier = Object.values(state.fleets).find((fleet) => fleet.armyId === lunaArmy.id);
+  const carrier = state.fleets[fleet.id];
   assert.ok(carrier?.transit);
   assert.equal(battle.elapsed, battleTime);
   advance(state, 0.8);

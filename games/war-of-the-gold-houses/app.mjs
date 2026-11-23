@@ -1,15 +1,15 @@
 import {
   createGame, advance, command, saveGame, loadGame, getSaveSlots, previewRoute, getSupplyStatus,
-  getPlanetControl, getGroupControl, getControlBonusStatus,
+  getPlanetControl, getGroupControl, getControlBonusStatus, getRecruitmentOptions, getPurchaseQuote,
 } from './game.mjs';
 import {
   HOUSES, PLANETS, REGIONS, BUILDINGS, SHIPS, COLORS, OPERATIONS, DOCTRINES, SKIRMISHES,
-  CAMPAIGN_MODES, RESOURCE_KEYS, RESOURCE_LABELS, WORLD_ECONOMIES, PLANET_GROUPS,
+  CAMPAIGN_MODES, RESOURCE_KEYS, RESOURCE_LABELS, WORLD_ECONOMIES, PLANET_GROUPS, HOUSE_HOMEWORLDS,
 } from './content.mjs';
 import { UNIT_TYPES } from './battle.mjs';
 import { fleetCapacity, fleetPower } from './fleets.mjs';
 import {
-  MAP_WIDTH, MAP_HEIGHT, mapPoint, planetAtPoint, regionAtPoint, armyPoint, fleetPoint, battlePoint, battleWorldPoint,
+  MAP_WIDTH, MAP_HEIGHT, mapPoint, planetAtPoint, regionAtPoint, armyPoint, fleetAtPoint, battlePoint, battleWorldPoint,
   drawSolar, drawPlanet, drawBattle, drawBattleMinimap,
 } from './art.mjs';
 
@@ -25,7 +25,8 @@ const actionIcons = {
   'attack-mode': 'attack', 'select-all': 'formation', retreat: 'withdraw',
   'fleet-order': 'tactical', intercept: 'attack', blockade: 'hold',
   transport: 'fleet', sail: 'solar', ship: 'fleet', build: 'materials',
-  doctrine: 'command', recruit: 'command', replenish: 'supplies', dispatch: 'formation',
+  doctrine: 'command', 'recruit-area': 'command', 'recruit-squad': 'formation', home: 'planet',
+  'plan-invasion': 'fleet', replenish: 'supplies', dispatch: 'formation',
   rally: 'rally', combine: 'formation', split: 'formation',
   diplomacy: 'politics', operation: 'ability', start: 'command',
 };
@@ -90,6 +91,10 @@ const relationsWith = id => state.relations[[state.houseId, id].sort().join(':')
 const atWar = id => relationsWith(id)?.stance === 'war';
 const reachableWorlds = planetId => Object.keys(state.planets).filter(id => id !== planetId && PLANETS[id]?.regionIds?.length);
 const slotId = id => id === 'auto' ? id : Number(id);
+const homeworld = () => HOUSE_HOMEWORLDS[state.houseId];
+const localForces = regionId => Object.values(state.armies).filter(army =>
+  army.regionId === regionId && !army.fleetId && !army.destroyed);
+const stationary = army => !army.garrison && !army.battleId && !army.transit && !army.orders?.length;
 
 function formatTime(seconds) {
   const rounded = Math.max(0, Math.floor(seconds || 0));
@@ -127,6 +132,13 @@ function houseLabel(id) { return id && HOUSES[id] ? `<span class="house-dot" sty
 function unitName(type) { return UNIT_TYPES[type]?.name ?? title(type); }
 function namedChoices(entries) { return Object.values(entries).map(entry => [entry.id, entry.name]); }
 function resourceCost(cost) { return Object.entries(cost ?? {}).map(([key, quantity]) => `${quantity} ${RESOURCE_LABELS[key] ?? key}`).join(', '); }
+function purchaseRow(name, label, action, id, quote, options = {}) {
+  const price = resourceCost(quote.cost) || (quote.eligible ? 'No cost' : '');
+  return row(
+    `<div class="purchase-item"><strong>${esc(name)}</strong>${price ? `<span>${esc(price)}</span>` : ''}${quote.reason ? `<small>${esc(quote.reason)}</small>` : ''}</div>`,
+    button(label, action, id, { ...options, disabled: !quote.eligible, title: quote.reason || options.title }),
+  );
+}
 function showStatus(message, ok = true) {
   text('status', message || '');
   elements.status.classList.toggle('error', !ok);
@@ -170,38 +182,96 @@ function armyPanel(army) {
   ${army.battleId ? row(button('Enter battle', 'battle', army.battleId)) : ''}`;
 }
 
-function regionPanel(region) {
+function recruitmentPanel(region, { recruitTo, projects, own }) {
+  const definition = REGIONS[region.id];
+  const key = `recruit-${region.id}`;
+  const recruitment = getRecruitmentOptions(state, region.id);
+  const shown = recruitment.options.find(option => option.id === ui.picks[key])
+    ?? recruitment.options.find(option => option.eligible)
+    ?? recruitment.options[0];
+  const hasBarracks = Boolean(region.buildings.barracks);
+  const buildingProject = projects.find(project => project.type === 'build' && project.item === 'barracks');
+  const barracksQuote = getPurchaseQuote(state, { type: 'build', regionId: region.id, buildingId: 'barracks' });
+  const training = projects.filter(project => project.type !== 'build' && project.type !== 'buildShip');
+  let eta = 0;
+  return `<section class="recruit-card" data-recruitment="${esc(region.id)}" tabindex="-1">
+    <div class="recruit-heading"><h3>Recruit troops</h3><span>${own.reduce((sum, army) => sum + living(army.squads), 0)} troops here</span></div>
+    ${hasBarracks && shown ? `
+      <div class="recruit-picker">
+        ${illustration('units', shown.id, 'recruit-portrait')}
+        <div>${select(key, recruitment.options.map(option => [option.id, `${option.name}${option.eligible ? '' : ' (unavailable)'}`]), shown.id, 'Squad to recruit')}
+          <p class="recruit-cost">${esc(resourceCost(shown.cost))}</p>
+          <p class="hint">${formatTime(Math.ceil(shown.duration))} training${recruitment.queuedSeconds > 0 ? ` · ready in ${formatTime(Math.ceil(recruitment.queuedSeconds + shown.duration))}` : ''}</p></div>
+      </div>
+      ${shown.reason ? `<p class="hint recruit-unavailable">${esc(shown.reason)}</p>` : ''}
+      ${recruitment.reason && recruitment.reason !== shown.reason ? `<p class="hint recruit-unavailable">${esc(recruitment.reason)}</p>` : ''}
+      ${row(button('Recruit squad', 'recruit-squad', shown.id, {
+        className: 'primary', disabled: !recruitment.eligible || !shown.eligible,
+        data: { region: region.id, ...(recruitTo ? { army: recruitTo.id } : {}) },
+      }))}
+      <p class="hint">${recruitTo ? `Joins ${esc(recruitTo.name)} if it stays here.` : 'Recruits join a local army or form a new reserve army.'}</p>
+    ` : hasBarracks ? `<p class="hint">${esc(recruitment.reason ?? 'Recruiting unavailable.')}</p>`
+      : buildingProject ? `<p class="hint">Barracks under construction. Recruiting opens when it is ready.</p>` : `
+      <p class="hint">Build a barracks to train squads in ${esc(definition.name)}.</p>
+      ${purchaseRow('Barracks', 'Build barracks', 'build', 'barracks', barracksQuote, {
+        className: 'primary', data: { region: region.id },
+      })}
+    `}
+    ${training.length ? `<div class="recruit-queue-heading"><strong>Training queue</strong><span>${training.length} queued</span></div>
+      <ol class="recruit-queue">${training.map((project, index) => {
+        eta += project.remaining;
+        return `<li><span>${esc(unitName(project.item))}</span><span>${index ? 'Queued' : 'Training'} · ${formatTime(Math.ceil(eta))}</span></li>`;
+      }).join('')}</ol>` : ''}
+  </section>`;
+}
+
+function regionPanel(region, selectedArmy = null) {
   const definition = REGIONS[region.id];
   const friendly = region.owner === state.houseId;
-  const allies = Object.values(state.armies).filter(army => army.regionId === region.id && !army.fleetId && !army.destroyed);
+  const stationed = localForces(region.id);
+  const own = stationed.filter(army => army.houseId === state.houseId);
   const projects = (state.projects ?? []).filter(project => project.regionId === region.id && project.houseId === state.houseId);
+  const otherProjects = projects.filter(project => project.type === 'build' || project.type === 'buildShip');
   const active = activeBattles().find(battle => battle.regionId === region.id);
-  const recruitTo = selectedArmies().find(army => army.regionId === region.id && army.houseId === state.houseId && !army.battleId && !army.transit)
-    ?? allies.find(army => army.houseId === state.houseId && !army.battleId && !army.transit);
-  const recruitChoices = Object.entries(UNIT_TYPES).filter(([id, unit]) => ['rifle', 'heavy', 'marksman'].includes(id) || region.buildings.workshop || definition.colors.includes(unit.color.toLowerCase())).map(([id, unit]) => [id, unit.name]);
+  const recruitTo = own.includes(selectedArmy) && stationary(selectedArmy) ? selectedArmy : null;
+  const replenish = recruitTo ?? own.find(stationary);
+  const needsReplenishment = replenish?.squads.some(squad => squad.soldiers < UNIT_TYPES[squad.type].maxSoldiers || squad.wounds);
+  const launchArmy = region.buildings.spaceport && (recruitTo ?? own.find(stationary));
+  const dockedFleet = launchArmy && Object.values(state.fleets).some(fleet => fleet.houseId === state.houseId
+    && fleet.regionId === region.id && !fleet.transit && !fleet.armyId && !fleet.engagement && !fleet.landing);
+  const dispatchChoices = Object.entries(UNIT_TYPES)
+    .filter(([id, unit]) => ['rifle', 'heavy', 'marksman'].includes(id) || region.buildings.workshop || definition.colors.includes(unit.color.toLowerCase()))
+    .map(([id, unit]) => [id, unit.name]);
+  const dispatchType = dispatchChoices.find(([id]) => id === ui.picks.dispatch)?.[0] ?? 'rifle';
+  const dispatchQuote = getPurchaseQuote(state, { type: 'dispatch', regionId: region.id, unitType: dispatchType });
   const buildingLevel = id => typeof region.buildings[id] === 'number' ? region.buildings[id] : region.buildings[id]?.level ?? 0;
   const rallyChoices = [['', 'Clear rally point'], ...Object.values(state.planets[definition.planetId].regions)
     .filter(other => other.owner === state.houseId && other.id !== region.id).map(other => [other.id, REGIONS[other.id].name])];
-  return `<div class="subject-heading">${illustration('terrain', definition.terrain, 'subject-art terrain-art')}<div><h2>${esc(definition.name)}</h2><p class="muted">${houseLabel(region.owner)} · ${esc(title(definition.terrain))}</p></div></div>
-    ${definition.description ? `<p class="hint">${esc(definition.description)}</p>` : ''}
+  return `<div class="subject-heading">${illustration('terrain', definition.terrain, 'subject-art terrain-art')}<div><h2>${esc(definition.name)}</h2><p class="muted">${houseLabel(region.owner)} · ${esc(title(definition.terrain))}</p>${state.mode === 'grand' && homeworld().regionId === region.id ? '<span class="home-tag">Home capital</span>' : ''}</div></div>
     ${active ? row(button('Enter battle', 'battle', active.id, { className: 'primary' })) : ''}
-    ${allies.map(army => row(`<span class="hint">${houseLabel(army.houseId)} · ${living(army.squads)} troops</span>`, button(esc(army.name), 'army', army.id))).join('')}
+    ${friendly ? recruitmentPanel(region, { recruitTo, projects, own }) : ''}
+    ${friendly && region.buildings.barracks && needsReplenishment ? purchaseRow(`Replenish ${replenish.name}`, 'Replenish', 'replenish', replenish.id,
+      getPurchaseQuote(state, { type: 'replenish', armyId: replenish.id })) : ''}
+    ${state.mode === 'grand' && friendly && dockedFleet ? row(button('Plan invasion', 'plan-invasion', launchArmy.id)) : ''}
+    ${stationed.length ? `<h3>Local armies</h3>${stationed.map(army => row(`<span class="hint">${houseLabel(army.houseId)} · ${living(army.squads)} troops</span>`, button(esc(army.name), 'army', army.id, { pressed: ui.selectedArmyIds.has(army.id) }))).join('')}` : ''}
+    ${selectedArmy ? `<hr>${armyPanel(selectedArmy)}` : ''}
+    ${definition.description ? `<p class="hint">${esc(definition.description)}</p>` : ''}
     ${friendly ? details('development', 'Develop territory', Object.values(BUILDINGS).filter(building => state.mode === 'grand' || building.id !== 'spaceport').map(building => {
       const level = buildingLevel(building.id);
-      return row(`<span class="hint">${esc(building.name)} · ${level}</span>`, button(level ? 'Upgrade' : 'Build', 'build', building.id, {
-        disabled: level >= building.maxLevel, data: { region: region.id }, title: `${building.role} (${resourceCost(Object.fromEntries(Object.entries(building.cost).map(([key, value]) => [key, value * (level + 1)])))})`,
-      }));
+      const quote = getPurchaseQuote(state, { type: 'build', regionId: region.id, buildingId: building.id });
+      return purchaseRow(`${building.name} · ${level}`, level ? 'Upgrade' : 'Build', 'build', building.id, quote,
+        { data: { region: region.id }, title: building.role });
     }).join('')) : ''}
-    ${friendly && buildingLevel('barracks') ? details('recruitment', 'Recruitment and rally', `
-      ${recruitTo ? row(select('recruit', recruitChoices, ui.picks.recruit ?? 'rifle', 'Unit to recruit'), button('Recruit', 'recruit', recruitTo.id)) : ''}
-      ${recruitTo ? row(button('Replenish squads', 'replenish', recruitTo.id, { disabled: recruitTo.squads.every(squad => squad.soldiers >= UNIT_TYPES[squad.type].maxSoldiers && !squad.wounds) })) : ''}
+    ${friendly && buildingLevel('barracks') ? details('recruitment-logistics', 'Rally point', `
       ${row(select('rally', rallyChoices, ui.picks.rally ?? region.rally ?? '', 'Rally destination'), button('Set rally', 'rally', region.id))}
-      ${row(select('dispatch', recruitChoices, ui.picks.dispatch ?? 'rifle', 'Unit to dispatch'), button('Dispatch', 'dispatch', region.id, { disabled: !region.rally, title: 'Recruit and send to the assigned rally point' }))}
+      ${row(select('dispatch', dispatchChoices, dispatchType, 'Unit to dispatch'))}
+      ${purchaseRow(unitName(dispatchType), 'Dispatch', 'dispatch', region.id, dispatchQuote, { title: 'Recruit and send to the assigned rally point' })}
     `) : ''}
-    ${friendly && buildingLevel('spaceport') && state.mode === 'grand' ? details('shipyard', 'Shipyard', Object.values(SHIPS).map(ship => row(
-      `<span class="hint">${esc(ship.name)}</span>`, button('Build', 'ship', ship.id, { disabled: buildingLevel('spaceport') < ship.level, data: { region: region.id }, title: `${ship.role} (${resourceCost(ship.cost)})` }),
+    ${friendly && buildingLevel('spaceport') && state.mode === 'grand' ? details('shipyard', 'Shipyard', Object.values(SHIPS).map(ship => purchaseRow(
+      ship.name, 'Build', 'ship', ship.id, getPurchaseQuote(state, { type: 'buildShip', regionId: region.id, shipType: ship.id }),
+      { data: { region: region.id }, title: ship.role },
     )).join('')) : ''}
-    ${projects.length ? `<h3>In progress</h3>${stats(projects.map(project => [BUILDINGS[project.item]?.name ?? SHIPS[project.item]?.name ?? unitName(project.item), formatTime(Math.ceil(project.remaining))]))}` : ''}`;
+    ${otherProjects.length ? `<h3>Construction queue</h3>${stats(otherProjects.map(project => [BUILDINGS[project.item]?.name ?? SHIPS[project.item]?.name ?? unitName(project.item), formatTime(Math.ceil(project.remaining))]))}` : ''}`;
 }
 
 function rewardMarkup(reward) {
@@ -294,23 +364,41 @@ function solarPanel() {
   const landingMethod = ui.picks.transportLanding ?? 'spaceport';
   const dropSites = Object.values(state.planets[destination]?.regions ?? {}).filter(region => landingMethod === 'rain' || (region.buildings.spaceport && !atWar(region.owner)));
   const drop = dropSites.find(region => region.id === ui.picks.transportSite)?.id ?? dropSites[0]?.id;
+  const launchQuote = chosenArmy ? getPurchaseQuote(state, {
+    type: 'transport', armyId: chosenArmy.id, planetId: destination, regionId: drop, landing: landingMethod,
+  }) : null;
   const availableFleets = Object.values(state.fleets).filter(ship => (ship.transit?.to ?? ship.planetId) === planet?.id);
-  const worldChoices = Object.keys(state.planets).map(id => [id, PLANETS[id].name]);
+  const invasions = Object.values(state.fleets).filter(ship => ship.armyId && (ship.transit || ship.landing));
+  const worldChoices = Object.keys(state.planets).map(id => [id, id === homeworld().planetId ? `${PLANETS[id].name} (Homeworld)` : PLANETS[id].name]);
   const active = activeBattles().filter(battle => battle.planetId === planet?.id).length;
-  return `${planet ? `<div class="subject-heading">${illustration('planets', planet.id, 'subject-art planet-art')}<div><h2>${esc(planet.name)}</h2><p class="hint">${esc(planet.description)}</p></div></div>` : '<h2>Solar System</h2>'}
+  return `${planet ? `<div class="subject-heading">${illustration('planets', planet.id, 'subject-art planet-art')}<div><h2>${esc(planet.name)}</h2>${planet.id === homeworld().planetId ? '<span class="home-tag">Homeworld</span>' : ''}<p class="hint">${esc(planet.description)}</p></div></div>` : '<h2>Solar System</h2>'}
     ${row(select('focusWorld', worldChoices, ui.planetId, 'Inspect world'), record ? button('Open territories', 'planet', planet.id, { className: 'primary', accessibleLabel: `Open ${planet.name} territories` }) : '')}
+    ${invasions.length ? `<h3>Invasion fleets</h3>${invasions.map(invasionCard).join('')}` : ''}
+    ${fleet ? fleetPanel(fleet) : ''}
     ${active ? stats([['Active battles', active]]) : ''}
     ${record ? worldControlPanel(planet.id) : ''}
-    ${availableFleets.length ? `<h3>Fleets</h3>${availableFleets.map(ship => row(button(`${houseLabel(ship.houseId)} ${esc(ship.name ?? title(ship.id))}`, 'fleet', ship.id, { pressed: ship.id === ui.selectedFleetId }))).join('')}` : ''}
-    ${fleet ? fleetPanel(fleet) : ''}
     ${chosenArmy && destinations.length ? details('transport', 'Transport an army', `
       ${row(select('transportArmy', strategicArmies.map(army => [army.id, army.name]), chosenArmy.id, 'Army for transport'))}
       ${row(select('transportPlanet', destinations.map(id => [id, PLANETS[id].name]), destination, 'Destination world'))}
       ${row(select('transportSite', dropSites.map(region => [region.id, REGIONS[region.id].name]), drop, 'Landing site'))}
-      ${row(select('transportLanding', [['spaceport', 'Spaceport landing'], ['rain', 'Iron Rain']], landingMethod, 'Landing method'),
-        button('Launch', 'transport', chosenArmy.id, { disabled: !drop, data: { planet: destination, region: drop } }))}
+      ${row(select('transportLanding', [['spaceport', 'Spaceport landing'], ['rain', 'Iron Rain']], landingMethod, 'Landing method'))}
+      ${purchaseRow('Fleet launch', 'Launch', 'transport', chosenArmy.id, launchQuote,
+        { className: 'primary', data: { planet: destination, region: drop } })}
       <p class="hint">Move the army to a friendly spaceport before launch. Iron Rain can reach hostile territory.</p>
-    `) : ''}`;
+    `) : ''}
+    ${availableFleets.length ? `<h3>Local fleets</h3>${availableFleets.map(ship => row(button(`${houseLabel(ship.houseId)} ${esc(ship.name ?? title(ship.id))}`, 'fleet', ship.id, { pressed: ship.id === ui.selectedFleetId }))).join('')}` : ''}`;
+}
+
+function invasionCard(fleet) {
+  const trip = fleet.transit;
+  const from = PLANETS[trip?.from]?.name;
+  const destination = PLANETS[trip?.to ?? fleet.planetId]?.name;
+  const route = trip ? `${trip.returning ? destination : from} → ${trip.returning ? from : destination}` : `Landing on ${destination}`;
+  const remaining = trip ? (trip.returning ? trip.elapsed : trip.duration - trip.elapsed) : fleet.landing.duration - fleet.landing.elapsed;
+  const label = `${route} · ${formatTime(Math.ceil(remaining))}`;
+  return button(`<strong>${houseLabel(fleet.houseId)} · ${esc(fleet.name)}</strong><span>${esc(label)}</span>`, 'fleet', fleet.id, {
+    className: 'battle-card invasion-card', pressed: fleet.id === ui.selectedFleetId,
+  });
 }
 
 function fleetPanel(fleet) {
@@ -347,9 +435,11 @@ function politicsPanel() {
   const territoryChoices = Object.values(state.planets).flatMap(planet => Object.values(planet.regions))
     .filter(region => region.owner === active.id).map(region => [region.id, REGIONS[region.id].name]);
   const stateLabel = title(relation?.stance ?? 'Neutral');
+  const deal = ui.picks.deal ?? 'ceasefire';
   return `<h2>House politics</h2>${row(select('politicalHouse', namedChoices(Object.fromEntries(houses.map(house => [house.id, house]))), active.id, 'House'))}
     <p class="hint">${esc(active.description)}</p>${stats([['Relations', esc(stateLabel)], ['Trust', pct(relation?.trust ?? 0)], ['Pacts', esc(['trade', 'access', 'marriage'].filter(id => relation?.[id]).map(title).join(' · ') || 'None')], ['Doctrine', esc(title(active.doctrine))]])}
-    ${row(select('deal', Object.entries(deals), ui.picks.deal ?? 'ceasefire', 'Agreement'), button('Propose', 'diplomacy', active.id))}
+    ${row(select('deal', Object.entries(deals), deal, 'Agreement'))}
+    ${purchaseRow(deals[deal], 'Propose', 'diplomacy', active.id, getPurchaseQuote(state, { type: 'diplomacy', deal }))}
     ${ui.picks.deal === 'concession' && territoryChoices.length ? row(select('concession', territoryChoices, ui.picks.concession ?? territoryChoices[0][0], 'Territory concession')) : ''}`;
 }
 
@@ -361,6 +451,7 @@ function colorsPanel() {
       const present = Array.isArray(colors) ? colors.includes(color.id) : Number(colors?.[color.id]) > 0;
       const operation = OPERATIONS[color.id];
       const ready = region?.owner === state.houseId && present && operation;
+      const quote = ready ? getPurchaseQuote(state, { type: 'operation', colorId: color.id }) : null;
       let targets = null;
       if (ready && operation.target === 'hostile') {
         const ids = color.id === 'pink' ? Object.values(state.planets).flatMap(planet => Object.keys(planet.regions)) : REGIONS[region.id].neighbors;
@@ -371,9 +462,10 @@ function colorsPanel() {
       }
       if (ready && operation.target === 'rival') targets = Object.values(HOUSES).filter(house => house.id !== state.houseId).map(house => [house.id, house.name]);
       return details(`color-${color.id}`, `${color.name} · ${color.role}`, `<p class="hint">${esc(color.mechanic)}</p>
-        ${ready ? `<p class="hint">${esc(operation.description)} ${esc(resourceCost(operation.cost))}${operation.duration ? ` · ${formatTime(operation.duration)}` : ''}</p>
+        ${ready ? `<p class="hint">${esc(operation.description)}${operation.duration ? ` · ${formatTime(operation.duration)}` : ''}</p>
           ${targets?.length ? row(select(`operation-${color.id}`, targets, ui.picks[`operation-${color.id}`] ?? targets[0][0], 'Operation target')) : ''}
-          ${row(button(esc(operation.name), 'operation', color.id, { disabled: targets?.length === 0, data: { region: region.id } }))}` : ''}`);
+          ${purchaseRow(operation.name, 'Activate', 'operation', color.id,
+      targets?.length === 0 ? { ...quote, eligible: false, reason: 'No available target.' } : quote, { data: { region: region.id } })}` : ''}`);
     }).join('')}`;
 }
 
@@ -403,22 +495,23 @@ function theaterPanel() {
   const selected = selectedArmies();
   const region = currentRegion();
   const world = PLANETS[ui.planetId];
-  if (selected.length === 1 && selected[0].regionId === region?.id) return `${armyPanel(selected[0])}<hr>${regionPanel(region)}`;
-  if (selected.length > 1) return `<h2>${selected.length} armies selected</h2><p class="hint">Right-click a destination to march together. Hold Shift to queue waypoints.</p>
-    ${selected.map(army => row(button(esc(army.name), 'army', army.id))).join('')}${region ? `<hr>${regionPanel(region)}` : ''}`;
+  if (region && selected.length === 1 && selected[0].regionId === region.id) return regionPanel(region, selected[0]);
+  if (selected.length > 1) return `${region ? `${regionPanel(region)}<hr>` : ''}<h2>${selected.length} armies selected</h2><p class="hint">Right-click a destination to march together. Hold Shift to queue waypoints.</p>
+    ${selected.map(army => row(button(esc(army.name), 'army', army.id))).join('')}`;
   if (region) return regionPanel(region);
   const own = Object.values(state.armies).filter(army => army.houseId === state.houseId && army.planetId === ui.planetId && !army.fleetId && !army.destroyed);
-  return `<h2>${esc(world?.name ?? 'Planetary map')}</h2>
+  return `<h2>${esc(world?.name ?? 'Planetary map')}</h2>${state.mode === 'grand' && world?.id === homeworld().planetId ? '<span class="home-tag">Homeworld</span>' : ''}
+    <p class="hint">Select a territory to recruit troops, or select an army to move it.</p>
     ${own.map(army => row(button(esc(army.name), 'army', army.id))).join('')}
     ${world ? worldControlPanel(world.id) : ''}`;
 }
 
 function ordersPanel() {
-  if (ui.view === 'solar') return '<span class="toolbar-title">Solar command</span><span class="toolbar-help">Select a fleet or world. Double-click a world to open its territory map.</span>';
+  if (ui.view === 'solar') return '<span class="toolbar-title">Solar command</span><span class="toolbar-help">Select a moving fleet to inspect its invasion. Double-click a world to open its territories.</span>';
   if (ui.view === 'planet') {
     const armies = selectedArmies();
     return `<span class="toolbar-title">${armies.length ? `${armies.length} ${armies.length === 1 ? 'army' : 'armies'} · ${armies.reduce((total, army) => total + living(army.squads), 0)} troops` : 'Territory command'}</span>
-      <span class="toolbar-help">Select an army. Right-click a territory to march. Hold <kbd>Shift</kbd> to queue.</span>`;
+      <span class="toolbar-help">Select a territory to recruit. Select an army and right-click to march.</span>`;
   }
   const roster = tacticalRoster();
   const chosen = roster.filter(squad => ui.selectedSquadIds.has(squad.id));
@@ -469,10 +562,13 @@ function refreshHud() {
   ].map(([id, label, tooltip]) => button(label, 'speed', String(id), { pressed: speed === id, title: tooltip, accessibleLabel: tooltip })).join('')}`);
   html('layers', `${mode === 'grand' ? button('Solar system', 'layer', 'solar', { pressed: ui.view === 'solar' }) : ''}
     ${mode !== 'skirmish' ? button(esc(PLANETS[ui.planetId]?.name ?? 'Territories'), 'layer', 'planet', { pressed: ui.view === 'planet', disabled: !state.planets[ui.planetId] }) : ''}
+    ${mode === 'grand' ? button('Homeworld', 'home', '', { title: `Go to ${PLANETS[homeworld().planetId].name}` }) : ''}
     ${ui.battleId ? button('Battlefield', 'layer', 'battle', { pressed: ui.view === 'battle' }) : ''}`);
   const controlToggle = button('Control', 'control', '', { pressed: ui.tab === 'control', title: 'World and group control rewards' });
-  html('map-controls', ui.view === 'planet' ? `${button('Supply', 'supply', '', { pressed: ui.showSupply, title: 'Toggle supply overlay' })}${controlToggle}`
-    : ui.view === 'battle' ? `${button('-', 'zoom', 'out', { title: 'Zoom out' })}${button('Fit', 'zoom', 'fit', { title: 'Center the battlefield' })}${button('+', 'zoom', 'in', { title: 'Zoom in' })}` : controlToggle);
+  const recruitRegion = ui.view !== 'battle' && findRecruitmentRegion();
+  const recruitControl = recruitRegion ? button('Recruit troops', 'recruit-area', recruitRegion.id, { className: 'primary', title: `Recruit at ${REGIONS[recruitRegion.id].name}` }) : '';
+  html('map-controls', ui.view === 'planet' ? `${recruitControl}${button('Supply', 'supply', '', { pressed: ui.showSupply, title: 'Toggle supply overlay' })}${controlToggle}`
+    : ui.view === 'battle' ? `${button('-', 'zoom', 'out', { title: 'Zoom out' })}${button('Fit', 'zoom', 'fit', { title: 'Center the battlefield' })}${button('+', 'zoom', 'in', { title: 'Zoom in' })}` : `${recruitControl}${controlToggle}`);
   for (const tab of document.querySelectorAll('.rail-tabs button')) tab.setAttribute('aria-pressed', String(tab.dataset.id === ui.tab));
   const battle = currentBattle();
   let inspector;
@@ -514,6 +610,7 @@ function renderMenu() {
   const slots = slotList();
   const house = HOUSES[setup.houseId];
   const skirmish = setup.mode === 'skirmish';
+  const home = HOUSE_HOMEWORLDS[setup.houseId];
   const menuSelect = (id, choices, label) => `<label>${label}${select(id, choices, setup[id], label, { setup: true })}</label>`;
   const menuSlots = ['auto', '1', '2', '3'].map((id, index) => {
     const slot = Array.isArray(slots) ? slots.find(item => String(item.slot ?? item.id) === id) : slots?.[id];
@@ -523,7 +620,9 @@ function renderMenu() {
   html('menu-content', `<section class="menu-section"><h2>${state ? 'New campaign' : 'Start campaign'}</h2><div class="menu-grid">
     ${menuSelect('mode', Object.entries(CAMPAIGN_MODES), 'Mode')}
     ${menuSelect('houseId', namedChoices(HOUSES), 'Your House')}
-    ${skirmish ? menuSelect('enemyHouseId', namedChoices(HOUSES).filter(([id]) => id !== setup.houseId), 'Enemy House') : menuSelect('planetId', planets.map(planet => [planet.id, planet.name]), 'Starting world')}
+    ${skirmish ? menuSelect('enemyHouseId', namedChoices(HOUSES).filter(([id]) => id !== setup.houseId), 'Enemy House')
+      : setup.mode === 'planetary' ? menuSelect('planetId', planets.map(planet => [planet.id, planet.name]), 'Starting world')
+        : `<div class="menu-home"><span>Homeworld</span><strong>${esc(PLANETS[home.planetId].name)}</strong><small>${esc(REGIONS[home.regionId].name)}</small></div>`}
     ${skirmish ? menuSelect('terrain', namedChoices(SKIRMISHES), 'Battlefield') : ''}
     ${menuSelect('difficulty', [['standard', 'Standard'], ['hard', 'Veteran']], 'Difficulty')}
     </div><p class="hint menu-line">${esc(house?.description)}</p><div class="menu-line">${button(skirmish ? 'Start battle' : 'Begin campaign', 'start', '', { className: 'primary' })}</div></section>
@@ -547,16 +646,18 @@ function manualSave(slot, quiet = false) {
   }
 }
 
-function setState(next) {
+function setState(next, freshCampaign = false) {
   state = next;
   ui.houseId = state.houseId;
-  ui.planetId = state.planets[state.planetId] ? state.planetId : Object.keys(state.planets)[0] ?? null;
+  const home = freshCampaign && state.mode === 'grand' ? homeworld() : null;
+  const start = home?.planetId ?? state.planetId;
+  ui.planetId = state.planets[start] ? start : Object.keys(state.planets)[0] ?? null;
   ui.selectedPlanetId = ui.planetId;
-  ui.regionId = null;
-  ui.selectedRegionId = null;
+  ui.regionId = state.planets[ui.planetId]?.regions[home?.regionId]?.id ?? null;
+  ui.selectedRegionId = ui.regionId;
   ui.battleId = null;
   ui.tab = 'command';
-  ui.view = state.mode === 'grand' ? 'solar' : 'planet';
+  ui.view = state.mode === 'grand' && !home ? 'solar' : 'planet';
   ui.selectedArmyIds.clear();
   ui.selectedSquadIds.clear();
   ui.selectedFleetId = null;
@@ -620,6 +721,28 @@ function enterPlanet(id) {
   map.focus({ preventScroll: true });
 }
 
+function focusTerritory(planetId, regionId) {
+  enterPlanet(planetId);
+  if (!state.planets[planetId]?.regions[regionId]) return;
+  ui.regionId = regionId;
+  ui.selectedRegionId = regionId;
+  ui.selectedArmyIds.clear();
+  ui.picks.rally = null;
+}
+
+function findRecruitmentRegion() {
+  const region = currentRegion();
+  if (region?.owner === state.houseId) return region;
+  const own = world => Object.values(world?.regions ?? {}).filter(candidate => candidate.owner === state.houseId);
+  const local = own(state.planets[ui.planetId]);
+  if (local.length) return local.find(candidate => candidate.buildings.barracks) ?? local[0];
+  const home = homeworld();
+  const homeRegion = state.planets[home.planetId]?.regions[home.regionId];
+  if (homeRegion?.owner === state.houseId) return homeRegion;
+  const territories = Object.values(state.planets).flatMap(own);
+  return territories.find(candidate => candidate.buildings.barracks) ?? territories[0];
+}
+
 function focusWorld(id) {
   if (!state.planets[id]) return;
   if (ui.planetId !== id) {
@@ -674,7 +797,7 @@ function actionForClick(event) {
     return;
   }
   if (action === 'resume') { if (state) elements.menu.close(); return; }
-  if (action === 'start') { setState(createGame(ui.setup)); return; }
+  if (action === 'start') { setState(createGame(ui.setup), true); return; }
   if (action === 'save') { manualSave(id); renderMenu(); return; }
   if (action === 'load') {
     try {
@@ -699,6 +822,37 @@ function actionForClick(event) {
       else setView('solar');
       break;
     case 'planet': enterPlanet(id); break;
+    case 'home': {
+      const home = homeworld();
+      focusTerritory(home.planetId, home.regionId);
+      break;
+    }
+    case 'recruit-area': {
+      const territory = REGIONS[id] ?? REGIONS[findRecruitmentRegion()?.id];
+      if (!territory) break;
+      focusTerritory(territory.planetId, territory.id);
+      refreshHud();
+      const panel = elements.inspector.querySelector('[data-recruitment]');
+      panel?.scrollIntoView?.({ block: 'nearest' });
+      (panel?.querySelector('select, button:not(:disabled)') ?? panel)?.focus?.({ preventScroll: true });
+      return;
+    }
+    case 'plan-invasion': {
+      const expedition = state.armies[id];
+      if (!expedition) break;
+      setView('solar');
+      focusWorld(expedition.planetId);
+      ui.picks.transportArmy = id;
+      ui.picks.transportPlanet = null;
+      ui.picks.transportSite = null;
+      ui.picks.transportLanding = 'rain';
+      ui.details.add('transport');
+      refreshHud();
+      const transport = elements.inspector.querySelector('[data-detail="transport"]');
+      transport?.scrollIntoView?.({ block: 'nearest' });
+      transport?.querySelector('[data-pick="transportPlanet"]')?.focus({ preventScroll: true });
+      return;
+    }
     case 'inspect-world':
       setView('solar');
       focusWorld(id);
@@ -725,12 +879,17 @@ function actionForClick(event) {
       break;
     }
     case 'build': issue({ type: 'build', regionId: region, buildingId: id }); break;
-    case 'recruit': issue({ type: 'recruit', armyId: id, unitType: pick('recruit') }); break;
+    case 'recruit-squad': issue({ type: 'recruitAt', regionId: region, unitType: id, armyId: army }); break;
     case 'replenish': issue({ type: 'replenish', armyId: id }); break;
     case 'rally': issue({ type: 'rally', regionId: id, targetId: pick('rally') || null }); break;
     case 'dispatch': issue({ type: 'dispatch', regionId: id, unitType: pick('dispatch') }); break;
     case 'ship': issue({ type: 'buildShip', regionId: region, shipType: id }); break;
-    case 'transport': issue({ type: 'transport', armyId: id, planetId: planet, regionId: region, landing: pick('transportLanding') }); break;
+    case 'transport':
+      if (issue({ type: 'transport', armyId: id, planetId: planet, regionId: region, landing: pick('transportLanding') })) {
+        const fleetId = state.armies[id]?.fleetId;
+        if (fleetId) chooseFleet(fleetId);
+      }
+      break;
     case 'sail': issue({ type: 'sail', fleetId: id, planetId: pick('sail') }); break;
     case 'blockade': issue({ type: 'blockade', fleetId: id }); break;
     case 'fleet-order': issue({ type: 'fleetOrder', fleetId: id, stance }); break;
@@ -802,15 +961,19 @@ function isDouble(key) {
 function strategicLeft(point, extended) {
   if (ui.view === 'solar') {
     const exact = planetAtPoint(state, point, true);
-    if (!exact) {
-      const fleet = getNearest(Object.values(state.fleets), point, item => fleetPoint(state, item), 19);
-      if (fleet) { chooseFleet(fleet.id); return; }
+    const fleet = fleetAtPoint(state, point, false, ui.selectedFleetId);
+    if (fleet && (!exact || fleet.transit || fleet.landing)) {
+      chooseFleet(fleet.id);
+      return;
     }
     const world = exact ?? planetAtPoint(state, point);
     if (world) {
       focusWorld(world.id);
       if (isDouble(`planet-${world.id}`)) enterPlanet(world.id);
+      return;
     }
+    const lane = fleetAtPoint(state, point, true, ui.selectedFleetId);
+    if (lane) chooseFleet(lane.id);
     return;
   }
   const troops = Object.values(state.armies).filter(army => army.planetId === ui.planetId && !army.destroyed && !army.fleetId);
@@ -824,6 +987,7 @@ function strategicLeft(point, extended) {
   if (!region) return;
   ui.regionId = region.id;
   ui.selectedRegionId = region.id;
+  ui.tab = 'command';
   ui.picks.rally = null;
   if (!extended) ui.selectedArmyIds.clear();
   const battle = activeBattles().find(item => item.regionId === region.id);

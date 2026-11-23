@@ -79,45 +79,59 @@ function launch(state, fleet, to, regionId, direction) {
   fleet.lastArrival = null;
 }
 
-export function transport(state, houseId, action, helpers) {
-  if (state.mode !== 'grand') return result(false, 'Orbital transfers are available in Grand Conquest.');
+export function transportSupplyCost(state, army, landing) {
+  const size = army.squads.filter(squad => squad.soldiers > 0).length;
+  const port = regionAt(state, army.regionId);
+  const blueCrew = (port?.operations?.blue ?? 0) > state.elapsed;
+  return Math.max(1, Math.ceil(2 + size / 2 + (landing === 'rain' ? 3 : 0) - (blueCrew ? 2 : 0)));
+}
+
+export function quoteTransport(state, houseId, action, helpers) {
   const army = state.armies[action.armyId];
-  if (!army || army.houseId !== houseId || army.destroyed) return result(false, 'Select an available army.');
-  if (army.fleetId || army.transit || army.battleId) return result(false, 'That army is already deployed.');
+  const landing = action.landing ?? 'spaceport';
+  const cost = army ? { supplies: transportSupplyCost(state, army, landing) } : {};
+  const unavailable = (reason) => ({ eligible: false, reason, cost });
+  if (state.mode !== 'grand') return unavailable('Orbital transfers are available in Grand Conquest.');
+  if (!army || army.houseId !== houseId || army.destroyed) return unavailable('Select an available army.');
+  if (army.fleetId || army.transit || army.battleId) return unavailable('That army is already deployed.');
   const from = regionAt(state, army.regionId);
   if (!validPort(from) || (from.owner !== houseId && !helpers.friendly?.(state, houseId, from.owner))) {
-    return result(false, 'March the army to a friendly spaceport to embark.');
+    return unavailable('March the army to a friendly spaceport to embark.');
   }
 
-  const landing = action.landing ?? 'spaceport';
   const { planetId, regionId } = action;
   const target = regionAt(state, regionId);
   if (!operationalWorld(state, planetId) || REGIONS[regionId]?.planetId !== planetId || planetId === army.planetId || !target) {
-    return result(false, 'Choose a landing region on another world.');
+    return unavailable('Choose a landing region on another world.');
   }
-  if (!Object.hasOwn(LANDING_TIME, landing)) return result(false, 'Choose a spaceport landing or an Iron Rain.');
+  if (!Object.hasOwn(LANDING_TIME, landing)) return unavailable('Choose a spaceport landing or an Iron Rain.');
   if (landing === 'spaceport' && (!validPort(target) || hostilePort(state, houseId, target, helpers))) {
-    return result(false, 'A conventional landing requires a nonhostile spaceport.');
+    return unavailable('A conventional landing requires a nonhostile spaceport.');
   }
 
   const size = army.squads.filter(squad => squad.soldiers > 0).length;
-  if (!size) return result(false, 'That army has no squads to embark.');
+  if (!size) return unavailable('That army has no squads to embark.');
   const available = Object.values(state.fleets).filter(fleet => fleet.houseId === houseId
     && fleet.planetId === army.planetId && fleet.regionId === army.regionId && !fleet.armyId
     && !fleet.transit && !fleet.engagement && !fleet.landing && (!action.fleetId || fleet.id === action.fleetId));
-  if (!available.length) return result(false, 'Dock a fleet at this spaceport to embark the army.');
+  if (!available.length) return unavailable('Dock a fleet at this spaceport to embark the army.');
   const capacious = available.filter(fleet => fleetCapacity(fleet) >= size);
   if (!capacious.length) {
     const capacity = Math.max(...available.map(fleetCapacity));
-    return result(false, `Transport capacity ${capacity}/${size} squads. Build transports or split the army.`);
+    return unavailable(`Transport capacity ${capacity}/${size} squads. Build transports or split the army.`);
   }
   const fleet = capacious.find(candidate => landing === 'spaceport' || candidate.ships.assault > 0);
-  if (!fleet) return result(false, 'Iron Rain requires an assault ship.');
+  if (!fleet) return unavailable('Iron Rain requires an assault ship.');
 
-  const cost = Math.max(1, Math.ceil(2 + size / 2 + (landing === 'rain' ? 3 : 0)
-    - ((from.operations?.blue ?? 0) > state.elapsed ? 2 : 0)));
-  if ((state.resources[houseId]?.supplies ?? 0) < cost) return result(false, `Embarkation needs ${cost} Supplies.`);
-  state.resources[houseId].supplies -= cost;
+  if ((state.resources[houseId]?.supplies ?? 0) < cost.supplies) return unavailable(`Embarkation needs ${cost.supplies} Supplies.`);
+  return { eligible: true, reason: '', cost, army, fleet, landing };
+}
+
+export function transport(state, houseId, action, helpers) {
+  const { eligible, reason, cost, army, fleet, landing } = quoteTransport(state, houseId, action, helpers);
+  if (!eligible) return result(false, reason);
+  const { planetId, regionId } = action;
+  state.resources[houseId].supplies -= cost.supplies;
   fleet.armyId = army.id;
   army.fleetId = fleet.id;
   army.regionId = null;
