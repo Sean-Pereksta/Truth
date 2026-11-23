@@ -261,7 +261,8 @@ test("recruitment at an empty territory charges the displayed price and musters 
   const options = getRecruitmentOptions(state, regionId);
   const entry = rifleOption(state, regionId);
   assert.ok(options.eligible && entry?.eligible);
-  assert.ok(entry.duration > 0);
+  assert.equal(entry.duration, 18);
+  assert.equal(options.options.find(({ id }) => id === "tank").duration, 38);
   assert.deepEqual(fieldArmiesAt(state, regionId), []);
   const resources = { ...state.resources[state.houseId] };
   issue(state, { type: "recruitAt", regionId, unitType: entry.id });
@@ -271,7 +272,10 @@ test("recruitment at an empty territory charges the displayed price and musters 
   assert.equal(project.item, entry.id);
   assertClose(project.remaining, entry.duration, "displayed duration");
   assert.deepEqual(fieldArmiesAt(state, regionId), []);
-  advanceUntil(state, () => fieldArmiesAt(state, regionId).length > 0, entry.duration + 2);
+  advance(state, entry.duration - 0.1);
+  assert.deepEqual(fieldArmiesAt(state, regionId), []);
+  assertClose(project.remaining, 0.1, "recruitment time remaining");
+  advance(state, 0.1);
   const [army] = fieldArmiesAt(state, regionId);
   assert.equal(army.planetId, REGIONS[regionId].planetId);
   const rifle = army.squads.find(({ type }) => type === "rifle");
@@ -316,7 +320,7 @@ test("construction and ship quotes match the charge, including the next queued b
   const construction = { type: "build", regionId, buildingId: "barracks" };
   const upgrade = getPurchaseQuote(state, construction);
   const tierCost = (tier) => Object.fromEntries(Object.entries(BUILDINGS.barracks.cost).map(([key, amount]) => [key, amount * tier]));
-  assert.ok(upgrade.eligible && upgrade.duration > 0);
+  assert.ok(upgrade.eligible && upgrade.duration >= 14);
   assert.deepEqual(upgrade.cost, tierCost(2));
   const initial = { ...wallet };
   issue(state, construction);
@@ -327,22 +331,64 @@ test("construction and ship quotes match the charge, including the next queued b
 
   const shipbuilding = { type: "buildShip", regionId, shipType: "corvette" };
   const ship = getPurchaseQuote(state, shipbuilding);
-  assert.ok(ship.eligible && ship.duration > 0);
+  assert.ok(ship.eligible && ship.duration >= 15);
   assert.deepEqual(ship.cost, SHIPS.corvette.cost);
   const remaining = { ...wallet };
   issue(state, shipbuilding);
   assertPaid(wallet, remaining, ship.cost);
   assertClose(state.projects.find(({ item }) => item === "corvette").duration, ship.duration, "ship quote duration");
-  advanceUntil(state, () => state.projects.length === 0, Math.max(upgrade.duration, ship.duration) + 2);
+  advance(state, 10);
+  assert.equal(region.buildings.barracks, 1);
+  assert.equal(Object.keys(state.fleets).length, 0);
+  assert.equal(state.projects.length, 2);
+  advanceUntil(state, () => state.projects.length === 0, Math.max(upgrade.duration, ship.duration) - 8);
   assert.equal(region.buildings.barracks, 2);
   assert.equal(Object.values(state.fleets).find((fleet) => fleet.regionId === regionId)?.ships.corvette, 1);
+});
+
+test("replenishment takes the displayed time before restoring casualties and wounds", () => {
+  const { state, regionId } = musterFixture();
+  issue(state, { type: "recruitAt", regionId, unitType: "rifle" });
+  advance(state, rifleOption(state, regionId).duration);
+  const [army] = fieldArmiesAt(state, regionId);
+  const [squad] = army.squads;
+  squad.soldiers -= 4;
+  squad.wounds = 7;
+  const replenish = { type: "replenish", armyId: army.id };
+  const quote = getPurchaseQuote(state, replenish);
+  assert.ok(quote.eligible);
+  assert.equal(quote.duration, REGIONS[regionId].colors.includes("yellow") ? 12 : 20);
+  issue(state, replenish);
+  advance(state, quote.duration - 0.1);
+  assert.equal(squad.soldiers, UNIT_TYPES.rifle.maxSoldiers - 4);
+  advance(state, 0.1);
+  assert.equal(squad.soldiers, UNIT_TYPES.rifle.maxSoldiers);
+  assert.equal(squad.wounds, 0);
+});
+
+test("an existing short training project retains the finish time saved before production slowed", () => {
+  const { state, regionId } = musterFixture();
+  issue(state, { type: "recruitAt", regionId, unitType: "rifle" });
+  const [project] = state.projects;
+  project.duration = 4;
+  project.remaining = 1.7;
+  const storage = storageFixture();
+  assert.ok(saveGame(state, storage).ok);
+  const restored = loadGame(storage);
+  assert.deepEqual(restored.projects, [project]);
+  advance(restored, 1.6);
+  assert.equal(fieldArmiesAt(restored, regionId).length, 0);
+  advance(restored, 0.1);
+  assert.equal(restored.projects.length, 0);
+  assert.equal(fieldArmiesAt(restored, regionId)[0].squads[0].type, "rifle");
 });
 
 test("a queued squad joins a stationary local army after save and reload", () => {
   const { state, regionId } = musterFixture();
   const action = { type: "recruitAt", regionId, unitType: "rifle" };
+  const duration = rifleOption(state, regionId).duration;
   issue(state, action);
-  advanceUntil(state, () => fieldArmiesAt(state, regionId).length > 0, 15);
+  advanceUntil(state, () => fieldArmiesAt(state, regionId).length > 0, duration + 2);
   const [army] = fieldArmiesAt(state, regionId);
   const squadCount = army.squads.length;
   issue(state, { ...action, armyId: army.id });
@@ -383,8 +429,9 @@ test("the advertised queue time includes earlier squads at the same barracks", (
 test("recruits stay at their territory if their assigned army marches away", () => {
   const { state, regionId } = musterFixture();
   const action = { type: "recruitAt", regionId, unitType: "rifle" };
+  const duration = rifleOption(state, regionId).duration;
   issue(state, action);
-  advanceUntil(state, () => fieldArmiesAt(state, regionId).length > 0, 15);
+  advanceUntil(state, () => fieldArmiesAt(state, regionId).length > 0, duration + 2);
   const [army] = fieldArmiesAt(state, regionId);
   const roster = structuredClone(army.squads);
   const destinationId = REGIONS[regionId].neighbors[0];
@@ -392,7 +439,7 @@ test("recruits stay at their territory if their assigned army marches away", () 
   world.regions[destinationId].owner = state.houseId;
   issue(state, { ...action, armyId: army.id });
   issue(state, { type: "move", armyId: army.id, regionId: destinationId });
-  advanceUntil(state, () => army.regionId === destinationId && state.projects.length === 0, 15);
+  advanceUntil(state, () => army.regionId === destinationId && state.projects.length === 0, duration + 2);
   assert.deepEqual(army.squads, roster);
   const replacements = fieldArmiesAt(state, regionId);
   assert.equal(replacements.length, 1);
@@ -678,6 +725,92 @@ test("tactical commands preserve identity and ordering while squads move", () =>
   assert.ok(squad.soldiers > 0);
 });
 
+function weaponsFixture(type = "rifle", distance = 105) {
+  const battle = createBattle({
+    id: "weapons", terrain: "desert", seed,
+    armies: [
+      { id: "attacker", houseId: "augustus", squads: [createSquad(type, "attacker-squad")] },
+      { id: "defender", houseId: "bellona", squads: [createSquad("rifle", "defender-squad")] },
+    ],
+  });
+  const [attacker, defender] = battle.squads;
+  battle.obstacles = [];
+  battle.zones = [];
+  Object.assign(attacker, { x: 320, y: 220, heading: 0 });
+  Object.assign(defender, { x: attacker.x + distance, y: attacker.y, heading: Math.PI, cooldown: 120 });
+  assert.equal(issueOrder(battle, defender.houseId, [defender.id], { type: "hold" }), 1);
+  const order = (action) => issueOrder(battle, attacker.houseId, [attacker.id], action);
+  return { battle, attacker, defender, order };
+}
+
+function tickToStrike(battle, attacker) {
+  for (let tick = 0; tick < 100 && !attacker.lastAttackMode; tick += 1) tickBattle(battle, 0.05);
+  assert.ok(attacker.lastAttackMode, "The squad should strike within five battle seconds");
+}
+
+test("rifle squads fire at range or close to use melee, and vehicles reject melee", () => {
+  const ranged = weaponsFixture();
+  assert.equal(ranged.order({ type: "attackMode", mode: "ranged" }), 1);
+  assert.equal(ranged.attacker.attackMode, "ranged");
+  assert.equal(ranged.order({ type: "attack", targetId: ranged.defender.id }), 1);
+  const start = position(ranged.attacker);
+  tickToStrike(ranged.battle, ranged.attacker);
+  assert.equal(ranged.attacker.lastAttackMode, "ranged");
+  assert.deepEqual(position(ranged.attacker), start);
+  assert.ok(ranged.battle.effects.some(({ kind }) => kind === "shot"));
+  assert.ok(ranged.defender.hp < ranged.defender.maxHp);
+
+  const melee = weaponsFixture();
+  assert.equal(melee.order({ type: "attackMode", mode: "ranged" }), 1);
+  const targetId = melee.defender.id;
+  assert.equal(melee.order({ type: "attack", targetId, mode: "melee" }), 1);
+  tickBattle(melee.battle, 0.35);
+  assert.ok(melee.attacker.x > start[0]);
+  assert.equal(melee.defender.hp, melee.defender.maxHp);
+  tickToStrike(melee.battle, melee.attacker);
+  assert.equal(melee.attacker.lastAttackMode, "melee");
+  assert.equal(melee.attacker.attackMode, "ranged", "One attack's override should not change the squad preference");
+  assert.ok(melee.battle.effects.some(({ kind }) => kind === "melee"));
+  assert.ok(melee.defender.hp < melee.defender.maxHp);
+
+  const vehicle = weaponsFixture("tank");
+  assert.equal(vehicle.order({ type: "attackMode", mode: "melee" }), 0);
+});
+
+test("facing turns a squad in place and rear attacks deal more damage", () => {
+  const turning = weaponsFixture("rifle", 180);
+  const start = position(turning.attacker);
+  assert.equal(turning.order({ type: "face", x: 220, y: 220 }), 1);
+  tickBattle(turning.battle, 0.05);
+  assert.ok(Math.cos(turning.attacker.heading) > -0.95, "Turning should take longer than one frame");
+  tickBattle(turning.battle, 2);
+  assert.ok(Math.cos(turning.attacker.heading) < -0.99);
+  assert.deepEqual(position(turning.attacker), start);
+
+  function firstRifleHit(facing) {
+    const { battle, attacker, defender, order } = weaponsFixture();
+    defender.heading = facing;
+    assert.equal(order({ type: "attack", targetId: defender.id, mode: "ranged" }), 1);
+    tickToStrike(battle, attacker);
+    return defender.maxHp - defender.hp;
+  }
+  const front = firstRifleHit(Math.PI);
+  const rear = firstRifleHit(0);
+  assert.ok(front > 0);
+  assert.ok(rear > front * 1.1, "Exposed rear should take materially more damage");
+});
+
+test("a skirmish stays active longer while battle and campaign clocks advance together", () => {
+  const state = createGame({ mode: "skirmish", seed });
+  const battle = activeBattle(state);
+  advance(state, 30);
+  assert.equal(battle.winner, null);
+  assertClose(battle.elapsed, state.elapsed, "tactical and campaign time");
+  assert.ok(battle.squads.some(({ hp, maxHp }) => hp < maxHp), "Combat should already be active");
+  advanceUntil(state, () => state.victory, 100);
+  assert.ok(battle.elapsed > 30);
+});
+
 test("tactical pathfinding detours around an obstacle and reaches the ordered destination", () => {
   const battle = createBattle({
     id: "pathfinding", terrain: "desert", seed,
@@ -891,8 +1024,12 @@ test("a Mars ground battle continues while a fleet carries another army to Luna"
 test("live battle save restores commands, casualties, positions, and deterministic progress", () => {
   const state = createGame({ mode: "skirmish", seed });
   const battle = activeBattle(state);
-  const squad = liveSquads(battle, state.houseId)[0];
+  const squad = liveSquads(battle, state.houseId).find(({ type }) => type === "rifle");
   const enemy = battle.squads.find((candidate) => candidate.houseId !== state.houseId);
+  issue(state, {
+    type: "orderSquads", battleId: battle.id, squadIds: [squad.id],
+    order: { type: "attackMode", mode: "ranged" },
+  });
   issue(state, {
     type: "orderSquads", battleId: battle.id, squadIds: [squad.id],
     order: { type: "attack", targetId: enemy.id },
@@ -904,10 +1041,34 @@ test("live battle save restores commands, casualties, positions, and determinist
   const restored = loadGame(storage, 3);
   assert.deepEqual(restored.battles[battle.id], battle);
   assert.deepEqual(restored.armies, state.armies);
+  assert.equal(restored.battles[battle.id].squads.find(({ id }) => id === squad.id).attackMode, "ranged");
   advance(state, 12);
   advance(restored, 12);
   assert.deepEqual(restored.battles[battle.id], state.battles[battle.id]);
   assert.deepEqual(restored.armies, state.armies);
+});
+
+test("a battle saved before weapon stances could be selected still resolves attacks", () => {
+  const state = createGame({ mode: "skirmish", seed });
+  const battle = activeBattle(state);
+  const rifle = liveSquads(battle, state.houseId).find(({ type }) => type === "rifle");
+  const enemy = battle.squads.find(({ houseId }) => houseId !== state.houseId);
+  issue(state, {
+    type: "orderSquads", battleId: battle.id, squadIds: [rifle.id],
+    order: { type: "attack", targetId: enemy.id },
+  });
+  for (const squad of battle.squads) {
+    for (const field of ["attackMode", "lastAttackMode", "facingLocked", "aimTargetId", "aimMode", "aimRemaining"]) {
+      delete squad[field];
+    }
+  }
+  const storage = storageFixture();
+  assert.ok(saveGame(state, storage).ok);
+  const restored = loadGame(storage);
+  const restoredBattle = restored.battles[battle.id];
+  advanceUntil(restored, () => restoredBattle.squads.some(({ lastAttackMode }) => Boolean(lastAttackMode)), 20);
+  assert.ok(restoredBattle.squads.some(({ hp, maxHp }) => hp < maxHp));
+  assert.ok(restoredBattle.squads.every(({ x, y, heading }) => [x, y, heading].every(Number.isFinite)));
 });
 
 test("a skirmish resolves once and preserves surviving soldiers, wounds, and experience", () => {

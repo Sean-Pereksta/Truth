@@ -1,5 +1,6 @@
 import { HOUSES, PLANETS, PLANET_GROUPS, REGIONS } from './content.mjs';
 import { getPlanetControl, getSupplyStatus } from './game.mjs';
+import { pointInTerrainZone, terrainOutline } from './terrain-shapes.mjs';
 
 export const MAP_WIDTH = 960;
 export const MAP_HEIGHT = 540;
@@ -24,6 +25,16 @@ const EMBLEMS = {
 const FALLBACK_HOUSE = { color: '#687c83', accent: '#d9dfc7', emblem: 'eye' };
 const GROUND_STEP = 8;
 const planetSprites = new Map();
+const globeSpins = new Map();
+const GLOBE_FRAMES = 96;
+const GLOBE_COLUMNS = 12;
+const GLOBE_TEXTURE_WIDTH = 256;
+const GLOBE_PERIODS = { gas: 26, rings: 29, moon: 36 };
+const GLOBE_ART_BOUNDS = {
+  saturn: { x: .50, y: .49, radius: .318 },
+  io: { x: .452, y: .50, radius: .427 },
+  titan: { x: .529, y: .50, radius: .428 },
+};
 const sectorLayouts = new Map();
 const sectorBackdrops = new Map();
 const tacticalBackdrops = new Map();
@@ -339,20 +350,156 @@ function drawPlanetSprite(ctx, planet, x, y, time) {
   const radius = planet.radius ?? 26;
   const painting = paintedAsset(`planets/${planet.id}`);
   const seed = hash(planet.id);
-  const phase = time * (planet.style === 'gas' ? .72 : .36) + (seed % 628) / 100;
   const rings = planet.style === 'rings';
+  const phase = time / (GLOBE_PERIODS[planet.style] ?? 32);
   if (rings && !painting) planetRing(ctx, { x, y }, radius, '#998d73', true);
   ctx.save();
   ctx.translate(x, y);
-  if (!rings) ctx.rotate(Math.sin(phase) * (ATMOSPHERES.has(planet.id) ? .15 : .19));
   if (painting) {
-    drawPainting(ctx, painting, -radius, -radius, radius * 2, radius * 2);
+    if (!paintSpinningGlobe(ctx, planet, painting, radius, phase)) {
+      if (!rings) ctx.rotate(wrap(phase, 1) * TAU);
+      drawPainting(ctx, painting, -radius, -radius, radius * 2, radius * 2);
+    }
   } else {
+    if (!rings) ctx.rotate(wrap(phase, 1) * TAU);
     drawProceduralPlanet(ctx, planet, radius, seed);
   }
   ctx.restore();
   if (ATMOSPHERES.has(planet.id)) drawAtmosphericBands(ctx, x, y, radius * (rings ? .59 : .87), time, seed, planet);
   if (rings && !painting) planetRing(ctx, { x, y }, radius, '#bbaa81', false);
+}
+
+// The painted assets are front-facing globes. Use their visible surface as a seamless
+// longitude texture, then project it back onto a fixed, separately lit sphere.
+function globeProjection(ctx, planet, painting, radius) {
+  if (globeSpins.has(planet.id)) return globeSpins.get(planet.id);
+  const size = clamp(Math.ceil(radius * 1.6), 36, 72);
+  const sourceSize = 128;
+  const source = surface(ctx, sourceSize, sourceSize);
+  const atlas = surface(ctx, GLOBE_COLUMNS * size, GLOBE_FRAMES / GLOBE_COLUMNS * size);
+  const input = source?.getContext('2d', { willReadFrequently: true });
+  const output = atlas?.getContext('2d');
+  if (!input?.getImageData || !output?.createImageData || !output.putImageData) return null;
+  let pixels;
+  try {
+    input.drawImage(painting, 0, 0, sourceSize, sourceSize);
+    pixels = input.getImageData(0, 0, sourceSize, sourceSize)?.data;
+  } catch {
+    globeSpins.set(planet.id, null);
+    return null;
+  }
+  if (!pixels?.length) return null;
+  const frame = output.createImageData(size, size);
+  if (!frame?.data) return null;
+  const rings = planet.style === 'rings';
+  const globe = GLOBE_ART_BOUNDS[planet.id] ?? { x: .50, y: .50, radius: .465 };
+  const tilt = rings ? -.43 : -.12;
+  const cos = Math.cos(tilt);
+  const sin = Math.sin(tilt);
+  const lightAt = (x, y, z) => .63 + .44 * Math.max(0, -.50 * x - .43 * y + .71 * z);
+  const sourcePixel = (x, y) => {
+    const column = clamp(Math.round(x * sourceSize - .5), 0, sourceSize - 1);
+    const row = clamp(Math.round(y * sourceSize - .5), 0, sourceSize - 1);
+    return 4 * (row * sourceSize + column);
+  };
+  const mapSize = GLOBE_TEXTURE_WIDTH * size;
+  const terrain = new Float32Array(mapSize * 3);
+  for (let row = 0; row < size; row += 1) {
+    const latitude = ((row + .5) / size) * 2 - 1;
+    const span = Math.sqrt(1 - latitude * latitude);
+    for (let column = 0; column < GLOBE_TEXTURE_WIDTH; column += 1) {
+      const longitude = TAU * column / GLOBE_TEXTURE_WIDTH;
+      const px = Math.sin(longitude) * span * .97;
+      const dx = px * cos - latitude * sin;
+      const dy = px * sin + latitude * cos;
+      let sample = sourcePixel(globe.x + dx * globe.radius, globe.y + dy * globe.radius);
+      if (pixels[sample + 3] < 128) {
+        sample = sourcePixel(globe.x + dx * globe.radius * .91, globe.y + dy * globe.radius * .91);
+      }
+      const light = lightAt(dx, dy, Math.sqrt(Math.max(0, 1 - px * px - latitude * latitude)));
+      const index = (row * GLOBE_TEXTURE_WIDTH + column) * 3;
+      const clouds = planet.id === 'uranus'
+        ? 1 + .23 * span * Math.cos(longitude * 3 + latitude * 7) * Math.cos(latitude * 5 + .45) : 1;
+      const shade = clouds / light;
+      terrain[index] = pixels[sample] * shade;
+      terrain[index + 1] = pixels[sample + 1] * shade;
+      terrain[index + 2] = pixels[sample + 2] * shade;
+    }
+  }
+  const onscreenRadius = rings ? globe.radius : .468;
+  const texels = [];
+  for (let py = 0; py < size; py += 1) {
+    for (let px = 0; px < size; px += 1) {
+      const u = (px + .5) / size;
+      const v = (py + .5) / size;
+      const index = (py * size + px) * 4;
+      const dx = (u - .5) / onscreenRadius;
+      const dy = (v - (rings ? globe.y : .5)) / onscreenRadius;
+      const distance = dx * dx + dy * dy;
+      if (rings) {
+        const sample = sourcePixel(u, v);
+        frame.data.set(pixels.subarray(sample, sample + 4), index);
+      }
+      if (distance >= 1) continue;
+      // Keep the foreground of Saturn's painted rings still while bands on the sphere rotate.
+      const ringY = -(u - .5) * sin + (v - .48) * cos;
+      const ringSpan = Math.sqrt(Math.max(0, 1 - ((u - .5) / .49) ** 2));
+      if (rings && ringY > .063 * ringSpan && ringY < .148 * ringSpan) continue;
+      const depth = Math.sqrt(1 - distance);
+      const longitude = Math.atan2(dx * cos + dy * sin, depth);
+      const latitude = -dx * sin + dy * cos;
+      const textureRow = clamp(Math.round((latitude + 1) * size / 2 - .5), 0, size - 1);
+      const longitudeSample = wrap(longitude / TAU * GLOBE_TEXTURE_WIDTH, GLOBE_TEXTURE_WIDTH);
+      texels.push({ index, start: textureRow * GLOBE_TEXTURE_WIDTH, longitudeSample, light: lightAt(dx, dy, depth) });
+      if (!rings) frame.data[index + 3] = Math.round(255 * Math.min(1, (1 - Math.sqrt(distance)) * onscreenRadius * size));
+    }
+  }
+  const projection = { atlas, output, frame, size, terrain, texels, ready: new Set() };
+  globeSpins.set(planet.id, projection);
+  return projection;
+}
+
+function paintGlobeFrame(projection, index) {
+  const { output, frame, ready, size, terrain, texels } = projection;
+  const x = index % GLOBE_COLUMNS * size;
+  const y = Math.floor(index / GLOBE_COLUMNS) * size;
+  if (!ready.has(index)) {
+    const phaseOffset = (GLOBE_FRAMES - index) * GLOBE_TEXTURE_WIDTH / GLOBE_FRAMES;
+    for (const texel of texels) {
+      const u = texel.longitudeSample + phaseOffset;
+      const column = Math.floor(u);
+      const first = (texel.start + (column & (GLOBE_TEXTURE_WIDTH - 1))) * 3;
+      const second = (texel.start + ((column + 1) & (GLOBE_TEXTURE_WIDTH - 1))) * 3;
+      for (let channel = 0; channel < 3; channel += 1) {
+        frame.data[texel.index + channel] =
+          lerp(terrain[first + channel], terrain[second + channel], u - column) * texel.light;
+      }
+    }
+    output.putImageData(frame, x, y);
+    ready.add(index);
+  }
+  return { x, y };
+}
+
+function paintSpinningGlobe(ctx, planet, painting, radius, phase) {
+  const projection = globeProjection(ctx, planet, painting, radius);
+  if (!projection) return false;
+  const framePosition = wrap(phase, 1) * GLOBE_FRAMES;
+  const index = Math.floor(framePosition);
+  const blend = framePosition - index;
+  const draw = (frame) => {
+    const { x, y } = paintGlobeFrame(projection, frame);
+    const { atlas, size } = projection;
+    ctx.drawImage(atlas, x, y, size, size, -radius, -radius, radius * 2, radius * 2);
+  };
+  draw(index);
+  if (blend > .001) {
+    const alpha = ctx.globalAlpha;
+    ctx.globalAlpha = alpha * blend;
+    draw((index + 1) % GLOBE_FRAMES);
+    ctx.globalAlpha = alpha;
+  }
+  return true;
 }
 
 function drawProceduralPlanet(ctx, planet, radius, seed) {
@@ -730,7 +877,7 @@ export function drawSolar(ctx, state, ui = {}) {
     const radius = planet.radius ?? 26;
     const active = Object.values(state.battles).filter((battle) => battle.planetId === planet.id && !battle.winner);
     const control = controls.get(planet.id);
-    drawPlanetSprite(ctx, planet, point.x, point.y, time);
+    drawPlanetSprite(ctx, planet, point.x, point.y, ui.time ?? time);
     drawControlRing(ctx, point, radius + 5, control);
     if (active.length) {
       const pulse = .5 + Math.sin(time * 5) * .25;
@@ -1026,6 +1173,168 @@ function drawGroundLanding(ctx, point, time) {
   }
 }
 
+function traceTerrain(ctx, points) {
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (const point of points.slice(1)) ctx.lineTo(point.x, point.y);
+  ctx.closePath();
+}
+
+function fillTerrain(ctx, points, color) {
+  traceTerrain(ctx, points);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+function insetTerrain(points, x, y, widthRatio, heightRatio = widthRatio) {
+  return points.map((point) => ({ x: lerp(x, point.x, widthRatio), y: lerp(y, point.y, heightRatio) }));
+}
+
+function paintOpenGround(ctx, battle, terrain, seed) {
+  const { width, height } = battle;
+  paint(ctx, terrain.ground, 0, 0, width, height);
+  ctx.save();
+  ctx.globalAlpha = .38;
+  for (let i = 0; i < 33; i++) {
+    const x = noise(i, 2, seed) * width - 128;
+    const y = noise(i, 83, seed) * height - 32;
+    const shape = { x, y, w: 130 + noise(i, 4, seed) * 320, h: 28 + noise(i, 6, seed) * 96,
+      kind: i % 2 ? 'high' : 'cover' };
+    fillTerrain(ctx, terrainOutline(shape), i % 2 ? terrain.shade : terrain.light);
+  }
+  ctx.globalAlpha = .52;
+  for (let i = 0; i < 2200; i++) {
+    const x = noise(i, 214, seed) * width;
+    const y = noise(i, 91, seed) * height;
+    paint(ctx, i % 3 ? terrain.shade : terrain.detail, x, y, (i % 3) + 1, 1);
+  }
+  ctx.restore();
+}
+
+function paintGroundFeature(ctx, zone, terrain, biome, seed) {
+  const outline = terrainOutline(zone);
+  const high = zone.kind === 'high';
+  const x = zone.x + zone.w * .5;
+  const y = zone.y + zone.h * .46;
+  const scrub = ['desert', 'mountain', 'fortress'].includes(biome);
+  const color = high ? terrain.light : scrub ? '#5e5640' : terrain.rock;
+  ctx.save();
+  ctx.globalAlpha = high ? .32 : .25;
+  fillTerrain(ctx, outline, color);
+  ctx.globalAlpha = high ? .32 : .2;
+  fillTerrain(ctx, insetTerrain(outline, x, y, .76, .59), high ? terrain.detail : terrain.shade);
+  ctx.globalAlpha = .76;
+  if (high) {
+    for (let tier = 0; tier < 3; tier++) {
+      const contour = insetTerrain(outline, x, y, .90 - tier * .17, .87 - tier * .2);
+      contour.forEach((start, i) => {
+        if ((i + tier) % 3 === 1) return;
+        const end = contour[(i + 1) % contour.length];
+        if (start.y < y && end.y < y) return;
+        line(ctx, start.x, start.y, lerp(start.x, end.x, .82), lerp(start.y, end.y, .82), tier % 2 ? terrain.light : terrain.rock);
+      });
+    }
+  }
+  const pieces = Math.ceil(zone.w * zone.h / (high ? 460 : 270));
+  for (let i = 0; i < pieces; i++) {
+    const px = zone.x + noise(i, 25, seed) * zone.w;
+    const py = zone.y + noise(i, 712, seed) * zone.h;
+    if (!pointInTerrainZone(px, py, zone)) continue;
+    const spread = high ? 3 + noise(i, 44, seed) * 5 : 3 + noise(i, 12, seed) * 4;
+    ellipse(ctx, px, py + 1, spread, 1, terrain.rock, 1, true);
+    if (!high && scrub) {
+      line(ctx, px, py + 1, px - spread * .73, py - 3, '#746d47', 2);
+      line(ctx, px, py + 1, px + spread * .56, py - spread, '#9b8860', 1);
+      paint(ctx, terrain.detail, px + 1, py - 2, 1, 1);
+    } else {
+      paint(ctx, terrain.detail, px - 2, py - 1, 3, 1);
+    }
+  }
+  ctx.restore();
+}
+
+function rockFeature(ctx, block, terrain, biome, outline) {
+  const { x, y, w, h } = block;
+  const ice = biome === 'ice';
+  fillTerrain(ctx, insetTerrain(outline, x + w * .47, y + h * .24, .89, .80), ice ? '#a5c4cb' : terrain.shade);
+  const seed = hash(`${block.x}|${block.y}|${block.kind}`);
+  const ledges = Math.max(2, Math.ceil(h / 31));
+  ctx.save();
+  traceTerrain(ctx, outline);
+  ctx.clip();
+  for (let i = 0; i < ledges; i++) {
+    const px = x + w * (.22 + noise(i, 21, seed) * .28);
+    const py = y + (i + .65) / ledges * h;
+    const reach = w * (.36 + noise(i, 33, seed) * .26);
+    const fall = h / ledges * (.28 + noise(i, 41, seed) * .42);
+    const edge = { x: px - reach * .65, y: py - fall * .48 };
+    const peak = { x: px, y: py - fall };
+    const right = { x: px + reach * .87, y: py + fall * .18 };
+    const foot = { x: px + reach * .11, y: py + fall * .84 };
+    fillTerrain(ctx, [edge, peak, right, foot], terrain.rock);
+    fillTerrain(ctx, [edge, peak, { x: px + reach * .29, y: py - fall * .16 }, foot], ice ? '#789fae' : terrain.light);
+    line(ctx, edge.x, edge.y, peak.x, peak.y, ice ? '#d9edec' : terrain.detail);
+  }
+  ctx.restore();
+}
+
+function structureFeature(ctx, block, terrain, outline) {
+  const { x, y, w, h, kind } = block;
+  const wall = kind === 'wall';
+  const roof = insetTerrain(outline, x + w * .46, y + h * .18, .90, wall ? .91 : .78);
+  fillTerrain(ctx, roof, wall ? '#77706b' : '#65747b');
+  ctx.save();
+  traceTerrain(ctx, roof);
+  ctx.clip();
+  const step = clamp(w / (wall ? 3 : 5), 7, 16);
+  for (let p = x + 3; p < x + w - 3; p += step) {
+    const depth = wall ? h * .94 : h * .53;
+    line(ctx, p, y + 2, p + (wall ? 0 : 7), y + depth, '#3d4a53', wall ? 2 : 1);
+    for (let yy = y + 12; yy < y + h * .88; yy += 19) {
+      paint(ctx, '#313d45', p + 1, yy, 5, 6);
+      paint(ctx, terrain.detail, p + 1, yy, 4, 1);
+    }
+  }
+  line(ctx, x, y + 4, x + w, y + 4, '#a6a798', 2);
+  if (!wall) {
+    line(ctx, x + 2, y + .56 * h, x + w, y + .49 * h, '#333e49', 3);
+    line(ctx, x + 2, y + .53 * h, x + w, y + .46 * h, '#879699', 1);
+  }
+  ctx.restore();
+}
+
+const wrecked = (block) => block.maxHealth > 0 && block.health <= 0;
+
+function paintBattleObstacle(ctx, block, terrain, biome) {
+  const { x, y, w, h, kind } = block;
+  const outline = terrainOutline(block);
+  if (wrecked(block)) {
+    for (let i = 0; i < Math.max(w, h) / 5; i++) {
+      const px = x + 3 + noise(i, 28, Math.round(x)) * (w - 6);
+      const py = y + 3 + noise(i, 36, Math.round(y)) * (h - 6);
+      ellipse(ctx, px, py, 3 + i % 3, 2, terrain.rock, 1, true);
+      paint(ctx, terrain.light, px - 1, py - 1, 2, 1);
+    }
+    return;
+  }
+  ctx.save();
+  ctx.globalAlpha = .43;
+  fillTerrain(ctx, outline.map((point) => ({ x: point.x + 4, y: point.y + 5 })), '#182530');
+  ctx.restore();
+  fillTerrain(ctx, outline, terrain.rock);
+  if (kind === 'rock') rockFeature(ctx, block, terrain, biome, outline);
+  else structureFeature(ctx, block, terrain, outline);
+}
+
+function obstacleHealth(ctx, block) {
+  const { x, y, w } = block;
+  if (block.maxHealth > 0 && block.health < block.maxHealth) {
+    if (wrecked(block)) return;
+    paint(ctx, '#2e3541', x + w / 4, y - 5, Math.max(w / 2, 6), 2);
+    paint(ctx, '#e8af60', x + w / 4, y - 5, Math.max(w / 2, 6) * block.health / block.maxHealth, 2);
+  }
+}
+
 function paintBattleTerrain(ctx, battle, terrain, painting) {
   const { width, height } = battle;
   const seed = hash(battle.seed ?? battle.terrain);
@@ -1035,75 +1344,81 @@ function paintBattleTerrain(ctx, battle, terrain, painting) {
     paint(ctx, '#202935', 0, 0, width, height);
     ctx.globalAlpha = 1;
   } else {
-    paint(ctx, terrain.ground, 0, 0, width, height);
-    for (let y = 0; y < height; y += 8) {
-      for (let x = 0; x < width; x += 8) {
-        const sx = x >> 3;
-        const sy = y >> 3;
-        const octave = noise(sx >> 3, sy >> 3, seed) * .56 + noise(sx >> 1, sy >> 1, seed) * .27 +
-          noise(sx, sy, seed) * .17;
-        const dune = Math.sin(x / 98 + Math.sin(y / 98) * 3) * .14;
-        if (octave + dune > .64) paint(ctx, terrain.light, x, y, 8, 8);
-        else if (octave + dune < .39) paint(ctx, terrain.shade, x, y, 8, 8);
-        const dither = noise(sx + 60, sy + 18, seed);
-        if (dither > .9) paint(ctx, terrain.rock, x + 2, y + 6, 2, 1);
-        if (dither < .11) paint(ctx, terrain.detail, x + 5, y + 1, 2, 1);
-      }
-    }
-  }
-  if (!painting && ['urban', 'industrial', 'spaceport', 'fortress'].includes(battle.terrain)) {
-    const strip = Math.floor(height * .43);
-    ctx.globalAlpha = .28;
-    paint(ctx, terrain.rock, 0, strip, width, 74);
-    paint(ctx, terrain.ground, 0, strip + 5, width, 64);
-    for (let x = 0; x < width; x += 32) paint(ctx, terrain.detail, x, strip + 36, 16, 2);
-    ctx.globalAlpha = 1;
+    paintOpenGround(ctx, battle, terrain, seed);
   }
   for (const zone of battle.zones ?? []) {
-    const high = zone.kind === 'high';
-    ctx.globalAlpha = high ? .39 : .32;
-    paint(ctx, high ? terrain.light : terrain.shade, zone.x, zone.y, zone.w, zone.h);
-    for (let y = 3; y < zone.h; y += 7) {
-      for (let x = 3; x < zone.w; x += 10) {
-        if (noise(x, y, seed) < .47) continue;
-        paint(ctx, high ? terrain.detail : '#354e43', zone.x + x, zone.y + y, high ? 7 : 4, high ? 1 : 2);
-      }
-    }
-    ctx.globalAlpha = 1;
-    for (let x = 0; x < zone.w - 3; x += 8) {
-      const tone = high ? terrain.detail : '#677869';
-      paint(ctx, tone, zone.x + x, zone.y, 3, 1);
-      paint(ctx, tone, zone.x + x, zone.y + zone.h, 3, 1);
-    }
+    paintGroundFeature(ctx, zone, terrain, battle.terrain, seed ^ hash(`${zone.x}|${zone.y}`));
   }
+  for (const block of battle.obstacles ?? []) paintBattleObstacle(ctx, block, terrain, battle.terrain);
 }
 
-function obstacle(ctx, block, terrain) {
-  const { x, y, w, h, kind } = block;
-  if (block.maxHealth > 0 && block.health <= 0) {
-    for (let dx = 3; dx < w; dx += 8) {
-      const dy = noise(dx, Math.round(y), 176) * Math.max(2, h - 5);
-      paint(ctx, terrain.rock, x + dx, y + dy, 4, 3);
-      paint(ctx, terrain.light, x + dx, y + dy, 2, 1);
+const WEATHER = {
+  desert: { color: '#f4c18e', haze: '#d9a173', speed: 37, count: 48, size: 2, trail: 7 },
+  mountain: { color: '#cbddda', haze: '#c0d7d6', speed: 29, count: 30, size: 2, trail: 4 },
+  urban: { color: '#f4d894', haze: '#8fa8b2', speed: 18, count: 23, size: 1, trail: 2, lamps: true },
+  fortress: { color: '#ecc082', haze: '#a99b83', speed: 24, count: 30, size: 2, trail: 2, lamps: true },
+  industrial: { color: '#ffca81', haze: '#9eb0ab', speed: 18, count: 34, size: 1, trail: 4, lamps: true },
+  mine: { color: '#f0b297', haze: '#b59484', speed: 12, count: 28, size: 1, trail: 2, lamps: true },
+  spaceport: { color: '#bcf1ef', haze: '#a2c6c9', speed: 25, count: 24, size: 1, trail: 4, lamps: true },
+  ice: { color: '#f2f5e8', haze: '#d6e9ed', speed: 34, count: 62, size: 2, trail: 3, snow: true },
+};
+
+function battleAmbience(ctx, battle, time) {
+  const weather = WEATHER[battle.terrain] ?? WEATHER.desert;
+  const { width, height } = battle;
+  const seed = hash(battle.seed ?? battle.terrain);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, width, height);
+  ctx.clip();
+  for (let i = 0; i < 9; i++) {
+    const x = wrap(noise(i, 182, seed) * (width + 410) + time * weather.speed * (.25 + i * .055), width + 410) - 205;
+    const y = noise(i, 401, seed) * height + Math.sin(time * .34 + i) * 10;
+    const reach = 43 + noise(i, 21, seed) * 110;
+    ctx.globalAlpha = battle.terrain === 'ice' ? .14 : .09;
+    ellipse(ctx, x, y, reach, 2 + i % 6, weather.haze, 1, true);
+    ctx.globalAlpha *= .7;
+    ellipse(ctx, x + reach * .35, y + 4, reach * .81, 3 + i % 4, weather.haze, 1, true);
+  }
+  for (let i = 0; i < weather.count; i++) {
+    const velocity = weather.speed * (.46 + noise(i, 55, seed) * .94);
+    const x = wrap(noise(i, 82, seed) * width + time * velocity, width);
+    const y = wrap(noise(i, 99, seed) * height + time * velocity * (weather.snow ? .43 : -.10)
+      + Math.sin(time * 1.6 + i) * (weather.snow ? 6 : 2), height);
+    ctx.globalAlpha = (weather.snow ? .23 : .11) + noise(i, 62, seed) * .22;
+    if (i % 4 === 0) line(ctx, x, y, x - weather.trail, y + (weather.snow ? -2 : 1), weather.color);
+    paint(ctx, weather.color, x, y, weather.size + (i % 3 === 0 ? 1 : 0), weather.snow ? 2 : 1);
+  }
+  for (const zone of battle.zones ?? []) {
+    if (zone.kind !== 'cover') continue;
+    for (let i = 0; i < 7; i++) {
+      const x = zone.x + zone.w * (.16 + .68 * noise(i, 913, seed ^ zone.x));
+      const y = zone.y + zone.h * (.22 + .62 * noise(i, 97, seed ^ zone.y));
+      if (!pointInTerrainZone(x, y, zone)) continue;
+      const swing = Math.sin(time * 2.1 + i * 2.3 + zone.x) * 2.5;
+      const sprig = ['desert', 'mountain', 'fortress'].includes(battle.terrain);
+      ctx.globalAlpha = sprig ? .57 : .33;
+      if (sprig) {
+        line(ctx, x, y + 2, x + 4 + swing, y - 7, '#afa578');
+        line(ctx, x, y + 2, x - 2 + swing * .7, y - 4, '#8c7953');
+      } else {
+        paint(ctx, weather.color, x + swing, y, 1, 1);
+      }
     }
-    return;
   }
-  const metallic = ['building', 'wall', 'fortification', 'crate', 'bunker', 'depot', 'gantry'].includes(kind);
-  paint(ctx, '#35404a', x + 4, y + 6, w, h);
-  paint(ctx, terrain.rock, x, y, w, h);
-  paint(ctx, metallic ? '#515e64' : terrain.shade, x + 2, y + 2, w - 4, h - 5);
-  paint(ctx, metallic ? '#85958e' : terrain.light, x + 2, y + 1, w - 5, 3);
-  paint(ctx, metallic ? '#293740' : terrain.rock, x + 2, y + h - 4, w - 4, 3);
-  const step = metallic ? 13 : 9;
-  for (let dx = 5; dx < w - 5; dx += step) {
-    const height = Math.min(h - 10, 5 + noise(dx, Math.round(x), 119) * 8);
-    paint(ctx, metallic ? '#3b4753' : terrain.rock, x + dx, y + 6, metallic ? 8 : 4, Math.max(2, height));
-    if (metallic) paint(ctx, '#b19867', x + dx + 1, y + 5, 4, 1);
+  if (weather.lamps) {
+    for (const entry of battle.obstacles ?? []) {
+      if (entry.kind === 'rock' || wrecked(entry)) continue;
+      const x = entry.x + entry.w * .71;
+      const y = entry.y + entry.h * .19;
+      const pulse = .5 + .5 * Math.cos(time * 3 + (entry.x + entry.y) / 52);
+      ctx.globalAlpha = .07 + pulse * .26;
+      ellipse(ctx, x, y, 8 + pulse * 4, 5 + pulse * 3, weather.color, 1, true);
+      ctx.globalAlpha = .52 + pulse * .35;
+      paint(ctx, weather.color, x - 1, y - 1, 3, 2);
+    }
   }
-  if (block.maxHealth > 0 && block.health < block.maxHealth) {
-    paint(ctx, '#2e3541', x + w / 4, y - 5, Math.max(w / 2, 6), 2);
-    paint(ctx, '#e8af60', x + w / 4, y - 5, Math.max(w / 2, 6) * block.health / block.maxHealth, 2);
-  }
+  ctx.restore();
 }
 
 const UNITS = {
@@ -1282,6 +1597,28 @@ function commander(ctx, squad, faction, gait, painting) {
   line(ctx, x + facing * 5, y + 2, x + facing * 11, y - 8, '#fff0a9', 2);
 }
 
+function facingArrow(ctx, x, y, heading, radius) {
+  const forward = { x: Math.cos(heading), y: Math.sin(heading) };
+  const flank = { x: -forward.y, y: forward.x };
+  const start = { x: x + forward.x * radius, y: y + forward.y * radius * .73 };
+  const impact = { x: start.x + forward.x * 14, y: start.y + forward.y * 14 };
+  const color = '#fae8ab';
+  ctx.save();
+  ctx.globalAlpha = .72;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.ellipse(x, y, radius, radius * .73, 0, heading - .49, heading + .49);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  line(ctx, start.x, start.y, impact.x, impact.y, '#27343b', 5);
+  line(ctx, start.x, start.y, impact.x, impact.y, color, 3);
+  const notch = { x: impact.x - forward.x * 8, y: impact.y - forward.y * 8 };
+  fillTerrain(ctx, [impact, { x: notch.x + flank.x * 6, y: notch.y + flank.y * 6 },
+    { x: notch.x - flank.x * 6, y: notch.y - flank.y * 6 }], color);
+  ctx.restore();
+}
+
 function drawSquad(ctx, squad, selected, time) {
   const faction = house(squad.houseId);
   const frame = movementFrame(squad, time);
@@ -1289,21 +1626,30 @@ function drawSquad(ctx, squad, selected, time) {
   const painting = unitPainting(squad.type, firing ? ATTACK_FRAME : frame);
   const gait = [0, -1, 0, 1, 0][frame];
   const radius = clamp(12 + Math.sqrt(squad.soldiers) * 3, 16, 32);
-  if (selected) ellipse(ctx, squad.x, squad.y + 3, radius, radius * .65, '#ffed9c', 2);
+  const angle = squad.heading ?? 0;
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  if (selected) {
+    ellipse(ctx, squad.x, squad.y + 3, radius, radius * .65, '#ffed9c', 1);
+    facingArrow(ctx, squad.x, squad.y + 3, angle, radius + 4);
+  }
+  ctx.save();
+  if (firing) {
+    const motion = clamp(squad.fireFlash * 4, 0, 1) * (squad.lastAttackMode === 'melee' ? 6 : -2.5);
+    ctx.translate(cos * motion, sin * motion);
+  }
   if (['transport', 'tank'].includes(squad.type)) vehicle(ctx, squad.x, squad.y, squad, faction, painting);
   else if (squad.type === 'commander') commander(ctx, squad, faction, gait, painting);
   else {
-    const angle = squad.heading ?? 0;
-    const cos = Math.cos(angle);
-    const sin = Math.sin(angle);
     for (let index = squad.soldiers - 1; index >= 0; index -= 1) {
       const { ahead, across } = getFormation(squad, squad.soldiers, index);
       const x = squad.x + ahead * cos - across * sin;
       const y = squad.y + ahead * sin + across * cos;
       drawSoldier(ctx, squad, faction, x, y, angle, (index % 2 ? -1 : 1) * gait,
-        firing && (index + Math.floor(time * 15)) % 4 === 0, painting);
+        firing && squad.lastAttackMode !== 'melee' && (index + Math.floor(time * 15)) % 4 === 0, painting);
     }
   }
+  ctx.restore();
   if (selected || squad.routing || squad.hp < squad.maxHp * .6) {
     const width = 26;
     const x = squad.x - width / 2;
@@ -1324,21 +1670,38 @@ function drawEffect(ctx, effect, terrain) {
   ctx.globalAlpha = fade;
   if (kind === 'shot' || kind === 'heavy') {
     const to = { x: toX ?? x, y: toY ?? y };
-    const tail = kind === 'heavy' ? .57 : .83;
-    line(ctx, lerp(x, to.x, tail), lerp(y, to.y, tail), to.x, to.y,
-      kind === 'heavy' ? '#ffd07d' : '#ffedb1', kind === 'heavy' ? 3 : 1);
-    paint(ctx, '#fff1b4', to.x - 1, to.y - 1, 3, 3);
+    const head = clamp((1 - fade) * 2.6 + .15, 0, 1);
+    const tail = clamp(head - (kind === 'heavy' ? .37 : .23), 0, 1);
+    const width = kind === 'heavy' ? 3 : 1;
+    const from = { x: lerp(x, to.x, tail), y: lerp(y, to.y, tail) };
+    const tracer = { x: lerp(x, to.x, head), y: lerp(y, to.y, head) };
+    line(ctx, from.x, from.y, tracer.x, tracer.y, '#bd774b', width + 2);
+    line(ctx, from.x, from.y, tracer.x, tracer.y, kind === 'heavy' ? '#ffd181' : '#fff3bd', width);
+    if (fade > .6) ellipse(ctx, x, y, width + 3, width + 2, '#ffd782', 1, true);
+    if (head === 1) paint(ctx, '#fff1b4', to.x - 1, to.y - 1, width + 2, width + 2);
   } else if (kind === 'melee') {
-    const dx = toX ?? x;
-    const dy = toY ?? y;
-    line(ctx, dx - 6, dy + 4, dx + 6, dy - 6, '#ffeab3', 2);
-    paint(ctx, '#faa264', dx, dy - 1, 3, 2);
+    const target = { x: toX ?? x, y: toY ?? y };
+    const heading = Math.atan2(target.y - y, target.x - x);
+    const reach = 10 + (1 - fade) * 12;
+    const middle = { x: lerp(x, target.x, .68), y: lerp(y, target.y, .68) };
+    ctx.globalAlpha = fade * .54;
+    ellipse(ctx, middle.x, middle.y + 3, reach * .95, reach * .35, terrain.detail, 1, true);
+    ctx.globalAlpha = fade;
+    ctx.beginPath();
+    ctx.ellipse(middle.x, middle.y - 2, reach, reach * .54, heading, -.97, .95);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#f3985f';
+    ctx.stroke();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#fff4d1';
+    ctx.stroke();
+    ellipse(ctx, target.x, target.y, 3, 2, '#ffe0a2', 1, true);
   } else if (kind === 'explosion' || kind === 'dust') {
     const size = 7 + (1 - fade) * 21;
     ellipse(ctx, x, y, size, size * .7, kind === 'explosion' ? '#302e37' : terrain.rock, 1, true);
     if (kind === 'explosion') {
-      paint(ctx, '#ce7350', x - size / 2, y - size / 3, size, size * .68);
-      paint(ctx, '#f8c878', x - size / 3, y - size / 5, size * .66, size * .4);
+      ellipse(ctx, x + size * .12, y - size * .47, size * .65, size * .44, '#ce7350', 1, true);
+      ellipse(ctx, x - size * .21, y - size * .18, size * .38, size * .30, '#f8c878', 1, true);
     }
   } else {
     const shades = { heal: '#9fd691', repair: '#f9bc73', jam: '#8fd8d4', rally: '#fce397' };
@@ -1357,13 +1720,13 @@ function tacticalRoute(ctx, squad, battle) {
     const point = obstacle ? { x: obstacle.x + obstacle.w / 2, y: obstacle.y + obstacle.h / 2 } :
       order.targetId ? battle.squads.find((item) => item.id === order.targetId) : order;
     if (!point || !Number.isFinite(point.x + point.y)) continue;
-    const color = order.type === 'attack' ? '#ff9b78' : '#f9dfa0';
+    const color = order.type === 'attack' ? '#ff9b78' : order.type === 'face' ? '#9edcd2' : '#f9dfa0';
     saveLineStyle(ctx);
     ctx.globalAlpha = .73;
     line(ctx, from.x, from.y, point.x, point.y, color, 1);
     ctx.restore();
     brackets(ctx, point.x, point.y, 6, 5, color, 3);
-    from = point;
+    if (order.type !== 'face') from = point;
   }
 }
 
@@ -1377,11 +1740,14 @@ export function drawBattle(ctx, battle, ui = {}) {
   ctx.save();
   ctx.translate(origin.x, origin.y);
   ctx.scale((extent.x - origin.x) / battle.width, (extent.y - origin.y) / battle.height);
-  const key = [battle.terrain, battle.width, battle.height, battle.seed, Boolean(painting), JSON.stringify(battle.zones)].join('|');
+  const obstacles = (battle.obstacles ?? []).map((block) => [block.kind, block.x, block.y, block.w, block.h, wrecked(block)]);
+  const key = [battle.terrain, battle.width, battle.height, battle.seed, Boolean(painting),
+    JSON.stringify(battle.zones), JSON.stringify(obstacles)].join('|');
   drawCached(ctx, tacticalBackdrops, key, battle.width, battle.height, (canvas) => {
     paintBattleTerrain(canvas, battle, terrain, painting);
   });
-  for (const item of battle.obstacles ?? []) obstacle(ctx, item, terrain);
+  battleAmbience(ctx, battle, time);
+  for (const item of battle.obstacles ?? []) obstacleHealth(ctx, item);
   for (const squad of battle.squads) {
     if (squad.soldiers <= 0 || squad.withdrawn) continue;
     if (includes(ui.selectedSquadIds, squad.id)) tacticalRoute(ctx, squad, battle);
@@ -1395,7 +1761,7 @@ export function drawBattle(ctx, battle, ui = {}) {
   for (const effect of battle.effects ?? []) drawEffect(ctx, effect, terrain);
   if (ui.orderMarker) {
     const { x, y, type } = ui.orderMarker;
-    brackets(ctx, x, y, 10, 8, type === 'attack' ? '#ff9b79' : '#f6e095', 5);
+    brackets(ctx, x, y, 10, 8, type === 'attack' ? '#ff9b79' : type === 'face' ? '#9edcd2' : '#f6e095', 5);
   }
   ctx.restore();
   const selection = ui.selectionBox;
@@ -1422,10 +1788,13 @@ export function drawBattleMinimap(ctx, battle, ui = {}) {
     drawPainting(ctx, painting, 0, 0, width, height);
     ctx.globalAlpha = 1;
   }
-  for (const block of battle.obstacles ?? []) {
-    if (block.maxHealth > 0 && block.health <= 0) continue;
-    paint(ctx, terrain.rock, block.x * sx, block.y * sy, block.w * sx, block.h * sy);
-  }
+  ctx.save();
+  ctx.scale(sx, sy);
+  ctx.globalAlpha = .53;
+  for (const zone of battle.zones ?? []) fillTerrain(ctx, terrainOutline(zone), zone.kind === 'high' ? terrain.light : terrain.shade);
+  ctx.globalAlpha = 1;
+  for (const block of battle.obstacles ?? []) if (!wrecked(block)) fillTerrain(ctx, terrainOutline(block), terrain.rock);
+  ctx.restore();
   for (const squad of battle.squads) {
     if (squad.soldiers <= 0 || squad.withdrawn) continue;
     paint(ctx, house(squad.houseId).accent, squad.x * sx - 1, squad.y * sy - 1, 3, 3);

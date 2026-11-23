@@ -113,6 +113,9 @@ body {
 .orders { padding: .59rem .7rem .65rem; min-height: 5.1rem; margin-top: .5rem }
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .29rem; margin-top: .45rem }
 .toolbar button { font-size: .75rem }
+.weapon-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem; padding-left: .4rem; border-left: 1px solid var(--edge) }
+.weapon-toolbar .toolbar-help { margin: 0 .06rem 0 0 }
+#map.targeting { cursor: cell }
 .toolbar-title { color: var(--text); font-size: .86rem; font-weight: 700 }
 .toolbar-help, .hint, .muted { color: var(--dim); font-size: .75rem; line-height: 1.45 }
 .toolbar-help { margin-left: .28rem }
