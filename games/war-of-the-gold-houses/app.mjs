@@ -13,8 +13,18 @@ const ctx = map.getContext('2d');
 const mini = elements.minimap.getContext('2d');
 const defaultKeys = { attack: 'a', hold: 'h', stop: 's', formation: 'f', ability: 'e', pause: ' ' };
 const keyLabels = { attack: 'Attack-move', hold: 'Hold', stop: 'Stop', formation: 'Formation', ability: 'Ability', pause: 'Pause' };
-const resourceIcons = { credits: '¢', materials: '◆', supplies: '▦', influence: '✶' };
 const formations = ['line', 'column', 'wedge', 'defensive', 'loose'];
+const actionIcons = {
+  planet: 'planet', battle: 'tactical', fleet: 'fleet', supply: 'supplies',
+  'attack-mode': 'attack', 'select-all': 'formation', retreat: 'withdraw',
+  'fleet-order': 'tactical', intercept: 'attack', blockade: 'hold',
+  transport: 'fleet', sail: 'solar', ship: 'fleet', build: 'materials',
+  doctrine: 'command', recruit: 'command', replenish: 'supplies', dispatch: 'formation',
+  rally: 'rally', combine: 'formation', split: 'formation',
+  diplomacy: 'politics', operation: 'ability', start: 'command',
+};
+const orderIcons = { hold: 'hold', stop: 'stop', ability: 'ability', formation: 'formation' };
+const layerIcons = { solar: 'solar', planet: 'planet', battle: 'tactical' };
 const deals = {
   ceasefire: 'Ceasefire', trade: 'Trade', alliance: 'Alliance', access: 'Military access',
   marriage: 'House marriage', concession: 'Demand territory', vassal: 'Demand submission',
@@ -80,10 +90,20 @@ function formatTime(seconds) {
   return `${Math.floor(rounded / 60)}:${String(rounded % 60).padStart(2, '0')}`;
 }
 
+function icon(name, className = '') {
+  return name ? `<span class="ui-icon${className ? ` ${className}` : ''}" data-icon="${esc(name)}" aria-hidden="true"></span>` : '';
+}
+
+function illustration(kind, id, className = '') {
+  return `<img class="painted-art ${className}" src="./assets/${kind}/${esc(id)}.webp" width="64" height="64" alt="" decoding="async">`;
+}
+
 function button(label, action, id = '', options = {}) {
-  const { disabled = false, pressed, data = {}, title: tooltip, className } = options;
+  const { disabled = false, pressed, data = {}, title: tooltip, className, portrait, accessibleLabel } = options;
+  const symbol = action === 'layer' ? layerIcons[id] : action === 'direct-order' ? orderIcons[id] : actionIcons[action];
+  const image = portrait ? illustration('units', portrait, 'unit-icon') : icon(symbol);
   const attributes = Object.entries(data).map(([key, value]) => ` data-${key}="${esc(value)}"`).join('');
-  return `<button type="button" data-action="${esc(action)}"${id ? ` data-id="${esc(id)}"` : ''}${attributes}${disabled ? ' disabled' : ''}${pressed == null ? '' : ` aria-pressed="${Boolean(pressed)}"`}${tooltip ? ` title="${esc(tooltip)}"` : ''}${className ? ` class="${esc(className)}"` : ''}>${label}</button>`;
+  return `<button type="button" data-action="${esc(action)}"${id ? ` data-id="${esc(id)}"` : ''}${attributes}${disabled ? ' disabled' : ''}${pressed == null ? '' : ` aria-pressed="${Boolean(pressed)}"`}${tooltip ? ` title="${esc(tooltip)}"` : ''}${className ? ` class="${esc(className)}"` : ''}${accessibleLabel ? ` aria-label="${esc(accessibleLabel)}"` : ''}>${image}${label}</button>`;
 }
 
 function select(id, choices, value, label, { setup = false } = {}) {
@@ -123,7 +143,7 @@ function rosterDetails(army) {
   const roster = army.squads.filter(squad => squad.soldiers > 0);
   return details('roster', `Army roster (${roster.length})`, `
     <div class="roster">${roster.map(squad => button(`${esc(unitName(squad.type))} · ${squad.soldiers}`, 'roster', squad.id, {
-      pressed: chosen.includes(squad.id), data: { army: army.id }, title: `${squad.xp ?? 0} experience`,
+      pressed: chosen.includes(squad.id), data: { army: army.id }, title: `${squad.xp ?? 0} experience`, portrait: squad.type,
     })).join('')}</div>
     ${row('', button(chosen.length ? 'Split selected' : 'Split in half', 'split', army.id, { disabled: roster.length < 2 }))}`);
 }
@@ -134,7 +154,7 @@ function armyPanel(army) {
   const supplyLabel = supply.status;
   const combine = Object.values(state.armies).filter(other => other.id !== army.id && other.houseId === state.houseId && other.regionId && other.regionId === army.regionId && !other.battleId && !other.transit && !other.destroyed && !other.fleetId);
   const chosenCombine = ui.picks.combine ?? combine[0]?.id;
-  return `<h2>${esc(army.name)}</h2><p class="muted">${houseLabel(army.houseId)}</p>${stats([
+  return `<div class="subject-heading">${illustration('units', 'commander', 'subject-art unit-art')}<div><h2>${esc(army.name)}</h2><p class="muted">${houseLabel(army.houseId)}</p></div></div>${stats([
     ['Location', esc(army.fleetId ? 'Embarked' : region?.name ?? 'In transit')],
     ['Strength', `${living(army.squads)} troops`], ['Supply', esc(supplyLabel)],
     ['Commander', esc(army.commander?.name ?? 'Field command')],
@@ -156,7 +176,7 @@ function regionPanel(region) {
   const buildingLevel = id => typeof region.buildings[id] === 'number' ? region.buildings[id] : region.buildings[id]?.level ?? 0;
   const rallyChoices = [['', 'Clear rally point'], ...Object.values(state.planets[definition.planetId].regions)
     .filter(other => other.owner === state.houseId && other.id !== region.id).map(other => [other.id, REGIONS[other.id].name])];
-  return `<h2>${esc(definition.name)}</h2><p class="muted">${houseLabel(region.owner)} · ${esc(title(definition.terrain))}</p>
+  return `<div class="subject-heading">${illustration('terrain', definition.terrain, 'subject-art terrain-art')}<div><h2>${esc(definition.name)}</h2><p class="muted">${houseLabel(region.owner)} · ${esc(title(definition.terrain))}</p></div></div>
     ${definition.description ? `<p class="hint">${esc(definition.description)}</p>` : ''}
     ${active ? row(button('Enter battle', 'battle', active.id, { className: 'primary' })) : ''}
     ${allies.map(army => row(`<span class="hint">${houseLabel(army.houseId)} · ${living(army.squads)} troops</span>`, button(esc(army.name), 'army', army.id))).join('')}
@@ -190,7 +210,7 @@ function solarPanel() {
   const dropSites = Object.values(state.planets[destination]?.regions ?? {}).filter(region => landingMethod === 'rain' || (region.buildings.spaceport && !atWar(region.owner)));
   const drop = dropSites.find(region => region.id === ui.picks.transportSite)?.id ?? dropSites[0]?.id;
   const availableFleets = Object.values(state.fleets).filter(ship => (ship.transit?.to ?? ship.planetId) === planet?.id);
-  return `${planet ? `<h2>${esc(planet.name)}</h2><p class="hint">${esc(planet.description)}</p>` : '<h2>Solar System</h2>'}
+  return `${planet ? `<div class="subject-heading">${illustration('planets', planet.id, 'subject-art planet-art')}<div><h2>${esc(planet.name)}</h2><p class="hint">${esc(planet.description)}</p></div></div>` : '<h2>Solar System</h2>'}
     ${record && planet.regionIds.length ? row(button('Open territories', 'planet', planet.id, { className: 'primary' })) : ''}
     ${record && planet.regionIds.length ? stats([
       ['Territories', Object.keys(record.regions).length],
@@ -219,8 +239,9 @@ function fleetPanel(fleet) {
   const localPort = Object.values(state.planets[fleet.planetId]?.regions ?? {}).find(region => region.buildings.spaceport && (region.owner === state.houseId || ['alliance', 'vassal'].includes(relationsWith(region.owner)?.stance)));
   if (!fleet.regionId && localPort) destinationChoices.unshift([fleet.planetId, `Dock at ${REGIONS[localPort.id].name}`]);
   const targets = Object.values(state.fleets).filter(other => atWar(other.houseId) && !other.regionId && !other.transit && !other.engagement && other.planetId === fleet.planetId);
-  return `<hr><h2>${esc(fleet.name ?? title(fleet.id))}</h2>${stats([
-    ['House', houseLabel(fleet.houseId)], ['Location', esc(berth)],
+  const flagship = Object.values(SHIPS).filter(ship => fleet.ships[ship.id] > 0).sort((a, b) => b.power - a.power)[0];
+  return `<hr><div class="subject-heading">${illustration('ships', flagship?.id ?? 'transport', 'subject-art')}<div><h2>${esc(fleet.name ?? title(fleet.id))}</h2><p class="muted">${houseLabel(fleet.houseId)}</p></div></div>${stats([
+    ['Location', esc(berth)],
     ['Hull power', `${Math.round(fleetPower(fleet, state))}`], ['Capacity', `${fleetCapacity(fleet)} squads`],
     ['Passengers', esc(state.armies[fleet.armyId]?.name ?? 'None')],
     ...Object.entries(fleet.ships).filter(([, count]) => count > 0).map(([id, count]) => [SHIPS[id]?.name ?? title(id), count]),
@@ -282,10 +303,10 @@ function battleSituation(battle) {
 
 function battlePanel(battle) {
   const selected = battle.squads.filter(squad => ui.selectedSquadIds.has(squad.id));
-  return `<h2>${esc(battle.name)}</h2><p class="muted">${esc(PLANETS[battle.planetId]?.name ?? 'Skirmish')} · ${formatTime(battle.elapsed)}</p>
+  return `<div class="subject-heading">${illustration('terrain', battle.terrain, 'subject-art terrain-art')}<div><h2>${esc(battle.name)}</h2><p class="muted">${esc(PLANETS[battle.planetId]?.name ?? 'Skirmish')} · ${formatTime(battle.elapsed)}</p></div></div>
     ${stats(battleSituation(battle).map(([id, strength]) => [HOUSES[id]?.name ?? id, `${strength} troops`]))}
     ${battle.winner != null ? `<p class="hint">${battle.winner === 'draw' ? 'Battle ended in a draw.' : `${houseLabel(battle.winner)} won.`}</p>` : ''}
-    ${selected.map(squad => `<h3>${esc(unitName(squad.type))}</h3>${stats([
+    ${selected.map(squad => `<div class="squad-heading">${illustration('units', squad.type, 'squad-art')}<div><h3>${esc(squad.name ?? unitName(squad.type))}</h3><p class="hint">${esc(UNIT_TYPES[squad.type]?.role)}</p></div></div>${stats([
       ['Soldiers', `${squad.soldiers} / ${squad.maxSoldiers}`], ['Morale', pct(squad.morale ?? 100)],
       ['Health', pct(100 * squad.hp / (squad.maxHp || 1))],
       ['Experience', String(squad.xp ?? 0)], ['Formation', esc(title(squad.formation))],
@@ -317,8 +338,15 @@ function ordersPanel() {
   const roster = tacticalRoster();
   const chosen = roster.filter(squad => ui.selectedSquadIds.has(squad.id));
   const disabled = !chosen.length || currentBattle()?.winner != null;
+  const cards = roster.map(squad => {
+    const label = `${squad.name ?? unitName(squad.type)}, ${squad.soldiers} soldiers`;
+    return button(`<span>${squad.soldiers}</span>`, 'select-squad', squad.id, {
+      className: 'squad-card', portrait: squad.type, pressed: ui.selectedSquadIds.has(squad.id), accessibleLabel: label, title: label,
+    });
+  }).join('');
   return `<span class="toolbar-title">${chosen.length ? `${chosen.length} ${chosen.length === 1 ? 'squad' : 'squads'} · ${living(chosen)} troops` : 'Tactical command'}</span>
     <span class="toolbar-help">Drag to select squads. Right-click to move or attack.</span>
+    ${cards ? `<div class="squad-strip" aria-label="Squads on this battlefield">${cards}</div>` : ''}
     <div class="toolbar">
       ${button('Select all', 'select-all', '', { disabled: !roster.length })}
       ${button(`Attack-move <kbd>${esc(keyName(ui.keys.attack))}</kbd>`, 'attack-mode', '', { disabled, pressed: ui.attackMode, title: 'Attack enemies encountered on the way to your next click' })}
@@ -350,10 +378,10 @@ function refreshHud() {
   }
   const { speed, elapsed, mode, houseId } = state;
   const resources = state.resources[houseId] ?? {};
-  html('resources', RESOURCE_KEYS.map(key => `<span class="resource"><span class="resource-mark">${resourceIcons[key]}</span>${esc(RESOURCE_LABELS[key])}<strong>${Math.floor(resources[key] ?? 0)}</strong></span>`).join(''));
+  html('resources', RESOURCE_KEYS.map(key => `<span class="resource">${icon(key, 'resource-mark')}<span>${esc(RESOURCE_LABELS[key])}</span><strong>${Math.floor(resources[key] ?? 0)}</strong></span>`).join(''));
   html('time-controls', `<span class="clock" title="Campaign time">${formatTime(elapsed)}</span>${[
-    [0, 'Ⅱ', 'Pause'], [1, '1×', 'Normal speed'], [2, '2×', 'Fast speed'], [4, '4×', 'Maximum speed'],
-  ].map(([id, label, tooltip]) => button(label, 'speed', String(id), { pressed: speed === id, title: tooltip })).join('')}`);
+    [0, icon('pause'), 'Pause'], [1, '1×', 'Normal speed'], [2, '2×', 'Fast speed'], [4, '4×', 'Maximum speed'],
+  ].map(([id, label, tooltip]) => button(label, 'speed', String(id), { pressed: speed === id, title: tooltip, accessibleLabel: tooltip })).join('')}`);
   html('layers', `${mode === 'grand' ? button('Solar system', 'layer', 'solar', { pressed: ui.view === 'solar' }) : ''}
     ${mode !== 'skirmish' ? button(esc(PLANETS[ui.planetId]?.name ?? 'Territories'), 'layer', 'planet', { pressed: ui.view === 'planet', disabled: !state.planets[ui.planetId] }) : ''}
     ${ui.battleId ? button('Battlefield', 'layer', 'battle', { pressed: ui.view === 'battle' }) : ''}`);
@@ -598,6 +626,7 @@ function actionForClick(event) {
     case 'diplomacy': issue({ type: 'diplomacy', houseId: id, deal: pick('deal'), regionId: pick('concession') }); break;
     case 'operation': issue({ type: 'operation', regionId: region, colorId: id, targetId: pick(`operation-${id}`) }); break;
     case 'select-all': ui.selectedSquadIds = new Set(tacticalRoster().map(squad => squad.id)); break;
+    case 'select-squad': updateSquadSelection([id], event.shiftKey, true); map.focus({ preventScroll: true }); break;
     case 'attack-mode': ui.attackMode = !ui.attackMode; map.focus({ preventScroll: true }); break;
     case 'direct-order': tacticalOrder(id, null, event.shiftKey); map.focus({ preventScroll: true }); break;
     case 'retreat': issue({ type: 'retreat', battleId: id }); break;
