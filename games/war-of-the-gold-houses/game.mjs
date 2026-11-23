@@ -15,6 +15,11 @@ const SAVE_SLOTS = ["auto", 1, 2, 3];
 const CONTROL_INTERVAL = 30;
 const CONTROL_TICKS = CONTROL_INTERVAL / STEP;
 const ARMY_SQUAD_LIMIT = 16;
+const RECRUIT_SECONDS = {
+  rifle: 18, heavy: 24, marksman: 20,
+  raider: 22, obsidian: 30, razor: 32, commander: 36,
+  engineer: 24, electronic: 25, medic: 20, transport: 29, tank: 38,
+};
 const HOUSE_IDS = Object.keys(HOUSES);
 const CAMPAIGN_DEFAULTS = { credits: 480, materials: 325, supplies: 235, influence: 150 };
 const ADVANCED_UNITS = new Set(["raider", "obsidian", "razor", "commander", "engineer", "electronic", "medic", "transport", "tank"]);
@@ -482,7 +487,7 @@ function recruitmentOption(state, houseId, region, id, blocked = "") {
     materials: ["tank", "transport"].includes(id) ? 28 : 3,
     supplies: 6,
   };
-  const duration = (specialist ? 6 : 4) / Math.sqrt(region?.buildings.barracks || 1);
+  const duration = RECRUIT_SECONDS[id] / Math.sqrt(region?.buildings.barracks || 1);
   let reason = blocked;
   if (!reason && specialist && !region.buildings.workshop && !REGIONS[region.id].colors.includes(unit.color.toLowerCase())) {
     reason = `Requires a Workshop or local ${unit.color} specialists.`;
@@ -535,14 +540,14 @@ function describeProject(state, houseId, { type, regionId, armyId, buildingId, u
     if (level >= building.maxLevel) return blockedPurchase(`${building.name} has reached its final tier.`);
     if (state.mode !== "grand" && item === "spaceport") return blockedPurchase("Shipyards operate in Grand Conquest.", building.cost);
     cost = Object.fromEntries(Object.entries(building.cost).map(([k, v]) => [k, v * (level + 1)]));
-    duration = (5 + level * 3) * (HOUSES[houseId].bonus.construction ?? 1);
+    duration = (15 + level * 8) * (HOUSES[houseId].bonus.construction ?? 1);
     if (REGIONS[targetRegion].colors.includes("orange")) duration *= 0.72;
   } else if (type === "buildShip") {
     item = shipType;
     cost = SHIPS[item]?.cost;
     if (!cost || !region.buildings.spaceport || state.mode !== "grand") return blockedPurchase("A spaceport is required to build that ship.", cost);
     if (["battleship", "carrier"].includes(item) && region.buildings.spaceport < 2) return blockedPurchase("This ship requires a tier 2 spaceport.", cost);
-    duration = 6 + SHIPS[item].power * 0.1;
+    duration = 15 + SHIPS[item].power * 0.42;
     if (REGIONS[targetRegion].colors.includes("blue")) duration *= 0.78;
   } else if (type === "replenish") {
     const blocked = recruitmentAvailability(state, houseId, region);
@@ -552,7 +557,7 @@ function describeProject(state, houseId, { type, regionId, armyId, buildingId, u
     if (state.projects.some((p) => p.type === type && p.armyId === armyId)) return blockedPurchase("Recovery is already queued.");
     item = "Squad recovery";
     cost = { credits: 10 + missing, supplies: 6 + Math.ceil(missing / 2) };
-    duration = REGIONS[targetRegion].colors.includes("yellow") ? 4 : 8;
+    duration = REGIONS[targetRegion].colors.includes("yellow") ? 12 : 20;
   } else {
     item = unitType;
     if (!UNIT_TYPES[item]) return blockedPurchase("Choose a valid squad.");

@@ -6,7 +6,7 @@ import {
   HOUSES, PLANETS, REGIONS, BUILDINGS, SHIPS, COLORS, OPERATIONS, DOCTRINES, SKIRMISHES,
   CAMPAIGN_MODES, RESOURCE_KEYS, RESOURCE_LABELS, WORLD_ECONOMIES, PLANET_GROUPS, HOUSE_HOMEWORLDS,
 } from './content.mjs';
-import { UNIT_TYPES } from './battle.mjs';
+import { ATTACK_PROFILES, UNIT_TYPES } from './battle.mjs';
 import { fleetCapacity, fleetPower } from './fleets.mjs';
 import {
   MAP_WIDTH, MAP_HEIGHT, mapPoint, planetAtPoint, regionAtPoint, armyPoint, fleetAtPoint, battlePoint, battleWorldPoint,
@@ -17,12 +17,14 @@ const elements = Object.fromEntries([...document.querySelectorAll('[id]')].map(e
 const map = elements.map;
 const ctx = map.getContext('2d');
 const mini = elements.minimap.getContext('2d');
-const defaultKeys = { attack: 'a', hold: 'h', stop: 's', formation: 'f', ability: 'e', pause: ' ' };
-const keyLabels = { attack: 'Attack-move', hold: 'Hold', stop: 'Stop', formation: 'Formation', ability: 'Ability', pause: 'Pause' };
+const defaultKeys = { attack: 'a', face: 'g', hold: 'h', stop: 's', formation: 'f', ability: 'e', pause: ' ' };
+const keyLabels = { attack: 'Attack-move', face: 'Face direction', hold: 'Hold', stop: 'Stop', formation: 'Formation', ability: 'Ability', pause: 'Pause' };
 const formations = ['line', 'column', 'wedge', 'defensive', 'loose'];
+const weaponModes = ['auto', 'melee', 'ranged'];
+const directions = ['East', 'Southeast', 'South', 'Southwest', 'West', 'Northwest', 'North', 'Northeast'];
 const actionIcons = {
   planet: 'planet', 'inspect-world': 'planet', control: 'politics', battle: 'tactical', fleet: 'fleet', supply: 'supplies',
-  'attack-mode': 'attack', 'select-all': 'formation', retreat: 'withdraw',
+  'attack-mode': 'attack', 'face-mode': 'tactical', 'select-all': 'formation', retreat: 'withdraw',
   'fleet-order': 'tactical', intercept: 'attack', blockade: 'hold',
   transport: 'fleet', sail: 'solar', ship: 'fleet', build: 'materials',
   doctrine: 'command', 'recruit-area': 'command', 'recruit-squad': 'formation', home: 'planet',
@@ -42,14 +44,22 @@ const storage = (() => {
 })();
 
 function savedKeys() {
-  try { return { ...defaultKeys, ...JSON.parse(storage?.getItem('gold-houses-keys') ?? '{}') }; }
+  try {
+    const saved = JSON.parse(storage?.getItem('gold-houses-keys') ?? '{}') ?? {};
+    const keys = { ...defaultKeys, ...saved };
+    if (!saved.face) {
+      const reserved = new Set(Object.entries(keys).filter(([id]) => id !== 'face').map(([, value]) => value));
+      keys.face = [...'gqrtv', ...'abcdefghijklmnopqrstuvwxyz'].find(key => !reserved.has(key)) ?? defaultKeys.face;
+    }
+    return keys;
+  }
   catch { return { ...defaultKeys }; }
 }
 
 const ui = {
   view: 'solar', tab: 'command', houseId: null, planetId: null, regionId: null, battleId: null,
   selectedArmyIds: new Set(), selectedSquadIds: new Set(), selectedFleetId: null,
-  showSupply: false, attackMode: false, camera: null, time: 0, orderMarker: null, drag: null,
+  showSupply: false, targetOrder: null, camera: null, time: 0, orderMarker: null, drag: null,
   selectionBox: null, routePreview: null, details: new Set(), picks: {}, battleViews: {},
   keys: savedKeys(), keyCapture: null, lastGroup: null,
   setup: { mode: 'grand', houseId: 'augustus', planetId: 'mars', terrain: 'basin', enemyHouseId: 'bellona', difficulty: 'standard' },
@@ -84,6 +94,8 @@ const currentRegion = () => state?.planets[ui.planetId]?.regions[ui.regionId];
 const selectedArmies = () => [...ui.selectedArmyIds].map(id => state.armies[id]).filter(Boolean);
 const selectedFleet = () => state?.fleets[ui.selectedFleetId];
 const tacticalRoster = () => (currentBattle()?.squads ?? []).filter(squad => squad.houseId === state.houseId && squad.soldiers > 0 && !squad.withdrawn);
+const selectedTacticalSquads = () => tacticalRoster().filter(squad => ui.selectedSquadIds.has(squad.id));
+const supportsMode = (squad, mode) => mode === 'auto' || Boolean(ATTACK_PROFILES[squad.type]?.[mode]);
 const activeBattles = () => Object.values(state.battles).filter(battle => battle.winner == null);
 const living = squads => squads.reduce((count, squad) => count + squad.soldiers, 0);
 const keyName = value => value === ' ' ? 'Space' : value.toUpperCase();
@@ -134,8 +146,10 @@ function namedChoices(entries) { return Object.values(entries).map(entry => [ent
 function resourceCost(cost) { return Object.entries(cost ?? {}).map(([key, quantity]) => `${quantity} ${RESOURCE_LABELS[key] ?? key}`).join(', '); }
 function purchaseRow(name, label, action, id, quote, options = {}) {
   const price = resourceCost(quote.cost) || (quote.eligible ? 'No cost' : '');
+  const duration = quote.duration > 0 ? formatTime(Math.ceil(quote.duration)) : '';
+  const terms = [price, duration].filter(Boolean).join(' · ');
   return row(
-    `<div class="purchase-item"><strong>${esc(name)}</strong>${price ? `<span>${esc(price)}</span>` : ''}${quote.reason ? `<small>${esc(quote.reason)}</small>` : ''}</div>`,
+    `<div class="purchase-item"><strong>${esc(name)}</strong>${terms ? `<span>${esc(terms)}</span>` : ''}${quote.reason ? `<small>${esc(quote.reason)}</small>` : ''}</div>`,
     button(label, action, id, { ...options, disabled: !quote.eligible, title: quote.reason || options.title }),
   );
 }
@@ -232,6 +246,7 @@ function regionPanel(region, selectedArmy = null) {
   const own = stationed.filter(army => army.houseId === state.houseId);
   const projects = (state.projects ?? []).filter(project => project.regionId === region.id && project.houseId === state.houseId);
   const otherProjects = projects.filter(project => project.type === 'build' || project.type === 'buildShip');
+  const buildTimes = { build: 0, buildShip: 0 };
   const active = activeBattles().find(battle => battle.regionId === region.id);
   const recruitTo = own.includes(selectedArmy) && stationary(selectedArmy) ? selectedArmy : null;
   const replenish = recruitTo ?? own.find(stationary);
@@ -271,7 +286,12 @@ function regionPanel(region, selectedArmy = null) {
       ship.name, 'Build', 'ship', ship.id, getPurchaseQuote(state, { type: 'buildShip', regionId: region.id, shipType: ship.id }),
       { data: { region: region.id }, title: ship.role },
     )).join('')) : ''}
-    ${otherProjects.length ? `<h3>Construction queue</h3>${stats(otherProjects.map(project => [BUILDINGS[project.item]?.name ?? SHIPS[project.item]?.name ?? unitName(project.item), formatTime(Math.ceil(project.remaining))]))}` : ''}`;
+    ${otherProjects.length ? `<h3>Project queue</h3>${stats(otherProjects.map(project => {
+      buildTimes[project.type] += project.remaining;
+      const name = BUILDINGS[project.item]?.name ?? SHIPS[project.item]?.name ?? unitName(project.item);
+      const lane = project.type === 'buildShip' ? 'Shipyard' : 'Construction';
+      return [name, `${lane} · ${formatTime(Math.ceil(buildTimes[project.type]))}`];
+    }))}` : ''}`;
 }
 
 function rewardMarkup(reward) {
@@ -477,8 +497,19 @@ function battleSituation(battle) {
   return Object.entries(strength);
 }
 
+function squadFacing(squad) {
+  const heading = Number.isFinite(squad.heading) ? squad.heading : 0;
+  const octant = Math.round(heading / (Math.PI / 4));
+  return directions[(octant % directions.length + directions.length) % directions.length];
+}
+
+function squadWeapons(squad) {
+  return Object.entries(ATTACK_PROFILES[squad.type] ?? {}).map(([mode, weapon]) =>
+    `${title(mode)} ${Math.round(weapon.range)}`).join(' · ');
+}
+
 function battlePanel(battle) {
-  const selected = battle.squads.filter(squad => ui.selectedSquadIds.has(squad.id));
+  const selected = selectedTacticalSquads();
   return `<div class="subject-heading">${illustration('terrain', battle.terrain, 'subject-art terrain-art')}<div><h2>${esc(battle.name)}</h2><p class="muted">${esc(PLANETS[battle.planetId]?.name ?? 'Skirmish')} · ${formatTime(battle.elapsed)}</p></div></div>
     ${stats(battleSituation(battle).map(([id, strength]) => [HOUSES[id]?.name ?? id, `${strength} troops`]))}
     ${battle.winner != null ? `<p class="hint">${battle.winner === 'draw' ? 'Battle ended in a draw.' : `${houseLabel(battle.winner)} won.`}</p>` : ''}
@@ -486,6 +517,8 @@ function battlePanel(battle) {
       ['Soldiers', `${squad.soldiers} / ${squad.maxSoldiers}`], ['Morale', pct(squad.morale ?? 100)],
       ['Health', pct(100 * squad.hp / (squad.maxHp || 1))],
       ['Experience', String(squad.xp ?? 0)], ['Formation', esc(title(squad.formation))],
+      ['Weapon range', esc(squadWeapons(squad))],
+      ['Weapon stance', esc(title(squad.attackMode ?? 'auto'))], ['Facing', esc(squadFacing(squad))],
       ['Order', esc(title(squad.orders?.[0]?.type ?? 'Ready'))],
     ])}`).join('')}
     ${battle.winner == null && tacticalRoster().length ? row(button('Order retreat', 'retreat', battle.id, { title: 'Withdraw your remaining squads from this battle' })) : ''}`;
@@ -514,25 +547,39 @@ function ordersPanel() {
       <span class="toolbar-help">Select a territory to recruit. Select an army and right-click to march.</span>`;
   }
   const roster = tacticalRoster();
-  const chosen = roster.filter(squad => ui.selectedSquadIds.has(squad.id));
+  const chosen = selectedTacticalSquads();
   const disabled = !chosen.length || currentBattle()?.winner != null;
   const cards = roster.map(squad => {
     const label = `${squad.name ?? unitName(squad.type)}, ${squad.soldiers} soldiers`;
     return button(`<span>${squad.soldiers}</span>`, 'select-squad', squad.id, {
-      className: 'squad-card', portrait: squad.type, pressed: ui.selectedSquadIds.has(squad.id), accessibleLabel: label, title: label,
+      className: 'squad-card', portrait: squad.type, pressed: ui.selectedSquadIds.has(squad.id), accessibleLabel: label,
+      title: `${label} · ${squadWeapons(squad)} · Facing ${squadFacing(squad)}`,
     });
   }).join('');
   return `<span class="toolbar-title">${chosen.length ? `${chosen.length} ${chosen.length === 1 ? 'squad' : 'squads'} · ${living(chosen)} troops` : 'Tactical command'}</span>
-    <span class="toolbar-help">Drag to select squads. Right-click to move or attack.</span>
+    <span class="toolbar-help">Right-click ground to move or an enemy to attack. Right-drag sets facing on arrival.</span>
     ${cards ? `<div class="squad-strip" aria-label="Squads on this battlefield">${cards}</div>` : ''}
     <div class="toolbar">
       ${button('Select all', 'select-all', '', { disabled: !roster.length })}
-      ${button(`Attack-move <kbd>${esc(keyName(ui.keys.attack))}</kbd>`, 'attack-mode', '', { disabled, pressed: ui.attackMode, title: 'Attack enemies encountered on the way to your next click' })}
+      ${button(`Attack-move <kbd>${esc(keyName(ui.keys.attack))}</kbd>`, 'attack-mode', '', { disabled, pressed: ui.targetOrder === 'attackMove', title: 'Attack enemies encountered on the way to your next click' })}
+      ${button(`Face <kbd>${esc(keyName(ui.keys.face))}</kbd>`, 'face-mode', '', { disabled, pressed: ui.targetOrder === 'face', title: 'Click toward the direction to face while holding position' })}
       ${button(`Hold <kbd>${esc(keyName(ui.keys.hold))}</kbd>`, 'direct-order', 'hold', { disabled })}
       ${button(`Stop <kbd>${esc(keyName(ui.keys.stop))}</kbd>`, 'direct-order', 'stop', { disabled })}
       ${button(`Ability <kbd>${esc(keyName(ui.keys.ability))}</kbd>`, 'direct-order', 'ability', { disabled })}
       ${button(`Formation <kbd>${esc(keyName(ui.keys.formation))}</kbd>`, 'direct-order', 'formation', { disabled })}
       ${select('formation', formations.map(id => [id, title(id)]), ui.picks.formation ?? 'line', 'Squad formation')}
+      <div class="weapon-toolbar" role="group" aria-label="Squad weapon stance">
+        <span class="toolbar-help">Weapons</span>
+        ${weaponModes.map(mode => {
+          const compatible = chosen.filter(squad => supportsMode(squad, mode));
+          const allMatch = compatible.length === chosen.length && chosen.every(squad => (squad.attackMode ?? 'auto') === mode);
+          const description = mode === 'auto' ? 'Switch weapons based on distance' : `Use ${mode} weapons only`;
+          return button(title(mode), 'weapon-mode', mode, {
+            disabled: disabled || !compatible.length, pressed: !disabled && allMatch,
+            title: chosen.length && compatible.length !== chosen.length ? `${description} (${compatible.length} of ${chosen.length} squads)` : description,
+          });
+        }).join('')}
+      </div>
     </div>`;
 }
 
@@ -586,10 +633,13 @@ function refreshHud() {
   for (const tab of document.querySelectorAll('.rail-tabs button')) tab.hidden = mode === 'skirmish' && tab.dataset.id !== 'command';
   const info = [];
   if (speed === 0) info.push('PAUSED');
-  if (ui.attackMode && ui.view === 'battle') info.push('CLICK TO ATTACK-MOVE');
+  if (ui.view === 'battle' && ui.targetOrder) {
+    info.push(ui.targetOrder === 'face' ? 'CLICK A POINT TO FACE IT' : 'CLICK TO ATTACK-MOVE');
+  }
   if (state.victory) info.push(victoryLabel(state.victory));
   if (ui.routePreview?.eta) info.push(`ETA ${formatTime(Math.ceil(ui.routePreview.eta))}${ui.routePreview.danger ? ' · Enemy territory' : ''}`);
   text('map-info', info.join(' · '));
+  map.classList.toggle('targeting', ui.view === 'battle' && Boolean(ui.targetOrder));
   text('map-title', ui.view === 'solar' ? 'SOLAR SYSTEM' : ui.view === 'planet' ? (PLANETS[ui.planetId]?.name ?? '').toUpperCase() : (battle?.name ?? '').toUpperCase());
   map.setAttribute('aria-label', ui.view === 'battle' ? 'Tactical battlefield' : ui.view === 'planet' ? 'Planetary territory map' : 'Solar system map');
 }
@@ -628,7 +678,7 @@ function renderMenu() {
     </div><p class="hint menu-line">${esc(house?.description)}</p><div class="menu-line">${button(skirmish ? 'Start battle' : 'Begin campaign', 'start', '', { className: 'primary' })}</div></section>
     <section class="menu-section"><h2>Saved campaigns</h2>${menuSlots}${storage ? '' : '<p class="hint">Campaign storage is unavailable in this browser session.</p>'}</section>
     <section class="menu-section"><details data-detail="shortcuts"${ui.details.has('shortcuts') ? ' open' : ''}><summary>Controls and key bindings</summary>
-      <ul class="shortcuts"><li>Left-drag to select squads</li><li>Right-click to move or attack</li><li>Shift queues orders</li><li>Ctrl + 1–9 assigns control groups</li><li>1–9 recalls a group. Double-tap to center it.</li><li>Scroll to zoom. Middle-drag to pan.</li></ul>
+      <ul class="shortcuts"><li>Left-drag to select squads</li><li>Right-click to move or attack</li><li>Right-drag to set facing on arrival</li><li>Face turns squads toward the next click in place</li><li>Shift queues orders</li><li>Ctrl + 1-9 assigns control groups</li><li>1-9 recalls a group. Double-tap to center it.</li><li>Scroll to zoom. Middle-drag to pan.</li></ul>
       <div class="toolbar">${Object.entries(ui.keys).map(([id, value]) => button(`${esc(keyLabels[id])} <kbd>${ui.keyCapture === id ? 'Press key' : esc(keyName(value))}</kbd>`, 'key', id, { pressed: ui.keyCapture === id })).join('')}
       ${button('Reset keys', 'reset-keys')}</div></details></section>`);
   elements.menu.querySelector('[data-action="resume"]').hidden = !state;
@@ -657,6 +707,7 @@ function setState(next, freshCampaign = false) {
   ui.selectedRegionId = ui.regionId;
   ui.battleId = null;
   ui.tab = 'command';
+  ui.targetOrder = null;
   ui.view = state.mode === 'grand' && !home ? 'solar' : 'planet';
   ui.selectedArmyIds.clear();
   ui.selectedSquadIds.clear();
@@ -684,7 +735,7 @@ function setView(view) {
   if (ui.view === view) return;
   stashBattle();
   ui.view = view;
-  ui.attackMode = false;
+  ui.targetOrder = null;
   ui.orderMarker = null;
   ui.routePreview = null;
   ui.drag = null;
@@ -897,8 +948,10 @@ function actionForClick(event) {
     case 'diplomacy': issue({ type: 'diplomacy', houseId: id, deal: pick('deal'), regionId: pick('concession') }); break;
     case 'operation': issue({ type: 'operation', regionId: region, colorId: id, targetId: pick(`operation-${id}`) }); break;
     case 'select-all': ui.selectedSquadIds = new Set(tacticalRoster().map(squad => squad.id)); break;
-    case 'select-squad': updateSquadSelection([id], event.shiftKey, true); map.focus({ preventScroll: true }); break;
-    case 'attack-mode': ui.attackMode = !ui.attackMode; map.focus({ preventScroll: true }); break;
+    case 'select-squad': ui.targetOrder = null; updateSquadSelection([id], event.shiftKey, true); map.focus({ preventScroll: true }); break;
+    case 'attack-mode': setTargetOrder('attackMove'); break;
+    case 'face-mode': setTargetOrder('face'); break;
+    case 'weapon-mode': setWeaponMode(id); break;
     case 'direct-order': tacticalOrder(id, null, event.shiftKey); map.focus({ preventScroll: true }); break;
     case 'retreat': issue({ type: 'retreat', battleId: id }); break;
   }
@@ -1023,8 +1076,28 @@ function updateSquadSelection(ids, extend, toggle = false) {
   }
 }
 
+function setTargetOrder(type) {
+  if (currentBattle()?.winner != null || !selectedTacticalSquads().length) return;
+  ui.targetOrder = ui.targetOrder === type ? null : type;
+  map.focus({ preventScroll: true });
+}
+
+function setWeaponMode(mode) {
+  const battle = currentBattle();
+  if (!battle || battle.winner != null || !weaponModes.includes(mode)) return;
+  const squadIds = selectedTacticalSquads().filter(squad => supportsMode(squad, mode)).map(squad => squad.id);
+  if (!squadIds.length) return;
+  issue({ type: 'orderSquads', battleId: battle.id, squadIds, order: { type: 'attackMode', mode } }, { quiet: true });
+  map.focus({ preventScroll: true });
+}
+
 function tacticalLeft(point, extended, box) {
-  if (ui.attackMode) { tacticalOrder('attackMove', point, extended); ui.attackMode = false; return; }
+  if (ui.targetOrder) {
+    const type = ui.targetOrder;
+    ui.targetOrder = null;
+    tacticalOrder(type, point, extended);
+    return;
+  }
   const battle = currentBattle();
   if (box) {
     const squads = tacticalRoster().filter(squad => {
@@ -1063,7 +1136,7 @@ function tacticalOrder(type, point, queue = false, facing) {
 function tacticalRight(point, queue, facing) {
   const target = !facing && (squadAt(point, true) || obstacleAt(point));
   tacticalOrder(target ? 'attack' : 'move', point, queue, facing);
-  ui.attackMode = false;
+  ui.targetOrder = null;
 }
 
 function adjustCamera() {
@@ -1119,7 +1192,7 @@ function pointerMove(event) {
     ui.camera.x -= next.x - last.x;
     ui.camera.y -= next.y - last.y;
     adjustCamera();
-  } else if (drag.button === 0 && !ui.attackMode && Math.hypot(point.x - drag.start.x, point.y - drag.start.y) > 6) {
+  } else if (drag.button === 0 && !ui.targetOrder && Math.hypot(point.x - drag.start.x, point.y - drag.start.y) > 6) {
     ui.selectionBox = { x: Math.min(point.x, drag.start.x), y: Math.min(point.y, drag.start.y), w: Math.abs(point.x - drag.start.x), h: Math.abs(point.y - drag.start.y) };
   }
   drag.last = point;
@@ -1169,7 +1242,7 @@ function handleKeys(event) {
   }
   if (!state || elements.menu.open || event.target.matches('select,input,textarea') || event.repeat) return;
   if (key === 'escape') {
-    if (ui.attackMode) { ui.attackMode = false; refreshHud(); }
+    if (ui.targetOrder) { ui.targetOrder = null; refreshHud(); }
     else { text('menu-status', ''); renderMenu(); elements.menu.showModal(); }
     event.preventDefault();
     return;
@@ -1206,7 +1279,8 @@ function handleKeys(event) {
   const binding = Object.keys(ui.keys).find(id => ui.keys[id] === key);
   if (!binding || binding === 'pause') return;
   event.preventDefault();
-  if (binding === 'attack') { if (ui.selectedSquadIds.size) ui.attackMode = !ui.attackMode; }
+  if (binding === 'attack') setTargetOrder('attackMove');
+  else if (binding === 'face') setTargetOrder('face');
   else if (binding === 'formation') {
     const current = ui.picks.formation ?? 'line';
     ui.picks.formation = formations[(formations.indexOf(current) + 1) % formations.length];

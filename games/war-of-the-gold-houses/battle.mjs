@@ -1,3 +1,5 @@
+import { pointInTerrainZone } from './terrain-shapes.mjs';
+
 export const UNIT_TYPES = Object.freeze({
   rifle: { name: 'Gray Riflemen', color: 'Gray', role: 'Line infantry', maxSoldiers: 30, hp: 32, damage: 4.5, range: 145, speed: 63, interval: 0.86 },
   heavy: { name: 'Gray Heavy Gunners', color: 'Gray', role: 'Suppression', maxSoldiers: 20, hp: 39, damage: 6.1, range: 170, speed: 48, interval: 0.88 },
@@ -15,6 +17,34 @@ export const UNIT_TYPES = Object.freeze({
 
 export const FORMATIONS = Object.freeze(['line', 'column', 'wedge', 'defensive', 'loose']);
 
+const BATTLE_MOVEMENT = 0.84;
+const VOLLEY_INTERVAL = 1.85;
+const VOLLEY_DAMAGE = 0.55;
+const DEPLOYMENT_INSET = 76;
+const backupWeapons = {
+  rifle: { range: 31, damage: 4.7, interval: 0.81 },
+  heavy: { range: 31, damage: 5.1, interval: 0.96 },
+  marksman: { range: 29, damage: 4.2, interval: 0.96 },
+  raider: { range: 102, damage: 5.2, interval: 1.02 },
+  obsidian: { range: 94, damage: 7.0, interval: 1.25 },
+  razor: { range: 110, damage: 16, interval: 1.08 },
+  commander: { range: 117, damage: 42, interval: 1.15 },
+  engineer: { range: 33, damage: 6, interval: 0.91 },
+  electronic: { range: 29, damage: 3.3, interval: 0.96 },
+  medic: { range: 28, damage: 2.9, interval: 0.95 },
+};
+
+function tunedWeapon({ range, damage, interval }) {
+  return Object.freeze({ range, damage: damage * VOLLEY_DAMAGE, interval: interval * VOLLEY_INTERVAL });
+}
+
+export const ATTACK_PROFILES = Object.freeze(Object.fromEntries(Object.entries(UNIT_TYPES).map(([type, primary]) => {
+  const mode = primary.range < 50 ? 'melee' : 'ranged';
+  const weapons = { [mode]: tunedWeapon(primary) };
+  if (backupWeapons[type]) weapons[mode === 'ranged' ? 'melee' : 'ranged'] = tunedWeapon(backupWeapons[type]);
+  return [type, Object.freeze(weapons)];
+})));
+
 const WIDTH = 960;
 const HEIGHT = 576;
 const CELL = 24;
@@ -23,7 +53,8 @@ const ROWS = HEIGHT / CELL;
 const PADDING = 8;
 const HOLD_MORALE = 17;
 const ARMOR = new Set(['transport', 'tank']);
-const COMMANDS = new Set(['move', 'attack', 'attackMove', 'hold', 'stop', 'formation', 'ability']);
+const ATTACK_MODES = new Set(['auto', 'melee', 'ranged']);
+const COMMANDS = new Set(['move', 'attack', 'attackMove', 'hold', 'stop', 'formation', 'ability', 'attackMode', 'face']);
 const GRID_CACHE = new WeakMap();
 const NEIGHBORS = [[1, 0], [0, 1], [-1, 0], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]];
 
@@ -70,6 +101,10 @@ const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const active = squad => squad.soldiers > 0 && !squad.withdrawn;
 const fighting = squad => active(squad) && !squad.routing;
 const vehicle = squad => ARMOR.has(squad.type);
+const bearing = (from, to) => Math.atan2(to.y - from.y, to.x - from.x);
+const normalizeAngle = (angle) => Math.atan2(Math.sin(angle), Math.cos(angle));
+const headingOf = (squad) => Number.isFinite(squad.heading) ? squad.heading : squad.side === 0 ? 0 : Math.PI;
+const stationary = (squad) => squad.locked || squad.orders[0]?.type === 'hold' || squad.orders[0]?.type === 'face';
 const inRect = (x, y, rect, pad = 0) => x >= rect.x - pad && x <= rect.x + rect.w + pad &&
   y >= rect.y - pad && y <= rect.y + rect.h + pad;
 
@@ -155,16 +190,17 @@ export function addReinforcements(battle, army) {
     const index = firstIndex + deployed++;
     const column = Math.floor(index / 9);
     const row = index % 9;
-    const x = clamp(side === 0 ? 141 - column * 42 : WIDTH - 141 + column * 42, 25, WIDTH - 25);
+    const x = clamp(side === 0 ? DEPLOYMENT_INSET - column * 31 : WIDTH - DEPLOYMENT_INSET + column * 31, 25, WIDTH - 25);
     const y = HEIGHT / 2 + (row % 2 === 0 ? 1 : -1) * Math.ceil(row / 2) * 49;
     battle.squads.push({
       id: input.id, armyId: army.id, houseId: army.houseId, type: input.type, x, y,
       name: input.name ?? (input.type === 'commander' ? ideas.name : null) ?? definition.name,
-      heading: side === 0 ? 0 : Math.PI, soldiers, maxSoldiers: definition.maxSoldiers,
+      heading: side === 0 ? 0 : Math.PI, soldiers, deployedSoldiers: soldiers, maxSoldiers: definition.maxSoldiers,
       hp: soldiers * definition.hp - wounds, maxHp: definition.maxSoldiers * definition.hp,
       morale: clamp(89 + entry.leadership / 5 - (entry.supplied ? 0 : 15) + entry.defense * 3, 0, 100),
       xp: clamp(Number(input.xp) || 0, 0, 20), formation: 'line', orders: [],
       path: [], pathTarget: null, repath: 0, targetId: null, cooldown: 0,
+      attackMode: 'auto', lastAttackMode: null, facingLocked: false, aimTargetId: null, aimMode: null, aimRemaining: 0,
       abilityCooldown: 0, fireFlash: 0, suppression: 0, jammed: 0, boost: 0,
       supplied: entry.supplied, defense: entry.defense, side, recovering: 0,
       routing: false, withdrawn: false, locked: false, aiTime: 0, stuckTime: 0,
@@ -349,6 +385,21 @@ function clearPath(squad) {
   squad.stuckTime = 0;
 }
 
+function clearAim(squad) {
+  squad.aimTargetId = null;
+  squad.aimMode = null;
+  squad.aimRemaining = 0;
+}
+
+function turnToward(squad, heading, dt) {
+  const current = headingOf(squad);
+  const difference = normalizeAngle(heading - current);
+  const rate = vehicle(squad) ? 2.05 : 3.3;
+  const maxTurn = rate * dt;
+  squad.heading = normalizeAngle(current + clamp(difference, -maxTurn, maxTurn));
+  return Math.abs(difference) <= maxTurn + 1e-7;
+}
+
 function advance(battle, squad, destination, dt) {
   if (distance(squad, destination) <= 5) return true;
   if (!squad.pathTarget || (squad.repath <= 0 && distance(squad.pathTarget, destination) > 26)) {
@@ -363,9 +414,10 @@ function advance(battle, squad, destination, dt) {
   const dy = next.y - squad.y;
   const gap = Math.hypot(dx, dy);
   const formationSpeed = squad.formation === 'column' ? 1.16 : squad.formation === 'defensive' ? 0.86 : 1;
-  const speed = UNIT_TYPES[squad.type].speed * formationSpeed * (squad.routing ? 1.22 : 1) *
-    (squad.suppression > 0 ? 0.72 : 1) * (squad.boost > 0 ? 1.33 : 1);
+  const speed = UNIT_TYPES[squad.type].speed * BATTLE_MOVEMENT * formationSpeed * (squad.routing ? 1.22 : 1) *
+    (squad.suppression > 0 ? 0.61 : 1) * (squad.boost > 0 ? 1.33 : 1);
   const step = Math.min(gap, speed * dt);
+  if (gap > 1) turnToward(squad, Math.atan2(dy, dx), dt);
   if (gap <= 1 || step >= gap - 0.15) {
     if (walkable(battle, next.x, next.y) && unobstructed(battle, squad, next, PADDING - 1)) {
       squad.x = next.x;
@@ -374,7 +426,6 @@ function advance(battle, squad, destination, dt) {
     squad.path.shift();
     return squad.path.length === 0;
   }
-  squad.heading = Math.atan2(dy, dx);
   const x = squad.x + dx * step / gap;
   const y = squad.y + dy * step / gap;
   if (walkable(battle, x, y) && unobstructed(battle, squad, { x, y }, PADDING - 1)) {
@@ -418,7 +469,10 @@ export function issueOrder(battle, houseId, ids, order, queue = false) {
   if (squads.length === 0) return 0;
   const destination = order.type === 'move' || order.type === 'attackMove';
   if (destination && (!Number.isFinite(order.x) || !Number.isFinite(order.y))) return 0;
+  const directed = Number.isFinite(order.heading);
+  if (order.type === 'face' && !directed && (!Number.isFinite(order.x) || !Number.isFinite(order.y))) return 0;
   if (order.type === 'formation' && !FORMATIONS.includes(order.formation)) return 0;
+  if ((order.mode !== undefined || order.type === 'attackMode') && !ATTACK_MODES.has(order.mode)) return 0;
   if (order.type === 'attack') {
     const hostile = battle.squads.some(squad => squad.id === order.targetId && squad.houseId !== houseId && active(squad));
     const structure = battle.obstacles.some(obstacle => obstacle.id === order.targetId && obstacle.health > 0);
@@ -427,20 +481,28 @@ export function issueOrder(battle, houseId, ids, order, queue = false) {
   const offsets = destination && squads.length > 1 ? spacedDestinations(squads, order) : null;
   let accepted = 0;
   for (const squad of squads) {
-    if (order.type === 'formation') {
+    if (order.mode && order.mode !== 'auto' && !ATTACK_PROFILES[squad.type][order.mode]) continue;
+    if (order.type === 'attackMode') {
+      squad.attackMode = order.mode;
+      clearAim(squad);
+    } else if (order.type === 'formation') {
       squad.formation = order.formation;
-      if (Number.isFinite(order.heading)) squad.heading = order.heading;
+      if (directed) squad.heading = normalizeAngle(order.heading);
     } else if (order.type === 'ability') {
       if (!useAbility(battle, squad, order)) continue;
     } else {
       if (!queue || order.type === 'stop') {
         squad.orders = [];
+        squad.facingLocked = false;
         clearPath(squad);
+        clearAim(squad);
       }
-      if (queue && squad.orders.length === 1 && squad.orders[0].type === 'hold') squad.orders.shift();
+      if (queue && squad.orders.length === 1 && ['hold', 'face'].includes(squad.orders[0].type)) squad.orders.shift();
       const command = { type: order.type, ...(offsets?.get(squad.id) ?? (destination ? { x: order.x, y: order.y } : {})) };
-      if (destination && Number.isFinite(order.heading)) command.heading = order.heading;
+      if (directed) command.heading = normalizeAngle(order.heading);
+      if (order.type === 'face' && !directed) command.heading = bearing(squad, order);
       if (order.type === 'attack') command.targetId = order.targetId;
+      if (order.mode) command.mode = order.mode;
       if (order.type !== 'stop') squad.orders.push(command);
       squad.locked = order.type === 'stop';
       squad.targetId = null;
@@ -494,9 +556,9 @@ function useAbility(battle, squad, order = {}) {
       target = valid.find(unit => unit.id === order.targetId) ??
         valid.sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
       if (target) {
-        recover(target, squad.type === 'medic' ? 90 + squad.soldiers * 7 : 105 + squad.soldiers * 9);
+        recover(target, squad.type === 'medic' ? 78 + squad.soldiers * 6 : 90 + squad.soldiers * 8);
         target.morale = Math.min(100, target.morale + 6);
-        squad.abilityCooldown = 12;
+        squad.abilityCooldown = 15;
         addEffect(battle, squad.type === 'medic' ? 'heal' : 'repair', squad, target, 0.62);
         return true;
       }
@@ -505,7 +567,7 @@ function useAbility(battle, squad, order = {}) {
       if (!obstacle) return false;
       const position = { x: obstacle.x + obstacle.w / 2, y: obstacle.y + obstacle.h / 2 };
       if (distance(squad, position) > 115) return false;
-      obstacle.health = Math.max(0, obstacle.health - 335);
+      obstacle.health = Math.max(0, obstacle.health - 280);
       squad.abilityCooldown = 14;
       addEffect(battle, 'explosion', { ...position, houseId: squad.houseId }, null, 0.76);
       return true;
@@ -532,11 +594,12 @@ function useAbility(battle, squad, order = {}) {
       return true;
     case 'heavy':
     case 'tank':
-      target = enemies.find(unit => unit.id === order.targetId) ?? enemies.filter(unit => unobstructed(battle, squad, unit)).sort((a, b) => distance(a, squad) - distance(b, squad))[0];
-      if (!target || !unobstructed(battle, squad, target)) return false;
-      hurt(battle, squad, target, squad.type === 'tank' ? 240 : 108);
+      target = enemies.find(unit => unit.id === order.targetId) ?? enemies.filter(unit =>
+        withinArc(squad, unit, 'ranged') && unobstructed(battle, squad, unit)).sort((a, b) => distance(a, squad) - distance(b, squad))[0];
+      if (!target || !withinArc(squad, target, 'ranged') || !unobstructed(battle, squad, target)) return false;
+      hurt(battle, squad, target, squad.type === 'tank' ? 150 : 70);
       target.suppression = 4;
-      squad.abilityCooldown = 14;
+      squad.abilityCooldown = 18;
       addEffect(battle, 'heavy', squad, target, 0.56);
       return true;
     default:
@@ -544,14 +607,14 @@ function useAbility(battle, squad, order = {}) {
   }
 }
 
-function hurt(battle, squad, target, amount) {
+function hurt(battle, squad, target, amount, moralePressure = 1) {
   const previous = target.soldiers;
   const hp = UNIT_TYPES[target.type].hp;
   target.hp = Math.max(0, target.hp - amount);
   target.soldiers = Math.ceil(target.hp / hp);
   const lost = previous - target.soldiers;
   if (!vehicle(target)) target.recovering += lost * 0.45;
-  target.morale = Math.max(0, target.morale - (amount / target.maxHp) * 24 - lost / previous * 22);
+  target.morale = Math.max(0, target.morale - ((amount / target.maxHp) * 19 + lost / previous * 15) * moralePressure);
   squad.xp = Math.min(20, squad.xp + amount / 910 + lost * 0.04);
   if (target.soldiers > 0) return;
   target.orders = [];
@@ -559,59 +622,100 @@ function hurt(battle, squad, target, amount) {
   if (target.type === 'commander') {
     battle.leaderLosses++;
     for (const ally of battle.squads) {
-      if (ally.armyId === target.armyId && active(ally)) ally.morale = Math.max(0, ally.morale - 24);
+      if (ally.armyId === target.armyId && active(ally)) ally.morale = Math.max(0, ally.morale - 20);
     }
   }
   if (vehicle(target)) addEffect(battle, 'explosion', target, null, 1.05);
 }
 
 function zoneOf(battle, squad, kind) {
-  return battle.zones.find(zone => zone.kind === kind && inRect(squad.x, squad.y, zone));
+  return battle.zones.find(zone => zone.kind === kind && pointInTerrainZone(squad.x, squad.y, zone));
 }
 
-function firingRange(battle, squad) {
-  const range = UNIT_TYPES[squad.type].range;
-  return range > 50 && zoneOf(battle, squad, 'high') ? range + 17 : range;
+function withinArc(squad, target, mode) {
+  const arc = mode === 'melee' ? 1.6 : vehicle(squad) ? 0.68 : 1.12;
+  return Math.abs(normalizeAngle(bearing(squad, target) - headingOf(squad))) <= arc;
 }
 
-function canShoot(battle, squad, target) {
-  return distance(squad, target) <= firingRange(battle, squad) && unobstructed(battle, squad, target);
+function availableAttack(battle, squad, target, order, fixedFacing = false, obstacle = null) {
+  const profiles = ATTACK_PROFILES[squad.type];
+  const requested = order?.mode ?? squad.attackMode ?? 'auto';
+  const separation = distance(squad, target);
+  const melee = profiles.melee && separation <= profiles.melee.range;
+  const range = profiles.ranged?.range ?? 0;
+  const ranged = profiles.ranged && (separation <= range ||
+    (separation <= range + 17 && zoneOf(battle, squad, 'high')));
+  let mode;
+  if (requested === 'melee' && profiles.melee) mode = melee ? 'melee' : null;
+  else if (requested === 'ranged' && profiles.ranged) mode = ranged ? 'ranged' : null;
+  else if (melee && (!fixedFacing || withinArc(squad, target, 'melee'))) mode = 'melee';
+  else if (ranged && (UNIT_TYPES[squad.type].range >= 50 || fixedFacing || squad.locked)) mode = 'ranged';
+  if (!mode || (fixedFacing && !withinArc(squad, target, mode))) return null;
+  return unobstructed(battle, squad, target, 0, obstacle) ? mode : null;
 }
 
-function attack(battle, squad, target) {
-  squad.heading = Math.atan2(target.y - squad.y, target.x - squad.x);
-  if (squad.cooldown > 0) return;
-  const def = UNIT_TYPES[squad.type];
-  const melee = def.range < 50;
-  const rear = Math.abs(Math.atan2(Math.sin(target.heading - squad.heading), Math.cos(target.heading - squad.heading))) < 0.92;
-  let damage = def.damage * squad.soldiers * (0.92 + nextRandom(battle) * 0.16) * (1 + squad.xp / 85);
+function readyToStrike(squad, target, mode, dt, fixedFacing) {
+  if (!fixedFacing && !turnToward(squad, bearing(squad, target), dt)) return false;
+  if (squad.aimTargetId !== target.id || squad.aimMode !== mode) {
+    squad.aimTargetId = target.id;
+    squad.aimMode = mode;
+    const windup = mode === 'melee' ? 0.38 : vehicle(squad) ? 1.02 : squad.type === 'marksman' ? 1.06 : 0.85;
+    squad.aimRemaining = fixedFacing ? windup * 0.82 : windup;
+  }
+  squad.aimRemaining = Math.max(0, (squad.aimRemaining ?? 0) - dt);
+  return squad.aimRemaining <= 1e-7 && squad.cooldown <= 1e-7;
+}
+
+function markAttack(squad, mode) {
+  squad.cooldown = ATTACK_PROFILES[squad.type][mode].interval * (squad.supplied ? 1 : 1.18);
+  squad.lastAttackMode = mode;
+  squad.fireFlash = mode === 'melee' ? 0.32 : 0.25;
+}
+
+function attack(battle, squad, target, mode, dt, fixedFacing = false) {
+  if (!readyToStrike(squad, target, mode, dt, fixedFacing)) return;
+  const profile = ATTACK_PROFILES[squad.type][mode];
+  const melee = mode === 'melee';
+  const angle = Math.abs(normalizeAngle(bearing(target, squad) - headingOf(target)));
+  const rear = angle >= 2.18;
+  const flank = angle > 1.05 && !rear;
+  let damage = profile.damage * squad.soldiers * (0.92 + nextRandom(battle) * 0.16) * (1 + squad.xp / 85);
   if (!melee && zoneOf(battle, target, 'cover')) damage *= 0.72;
   if (!melee && zoneOf(battle, squad, 'high')) damage *= 1.12;
   if (!melee && target.formation === 'loose') damage *= 0.81;
   if (!melee && squad.formation === 'line') damage *= 1.08;
   if (melee && squad.formation === 'wedge') damage *= 1.19;
-  if (target.formation === 'defensive' && !rear) damage *= 0.77;
+  if (target.formation === 'defensive' && !rear) damage *= flank ? 0.94 : 0.77;
   const inHomeHalf = target.side === 0 ? target.x < WIDTH / 2 : target.x > WIDTH / 2;
-  if (!melee && inHomeHalf) damage *= 1 - target.defense * 0.05;
-  if (rear) damage *= melee ? 1.29 : 1.12;
+  if (!melee && inHomeHalf && !rear) damage *= 1 - target.defense * (flank ? 0.027 : 0.05);
+  if (rear) damage *= melee ? 1.34 : 1.21;
+  if (flank) damage *= melee ? 1.14 : 1.08;
+  if (!melee) {
+    const separation = distance(squad, target);
+    const longRange = clamp((separation / profile.range - 0.62) / 0.38, 0, 1);
+    const falloff = squad.type === 'marksman' ? 0.17 : vehicle(squad) ? 0.24 : 0.36;
+    damage *= 1 - longRange * falloff;
+    if (separation <= (ATTACK_PROFILES[squad.type].melee?.range ?? 0)) damage *= 0.82;
+  }
   if (vehicle(target) && (squad.type === 'rifle' || squad.type === 'marksman' || squad.type === 'medic')) damage *= 0.54;
   if (squad.suppression > 0) damage *= 0.83;
   if (squad.jammed > 0) damage *= vehicle(squad) ? 0.52 : 0.86;
   if (squad.morale < 50) damage *= 0.74 + squad.morale / 194;
-  squad.cooldown = def.interval * (squad.supplied ? 1 : 1.18);
-  squad.fireFlash = 0.14;
-  if (squad.type === 'heavy' || squad.type === 'tank') target.suppression = Math.max(target.suppression, 1.2);
-  hurt(battle, squad, target, damage);
-  addEffect(battle, melee ? 'melee' : squad.type === 'tank' ? 'heavy' : 'shot', squad, target, melee ? 0.25 : 0.19);
+  markAttack(squad, mode);
+  if (!melee && (squad.type === 'heavy' || squad.type === 'tank')) target.suppression = Math.max(target.suppression, 1.2);
+  hurt(battle, squad, target, damage, rear ? 1.32 : flank ? 1.15 : 1);
+  addEffect(battle, melee ? 'melee' : squad.type === 'tank' ? 'heavy' : 'shot', squad, target,
+    melee ? 0.4 : squad.type === 'tank' ? 0.42 : 0.31);
 }
 
-function bestEnemy(battle, squad, localOnly) {
+function bestEnemy(battle, squad, localOnly, order = null, fixedFacing = false) {
   let target = null;
   let minimum = Infinity;
   for (const unit of battle.squads) {
-    if (squad.houseId === unit.houseId || !active(unit) || (localOnly && !canShoot(battle, squad, unit))) continue;
+    if (squad.houseId === unit.houseId || !active(unit) || (localOnly && !availableAttack(battle, squad, unit, order, fixedFacing))) continue;
     let score = distance(squad, unit);
     if (unit.routing) score += 93;
+    if (localOnly && unit.id === squad.aimTargetId) score *= 0.86;
     if (squad.type === 'marksman' && unit.type === 'commander') score *= 0.68;
     if (squad.type === 'tank' && vehicle(unit)) score *= 0.72;
     if (score >= minimum) continue;
@@ -621,10 +725,12 @@ function bestEnemy(battle, squad, localOnly) {
   return target;
 }
 
-function attackStructure(battle, squad, obstacle, dt) {
+function attackStructure(battle, squad, obstacle, order, dt) {
   const center = { x: obstacle.x + obstacle.w / 2, y: obstacle.y + obstacle.h / 2 };
-  const target = { x: clamp(squad.x, obstacle.x, obstacle.x + obstacle.w), y: clamp(squad.y, obstacle.y, obstacle.y + obstacle.h) };
-  if (distance(squad, target) > firingRange(battle, squad) || !unobstructed(battle, squad, target, 0, obstacle)) {
+  const target = { id: obstacle.id, x: clamp(squad.x, obstacle.x, obstacle.x + obstacle.w), y: clamp(squad.y, obstacle.y, obstacle.y + obstacle.h) };
+  const mode = availableAttack(battle, squad, target, order, false, obstacle);
+  if (!mode) {
+    clearAim(squad);
     const dx = squad.x - center.x;
     const dy = squad.y - center.y;
     const offset = Math.atan2(dy, dx);
@@ -638,14 +744,13 @@ function attackStructure(battle, squad, obstacle, dt) {
     advance(battle, squad, approach, dt);
     return;
   }
-  squad.heading = Math.atan2(center.y - squad.y, center.x - squad.x);
-  if (squad.cooldown > 0) return;
-  const def = UNIT_TYPES[squad.type];
-  const damage = def.damage * squad.soldiers * (squad.type === 'obsidian' || squad.type === 'engineer' || squad.type === 'tank' ? 1.25 : 0.42);
+  if (!readyToStrike(squad, target, mode, dt, false)) return;
+  const profile = ATTACK_PROFILES[squad.type][mode];
+  const damage = profile.damage * squad.soldiers * (squad.type === 'obsidian' || squad.type === 'engineer' || squad.type === 'tank' ? 1.25 : 0.42);
   obstacle.health = Math.max(0, obstacle.health - damage);
-  squad.cooldown = def.interval;
-  squad.fireFlash = 0.14;
-  addEffect(battle, obstacle.health === 0 ? 'explosion' : 'heavy', squad, center, obstacle.health === 0 ? 0.8 : 0.29);
+  markAttack(squad, mode);
+  addEffect(battle, obstacle.health === 0 ? 'explosion' : mode === 'melee' ? 'melee' : 'heavy',
+    squad, target, obstacle.health === 0 ? 0.8 : 0.33);
 }
 
 function autoAbility(battle, squad, nearby) {
@@ -672,9 +777,11 @@ function autonomous(battle, squad, army, dt) {
     autoAbility(battle, squad, close);
   }
   if (close) {
-    attack(battle, squad, close);
+    const mode = availableAttack(battle, squad, close);
+    if (mode) attack(battle, squad, close, mode, dt);
     return;
   }
+  if (squad.aimTargetId != null) clearAim(squad);
   const target = battle.squads.find(unit => unit.id === squad.targetId && active(unit));
   if (!target) return;
   const cautious = army.doctrine === 'cautious' || (army.doctrine === 'balanced' && army.aggression < 32);
@@ -714,29 +821,39 @@ function autonomous(battle, squad, army, dt) {
 }
 
 function manual(battle, squad, order, dt) {
-  if (order.type === 'move') return advance(battle, squad, order, dt);
+  if (order.type === 'move') {
+    return advance(battle, squad, order, dt) && (!Number.isFinite(order.heading) || turnToward(squad, order.heading, dt));
+  }
   if (order.type === 'attack') {
     const target = battle.squads.find(unit => unit.id === order.targetId && active(unit));
     if (target) {
-      if (canShoot(battle, squad, target)) attack(battle, squad, target);
-      else advance(battle, squad, target, dt);
+      const mode = availableAttack(battle, squad, target, order);
+      if (mode) attack(battle, squad, target, mode, dt);
+      else {
+        if (squad.aimTargetId != null) clearAim(squad);
+        advance(battle, squad, target, dt);
+      }
       return false;
     }
     const obstacle = battle.obstacles.find(item => item.id === order.targetId && item.health > 0);
     if (!obstacle) return true;
-    attackStructure(battle, squad, obstacle, dt);
+    attackStructure(battle, squad, obstacle, order, dt);
     return false;
   }
-  const enemy = bestEnemy(battle, squad, true);
+  const fixedFacing = order.type === 'hold' || order.type === 'face';
+  if (fixedFacing && Number.isFinite(order.heading) && !turnToward(squad, order.heading, dt)) return false;
+  const enemy = bestEnemy(battle, squad, true, order, fixedFacing);
   if (enemy) {
-    attack(battle, squad, enemy);
+    const mode = availableAttack(battle, squad, enemy, order, fixedFacing);
+    if (mode) attack(battle, squad, enemy, mode, dt, fixedFacing);
     return false;
   }
-  if (order.type === 'hold') return squad.orders.length > 1;
-  return advance(battle, squad, order, dt);
+  if (fixedFacing) return squad.orders.length > 1;
+  if (squad.aimTargetId != null) clearAim(squad);
+  return advance(battle, squad, order, dt) && (!Number.isFinite(order.heading) || turnToward(squad, order.heading, dt));
 }
 
-function updateSquad(battle, squad, army, dt) {
+function updateSquad(battle, squad, army, dt, overwhelmed) {
   if (!active(squad)) return;
   squad.supplied = army.supplied;
   squad.cooldown = Math.max(0, squad.cooldown - dt);
@@ -748,11 +865,14 @@ function updateSquad(battle, squad, army, dt) {
   squad.repath = Math.max(0, squad.repath - dt);
   squad.aiTime = Math.max(0, squad.aiTime - dt);
 
+  if (overwhelmed && !squad.orders.length && !squad.locked) squad.morale = Math.max(0, squad.morale - dt * 7.4);
   if (!squad.routing && squad.morale <= HOLD_MORALE - army.discipline * 0.085 - army.loyalty * 0.025) {
     squad.routing = true;
     squad.orders = [];
     squad.locked = false;
+    squad.facingLocked = false;
     clearPath(squad);
+    clearAim(squad);
   }
   if (squad.routing) {
     const escape = { x: army.side === 0 ? 14 : WIDTH - 14, y: squad.y };
@@ -765,13 +885,18 @@ function updateSquad(battle, squad, army, dt) {
   if (order) {
     if (manual(battle, squad, order, dt)) {
       squad.orders.shift();
-      if (order.heading !== undefined) squad.heading = order.heading;
       squad.locked = squad.orders.length === 0 && (order.type === 'move' || order.type === 'attackMove');
+      squad.facingLocked = squad.locked && Number.isFinite(order.heading);
       clearPath(squad);
+      clearAim(squad);
     }
   } else if (squad.locked) {
-    const enemy = bestEnemy(battle, squad, true);
-    if (enemy) attack(battle, squad, enemy);
+    const facing = squad.facingLocked === true;
+    const enemy = bestEnemy(battle, squad, true, null, facing);
+    if (enemy) {
+      const mode = availableAttack(battle, squad, enemy, null, facing);
+      if (mode) attack(battle, squad, enemy, mode, dt, facing);
+    }
   } else {
     autonomous(battle, squad, army, dt);
   }
@@ -791,11 +916,11 @@ function spreadSquads(battle, dt) {
       const push = Math.min((spacing - gap) * 0.5, 26 * dt);
       const dx = Math.cos(angle) * push;
       const dy = Math.sin(angle) * push;
-      if (!a.locked && a.orders[0]?.type !== 'hold' && walkable(battle, a.x + dx, a.y + dy)) {
+      if (!stationary(a) && walkable(battle, a.x + dx, a.y + dy)) {
         a.x += dx;
         a.y += dy;
       }
-      if (!b.locked && b.orders[0]?.type !== 'hold' && walkable(battle, b.x - dx, b.y - dy)) {
+      if (!stationary(b) && walkable(battle, b.x - dx, b.y - dy)) {
         b.x -= dx;
         b.y -= dy;
       }
@@ -803,15 +928,34 @@ function spreadSquads(battle, dt) {
   }
 }
 
+function breakingHouses(squads) {
+  const forces = new Map();
+  let total = 0;
+  for (const squad of squads) {
+    let force = forces.get(squad.houseId);
+    if (!force) {
+      force = { deployed: 0, current: 0 };
+      forces.set(squad.houseId, force);
+    }
+    force.deployed += (squad.deployedSoldiers ?? squad.maxSoldiers) * UNIT_TYPES[squad.type].hp;
+    if (!fighting(squad)) continue;
+    force.current += squad.hp;
+    total += squad.hp;
+  }
+  const breaking = [...forces].filter(([, force]) => force.current < force.deployed * 0.25 && total - force.current > force.current * 1.9);
+  return new Set(breaking.map(([houseId]) => houseId));
+}
+
 function battleStep(battle, dt) {
   battle.elapsed += dt;
   for (const effect of battle.effects) effect.life -= dt;
   battle.effects = battle.effects.filter(effect => effect.life > 0);
   const commanders = new Map(battle.armies.map(army => [army.id, army]));
+  const breaking = breakingHouses(battle.squads);
   // Alternating team order gives both sides first action over successive steps.
   const even = Math.round(battle.elapsed * 20) % 2 === 0;
   const squads = even ? battle.squads : [...battle.squads].reverse();
-  for (const squad of squads) updateSquad(battle, squad, commanders.get(squad.armyId), dt);
+  for (const squad of squads) updateSquad(battle, squad, commanders.get(squad.armyId), dt, breaking.has(squad.houseId));
   spreadSquads(battle, dt);
   const stillFighting = new Set(battle.squads.filter(fighting).map(squad => squad.houseId));
   if (stillFighting.size <= 1 || battle.elapsed >= 480) {
