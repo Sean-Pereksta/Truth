@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#10141d">
+    <title>Red Rising · War of the Gold Houses</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script type="module" src="./app.mjs"></script>
+  </head>
+  <body>
+    <header class="top-bar">
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true">◆</span>
+        <div><span class="wordmark">Red Rising</span><span class="brand-subtitle">War of the Gold Houses</span></div>
+      </div>
+      <div id="resources" class="resources" aria-label="House resources"></div>
+      <div class="header-actions">
+        <div id="time-controls" class="time-controls" aria-label="Campaign speed"></div>
+        <button type="button" data-action="menu" title="Campaign menu (Esc)">Menu</button>
+      </div>
+    </header>
+    <main class="game-shell" id="game-shell" hidden>
+      <section class="game-main" aria-label="Command map">
+        <div class="map-navigation">
+          <nav id="layers" aria-label="Command layers"></nav>
+          <div id="map-controls" class="map-controls"></div>
+        </div>
+        <div id="map-frame" class="map-frame">
+          <canvas id="map" width="960" height="540" tabindex="0" aria-label="Interactive campaign map"></canvas>
+          <div id="map-title" class="map-title"></div>
+          <div id="map-info" class="map-info"></div>
+          <canvas id="minimap" width="156" height="88" tabindex="0" aria-label="Tactical minimap. Click to center the camera." hidden></canvas>
+        </div>
+        <div id="orders" class="orders" aria-label="Selected units and command buttons"></div>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </section>
+      <aside class="strategic-rail" aria-label="Campaign information">
+        <nav class="rail-tabs" aria-label="Campaign panels">
+          <button type="button" data-action="tab" data-id="command">Command</button>
+          <button type="button" data-action="tab" data-id="politics">Politics</button>
+          <button type="button" data-action="tab" data-id="colors">Colors</button>
+        </nav>
+        <section id="inspector" class="inspector" aria-label="Selected campaign information"></section>
+        <section class="live-panel" aria-labelledby="live-title">
+          <h2 id="live-title">Live Battles <span id="battle-count"></span></h2>
+          <div id="live-battles"></div>
+        </section>
+        <section class="dispatch-panel" aria-labelledby="dispatch-title">
+          <h2 id="dispatch-title">Dispatches</h2>
+          <ol id="dispatches"></ol>
+        </section>
+      </aside>
+    </main>
+    <dialog id="menu" aria-labelledby="menu-title">
+      <div class="dialog-header">
+        <div><span class="wordmark">Red Rising</span><h1 id="menu-title">War of the Gold Houses</h1></div>
+        <button type="button" data-action="resume" aria-label="Resume campaign">Close</button>
+      </div>
+      <div id="menu-content"></div>
+      <p id="menu-status" class="status" role="status" aria-live="polite"></p>
+    </dialog>
+  </body>
+</html>
