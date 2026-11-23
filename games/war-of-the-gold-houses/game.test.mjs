@@ -2,13 +2,19 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
-  advance, command, createGame, getSaveSlots, getSupplyStatus, loadGame,
-  previewRoute, saveGame,
+  advance, command, createGame, getControlBonusStatus, getGroupControl, getPlanetControl,
+  getSaveSlots, getSupplyStatus, loadGame, previewRoute, saveGame,
 } from "./game.mjs";
-import { COLORS, HOUSES, PLANETS, REGIONS, SHIPS, STARTING_ARMIES } from "./content.mjs";
+import {
+  COLORS, FLEET_ROUTES, HOUSES, PLANET_GROUPS, PLANETS, REGIONS, RESOURCE_KEYS,
+  SHIPS, STARTING_ARMIES, WORLD_ECONOMIES,
+} from "./content.mjs";
 import { UNIT_TYPES, createBattle, createSquad, issueOrder, tickBattle } from "./battle.mjs";
 
 const seed = 314159;
+const legacyWorldIds = ["mercury", "luna", "mars", "io"];
+const planetIds = ["mercury", "venus", "earth", "mars", "jupiter", "saturn", "uranus", "neptune"];
+const moonIds = ["luna", "io", "titan"];
 
 function webpSize(path) {
   const bytes = readFileSync(new URL(`./assets/${path}.webp`, import.meta.url));
@@ -98,6 +104,61 @@ function playerArmies(state) {
   );
 }
 
+function isolatedControl(ownedWorlds = []) {
+  const state = createGame({ mode: "grand", seed });
+  state.armies = {};
+  state.fleets = {};
+  for (const planet of Object.values(state.planets)) {
+    for (const region of Object.values(planet.regions)) {
+      region.owner = ownedWorlds.includes(planet.id) ? state.houseId : null;
+    }
+  }
+  return state;
+}
+
+function squadCounts(state) {
+  const counts = {};
+  for (const army of playerArmies(state).filter((army) => !army.destroyed)) {
+    for (const squad of army.squads) counts[squad.type] = (counts[squad.type] ?? 0) + 1;
+  }
+  return counts;
+}
+
+function expectedRewards(definitions) {
+  const resources = Object.fromEntries(RESOURCE_KEYS.map((key) => [key, 0]));
+  const squads = {};
+  for (const { reward } of definitions) {
+    for (const key of RESOURCE_KEYS) resources[key] += reward.resources?.[key] ?? 0;
+    for (const [type, count] of Object.entries(reward.squads ?? {})) {
+      squads[type] = (squads[type] ?? 0) + count;
+    }
+  }
+  return { resources, squads };
+}
+
+function assertClose(actual, expected, label) {
+  assert.ok(Math.abs(actual - expected) < 1e-7, `${label}: expected ${expected}, received ${actual}`);
+}
+
+function assertFirstCycleRewards(state, definitions) {
+  const expected = expectedRewards(definitions);
+  const { interval } = getControlBonusStatus(state);
+  advance(state, interval - 4);
+  const baseline = { ...state.resources[state.houseId] };
+  advance(state, 2);
+  const before = { ...state.resources[state.houseId] };
+  advance(state, 1.9);
+  assert.deepEqual(state.resources[state.houseId], before);
+  assert.deepEqual(squadCounts(state), {});
+  advance(state, 0.1);
+  const after = state.resources[state.houseId];
+  for (const key of RESOURCE_KEYS) {
+    const regularIncome = before[key] - baseline[key];
+    assertClose(after[key] - before[key] - regularIncome, expected.resources[key], key);
+  }
+  assert.deepEqual(squadCounts(state), expected.squads);
+}
+
 function liveSquads(battle, houseId) {
   return battle.squads.filter(
     (squad) => squad.houseId === houseId && squad.soldiers > 0 && !squad.withdrawn,
@@ -166,6 +227,202 @@ test("campaign, planetary, and skirmish modes initialize distinct playable state
   assert.ok(battle);
   assert.ok(liveSquads(battle, skirmish.houseId).length);
   assert.ok(battle.squads.some((squad) => squad.houseId !== skirmish.houseId && squad.soldiers > 0));
+});
+
+test("all eight planets and three moons offer conquest maps, spaceports, and fleet links", () => {
+  const grand = createGame({ mode: "grand", seed });
+  const worldIds = [...planetIds, ...moonIds];
+  for (const planetId of worldIds) {
+    const world = grand.planets[planetId];
+    assert.ok(world, `${planetId} is missing from Grand Conquest`);
+    assert.ok(PLANETS[planetId].regionIds.length > 1, `${planetId} needs playable territories`);
+    assert.ok(Object.values(world.regions).some((region) => region.buildings.spaceport > 0), planetId);
+    const planetary = createGame({ mode: "planetary", planetId, seed });
+    assert.deepEqual(Object.keys(planetary.planets), [planetId]);
+    assert.ok(playerArmies(planetary).some((army) => army.planetId === planetId), planetId);
+  }
+  const reachable = new Set();
+  const queued = [planetIds[0]];
+  for (const worldId of queued) {
+    if (reachable.has(worldId)) continue;
+    reachable.add(worldId);
+    for (const [from, to] of FLEET_ROUTES) {
+      assert.ok(grand.planets[from] && grand.planets[to], `${from}-${to} has an inoperable endpoint`);
+      if (worldId === from) queued.push(to);
+      else if (worldId === to) queued.push(from);
+    }
+  }
+  assert.ok(worldIds.every((worldId) => reachable.has(worldId)), "Fleet lanes should reach every playable world");
+});
+
+test("a planet's economy multiplies actual income from held territories", () => {
+  const economyProfiles = new Set();
+  for (const planetId of [...planetIds, ...moonIds]) {
+    const state = isolatedControl();
+    const world = WORLD_ECONOMIES[planetId];
+    assert.ok(world?.name && world.description && world.reward, planetId);
+    assert.ok(state.planets[planetId].regions[world.musterRegionId], `${planetId} needs a valid muster region`);
+    const profile = RESOURCE_KEYS.map((key) => world.multipliers[key] ?? 1);
+    assert.ok(profile.every((value) => Number.isFinite(value) && value > 0), planetId);
+    economyProfiles.add(profile.join(","));
+
+    const region = state.planets[planetId].regions[world.musterRegionId];
+    const { colors } = REGIONS[region.id];
+    region.owner = state.houseId;
+    region.buildings.mine = 2;
+    const base = {
+      credits: 1.2 + (colors.includes("silver") ? 2 : 0) + (colors.includes("copper") ? 1 : 0),
+      materials: region.buildings.mine * (colors.includes("red") ? 3 : 1.7),
+      supplies: colors.includes("brown") ? 3.5 : 1,
+      influence: colors.includes("white") ? 1.6 : 0.4,
+    };
+    const houseBonus = HOUSES[state.houseId].bonus.production ?? {};
+    const before = { ...state.resources[state.houseId] };
+    advance(state, 2);
+    for (const key of RESOURCE_KEYS) {
+      const income = base[key] * (world.multipliers[key] ?? 1) * (houseBonus[key] ?? 1);
+      assertClose(state.resources[state.houseId][key] - before[key], income, `${planetId} ${key}`);
+    }
+  }
+  assert.equal(economyProfiles.size, planetIds.length + moonIds.length);
+});
+
+test("world control pays at the campaign cycle and survives reload without double payment", () => {
+  const rim = PLANET_GROUPS.rim;
+  const worldId = rim.worldIds.find((id) => WORLD_ECONOMIES[id].reward.squads?.obsidian > 0);
+  assert.ok(worldId, "A single Rim world should be able to muster Obsidian troops");
+  const state = isolatedControl([worldId]);
+  const economy = WORLD_ECONOMIES[worldId];
+  const planet = getPlanetControl(state, worldId);
+  assert.equal(planet.owner, state.houseId);
+  assert.equal(planet.counts[state.houseId], planet.total);
+  const { interval, cycle, secondsRemaining, worlds, groups } = getControlBonusStatus(state);
+  assert.equal(interval, 30);
+  assert.equal(cycle, 0);
+  assert.equal(secondsRemaining, 30);
+  assert.deepEqual(worlds, [worldId]);
+  assert.deepEqual(groups, []);
+  assertFirstCycleRewards(state, [economy]);
+  assert.ok(playerArmies(state).every((army) => army.regionId === economy.musterRegionId));
+
+  const storage = storageFixture();
+  assert.equal(saveGame(state, storage).ok, true);
+  const restored = loadGame(storage);
+  assert.equal(getControlBonusStatus(restored).cycle, 1);
+  const firstPayout = { ...state.resources[state.houseId] };
+  advance(restored, 0.1);
+  assert.deepEqual(restored.resources[state.houseId], firstPayout);
+  assert.deepEqual(squadCounts(restored), economy.reward.squads);
+  advance(restored, 29.9);
+  advance(state, 30);
+  assert.deepEqual(restored.resources, state.resources);
+  assert.deepEqual(restored.armies, state.armies);
+  assert.deepEqual(squadCounts(restored), expectedRewards([economy, economy]).squads);
+  assert.equal(getControlBonusStatus(restored).cycle, 2);
+});
+
+test("full Core and Rim groups pay alongside their member worlds", () => {
+  const core = PLANET_GROUPS.core;
+  const rim = PLANET_GROUPS.rim;
+  assert.ok(core && rim);
+  assert.deepEqual([...core.worldIds].sort(), ["earth", "luna", "mars", "mercury", "venus"]);
+  assert.deepEqual([...rim.worldIds].sort(), ["io", "jupiter", "neptune", "saturn", "titan", "uranus"]);
+  assert.ok(rim.reward.squads.obsidian > Math.max(...rim.worldIds.map((id) => WORLD_ECONOMIES[id].reward.squads?.obsidian ?? 0)));
+
+  for (const group of [core, rim]) {
+    const state = isolatedControl(group.worldIds);
+    const control = getGroupControl(state, group.id);
+    assert.equal(control.owner, state.houseId);
+    assert.equal(control.counts[state.houseId], group.worldIds.length);
+    assert.ok(group.worldIds.every((id) => control.worlds[id] === state.houseId));
+    const ownedGroups = Object.values(PLANET_GROUPS).filter(
+      (candidate) => candidate.worldIds.every((id) => group.worldIds.includes(id)),
+    );
+    assert.deepEqual(new Set(getControlBonusStatus(state).groups), new Set(ownedGroups.map(({ id }) => id)));
+    assertFirstCycleRewards(state, [...group.worldIds.map((id) => WORLD_ECONOMIES[id]), ...ownedGroups]);
+  }
+});
+
+test("neutral and contested territories block world and group rewards", () => {
+  for (const outsider of [null, "bellona"]) {
+    const rim = PLANET_GROUPS.rim;
+    const disputedWorld = rim.worldIds.find((id) => WORLD_ECONOMIES[id].reward.squads?.obsidian);
+    const state = isolatedControl(rim.worldIds);
+    const world = state.planets[disputedWorld];
+    world.regions[WORLD_ECONOMIES[disputedWorld].musterRegionId].owner = outsider;
+    const control = getPlanetControl(state, disputedWorld);
+    assert.equal(control.owner, null);
+    assert.equal(control.counts[state.houseId], control.total - 1);
+    assert.equal(getGroupControl(state, rim.id).owner, null);
+    const next = getControlBonusStatus(state);
+    assert.ok(!next.worlds.includes(disputedWorld));
+    assert.ok(!next.groups.includes(rim.id));
+    assertFirstCycleRewards(state, [
+      ...next.worlds.map((id) => WORLD_ECONOMIES[id]),
+      ...next.groups.map((id) => PLANET_GROUPS[id]),
+    ]);
+  }
+});
+
+test("a live battle disputes control even before a territory changes owners", () => {
+  const group = PLANET_GROUPS.rim;
+  const state = isolatedControl(group.worldIds);
+  const planetId = "neptune";
+  const regionId = WORLD_ECONOMIES[planetId].musterRegionId;
+  const battle = createBattle({
+    id: "control-dispute", planetId, regionId, terrain: REGIONS[regionId].terrain, seed,
+    armies: [
+      { id: "home", houseId: state.houseId, squads: [createSquad("rifle", "home-squad")] },
+      { id: "invasion", houseId: "bellona", squads: [createSquad("rifle", "invader-squad")] },
+    ],
+  });
+  state.battles[battle.id] = battle;
+  const contested = getPlanetControl(state, planetId);
+  assert.equal(contested.counts[state.houseId], contested.total);
+  assert.equal(contested.owner, null);
+  assert.equal(getGroupControl(state, group.id).owner, null);
+  battle.winner = state.houseId;
+  assert.equal(getPlanetControl(state, planetId).owner, state.houseId);
+  assert.equal(getGroupControl(state, group.id).owner, state.houseId);
+});
+
+test("pre-expansion Grand Conquest saves gain new worlds and preserve active transports", () => {
+  const state = createGame({ mode: "grand", seed });
+  issue(state, {
+    type: "transport", armyId: "augustus-luna", planetId: "mars", regionId: "mars-arsia-port",
+    landing: "spaceport",
+  });
+  advance(state, 0.6);
+  const carrier = Object.values(state.fleets).find((fleet) => fleet.transit && fleet.armyId === "augustus-luna");
+  assert.ok(carrier);
+  const legacy = Object.fromEntries([
+    "version", "houseId", "mode", "difficulty", "seed", "planetId", "elapsed", "tick", "carry", "serial", "speed",
+    "planets", "armies", "fleets", "battles", "alerts", "projects", "resources", "relations", "victory", "aiTurn",
+  ].map((key) => [key, structuredClone(state[key])]));
+  legacy.version = 1;
+  legacy.elapsed = 45.2;
+  legacy.tick = 452;
+  legacy.planets = Object.fromEntries(legacyWorldIds.map((id) => [id, legacy.planets[id]]));
+  legacy.armies = Object.fromEntries(Object.entries(legacy.armies).filter(([, army]) => legacyWorldIds.includes(army.planetId) || army.id === carrier.armyId));
+  legacy.fleets = Object.fromEntries(Object.entries(legacy.fleets).filter(([, fleet]) => legacyWorldIds.includes(fleet.planetId) || fleet.id === carrier.id));
+  legacy.planets.mars.regions["mars-arsia-port"].buildings.mine = 3;
+  for (const region of Object.values(legacy.planets.io.regions)) region.owner = state.houseId;
+
+  const storage = storageFixture();
+  storage.setItem("war-of-the-gold-houses:2", JSON.stringify({ savedAt: 45_200, state: legacy }));
+  const restored = loadGame(storage, 2);
+  assert.ok(restored, "A version 1 campaign should remain visible and loadable");
+  assert.ok(getSaveSlots(storage).some((entry) => entry.slot === 2 && entry.mode === "grand"));
+  assert.ok([...planetIds, ...moonIds].every((id) => restored.planets[id]?.regions));
+  assert.equal(restored.planets.mars.regions["mars-arsia-port"].buildings.mine, 3);
+  assert.deepEqual(restored.fleets[carrier.id], legacy.fleets[carrier.id]);
+  assert.deepEqual(restored.armies[carrier.armyId], legacy.armies[carrier.armyId]);
+  assert.deepEqual(restored.resources, legacy.resources);
+  assert.equal(getControlBonusStatus(restored).cycle, 1);
+  assertClose(getControlBonusStatus(restored).secondsRemaining, 14.8, "migrated cycle clock");
+  advance(restored, 0.1);
+  assert.deepEqual(restored.resources, legacy.resources, "Migration must not replay the first control payout");
+  assert.ok(restored.fleets[carrier.id].transit.elapsed > carrier.transit.elapsed);
 });
 
 test("tactical commands preserve identity and ordering while squads move", () => {
@@ -286,6 +543,40 @@ function launchFixture(state) {
   assert.ok(otherWorld);
   return { army, fleet, destination: otherWorld.regionIds[0], landing: "rain" };
 }
+
+test("a fleet can land a ground force at a Neptune spaceport and the army can continue overland", () => {
+  const state = createGame({ mode: "grand", seed });
+  const army = state.armies["augustus-luna"];
+  const fleet = Object.values(state.fleets).find((entry) =>
+    entry.houseId === state.houseId && entry.regionId === army.regionId && entry.ships.transport > 0,
+  );
+  assert.ok(fleet);
+  state.fleets = { [fleet.id]: fleet };
+  state.armies = { [army.id]: army };
+  for (const world of Object.values(state.planets)) {
+    for (const region of Object.values(world.regions)) {
+      if (region.owner !== state.houseId) region.owner = null;
+    }
+  }
+  const port = Object.values(state.planets.neptune.regions).find((region) => region.buildings.spaceport > 0);
+  port.owner = state.houseId;
+  issue(state, {
+    type: "transport", armyId: army.id, fleetId: fleet.id, planetId: "neptune", regionId: port.id,
+    landing: "spaceport",
+  });
+  assert.ok(fleet.transit && fleet.transit.duration > 0);
+  const eta = fleet.transit.duration;
+  advanceUntil(state, () => army.regionId === port.id, eta + 15);
+  assert.equal(army.planetId, "neptune");
+  assert.equal(army.fleetId, null);
+
+  const destination = REGIONS[port.id].neighbors[0];
+  const route = previewRoute(state, army.id, destination);
+  assert.deepEqual(route.path, [destination]);
+  issue(state, { type: "move", armyId: army.id, regionId: destination });
+  advanceUntil(state, () => army.regionId === destination, route.eta + 2);
+  assert.equal(state.planets.neptune.regions[destination].owner, state.houseId);
+});
 
 test("ships enforce capacity and transports resume their recorded position on reload", () => {
   const state = createGame({ mode: "grand", seed });

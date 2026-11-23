@@ -1,5 +1,5 @@
-import { HOUSES, PLANETS, REGIONS } from './content.mjs';
-import { getSupplyStatus } from './game.mjs';
+import { HOUSES, PLANETS, PLANET_GROUPS, REGIONS } from './content.mjs';
+import { getPlanetControl, getSupplyStatus } from './game.mjs';
 
 export const MAP_WIDTH = 960;
 export const MAP_HEIGHT = 540;
@@ -180,6 +180,24 @@ function brackets(ctx, x, y, rx, ry, color, length = 8) {
 
 export function mapPoint(node) {
   return { x: 40 + (node?.x ?? .5) * 880, y: 40 + (node?.y ?? .5) * 460 };
+}
+
+export function planetAtPoint(state, point, exact = false) {
+  let nearest = null;
+  let minimum = Infinity;
+  for (const planet of Object.values(PLANETS)) {
+    if (!state.planets[planet.id]) continue;
+    const center = mapPoint(planet);
+    const distance = Math.hypot(point.x - center.x, point.y - center.y);
+    const radius = planet.radius ?? 26;
+    const onLabel = !exact && Math.abs(point.y - (center.y + radius + 17)) <= 7 &&
+      Math.abs(point.x - center.x) <= planet.name.length * 4;
+    if ((distance <= radius + (exact ? 0 : 12) || onLabel) && distance < minimum) {
+      nearest = planet;
+      minimum = distance;
+    }
+  }
+  return nearest;
 }
 
 export function battlePoint(battle, node, camera = {}) {
@@ -448,40 +466,109 @@ function drawOrbitalLanding(ctx, fleet, origin, time) {
   }
 }
 
+function drawControlRing(ctx, point, radius, control) {
+  ellipse(ctx, point.x, point.y, radius, radius, '#405161');
+  if (control.owner) {
+    ellipse(ctx, point.x, point.y, radius, radius, house(control.owner).accent, 2);
+    return;
+  }
+  const claims = Object.entries(control.counts);
+  if (!claims.length) return;
+  const circumference = TAU / control.total;
+  let angle = -Math.PI / 2;
+  ctx.lineWidth = 2;
+  for (const [houseId, regions] of claims) {
+    const next = angle + regions * circumference;
+    ctx.strokeStyle = house(houseId).accent;
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, radius, angle + .08, next - .08);
+    ctx.stroke();
+    angle = next;
+  }
+}
+
+function drawSolarGroups(ctx, state, controls, time) {
+  const fronts = [[PLANET_GROUPS.core, 62], [PLANET_GROUPS.rim, 504]];
+  for (const [group, x] of fronts) {
+    if (!group) continue;
+    const owners = group.worldIds.map((id) => controls.get(id)?.owner);
+    const controlled = owners.filter((id) => id === state.houseId).length;
+    const owner = owners.every((id) => id && id === owners[0]) ? owners[0] : null;
+    const y = 102;
+    const width = 148;
+    label(ctx, group.name.toUpperCase(), x, y, { color: '#d6c5a6', align: 'left' });
+    label(ctx, `${controlled}/${owners.length}`, x + width, y, { color: '#c5d7df', align: 'right' });
+    const step = width / owners.length;
+    owners.forEach((id, index) => {
+      const left = x + index * step;
+      paint(ctx, '#152134', left, y + 12, step - 3, 6);
+      paint(ctx, id ? house(id).accent : '#445466', left, y + 12, step - 3, 2);
+    });
+    if (owner) flag(ctx, x + width + 12, y - 6, owner, time);
+  }
+}
+
+function drawMoonLinks(ctx, planets) {
+  ctx.save();
+  ctx.setLineDash([3, 5]);
+  for (const moon of planets) {
+    const parent = PLANETS[moon.parentId];
+    if (!parent) continue;
+    const from = mapPoint(parent);
+    const to = mapPoint(moon);
+    const angle = Math.atan2(to.y - from.y, to.x - from.x);
+    const start = parent.radius + 9;
+    const end = moon.radius + 9;
+    line(ctx, from.x + Math.cos(angle) * start, from.y + Math.sin(angle) * start,
+      to.x - Math.cos(angle) * end, to.y - Math.sin(angle) * end, '#637b8b');
+  }
+  ctx.restore();
+}
+
+function drawSolarLegend(ctx) {
+  ellipse(ctx, 60, 501, 5, 5, '#d6c5a6', 2);
+  label(ctx, 'SECURED WORLD', 72, 501, { color: '#b6c9cc', size: 11, align: 'left' });
+  ctx.save();
+  ctx.setLineDash([3, 3]);
+  ellipse(ctx, 193, 501, 5, 5, '#a3afbc', 2);
+  ctx.restore();
+  label(ctx, 'DIVIDED CONTROL', 205, 501, { color: '#b6c9cc', size: 11, align: 'left' });
+}
+
 export function drawSolar(ctx, state, ui = {}) {
   starField(ctx);
   const time = simTime(state, ui);
   const selectedPlanet = ui.selectedPlanetId ?? ui.planetId;
-  const lut = Object.values(PLANETS);
-  for (const planet of lut) {
+  const planets = Object.values(PLANETS).filter(({ id }) => state.planets[id]);
+  const controls = new Map(planets.map(({ id }) => [id, getPlanetControl(state, id)]));
+  drawMoonLinks(ctx, planets);
+  for (const planet of planets) {
     const point = mapPoint(planet);
     const radius = planet.radius ?? 26;
     const active = Object.values(state.battles).filter((battle) => battle.planetId === planet.id && !battle.winner);
-    const regional = Object.values(state.planets[planet.id]?.regions ?? {});
-    const controlling = new Map();
-    for (const region of regional) {
-      if (region.owner) controlling.set(region.owner, (controlling.get(region.owner) ?? 0) + 1);
-    }
-    const dominant = [...controlling.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
-    ctx.globalAlpha = planet.regionIds?.length ? .88 : .51;
-    ellipse(ctx, point.x, point.y, radius + 7, radius + 7, '#273d52');
+    const control = controls.get(planet.id);
     if (planet.style === 'rings') planetRing(ctx, point, radius, '#998d73', true);
     drawPlanetSprite(ctx, planet, point.x, point.y);
     if (planet.style === 'rings') planetRing(ctx, point, radius, '#bbaa81', false);
-    ctx.globalAlpha = 1;
-    if (dominant) flag(ctx, point.x + radius - 5, point.y - radius - 4, dominant, time);
+    drawControlRing(ctx, point, radius + 5, control);
     if (active.length) {
       const pulse = .5 + Math.sin(time * 5) * .25;
       ctx.globalAlpha = pulse;
       ellipse(ctx, point.x, point.y, radius + 10, radius + 10, '#f28d53', 2);
       ctx.globalAlpha = 1;
-      label(ctx, String(active.length), point.x - radius - 7, point.y - radius + 2, { color: '#ff9e65' });
     }
-    label(ctx, planet.name.toUpperCase(), point.x, point.y + radius + 13,
-      { color: planet.regionIds?.length ? '#eae1c4' : '#9ba8b0', size: 12 });
     if (selectedPlanet === planet.id) brackets(ctx, point.x, point.y, radius + 10, radius + 9, '#f2d88f');
   }
   for (const fleet of Object.values(state.fleets)) drawFleet(ctx, state, fleet, ui, time);
+  for (const planet of planets) {
+    const point = mapPoint(planet);
+    const radius = planet.radius ?? 26;
+    const { owner } = controls.get(planet.id);
+    if (owner) flag(ctx, point.x + radius - 5, point.y - radius - 4, owner, time);
+    label(ctx, planet.name.toUpperCase(), point.x, point.y + radius + 17, { color: '#eae1c4', size: 12 });
+  }
+  drawSolarGroups(ctx, state, controls, time);
+  drawSolarLegend(ctx);
 }
 
 function sectorLayout(planet, regions) {

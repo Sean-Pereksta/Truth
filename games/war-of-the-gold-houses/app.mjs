@@ -1,9 +1,15 @@
-import { createGame, advance, command, saveGame, loadGame, getSaveSlots, previewRoute, getSupplyStatus } from './game.mjs';
-import { HOUSES, PLANETS, REGIONS, BUILDINGS, SHIPS, COLORS, OPERATIONS, DOCTRINES, SKIRMISHES, CAMPAIGN_MODES, RESOURCE_KEYS, RESOURCE_LABELS } from './content.mjs';
+import {
+  createGame, advance, command, saveGame, loadGame, getSaveSlots, previewRoute, getSupplyStatus,
+  getPlanetControl, getGroupControl, getControlBonusStatus,
+} from './game.mjs';
+import {
+  HOUSES, PLANETS, REGIONS, BUILDINGS, SHIPS, COLORS, OPERATIONS, DOCTRINES, SKIRMISHES,
+  CAMPAIGN_MODES, RESOURCE_KEYS, RESOURCE_LABELS, WORLD_ECONOMIES, PLANET_GROUPS,
+} from './content.mjs';
 import { UNIT_TYPES } from './battle.mjs';
 import { fleetCapacity, fleetPower } from './fleets.mjs';
 import {
-  MAP_WIDTH, MAP_HEIGHT, mapPoint, regionAtPoint, armyPoint, fleetPoint, battlePoint, battleWorldPoint,
+  MAP_WIDTH, MAP_HEIGHT, mapPoint, planetAtPoint, regionAtPoint, armyPoint, fleetPoint, battlePoint, battleWorldPoint,
   drawSolar, drawPlanet, drawBattle, drawBattleMinimap,
 } from './art.mjs';
 
@@ -15,7 +21,7 @@ const defaultKeys = { attack: 'a', hold: 'h', stop: 's', formation: 'f', ability
 const keyLabels = { attack: 'Attack-move', hold: 'Hold', stop: 'Stop', formation: 'Formation', ability: 'Ability', pause: 'Pause' };
 const formations = ['line', 'column', 'wedge', 'defensive', 'loose'];
 const actionIcons = {
-  planet: 'planet', battle: 'tactical', fleet: 'fleet', supply: 'supplies',
+  planet: 'planet', 'inspect-world': 'planet', control: 'politics', battle: 'tactical', fleet: 'fleet', supply: 'supplies',
   'attack-mode': 'attack', 'select-all': 'formation', retreat: 'withdraw',
   'fleet-order': 'tactical', intercept: 'attack', blockade: 'hold',
   transport: 'fleet', sail: 'solar', ship: 'fleet', build: 'materials',
@@ -198,6 +204,85 @@ function regionPanel(region) {
     ${projects.length ? `<h3>In progress</h3>${stats(projects.map(project => [BUILDINGS[project.item]?.name ?? SHIPS[project.item]?.name ?? unitName(project.item), formatTime(Math.ceil(project.remaining))]))}` : ''}`;
 }
 
+function rewardMarkup(reward) {
+  const resources = RESOURCE_KEYS.filter(key => reward.resources?.[key] > 0).map(key =>
+    `<span class="control-reward">${icon(key)}<strong>+${reward.resources[key]}</strong> ${esc(RESOURCE_LABELS[key])}</span>`);
+  const recruits = Object.entries(reward.squads ?? {}).filter(([, amount]) => amount > 0).map(([id, amount]) =>
+    `<span class="control-reward control-squad">${illustration('units', id, 'unit-icon')}<strong>+${amount}</strong> ${esc(unitName(id))} ${amount === 1 ? 'squad' : 'squads'}</span>`);
+  return `<div class="control-rewards">${[...resources, ...recruits].join('')}</div>`;
+}
+
+function controlClaims(control, measure) {
+  const claims = Object.entries(control.counts).sort((a, b) => b[1] - a[1]);
+  const open = control.total - claims.reduce((sum, [, count]) => sum + count, 0);
+  const width = count => Math.min(100, count / control.total * 100);
+  const parts = claims.map(([id, count]) =>
+    `<span style="--claim-color:${esc(HOUSES[id]?.color)};width:${width(count)}%"></span>`);
+  if (open > 0) parts.push(`<span class="control-unclaimed" style="width:${width(open)}%"></span>`);
+  return `<div class="control-meter" aria-hidden="true">${parts.join('')}</div>
+    <ul class="control-claims">
+      ${claims.map(([id, count]) => `<li>${houseLabel(id)} <strong>${count}</strong></li>`).join('')}
+      ${open > 0 ? `<li>${esc(measure)} <strong>${open}</strong></li>` : ''}
+    </ul>`;
+}
+
+function worldControlPanel(id) {
+  const economy = WORLD_ECONOMIES[id];
+  const control = getPlanetControl(state, id);
+  if (!economy || !control?.total) return '';
+  const progress = control.counts[state.houseId] ?? 0;
+  const owner = control.owner ? houseLabel(control.owner)
+    : Object.keys(control.counts).length > 1 || activeBattles().some(battle => battle.planetId === id) ? 'Contested'
+      : Object.keys(control.counts).length ? 'Partially held' : 'Unclaimed';
+  const production = RESOURCE_KEYS.filter(key => (economy.multipliers[key] ?? 1) !== 1).map(key => {
+    const percent = Math.round((economy.multipliers[key] - 1) * 100);
+    return `<span class="production-rate${percent < 0 ? ' production-low' : ''}">${icon(key)}${percent > 0 ? '+' : ''}${percent}% ${esc(RESOURCE_LABELS[key])}</span>`;
+  }).join('');
+  const muster = Object.keys(economy.reward.squads ?? {}).length ? REGIONS[economy.musterRegionId] : null;
+  return `<section class="control-card" data-world-control="${esc(id)}">
+    <div class="control-card-heading"><h3>${owner}</h3><span>${progress}/${control.total} yours</span></div>
+    ${controlClaims(control, 'Unclaimed')}
+    <h3>${esc(economy.name)}</h3><p class="hint">${esc(economy.description)}</p>
+    <div class="control-rewards" aria-label="Local production modifiers">${production}</div>
+    <div class="control-card-heading reward-heading"><h3>Control reward per cycle</h3>${control.owner ? '<span class="control-active">Active</span>' : ''}</div>
+    ${rewardMarkup(economy.reward)}
+    ${muster ? `<p class="hint">Reinforcements muster at ${esc(muster.name)}.</p>` : ''}
+  </section>`;
+}
+
+function controlPanel() {
+  const status = getControlBonusStatus(state);
+  const groups = Object.values(PLANET_GROUPS).filter(group => group.worldIds.every(id => state.planets[id]));
+  return `<div class="control-card-heading control-header">
+    <h2>Control ledger</h2><span class="control-countdown" title="Campaign time until control rewards pay">Payout in ${formatTime(Math.ceil(status.secondsRemaining))}</span>
+  </div>
+    <p class="hint">Hold every territory and clear active battles to earn a world reward every ${status.interval} seconds.${groups.length ? ' Holding every world in a group earns its extra reward.' : ''}</p>
+    ${stats([['Worlds controlled', `${status.worlds.length} / ${Object.keys(state.planets).length}`],
+      ...(groups.length ? [['Groups controlled', `${status.groups.length} / ${groups.length}`]] : [])])}
+    ${groups.map(group => {
+      const control = getGroupControl(state, group.id);
+      const owned = control.counts[state.houseId] ?? 0;
+      const musterWorld = group.musterWorldId ?? group.worldIds[0];
+      const muster = Object.keys(group.reward.squads ?? {}).length ? REGIONS[WORLD_ECONOMIES[musterWorld].musterRegionId] : null;
+      return `<section class="control-card" data-control-group="${esc(group.id)}">
+        <div class="control-card-heading"><h3>${esc(group.name)}</h3><span>${owned}/${control.total} worlds yours</span></div>
+        <p class="hint">${esc(group.description)}</p>
+        ${controlClaims(control, 'Open or contested')}
+        ${control.owner ? `<p class="control-active">Reward active for ${houseLabel(control.owner)}</p>` : ''}
+        ${rewardMarkup(group.reward)}
+        ${muster ? `<p class="hint">Reinforcements muster at ${esc(muster.name)} on ${esc(PLANETS[musterWorld].name)}.</p>` : ''}
+        <div class="control-worlds" aria-label="${esc(group.name)} worlds">${group.worldIds.map(id => {
+          const holder = control.worlds[id];
+          const world = PLANETS[id];
+          return button(`<strong>${esc(world.name)}</strong><span>${holder ? houseLabel(holder) : 'No full control'}</span>`, 'inspect-world', id, {
+            className: 'control-world', title: `Inspect ${world.name}'s economy and territories`,
+          });
+        }).join('')}</div>
+      </section>`;
+    }).join('')}
+    ${ui.planetId ? worldControlPanel(ui.planetId) : ''}`;
+}
+
 function solarPanel() {
   const planet = PLANETS[ui.planetId];
   const record = state.planets[ui.planetId];
@@ -210,13 +295,12 @@ function solarPanel() {
   const dropSites = Object.values(state.planets[destination]?.regions ?? {}).filter(region => landingMethod === 'rain' || (region.buildings.spaceport && !atWar(region.owner)));
   const drop = dropSites.find(region => region.id === ui.picks.transportSite)?.id ?? dropSites[0]?.id;
   const availableFleets = Object.values(state.fleets).filter(ship => (ship.transit?.to ?? ship.planetId) === planet?.id);
+  const worldChoices = Object.keys(state.planets).map(id => [id, PLANETS[id].name]);
+  const active = activeBattles().filter(battle => battle.planetId === planet?.id).length;
   return `${planet ? `<div class="subject-heading">${illustration('planets', planet.id, 'subject-art planet-art')}<div><h2>${esc(planet.name)}</h2><p class="hint">${esc(planet.description)}</p></div></div>` : '<h2>Solar System</h2>'}
-    ${record && planet.regionIds.length ? row(button('Open territories', 'planet', planet.id, { className: 'primary' })) : ''}
-    ${record && planet.regionIds.length ? stats([
-      ['Territories', Object.keys(record.regions).length],
-      ['Our territories', Object.values(record.regions).filter(region => region.owner === state.houseId).length],
-      ['Active battles', activeBattles().filter(battle => battle.planetId === planet.id).length],
-    ]) : ''}
+    ${row(select('focusWorld', worldChoices, ui.planetId, 'Inspect world'), record ? button('Open territories', 'planet', planet.id, { className: 'primary', accessibleLabel: `Open ${planet.name} territories` }) : '')}
+    ${active ? stats([['Active battles', active]]) : ''}
+    ${record ? worldControlPanel(planet.id) : ''}
     ${availableFleets.length ? `<h3>Fleets</h3>${availableFleets.map(ship => row(button(`${houseLabel(ship.houseId)} ${esc(ship.name ?? title(ship.id))}`, 'fleet', ship.id, { pressed: ship.id === ui.selectedFleetId }))).join('')}` : ''}
     ${fleet ? fleetPanel(fleet) : ''}
     ${chosenArmy && destinations.length ? details('transport', 'Transport an army', `
@@ -324,8 +408,9 @@ function theaterPanel() {
     ${selected.map(army => row(button(esc(army.name), 'army', army.id))).join('')}${region ? `<hr>${regionPanel(region)}` : ''}`;
   if (region) return regionPanel(region);
   const own = Object.values(state.armies).filter(army => army.houseId === state.houseId && army.planetId === ui.planetId && !army.fleetId && !army.destroyed);
-  return `<h2>${esc(world?.name ?? 'Planetary map')}</h2><p class="hint">Select a territory to inspect it, or choose an army to issue orders.</p>
-    ${own.map(army => row(button(esc(army.name), 'army', army.id))).join('')}`;
+  return `<h2>${esc(world?.name ?? 'Planetary map')}</h2>
+    ${own.map(army => row(button(esc(army.name), 'army', army.id))).join('')}
+    ${world ? worldControlPanel(world.id) : ''}`;
 }
 
 function ordersPanel() {
@@ -385,12 +470,19 @@ function refreshHud() {
   html('layers', `${mode === 'grand' ? button('Solar system', 'layer', 'solar', { pressed: ui.view === 'solar' }) : ''}
     ${mode !== 'skirmish' ? button(esc(PLANETS[ui.planetId]?.name ?? 'Territories'), 'layer', 'planet', { pressed: ui.view === 'planet', disabled: !state.planets[ui.planetId] }) : ''}
     ${ui.battleId ? button('Battlefield', 'layer', 'battle', { pressed: ui.view === 'battle' }) : ''}`);
-  html('map-controls', ui.view === 'planet' ? button('Supply', 'supply', '', { pressed: ui.showSupply, title: 'Toggle supply overlay' })
-    : ui.view === 'battle' ? `${button('−', 'zoom', 'out', { title: 'Zoom out' })}${button('Fit', 'zoom', 'fit', { title: 'Center the battlefield' })}${button('+', 'zoom', 'in', { title: 'Zoom in' })}` : '');
+  const controlToggle = button('Control', 'control', '', { pressed: ui.tab === 'control', title: 'World and group control rewards' });
+  html('map-controls', ui.view === 'planet' ? `${button('Supply', 'supply', '', { pressed: ui.showSupply, title: 'Toggle supply overlay' })}${controlToggle}`
+    : ui.view === 'battle' ? `${button('-', 'zoom', 'out', { title: 'Zoom out' })}${button('Fit', 'zoom', 'fit', { title: 'Center the battlefield' })}${button('+', 'zoom', 'in', { title: 'Zoom in' })}` : controlToggle);
   for (const tab of document.querySelectorAll('.rail-tabs button')) tab.setAttribute('aria-pressed', String(tab.dataset.id === ui.tab));
   const battle = currentBattle();
-  html('inspector', ui.tab === 'politics' && mode !== 'skirmish' ? politicsPanel() : ui.tab === 'colors' && mode !== 'skirmish' ? colorsPanel() :
-    ui.view === 'solar' ? solarPanel() : ui.view === 'battle' && battle ? battlePanel(battle) : theaterPanel());
+  let inspector;
+  if (ui.tab === 'control' && ui.view !== 'battle') inspector = controlPanel();
+  else if (ui.tab === 'politics' && mode !== 'skirmish') inspector = politicsPanel();
+  else if (ui.tab === 'colors' && mode !== 'skirmish') inspector = colorsPanel();
+  else if (ui.view === 'solar') inspector = solarPanel();
+  else if (ui.view === 'battle' && battle) inspector = battlePanel(battle);
+  else inspector = theaterPanel();
+  html('inspector', inspector);
   html('live-battles', livePanel());
   html('dispatches', state.alerts.slice(0, 8).map(event => `<li><time>${formatTime(event.time)}</time>${esc(event.message)}</li>`).join('') || '<li class="muted">No dispatches yet.</li>');
   html('orders', ordersPanel());
@@ -528,6 +620,19 @@ function enterPlanet(id) {
   map.focus({ preventScroll: true });
 }
 
+function focusWorld(id) {
+  if (!state.planets[id]) return;
+  if (ui.planetId !== id) {
+    ui.regionId = null;
+    ui.selectedRegionId = null;
+    ui.selectedArmyIds.clear();
+  }
+  ui.planetId = id;
+  ui.selectedPlanetId = id;
+  ui.selectedFleetId = null;
+  ui.tab = 'command';
+}
+
 function chooseArmy(id, extend = false) {
   const army = state.armies[id];
   if (!army) return;
@@ -586,6 +691,7 @@ function actionForClick(event) {
   if (!state) return;
   switch (action) {
     case 'tab': ui.tab = id; break;
+    case 'control': ui.tab = ui.tab === 'control' ? 'command' : 'control'; break;
     case 'speed': issue({ type: 'speed', speed: Number(id) }); break;
     case 'layer':
       if (id === 'planet') enterPlanet(ui.planetId);
@@ -593,6 +699,12 @@ function actionForClick(event) {
       else setView('solar');
       break;
     case 'planet': enterPlanet(id); break;
+    case 'inspect-world':
+      setView('solar');
+      focusWorld(id);
+      refreshHud();
+      elements.inspector.querySelector('[data-pick="focusWorld"]')?.focus({ preventScroll: true });
+      return;
     case 'battle': enterBattle(id); break;
     case 'army': chooseArmy(id, event.shiftKey); break;
     case 'fleet': chooseFleet(id); break;
@@ -646,6 +758,7 @@ function fieldChanged(event) {
     elements['menu-content'].querySelector(`[data-setup="${setup}"]`)?.focus({ preventScroll: true });
   } else if (key) {
     ui.picks[key] = event.target.value;
+    if (key === 'focusWorld') focusWorld(event.target.value);
     if (key === 'transportPlanet' || key === 'transportLanding' || key === 'transportArmy') ui.picks.transportSite = null;
     if (key === 'politicalHouse') ui.picks.concession = null;
     event.target.blur();
@@ -688,15 +801,15 @@ function isDouble(key) {
 
 function strategicLeft(point, extended) {
   if (ui.view === 'solar') {
-    const fleet = getNearest(Object.values(state.fleets), point, item => fleetPoint(state, item), 19);
-    if (fleet) { chooseFleet(fleet.id); return; }
-    const planet = getNearest(Object.values(PLANETS), point, mapPoint, item => (item.radius ?? 16) + 12);
-    if (planet) {
-      ui.planetId = planet.id;
-      ui.selectedPlanetId = planet.id;
-      ui.selectedFleetId = null;
-      ui.tab = 'command';
-      if (isDouble(`planet-${planet.id}`)) enterPlanet(planet.id);
+    const exact = planetAtPoint(state, point, true);
+    if (!exact) {
+      const fleet = getNearest(Object.values(state.fleets), point, item => fleetPoint(state, item), 19);
+      if (fleet) { chooseFleet(fleet.id); return; }
+    }
+    const world = exact ?? planetAtPoint(state, point);
+    if (world) {
+      focusWorld(world.id);
+      if (isDouble(`planet-${world.id}`)) enterPlanet(world.id);
     }
     return;
   }
