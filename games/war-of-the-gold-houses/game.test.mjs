@@ -1,13 +1,65 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   advance, command, createGame, getSaveSlots, getSupplyStatus, loadGame,
   previewRoute, saveGame,
 } from "./game.mjs";
-import { COLORS, HOUSES, PLANETS, REGIONS, STARTING_ARMIES } from "./content.mjs";
+import { COLORS, HOUSES, PLANETS, REGIONS, SHIPS, STARTING_ARMIES } from "./content.mjs";
 import { UNIT_TYPES, createBattle, createSquad, issueOrder, tickBattle } from "./battle.mjs";
 
 const seed = 314159;
+
+function webpSize(path) {
+  const bytes = readFileSync(new URL(`./assets/${path}.webp`, import.meta.url));
+  assert.ok(bytes.length >= 20, `${path} is too short to be WebP`);
+  assert.equal(bytes.toString("ascii", 0, 4), "RIFF", path);
+  assert.equal(bytes.toString("ascii", 8, 12), "WEBP", path);
+  assert.equal(bytes.readUInt32LE(4) + 8, bytes.length, `${path} is truncated`);
+  for (let offset = 12; offset + 8 <= bytes.length;) {
+    const format = bytes.toString("ascii", offset, offset + 4);
+    const length = bytes.readUInt32LE(offset + 4);
+    const data = offset + 8;
+    assert.ok(data + length <= bytes.length, `${path} has an incomplete ${format} chunk`);
+    if (format === "VP8X" && length >= 10) {
+      return { width: bytes.readUIntLE(data + 4, 3) + 1, height: bytes.readUIntLE(data + 7, 3) + 1 };
+    }
+    if (format === "VP8L" && length >= 5 && bytes[data] === 0x2f) {
+      const size = bytes.readUInt32LE(data + 1);
+      return { width: (size & 0x3fff) + 1, height: ((size >>> 14) & 0x3fff) + 1 };
+    }
+    if (format === "VP8 " && length >= 10 && bytes.readUIntLE(data + 3, 3) === 0x2a019d) {
+      return { width: bytes.readUInt16LE(data + 6) & 0x3fff, height: bytes.readUInt16LE(data + 8) & 0x3fff };
+    }
+    offset = data + length + (length % 2);
+  }
+  assert.fail(`${path} has no recognized WebP image header`);
+}
+
+test("painted units have an idle portrait and six equally sized horizontal sprite frames", () => {
+  for (const type of Object.keys(UNIT_TYPES)) {
+    const idle = webpSize(`units/${type}`);
+    assert.ok(idle.width >= 32 && idle.height >= 32, type);
+    assert.deepEqual(webpSize(`units/${type}-sheet`), { width: idle.width * 6, height: idle.height }, type);
+  }
+});
+
+test("painted solar, terrain, fleet, and interface artwork is present", () => {
+  const terrains = new Set(Object.values(REGIONS).map(({ terrain }) => terrain));
+  const plates = [
+    "space/system",
+    ...Object.keys(PLANETS).map((id) => `planets/${id}`),
+    ...[...terrains].map((id) => `terrain/${id}`),
+    ...Object.keys(SHIPS).map((id) => `ships/${id}`),
+    "ui/command-icons", "ui/console-frame", "ui/panel-texture", "ui/command-cover",
+  ];
+  for (const path of plates) {
+    const { width, height } = webpSize(path);
+    assert.ok(width >= 32 && height >= 32, `${path} is too small to render`);
+  }
+  const iconAtlas = webpSize("ui/command-icons");
+  assert.equal(iconAtlas.width / 5, iconAtlas.height / 4, "Command icon atlas should have square cells");
+});
 
 function storageFixture() {
   const entries = new Map();

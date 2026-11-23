@@ -28,6 +28,10 @@ const sectorLayouts = new Map();
 const sectorBackdrops = new Map();
 const tacticalBackdrops = new Map();
 const soldierSprites = new Map();
+const paintedAssets = new Map();
+const squadMotion = new WeakMap();
+const UNIT_FRAME_COUNT = 6;
+const ATTACK_FRAME = 5;
 let stars;
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -88,6 +92,40 @@ function drawCached(ctx, cache, key, width, height, render, x = 0, y = 0, capaci
   }
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(cache.get(key), x, y);
+}
+
+function paintedAsset(path) {
+  if (typeof Image !== 'function') return null;
+  if (!paintedAssets.has(path)) {
+    const request = { image: null };
+    const image = new Image();
+    image.decoding = 'async';
+    image.onload = () => { request.image = image; };
+    paintedAssets.set(path, request);
+    image.src = new URL(`./assets/${path}.webp`, import.meta.url).href;
+  }
+  return paintedAssets.get(path).image;
+}
+
+function drawPainting(ctx, image, x, y, width, height, source) {
+  const smoothing = ctx.imageSmoothingEnabled;
+  ctx.imageSmoothingEnabled = true;
+  if (source) ctx.drawImage(image, source.x, 0, source.width, source.height, x, y, width, height);
+  else ctx.drawImage(image, x, y, width, height);
+  ctx.imageSmoothingEnabled = smoothing;
+}
+
+function fitPainting(ctx, image, bounds, flip = false, source) {
+  const naturalWidth = source?.width ?? image.naturalWidth;
+  const naturalHeight = source?.height ?? image.naturalHeight;
+  const ratio = Math.min(bounds.width / naturalWidth, bounds.height / naturalHeight);
+  const width = Math.max(1, Math.round(naturalWidth * ratio));
+  const height = Math.max(1, Math.round(naturalHeight * ratio));
+  ctx.save();
+  ctx.translate(Math.round(bounds.x), Math.round(bounds.y));
+  if (flip) ctx.scale(-1, 1);
+  drawPainting(ctx, image, -Math.round(width / 2), -height + Math.round(height * (bounds.foot ?? .2)), width, height, source);
+  ctx.restore();
 }
 
 function label(ctx, value, x, y, { color = '#f1e8c9', size = 12, align = 'center' } = {}) {
@@ -221,6 +259,11 @@ function flag(ctx, x, y, houseId, time, size = 1) {
 }
 
 function starField(ctx) {
+  const painting = paintedAsset('space/system');
+  if (painting) {
+    drawPainting(ctx, painting, 0, 0, MAP_WIDTH, MAP_HEIGHT);
+    return;
+  }
   if (!stars) {
     stars = surface(ctx, MAP_WIDTH, MAP_HEIGHT);
     if (stars) paintStars(stars.getContext('2d'));
@@ -256,6 +299,11 @@ function paintStars(ctx) {
 
 function drawPlanetSprite(ctx, planet, x, y) {
   const radius = planet.radius ?? 26;
+  const painting = paintedAsset(`planets/${planet.id}`);
+  if (painting) {
+    drawPainting(ctx, painting, Math.round(x - radius), Math.round(y - radius), radius * 2, radius * 2);
+    return;
+  }
   const size = radius * 2 + 6;
   const seed = hash(planet.id);
   drawCached(ctx, planetSprites, planet.id, size, size, (canvas) => {
@@ -314,6 +362,14 @@ function fleetIcon(ctx, x, y, heading, houseId, type, time, scale = 1) {
   const exhaust = 2 + Math.floor(wrap(time * 10 + x, 5));
   paint(ctx, '#234759', -length - exhaust, -2, exhaust + 2, 4);
   paint(ctx, '#90cbd0', -length - Math.floor(exhaust / 2), -1, exhaust, 2);
+  const painting = type && paintedAsset(`ships/${type}`);
+  if (painting) {
+    fitPainting(ctx, painting, { x: 0, y: 0, width: length * 2 + 12, height: span * 2 + 11, foot: .5 });
+    paint(ctx, '#202b3d', -3, -1, 7, 3);
+    paint(ctx, faction.color, -2, 0, 5, 1);
+    ctx.restore();
+    return;
+  }
   paint(ctx, '#101723', -length, -span - 1, length + span, span * 2 + 2);
   paint(ctx, '#8c9eaa', -length + 2, -span, length - 1, span * 2);
   paint(ctx, faction.color, -length + 3, -span + 1, length + 3, Math.max(2, span * 2 - 2));
@@ -475,7 +531,7 @@ export function regionAtPoint(planetId, point) {
   return regions[assigned[index]]?.id ?? null;
 }
 
-function paintSectorTerrain(ctx, planet, regions, state, showSupply) {
+function paintSectorTerrain(ctx, planet, regions, state, showSupply, paintings) {
   const { assigned, gridWidth, gridHeight, seed } = sectorLayout(planet, regions);
   const ocean = planet.style === 'ice' || planet.style === 'moon' ? '#172635' : '#282634';
   paint(ctx, ocean, 0, 0, MAP_WIDTH, MAP_HEIGHT);
@@ -491,23 +547,58 @@ function paintSectorTerrain(ctx, planet, regions, state, showSupply) {
         continue;
       }
       const region = regions[regionIndex];
-      const dynamic = state.planets[planet.id]?.regions[region.id];
       const terrain = TERRAIN[region.terrain] ?? TERRAIN.desert;
-      const faction = house(dynamic?.owner);
       const edge = assigned[index - 1] !== regionIndex || assigned[index - gridWidth] !== regionIndex;
       const elevation = noise(col >> 2, row >> 2, seed + regionIndex);
       const tone = elevation > .72 ? terrain.light : elevation > .33 ? terrain.ground : terrain.shade;
       paint(ctx, edge ? terrain.rock : tone, x, y, GROUND_STEP, GROUND_STEP);
-      ctx.globalAlpha = edge ? .53 : .26 + grain * .1;
-      const overlay = showSupply ? (dynamic?.owner === state.houseId ? '#86af82' : '#725d69') : faction.color;
-      paint(ctx, overlay, x, y, GROUND_STEP, GROUND_STEP);
-      ctx.globalAlpha = 1;
       if (grain > .87 && !edge) {
         paint(ctx, terrain.rock, x + 1, y + 1, 5, 3);
         paint(ctx, terrain.detail, x + 2, y + 1, 2, 1);
       }
     }
   }
+  for (const [kind, painting] of Object.entries(paintings)) {
+    if (!painting) continue;
+    ctx.save();
+    ctx.beginPath();
+    for (let row = 0; row < gridHeight; row += 1) {
+      let segment = -1;
+      for (let col = 0; col <= gridWidth; col += 1) {
+        const region = col < gridWidth ? regions[assigned[row * gridWidth + col]] : null;
+        if (region?.terrain === kind) {
+          if (segment < 0) segment = col;
+        } else if (segment >= 0) {
+          ctx.rect(segment * GROUND_STEP, row * GROUND_STEP, (col - segment) * GROUND_STEP, GROUND_STEP);
+          segment = -1;
+        }
+      }
+    }
+    ctx.clip();
+    ctx.globalAlpha = .73;
+    drawPainting(ctx, painting, 0, 0, MAP_WIDTH, MAP_HEIGHT);
+    ctx.restore();
+  }
+  for (let row = 0; row < gridHeight; row += 1) {
+    for (let col = 0; col < gridWidth; col += 1) {
+      const index = row * gridWidth + col;
+      const regionIndex = assigned[index];
+      if (regionIndex < 0) continue;
+      const owner = state.planets[planet.id]?.regions[regions[regionIndex].id]?.owner;
+      const edge = assigned[index - 1] !== regionIndex || assigned[index - gridWidth] !== regionIndex;
+      const faction = house(owner);
+      const overlay = showSupply ? (owner === state.houseId ? '#86af82' : '#725d69') : faction.color;
+      const x = col * GROUND_STEP;
+      const y = row * GROUND_STEP;
+      ctx.globalAlpha = edge ? .57 : .25 + noise(col, row, seed) * .08;
+      paint(ctx, overlay, x, y, GROUND_STEP, GROUND_STEP);
+      if (edge) {
+        ctx.globalAlpha = .58;
+        paint(ctx, '#222630', x, y, GROUND_STEP, 2);
+      }
+    }
+  }
+  ctx.globalAlpha = 1;
   for (const region of regions) {
     const origin = mapPoint(region);
     for (const neighbor of region.neighbors ?? []) {
@@ -582,10 +673,17 @@ function drawArmy(ctx, state, army, ui, time) {
   const bob = army.transit ? Math.floor(wrap(time * 5, 2)) : 0;
   const { x, y } = point;
   ellipse(ctx, x, y + 5, 12, 5, '#27303a', 1, true);
+  const vanguard = army.squads.find((squad) => squad.type !== 'commander')?.type ?? 'commander';
+  const miniature = paintedAsset(`units/${vanguard}`);
+  const left = army.transit && mapPoint(REGIONS[army.transit.to]).x < mapPoint(REGIONS[army.transit.from]).x;
   for (const [dx, dy] of [[-9, 1], [-5, 4], [0, 0], [5, 3]]) {
-    paint(ctx, '#131c29', x + dx, y + dy - 3 - bob, 5, 8);
-    paint(ctx, faction.color, x + dx + 1, y + dy - 1 - bob, 3, 5);
-    paint(ctx, '#b7a99a', x + dx + 1, y + dy - 4 - bob, 3, 3);
+    if (miniature) {
+      fitPainting(ctx, miniature, { x: x + dx + 1, y: y + dy + 3 - bob, width: 14, height: 12 }, left);
+    } else {
+      paint(ctx, '#131c29', x + dx, y + dy - 3 - bob, 5, 8);
+      paint(ctx, faction.color, x + dx + 1, y + dy - 1 - bob, 3, 5);
+      paint(ctx, '#b7a99a', x + dx + 1, y + dy - 4 - bob, 3, 3);
+    }
   }
   flag(ctx, x - 4, y - 16 - bob, army.houseId, time);
   if (selected) {
@@ -611,9 +709,12 @@ export function drawPlanet(ctx, state, ui = {}) {
   const time = simTime(state, ui);
   const selected = ui.selectedRegionId ?? ui.regionId;
   const signatures = regions.map(({ id }) => state.planets[planet.id]?.regions[id]?.owner ?? '');
-  const cacheKey = [planet.id, ui.showSupply ? state.houseId : '', ...signatures].join('|');
+  const biomes = [...new Set(regions.map((region) => region.terrain))];
+  const paintings = Object.fromEntries(biomes.map((kind) => [kind, paintedAsset(`terrain/${kind}`)]));
+  const loaded = biomes.filter((kind) => paintings[kind]);
+  const cacheKey = [planet.id, ui.showSupply ? state.houseId : '', loaded.join(','), ...signatures].join('|');
   drawCached(ctx, sectorBackdrops, cacheKey, MAP_WIDTH, MAP_HEIGHT, (canvas) => {
-    paintSectorTerrain(canvas, planet, regions, state, ui.showSupply);
+    paintSectorTerrain(canvas, planet, regions, state, ui.showSupply, paintings);
   });
   if (ui.routePreview?.path?.length) {
     const army = Object.values(state.armies).find((item) => includes(ui.selectedArmyIds, item.id));
@@ -661,25 +762,32 @@ function drawGroundLanding(ctx, point, time) {
   }
 }
 
-function paintBattleTerrain(ctx, battle, terrain) {
+function paintBattleTerrain(ctx, battle, terrain, painting) {
   const { width, height } = battle;
   const seed = hash(battle.seed ?? battle.terrain);
-  paint(ctx, terrain.ground, 0, 0, width, height);
-  for (let y = 0; y < height; y += 8) {
-    for (let x = 0; x < width; x += 8) {
-      const sx = x >> 3;
-      const sy = y >> 3;
-      const octave = noise(sx >> 3, sy >> 3, seed) * .56 + noise(sx >> 1, sy >> 1, seed) * .27 +
-        noise(sx, sy, seed) * .17;
-      const dune = Math.sin(x / 98 + Math.sin(y / 98) * 3) * .14;
-      if (octave + dune > .64) paint(ctx, terrain.light, x, y, 8, 8);
-      else if (octave + dune < .39) paint(ctx, terrain.shade, x, y, 8, 8);
-      const dither = noise(sx + 60, sy + 18, seed);
-      if (dither > .9) paint(ctx, terrain.rock, x + 2, y + 6, 2, 1);
-      if (dither < .11) paint(ctx, terrain.detail, x + 5, y + 1, 2, 1);
+  if (painting) {
+    drawPainting(ctx, painting, 0, 0, width, height);
+    ctx.globalAlpha = .22;
+    paint(ctx, '#202935', 0, 0, width, height);
+    ctx.globalAlpha = 1;
+  } else {
+    paint(ctx, terrain.ground, 0, 0, width, height);
+    for (let y = 0; y < height; y += 8) {
+      for (let x = 0; x < width; x += 8) {
+        const sx = x >> 3;
+        const sy = y >> 3;
+        const octave = noise(sx >> 3, sy >> 3, seed) * .56 + noise(sx >> 1, sy >> 1, seed) * .27 +
+          noise(sx, sy, seed) * .17;
+        const dune = Math.sin(x / 98 + Math.sin(y / 98) * 3) * .14;
+        if (octave + dune > .64) paint(ctx, terrain.light, x, y, 8, 8);
+        else if (octave + dune < .39) paint(ctx, terrain.shade, x, y, 8, 8);
+        const dither = noise(sx + 60, sy + 18, seed);
+        if (dither > .9) paint(ctx, terrain.rock, x + 2, y + 6, 2, 1);
+        if (dither < .11) paint(ctx, terrain.detail, x + 5, y + 1, 2, 1);
+      }
     }
   }
-  if (['urban', 'industrial', 'spaceport', 'fortress'].includes(battle.terrain)) {
+  if (!painting && ['urban', 'industrial', 'spaceport', 'fortress'].includes(battle.terrain)) {
     const strip = Math.floor(height * .43);
     ctx.globalAlpha = .28;
     paint(ctx, terrain.rock, 0, strip, width, 74);
@@ -749,6 +857,33 @@ const UNITS = {
   tank: { body: '#7e7867', light: '#aab1a3', dark: '#3a414f', kit: 'tank' },
 };
 
+function unitPainting(type, frame) {
+  const sheet = paintedAsset(`units/${type}-sheet`);
+  if (sheet?.naturalWidth >= UNIT_FRAME_COUNT && sheet.naturalWidth % UNIT_FRAME_COUNT === 0) {
+    const width = sheet.naturalWidth / UNIT_FRAME_COUNT;
+    return { image: sheet, source: { x: frame * width, width, height: sheet.naturalHeight } };
+  }
+  const image = paintedAsset(`units/${type}`);
+  return image ? { image } : null;
+}
+
+function movementFrame(squad, time) {
+  const previous = squadMotion.get(squad);
+  if (!previous || time - previous.seen > .35 || time < previous.seen) {
+    squadMotion.set(squad, { x: squad.x, y: squad.y, phase: 0, seen: time, moved: -Infinity });
+    return 0;
+  }
+  const distance = Math.hypot(squad.x - previous.x, squad.y - previous.y);
+  previous.x = squad.x;
+  previous.y = squad.y;
+  previous.seen = time;
+  if (distance > .12) {
+    previous.phase = wrap(previous.phase + distance / 5, 4);
+    previous.moved = time;
+  }
+  return time - previous.moved < .15 ? 1 + Math.floor(previous.phase) : 0;
+}
+
 function getFormation(squad, count, index) {
   const cols = squad.formation === 'column' ? Math.min(count, 3) : Math.min(count, 7);
   const rows = Math.ceil(count / cols);
@@ -810,21 +945,35 @@ function soldier(ctx, x, y, angle, type, faction, gait, firing) {
   }
 }
 
-function drawSoldier(ctx, squad, faction, x, y, angle, gait, firing) {
+function drawSoldier(ctx, squad, faction, x, y, angle, gait, firing, painting) {
   const facing = Math.cos(angle) >= 0 ? 1 : -1;
   const forward = Math.sin(angle) >= 0 ? 1 : -1;
+  if (painting) {
+    const larger = ['obsidian', 'razor', 'raider'].includes(squad.type);
+    ellipse(ctx, x, y + 3, larger ? 5 : 4, 2, '#252933', 1, true);
+    fitPainting(ctx, painting.image, { x, y: y + 3, width: larger ? 19 : 15, height: larger ? 15 : 13 }, facing < 0, painting.source);
+    paint(ctx, faction.color, x - 2, y + 4, 4, 1);
+    return;
+  }
   const key = `${squad.type}|${squad.houseId}|${facing}|${forward}|${gait}|${firing}`;
   drawCached(ctx, soldierSprites, key, 30, 22, (canvas) => {
     soldier(canvas, 15, 11, angle, squad.type, faction, gait, firing);
   }, Math.round(x) - 15, Math.round(y) - 11, 400);
 }
 
-function vehicle(ctx, x, y, squad, faction) {
+function vehicle(ctx, x, y, squad, faction, painting) {
   const transport = squad.type === 'transport';
   const length = transport ? 14 : 13;
   ctx.save();
   ctx.translate(Math.round(x), Math.round(y));
   ctx.rotate(squad.heading ?? 0);
+  if (painting) {
+    ellipse(ctx, 0, 2, 15, 8, '#292e39', 1, true);
+    fitPainting(ctx, painting.image, { x: 0, y: 0, width: 35, height: 23, foot: .5 }, false, painting.source);
+    paint(ctx, faction.color, -11, 5, 7, 2);
+    ctx.restore();
+    return;
+  }
   paint(ctx, '#333842', -length, -7, length * 2 + 2, 16);
   paint(ctx, '#263549', -length, -7, length * 2, 4);
   paint(ctx, '#263549', -length, 4, length * 2, 4);
@@ -846,10 +995,16 @@ function vehicle(ctx, x, y, squad, faction) {
   ctx.restore();
 }
 
-function commander(ctx, squad, faction, gait) {
+function commander(ctx, squad, faction, gait, painting) {
   const x = squad.x;
   const y = squad.y;
   const facing = Math.cos(squad.heading ?? 0) >= 0 ? 1 : -1;
+  if (painting) {
+    ellipse(ctx, x, y + 4, 10, 4, '#2b2c39', 1, true);
+    fitPainting(ctx, painting.image, { x, y: y + 5, width: 31, height: 29, foot: .15 }, facing < 0, painting.source);
+    paint(ctx, faction.color, x - 3, y + 6, 6, 2);
+    return;
+  }
   paint(ctx, '#34303c', x - 7, y + 5, 14, 3);
   paint(ctx, '#272d3c', x - 6, y - 4, 12, 11);
   paint(ctx, faction.color, x - 5, y - 4, 10, 10);
@@ -865,13 +1020,14 @@ function commander(ctx, squad, faction, gait) {
 
 function drawSquad(ctx, squad, selected, time) {
   const faction = house(squad.houseId);
-  const mode = squad.orders?.[0]?.type;
-  const gait = ['move', 'attackMove', 'attack', 'retreat'].includes(mode) || squad.routing ?
-    Math.floor(wrap(time * 8 + squad.y * .09, 3)) - 1 : 0;
+  const frame = movementFrame(squad, time);
+  const firing = squad.fireFlash > 0;
+  const painting = unitPainting(squad.type, firing ? ATTACK_FRAME : frame);
+  const gait = [0, -1, 0, 1, 0][frame];
   const radius = clamp(12 + Math.sqrt(squad.soldiers) * 3, 16, 32);
   if (selected) ellipse(ctx, squad.x, squad.y + 3, radius, radius * .65, '#ffed9c', 2);
-  if (['transport', 'tank'].includes(squad.type)) vehicle(ctx, squad.x, squad.y, squad, faction);
-  else if (squad.type === 'commander') commander(ctx, squad, faction, gait);
+  if (['transport', 'tank'].includes(squad.type)) vehicle(ctx, squad.x, squad.y, squad, faction, painting);
+  else if (squad.type === 'commander') commander(ctx, squad, faction, gait, painting);
   else {
     const angle = squad.heading ?? 0;
     const cos = Math.cos(angle);
@@ -881,7 +1037,7 @@ function drawSquad(ctx, squad, selected, time) {
       const x = squad.x + ahead * cos - across * sin;
       const y = squad.y + ahead * sin + across * cos;
       drawSoldier(ctx, squad, faction, x, y, angle, (index % 2 ? -1 : 1) * gait,
-        squad.fireFlash > 0 && (index + Math.floor(time * 15)) % 4 === 0);
+        firing && (index + Math.floor(time * 15)) % 4 === 0, painting);
     }
   }
   if (selected || squad.routing || squad.hp < squad.maxHp * .6) {
@@ -950,15 +1106,16 @@ function tacticalRoute(ctx, squad, battle) {
 export function drawBattle(ctx, battle, ui = {}) {
   const time = simTime(battle, ui);
   const terrain = TERRAIN[battle.terrain] ?? TERRAIN.desert;
+  const painting = paintedAsset(`terrain/${battle.terrain ?? 'desert'}`);
   const origin = battlePoint(battle, { x: 0, y: 0 }, ui.camera);
   const extent = battlePoint(battle, { x: battle.width, y: battle.height }, ui.camera);
   paint(ctx, '#1d2736', 0, 0, MAP_WIDTH, MAP_HEIGHT);
   ctx.save();
   ctx.translate(origin.x, origin.y);
   ctx.scale((extent.x - origin.x) / battle.width, (extent.y - origin.y) / battle.height);
-  const key = [battle.terrain, battle.width, battle.height, battle.seed, JSON.stringify(battle.zones)].join('|');
+  const key = [battle.terrain, battle.width, battle.height, battle.seed, Boolean(painting), JSON.stringify(battle.zones)].join('|');
   drawCached(ctx, tacticalBackdrops, key, battle.width, battle.height, (canvas) => {
-    paintBattleTerrain(canvas, battle, terrain);
+    paintBattleTerrain(canvas, battle, terrain, painting);
   });
   for (const item of battle.obstacles ?? []) obstacle(ctx, item, terrain);
   for (const squad of battle.squads) {
@@ -995,6 +1152,12 @@ export function drawBattleMinimap(ctx, battle, ui = {}) {
   const sx = width / battle.width;
   const sy = height / battle.height;
   paint(ctx, terrain.shade, 0, 0, width, height);
+  const painting = paintedAsset(`terrain/${battle.terrain ?? 'desert'}`);
+  if (painting) {
+    ctx.globalAlpha = .52;
+    drawPainting(ctx, painting, 0, 0, width, height);
+    ctx.globalAlpha = 1;
+  }
   for (const block of battle.obstacles ?? []) {
     if (block.maxHealth > 0 && block.health <= 0) continue;
     paint(ctx, terrain.rock, block.x * sx, block.y * sy, block.w * sx, block.h * sy);

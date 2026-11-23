@@ -11,13 +11,13 @@
   <body>
     <header class="top-bar">
       <div class="brand">
-        <span class="brand-icon" aria-hidden="true">◆</span>
+        <span class="ui-icon brand-icon" data-icon="command" aria-hidden="true"></span>
         <div><span class="wordmark">Red Rising</span><span class="brand-subtitle">War of the Gold Houses</span></div>
       </div>
       <div id="resources" class="resources" aria-label="House resources"></div>
       <div class="header-actions">
         <div id="time-controls" class="time-controls" aria-label="Campaign speed"></div>
-        <button type="button" data-action="menu" title="Campaign menu (Esc)">Menu</button>
+        <button type="button" data-action="menu" title="Campaign menu (Esc)"><span class="ui-icon" data-icon="settings" aria-hidden="true"></span>Menu</button>
       </div>
     </header>
     <main class="game-shell" id="game-shell" hidden>
@@ -37,24 +37,24 @@
       </section>
       <aside class="strategic-rail" aria-label="Campaign information">
         <nav class="rail-tabs" aria-label="Campaign panels">
-          <button type="button" data-action="tab" data-id="command">Command</button>
-          <button type="button" data-action="tab" data-id="politics">Politics</button>
-          <button type="button" data-action="tab" data-id="colors">Colors</button>
+          <button type="button" data-action="tab" data-id="command"><span class="ui-icon" data-icon="command" aria-hidden="true"></span>Command</button>
+          <button type="button" data-action="tab" data-id="politics"><span class="ui-icon" data-icon="politics" aria-hidden="true"></span>Politics</button>
+          <button type="button" data-action="tab" data-id="colors"><span class="ui-icon" data-icon="colors" aria-hidden="true"></span>Colors</button>
         </nav>
         <section id="inspector" class="inspector" aria-label="Selected campaign information"></section>
         <section class="live-panel" aria-labelledby="live-title">
-          <h2 id="live-title">Live Battles <span id="battle-count"></span></h2>
+          <h2 id="live-title"><span class="ui-icon" data-icon="tactical" aria-hidden="true"></span>Live Battles <span id="battle-count"></span></h2>
           <div id="live-battles"></div>
         </section>
         <section class="dispatch-panel" aria-labelledby="dispatch-title">
-          <h2 id="dispatch-title">Dispatches</h2>
+          <h2 id="dispatch-title"><span class="ui-icon" data-icon="command" aria-hidden="true"></span>Dispatches</h2>
           <ol id="dispatches"></ol>
         </section>
       </aside>
     </main>
     <dialog id="menu" aria-labelledby="menu-title">
       <div class="dialog-header">
-        <div><span class="wordmark">Red Rising</span><h1 id="menu-title">War of the Gold Houses</h1></div>
+        <div class="brand"><span class="ui-icon brand-icon" data-icon="command" aria-hidden="true"></span><div><span class="wordmark">Red Rising</span><h1 id="menu-title">War of the Gold Houses</h1></div></div>
         <button type="button" data-action="resume" aria-label="Resume campaign">Close</button>
       </div>
       <div id="menu-content"></div>

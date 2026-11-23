@@ -9,6 +9,12 @@
   --gold: #f1c873;
   --danger: #ef9f8e;
   --green: #9cd5ba;
+  --panel-paint: url('./assets/ui/panel-texture.webp');
+  --console-paint: url('./assets/ui/console-frame.webp');
+  --command-cover: url('./assets/ui/command-cover.webp');
+  --command-icons: url('./assets/ui/command-icons.webp');
+  --trim: #93744d;
+  --panel-fill: linear-gradient(112deg, #101927eb, #1c2230d9 62%, #101623ec);
   font-family: "Cascadia Mono", Consolas, "Courier New", monospace;
   background: var(--ink);
   color: var(--text);
@@ -20,26 +26,51 @@ body { margin: 0; min-width: 300px }
 button, select { font: inherit }
 button, select {
   color: var(--text);
-  background: var(--surface);
-  border: 1px solid #434a59;
-  border-bottom-width: 2px;
-  border-radius: 2px;
+  background: linear-gradient(165deg, #283345d9, #1d2634ed 67%, #171e2aeb), var(--panel-paint) center / 240px auto, var(--surface);
+  border: 1px solid #5d574c;
+  border-top-color: #827059;
+  border-bottom: 2px solid #302921;
+  border-radius: 0;
+  box-shadow: inset 1px 1px #94806439, inset -1px -1px #090e18a0, 1px 1px #080a11;
   min-height: 2.15rem;
 }
 button { cursor: pointer; padding: .35rem .54rem; text-align: center }
 select { padding: .38rem .45rem; min-width: 0; max-width: 100% }
-button:hover, select:hover { border-color: #aa905c; background: #343744 }
+button:hover, select:hover { border-color: #aa905c; background-color: #575042; box-shadow: inset 0 0 8px #dec57d27, 1px 1px #080a11 }
 button:focus-visible, select:focus-visible, canvas:focus-visible, summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px }
 button[aria-pressed="true"], button[aria-current="true"], .primary {
   color: #171718;
   border-color: #f7dd9d;
   border-bottom-color: #ac8242;
-  background: var(--gold);
+  background: linear-gradient(160deg, #ffe0a0dc 6%, #d0a659e8 58%, #c38442ed), var(--panel-paint) center / 240px auto, var(--gold);
+  box-shadow: inset 1px 1px #fff0b9, inset -1px -1px #a1703a, 1px 1px #080a11;
   font-weight: 700;
 }
 button:disabled { opacity: .48; cursor: default }
-button:disabled:hover { border-color: #434a59; background: var(--surface) }
+button:disabled:hover { border-color: #5d574c; box-shadow: inset 1px 1px #94806439, inset -1px -1px #090e18a0 }
 h1, h2, h3, p { margin: 0 }
+
+.ui-icon {
+  --icon-size: 1.16rem;
+  display: inline-block;
+  width: var(--icon-size);
+  height: var(--icon-size);
+  margin-right: .32rem;
+  vertical-align: -.27em;
+  background: var(--command-icons) var(--icon-x, 0%) var(--icon-y, 0%) / 500% 400% no-repeat;
+  image-rendering: pixelated;
+}
+:is([data-icon="materials"], [data-icon="politics"], [data-icon="attack"], [data-icon="fleet"]) { --icon-x: 25% }
+:is([data-icon="supplies"], [data-icon="colors"], [data-icon="hold"], [data-icon="settings"]) { --icon-x: 50% }
+:is([data-icon="influence"], [data-icon="solar"], [data-icon="stop"], [data-icon="withdraw"]) { --icon-x: 75% }
+:is([data-icon="pause"], [data-icon="planet"], [data-icon="ability"], [data-icon="rally"]) { --icon-x: 100% }
+:is([data-icon="command"], [data-icon="politics"], [data-icon="colors"], [data-icon="solar"], [data-icon="planet"]) { --icon-y: 33.333333% }
+:is([data-icon="tactical"], [data-icon="attack"], [data-icon="hold"], [data-icon="stop"], [data-icon="ability"]) { --icon-y: 66.666667% }
+:is([data-icon="formation"], [data-icon="fleet"], [data-icon="settings"], [data-icon="withdraw"], [data-icon="rally"]) { --icon-y: 100% }
+
+body {
+  background: linear-gradient(145deg, #0e1420de, #121926f5 55%, #10151ff0), var(--panel-paint) top center / 420px auto, #10141d;
+}
 
 .top-bar {
   min-height: 4.25rem;
@@ -48,35 +79,38 @@ h1, h2, h3, p { margin: 0 }
   gap: 1rem;
   align-items: center;
   padding: .65rem clamp(.65rem, 2vw, 1.65rem);
-  border-bottom: 3px solid #3c3440;
-  background: #1b1f29;
+  border-bottom: 2px solid #7a6447;
+  background: linear-gradient(90deg, #161c2bef, #1d2939cb 43%, #151a27ef), var(--console-paint) center / cover, #1b1f29;
+  box-shadow: inset 0 -3px #6f58413b, 0 3px #090e18;
 }
 .brand { display: flex; align-items: center; gap: .68rem }
-.brand-icon { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; color: #1d1d25; background: var(--gold); font-size: 1.3rem; clip-path: polygon(0 0, 76% 0, 100% 25%, 100% 100%, 25% 100%, 0 75%) }
+.brand-icon { --icon-size: 2.85rem; margin: 0; flex: 0 0 auto; filter: drop-shadow(2px 2px #080c13) }
 .wordmark { display: block; color: var(--gold); text-transform: uppercase; font-size: .95rem; font-weight: 800; letter-spacing: .17em }
 .brand-subtitle { display: block; margin-top: .15rem; font-size: .69rem; color: var(--dim) }
 .resources, .header-actions, .time-controls { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center }
-.resources { justify-content: center; gap: .5rem clamp(.5rem, 1.4vw, 1.35rem) }
-.resource { font-size: .76rem; color: var(--dim); white-space: nowrap }
-.resource strong { color: var(--text); margin-left: .22rem }
-.resource-mark { color: var(--gold); margin-right: .18rem }
+.resources { justify-content: center; gap: .35rem clamp(.32rem, 1.3vw, 1rem) }
+.resource { display: grid; align-items: center; grid-template-columns: auto auto; gap: 0 .34rem; color: var(--dim); font-size: .68rem; white-space: nowrap; text-align: left }
+.resource strong { grid-column: 2; color: var(--text); font-size: .88rem; font-variant-numeric: tabular-nums }
+.resource .resource-mark { --icon-size: 1.85rem; grid-row: 1 / 3; margin: 0; filter: drop-shadow(1px 2px #080c13) }
 .header-actions { justify-content: flex-end }
 .clock { color: var(--dim); font-size: .74rem; margin-right: .2rem; white-space: nowrap }
 .time-controls button { min-width: 2rem; font-size: .75rem }
+.time-controls .ui-icon { --icon-size: 1.12rem; margin: 0 }
 
 .game-shell { display: grid; grid-template-columns: minmax(0, 1fr) clamp(16rem, 25vw, 23rem); gap: .85rem; width: min(100%, 1600px); margin: 0 auto; padding: .85rem clamp(.6rem, 2vw, 1.65rem) 1.4rem }
 .game-main, .strategic-rail { min-width: 0 }
 .map-navigation { display: flex; justify-content: space-between; gap: .5rem; margin-bottom: .45rem }
 .map-navigation nav, .map-controls, .rail-tabs { display: flex; flex-wrap: wrap; gap: .28rem }
 .map-navigation button, .rail-tabs button { font-size: .76rem }
-.map-frame { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border: 2px solid #4a4650; background: #0c111b; box-shadow: 0 .18rem 0 #080c13 }
+.map-frame { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border: 3px double var(--trim); background: #0c111b; box-shadow: 0 .18rem 0 #080c13, 0 0 0 1px #3a332b }
+.map-frame::after { content: ''; position: absolute; z-index: 1; inset: 0; pointer-events: none; border: 1px solid #bf9b6a55; border-image: var(--console-paint) 13% 14% / 10px stretch; box-shadow: inset 0 0 8px #090c17af }
 #map { display: block; width: 100%; height: 100%; image-rendering: pixelated; touch-action: none; cursor: crosshair; outline-offset: -4px }
 .map-title, .map-info { pointer-events: none; position: absolute; z-index: 1; padding: .35rem .5rem; font-size: clamp(.55rem, 1vw, .8rem); background: #10141eea; border: 1px solid #5b514b; color: var(--text); box-shadow: 2px 2px #0a0b12b0 }
 .map-title:empty, .map-info:empty { display: none }
 .map-title { top: .5rem; left: .52rem }
 .map-info { top: .5rem; right: .52rem; max-width: 43%; text-align: right }
 #minimap { position: absolute; right: .52rem; bottom: .52rem; width: min(24%, 156px); height: auto; border: 2px solid #726046; background: #10141e; image-rendering: pixelated; cursor: crosshair }
-.orders { padding: .59rem .7rem .65rem; min-height: 5.1rem; margin-top: .5rem; border: 1px solid var(--edge); background: var(--panel) }
+.orders { padding: .59rem .7rem .65rem; min-height: 5.1rem; margin-top: .5rem }
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: .29rem; margin-top: .45rem }
 .toolbar button { font-size: .75rem }
 .toolbar-title { color: var(--text); font-size: .86rem; font-weight: 700 }
@@ -89,7 +123,11 @@ kbd { display: inline-block; color: var(--gold); border: 1px solid #685b47; back
 .strategic-rail { display: flex; flex-direction: column; gap: .45rem }
 .rail-tabs { flex-wrap: nowrap }
 .rail-tabs button { flex: 1 1 0 }
-.inspector, .live-panel, .dispatch-panel { border: 1px solid var(--edge); background: var(--panel) }
+.orders, .inspector, .live-panel, .dispatch-panel {
+  border: 1px solid #82704f;
+  box-shadow: inset 0 0 0 2px #111624ed, inset 0 0 0 3px #aa88563b, 0 2px #090e18;
+  background: var(--panel-fill), var(--console-paint) center / cover, var(--panel);
+}
 .inspector { padding: .65rem; overflow: auto; max-height: clamp(20rem, 45vh, 45rem) }
 .inspector h2, .live-panel h2, .dispatch-panel h2 { color: var(--gold); font-size: .88rem; letter-spacing: .055em }
 .inspector h3 { color: var(--text); font-size: .79rem; margin: .57rem 0 .4rem }
@@ -105,26 +143,44 @@ kbd { display: inline-block; color: var(--gold); border: 1px solid #685b47; back
 .stats dt { color: var(--dim) }
 .stats dd { margin: 0; text-align: right; overflow-wrap: anywhere }
 .roster { display: flex; flex-wrap: wrap; gap: .25rem; margin: .34rem 0 .5rem }
-.roster button[aria-pressed="true"] { background: #ad8d53 }
+.roster button { max-width: 100%; text-align: left }
+.roster button[aria-pressed="true"] { background-color: #ad8d53 }
+.painted-art { image-rendering: pixelated; object-fit: contain; object-position: center }
+.unit-icon { width: 1.6rem; height: 1.6rem; margin-right: .27rem; vertical-align: middle }
+.squad-strip { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .45rem }
+.squad-card { position: relative; width: 2.8rem; height: 2.55rem; padding: .05rem; text-align: center }
+.squad-card .unit-icon { width: 2.15rem; height: 2.15rem; margin: 0 }
+.squad-card > span { position: absolute; right: .08rem; bottom: .1rem; min-width: 1rem; padding: .06rem .1rem; color: #f9edd2; background: #111927e8; border: 1px solid #79674f; line-height: 1; font-size: .62rem }
+.subject-heading, .squad-heading { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: .6rem }
+.subject-heading { min-height: 3.65rem; margin-bottom: .5rem }
+.subject-art, .squad-art { width: 3.65rem; height: 3.65rem; border: 1px solid #94774e; padding: .16rem; background: radial-gradient(ellipse at center, #354658, #101a2a 78%); box-shadow: inset 0 0 0 2px #171519, inset 0 0 0 3px #b997614a, 2px 2px #0a0e17 }
+.subject-art.terrain-art { object-fit: cover; padding: 0 }
+.subject-heading p, .squad-heading p { margin-top: .23rem }
+.squad-heading { margin-top: .6rem; border-top: 1px solid var(--edge); padding-top: .55rem }
+.squad-heading h3 { margin: 0 }
+.squad-art { width: 2.75rem; height: 2.75rem }
 .house-dot { display: inline-block; width: .58rem; height: .58rem; margin-right: .32rem; vertical-align: baseline; background: var(--house-color, var(--gold)); box-shadow: inset -2px -2px #0005 }
 .panel-details { margin: .52rem 0 0; border-top: 1px solid var(--edge); padding: .55rem 0 .12rem }
 .panel-details summary { cursor: pointer; color: var(--gold); font-size: .77rem }
-.live-panel h2, .dispatch-panel h2 { padding: .59rem .67rem; border-bottom: 1px solid var(--edge) }
+.live-panel h2, .dispatch-panel h2 { padding: .47rem .67rem; border-bottom: 1px solid #665741; background: linear-gradient(95deg, #4f433428, #17203160) }
 .live-panel h2 span { color: var(--dim) }
 #live-battles { padding: .45rem .62rem; max-height: 13.75rem; overflow: auto }
-.battle-card { display: block; width: 100%; text-align: left; margin-bottom: .3rem }
+.battle-card { display: block; position: relative; width: 100%; text-align: left; margin-bottom: .3rem; padding-left: 2.45rem }
 .battle-card:last-child { margin-bottom: 0 }
 .battle-card strong { display: block; padding-bottom: .1rem; font-size: .78rem }
-.battle-card span { display: block; color: var(--dim); font-size: .67rem; line-height: 1.4 }
+.battle-card > .ui-icon { --icon-size: 1.5rem; position: absolute; left: .5rem; top: 50%; transform: translateY(-50%) }
+.battle-card > span:not(.ui-icon) { display: block; color: var(--dim); font-size: .67rem; line-height: 1.4 }
+.battle-card[aria-pressed="true"] > span:not(.ui-icon) { color: #32251b }
 .dispatch-panel ol { list-style: none; padding: .16rem .6rem; margin: 0; max-height: 9rem; overflow: auto }
 .dispatch-panel li { border-top: 1px solid var(--edge); padding: .35rem 0; line-height: 1.35; font-size: .71rem }
 .dispatch-panel li:first-child { border-top: 0 }
 .dispatch-panel time { color: var(--gold); margin-right: .37rem }
 
-dialog { width: min(47rem, calc(100% - 1.2rem)); max-height: calc(100% - 1.3rem); padding: 1rem; border: 2px solid #9c845f; background: #1b202b; box-shadow: .35rem .4rem 0 #0b0c13, 0 1rem 4rem #0b0d16c0 }
+dialog { width: min(47rem, calc(100% - 1.2rem)); max-height: calc(100% - 1.3rem); padding: 1rem; border: 4px double #aa8d63; background: linear-gradient(115deg, #111b2aee, #202836db 56%, #111a2aef), var(--console-paint) center / cover, #1b202b; box-shadow: inset 0 0 0 3px #0e1019, inset 0 0 0 4px #b4915e66, .35rem .4rem 0 #0b0c13, 0 1rem 4rem #0b0d16c0 }
 dialog::backdrop { background: #080c16df }
-.dialog-header { display: flex; align-items: center; justify-content: space-between; gap: .6rem; padding-bottom: .85rem; border-bottom: 1px solid var(--edge) }
-.dialog-header h1 { font-size: clamp(1.17rem, 4vw, 1.74rem); line-height: 1.17; margin-top: .23rem }
+.dialog-header { display: flex; align-items: center; justify-content: space-between; gap: .6rem; min-height: 7.15rem; padding: .55rem .72rem; border: 1px solid #82704f; background: linear-gradient(90deg, #101722f2 18%, #111925b0 50%, #1c23397d 78%, #141a26bf), var(--command-cover) center 42% / cover, #1a2231; box-shadow: inset 0 0 0 2px #121622a6 }
+.dialog-header .brand-icon { --icon-size: 3.35rem }
+.dialog-header h1 { font-size: clamp(1.17rem, 4vw, 1.74rem); line-height: 1.17; margin-top: .23rem; text-shadow: 2px 2px #0c111d }
 .dialog-header button { min-width: 3.75rem }
 .menu-section { padding-top: .78rem }
 .menu-section h2 { color: var(--gold); font-size: .89rem; margin-bottom: .4rem }
@@ -148,13 +204,17 @@ dialog::backdrop { background: #080c16df }
   .toolbar-help { display: block; margin-left: 0; margin-top: .2rem }
   .header-actions .clock { display: none }
   .brand-subtitle { font-size: .59rem }
-  .brand-icon { width: 1.8rem; height: 1.8rem }
+  .brand-icon { --icon-size: 2rem }
   .brand { gap: .35rem }
   .wordmark { letter-spacing: .11em; font-size: .78rem }
   .header-actions { gap: .18rem }
   .time-controls { gap: .15rem }
   .time-controls button { min-width: 1.65rem; font-size: .65rem; padding: .18rem }
   .header-actions > button { padding: .25rem; font-size: .71rem }
+  .header-actions > button .ui-icon { display: none }
+  .resource { font-size: .59rem }
+  .resource strong { font-size: .77rem }
+  .resource .resource-mark { --icon-size: 1.45rem }
 }
 @media (prefers-reduced-motion: no-preference) {
   .map-frame.layer-change { animation: layer-change .17s ease-out }
