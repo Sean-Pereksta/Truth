@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { AFFINITIES, AFFINITY_DAMAGE, BUFFS, MAX_LEVEL, SPECIES, affinityMultiplier, getAbilities } from '../catalog.js';
+import { AFFINITIES, AFFINITY_DAMAGE, AURAS, BUFFS, MAX_LEVEL, REGIONS, SPECIES, affinityMultiplier, getAbilities, getAura } from '../catalog.js';
 
 test('affinities have two counters and resist their own attacks, with a neutral fallback', () => {
   const { effective, resisted, neutral } = AFFINITY_DAMAGE;
@@ -23,6 +23,7 @@ test('every family learns a typed attack and the four roles have varied support 
   const learnedBuffs = new Set();
   const supportRoles = new Set();
   let alliesWithSupport = 0;
+  let startersWithSupport = 0;
   for (const species of SPECIES) {
     const moves = getAbilities({ speciesId: species.id, level: MAX_LEVEL });
     assert.ok(AFFINITIES[species.affinity], species.name);
@@ -32,6 +33,7 @@ test('every family learns a typed attack and the four roles have varied support 
     if (support.length) {
       alliesWithSupport++;
       supportRoles.add(species.role);
+      if (support.some(move => move.learnLevel === 1)) startersWithSupport++;
     }
     for (const move of support) {
       assert.equal(move.status, null);
@@ -41,7 +43,8 @@ test('every family learns a typed attack and the four roles have varied support 
   }
   assert.deepEqual(supportRoles, new Set(['defender', 'healer', 'ranged', 'striker']));
   assert.deepEqual(learnedBuffs, new Set(Object.keys(BUFFS)));
-  assert.ok(alliesWithSupport > SPECIES.length / 2);
+  assert.equal(alliesWithSupport, SPECIES.length);
+  assert.ok(startersWithSupport >= 60);
 });
 
 test('support signatures grow into wider or longer-lasting versions after evolution', () => {
@@ -52,4 +55,23 @@ test('support signatures grow into wider or longer-lasting versions after evolut
   assert.deepEqual([pollen.name, pollen.buff, pollen.range, pollen.area], ['Pollen Veil', 'regen', 3, 0]);
   assert.deepEqual([apex.name, apex.buff, apex.range, apex.area], ['Pollen Veil II', 'regen', 4, 1]);
   assert.equal(ability(6, 20, 'apex').duration, BUFFS.regen.duration + 1);
+});
+
+test('passive auras unlock at the family’s level and their radii vary by Critter', () => {
+  const types = new Set();
+  for (const {id} of REGIONS) {
+    const carriers = SPECIES.filter(species => species.region === id && species.aura);
+    assert.ok(carriers.length > 2);
+    for (const species of carriers) {
+      const {unlockLevel} = species.aura;
+      assert.equal(getAura({speciesId:species.id, level:unlockLevel-1}), null);
+      const aura = getAura({speciesId:species.id, level:unlockLevel});
+      assert.equal(aura.target, aura.id === 'dread' ? 'enemy' : 'ally');
+      assert.equal(aura.amount, AURAS[aura.id].amount);
+      types.add(aura.id);
+    }
+  }
+  assert.deepEqual(types, new Set(Object.keys(AURAS)));
+  assert.equal(getAura({speciesId:111, level:MAX_LEVEL}).radius, 1);
+  assert.equal(getAura({speciesId:119, level:MAX_LEVEL}).radius, 2);
 });

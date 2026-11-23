@@ -32,6 +32,8 @@
 .mk-item-badge .fight-icon{width:27px;height:27px}
 .mk-item-badge.mk-capture{background:#3b393c;outline-color:#6b6472}
 .mk-item-badge.mk-food{background:#443f2b;outline-color:#756844}
+.mk-item-badge.mk-support{background:#293e48;outline-color:#698491}
+.mk-item-badge.mk-trade{background:#493829;outline-color:#94734a}
 .mk-portrait{width:62px;height:62px;display:grid;place-items:center;flex:none;background:radial-gradient(#4c64443d,transparent 70%)}
 .mk-card-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding-top:7px}
 .mk-card-foot b{color:#e5cd92}

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { REGIONS, SPECIES, makeMember } from '../catalog.js';
+import { BUFFS, REGIONS, SPECIES, makeMember } from '../catalog.js';
 import { ITEMS, battleSupplies, spendSupply } from '../economy.js';
 import { ARENA_COURSES } from '../arena-courses.js';
 import { attemptCapture, createBattle, encounterOpponents, hexDistance, previewAction, reachable, takeBattleEvents, useBattleSupply } from '../battle.js';
@@ -147,4 +147,28 @@ test('capture charms apply after both health and status bonuses, capped at 99 pe
   assert.equal(withStatus.baseChance, previewAction(battle,'capture',foe.key).chance);
   assert.equal(withStatus.chance, .99);
   assert.equal(previewAction(battle,{...ribbon,count:0},foe.key),null);
+});
+
+test('tactical supplies spend once and share support targeting, previews and turn duration', () => {
+  const state = {economy:{bag:{barksigil:1,glassshield:1,purereed:1}}};
+  const supplies = Object.fromEntries(battleSupplies(state).map(item => [item.id,item]));
+  const {battle, ally, foe} = setup();
+  const shield = supplies.barksigil;
+  const spend = id => spendSupply(state,id);
+  assert.equal(previewAction(battle,shield,foe.key),null);
+  assert.equal(useBattleSupply(battle,supplies.purereed,ally,spend),false);
+  assert.equal(state.economy.bag.purereed,1);
+  const preview = previewAction(battle,shield,ally.key);
+  assert.equal(preview.buff,'ward');
+  assert.deepEqual(preview.recipients.map(recipient => recipient.id),[ally.id]);
+  assert.equal(useBattleSupply(battle,shield,ally,() => false),false);
+  assert.equal(ally.status.ward,undefined);
+  assert.equal(useBattleSupply(battle,shield,ally,spend),true);
+  assert.equal(ally.status.ward,BUFFS.ward.duration);
+  assert.equal(active(battle),foe);
+  assert.equal(state.economy.bag.barksigil,undefined);
+  assert.equal(previewAction(battle,supplies.glassshield,ally.key),null);
+  const support = takeBattleEvents(battle).find(event => event.type === 'support');
+  assert.equal(support.supplyId,'barksigil');
+  assert.equal(support.duration,preview.duration);
 });

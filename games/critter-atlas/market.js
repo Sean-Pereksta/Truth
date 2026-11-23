@@ -6,8 +6,8 @@ import {
 import { fightIcon } from './fight-icons.js';
 
 const roleNames = {striker:'Striker', healer:'Healer', defender:'Defender', ranged:'Ranged'};
-const itemIcons = {food:'xp', heal:'heal', capture:'capture'};
-const itemKinds = {food:'Training food', heal:'Field remedy', capture:'Capture charm'};
+const itemIcons = {food:'xp', heal:'heal', capture:'capture', trade:'legendary'};
+const itemKinds = {food:'Training food', heal:'Field remedy', capture:'Capture charm', support:'Tactical supply', trade:'Trade good'};
 const escape = value => String(value).replace(/[&<>"']/g, char =>
   ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'})[char]);
 
@@ -16,7 +16,7 @@ function wallet(coins) {
 }
 function itemBadge(item) {
   const col = item.artIndex % 6, row = Math.floor(item.artIndex / 6);
-  return `<span class="mk-item-badge mk-${item.kind}" aria-hidden="true"><i class="mk-item-art" style="background-position:${col * 20}% ${row * 50}%"></i>${fightIcon(itemIcons[item.kind],'')}</span>`;
+  return `<span class="mk-item-badge mk-${item.kind}" aria-hidden="true"><i class="mk-item-art" style="background-position:${col * 20}% ${row * 50}%"></i>${fightIcon(item.buff ?? itemIcons[item.kind],'')}</span>`;
 }
 function priceButton(action, id, price, coins, label='Buy') {
   const shortage = price > coins;
@@ -84,7 +84,8 @@ export function mountMarket(root, {state, region, sprite, onChange, onExit}) {
     return `<p class="mk-demand">${store.demandNote} <strong>+45% on ${roleNames[store.demand].toLowerCase()} offers.</strong></p>
       <h2 class="mk-subhead">Your Critters</h2><div class="mk-grid">${state.roster.map(sellCard).join('')}</div>
       ${supplies.length ? `<h2 class="mk-subhead">Your supplies</h2><div class="mk-grid">${supplies.map(item => `
-      <article class="mk-card"><div class="mk-card-head">${itemBadge(item)}<div><small>${state.economy.bag[item.id]} in bag</small><h3>${item.name}</h3></div></div>
+      <article class="mk-card"><div class="mk-card-head">${itemBadge(item)}<div><small>${state.economy.bag[item.id]} in bag${item.demandRegion === region ? ' · Best price' : ''}</small><h3>${item.name}</h3></div></div>
+      ${item.kind === 'trade' ? `<p>${item.description}</p>` : ''}
       <div class="mk-card-foot"><button class="mk-trade" data-market-action="sell-item" data-id="${item.id}">Sell one · ${itemOffer(region,item.id)} coins</button></div></article>`).join('')}</div>` : ''}`;
   }
   function draw() {
@@ -138,8 +139,8 @@ export function mountBag(root, {state, sprite, onChange}) {
       <div class="mk-feedback" role="status"></div>
       ${items.length ? `<div class="mk-grid">${items.map(item => `<article class="mk-card"><div class="mk-card-head">
         ${itemBadge(item)}<div><small>${itemKinds[item.kind]} · ${state.economy.bag[item.id]} in bag</small><h3>${item.name}</h3></div></div><p>${item.description}</p>
-        <div class="mk-card-foot">${item.kind === 'food' ? `<button class="mk-trade" type="button" data-food="${item.id}">Choose Critter</button>` : '<small>Use during a battle</small>'}</div></article>`).join('')}</div>`
-      : '<p class="mk-empty">Your bag is empty. Visit a town market for remedies, capture charms, and training food.</p>'}
+        <div class="mk-card-foot">${item.kind === 'food' ? `<button class="mk-trade" type="button" data-food="${item.id}">Choose Critter</button>` : `<small>${item.kind === 'trade' ? 'Gathered on the trail' : 'Use during a battle'}</small>`}</div></article>`).join('')}</div>`
+      : '<p class="mk-empty">Your bag is empty. Visit a market for supplies or gather a find at a trail sign.</p>'}
       ${foodId ? `<div class="mk-feed"><div class="mk-toolbar"><h2>Give ${ITEMS[foodId].name} to…</h2>
       <button type="button" class="link-action" data-cancel-food>Cancel</button></div><div class="mk-grid">${state.roster.map(m => `<button type="button" class="mk-recipient" data-feed="${escape(m.uid)}" ${m.level >= MAX_LEVEL ? 'disabled' : ''}>
       ${portrait(sprite,m)}<span><b>${getForm(m).name}</b><small>${specimenLabel(state,m)} · Lv. ${m.level}</small></span></button>`).join('')}</div></div>` : ''}</section>`;

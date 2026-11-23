@@ -1,6 +1,6 @@
 import { REGIONS, SPECIES, getForm } from './catalog.js';
 import { spriteAtlas } from './art.js';
-import { FIGHT_ICONS, fightIcon, abilityIconKey, hazardIconKey } from './fight-icons.js';
+import { FIGHT_ICONS, fightIcon, abilityIconKey, auraIconKey, hazardIconKey } from './fight-icons.js';
 
 // Draw effects on a low-resolution plane. The creature actors themselves keep their
 // original painted sprites and are positioned in percentages for responsive boards.
@@ -260,7 +260,7 @@ function badgeInfo(e) {
   switch(e.type) {
     case 'move': return [];
     case 'attack': return [['damage','−'+e.amount],...e.modifiers.map(m=>[m,FIGHT_ICONS[m].label])];
-    case 'heal': return [[e.buff ?? 'heal','+'+e.amount]];
+    case 'heal': return [[e.aura ? auraIconKey(e.aura) : e.buff ?? 'heal','+'+e.amount]];
     case 'support': return [[e.buff,FIGHT_ICONS[e.buff].label + (e.recipients.length > 1 ? ' ×' + e.recipients.length : '')]];
     case 'guard': return [['guard','Guard']];
     case 'wait': return [['wait','Wait']];
@@ -459,7 +459,7 @@ function playEvent(scene,e,reduced) {
           paintFrame(ctx,'actions',flank?7:ranged?1:0,impact,dest,reach,dir);
           if (isSignature) paintFrame(ctx,'regions',region,impact,{x:dest.x-dir*5,y:dest.y-5},reach*.83,dir);
           drawMotion(ctx,motion,src,dest,impact,isSignature?palette:color,dir,isApex);
-          if (e.modifiers.some(modifier => ['guard','cover','ward','resisted'].includes(modifier))) {
+          if (e.modifiers.some(modifier => ['guard','cover','ward','resisted',auraIconKey('bulwark')].includes(modifier))) {
             paintFrame(ctx,'actions',3,impact,{x:dest.x-dir*7,y:dest.y+2},34,dir);
           }
           if (e.modifiers.includes('effective')) ring(ctx,{x:dest.x,y:dest.y+7},6+16*impact,color,.55);
@@ -468,7 +468,7 @@ function playEvent(scene,e,reduced) {
       }
       case 'heal': {
         const u=part(t,.12,.55), glow=wave(t);
-        if (actor!==target || t<=.36) actor?.pose({x:src.x,y:src.y-glow*3},{face:dir,strike:t>.14&&t<.63,light:1+glow*.30});
+        if (!e.aura && (actor!==target || t<=.36)) actor?.pose({x:src.x,y:src.y-glow*3},{face:dir,strike:t>.14&&t<.63,light:1+glow*.30});
         if (u>0 && u<1) streak(ctx,src,dest,u,MINT,12);
         const bloom=part(t,.36,1);
         if (bloom>0) {

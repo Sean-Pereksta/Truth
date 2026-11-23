@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { REGIONS, SPECIES, makeMember } from '../catalog.js';
-import { addCapture, loadJournal, newJournal, parseJournal, saveJournal, serializeJournal, setParty } from '../journal.js';
+import { REGIONS, SPECIES, getAura, makeMember, xpToNext } from '../catalog.js';
+import { addCapture, awardXP, loadJournal, newJournal, parseJournal, saveJournal, serializeJournal, setParty } from '../journal.js';
 
 test('portable backups restore the latest expedition without browser storage', () => {
   const state = newJournal(1);
@@ -55,4 +55,18 @@ test('a failed local write leaves the last successful timestamp and backup expor
   assert.equal(state.savedAt, previous);
   assert.equal(loadJournal({ getItem: denied }), null);
   assert.equal(parseJournal(serializeJournal(state)).economy.coins, state.economy.coins);
+});
+
+test('a regional Critter unlocks its aura through earned experience and keeps it on reload', () => {
+  const family = SPECIES.find(species => species.id >= 108 && species.aura?.unlockLevel > 1);
+  assert.ok(family);
+  const state = newJournal();
+  const member = addCapture(state, makeMember(family.id, family.aura.unlockLevel - 1));
+  assert.equal(getAura(member), null);
+  const notices = awardXP(state, xpToNext(member.level), [member.uid]);
+  const learned = getAura(member);
+  assert.ok(learned);
+  assert.ok(notices.some(notice => notice.includes('unlocked') && notice.includes(learned.name)));
+  const restored = parseJournal(serializeJournal(state));
+  assert.deepEqual(getAura(restored.roster.find(entry => entry.uid === member.uid)), learned);
 });

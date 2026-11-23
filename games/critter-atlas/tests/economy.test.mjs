@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { REGIONS, SPECIES, MAX_LEVEL, makeMember } from '../catalog.js';
-import { newJournal, addCapture, loadJournal, saveJournal } from '../journal.js';
+import { newJournal, addCapture, loadJournal, parseJournal, saveJournal, serializeJournal } from '../journal.js';
 import {
   ITEMS, MARKETS, freshEconomy, restoreEconomy, awardCoins, battleSupplies, spendSupply,
-  buyItem, itemOffer, sellItem, critterStock, buyCritter, critterOffer, sellCritter, feedCritter
+  buyItem, itemOffer, sellItem, critterStock, buyCritter, critterOffer, sellCritter, feedCritter,
+  trailFind, gatherTrailFind
 } from '../economy.js';
 
 function visit(region = 0) {
@@ -26,7 +27,7 @@ test('a legacy save receives starting supplies while zero balances and known bag
 });
 
 test('all trading posts have unique local recruits and goods, with affordable starting options', () => {
-  const species = new Set(), foods = new Set(), battleItems = new Set();
+  const species = new Set(), foods = new Set(), battleItems = new Set(), tactics = new Set();
   for (const region of REGIONS) {
     const s=visit(region.id), stock=critterStock(region.id);
     assert.equal(stock.length,2);
@@ -43,12 +44,14 @@ test('all trading posts have unique local recruits and goods, with affordable st
     for (const [id,price] of Object.entries(goods)) {
       assert.ok(MARKETS.every(market => itemOffer(market.region,id) < price));
       if (ITEMS[id].kind === 'food') foods.add(id);
+      else if (ITEMS[id].kind === 'support') tactics.add(id);
       else if (!['tonic','thread'].includes(id)) battleItems.add(id);
     }
   }
   assert.equal(species.size,2 * REGIONS.length);
   assert.equal(foods.size,REGIONS.length);
   assert.equal(battleItems.size,REGIONS.length);
+  assert.equal(tactics.size,REGIONS.length);
   assert.ok(critterStock(0)[0].price <= freshEconomy().coins);
 });
 
@@ -142,4 +145,45 @@ test('a trade survives journal reload without resetting the wallet, bag, locatio
   delete state.economy;
   assert.ok(saveJournal(state,storage));
   assert.deepEqual(loadJournal(storage).economy,freshEconomy());
+});
+
+test('every region offers two distinct trail finds and tactical stock', () => {
+  const ids = new Set();
+  for (const region of REGIONS) {
+    const state = visit(region.id);
+    const resource = trailFind(state,region.id,'ford');
+    const supply = trailFind(state,region.id,'lookout');
+    assert.equal(resource.kind,'trade');
+    assert.equal(supply.kind,'support');
+    assert.ok(MARKETS[region.id].stock[supply.id]);
+    assert.ok(!Object.hasOwn(MARKETS[region.id].stock,resource.id));
+    assert.ok(itemOffer(resource.demandRegion,resource.id) > itemOffer(region.id,resource.id));
+    assert.equal(trailFind(state,region.id,'camp'),null);
+    ids.add(resource.id);
+    ids.add(supply.id);
+  }
+  assert.equal(ids.size,2 * REGIONS.length);
+});
+
+test('gathering requires arrival and open routes and a sold find stays collected after reload', () => {
+  const state = visit();
+  assert.equal(gatherTrailFind(state,0,'ford').ok,false);
+  state.world.node = 'lookout';
+  assert.equal(gatherTrailFind(state,0,'lookout').ok,false);
+  state.world.cleared.push('0/grove');
+  assert.equal(gatherTrailFind(state,0,'lookout').ok,true);
+  assert.equal(state.economy.bag.barksigil,1);
+  state.world.node = 'ford';
+  assert.equal(gatherTrailFind(state,0,'ford').ok,true);
+  assert.equal(gatherTrailFind(state,0,'ford').ok,false);
+  assert.equal(trailFind(state,0,'ford'),null);
+  assert.deepEqual(battleSupplies(state).map(item => item.id),['tonic','barksigil']);
+  assert.equal(spendSupply(state,'briarresin'),false);
+  state.world.node = 'town';
+  assert.ok(sellItem(state,0,'briarresin').ok);
+  const restored = parseJournal(serializeJournal(state));
+  assert.deepEqual(restored.economy,state.economy);
+  assert.equal(trailFind(restored,0,'ford'),null);
+  assert.ok(trailFind(restored,1,'ford'));
+  assert.deepEqual(restoreEconomy({coins:0,found:['0/ford','unknown','0/ford','11/ford']}).found,['0/ford']);
 });

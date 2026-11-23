@@ -33,7 +33,7 @@ function cueFor(event) {
   switch (event.type) {
     case 'attack': return event.modifiers?.find(modifier => modifier === 'effective' || modifier === 'resisted') ?? event.style;
     case 'support': return event.buff;
-    case 'heal': return event.buff ?? 'heal';
+    case 'heal': return event.aura ? 'regen' : event.buff ?? 'heal';
     case 'capture': return event.success ? 'caught' : 'escaped';
     case 'hazard': return event.effect;
     case 'status': return event.phase === 'expire' ? 'clear' : event.phase === 'skip' ? 'skip' : event.effect;

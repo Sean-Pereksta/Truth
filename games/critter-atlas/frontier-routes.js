@@ -1,12 +1,18 @@
 import { EXPANSION_REGIONS } from './expansion-regions.js';
+import { TRAIL_HABITATS, TRAIL_SITE_NAMES } from './trail-species.js';
 
 // The three sheets meet at pass/entry and highpass/farpost. Site IDs also appear
 // in expedition journals; keep the seven original IDs stable across releases.
-export const DISTRICTS = [
+const CORE_DISTRICTS = [
   ['camp','town','grove','ford','outpost','pass'],
   ['entry','ridge','lookout','habitat','trial','highpass','rookery'],
   ['farpost','warden','hollow','sentinel','vault','den','wonder']
 ];
+const CORE_SITE_IDS = CORE_DISTRICTS.flat();
+const trailSites = Object.keys(TRAIL_HABITATS);
+export const DISTRICTS = CORE_DISTRICTS.map((sites, district) => [
+  ...sites, ...trailSites.filter(site => TRAIL_HABITATS[site].district === district)
+]);
 export const SITE_IDS = DISTRICTS.flat();
 const LOCATIONS = [
   [12,65],[30,34],[50,57],[58,22],[79,74],[87,36],
@@ -87,8 +93,8 @@ export const WONDERS = {
 };
 const TYPES = {
   camp:'camp',town:'town',grove:'tribe',ford:'sign',outpost:'guardian',pass:'pass',
-  entry:'pass',ridge:'tribe',lookout:'sign',habitat:'habitat',trial:'arena',highpass:'pass',rookery:'habitat',
-  farpost:'pass',warden:'warden',hollow:'hollow',sentinel:'guardian',vault:'vault',den:'guardian',wonder:'wonder'
+  entry:'pass',ridge:'tribe',lookout:'sign',habitat:'habitat',trial:'arena',highpass:'pass',rookery:'habitat',glade:'habitat',
+  farpost:'pass',warden:'warden',hollow:'hollow',sentinel:'guardian',vault:'vault',den:'guardian',wonder:'wonder',refuge:'habitat'
 };
 export const siteType = site => TYPES[site];
 export const hasSite = (region, site) => !!LAND[region] && SITE_IDS.includes(site) && (site !== 'wonder' || !!WONDERS[region]);
@@ -98,11 +104,17 @@ export function sitesFor(region, district) {
 export const districtOf = site => DISTRICTS.findIndex(sites => sites.includes(site));
 export const districtName = (region, district) => LAND[region].districts[district];
 export const districtDescription = (region, district) => LAND[region].travel[district];
-export const siteName = (region, site) => site === 'wonder' ? WONDERS[region]?.name : LAND[region].names[SITE_IDS.indexOf(site)];
+export function siteName(region, site) {
+  if (site === 'wonder') return WONDERS[region]?.name;
+  const trailIndex = trailSites.indexOf(site);
+  if (trailIndex !== -1) return TRAIL_SITE_NAMES[region]?.[trailIndex];
+  return LAND[region]?.names[CORE_SITE_IDS.indexOf(site)];
+}
 export const signText = (region, site) => LAND[region].signs[site === 'ford' ? 0 : 1];
 export function point(region, site) {
   const coordinates = EXPANSION_REGIONS[region - EXPANSION_START]?.points ?? LOCATIONS;
-  const [x,y] = site === 'wonder' ? WONDERS[region].point : coordinates[SITE_IDS.indexOf(site)];
+  const [x,y] = site === 'wonder' ? WONDERS[region].point :
+    TRAIL_HABITATS[site]?.point ?? coordinates[CORE_SITE_IDS.indexOf(site)];
   return {x,y};
 }
 export const keyFor = (region,site) => region+'/'+site;
@@ -130,6 +142,7 @@ const SHORTCUTS = [
 ];
 export function linksFor(region) {
   const links = [...LINKS,...SHORTCUTS[region]];
+  for (const site of trailSites) links.push([TRAIL_HABITATS[site].approach, site]);
   if (WONDERS[region]) links.push(['vault','wonder'],[WONDERS[region].approach,'wonder']);
   return links;
 }
@@ -151,6 +164,7 @@ export function requirements(world, region, site) {
   if (['sentinel','vault','wonder'].includes(site)) wins.push('den');
   if (site === 'vault' || site === 'wonder') wins.push('sentinel');
   if (site === 'wonder') wins.push('vault');
+  if (TRAIL_HABITATS[site]) wins.push(TRAIL_HABITATS[site].gate);
   const missing = wins.filter(id => !has(world.cleared,region,id));
   if (site === 'hollow') {
     for (const id of ['ford','lookout']) if (!has(world.clues,region,id)) missing.push(id);
@@ -165,6 +179,8 @@ export function routeHint(region, site) {
   const name = key => siteName(region,key);
   if (site === 'wonder' && WONDERS[region]) return 'Win at '+name('vault')+' to uncover '+name(site)+'. Alternate patrol victories at '+WONDERS[region].patrols.map(name).join(', ')+' to reveal fresh tracks. The twelfth search always finds them.';
   if (site === 'habitat') return 'Defeat the guardian at '+name('outpost')+' and the tribe at '+name('grove')+' to reach '+name(site)+'.';
+  if (site === 'glade') return 'Defeat the tribe at '+name('grove')+' and the guardian at '+name('outpost')+' to reach '+name(site)+' from '+name('lookout')+'.';
+  if (site === 'refuge') return 'Win at '+name('warden')+' and follow the side trail to '+name(site)+'.';
   if (site === 'rookery') return 'Beat the '+name('trial')+' qualifier to open '+name(site)+'.';
   if (site === 'vault') return 'Earn the warden’s crest, clear '+name('den')+' and defeat '+name('sentinel')+' to enter '+name(site)+'.';
   if (site === 'hollow') return 'Read the signs at '+name('ford')+' and '+name('lookout')+' and earn the warden’s crest.';
