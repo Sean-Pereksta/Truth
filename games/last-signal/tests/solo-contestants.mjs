@@ -219,6 +219,33 @@ test("a nearby fight interrupts a shelter and the owner pays for the roof only u
   assert.deepEqual(worker.bag, { branch: 3, fiber: 2, cloth: 1, spear: 1 });
 });
 
+test("walls, ramps and platforms each cost exactly one wood and one fiber", () => {
+  for (const id of ["wall", "ramp", "floor"]) {
+    const game = clearing();
+    const row = () => game.frame().build.find(entry => entry[0] === id);
+    for (const bag of [{}, { branch: 1 }, { fiber: 1 }]) {
+      game.player.bag = bag;
+      assert.equal(row()[2], "1 wood / 1 fiber", id);
+      assert.equal(row()[3], false, id);
+      game.command("build:" + id);
+      assert.equal(game.build, null, id);
+    }
+    game.player.bag = { branch: 1, fiber: 1 };
+    assert.equal(row()[3], true, id);
+    game.command("build:" + id);
+    assert.equal(game.blueprint().fits, true, id);
+    game.command("repeat");
+    assert.equal(game.pieces.length, 1, id);
+    assert.equal(game.pieces[0].id, id);
+    assert.deepEqual(game.player.bag, {}, id);
+    assert.equal(game.build, null, id);
+    assert.equal(row()[3], false, id);
+    game.command("build:" + id);
+    game.command("place");
+    assert.equal(game.pieces.length, 1, id);
+  }
+});
+
 test("all three maps run complete 24-contestant solo matches", () => {
   for (let arena = 0; arena < 3; arena++) {
     const game = new SoloArena({ arena, seed: 1776 + arena });

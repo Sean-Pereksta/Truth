@@ -42,13 +42,13 @@ const crafts = [
 ];
 const builds = [
   ["barricade", 1, { branch: 2, fiber: 1 }],
-  ["wall", 1, { branch: 3, fiber: 2 }],
+  ["wall", 1, { branch: 1, fiber: 1 }],
   ["gate", 1, { branch: 3, fiber: 1, scrap: 1 }],
   ["lean_to", 1, { branch: 3, fiber: 2, cloth: 1 }],
-  ["ramp", 1, { branch: 3, fiber: 1 }],
+  ["ramp", 1, { branch: 1, fiber: 1 }],
   ["fire", 1, { branch: 2, stone: 2, tinder: 1 }],
   ["rain_barrel", 1, { branch: 4, fiber: 2, cloth: 1 }],
-  ["floor", 1, { branch: 3, fiber: 2 }]
+  ["floor", 1, { branch: 1, fiber: 1 }]
 ];
 const pieceSize = {
   barricade: [3.7, 1.2, 0.48], wall: [4, 2.6, 0.42], gate: [3.4, 2.4, 0.44],
