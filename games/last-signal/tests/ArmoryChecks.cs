@@ -28,7 +28,7 @@ public static class ArmoryChecks {
             "Crossbow and its bundled bolts were not transferred together");
         Require(!Survival.Take(game, actor, cache), "A second pickup duplicated the crossbow");
     }
-static void CheckBuildingCosts() {
+    static void CheckBuildingCosts() {
         foreach (string id in new[] { "wall", "ramp", "floor" }) {
             Recipe recipe = Survival.Find(Survival.Builds, id);
             Require(recipe != null && recipe.Yield == 1 && recipe.Needs.Count == 2 &&
