@@ -28,6 +28,24 @@ public static class ArmoryChecks {
             "Crossbow and its bundled bolts were not transferred together");
         Require(!Survival.Take(game, actor, cache), "A second pickup duplicated the crossbow");
     }
+static void CheckBuildingCosts() {
+        foreach (string id in new[] { "wall", "ramp", "floor" }) {
+            Recipe recipe = Survival.Find(Survival.Builds, id);
+            Require(recipe != null && recipe.Yield == 1 && recipe.Needs.Count == 2 &&
+                recipe.Needs["branch"] == 1 && recipe.Needs["fiber"] == 1,
+                "Incorrect building recipe: " + id);
+            Require(recipe.CostText == "1 wood  /  1 fiber", "Incorrect displayed building cost: " + id);
+            var actor = new Actor();
+            Require(!Survival.CanMake(actor, recipe), "Empty inventory can build " + id);
+            actor.Add("branch", 1);
+            Require(!Survival.CanMake(actor, recipe), "Missing fiber accepted for " + id);
+            actor.Add("branch", -1);
+            actor.Add("fiber", 1);
+            Require(!Survival.CanMake(actor, recipe), "Missing wood accepted for " + id);
+            actor.Add("branch", 1);
+            Require(Survival.CanMake(actor, recipe), "Exact building materials rejected for " + id);
+        }
+    }
     public static int Main() {
         try {
             Require(Survival.Find(Survival.Crafts, "crossbow") == null, "Crossbows should only be found as rare loot");
@@ -35,9 +53,10 @@ public static class ArmoryChecks {
                 CheckMap(map, false);
                 CheckMap(map, true);
             }
+            CheckBuildingCosts();
             ShieldChecks.Run();
             CrossbowChecks.Run();
-            Console.WriteLine("Passed sword, shield, rare loot and crossbow checks.");
+            Console.WriteLine("Passed sword, shield, rare loot, crossbow and building cost checks.");
             return 0;
         } catch (Exception error) {
             Console.Error.WriteLine(error);

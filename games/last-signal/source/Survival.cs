@@ -70,13 +70,13 @@ namespace LastSignal
 
         public static readonly Recipe[] Builds = {
             new Recipe("barricade","Low barricade","Waist-high cover. Crouch to break sight.",1,"branch",2,"fiber",1),
-            new Recipe("wall","Timber wall","Join walls at their ends or start another story on a floor edge.",1,"branch",3,"fiber",2),
+            new Recipe("wall","Timber wall","Join walls at their ends or start another story on a floor edge.",1,"branch",1,"fiber",1),
             new Recipe("gate","Hinged gate","Fits between walls. Close it and choose Bar gate to secure it.",1,"branch",3,"fiber",1,"scrap",1),
             new Recipe("lean_to","Lean-to","A shelter for a camp on the arena floor.",1,"branch",3,"fiber",2,"cloth",1),
-            new Recipe("ramp","Timber ramp","Align the high end with a landing to walk up one story.",1,"branch",3,"fiber",1),
+            new Recipe("ramp","Timber ramp","Align the high end with a landing to walk up one story.",1,"branch",1,"fiber",1),
             new Recipe("fire","Campfire","Cook game here. Smoke and light reveal its position.",1,"branch",2,"stone",2,"tinder",1),
             new Recipe("rain_barrel","Rain barrel","Stores 160 water. Collects rain or accepts water from a skin.",1,"branch",4,"fiber",2,"cloth",1),
-            new Recipe("floor","Floor / ceiling","Aim at a wall top to build above it, or a floor edge to extend it.",1,"branch",3,"fiber",2)
+            new Recipe("floor","Floor / ceiling","Aim at a wall top to build above it, or a floor edge to extend it.",1,"branch",1,"fiber",1)
         };
 
         private const float Reach = 3.25f;
