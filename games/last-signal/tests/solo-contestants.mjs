@@ -219,7 +219,6 @@ test("a nearby fight interrupts a shelter and the owner pays for the roof only u
   assert.deepEqual(worker.bag, { branch: 3, fiber: 2, cloth: 1, spear: 1 });
 });
 
-
 test("walls, ramps and platforms each cost exactly one wood and one fiber", () => {
   for (const id of ["wall", "ramp", "floor"]) {
     const game = clearing();
