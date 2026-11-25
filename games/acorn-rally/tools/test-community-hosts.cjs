@@ -119,6 +119,61 @@ async function prepare(host) {
   return { live, action, loaded, rivalSeat };
 }
 
+test('diagnostics report capacity, queue, uptime and only current connected-player latency', async t => {
+  const pub = fixture('public', 'Live diagnostics');
+  t.after(() => pub.host.close());
+  const empty = pub.host.diagnostics();
+  assert.equal(empty.playerCount, 0);
+  assert.equal(empty.connectedPlayers, 0);
+  assert.equal(empty.maxPlayers, 8);
+  assert.equal(empty.queuedPlayers, 0);
+  assert.ok(Number.isFinite(empty.uptimeSeconds) && empty.uptimeSeconds >= 0);
+  assert.deepEqual(empty.players, []);
+
+  const { live, action } = await prepare(pub);
+  await action('metrics', { data: { transport: 'poll', rttMs: 65, jitterMs: 8, fps: 55 } });
+  const ticket = 'a'.repeat(64);
+  const waiting = await pub.request('queue', { data: { token: ticket, name: 'Next racer' } });
+  assert.equal(waiting.body.position, 1);
+  const active = pub.host.diagnostics();
+  assert.equal(active.phase, 'loading');
+  assert.equal(active.playerCount, 2);
+  assert.equal(active.connectedPlayers, 2);
+  assert.equal(active.maxPlayers, 8);
+  assert.equal(active.queuedPlayers, 1);
+  assert.ok(active.uptimeSeconds >= empty.uptimeSeconds);
+  assert.equal(active.players[0].connected, true);
+  assert.equal(active.players[0].rttMs, 65);
+  assert.equal(active.players[0].jitterMs, 8);
+  assert.ok(active.players[0].latencyAgeMs >= 0 && active.players[0].latencyAgeMs < 10_000);
+  assert.equal(active.players[1].rttMs, undefined, 'No fabricated zero latency before measurement');
+
+  const seat = live.seats[0];
+  seat.metrics.at = Date.now() - 10_001;
+  let sampled = pub.host.diagnostics().players[0];
+  assert.equal(sampled.rttMs, undefined, 'Old client metrics expire even while the connection stays open');
+  assert.equal(sampled.latencyAgeMs, undefined);
+  seat.socket = { isOpen: () => true, rttMs: 42, rttAgeMs: 100, close() {} };
+  sampled = pub.host.diagnostics().players[0];
+  assert.equal(sampled.rttMs, 42);
+  assert.equal(sampled.latencyAgeMs, 100);
+  seat.socket.rttAgeMs = 30_000;
+  assert.equal(pub.host.diagnostics().players[0].rttMs, undefined, 'Old socket heartbeat measurements expire too');
+
+  seat.socket = null;
+  seat.metrics.at = Date.now();
+  seat.lastPoll = Date.now() - 13_000;
+  const disconnected = pub.host.diagnostics();
+  assert.equal(disconnected.playerCount, 2, 'Reconnecting seats still occupy server capacity');
+  assert.equal(disconnected.connectedPlayers, 1);
+  assert.equal(disconnected.players[0].connected, false);
+  assert.equal(disconnected.players[0].transport, null);
+  assert.equal(disconnected.players[0].rttMs, undefined);
+  assert.equal(disconnected.players[0].loadState, 'reconnecting');
+  await pub.request('queue/leave', { data: { token: ticket } });
+  assert.equal(pub.host.diagnostics().queuedPlayers, 0);
+});
+
 test('a load timeout returns everyone to the lobby with a retryable grid', async t => {
   const pub = fixture('public', 'Load timeout');
   t.after(() => pub.host.close());
