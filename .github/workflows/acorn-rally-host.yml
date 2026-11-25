@@ -1,0 +1,43 @@
+name: Acorn Rally host diagnostics
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'games/acorn-rally/server/**'
+      - 'games/acorn-rally/*.js'
+      - 'games/acorn-rally/tools/test-community-*.cjs'
+      - 'games/acorn-rally/tools/test-lobby-supervisor.cjs'
+      - 'games/acorn-rally/tools/test-support/**'
+      - '.github/workflows/acorn-rally-host.yml'
+  pull_request:
+    paths:
+      - 'games/acorn-rally/server/**'
+      - 'games/acorn-rally/*.js'
+      - 'games/acorn-rally/tools/test-community-*.cjs'
+      - 'games/acorn-rally/tools/test-lobby-supervisor.cjs'
+      - 'games/acorn-rally/tools/test-support/**'
+      - '.github/workflows/acorn-rally-host.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostics:
+    runs-on: windows-2025
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: games/acorn-rally
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            games/acorn-rally/server
+            games/acorn-rally/tools
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.19.0'
+      - name: Test host statistics, player connections, supervisor IPC and tunnel freshness
+        run: node --test tools/test-community-hosts.cjs tools/test-community-sockets.cjs tools/test-lobby-supervisor.cjs tools/test-community-tunnel.cjs

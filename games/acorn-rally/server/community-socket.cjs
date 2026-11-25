@@ -89,12 +89,13 @@ function createRaceSockets({ server, onHello, onInput, onMetrics, onClose, runti
   function attach(socket, code) {
     const record = {
       socket, room: null, seat: null, awaitingHello: true, seenHeartbeat: true,
-      pingAt: 0, rttMs: null, skippedSnapshots: 0, intervalAt: performance.now(), messages: 0
+      pingAt: 0, rttMs: null, rttAt: null, skippedSnapshots: 0, intervalAt: performance.now(), messages: 0
     };
     const peer = {
       get bufferedAmount() { return socket.bufferedAmount; },
       get skippedSnapshots() { return record.skippedSnapshots; },
       get rttMs() { return record.rttMs; },
+      get rttAgeMs() { return record.rttAt === null ? null : Math.max(0, performance.now() - record.rttAt); },
       isOpen() { return socket.readyState === WebSocket.OPEN; },
       send(type, value) { return send(record, encode(type, value), discardable(type, value)); },
       close() { socket.close(1000); }
@@ -106,7 +107,10 @@ function createRaceSockets({ server, onHello, onInput, onMetrics, onClose, runti
     socket.on('error', () => socket.terminate());
     socket.on('pong', () => {
       record.seenHeartbeat = true;
-      if (record.pingAt) record.rttMs = Math.round(performance.now() - record.pingAt);
+      if (record.pingAt) {
+        record.rttAt = performance.now();
+        record.rttMs = Math.round(record.rttAt - record.pingAt);
+      }
     });
     socket.on('close', () => {
       clearHandshake(record);

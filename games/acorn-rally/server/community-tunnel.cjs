@@ -5,6 +5,7 @@ const { performance } = require('node:perf_hooks');
 
 const quickOrigin = /^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/;
 const outputAddress = /https:\/\/[a-z0-9-]+\.trycloudflare\.com(?=[\s|"'\x1b]|$)/i;
+const latencyFreshMs = 30_000;
 
 function wait(ms, signal) {
   return new Promise((resolve, reject) => {
@@ -24,12 +25,13 @@ function wait(ms, signal) {
 function startQuickTunnel({
   executable, port, probeId, spawnProcess = spawn, fetchImpl = globalThis.fetch,
   startupMs = 90_000, probeDelayMs = 1200, probeTimeoutMs = 3500,
+  now = () => performance.now(),
   probePath = '/api/rooms/version', matchesProbe = info =>
     info?.game === 'acorn-rally' && info.version === 1 && info.hostId === probeId
 }) {
   const lifetime = new AbortController();
   const { signal } = lifetime;
-  let lastRtt = null, jitter = null, samples = 0, failures = 0;
+  let lastRtt = null, lastSuccessAt = null, jitter = null, samples = 0, failures = 0;
   const child = spawnProcess(executable, ['tunnel', '--no-autoupdate', '--url', 'http://127.0.0.1:' + port], {
     windowsHide: true, stdio: ['ignore', 'pipe', 'pipe']
   });
@@ -70,7 +72,7 @@ function startQuickTunnel({
 
   async function probe(origin) {
     if (signal.aborted) return false;
-    const started = performance.now();
+    const started = now();
     const controller = new AbortController();
     const cancel = () => controller.abort(signal.reason);
     const timeout = setTimeout(() => controller.abort(), probeTimeoutMs);
@@ -80,12 +82,14 @@ function startQuickTunnel({
         redirect: 'error', signal: controller.signal, cache: 'no-store'
       });
       if (response.ok && matchesProbe(await response.json())) {
-        const rtt = performance.now() - started;
-        if (lastRtt !== null) {
+        const finished = now();
+        const rtt = Math.max(0, finished - started);
+        if (lastRtt !== null && finished - lastSuccessAt < latencyFreshMs) {
           const difference = Math.abs(rtt - lastRtt);
           jitter = (jitter ?? difference) * .75 + difference * .25;
-        }
+        } else jitter = null;
         lastRtt = rtt;
+        lastSuccessAt = finished;
         samples++;
         return true;
       }
@@ -120,7 +124,12 @@ function startQuickTunnel({
 
   return {
     ready, signal,
-    diagnostics: () => ({ tunnelRttMs: lastRtt, tunnelJitterMs: jitter, tunnelProbeSamples: samples, tunnelProbeFailures: failures }),
+    diagnostics() {
+      const tunnelLatencyAgeMs = lastSuccessAt === null ? null : Math.max(0, now() - lastSuccessAt);
+      const fresh = !signal.aborted && tunnelLatencyAgeMs !== null && tunnelLatencyAgeMs < latencyFreshMs;
+      return { tunnelRttMs: fresh ? lastRtt : null, tunnelJitterMs: fresh ? jitter : null,
+        tunnelLatencyAgeMs, tunnelProbeSamples: samples, tunnelProbeFailures: failures };
+    },
     close() { lifetime.abort(new Error('Hosting stopped.')); }
   };
 }

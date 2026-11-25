@@ -86,7 +86,8 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
   const rooms = new Map();
   const loopDelay = community && automatic ? monitorEventLoopDelay({ resolution: 20 }) : null;
   loopDelay?.enable();
-  let snapshotCount = 0, snapshotBytes, diagnosticsAt = performance.now();
+  const startedAt = performance.now();
+  let snapshotCount = 0, snapshotBytes, diagnosticsAt = startedAt;
   function members(room) { return room.seats.filter(Boolean); }
   function inProgress(room) { return room?.phase === 'loading' || room?.phase === 'racing'; }
   function activeRoom() {
@@ -368,15 +369,24 @@ function createRallyServer({ sim = raceSim, automatic = true, singleRoom = false
     const publicRoom = room && lobby(room);
     const players = room ? members(room).map(seat => {
       const info = publicRoom.seats.find(player => player.index === seat.index);
-      const metrics = seat.metrics?.round === room.round && wallTime - seat.metrics.at < 10_000 ? seat.metrics : {};
-      const transport = seat.socket?.isOpen() ? 'websocket' : seat.stream ? 'events' : seat.lastPoll ? 'poll' : null;
-      return { name: seat.name, transport,
-        rttMs: metrics.rttMs ?? seat.socket?.rttMs, jitterMs: metrics.jitterMs, snapshotAgeMs: metrics.snapshotAgeMs,
-        snapshotGapPct: metrics.snapshotGapPct, fps: metrics.fps, snapshotBacklog: seat.socket?.bufferedAmount,
+      const socketOpen = Boolean(seat.socket?.isOpen());
+      const transport = !info.connected ? null : socketOpen ? 'websocket' : seat.stream ? 'events' : 'poll';
+      const metricsAgeMs = seat.metrics ? Math.max(0, wallTime - seat.metrics.at) : null;
+      const metrics = info.connected && seat.metrics?.round === room.round && seat.metrics.transport === transport &&
+        metricsAgeMs < 10_000 ? seat.metrics : {};
+      const socketAgeMs = socketOpen ? seat.socket.rttAgeMs : null;
+      const socketRttMs = Number.isFinite(socketAgeMs) && socketAgeMs < 30_000 ? seat.socket.rttMs : undefined;
+      return { name: seat.name, transport, connected: info.connected,
+        rttMs: metrics.rttMs ?? socketRttMs,
+        latencyAgeMs: Number.isFinite(metrics.rttMs) ? metricsAgeMs : Number.isFinite(socketRttMs) ? socketAgeMs : undefined,
+        jitterMs: metrics.jitterMs, snapshotAgeMs: metrics.snapshotAgeMs,
+        snapshotGapPct: metrics.snapshotGapPct, fps: metrics.fps, snapshotBacklog: socketOpen ? seat.socket.bufferedAmount : undefined,
         loadState: info.connected ? info.loadState || publicRoom.phase : 'reconnecting',
         loadMs: seat.clientLoadMs };
     }) : [];
     return { phase: publicRoom?.phase || 'waiting', playerCount: players.length, players, eventLoopLagMs,
+      connectedPlayers: players.filter(player => player.connected).length, maxPlayers: capacity,
+      queuedPlayers: raceQueue?.size() || 0, uptimeSeconds: Math.max(0, now - startedAt) / 1000,
       readyPlayers: publicRoom?.loading?.ready, expectedPlayers: publicRoom?.loading?.expected,
       snapshotRateHz, snapshotBytes,
       skippedSnapshots: room ? members(room).reduce((total, seat) => total + (seat.socket?.skippedSnapshots || 0), 0) : 0 };
