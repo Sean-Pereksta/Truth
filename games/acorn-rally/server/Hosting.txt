@@ -14,7 +14,11 @@ servers where the race has yet to start. Each laptop controls its own
 queue and races independently. Firebase stores directory listings and
 the host's queue. The launcher opens an outbound tunnel for game traffic.
 Use Diagnostics next to Acorn Rally in Server Manager to see the tunnel,
-directory, player ping and jitter, snapshot timing, and track loading.
+directory, players and capacity, queue, uptime, player ping and jitter,
+snapshot timing, and track loading. Diagnostics update every three seconds.
+Players on the server includes reserved seats for reconnecting players;
+connected players counts those with a current connection. Missing ping
+measurements stay blank until a recent round-trip measurement is available.
 Snapshot gaps count missed game updates, including updates skipped when
 the connection falls behind.
 

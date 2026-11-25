@@ -26,7 +26,8 @@ function launch() {
   const current = spawn(process.execPath, args, { stdio: ['ignore', 'inherit', 'pipe', 'ipc'], windowsHide: true });
   child = current;
   current.on('message', update => {
-    if (child === current && process.connected && update?.type === 'rally-host-status') {
+    if (!stopping && child === current && process.connected &&
+        ['rally-host-status', 'rally-host-diagnostics'].includes(update?.type)) {
       process.send(update, () => {});
     }
   });
