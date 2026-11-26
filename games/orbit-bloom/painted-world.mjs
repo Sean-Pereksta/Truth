@@ -3,7 +3,10 @@ import { drawNeedIcon, drawPlant, drawScenery, drawStation } from './pixel-art.m
 
 const stationOrder = ['seed', 'shower', 'sun', 'moon', 'prism', 'repot', 'prune', 'ingredient', 'shelf', 'truck', 'compost', 'planter'];
 const plantColumns = ['sunflare', 'moonbell', 'cometvine', 'nebulalily', 'eclipseorchid'];
+const celestialColumns = ['emberhibiscus', 'aurorairis', 'starjasmine'];
 const plantRows = ['seed', 'sprout', 'bud', 'bloom'];
+const celestialFallbacks = { emberhibiscus: 'sunflare', aurorairis: 'nebulalily', starjasmine: 'moonbell' };
+const flowerGlints = { emberhibiscus: '#ffe0a5', aurorairis: '#caffed', starjasmine: '#fff5d2' };
 
 const stationSizes = {
   seed: [1.02, .83], shower: [.99, 1.07], sun: [.96, 1.07], moon: [.96, 1.07], prism: [.96, 1.07],
@@ -16,9 +19,11 @@ const potColors = { starter: '#d0a484', clay: '#ed9b77', silver: '#d4e4f1', glas
 const ceramicPaint = { silver: [156, 169, 194], glass: [98, 172, 167] };
 const stationsUrl = new URL('./assets/painted-stations.webp', import.meta.url);
 const plantsUrl = new URL('./assets/painted-plants.webp', import.meta.url);
+const celestialUrl = new URL('./assets/celestial-blooms.webp', import.meta.url);
 
 let stations;
 let plants;
+let celestialBlooms;
 let loading;
 
 function cellBounds(source, width, left, top, cellWidth, cellHeight) {
@@ -127,18 +132,19 @@ function loadAtlas(url, columns, rows, hasPots = false) {
 
 export function loadPaintedWorld() {
   if (typeof Image === 'undefined' || typeof document === 'undefined') {
-    return Promise.resolve({ stations: false, plants: false });
+    return Promise.resolve({ stations: false, plants: false, celestialBlooms: false });
   }
   loading ??= Promise.all([
     loadAtlas(stationsUrl, 4, 3).then(atlas => { stations = atlas; }),
-    loadAtlas(plantsUrl, 5, 4, true).then(atlas => { plants = atlas; }),
-  ]).then(() => ({ stations: Boolean(stations), plants: Boolean(plants) }));
+    loadAtlas(plantsUrl, plantColumns.length, plantRows.length, true).then(atlas => { plants = atlas; }),
+    loadAtlas(celestialUrl, celestialColumns.length, plantRows.length, true).then(atlas => { celestialBlooms = atlas; }),
+  ]).then(() => ({ stations: Boolean(stations), plants: Boolean(plants), celestialBlooms: Boolean(celestialBlooms) }));
   return loading;
 }
 
 void loadPaintedWorld();
 
-function paintSprite(ctx, atlas, index, x, y, maxWidth, maxHeight, { lift = 0, shadow = true, pot } = {}) {
+function paintSprite(ctx, atlas, index, x, y, maxWidth, maxHeight, { lift = 0, shadow = true, pot, sway = 0 } = {}) {
   const frame = atlas?.frames[index];
   if (!frame) return undefined;
   const scale = Math.min(maxWidth / frame.width, maxHeight / frame.height);
@@ -156,7 +162,14 @@ function paintSprite(ctx, atlas, index, x, y, maxWidth, maxHeight, { lift = 0, s
   }
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(atlas.glazes[pot] ?? atlas.image, frame.x, frame.y, frame.width, frame.height, left, top, width, height);
+  const source = atlas.glazes[pot] ?? atlas.image;
+  if (sway) {
+    ctx.translate(x, y - lift);
+    ctx.transform(1, 0, sway, 1, 0, 0);
+    ctx.drawImage(source, frame.x, frame.y, frame.width, frame.height, -width / 2, -height, width, height);
+  } else {
+    ctx.drawImage(source, frame.x, frame.y, frame.width, frame.height, left, top, width, height);
+  }
   ctx.restore();
   return { left, top, width, height };
 }
@@ -218,16 +231,34 @@ export function drawPaintedStation(ctx, kind, x, y, size, time, options = {}) {
   if (variant) cornerEmblem(ctx, sprite, kind, variant, size);
 }
 
+function bloomGleam(ctx, sprite, color, time, phase) {
+  const brightness = .5 + Math.sin(time * 2 + phase) * .5;
+  if (brightness < .4) return;
+  const x = sprite.left + sprite.width * (.38 + Math.sin(phase) * .12);
+  const y = sprite.top + sprite.height * .2;
+  ctx.globalAlpha *= brightness * .68;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.ellipse(x, y, .85, 1.35, Math.PI * .17, 0, Math.PI * 2);
+  ctx.fill();
+}
+
 export function drawPaintedPlant(ctx, species, phase, x, y, size, time, options = {}) {
-  const column = plantColumns.indexOf(species);
+  const celestialColumn = celestialColumns.indexOf(species);
+  const isCelestial = celestialColumn >= 0;
+  const columns = isCelestial ? celestialColumns : plantColumns;
+  const column = isCelestial ? celestialColumn : plantColumns.indexOf(species);
   const row = plantRows.indexOf(phase);
   const { pot = 'starter', quality, effects = true, shadow = true } = options;
   const blooming = phase === 'bloom';
-  const lift = effects && blooming ? (.6 + Math.sin(time * 2.8 + x * .065) * .6) : 0;
-  const index = row >= 0 && column >= 0 ? row * plantColumns.length + column : -1;
-  const sprite = paintSprite(ctx, plants, index, x, y, size * 1.04, size * (stageHeights[phase] ?? 1), { lift, shadow, pot });
+  const petalPhase = x * .065 + column * .82;
+  const drift = effects && blooming ? Math.sin(time * 2.8 + petalPhase) : 0;
+  const lift = effects && blooming ? .6 + drift * .5 : 0;
+  const index = row >= 0 && column >= 0 ? row * columns.length + column : -1;
+  const sprite = paintSprite(ctx, isCelestial ? celestialBlooms : plants, index, x, y, size * 1.04,
+    size * (stageHeights[phase] ?? 1), { lift, shadow, pot, sway: drift * .034 });
   if (!sprite) {
-    drawPlant(ctx, species, phase, x, y, size, time, options);
+    drawPlant(ctx, celestialFallbacks[species] ?? species, phase, x, y, size, effects ? time : 0, options);
     return;
   }
   ctx.save();
@@ -240,6 +271,7 @@ export function drawPaintedPlant(ctx, species, phase, x, y, size, time, options 
     ctx.fillStyle = '#b7756d';
     ctx.fillRect(Math.round(x + sprite.width * .14), Math.round(y - size * .12 - lift), 2, 2);
   }
+  if (effects && blooming && size >= 22) bloomGleam(ctx, sprite, flowerGlints[species] ?? FLOWERS[species]?.color ?? '#fff5d2', time, petalPhase);
   ctx.restore();
 }
 
