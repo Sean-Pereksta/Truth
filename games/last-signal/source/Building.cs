@@ -117,6 +117,11 @@ namespace LastSignal
         }
         public static bool BuildFits(Game g,Prop p)
         {
+            return BuildFits(g,p,null);
+        }
+
+        internal static bool BuildFits(Game g,Prop p,Actor ignore)
+        {
             if(p==null||!BuildType(p.Model)||p.X*p.X+p.Z*p.Z>(Radius-1.65f)*(Radius-1.65f)||
                 Surface(p.X,p.Z,false)-p.Y>.42f)return false;
             if(!HasFortSupport(g,p))return false;
@@ -165,11 +170,17 @@ namespace LastSignal
             }
             for(int i=0;i<g.Actors.Count;i++)
             {
-                Actor a=g.Actors[i];if(!a.Alive||a.Y+1.65f<=p.Y+.03f||a.Y>=p.Y+p.H)continue;
-                float dx=a.X-p.X,dz=a.Z-p.Z;
-                if(Math.Abs(dx*c-dz*s)<p.W*.5f+.23f&&Math.Abs(dx*s+dz*c)<p.D*.5f+.23f)return false;
+                Actor a=g.Actors[i];
+                if(a!=ignore&&a.Alive&&FortOccupies(p,a.X,a.Y,a.Z))return false;
             }
             return true;
+        }
+
+        internal static bool FortOccupies(Prop p,float x,float y,float z)
+        {
+            if(y+1.65f<=p.Y+.03f||y>=p.Y+p.H)return false;
+            float c=Cos(p.Yaw),s=Sin(p.Yaw),dx=x-p.X,dz=z-p.Z;
+            return Math.Abs(dx*c-dz*s)<p.W*.5f+.23f&&Math.Abs(dx*s+dz*c)<p.D*.5f+.23f;
         }
         public static bool BuildFits(Game g,string model,float x,float z,float yaw,out Prop support)
         {

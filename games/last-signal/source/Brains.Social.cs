@@ -82,21 +82,19 @@ namespace LastSignal
             m.AnchorTime=g.Time;m.CareAfter=g.Time;
             trackers.Remove(a);m.Replan=m.Scan=0;
         }
-        static bool WantsAlliance(Game g,Offer o)
+        static bool WantsAlliance(Offer o)
         {
             Mind m=minds[o.Listener];
-            if(m.Style==Style.Shadow)return false;
-            // A well-equipped independent raider sometimes prefers the solo game.
-            if(m.Style==Style.Raider && CombatReady(o.Listener) && o.Listener.Health>70 &&
-               !CombatReady(o.Caller) && m.Dice.Next(3)!=0)return false;
-            return true;
+            Actor listener=o.Listener;
+            bool supplied=CombatReady(listener) && listener.Health>70 && listener.Hunger>54 && listener.Hydration>54;
+            return !supplied || CombatReady(o.Caller) || m.Dice.NextDouble()>.26f+.36f*m.Boldness;
         }
         static bool Confirm(Game g,Offer o)
         {
             Actor a=o.Caller,b=o.Listener;Mind ma=minds[a],mb=minds[b];
             Pack p=ma.Alliance;
             if(mb.Alliance!=null||(p!=null&&(!p.Active||Living(p)>=Capacity(g))))return false;
-            if(!WantsAlliance(g,o))
+            if(!WantsAlliance(o))
             {
                 mb.RecruitAfter=g.Time+27;
                 LocalFeed(g,b,a,b.Name+" declined "+a.Name+"'s truce");
@@ -148,7 +146,7 @@ namespace LastSignal
             {
                 if(g.PlayerDriven(a)||!a.Alive||Pending(a)!=null)continue;
                 Mind m=minds[a];
-                if(m.RecruitAfter>g.Time||m.NextInvite>g.Time||m.Style==Style.Shadow||m.Style==Style.Builder||ActiveHunter(a))continue;
+                if(m.RecruitAfter>g.Time||m.NextInvite>g.Time||m.Job==Aim.Build||m.Job==Aim.Recover||ActiveHunter(a))continue;
                 Pack p=m.Alliance;
                 if(p==null && liveGroups+pendingGroups>=limit)continue;
                 if(p!=null && (!p.Active || Living(p)>=seats || offers.Exists(o=>minds[o.Caller].Alliance==p)))continue;
@@ -160,7 +158,7 @@ namespace LastSignal
                     if(mb.Alliance!=null||mb.RecruitAfter>g.Time||ActiveHunter(b)||!Calm(g,a,b)||!Calm(g,b,a))continue;
                     float d=Dist(a.X,a.Z,b.X,b.Z);
                     if(d>15||!Perception.SeeActor(g,a,b)||!SignalReaches(g,a,b))continue;
-                    float score=15f-d+(CombatReady(b)?2:0)+(mb.Style!=m.Style?1:0);
+                    float score=15f-d+(CombatReady(b)?2:0)+Math.Abs(mb.Caution-m.Caution);
                     if(score>bestScore){best=b;bestScore=score;}
                 }
                 if(best==null){m.NextInvite=g.Time+1.3f;continue;}

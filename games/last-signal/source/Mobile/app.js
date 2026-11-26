@@ -236,7 +236,8 @@ async function startSolo() {
   try {
     const { SoloArena } = await import("./solo.js");
     round = 1;
-    solo = new SoloArena({ name: playerName, round, arena: Number($("solo-map").value) });
+    solo = new SoloArena({ name: playerName, round, arena: Number($("solo-map").value),
+      difficulty: Number($("solo-difficulty")?.value ?? 1) });
     soloFrameAt = performance.now();
     setMode("playing");
     handleFrame(solo.world);

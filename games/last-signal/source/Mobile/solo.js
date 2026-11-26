@@ -1,4 +1,8 @@
 import { createSoloWorld } from "./solo-world.js";
+import {
+  collapseFort, fortBlocksActor, fortGround, fortSizes, FORT_STEP_HEIGHT,
+  playerFortPiece, rivalFortApproach, rivalFortCandidate, rivalFortDescent, stepRivalFort
+} from "./solo-forts.js";
 
 const TAU = Math.PI * 2;
 const ROUND_START = 4;
@@ -9,6 +13,12 @@ const BOT_NAMES = [
   "Thorn", "Vale", "Vesper", "Willow", "Wren", "Yarrow"
 ];
 const BOT_STYLES = ["fighter", "runner", "hunter", "stalker"];
+const tendencies = {
+  fighter: { opening: 0.94, risk: 0.72, track: 0.4 },
+  runner: { opening: 0.42, risk: 0.45, track: 0.46 },
+  hunter: { opening: 0.53, risk: 0.57, track: 0.85 },
+  stalker: { opening: 0.14, risk: 0.31, track: 0.77 }
+};
 const weapons = {
   fists: { damage: 12, reach: 2.1, delay: 0.56 },
   knife: { damage: 23, reach: 2.2, delay: 0.48 },
@@ -51,9 +61,8 @@ const builds = [
   ["floor", 1, { branch: 1, fiber: 1 }]
 ];
 const pieceSize = {
-  barricade: [3.7, 1.2, 0.48], wall: [4, 2.6, 0.42], gate: [3.4, 2.4, 0.44],
-  lean_to: [3.8, 2.5, 3.2], ramp: [2.5, 1.8, 3.5], fire: [1.12, 0.45, 1.12],
-  rain_barrel: [1.2, 1.15, 1.2], floor: [3.7, 0.24, 3.7]
+  barricade: [3.7, 1.2, 0.48], lean_to: [3.8, 2.5, 3.2], fire: [1.12, 0.45, 1.12],
+  rain_barrel: [1.2, 1.15, 1.2], ...fortSizes
 };
 const clamp = (value, low = 0, high = 1) => Math.max(low, Math.min(high, value));
 const distance = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
@@ -69,19 +78,42 @@ function add(actor, item, amount) {
 }
 
 function makeActor(id, name, style, spawn, groundY, random) {
+  const cooldown = random() * 0.55, decision = random() * 0.4, aggression = random();
   return {
     id, name, x: spawn.x, y: groundY, z: spawn.z, yaw: spawn.yaw,
-    style,
+    style, tendencies: tendencies[style], buildBias: (id * 0.61803398875 + aggression) % 1,
     health: 100, stamina: 100, hunger: 100, hydration: 100,
     water: 0, alive: true, placement: 0, weapon: "fists", armor: "", speed: 0,
-    cooldown: random() * 0.55, crouch: false, guard: false, swing: 0, hurt: 0, anim: 0,
+    cooldown, crouch: false, guard: false, swing: 0, hurt: 0, anim: 0,
     reload: 0, crossbowLoaded: false, jump: 0, verticalSpeed: 0, bag: {},
-    decision: random() * 0.4, target: null, aggression: random(), intent: "roam",
+    decision, target: null, aggression, intent: "roam",
     lastSeen: null, lastSound: 0, soundMemory: null, opponent: null, openingLoot: false,
     attackedAt: -Infinity, woundedAt: -Infinity, nextStepNoise: 0, lookAt: null,
-    escapeUntil: 0, openingRoute: null, leftPlaza: false, winded: false,
-    seenHits: new Map(), seenSwings: new Map()
+    openingRoute: null, leftPlaza: false, winded: false,
+    seenHits: new Map(), seenSwings: new Map(), visitedSites: new Map(),
+    commitUntil: 0, noProgress: 0, detourUntil: 0, detourAngle: 0,
+    trackDistance: 0, lastTrack: 0
   };
+}
+
+function rivalWeaponReady(actor) {
+  const weapon = weapons[actor.weapon];
+  return actor.weapon !== "fists" && (!weapon.ammo || count(actor, weapon.ammo) > 0);
+}
+
+function chooseRivalWeapon(actor, reach) {
+  let best = actor.weapon, high = -Infinity;
+  for (const [id, weapon] of Object.entries(weapons)) {
+    if (id !== actor.weapon && id !== "fists" && !count(actor, id)) continue;
+    if (weapon.ammo && !count(actor, weapon.ammo)) continue;
+    const reachPenalty = weapon.ammo ? Math.max(0, 7 - reach) * 5 + Math.max(0, reach - weapon.range * 0.65) * 1.8 :
+      Math.min(28, Math.max(0, reach - weapon.reach) * 2.4);
+    const reloadPenalty = id === "crossbow" && (id !== actor.weapon || !actor.crossbowLoaded) ? 14 : 0;
+    const shieldBonus = count(actor, "shield") && (id === "sword" || id === "spear") ? 6 : 0;
+    const score = weapon.damage - reachPenalty - reloadPenalty + shieldBonus + (id === actor.weapon ? 5 : 0);
+    if (score > high) { best = id; high = score; }
+  }
+  if (best !== actor.weapon) equips(actor, best);
 }
 
 function recipeAffordable(actor, recipe, building) {
@@ -133,13 +165,19 @@ function crossesPiece(from, to, eye, end, piece) {
     far = Math.min(far, Math.max(a, b));
     return near <= far;
   }
-  return slab(ox * c - oz * s, dx * c - dz * s, piece.w / 2) &&
-    slab(ox * s + oz * c, dx * s + dz * c, piece.d / 2) &&
-    slab(eye - piece.y - piece.h / 2, end - eye, piece.h / 2);
+  const forward = ox * s + oz * c, forwardDelta = dx * s + dz * c;
+  if (!slab(ox * c - oz * s, dx * c - dz * s, piece.w / 2) ||
+      !slab(forward, forwardDelta, piece.d / 2)) return false;
+  if (piece.id === "ramp") {
+    return slab(eye - piece.y - piece.h * (forward / piece.d + 0.5),
+      end - eye - piece.h * forwardDelta / piece.d, 0.18);
+  }
+  return slab(eye - piece.y - piece.h / 2, end - eye, piece.h / 2);
 }
 
 export class SoloArena {
-  constructor({ name = "Contestant", round = 1, seed = Date.now(), arena = 0 } = {}) {
+  constructor({ name = "Contestant", round = 1, seed = Date.now(), arena = 0, difficulty = 1 } = {}) {
+    this.difficulty = clamp(Number.isFinite(difficulty) ? difficulty : 1, 0, 3);
     this.map = createSoloWorld(seed, arena);
     const { terrain, props, spawns, heightAt, random } = this.map;
     this.world = { type: "world", round, arena, seed, radius: this.map.radius || 185, terrain, props };
@@ -168,6 +206,8 @@ export class SoloArena {
     this.shots = [];
     this.rivalSounds = [];
     this.soundSerial = 0;
+    this.footprints = [];
+    this.trackSerial = 0;
     this.wildlife = (this.map.wildlife || []).map(animal => ({ ...animal, phase: random() * TAU }));
     this.stoves = props.flatMap((prop, propIndex) => prop?.[0] === "stove" ?
       [{ x: prop[1], z: prop[3], propIndex, lit: true }] : []);
@@ -310,12 +350,20 @@ export class SoloArena {
     const y = this.map.heightAt(px, pz);
     const [w, h, d] = pieceSize[id];
     const angle = Math.round(yaw / (Math.PI / 4)) * Math.PI / 4 + rotation;
+    const draft = { id, x: px, y, z: pz, w, h, d, angle };
+    if (Object.hasOwn(fortSizes, id) || (id === "barricade" && actor === this.player)) {
+      return playerFortPiece(this, actor, draft, actor === this.player ? this.input.pitch || 0 : 0);
+    }
     const fits = this.map.surfaceAt(px, pz) <= y + 0.25 &&
       this.canOccupy(px, pz, 0.7) &&
       this.pieces.every(piece => this.removed.has(piece.propIndex) || piece.id !== id || distance(piece, { x: px, z: pz }) > 0.75) &&
       this.actors.every(actor => !actor.alive || actor.id === actorId || distance(actor, { x: px, z: pz }) > 1.5);
-    return { id, x: px, y, z: pz, w, h, d, angle, fits };
+    return { ...draft, fits };
   }
+
+  fortRecipe(id) { return builds.find(row => row[0] === id); }
+
+  equipFortTool(actor) { equips(actor, "hatchet"); }
 
   place(repeat) {
     const piece = this.blueprint();
@@ -332,7 +380,7 @@ export class SoloArena {
     pay(actor, recipe, true);
     piece.propIndex = this.nextProp++;
     piece.owner = actor.id;
-    piece.health = 48;
+    piece.health = { wall: 100, gate: 80, floor: 90, ramp: 75 }[piece.id] ?? 48;
     piece.lit = false;
     this.pieces.push(piece);
     this.showPiece(piece);
@@ -356,6 +404,7 @@ export class SoloArena {
   remove(target) {
     this.removed.add(target.propIndex);
     this.changes.set(target.propIndex, null);
+    if (this.pieces.includes(target)) collapseFort(this, target);
   }
 
   refreshFocus() {
@@ -441,8 +490,14 @@ export class SoloArena {
         this.say("Cooked a meal.");
       } else this.say("Find game meat to cook.");
     } else if (kind === "gate") {
-      target.open = !target.open;
-      this.showPiece(target);
+      const closed = { ...target, open: false };
+      if (target.open && this.actors.some(other => other.alive &&
+          fortBlocksActor(closed, other.x, other.z, 0.28, other.y, other.y + 1.65))) {
+        this.say("The gate is blocked.");
+      } else {
+        target.open = !target.open;
+        this.showPiece(target);
+      }
     } else if (kind === "wildlife") {
       target.harvested = true;
       add(actor, "meat", 2);
@@ -633,30 +688,38 @@ export class SoloArena {
     return true;
   }
 
-  canOccupy(x, z, padding = 0.28) {
+  canOccupy(x, z, padding = 0.28, actor, feet) {
     if (!this.map.canOccupy(x, z, this.removed)) return false;
-    return this.pieces.every(piece => {
-      if (piece.open || piece.h < 0.65 || this.removed.has(piece.propIndex)) return true;
-      const vx = x - piece.x;
-      const vz = z - piece.z;
-      const c = Math.cos(piece.angle);
-      const s = Math.sin(piece.angle);
-      return Math.abs(vx * c - vz * s) > piece.w / 2 + padding || Math.abs(vx * s + vz * c) > piece.d / 2 + padding;
-    });
+    if (actor && feet === undefined) {
+      const current = fortGround(this, actor.x, actor.z, actor.y + 0.08);
+      feet = fortGround(this, x, z, current + FORT_STEP_HEIGHT) + (actor.jump || 0);
+    }
+    const head = feet + (actor?.crouch ? 1.17 : 1.64);
+    return this.pieces.every(piece => this.removed.has(piece.propIndex) || !fortBlocksActor(piece, x, z, padding, feet, head));
   }
 
   move(actor, right, forward, seconds, speed) {
     const length = Math.max(1, Math.hypot(right, forward));
     const dx = (Math.sin(actor.yaw) * forward + Math.cos(actor.yaw) * right) * seconds * speed / length;
     const dz = (Math.cos(actor.yaw) * forward - Math.sin(actor.yaw) * right) * seconds * speed / length;
-    if (this.canOccupy(actor.x + dx, actor.z)) actor.x += dx;
-    if (this.canOccupy(actor.x, actor.z + dz)) actor.z += dz;
-    actor.y = this.map.heightAt(actor.x, actor.z) + actor.jump;
-    actor.speed = Math.hypot(dx, dz) / Math.max(0.001, seconds);
+    const oldX = actor.x, oldZ = actor.z;
+    let ground = fortGround(this, oldX, oldZ, actor.y + 0.08);
+    const structuresNearby = this.pieces.some(piece => !this.removed.has(piece.propIndex) && distance(actor, piece) < 5);
+    const steps = structuresNearby ? Math.max(1, Math.ceil(Math.hypot(dx, dz) / 0.18)) : 1;
+    const jump = actor.jump || 0;
+    for (let step = 0; step < steps; step++) {
+      const x = actor.x + dx / steps, z = actor.z + dz / steps;
+      const east = fortGround(this, x, actor.z, ground + FORT_STEP_HEIGHT);
+      if (this.canOccupy(x, actor.z, undefined, actor, east + jump)) { actor.x = x; ground = east; }
+      const north = fortGround(this, actor.x, z, ground + FORT_STEP_HEIGHT);
+      if (this.canOccupy(actor.x, z, undefined, actor, north + jump)) { actor.z = z; ground = north; }
+    }
+    actor.y = ground + jump;
+    actor.speed = Math.hypot(actor.x - oldX, actor.z - oldZ) / Math.max(0.001, seconds);
     actor.anim += (1 + actor.speed * 1.15) * seconds;
   }
 
-  attack(actor, strength = 1, weapon = weapons[actor.weapon]) {
+  attack(actor, strength = 1, weapon = weapons[actor.weapon], prey = null) {
     if (actor.cooldown > 0 || !actor.alive) return;
     if (weapon.ammo) {
       if (actor.weapon === "crossbow" && !actor.crossbowLoaded) return;
@@ -689,13 +752,13 @@ export class SoloArena {
       this.damage(target, weapon.damage, actor, { height: reachHeight(target) });
       return;
     }
-    if (actor !== this.player) return;
-    const animal = this.wildlife.find(candidate => candidate.health > 0 && aligned(candidate));
-    if (animal) {
+    const animal = prey || (actor === this.player && this.wildlife.find(candidate => candidate.health > 0 && aligned(candidate)));
+    if (animal?.health > 0 && aligned(animal)) {
       animal.health -= weapon.damage;
-      this.hitUntil = this.clock + 0.23;
+      if (actor === this.player) this.hitUntil = this.clock + 0.23;
       return;
     }
+    if (actor !== this.player) return;
     const prop = this.focus.find(option => option.kind === "resource" && distance(actor, option.target) <= Math.max(weapon.reach, 2.85));
     if (prop) {
       this.harvest(prop.target);
@@ -703,15 +766,48 @@ export class SoloArena {
       return;
     }
     const piece = this.pieces.find(candidate => !this.removed.has(candidate.propIndex) && distance(actor, candidate) < weapon.reach &&
-      Math.abs(angleDifference(actor.yaw, heading(actor, candidate))) < 0.6);
-    if (piece && (piece.health -= weapon.damage) <= 0) {
-      this.remove(piece);
-      const recipe = builds.find(([id]) => id === piece.id);
-      const salvage = piece.id === "wall" || piece.id === "gate" ? 3 : piece.id === "fire" ? 1 : 2;
-      const wood = Math.min(recipe?.[2].branch ?? 0, salvage);
-      if (wood > 0) this.drop(piece.x, piece.z, { branch: wood });
-      this.say("Structure broken.");
+      Math.abs(angleDifference(actor.yaw, heading(actor, candidate))) < 0.6 &&
+      handHeight + incline * distance(actor, candidate) >= candidate.y - 0.18 &&
+      handHeight + incline * distance(actor, candidate) <= candidate.y + candidate.h + 0.2 &&
+      this.lineClear(actor, candidate, [candidate]));
+    if (piece) this.damageFort(piece, weapon.damage, actor);
+  }
+
+  damageFort(piece, damage, actor) {
+    piece.health = (piece.health ?? 48) - damage;
+    if (piece.health > 0) return;
+    this.remove(piece);
+    const wood = Math.min(this.fortRecipe(piece.id)?.[2].branch ?? 0, piece.id === "fire" ? 1 : 2);
+    if (wood > 0) this.drop(piece.x, piece.z, { branch: wood });
+    if (actor === this.player) this.say("Structure broken.");
+  }
+
+  breachFort(actor, target) {
+    if (distance(actor, target) > 9 || this.lineClear(actor, target)) return false;
+    const tool = count(actor, "hatchet") ? "hatchet" : actor.weapon;
+    const weapon = weapons[tool];
+    const eye = actor.y + 1.13;
+    const end = (target.y ?? this.map.heightAt(target.x, target.z)) + 1.13;
+    const obstacle = this.pieces.find(piece => !this.removed.has(piece.propIndex) && !piece.open &&
+      distance(actor, piece) < (weapon.reach || 2.3) + 0.4 && crossesPiece(actor, target, eye, end, piece) &&
+      this.lineClear(actor, piece, [piece]));
+    if (!obstacle) return false;
+    actor.yaw = heading(actor, obstacle);
+    if (obstacle.id === "gate") {
+      obstacle.open = true;
+      this.showPiece(obstacle);
+      this.rivalNoise(actor, 10, "build");
+      return true;
     }
+    if (obstacle.owner === actor.id || !weapon.reach) return false;
+    if (actor.cooldown <= 0) {
+      equips(actor, tool);
+      actor.cooldown = weapon.delay;
+      actor.swing = 0.46;
+      this.damageFort(obstacle, weapon.damage, actor);
+      this.rivalNoise(actor, 17, "strike");
+    }
+    return true;
   }
 
   projectile(actor, weapon, strength) {
@@ -729,11 +825,12 @@ export class SoloArena {
     return true;
   }
 
-  lineClear(from, to) {
+  lineClear(from, to, ignored = []) {
     const eye = from.y + (from.crouch ? 1.04 : 1.6);
     const end = (to.y ?? this.map.heightAt(to.x, to.z)) + (to.crouch ? 0.99 : to.alive ? 1.55 : 0.55);
     return this.map.clearSight(from, to, eye, end, this.removed) &&
-      !this.pieces.some(piece => !piece.open && !this.removed.has(piece.propIndex) && crossesPiece(from, to, eye, end, piece));
+      !this.pieces.some(piece => !piece.open && !this.removed.has(piece.propIndex) && !ignored.includes(piece) &&
+        crossesPiece(from, to, eye, end, piece));
   }
 
   damage(actor, amount, source, contact = {}) {
@@ -773,11 +870,19 @@ export class SoloArena {
       let ended = false;
       for (let step = 0, steps = Math.max(1, Math.ceil(travel / 0.55)); step < steps; step++) {
         const stride = travel / steps;
+        const before = { x: shot.x, y: shot.y, z: shot.z };
         shot.x += Math.sin(shot.yaw) * Math.cos(shot.pitch) * stride;
         shot.z += Math.cos(shot.yaw) * Math.cos(shot.pitch) * stride;
         shot.y += Math.sin(shot.pitch) * stride;
         shot.range -= stride;
-        if (shot.range <= 0 || shot.y <= this.map.heightAt(shot.x, shot.z) || !this.canOccupy(shot.x, shot.z, 0)) {
+        if (shot.range <= 0 || shot.y <= this.map.heightAt(shot.x, shot.z) || !this.map.canOccupy(shot.x, shot.z, this.removed)) {
+          ended = true;
+          break;
+        }
+        const piece = this.pieces.find(candidate => !candidate.open && !this.removed.has(candidate.propIndex) &&
+          crossesPiece(before, shot, before.y, shot.y, candidate));
+        if (piece) {
+          this.damageFort(piece, shot.damage * 0.48, shot.owner);
           ended = true;
           break;
         }
@@ -822,7 +927,10 @@ export class SoloArena {
       const sound = this.rivalSounds[i];
       if (sound.id <= actor.lastSound || this.clock - sound.at > 1.1) break;
       if (sound.source === actor.id) continue;
-      const loudness = 1 - distance(actor, sound) / sound.radius;
+      const reach = distance(actor, sound);
+      if (reach >= sound.radius) continue;
+      const hearing = this.lineClear(actor, sound) ? sound.radius : sound.radius * 0.82;
+      const loudness = 1 - reach / hearing;
       if (loudness > volume) { best = sound; volume = loudness; }
     }
     actor.lastSound = this.soundSerial;
@@ -836,10 +944,7 @@ export class SoloArena {
 
   canSeeRival(actor, other) {
     if (other === actor || !other.alive) return false;
-    const reach = distance(actor, other);
-    const range = other.crouch ? 17 : actor.style === "hunter" ? 43 : 35;
-    if (reach > range || (reach > 2.2 && Math.abs(angleDifference(actor.yaw, heading(actor, other))) > 1.45)) return false;
-    return this.lineClear(actor, other);
+    return this.rivalLooksAt(actor, other, other.crouch ? 17 : 35 + actor.tendencies.track * 6);
   }
 
   supplyFor(actor, takeAny) {
@@ -851,10 +956,15 @@ export class SoloArena {
         if (reach > 28 || reach > score + 6) continue;
         const model = this.world.props[cache.propIndex]?.[0] || "pack";
         const container = model === "cache" || model === "pack";
-        const needsGear = actor.weapon === "fists", needsAid = actor.health < 65, needsFood = actor.hunger < 60;
+        const needsGear = !rivalWeaponReady(actor), needsAid = actor.health < 65, needsFood = actor.hunger < 60;
+        const ammo = ["arrows", "bolts", "stone"].some(id => model === id && count(actor, id) < 3 &&
+          Object.entries(weapons).some(([weapon, kit]) => kit.ammo === id && count(actor, weapon)));
+        const utility = (model === "waterskin" && !count(actor, model)) ||
+          (model === "shield" && !count(actor, model) && ["spear", "sword"].includes(actor.weapon)) ||
+          ((model === "woven_vest" || model === "scrap_cuirass") && !actor.armor);
         const useful = (needsGear && Object.hasOwn(weapons, model)) || (needsAid && model === "bandage") ||
-          (needsFood && (model === "meal" || model === "berries"));
-        if (!useful && !takeAny && !(container && (needsGear || needsAid || needsFood))) continue;
+          (needsFood && (model === "meal" || model === "berries")) || ammo || utility;
+        if (!useful && !takeAny && !(container && (needsGear || needsAid || needsFood || reach < 6))) continue;
         const value = reach - (useful && !takeAny ? 5 : 0);
         if (value >= score || (reach > 3 && Math.abs(angleDifference(actor.yaw, heading(actor, cache))) > 1.55) ||
           !this.lineClear(actor, cache)) continue;
@@ -866,11 +976,35 @@ export class SoloArena {
   }
 
   rivalExit(actor, threat) {
-    const angle = (threat ? heading(threat, actor) : Math.atan2(actor.x, actor.z)) +
-      (actor.id % 2 ? 0.28 : -0.28);
-    const x = actor.x + Math.sin(angle) * 16, z = actor.z + Math.cos(angle) * 16;
-    const scale = Math.min(1, this.storm.radius * 0.96 / Math.max(1, Math.hypot(x - this.storm.x, z - this.storm.z)));
-    return { x: this.storm.x + (x - this.storm.x) * scale, z: this.storm.z + (z - this.storm.z) * scale };
+    const direct = heading(threat, actor), side = actor.id % 2 ? 1 : -1;
+    const offsets = this.difficulty < 2 ? [0.28, -0.5, 0.9] : [0.15, -0.45, 0.62, -1.1, 1.25, 1.75];
+    const points = offsets.map(offset => {
+      const angle = direct + side * offset;
+      const x = actor.x + Math.sin(angle) * 16 - this.storm.x;
+      const z = actor.z + Math.cos(angle) * 16 - this.storm.z;
+      const scale = Math.min(1, (this.storm.radius - 2) / Math.max(1, Math.hypot(x, z)));
+      return { x: this.storm.x + x * scale, z: this.storm.z + z * scale };
+    });
+    for (const piece of this.pieces) {
+      if (!["wall", "barricade"].includes(piece.id) || distance(actor, piece) > 17 || this.removed.has(piece.propIndex)) continue;
+      const nx = Math.sin(piece.angle), nz = Math.cos(piece.angle);
+      const actorSide = Math.sign((actor.x - piece.x) * nx + (actor.z - piece.z) * nz) || 1;
+      const face = actorSide * (piece.d * 0.5 + 0.12);
+      const seen = { x: piece.x + nx * face, z: piece.z + nz * face, y: piece.y };
+      if (!this.lineClear(actor, seen)) continue;
+      const farSide = Math.sign((piece.x - threat.x) * nx + (piece.z - threat.z) * nz) || actorSide;
+      points.push({ x: piece.x + nx * farSide * 1.05, z: piece.z + nz * farSide * 1.05, shelter: true });
+    }
+    let best = null, bestScore = -Infinity;
+    for (const target of points) {
+      if (!this.canOccupy(target.x, target.z) || !this.rivalSafe(actor, target, 1)) continue;
+      const open = this.lineClear(actor, target);
+      const checkCover = target.shelter || this.difficulty >= 2;
+      const covered = checkCover && !this.lineClear({ ...target, y: this.map.heightAt(target.x, target.z), crouch: true }, threat);
+      const score = distance(threat, target) + (open ? 5 : 0) + (covered ? (target.shelter ? 11 : 6) : 0);
+      if (score > bestScore) { best = target; bestScore = score; }
+    }
+    return best || { x: this.storm.x, z: this.storm.z };
   }
 
   rivalPlan(actor, intent, goal, lookAt = null, opponent = null) {
@@ -881,125 +1015,365 @@ export class SoloArena {
     actor.opponent = opponent;
   }
 
+  rivalSafe(actor, target, buffer = 3, workTime = 0) {
+    const storm = this.storm;
+    const travel = distance(actor, target) / 3.7 + workTime;
+    const radius = storm.moving ? Math.max(5, storm.radius - travel * 0.87) :
+      storm.warning && travel >= storm.seconds ? Math.max(5, storm.radius - (travel - storm.seconds) * 0.87) : storm.radius;
+    return distance(target, storm) <= Math.max(1.5, radius - buffer);
+  }
+
+  rivalPatrol(actor) {
+    const current = actor.intent === "roam" ? actor.target : null;
+    if (current && distance(actor, current) > 1.5 && this.rivalSafe(actor, current)) return current;
+    if (current?.site) actor.visitedSites.set(current.site, this.clock);
+    const sites = [...this.map.landmarks, ...this.map.waterSources];
+    const limit = Math.max(2, this.storm.radius - Math.max(2, Math.min(14, this.storm.radius * 0.2)));
+    let best = null, bestScore = -Infinity;
+    for (const [index, site] of sites.entries()) {
+      const range = distance(actor, site);
+      if (range < 8 || range > 96) continue;
+      const angle = heading(site, actor) + (actor.id % 2 ? 0.9 : -0.9);
+      const target = { x: site.x + Math.sin(angle) * 5, z: site.z + Math.cos(angle) * 5, site: index + 1 };
+      if (!this.rivalSafe(actor, target) || !this.canOccupy(target.x, target.z)) continue;
+      const lastVisit = actor.visitedSites.get(target.site) ?? -Infinity;
+      const score = Math.min(48, this.clock - lastVisit) * 0.56 - Math.abs(range - 36) * 0.26 + this.map.random() * 14;
+      if (score > bestScore) { best = target; bestScore = score; }
+    }
+    if (best) return best;
+    // Search locally when landmarks are too distant or the circle is small.
+    for (let attempt = 0; attempt < 7; attempt++) {
+      const angle = actor.yaw + (this.map.random() - 0.5) * TAU;
+      const stride = Math.min(37, 10 + this.map.random() * 29, Math.max(4, limit));
+      const x = actor.x + Math.sin(angle) * stride - this.storm.x;
+      const z = actor.z + Math.cos(angle) * stride - this.storm.z;
+      const scale = Math.min(1, limit / Math.max(1, Math.hypot(x, z)));
+      const target = { x: this.storm.x + x * scale, z: this.storm.z + z * scale };
+      if (distance(actor, target) > 1.4 && this.canOccupy(target.x, target.z)) return target;
+    }
+    return { x: this.storm.x, z: this.storm.z };
+  }
+
+  rivalTrail(actor) {
+    if (!rivalWeaponReady(actor) || actor.health < 39 || actor.stamina < 24) return null;
+    let best = null, lowest = Infinity;
+    for (let i = this.footprints.length - 1; i >= 0; i--) {
+      const track = this.footprints[i], age = this.clock - track.at;
+      if (age > 8) break;
+      if (track.id <= actor.lastTrack || track.maker === actor.id) continue;
+      const reach = distance(actor, track);
+      const score = reach + age * 0.42;
+      if (reach > 8.5 || score >= lowest || !this.rivalLooksAt(actor, track, 8.5)) continue;
+      const target = { x: track.x + Math.sin(track.yaw) * 5.5, z: track.z + Math.cos(track.yaw) * 5.5 };
+      if (!this.rivalSafe(actor, target)) continue;
+      best = { ...target, trailId: track.id };
+      lowest = score;
+    }
+    return best;
+  }
+
+  rivalLooksAt(actor, target, range) {
+    const reach = distance(actor, target);
+    return reach <= range && (reach < 2.2 || Math.abs(angleDifference(actor.yaw, heading(actor, target))) <= 1.45) &&
+      this.lineClear(actor, target);
+  }
+
+  rivalPrey(actor) {
+    if (!rivalWeaponReady(actor) || count(actor, "meat") + count(actor, "meal") >= 3) return null;
+    let best = null, lowest = Infinity;
+    for (const animal of this.wildlife) {
+      if (animal.harvested) continue;
+      const reach = distance(actor, animal);
+      const cost = reach + (animal.health > 0 ? animal.health * 0.13 : -6);
+      if (cost >= lowest || !this.rivalLooksAt(actor, animal, animal.health > 0 ? 30 : 14) || !this.rivalSafe(actor, animal)) continue;
+      best = animal;
+      lowest = cost;
+    }
+    return best;
+  }
+
+  rivalNeeds(actor, propose) {
+    const ready = rivalWeaponReady(actor);
+    if (actor.health < 74 && count(actor, "bandage")) propose("recover", actor, 59 + (74 - actor.health) * 0.75);
+    if (actor.hydration < 67 && actor.water > 0 && count(actor, "waterskin")) propose("recover", actor, 40 + (67 - actor.hydration) * 0.9);
+    if (actor.hunger < 69 && (count(actor, "meal") || count(actor, "berries"))) propose("recover", actor, 37 + (69 - actor.hunger) * 0.65);
+    if (actor.hydration < 63) {
+      const nearbyWater = [0, 3, 5].map(offset => ({ x: actor.x + Math.sin(actor.yaw) * offset, z: actor.z + Math.cos(actor.yaw) * offset }))
+        .filter(site => this.map.surfaceAt(site.x, site.z) > this.map.heightAt(site.x, site.z) + 0.05);
+      for (const source of [...nearbyWater, ...this.map.waterSources]) {
+        if (this.rivalLooksAt(actor, source, 23) && this.rivalSafe(actor, source)) {
+          propose("drink", source, 40 + (63 - actor.hydration) * 0.9 - distance(actor, source) * 0.5);
+        }
+      }
+    }
+    if (actor.hunger < 75) {
+      const prey = this.rivalPrey(actor);
+      if (prey) propose("hunt", prey, 33 + (75 - actor.hunger) * 0.34 + actor.tendencies.track * 8 +
+        (prey.health <= 0 ? 12 : 0) - distance(actor, prey) * 0.44);
+      for (const node of this.map.nodes) {
+        if (node.type === "berry" && !this.removed.has(node.propIndex) && this.rivalLooksAt(actor, node, 13) && this.rivalSafe(actor, node)) {
+          propose("forage", node, 36 + (75 - actor.hunger) * 0.44 - distance(actor, node) * 0.68);
+        }
+      }
+    }
+    if (count(actor, "meat") && actor.hunger < 79) {
+      const fires = [...this.stoves, ...this.pieces.filter(piece => piece.id === "fire" && !this.removed.has(piece.propIndex))];
+      for (const fire of fires) {
+        if (this.rivalLooksAt(actor, fire, 20) && this.rivalSafe(actor, fire, 4, 3)) {
+          propose("cook", fire, 47 + (79 - actor.hunger) * 0.38 - distance(actor, fire) * 0.63);
+        }
+      }
+      const recipe = builds.find(([id]) => id === "fire");
+      if (this.rivalSafe(actor, actor, 8, 6) && recipeAffordable(actor, recipe, true) && this.clock >= (actor.nextCookSite ?? 0)) {
+        propose("cook", actor, 45 + (79 - actor.hunger) * 0.39);
+      }
+    }
+    if (!ready && this.clock >= (actor.nextCraft ?? 0) && crafts.some(row => (row[0] === "spear" || row[0] === "sling") && recipeAffordable(actor, row))) {
+      propose("recover", actor, 66);
+    }
+  }
+
   thinkRival(actor) {
     const now = this.clock, age = now - ROUND_START, opening = age < 14;
-    const bold = actor.style === "fighter", cautious = actor.style === "runner" || actor.style === "stalker";
     const sound = this.heardBy(actor);
     const visible = this.actors.filter(other => this.canSeeRival(actor, other));
+    const exposed = other => now - (actor.seenHits.get(other.id) ?? -Infinity) < 2.6 ||
+      (other.weapon === "crossbow" && !other.crossbowLoaded && other.reload > 0);
     for (const rival of visible) {
       if (rival.hurt > 0 && now - rival.woundedAt < 0.43) actor.seenHits.set(rival.id, now);
       if (rival.swing > 0 && now - rival.attackedAt < 0.48) {
         actor.seenSwings.set(rival.id, { x: rival.x, z: rival.z, yaw: rival.yaw, at: now });
       }
     }
-    const exposed = other => now - (actor.seenHits.get(other.id) ?? -Infinity) < 2.6 ||
-      (other.weapon === "crossbow" && other.reload > 0);
-    const rank = other => distance(actor, other) - (exposed(other) ? 7 : 0) -
-      (other.id === actor.opponent ? 3 : 0);
+    const rank = rival => distance(actor, rival) - (exposed(rival) ? 7 : 0) - (rival.id === actor.opponent ? 3 : 0);
     visible.sort((a, b) => rank(a) - rank(b));
     const enemy = visible[0], third = visible[1];
-    const sight = enemy && { x: enemy.x, z: enemy.z, at: now, id: enemy.id };
+    const sight = enemy && { x: enemy.x, z: enemy.z, y: enemy.y, at: now, id: enemy.id };
     if (sight) actor.lastSeen = sight;
-    if (this.storm.active && distance(actor, this.storm) > this.storm.radius - Math.min(2.5, this.storm.radius * 0.12)) {
-      return this.rivalPlan(actor, "storm", { x: this.storm.x, z: this.storm.z });
+    if (enemy && actor.cooldown <= 0) chooseRivalWeapon(actor, distance(actor, enemy));
+    const storm = this.storm;
+    const margin = distance(actor, storm) - storm.radius;
+    if (margin > -Math.min(2.4, storm.radius * 0.12) && (storm.active || storm.warning)) {
+      const angle = heading(storm, actor) + (actor.id % 2 ? 0.18 : -0.18);
+      const radius = Math.max(1, storm.radius - 9);
+      return this.rivalPlan(actor, "storm", { x: storm.x + Math.sin(angle) * radius, z: storm.z + Math.cos(angle) * radius });
     }
-    if (actor.intent === "retreat" && now < actor.escapeUntil && actor.target && distance(actor, actor.target) > 2) return;
-    // Carry a successful grab out of the plaza. Losing a pursuer's sight on the
-    // first step should not make a runner turn back toward the same fight.
-    const leaveOpening = actor.style === "runner" && (actor.openingLoot || age > 5) ||
-      actor.style === "hunter" && age > (actor.aggression < 0.55 ? 2 : 8) ||
-      actor.style === "stalker" && age > 10;
-    if (!actor.leftPlaza && this.alive > 3 && age < 25 && leaveOpening) {
-      if (!actor.openingRoute) {
-        const angle = Math.atan2(actor.x, actor.z) + (actor.id % 2 ? 0.25 : -0.25);
-        const radius = 42 + actor.aggression * 18;
-        actor.openingRoute = { x: Math.sin(angle) * radius, z: Math.cos(angle) * radius };
-      }
-      if (distance(actor, actor.openingRoute) > 2.5) {
-        actor.lastSeen = null;
-        return this.rivalPlan(actor, "retreat", actor.openingRoute);
-      }
-      actor.leftPlaza = true;
-      actor.lastSeen = null;
-    }
+
+    let best = null;
+    const propose = (intent, target, score, lookAt = null, opponent = null) => {
+      const continuing = intent === actor.intent && distance(target, actor.target || actor) < 3;
+      if (continuing && now < actor.commitUntil) score += 4;
+      if (!best || score > best.score) best = { intent, target, score, lookAt, opponent, continuing };
+    };
+    const ready = rivalWeaponReady(actor);
+    const risk = actor.tendencies.risk + (actor.aggression - 0.5) * 0.18;
+    const spent = actor.stamina < 23 || actor.hunger < 26 || actor.hydration < 26;
     if (enemy) {
       const reach = distance(actor, enemy);
-      const contact = reach < 4.3 || (reach < 14 && now - actor.woundedAt < 1.8);
-      const outmatched = actor.weapon === "fists" && enemy.weapon !== "fists";
+      const close = reach < (enemy.weapon === "fists" ? 3.5 : 5.2);
+      const outmatched = !ready && enemy.weapon !== "fists";
       const extraThreat = third || (sound && sound.source !== enemy.id && now - sound.at < 1.8);
+      const vulnerable = exposed(enemy);
+      const endangered = actor.health < 26 || ((actor.health < 49 || spent || !ready) && extraThreat) || (outmatched && close);
       const swungAt = (striker, rival) => {
         const swing = actor.seenSwings.get(striker.id);
         return swing && now - swing.at < 2.6 && Math.abs(angleDifference(swing.yaw, heading(swing, rival))) < 1.1;
       };
       const trading = third && distance(enemy, third) < 13 && (swungAt(enemy, third) || swungAt(third, enemy));
-      const vulnerable = exposed(enemy);
-      const needsRecovery = actor.health < 48 || actor.stamina < 23 || actor.hunger < 26 || actor.hydration < 26;
-      if (this.alive > 2 && ((needsRecovery && extraThreat) ||
-        (contact && (actor.health < 25 || (outmatched && cautious))))) {
-        actor.escapeUntil = now + 3.5;
-        return this.rivalPlan(actor, "retreat", this.rivalExit(actor, sight));
+      const chance = (actor.health - 60) * 0.22 + (actor.stamina - 55) * 0.12 + (ready ? 8 : 0) + (actor.armor ? 5 : 0) +
+        (hasShield(actor) ? 3 : 0) + risk * 9 - (outmatched ? 22 : 0) - (extraThreat && !vulnerable ? 12 : 0) - (spent ? 13 : 0);
+      if (endangered && storm.radius > 8) {
+        propose("retreat", this.rivalExit(actor, sight), 104, sight);
       }
-      if (trading && !contact && (cautious || this.alive === 3) && !(vulnerable && actor.health > 48)) {
-        return this.rivalPlan(actor, "watch", { x: actor.x, z: actor.z }, sight);
+      if (trading && !close && !vulnerable && (this.alive <= 3 || chance < 30)) {
+        propose("watch", actor, this.alive <= 3 ? 84 : 66, sight);
       }
-      if ((contact && (!opening || bold || !outmatched)) ||
-        ((!opening || (bold && actor.weapon !== "fists")) &&
-          (!outmatched || vulnerable || this.alive === 2) &&
-          (!cautious || vulnerable || this.alive === 2 || reach < 8 || trading))) {
-        return this.rivalPlan(actor, "engage", sight, null, enemy.id);
+      if (opening && !close && !vulnerable && !actor.openingLoot) {
+        propose("watch", actor, 73 - actor.tendencies.opening * 37, sight);
       }
-      if (opening && actor.style === "stalker" && !contact && !vulnerable) {
-        return this.rivalPlan(actor, "watch", { x: actor.x, z: actor.z }, sight);
+      if (!endangered || storm.radius <= 8) {
+        const ideal = weapons[actor.weapon].ammo ? 11 : 5;
+        const score = 43 + chance + (vulnerable ? 20 : 0) + (close ? 16 : 0) + (this.alive <= 3 ? 15 : 0) -
+          Math.max(0, reach - ideal) * 0.8 - (opening && !ready && !close ? 18 : 0);
+        propose("engage", sight, score, sight, enemy.id);
       }
-      if (!opening && cautious && (actor.weapon !== "fists" || outmatched)) {
-        return this.rivalPlan(actor, "watch", reach < 7 ? this.rivalExit(actor, sight) : { x: actor.x, z: actor.z }, sight);
-      }
-    }
-    if (!enemy) {
+    } else {
       const memory = actor.lastSeen;
-      if (cautious && this.alive > 2 && sound && (sound.kind === "strike" || sound.kind === "shot") &&
-        (!memory || memory.at < sound.at) && distance(actor, sound) < 12) {
-        actor.escapeUntil = now + 2.8;
-        return this.rivalPlan(actor, "retreat", this.rivalExit(actor, sound));
+      const memoryAge = memory ? now - memory.at : Infinity;
+      if (sound && (!memory || sound.at > memory.at)) {
+        const startled = ["strike", "shot"].includes(sound.kind) && distance(actor, sound) < 13 && (actor.health < 46 || spent || !ready);
+        if (startled && this.alive > 2) propose("retreat", this.rivalExit(actor, sound), 79, sound);
+        else if (ready || sound.kind === "footsteps" || actor.health >= 48) propose("investigate", sound, 57 - (now - sound.at) * 3);
+      } else if (memoryAge < 6.5 + actor.tendencies.track * 2.5) {
+        propose("search", memory, 60 - memoryAge * 2 + (this.alive <= 3 ? 8 : 0));
       }
-      if (sound && (!memory || sound.at > memory.at)) return this.rivalPlan(actor, "investigate", sound);
-      if (memory && now - memory.at < (actor.style === "hunter" ? 8 : 5.5)) return this.rivalPlan(actor, "search", memory);
-      if (sound) return this.rivalPlan(actor, "investigate", sound);
-      if (actor.health < 75 && count(actor, "bandage")) {
-        add(actor, "bandage", -1);
-        actor.health = Math.min(100, actor.health + 28);
-      }
-      if (actor.hunger < 68) {
-        const food = count(actor, "meal") ? "meal" : "berries";
-        if (count(actor, food)) {
-          add(actor, food, -1);
-          actor.hunger = Math.min(100, actor.hunger + (food === "meal" ? 42 : 18));
+      if ((!sound || now - sound.at > 2.4) && memoryAge > 1.5) {
+        const track = this.rivalTrail(actor);
+        if (track) propose("search", track, 46 + actor.tendencies.track * 6);
+        if (actor.target?.trailId && actor.intent === "search" && distance(actor, actor.target) > 1.5 && now < actor.commitUntil) {
+          propose("search", actor.target, 48 + actor.tendencies.track * 6);
         }
       }
-      if (actor.hydration < 58) {
-        if (actor.water > 0 && count(actor, "waterskin")) {
-          const drink = Math.min(24, actor.water);
-          actor.water -= drink;
-          actor.hydration += drink;
-        } else if (this.map.surfaceAt(actor.x, actor.z) > this.map.heightAt(actor.x, actor.z) + 0.05) {
-          actor.hydration = Math.min(100, actor.hydration + 55);
+      this.rivalNeeds(actor, propose);
+    }
+
+    if (!actor.leftPlaza && this.alive > 3 && age < 25) {
+      const bail = actor.openingLoot || age > 4 + actor.tendencies.opening * 13 || actor.health < 63;
+      if (bail && (opening || actor.openingRoute)) {
+        if (!actor.openingRoute) {
+          const angle = Math.atan2(actor.x, actor.z) + (actor.id % 2 ? 0.29 : -0.29);
+          const radius = 42 + actor.aggression * 21;
+          actor.openingRoute = { x: Math.sin(angle) * radius, z: Math.cos(angle) * radius };
+        }
+        if (distance(actor, actor.openingRoute) < 3) actor.leftPlaza = true;
+        else propose("retreat", actor.openingRoute, 94 - actor.tendencies.opening * 53 + (actor.openingLoot ? 7 : 0));
+      }
+    }
+
+    const supply = this.supplyFor(actor, opening && !actor.openingLoot);
+    if (supply && this.rivalSafe(actor, supply)) {
+      propose("loot", supply, (opening ? 61 : ready ? 39 : 65) - distance(actor, supply) * (opening ? 0.65 : 0.7));
+    }
+    if (!opening && actor.health >= 40 && actor.hydration >= 35 && actor.hunger >= 35) {
+      const camp = actor.campFrame;
+      const existingCamp = camp && !this.removed.has(camp.propIndex) && distance(actor, camp) < 32 && this.rivalSafe(actor, camp);
+      if (!enemy && (!sound || now - sound.at > 2.2) && existingCamp && camp.shelterFrame) {
+        if (actor.intent === "work" && actor.target?.workNode && !this.removed.has(actor.target.workNode.propIndex)) {
+          propose("work", actor.target, 63);
         } else {
-          const spring = this.map.waterSources.find(source => distance(actor, source) < 18 && this.lineClear(actor, source));
-          if (spring) return this.rivalPlan(actor, "drink", spring);
+          const site = this.workSite(actor);
+          if (site) propose("work", site, 59 - distance(actor, site) * 0.3);
         }
+      } else if (!existingCamp) {
+        const fort = rivalFortCandidate(this, actor, { enemy, sound });
+        if (fort) propose("fortify", fort.target, fort.score);
       }
     }
-    const supply = this.supplyFor(actor, opening && !actor.openingLoot && actor.style === "runner");
-    if (supply) return this.rivalPlan(actor, "loot", supply);
-    if (this.alive > 2 && (!opening || actor.leftPlaza) && !enemy && (actor.style === "runner" || actor.style === "hunter")) {
-      if (actor.intent === "work" && actor.target && !this.removed.has(actor.target.workNode?.propIndex)) return;
-      const site = this.workSite(actor);
-      if (site) return this.rivalPlan(actor, "work", site);
+    if (!best || best.score < 33) propose("roam", this.rivalPatrol(actor), 33);
+    if (!best.continuing) actor.commitUntil = now + (best.intent === "search" ? 4.5 : 3.5 + this.map.random() * 2.5);
+    if (best.target.trailId) actor.lastTrack = Math.max(actor.lastTrack, best.target.trailId);
+    // Watch and recovery stay in place using a position snapshot.
+    const target = best.target === actor ? { x: actor.x, z: actor.z } : best.target;
+    this.rivalPlan(actor, best.intent, target, best.lookAt, best.opponent);
+  }
+
+  recoverRival(actor) {
+    if (actor.health < 74 && count(actor, "bandage")) {
+      add(actor, "bandage", -1);
+      actor.health = Math.min(100, actor.health + 28);
+    } else if (actor.hydration < 67 && actor.water > 0 && count(actor, "waterskin")) {
+      const amount = Math.min(24, actor.water);
+      actor.water -= amount;
+      actor.hydration = Math.min(100, actor.hydration + amount);
+    } else if (actor.hunger < 69 && (count(actor, "meal") || count(actor, "berries"))) {
+      const food = count(actor, "meal") ? "meal" : "berries";
+      add(actor, food, -1);
+      actor.hunger = Math.min(100, actor.hunger + (food === "meal" ? 42 : 18));
+    } else if (!rivalWeaponReady(actor)) {
+      const recipe = ["spear", "sling"].map(id => crafts.find(row => row[0] === id)).find(row => recipeAffordable(actor, row));
+      if (recipe) {
+        pay(actor, recipe, false);
+        add(actor, recipe[0], recipe[1]);
+        equips(actor, recipe[0]);
+      }
+      actor.nextCraft = this.clock + 3;
     }
-    if (actor.intent === "roam" && actor.target && distance(actor, actor.target) > 2) return;
-    const angle = opening ? Math.atan2(actor.x, actor.z) : this.map.random() * TAU;
-    const radius = opening ? 27 + actor.aggression * 9 : Math.max(2, this.storm.radius * (0.15 + 0.65 * this.map.random()));
-    this.rivalPlan(actor, "roam", { x: this.storm.x + Math.sin(angle) * radius, z: this.storm.z + Math.cos(angle) * radius });
+    actor.target = null;
+    actor.decision = this.clock + 0.6;
+  }
+
+  cookRival(actor, fire) {
+    if (fire.propIndex == null) {
+      const recipe = builds.find(([id]) => id === "fire");
+      for (let direction = 0; direction < 6; direction++) {
+        const candidate = this.blueprint({ ...actor, yaw: actor.yaw + direction * TAU / 6 }, recipe, 0, 1.9);
+        if (!candidate?.fits || !recipeAffordable(actor, recipe, true)) continue;
+        this.installPiece(actor, recipe, candidate);
+        fire = candidate;
+        break;
+      }
+      actor.nextCookSite = this.clock + 9;
+      if (fire.propIndex == null) { actor.target = null; actor.decision = this.clock; return; }
+      actor.target = fire;
+    }
+    if (this.removed.has(fire.propIndex) || !count(actor, "meat")) {
+      actor.target = null;
+      actor.decision = this.clock;
+      return;
+    }
+    if (this.clock < (actor.nextCook ?? 0)) return;
+    if (!fire.lit) {
+      fire.lit = true;
+      this.showPiece(fire);
+    } else {
+      add(actor, "meat", -1);
+      add(actor, "meal", 1);
+      this.rivalPlan(actor, "recover", { x: actor.x, z: actor.z });
+    }
+    actor.nextCook = this.clock + 2.5;
+    actor.decision = this.clock + Math.min(0.85, 1.15 - this.difficulty * 0.12);
+  }
+
+  rivalFight(actor, target, seconds, hunting = false) {
+    if (!target) return false;
+    const visible = hunting ? this.rivalLooksAt(actor, target, 33) : this.canSeeRival(actor, target);
+    if (!visible) return false;
+    const weapon = weapons[actor.weapon];
+    const reach = distance(actor, target);
+    const ideal = weapon.ammo ? Math.min(weapon.range * 0.44, actor.weapon === "crossbow" ? 23 : 17) : weapon.reach * 0.82;
+    const range = weapon.ammo ? weapon.range * 0.68 : weapon.reach;
+    actor.yaw = heading(actor, target);
+    if (!hunting && hasShield(actor) && !weapon.ammo && actor.stamina > 13) {
+      actor.guard = actor.cooldown > Math.max(0.13, 0.31 - this.difficulty * 0.058) ||
+        (target.swing > 0.24 && reach < (weapons[target.weapon].reach ?? 3.7) + 1 && actor.cooldown > 0);
+    }
+    const tired = actor.stamina < 17;
+    const elevation = (target.y ?? this.map.heightAt(target.x, target.z)) - actor.y;
+    if ((!weapon.ammo && Math.abs(elevation) > 1.06) || (!weapon.ammo && tired)) return false;
+    if (reach <= range && actor.cooldown <= 0 && (!weapon.ammo || actor.weapon !== "crossbow" || actor.crossbowLoaded)) {
+      const aimHeight = hunting ? -0.68 : target.crouch ? -0.64 : -0.29;
+      const error = weapon.ammo ? (this.map.random() - 0.5) * (0.11 - this.difficulty * 0.027) : 0;
+      actor.yaw += error;
+      actor.aimPitch = Math.atan2(elevation + aimHeight + reach * reach * 0.0009, Math.max(0.2, reach));
+      this.attack(actor, 1, weapon, hunting ? target : null);
+      actor.stamina = Math.max(0, actor.stamina - (weapon.ammo ? 3 : 8));
+      return true;
+    }
+    if (hunting && reach > ideal) return false;
+    if (!hunting && (reach < ideal * 1.35 || weapon.ammo && reach <= range)) {
+      const back = reach < ideal * 0.83 ? -0.87 : 0;
+      const side = (actor.id % 2 ? 1 : -1) * (weapon.ammo ? 0.65 : 0.45 + this.difficulty * 0.1);
+      this.move(actor, side, back, seconds, actor.guard ? 2.1 : 3.15);
+      return true;
+    }
+    return reach < ideal && weapon.ammo;
+  }
+
+  moveRival(actor, target, seconds, intent) {
+    const route = rivalFortDescent(this, actor, target);
+    const yaw = heading(actor, route), side = actor.id % 2 ? 1 : -1;
+    const rush = ["retreat", "storm"].includes(intent) || intent === "hunt" && !weapons[actor.weapon].ammo;
+    const water = this.map.surfaceAt(actor.x, actor.z) - this.map.heightAt(actor.x, actor.z);
+    const speed = (actor.crouch ? 2.05 : rush && !actor.winded ? 5.8 : 3.7 + actor.aggression * 0.9) * (water > 0.3 ? 0.65 : 1);
+    const before = distance(actor, route);
+    for (const offset of [0, 0.55, -0.55, 1.1, -1.1, 1.65]) {
+      actor.yaw = yaw + side * offset + (actor.detourUntil > this.clock ? actor.detourAngle : 0);
+      if (!this.canOccupy(actor.x + Math.sin(actor.yaw) * 0.48, actor.z + Math.cos(actor.yaw) * 0.48, undefined, actor)) continue;
+      this.move(actor, 0, 1, seconds, speed);
+      break;
+    }
+    if (before - distance(actor, route) < seconds * 0.38) actor.noProgress += seconds;
+    else actor.noProgress = Math.max(0, actor.noProgress - seconds * 1.6);
+    if (actor.noProgress < 1.8) return;
+    actor.noProgress = 0;
+    if (actor.detourUntil > this.clock && ["roam", "hunt", "forage", "loot"].includes(intent)) {
+      if (target.site) actor.visitedSites.set(target.site, this.clock);
+      actor.target = null;
+      actor.decision = this.clock;
+      return;
+    }
+    actor.detourAngle = side * 1.22;
+    actor.detourUntil = this.clock + 3.1;
   }
 
   bot(actor, seconds) {
@@ -1008,28 +1382,35 @@ export class SoloArena {
       equips(actor, Object.keys(weapons).reverse().find(id => weapons[id].reach && count(actor, id)) || "fists");
     }
     if (actor.decision <= this.clock) {
-      actor.decision = this.clock + 0.32 + this.map.random() * 0.25;
+      actor.decision = this.clock + 0.69 + this.map.random() * 0.45 - this.difficulty * 0.105;
       this.thinkRival(actor);
     }
     const target = actor.target;
+    actor.speed = 0;
     if (!target) return;
     const reach = distance(actor, target), intent = actor.intent;
-    actor.speed = 0;
     actor.guard = false;
-    actor.crouch = intent === "watch" || (intent === "search" && actor.style === "stalker");
+    actor.crouch = intent === "watch" || (intent === "search" && actor.tendencies.track > 0.7);
+    if (intent === "fortify") { stepRivalFort(this, actor, seconds); return; }
+    if (intent === "recover") { this.recoverRival(actor); return; }
     if (intent === "engage") {
-      const enemy = this.actors.find(other => other.id === actor.opponent), weapon = weapons[actor.weapon];
-      const attackRange = weapon.ammo ? weapon.range * 0.68 : weapon.reach;
-      if (enemy && reach < attackRange + 1) {
-        actor.yaw = heading(actor, target);
-        actor.guard = hasShield(actor) && actor.cooldown > 0.18;
-        if (actor.cooldown <= 0 && this.canSeeRival(actor, enemy) && distance(actor, enemy) <= attackRange) {
-          actor.yaw = heading(actor, enemy);
-          actor.aimPitch = Math.atan2(enemy.y - actor.y + (enemy.crouch ? -0.64 : -0.29) + reach * reach * 0.0009, Math.max(0.2, reach));
-          this.attack(actor);
-          return;
-        }
-        if (actor.cooldown > 0 && reach < attackRange * 0.85) return;
+      const enemy = this.actors.find(other => other.id === actor.opponent);
+      if (this.rivalFight(actor, enemy, seconds)) return;
+    }
+    if (intent === "engage" || intent === "search") {
+      const approach = rivalFortApproach(this, actor, target);
+      if (approach !== target) { this.moveRival(actor, approach, seconds, intent); return; }
+      if (this.breachFort(actor, target)) return;
+    }
+    if (intent === "hunt") {
+      if (target.harvested || !this.rivalLooksAt(actor, target, 33)) { actor.target = null; actor.decision = this.clock; return; }
+      if (target.health > 0 && this.rivalFight(actor, target, seconds, true)) return;
+      if (target.health <= 0 && reach <= 2.4) {
+        target.harvested = true;
+        add(actor, "meat", 2);
+        actor.target = null;
+        actor.decision = this.clock;
+        return;
       }
     }
     if (intent === "loot" && reach < 2.15 && this.lineClear(actor, target)) {
@@ -1038,33 +1419,33 @@ export class SoloArena {
         actor.openingLoot = true;
       }
       actor.target = null;
-      actor.decision = 0;
+      actor.decision = this.clock;
       return;
     }
     if (intent === "work" && (reach < 0.5 || distance(actor, target.workNode) <= 2.7)) {
-      if (!this.workAt(actor, target)) { actor.target = null; actor.decision = 0; }
+      if (!this.workAt(actor, target)) { actor.target = null; actor.decision = this.clock; }
+      return;
+    }
+    if (intent === "cook" && reach < 2.38) { this.cookRival(actor, target); return; }
+    if (intent === "forage" && reach < 2.4 && this.lineClear(actor, target)) {
+      this.harvest(target, actor);
+      actor.target = null;
+      actor.decision = this.clock + 0.65;
       return;
     }
     if (intent === "drink" && reach < 2.3) {
       actor.hydration = Math.min(100, actor.hydration + 55);
       if (count(actor, "waterskin")) actor.water = 42;
       actor.target = null;
-      actor.decision = 0;
+      actor.decision = this.clock;
       return;
     }
     if (reach < 1.0) {
       if (actor.lookAt) actor.yaw = heading(actor, actor.lookAt);
-      else if (intent === "investigate" || intent === "search") actor.yaw += seconds * (actor.id % 2 ? 1.25 : -1.25);
+      else if (["investigate", "search", "roam"].includes(intent)) actor.yaw += seconds * (actor.id % 2 ? 1.35 : -1.35);
       return;
     }
-    const yaw = heading(actor, target), side = actor.id % 2 ? 1 : -1;
-    const speed = actor.crouch ? 2.05 : intent === "retreat" && !actor.winded ? 5.8 : 3.7 + actor.aggression * 0.9;
-    for (const offset of [0, 0.55, -0.55, 1.1, -1.1, 1.65]) {
-      actor.yaw = yaw + side * offset;
-      if (!this.canOccupy(actor.x + Math.sin(actor.yaw) * 0.75, actor.z + Math.cos(actor.yaw) * 0.75)) continue;
-      this.move(actor, 0, 1, seconds, speed);
-      break;
-    }
+    this.moveRival(actor, target, seconds, intent);
   }
 
   updateActor(actor, seconds) {
@@ -1099,6 +1480,15 @@ export class SoloArena {
       this.move(actor, right, forward, seconds, speed);
       if (this.hold.has("attack") && !weapons[actor.weapon].ammo && actor.cooldown <= 0) this.attack(actor);
     }
+    actor.trackDistance += Math.hypot(actor.x - oldX, actor.z - oldZ);
+    if (actor.trackDistance >= 2.3) {
+      actor.trackDistance = 0;
+      const ground = this.map.heightAt(actor.x, actor.z);
+      if (!actor.crouch && Math.abs(actor.y - ground) < 0.35 && this.map.surfaceAt(actor.x, actor.z) <= ground + 0.12) {
+        this.footprints.push({ id: ++this.trackSerial, x: actor.x, z: actor.z, at: this.clock,
+          maker: actor.id, yaw: Math.atan2(actor.x - oldX, actor.z - oldZ) });
+      }
+    }
     if (!actor.crouch && actor.speed > 5 && this.clock >= actor.nextStepNoise &&
       Math.hypot(actor.x - oldX, actor.z - oldZ) > seconds * 2.5) {
       actor.nextStepNoise = this.clock + 0.48;
@@ -1119,6 +1509,7 @@ export class SoloArena {
     const elapsed = this.clock - ROUND_START;
     if (elapsed < 0) return;
     while (this.rivalSounds.length && this.clock - this.rivalSounds[0].at > 1.2) this.rivalSounds.shift();
+    while (this.footprints.length && this.clock - this.footprints[0].at > 8) this.footprints.shift();
     const stormTime = Math.max(0, elapsed - 38);
     const radius = this.world.radius;
     this.storm.radius = Math.max(5, radius - stormTime * 0.87);
@@ -1132,9 +1523,15 @@ export class SoloArena {
     }
     for (const animal of this.wildlife) {
       if (animal.health <= 0) continue;
-      if (distance(animal, this.player) < 10) animal.yaw = heading(this.player, animal);
+      let threat = null, closest = 10;
+      for (const actor of this.actors) {
+        if (!actor.alive) continue;
+        const reach = distance(animal, actor);
+        if (reach < closest && (!actor.crouch || reach < 4.5)) { threat = actor; closest = reach; }
+      }
+      if (threat) animal.yaw = heading(threat, animal);
       else animal.yaw += Math.sin(this.clock * 0.45 + animal.phase) * seconds * 0.75;
-      const pace = distance(animal, this.player) < 10 ? 3.8 : 0.8;
+      const pace = threat ? 3.8 : 0.8;
       const x = animal.x + Math.sin(animal.yaw) * seconds * pace;
       const z = animal.z + Math.cos(animal.yaw) * seconds * pace;
       if (this.canOccupy(x, z)) {
@@ -1170,7 +1567,7 @@ export class SoloArena {
     const lean = this.input.lean * 0.28 || 0;
     const cameraX = x + Math.cos(yaw) * lean;
     const cameraZ = z - Math.sin(yaw) * lean;
-    const leaning = lean && this.canOccupy(cameraX, cameraZ, 0);
+    const leaning = lean && this.canOccupy(cameraX, cameraZ, 0, actor);
     return {
       type: "frame", round: this.world.round, clock: this.clock, time: this.clock,
       mode: "match", daylight, rain: false, flood: false,
@@ -1185,6 +1582,8 @@ export class SoloArena {
           other.crossbowLoaded, other.swing, this.clock - other.woundedAt < 0.43 ? other.hurt / 0.43 : 0]),
       wildlife: this.wildlife.filter(animal => !animal.harvested && distance(actor, animal) < 85)
         .map(animal => [animal.model, animal.x, this.map.heightAt(animal.x, animal.z), animal.z, animal.yaw, animal.health > 0, animal.phase]),
+      tracks: this.footprints.filter(track => distance(actor, track) < 18)
+        .map(track => [track.x, this.map.heightAt(track.x, track.z) + 0.026, track.z, track.yaw, clamp(1 - (this.clock - track.at) / 8)]),
       shots: this.shots.map(shot => [shot.model, shot.x, shot.y, shot.z, shot.yaw, Math.PI / 2 - shot.pitch]),
       ghost: blueprint && itemRow(blueprint.id, blueprint.x, blueprint.y, blueprint.z,
         blueprint.w, blueprint.h, blueprint.d, "structure", blueprint.angle),

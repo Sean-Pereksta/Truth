@@ -1,6 +1,7 @@
 const TAU = Math.PI * 2;
 const PROP_CELL = 26;
 const PROP_RANGE = 160;
+const modelFiles = ["landmarks.bin.gz", "survivors.bin.gz", "field.bin.gz"];
 const clamp = (n, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, n));
 const mix = (a, b, t) => a + (b - a) * t;
 const solid = [1, 1, 1, 1];
@@ -13,6 +14,7 @@ const costume = {
   player: [1, 1, 1, 1], hunter: [1, 0.91, 0.81, 1], runner: [0.85, 0.96, 1, 1],
   stalker: [0.76, 0.86, 0.79, 1], fighter: [1, 0.83, 0.74, 1],
 };
+const nativeCostume = { raider: "fighter", scout: "runner", shadow: "stalker" };
 
 const vertexSource = `#version 300 es
 in vec3 vertex;
@@ -266,6 +268,14 @@ function boxVertices() {
   return new Float32Array(vertices);
 }
 
+function footprintVertices() {
+  const vertices = [];
+  for (const [width, heel, toe] of [[0.040, -0.136, -0.045], [0.047, -0.006, 0.145]]) {
+    appendFace(vertices, [[-width, 0, toe], [width, 0, toe], [width, 0, heel], [-width, 0, heel]], [0, 1, 0]);
+  }
+  return new Float32Array(vertices);
+}
+
 function transformedPoint(matrix, x, y, z, direction = 0) {
   return [matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12] * direction,
     matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13] * direction,
@@ -496,10 +506,10 @@ function skyConditions(frame, arena, camera) {
 }
 
 export class ArenaRenderer {
-  constructor(canvas, browserAssets = false) {
+  constructor(canvas, staticSite = false) {
     this.canvas = canvas;
-    this.assetRoot = new URL(browserAssets ? "../../browser-assets/" : "./assets/", import.meta.url);
-    this.modelFiles = browserAssets ? ["landmarks.bin.gz", "survivors.bin.gz", "field.bin.gz"] : ["models.bin"];
+    this.assetRoot = new URL(staticSite ? "../../browser-assets/" : "./assets/", import.meta.url);
+    this.legacyModels = !staticSite;
     this.gl = canvas.getContext("webgl2", {
       alpha: false, depth: true, antialias: false, powerPreference: "high-performance",
     });
@@ -555,6 +565,7 @@ export class ArenaRenderer {
     this.canopy = this.makeMesh(coneVertices(8, 0.04));
     this.rock = this.makeMesh(coneVertices(6, 0.47));
     this.flame = this.makeMesh(coneVertices(6, 0));
+    this.footprint = this.makeMesh(footprintVertices());
     this.sword = this.makeMesh(swordVertices());
     this.shield = this.makeMesh(shieldVertices());
     this.crossbow = this.makeMesh(crossbowVertices());
@@ -594,38 +605,43 @@ export class ArenaRenderer {
         }
       }
     };
-    const loadModels = async (path) => {
+    const loadModels = async (path, fillMissing = false) => {
       try {
         const response = await fetch(new URL(path, this.assetRoot), { signal });
-        if (!response.ok) return;
+        if (!response.ok) return false;
         let bytes = await response.arrayBuffer();
         const header = new Uint8Array(bytes, 0, Math.min(2, bytes.byteLength));
         if (header[0] === 31 && header[1] === 139) {
-          if (typeof DecompressionStream !== "function") return;
+          if (typeof DecompressionStream !== "function") return false;
           const decoded = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
           bytes = await new Response(decoded).arrayBuffer();
         }
-        if (!signal.aborted) {
-          for (const [id, model] of readModels(bytes)) this.models.set(id, model);
+        if (signal.aborted) return false;
+        for (const [id, model] of readModels(bytes)) {
+          if (!fillMissing || !this.models.has(id)) this.models.set(id, model);
         }
+        return true;
       } catch {
         // The arena can still render with its compact scene meshes while art is unavailable.
+        return false;
       }
     };
     if (!this.modelRequest) {
       this.modelRequest = true;
-      for (const path of this.modelFiles) void loadModels(path);
+      void Promise.all(modelFiles.map(path => loadModels(path))).then(packs => {
+        if (this.legacyModels && !signal.aborted && packs.some(loaded => !loaded)) void loadModels("models.bin", true);
+      });
     }
     const prefix = arena === 1 ? "gorge_" : arena === 2 ? "frost_" : "";
-    await load("ground", prefix ? [prefix + "floor.png", "ground.png"] : ["ground.png"], true);
-    if (signal.aborted || this.world?.arena !== arena) return;
-    await load("soil", prefix ? [prefix + "path.png", "soil.png"] : ["soil.png"], true);
-    if (!this.sharedTextureRequest && !signal.aborted) {
+    const textures = [
+      load("ground", prefix ? [prefix + "floor.png", "ground.png"] : ["ground.png"], true),
+      load("soil", prefix ? [prefix + "path.png", "soil.png"] : ["soil.png"], true),
+    ];
+    if (!this.sharedTextureRequest) {
       this.sharedTextureRequest = true;
-      await load("paint", ["modelpaint.png", "paint.png"]);
-      await load("pavers", ["pavers.png"]);
-      await load("sky", ["sky.png"]);
+      textures.push(load("paint", ["modelpaint.png", "paint.png"]), load("pavers", ["pavers.png"]), load("sky", ["sky.png"]));
     }
+    await Promise.all(textures);
   }
 
   createTexture(name, unit, color) {
@@ -1072,6 +1088,10 @@ export class ArenaRenderer {
     } else if (id === "gate" && open) {
       add(this.box, -w * 0.42, 0, 0, w * 0.10, h, d, [0.39, 0.26, 0.14, 1]);
       add(this.box, w * 0.42, 0, 0, w * 0.10, h, d, [0.39, 0.26, 0.14, 1]);
+    } else if (kind === "structure" && id === "ramp") {
+      const incline = pose(0, h * 0.5 / size, 0, 0, -Math.atan2(h, d),
+        w / size, 0.12 / size, Math.hypot(d, h) / size);
+      this.queue(batch, this.box, multiply(matrix, incline), highlight ?? [0.46, 0.34, 0.21, 1]);
     } else if (kind === "structure" && id === "wall") {
       for (let i = 0; i < 6; i++) {
         add(this.trunk, ((i + 0.5) / 6 - 0.5) * w, 0, 0, w * 0.18, h * (0.94 + (i % 2) * 0.06), d, [0.43, 0.30, 0.18, 1]);
@@ -1085,7 +1105,7 @@ export class ArenaRenderer {
 
   actor(batch, a, clock, nearby) {
     const [x, y, z, yaw, alive, crouch, style, , fallYaw, anim, speed, weapon, shield, guard, guardBlend, reload, loaded, striking, recoil = 0] = a;
-    const tint = costume[style] ?? solid;
+    const tint = costume[nativeCostume[style] ?? style] ?? solid;
     const gait = alive ? Math.sin(anim ?? clock * 5) * clamp((speed ?? 0) * 0.25) : 0;
     const matrix = alive ? pose(x, y - (crouch ? 0.20 : 0) - recoil * 0.1, z, yaw, -0.19 * recoil, 1, crouch ? 0.86 : 1, 1)
       : pose(x, y + 0.18, z, fallYaw ?? yaw, -Math.PI / 2);
@@ -1322,6 +1342,16 @@ export class ArenaRenderer {
     this.drawBatch(nearby);
     gl.enable(gl.BLEND);
     gl.depthMask(false);
+    const tracks = new Map();
+    for (const [x, y, z, yaw, fade] of frame.tracks ?? []) {
+      if (fade <= 0 || !this.visible(camera, x, z, 18, horizontal, 0.4)) continue;
+      const ground = this.groundHeight(x, z);
+      if (Math.abs(y - ground) > 0.55) continue;
+      const forward = this.groundHeight(x + Math.sin(yaw) * 0.16, z + Math.cos(yaw) * 0.16);
+      this.queue(tracks, this.footprint, pose(x, ground + 0.032, z, yaw, -Math.atan2(forward - ground, 0.16)),
+        [0.17, 0.14, 0.10, 0.52 * clamp(fade)]);
+    }
+    this.drawBatch(tracks, 4);
     const water = frame.flood ? this.floodMesh ?? this.waterMesh : this.waterMesh;
     if (water) this.draw(water, identity);
     const s = frame.storm;

@@ -27,7 +27,7 @@ class TestMobile {
     }
     sealed class ReplyHeaders {
         public int Status;
-        public string Location="",ContentType="";
+        public string Location="",ContentType="",ContentEncoding="";
     }
 
     static void Check(bool condition,string message) {
@@ -69,6 +69,8 @@ class TestMobile {
                 .Select(line=>line.Substring(10)).FirstOrDefault()??"";
             values.ContentType=parts.Where(line=>line.StartsWith("Content-Type: ",StringComparison.OrdinalIgnoreCase))
                 .Select(line=>line.Substring(14)).FirstOrDefault()??"";
+            values.ContentEncoding=parts.Where(line=>line.StartsWith("Content-Encoding: ",StringComparison.OrdinalIgnoreCase))
+                .Select(line=>line.Substring(18)).FirstOrDefault()??"";
             return values;
         }
         var request=(HttpWebRequest)WebRequest.Create(origin+path);
@@ -82,7 +84,8 @@ class TestMobile {
             response=(HttpWebResponse)error.Response;
         }
         using(response) {
-            return new ReplyHeaders {Status=(int)response.StatusCode,Location=response.Headers["Location"],ContentType=response.ContentType};
+            return new ReplyHeaders {Status=(int)response.StatusCode,Location=response.Headers["Location"],
+                ContentType=response.ContentType,ContentEncoding=response.ContentEncoding};
         }
     }
     static WebSocket Connect(bool compressed) {
@@ -191,8 +194,11 @@ class TestMobile {
         Check(Number(player,"id")==seat&&(string)player["name"]==name,"Frame exposes another seat's perspective.");
         Check(player["shield"] is bool && player["shieldRaised"] is bool && player["crossbowLoaded"] is bool &&
             Number(player,"reload")>=0 && Number(player,"reload")<=1, "Incomplete mobile equipment state.");
-        Check(Number(frame,"alive")>0&&Number(frame,"alive")<=24&&frame.ContainsKey("propChanges")&&((object[])frame["craft"]).Length>0,
+        Check(Number(frame,"alive")>0&&Number(frame,"alive")<=24&&frame.ContainsKey("propChanges")&&frame.ContainsKey("tracks")&&((object[])frame["craft"]).Length>0,
             "Frame is missing arena contestants, prop changes, or recipes.");
+        foreach(object[] actor in (object[])frame["actors"])
+            Check(actor.Length>=19&&Convert.ToSingle(actor[18])>=0&&Convert.ToSingle(actor[18])<=1,
+                  "Frame is missing a visible contestant's hit reaction.");
     }
     static bool PropChanged(Message message,int index,bool felling) {
         if(message.Data==null||(string)message.Data["type"]!="frame")return false;
@@ -281,6 +287,11 @@ class TestMobile {
                 Check(Get("/mobile/ws","https://unrelated.example").Status==403,"Cross-origin mobile connection was accepted.");
                 Check(Get("/ws",origin).Status==403,"Browser origin entered native WebSocket.");
                 Check(Get("/mobile/assets/Last%20Signal.exe").Status==404,"Mobile server exposed a file outside its allowlist.");
+                foreach(string pack in new[]{"landmarks.bin.gz","survivors.bin.gz","field.bin.gz"}) {
+                    ReplyHeaders response=Get("/mobile/assets/"+pack);
+                    Check(response.Status==200&&response.ContentType=="application/octet-stream"&&(publish||response.ContentEncoding=="gzip"),
+                          "Online browser art is missing or has the wrong encoding: "+pack);
+                }
 
                 string resume;
                 int round,treeIndex;

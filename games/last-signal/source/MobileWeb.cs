@@ -16,6 +16,8 @@ namespace LastSignal {
         };
         static readonly Dictionary<string,string> Assets=new Dictionary<string,string> {
             {"models.bin","application/octet-stream"},{"modelpaint.png","image/png"},{"paint.png","image/png"},
+            {"landmarks.bin.gz","application/octet-stream"},{"survivors.bin.gz","application/octet-stream"},
+            {"field.bin.gz","application/octet-stream"},
             {"ground.png","image/png"},{"soil.png","image/png"},{"pavers.png","image/png"},{"sky.png","image/png"},
             {"gorge_floor.png","image/png"},{"gorge_path.png","image/png"},
             {"frost_floor.png","image/png"},{"frost_path.png","image/png"},{"Audio/wood.wav","audio/wav"}
@@ -47,13 +49,15 @@ namespace LastSignal {
             string name=asset?path.Substring(15):path.Substring(8),type;
             if(name.Length==0&&!asset)name="index.html";
             if(!(asset?Assets:MobileFiles).TryGetValue(name,out type))return false;
-            string file=Path.Combine(root,asset?"Assets":"Mobile",name);
+            string file=Path.Combine(root,asset?"BrowserAssets":"Mobile",name);
+            if(asset&&!File.Exists(file))file=Path.Combine(root,"Assets",name);
             if(!File.Exists(file))return false;
+            string contentEncoding=asset&&name.EndsWith(".bin.gz",StringComparison.Ordinal)?"Content-Encoding: gzip\r\n":"";
             string origin=Origin(host);
             string socket=origin.Length>0?" "+(origin.StartsWith("https:",StringComparison.Ordinal)?"wss"+origin.Substring(5):"ws"+origin.Substring(4)):"";
             try {
                 using(var input=new FileStream(file,FileMode.Open,FileAccess.Read,FileShare.Read)) {
-                    Write(destination,"HTTP/1.1 200 OK\r\nContent-Type: "+type+"\r\nContent-Length: "+
+                    Write(destination,"HTTP/1.1 200 OK\r\nContent-Type: "+type+"\r\n"+contentEncoding+"Content-Length: "+
                         input.Length.ToString(CultureInfo.InvariantCulture)+"\r\nConnection: close\r\nCache-Control: "+
                         (asset?"public, max-age=3600":"no-store")+"\r\nX-Content-Type-Options: nosniff\r\n"+
                         "Referrer-Policy: no-referrer\r\nContent-Security-Policy: default-src 'none'; "+
