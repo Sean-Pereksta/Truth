@@ -1,4 +1,4 @@
-import { drawFloorTile, drawGardener, drawNeedBubble, drawPlant, drawScenery, drawStation } from './pixel-art.mjs';
+import { drawBorderArt, drawEnvironmentTile, drawFloorTile, drawGardener, drawNeedBubble, drawPlant, drawScenery, drawStation } from './pixel-art.mjs';
 import { getPlantNeed, getTruckWindow } from './sim.mjs';
 
 const tile = 48;
@@ -6,6 +6,7 @@ const boothTypes = new Set(['sun', 'moon', 'prism']);
 export const THEME_COLORS = {
   dawn: '#ffc280', moon: '#9adfff', comet: '#bd9cff', dune: '#f9aa73', meteor: '#ff8d79',
   nebula: '#f4a0d9', frost: '#a9eefb', aurora: '#91f4c5', eclipse: '#e1a7ff', midnight: '#a9a8ff',
+  pollenworks: '#ffd781', tidalglass: '#72e4d6', switchyard: '#ffad79', drawbridge: '#c1cafd', saturn: '#f4cb89',
 };
 
 function block(ctx, color, x, y, width, height) {
@@ -19,6 +20,79 @@ function stationColor(station) {
   }[station.type] || '#fcdfb1';
 }
 
+function center(point) {
+  return { x: (point.x + .5) * tile, y: (point.y + .5) * tile };
+}
+
+function isChannel(theme, x) {
+  if (theme === 'tidalglass' || theme === 'drawbridge') return x >= 4 && x <= 6;
+  if (theme === 'saturn') return x === 3 || x === 7;
+  return theme === 'switchyard' && x === 5;
+}
+
+function drawBelt(ctx, belt, time) {
+  const route = belt.path.map(center);
+  for (const [i, point] of route.entries()) {
+    const next = route[i + 1];
+    if (!next) break;
+    const dx = next.x - point.x;
+    const dy = next.y - point.y;
+    ctx.save();
+    ctx.translate(point.x, point.y);
+    ctx.rotate(Math.atan2(dy, dx));
+    const length = Math.hypot(dx, dy);
+    block(ctx, '#211825', -4, -11, length + 8, 24);
+    block(ctx, '#7d4c50', 0, -10, length, 20);
+    block(ctx, '#28283f', 0, -7, length, 14);
+    for (let p = Math.floor(time * 20) % 8; p < length; p += 8) {
+      block(ctx, '#564f69', p, -7, 2, 14);
+    }
+    for (let p = 8; p < length - 4; p += 16) {
+      block(ctx, '#ffd78c', p, -1, 7, 2);
+      block(ctx, '#ffd78c', p + 4, -4, 2, 2);
+      block(ctx, '#ffd78c', p + 4, 2, 2, 2);
+    }
+    ctx.restore();
+  }
+  for (const [i, point] of [route[0], route.at(-1)].entries()) {
+    block(ctx, '#282133', point.x - 14, point.y - 12, 28, 24);
+    block(ctx, i ? '#abd7d1' : '#f9bb72', point.x - 12, point.y - 10, 24, 20);
+    block(ctx, '#59485a', point.x - 9, point.y - 7, 18, 14);
+    block(ctx, i ? '#75e3cd' : '#ffe4ad', point.x - 8, point.y + 10, 16, 2);
+  }
+}
+
+function drawPlatformRoute(ctx, layout, boat) {
+  const [a, b] = layout.stops.map(center);
+  const distance = Math.hypot(b.x - a.x, b.y - a.y);
+  for (let t = 10; t < distance; t += 13) {
+    const x = a.x + (b.x - a.x) * t / distance;
+    const y = a.y + (b.y - a.y) * t / distance;
+    block(ctx, '#8394c0', x - 2, y - 1, 5, 2);
+  }
+  for (const [index, point] of [a, b].entries()) {
+    const arrived = boat?.mode === 'docked' && boat.stopIndex === index;
+    block(ctx, '#223248', point.x - 20, point.y - 15, 40, 30);
+    block(ctx, '#728a9f', point.x - 17, point.y - 12, 34, 24);
+    block(ctx, '#485b76', point.x - 14, point.y - 9, 28, 18);
+    block(ctx, arrived ? '#93f4c9' : '#f6bf7d', point.x - 15, point.y + 9, 30, 3);
+    block(ctx, '#dce9f5', point.x - 1, point.y - 5, 2, 10);
+    block(ctx, '#dce9f5', point.x - 5, point.y - 1, 10, 2);
+  }
+}
+
+function drawPlatform(ctx, boat) {
+  const { x, y } = center(boat);
+  block(ctx, '#1c1832', x - 22, y - 16, 44, 35);
+  block(ctx, '#6e4c7d', x - 20, y - 15, 40, 31);
+  block(ctx, '#e7b78d', x - 18, y - 12, 36, 23);
+  for (let i = 0; i < 4; i++) block(ctx, '#a97887', x - 16, y - 9 + i * 5, 32, 1);
+  block(ctx, '#fbeba8', x - 15, y - 10, 30, 2);
+  block(ctx, '#a691c3', x - 17, y + 11, 34, 4);
+  block(ctx, '#8ce8d9', x - 17, y - 14, 4, 4);
+  block(ctx, '#8ce8d9', x + 13, y - 14, 4, 4);
+}
+
 export function createBoardRenderer(canvas) {
   const ctx = canvas.getContext('2d');
   const background = document.createElement('canvas');
@@ -28,6 +102,8 @@ export function createBoardRenderer(canvas) {
   let targets = [];
   let lastEvent;
   let level;
+  let crossing;
+  let edgeProps;
 
   function prepare(map) {
     level = map;
@@ -35,6 +111,25 @@ export function createBoardRenderer(canvas) {
     bursts.length = 0;
     targets = [];
     lastEvent = undefined;
+    crossing = new Set();
+    for (const belt of map.conveyors ?? []) {
+      for (const point of belt.path) crossing.add(`${point.x}:${point.y}`);
+    }
+    for (const platform of map.platforms ?? []) {
+      const [from, to] = platform.stops;
+      const count = Math.max(Math.abs(to.x - from.x), Math.abs(to.y - from.y));
+      for (let n = 0; n <= count; n++) {
+        const x = Math.round(from.x + (to.x - from.x) * n / count);
+        const y = Math.round(from.y + (to.y - from.y) * n / count);
+        crossing.add(`${x}:${y}`);
+      }
+    }
+    edgeProps = [[0, 0], [map.width - 1, 0], [0, map.height - 1], [map.width - 1, map.height - 1]];
+    if (map.platforms?.length || map.conveyors?.length) {
+      const seed = map.name.length % 3;
+      edgeProps.push([2 + seed, 0], [map.width - 3 - seed, 0], [0, 3 + seed], [map.width - 1, 6 - seed]);
+    }
+    edgeProps = edgeProps.filter(([x, y]) => map.layout[y]?.[x] === '.' && !crossing.has(`${x}:${y}`));
     canvas.width = background.width = map.width * tile;
     canvas.height = background.height = map.height * tile;
     ctx.imageSmoothingEnabled = false;
@@ -44,21 +139,20 @@ export function createBoardRenderer(canvas) {
         const left = x * tile;
         const top = y * tile;
         drawFloorTile(floor, left, top, tile, map.theme);
-        if (cell === '#') {
-          block(floor, '#20192f', left + 1, top + 3, tile - 2, tile - 4);
-          block(floor, '#584867', left + 2, top + 3, tile - 4, 5);
-          block(floor, '#322845', left + 4, top + 8, tile - 8, tile - 12);
-          block(floor, '#3c3154', left + 4, top + 36, tile - 8, 2);
-        } else if (cell === '~') {
-          block(floor, '#2b4a63', left + 3, top + 3, tile - 6, tile - 6);
-          block(floor, '#497188', left + 8, top + 14, 15, 2);
-          block(floor, '#41697f', left + 21, top + 28, 17, 2);
-        } else if (cell === '+') {
-          block(floor, '#646059', left + 3, top + 19, tile - 6, 10);
-          block(floor, '#95886b', left + 5, top + 20, 10, 2);
-          block(floor, '#95886b', left + 26, top + 20, 10, 2);
-        }
+        drawEnvironmentTile(floor, left, top, tile, cell === '#' && isChannel(map.theme, x) ? ':' : cell, map.theme);
       }
+    }
+    drawBorderArt(floor, canvas.width, canvas.height, tile, map.theme);
+    for (const station of map.stations) {
+      if (!boothTypes.has(station.type) && station.type !== 'shower') continue;
+      const shade = stationColor(station);
+      const at = center(station);
+      floor.globalAlpha = .1;
+      block(floor, shade, at.x - 29, at.y - 12, 58, 25);
+      block(floor, shade, at.x - 25, at.y - 18, 50, 37);
+      floor.globalAlpha = .16;
+      block(floor, shade, at.x - 17, at.y + 10, 34, 15);
+      floor.globalAlpha = 1;
     }
   }
 
@@ -71,17 +165,43 @@ export function createBoardRenderer(canvas) {
     const truck = getTruckWindow(state);
     const bubbles = [];
     const scene = [];
-    const occupied = new Set(level.stations.map(station => `${station.x}:${station.y}`));
+    const platformStates = new Map((state.platforms ?? []).map(boat => [boat.id, boat]));
 
-    for (const [x, y] of [[0, 0], [level.width - 1, 0], [0, level.height - 1], [level.width - 1, level.height - 1]]) {
-      if (!occupied.has(`${x}:${y}`) && level.layout[y][x] === '.') {
-        scene.push({ y: y - .1, paint: () => drawScenery(ctx, (x + .5) * tile, (y + .87) * tile, tile * 1.06, level.theme, visualTime, x + y + 3) });
+    for (const [y, row] of level.layout.entries()) {
+      for (const [x, cell] of [...row].entries()) {
+        if (cell !== '=') continue;
+        const at = center({ x, y });
+        block(ctx, '#1a2037', at.x - 24, at.y - 24, 48, 48);
+        if (state.solo) {
+          block(ctx, '#4f695f', at.x - 24, at.y - 16, 48, 32);
+          for (let slat = -23; slat < 24; slat += 8) block(ctx, '#8bc2a2', at.x + slat, at.y - 13, 2, 26);
+          block(ctx, '#b0d8b3', at.x - 24, at.y - 16, 48, 2);
+          block(ctx, '#759680', at.x - 24, at.y + 13, 48, 2);
+        } else {
+          block(ctx, '#5f5d77', at.x - 10, at.y - 12, 20, 24);
+          for (let bar = -8; bar < 10; bar += 5) block(ctx, '#9391a7', at.x + bar, at.y - 11, 2, 22);
+        }
       }
+    }
+    for (const belt of level.conveyors ?? []) drawBelt(ctx, belt, visualTime);
+    for (const platform of level.platforms ?? []) {
+      const boat = platformStates.get(platform.id);
+      drawPlatformRoute(ctx, platform, boat);
+      if (boat) drawPlatform(ctx, boat);
+    }
+    if (Number.isFinite(selected?.x) && Number.isFinite(selected?.y)) {
+      const at = center(selected);
+      block(ctx, '#9bf1cc', at.x - 7, at.y - 1, 15, 2);
+      block(ctx, '#9bf1cc', at.x - 1, at.y - 7, 2, 15);
+    }
+
+    for (const [x, y] of edgeProps) {
+      scene.push({ y: y - .1, paint: () => drawScenery(ctx, (x + .5) * tile, (y + .87) * tile, tile * 1.06, level.theme, visualTime, x + y + 3) });
     }
 
     for (const [y, row] of level.layout.entries()) {
       for (const [x, cell] of [...row].entries()) {
-        if (cell === '#') scene.push({ y, paint: () => drawScenery(ctx, (x + .5) * tile, (y + .87) * tile, tile * 1.06, level.theme, visualTime, x + y * 11) });
+        if (cell === '#' && !isChannel(level.theme, x) && !crossing.has(`${x}:${y}`)) scene.push({ y, paint: () => drawScenery(ctx, (x + .5) * tile, (y + .87) * tile, tile * 1.06, level.theme, visualTime, x + y * 11) });
       }
     }
 
@@ -112,7 +232,7 @@ export function createBoardRenderer(canvas) {
       const dx = player.x - view.x;
       const dy = player.y - view.y;
       if (Math.abs(dx) > .015) view.facing = dx > 0 ? 1 : -1;
-      const moving = Math.abs(dx) + Math.abs(dy) > .015;
+      const moving = !player.platformId && Math.abs(dx) + Math.abs(dy) > .015;
       if (Math.abs(dx) + Math.abs(dy) > 3) Object.assign(view, { x: player.x, y: player.y });
       else { view.x += dx * .6; view.y += dy * .6; }
       actors.set(player.id, view);
@@ -140,7 +260,7 @@ export function createBoardRenderer(canvas) {
       scene.push({ y: plant.y, paint() {
         const need = getPlantNeed(plant, state);
         drawPlant(ctx, plant.flowerId, plant.phase, x, y, tile * .79, visualTime, { pot: plant.pot, quality: plant.quality, progress: need?.progress });
-        if (need) bubbles.push({ need, x, y: y - 36, plantId: plant.id });
+        if (need) bubbles.push({ need, x, y: y - 36, plantId: plant.beltId ? undefined : plant.id });
       } });
     }
 

@@ -69,6 +69,7 @@ function validateCommand(command) {
       return Number.isFinite(command.x) && Number.isFinite(command.y) && Math.abs(command.x) <= 1 && Math.abs(command.y) <= 1;
     case 'target':
       if (typeof command.stationId === 'string') return entityId.test(command.stationId);
+      if (typeof command.conveyorId === 'string') return entityId.test(command.conveyorId);
       if (typeof command.plantId === 'string') return entityId.test(command.plantId);
       return Number.isFinite(command.x) && Number.isFinite(command.y) &&
         command.x >= 0 && command.x < 64 && command.y >= 0 && command.y < 64;
