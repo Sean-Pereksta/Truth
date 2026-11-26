@@ -169,19 +169,37 @@ namespace LastSignal
             if(fence&&level==0&&p.Support!=null&&p.Support.Model=="barricade"&&
                 Game.Distance(p.X,p.Z,p.Support.X,p.Support.Z)<.06f)
             {p.Fort=frame;return p;}
-            p.Support=null;p.Fort=frame;p.FortLevel=level;
-            p.Y=frame.Y+level*Story-(id=="floor"?DeckThickness:0);
-            if(id=="floor"&&level==0&&!frame.StartsOnDeck)p.Y+=DeckThickness;
+            SetFortCourse(p,frame,level);
             joined=true;return p;
+        }
+
+        internal static Prop PreviewFortGridPiece(Game g,FortFrame frame,string model,float u,float v,int quarter,int level)
+        {
+            float x,z;
+            frame.World(u,v,out x,out z);
+            Prop p=BuildPreview(g,model,x,z,frame.Yaw+quarter*QuarterTurn);
+            SetFortCourse(p,frame,level);
+            return p;
+        }
+
+        static void SetFortCourse(Prop p,FortFrame frame,int level)
+        {
+            p.Support=null;p.Fort=frame;p.FortLevel=level;
+            p.Y=frame.Y+level*Story-(p.Model=="floor"?DeckThickness:0);
+            if(p.Model=="floor"&&level==0&&!frame.StartsOnDeck)p.Y+=DeckThickness;
         }
 
         internal static bool FortVisible(Game g,Actor a,Prop p)
         {
-            if(a==null||p==null||Game.Distance(a.X,a.Z,p.X,p.Z)>6.35f||Math.Abs(p.Y-a.Y)>5.8f)return false;
-            float eye=a.Y+(a.Crouch?1.03f:1.45f);
-            if(!GridModel(p.Model))return Clear(g,a.X,eye,a.Z,p.X,p.Y+.58f,p.Z);
-            float y=p.Model=="floor"?p.Y+.07f:p.Y+Math.Min(.72f,p.H*.5f);
-            if(Clear(g,a.X,eye,a.Z,p.X,y,p.Z))return true;
+            return a!=null && FortVisibleFrom(g,a.X,a.Y,a.Z,a.Y+(a.Crouch?1.03f:1.45f),p);
+        }
+
+        internal static bool FortVisibleFrom(Game g,float x,float footY,float z,float eye,Prop p)
+        {
+            if(p==null||Game.Distance(x,z,p.X,p.Z)>6.35f||Math.Abs(p.Y-footY)>5.8f)return false;
+            if(!GridModel(p.Model))return Clear(g,x,eye,z,p.X,p.Y+.58f,p.Z);
+            float targetY=p.Model=="floor"?p.Y+.07f:p.Y+Math.Min(.72f,p.H*.5f);
+            if(Clear(g,x,eye,z,p.X,targetY,p.Z))return true;
             // A connected wall can obscure the center while the builder sees
             // the mounting edge. Require actual sight of an edge or top corner.
             float c=Cos(p.Yaw),s=Sin(p.Yaw);
@@ -189,7 +207,7 @@ namespace LastSignal
             {
                 float u=(i%2==0?-1:1)*p.W*.48f,v=((i/2)%2==0?-1:1)*p.D*.48f;
                 float h=i<4?p.Y+.03f:p.Y+p.H+.025f;
-                if(Clear(g,a.X,eye,a.Z,p.X+c*u+s*v,h,p.Z-s*u+c*v))return true;
+                if(Clear(g,x,eye,z,p.X+c*u+s*v,h,p.Z-s*u+c*v))return true;
             }
             return false;
         }

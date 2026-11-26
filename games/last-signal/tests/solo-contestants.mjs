@@ -91,24 +91,61 @@ test("in the final three the observer waits, intervenes, then withdraws when hur
   assert.equal(watcher.intent, "retreat");
 });
 
-test("shelter crafts charge the displayed prices and require every ingredient", () => {
-  for (const [item, cloth] of [["floor", 0], ["wall", 0], ["lean_to", 1]]) {
-    const game = clearing();
-    const player = game.player;
-    player.bag = { branch: 2, fiber: 2, ...(cloth && { cloth }) };
-    const row = () => game.frame().build.find(recipe => recipe[0] === item);
-    assert.equal(row()[3], false, item);
-    game.command("build:" + item);
-    assert.equal(game.build, null, item);
-    player.bag.branch++;
-    assert.equal(row()[3], true);
-    assert.match(row()[2], /^3 wood \/ 2 fiber/);
-    game.command("build:" + item);
-    game.command("place");
-    assert.deepEqual(player.bag, {});
-    assert.equal(game.pieces.length, 1);
-    assert.equal(game.pieces[0].id, item);
+test("a cautious bot presses the same opening against either a human or another bot", () => {
+  for (const enemyIsHuman of [false, true]) {
+    const game = clearing(["stalker", "fighter"]);
+    const [player, scout, fighter] = game.actors;
+    const rival = enemyIsHuman ? player : fighter;
+    const outOfSight = enemyIsHuman ? fighter : player;
+    Object.assign(scout, { bag: { spear: 1 }, weapon: "spear" });
+    Object.assign(rival, { x: 0, z: 0, weapon: "crossbow", bag: { crossbow: 1, bolts: 2 }, reload: 1.5 });
+    Object.assign(outOfSight, { x: 80, z: 80 });
+    game.thinkRival(scout);
+    assert.equal(scout.intent, "engage");
+    assert.equal(scout.opponent, rival.id);
+    scout.health = 20;
+    game.thinkRival(scout);
+    assert.equal(scout.intent, "retreat");
   }
+});
+
+test("wildlife reacts to a nearby bot and a hungry contestant can hunt and dress it", () => {
+  const game = clearing(["hunter", "fighter"]);
+  const [player, hunter, fighter] = game.actors;
+  Object.assign(player, { x: 80, z: 75 });
+  Object.assign(fighter, { x: -80, z: -75 });
+  Object.assign(hunter, { bag: { spear: 1 }, weapon: "spear", hunger: 38 });
+  const prey = { model: "hare", x: 0, z: -6, yaw: Math.PI, health: 16, phase: 0 };
+  game.wildlife = [prey];
+  game.step(0.1);
+  assert.ok(prey.z > -6, "the hare fled from the bot");
+  assert.equal(hunter.intent, "hunt");
+  for (let step = 0; step < 100 && !prey.harvested; step++) game.step(0.1);
+  assert.equal(prey.harvested, true);
+  assert.equal(hunter.bag.meat, 2);
+  const hungerBeforeCooking = hunter.hunger;
+  game.stoves = [{ x: hunter.x, z: hunter.z, propIndex: game.nextProp++, lit: true }];
+  for (let step = 0; step < 100 && hunter.hunger <= hungerBeforeCooking; step++) game.step(0.1);
+  assert.ok(hunter.hunger > hungerBeforeCooking, "the hunter cooked food and ate it");
+  assert.equal(hunter.bag.meat, 1);
+});
+
+test("lean-to construction charges the displayed price and requires every ingredient", () => {
+  const game = clearing();
+  const player = game.player;
+  player.bag = { branch: 2, fiber: 2, cloth: 1 };
+  const row = () => game.frame().build.find(recipe => recipe[0] === "lean_to");
+  assert.equal(row()[3], false);
+  game.command("build:lean_to");
+  assert.equal(game.build, null);
+  player.bag.branch++;
+  assert.equal(row()[3], true);
+  assert.equal(row()[2], "3 wood / 2 fiber / 1 cloth");
+  game.command("build:lean_to");
+  game.command("place");
+  assert.deepEqual(player.bag, {});
+  assert.equal(game.pieces.length, 1);
+  assert.equal(game.pieces[0].id, "lean_to");
 });
 
 test("taking a supply chest leaves evidence but no second load of supplies", () => {

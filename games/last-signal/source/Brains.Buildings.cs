@@ -20,7 +20,7 @@ namespace LastSignal
                 }
             }
             if(m.Job!=Aim.Combat&&m.Job!=Aim.Search||a.Weapon=="fists"||a.Health<30||
-               panel.Owner==a.Id||FriendlyNoise(g,a,panel.Owner)||m.Style==Style.Shadow)return false;
+               a.Stamina<16+9*m.Caution||panel.Owner==a.Id||FriendlyNoise(g,a,panel.Owner))return false;
             Place clue;
             if(m.Enemy!=null&&g.Time-m.SeenAt<9)clue=m.LastSeen;
             else if(m.BriefUntil>g.Time)clue=m.PackGoal;

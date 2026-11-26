@@ -196,6 +196,7 @@ namespace LastSignal
                 r.ChangeRound(f.Round,seat,f.Actors.Count,f.Animals.Count);
             }
             UpdateProps(client,f,r);UpdateLiving(client,f,r,fresh);UpdateWorld(client,f);UpdateView(client,view,fresh);
+            if(fresh)client.ResetTracks();
             r.Window=fresh?0:Math.Max(.025f,Math.Min(.16f,f.Clock-r.FrameClock));r.Elapsed=0;r.FrameClock=f.Clock;
             r.FrameTime=f.Time;r.FrameCountdown=f.Countdown;r.LastPacket=f.Sequence;
             foreach(SoundRecord sound in f.Sounds)
@@ -235,6 +236,7 @@ namespace LastSignal
                 Animal a=client.Animals[i];Pose pose=Pose.Blend(r.AnimalsFrom[i],r.AnimalsTo[i],blend);
                 a.X=pose.X;a.Y=pose.Y;a.Z=pose.Z;a.Yaw=pose.Yaw;
             }
+            if(step>0&&r.FrameCountdown<=0&&client.Mode!="results")client.RecordTracks(step);
             client.RefreshOnlineCamera(dt);
         }
     }

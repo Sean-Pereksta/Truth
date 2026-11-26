@@ -168,7 +168,7 @@ namespace LastSignal
         {
             return Build(g,a,Arena.BuildPreview(g,id,x,z,yaw));
         }
-        static Prop Build(Game g,Actor a,Prop preview)
+        internal static Prop Build(Game g,Actor a,Prop preview)
         {
             if(preview==null)return null;
             string id=preview.Model;Recipe r=Find(Builds,id);

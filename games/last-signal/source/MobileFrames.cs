@@ -115,7 +115,8 @@ namespace LastSignal {
                     actors.Add(new object[]{Value(actor.X),Value(actor.Y),Value(actor.Z),Value(actor.Yaw),
                         actor.Alive,actor.Crouch,actor.Style,actor.Name,Value(actor.FallYaw),Value(actor.Anim),Value(actor.Speed),
                         actor.Weapon,Game.CarriesShield(actor),Game.ShieldRaised(actor),Value(actor.GuardBlend),
-                        Value(actor.CrossbowReload/Actor.CrossbowReloadTime),actor.CrossbowLoaded,Value(actor.Swing)});
+                        Value(actor.CrossbowReload/Actor.CrossbowReloadTime),actor.CrossbowLoaded,Value(actor.Swing),
+                        Value(Math.Min(1f,actor.Hurt/.42f))});
                 }
                 var wildlife=new List<object[]>();
                 foreach(Animal animal in g.Animals) {
@@ -143,7 +144,7 @@ namespace LastSignal {
                     camera=new {x=Value(g.CamX),y=Value(g.CamY),z=Value(g.CamZ),yaw=Value(g.CamYaw),pitch=Value(g.CamPitch)},
                     storm=new {x=g.StormX,z=g.StormZ,radius=Value(g.StormRadius),nextRadius=Value(g.StormNextRadius),
                         seconds=Value(g.StormSecondsRemaining),warning=g.StormWarning,moving=g.StormMoving,active=g.StormActive},
-                    propChanges=ChangesInView(g),actors,wildlife,shots,workSound=RecentWorkSound(g,player),
+                    propChanges=ChangesInView(g),actors,wildlife,shots,tracks=TracksInView(g),workSound=RecentWorkSound(g,player),
                     ghost=g.Ghost==null?null:PropRecord(g.Ghost,-1),ghostFits=g.GhostFits,
                     player=new {id=player.Id,name=player.Name,yaw=Value(player.Yaw),pitch=Value(g.Pitch),
                         health=Value(player.Health),stamina=Value(player.Stamina),hunger=Value(player.Hunger),
@@ -163,6 +164,17 @@ namespace LastSignal {
                 });
             });
             return bytes!=null&&gzip?Compress(bytes):bytes;
+        }
+
+        static List<object[]> TracksInView(Game g) {
+            var tracks=new List<object[]>();
+            foreach(Footprint track in g.Tracks) {
+                if(track.Maker==null||track.Time+track.Life<=g.Time||!InRange(g,track.X,track.Z,18f))continue;
+                if(!Arena.Clear(g,g.CamX,g.CamY,g.CamZ,track.X,track.Y+.04f,track.Z))continue;
+                tracks.Add(new object[]{Value(track.X),Value(track.Y),Value(track.Z),Value(track.Yaw),
+                    Value(1f-(g.Time-track.Time)/track.Life)});
+            }
+            return tracks;
         }
 
         static object RecentWorkSound(Game g,Actor listener) {

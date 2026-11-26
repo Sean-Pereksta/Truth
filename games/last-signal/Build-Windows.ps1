@@ -17,7 +17,7 @@ $package = [IO.Compression.ZipFile]::OpenRead($archive)
 try {
     $prefix = $output.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
     foreach ($entry in $package.Entries) {
-        if (-not $entry.Name -or $entry.FullName -match '^(Source|Mobile)/') { continue }
+        if (-not $entry.Name -or $entry.FullName -match '^(Source|Mobile|BrowserAssets)/') { continue }
         $path = [IO.Path]::GetFullPath((Join-Path $output $entry.FullName))
         if (-not $path.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase)) { throw 'Invalid file path in portable archive.' }
         [IO.Directory]::CreateDirectory((Split-Path -Parent $path)) | Out-Null
@@ -32,6 +32,7 @@ foreach ($file in (Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'source')
     Copy-Item -LiteralPath $file.FullName -Destination $destinationPath -Force
 }
 Copy-Item -LiteralPath (Join-Path $compiledSource 'Mobile') -Destination (Join-Path $output 'Mobile') -Recurse
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'browser-assets') -Destination (Join-Path $output 'BrowserAssets') -Recurse
 & (Join-Path $compiledSource 'Build.cmd')
 if ($LASTEXITCODE -ne 0) { throw "C# compilation failed with exit code $LASTEXITCODE." }
 Write-Output (Join-Path $output 'Last Signal.exe')

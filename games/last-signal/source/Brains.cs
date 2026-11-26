@@ -8,7 +8,7 @@ namespace LastSignal
     public static partial class Brains
     {
         enum Style { Raider, Hunter, Builder, Shadow, Scout }
-        enum Aim { Travel, Loot, Stalk, Evade, Search, Wait, Combat, Camp, Forage, Water }
+        enum Aim { Travel, Loot, Stalk, Evade, Search, Wait, Combat, Camp, Forage, Water, Build, Recover }
 
         struct Place
         {
@@ -20,8 +20,20 @@ namespace LastSignal
         {
             public readonly Random Dice;
             public readonly Style Style;
+            public readonly float Boldness, Caution, Curiosity, HuntInterest, BuildInterest;
+            public readonly Place[] RouteHistory=new Place[6];
+            public readonly Prop[] FailedLoot=new Prop[4];
+            public readonly float[] LootRetryAt=new float[4];
+            public Place RouteGoal, PreySeen, SmokeLead;
+            public float RouteUntil, RouteValue, CommitUntil, WithdrawUntil, PreySeenAt, CandidateWaterDeadline, LastHealth=100f;
+            public float SmokeLeadUntil, OpeningExitUntil;
+            public int RouteCount, RouteCursor, SeenWeaponRank, FailedLootCursor;
+            public bool SeenRanged;
+            public BotFort Fort, FortCandidate;
+            public float NextFortCheck, FortWork, FortPauseUntil;
+            public int FortsStarted;
             public Aim Job;
-            public Place Goal, LastSeen, Heard, Shelter, Home, LastPosition;
+            public Place Goal, LastSeen, Heard, Home, LastPosition;
             public float Think, Scan, Pause, Replan, LostSight, HeardFor, Watch, Steering;
             public float HitCooldown, GuardFor, RunFor, Stuck, Action, Danger, Age;
             public float Drift;
@@ -38,7 +50,7 @@ namespace LastSignal
             public int FlankPoint;
             public Place ThrowSite;
             public float RecoverUntil;
-            public bool AtCamp, HasObservation, HeardEnemy, Opening;
+            public bool HasObservation, HeardEnemy, Opening;
             public Actor Enemy; public Animal Animal;
             public Actor ReadTarget;
             public Place EyeFix, TacticalCover;
@@ -46,11 +58,10 @@ namespace LastSignal
             public bool SawMotion, AnswerMotion, LargeWind, WasGuard, ReadGuard, ReadRanged, ReadSwing, ReadMotion, CanRead;
 
             public Prop Item, Fire, WaterSource, Barrel;
+            public Prop CampProgressFire, DeferredFire;
+            public float CampProgress, CampProgressAt, FireRetryAt, NewFireAfter;
             public Prop WorkTree;
             public float NextWorkCheck, WorkEnds;
-            public Prop ShelterFrame;
-            public float ShelterWork, NextShelterCheck;
-
             public float WaterDeadline, WaterRecheck;
             public int Drinks;
              public float SmokeTime; public float GuardDelay, NextScanPose, NavAngle, NavTime, SeenAt=-200, LastNoiseAt=-200; public readonly List<Prop> Nearby=new List<Prop>(80);
@@ -58,6 +69,12 @@ namespace LastSignal
             {
                 Dice=new Random(seed);
                 Style=(Style)(index % 5);
+                var temperament=new Random(unchecked(seed*29+81749));
+                Boldness=(float)temperament.NextDouble();
+                Caution=(float)temperament.NextDouble();
+                Curiosity=(float)temperament.NextDouble();
+                HuntInterest=(float)temperament.NextDouble();
+                BuildInterest=(float)temperament.NextDouble();
                 Side=Dice.Next(2)==0 ? -1 : 1;
                 Think=(float)Dice.NextDouble()*.23f;
                 Scan=0;
@@ -75,7 +92,6 @@ namespace LastSignal
             public Place AllyAnchor, PackGoal;
             public float ImpactUntil;
             public Place ImpactClue;
-            public float ChallengeUntil;
             public Actor FocusTarget;
             public float FocusUntil;
             public float PursuitRunUntil, BreathUntil, RunnerSince;
@@ -134,7 +150,7 @@ namespace LastSignal
             if(current!=g || minds.ContainsKey(a))return;
             Mind m=new Mind(unchecked(g.Seed*3037+a.Id*8231+773),a.Id+(int)((uint)g.Seed%5));
             a.Style=m.Style.ToString().ToLowerInvariant();
-            m.Home=m.Shelter=m.LastPosition=new Place(a.X,a.Z);
+            m.Home=m.LastPosition=new Place(a.X,a.Z);
             m.Goal=Constrain(Offset(m.Home,a.Yaw,m.Between(9,21)),Math.Max(7,g.SafeRadius-4));
             m.Job=Aim.Travel; m.Opening=false;m.Expedition=true;
             minds.Add(a,m);
@@ -151,18 +167,19 @@ namespace LastSignal
                 a.Style=m.Style.ToString().ToLowerInvariant();
                 float outward=Heading(a.X,a.Z)+m.Between(-.38f,.38f);
                 m.Home=Offset(new Place(0,0),outward,m.Between(47f,95f));
-                if(m.Style!=Style.Raider && (a.Id+g.Seed%3)%3!=0)
+                if(m.Curiosity+.30f*m.HuntInterest>.33f && (a.Id+g.Seed%3)%3!=0)
                 {
                     float hx,hz;
                     Arena.HuntingGround(Arena.ZoneIndex(Sin(outward)*60,Cos(outward)*60),out hx,out hz);
                     m.Home=Constrain(Offset(new Place(hx,hz),outward,13f*Sin(a.Id*4.72f+g.Seed%41)),Arena.Radius-12);
                     m.Expedition=true;
                 }
-                m.Shelter=m.Home; m.LastPosition=new Place(a.X,a.Z);
+                m.LastPosition=new Place(a.X,a.Z);
                 m.Goal=m.Home; m.Job=Aim.Travel;
             }
             AssignOpening(g);
             MakePacks(g);
+            ResetPatrolLandmarks(g);
             int i=0;
             foreach(Animal v in g.Animals)
             {
@@ -197,7 +214,7 @@ namespace LastSignal
                 int score=OpeningPriority(b,minds[b],g.Seed).CompareTo(OpeningPriority(a,minds[a],g.Seed));
                 return score!=0?score:a.Id.CompareTo(b.Id);
             });
-            int count=(int)Math.Round(candidates.Count*.58f,MidpointRounding.AwayFromZero);
+            int count=(int)Math.Round(candidates.Count*.52f,MidpointRounding.AwayFromZero);
             count=Math.Min(candidates.Count,Math.Max(1,count));
 
             // Some contestants deliberately pass the outside racks to reach the
@@ -226,8 +243,8 @@ namespace LastSignal
             foreach(Actor a in candidates)
             {
                 Mind m=minds[a];
-                m.GrabAndLeave=m.Rush && !m.Vault && m.Style==Style.Scout;
-                m.WatchOpening=!m.Rush && (m.Style==Style.Hunter || m.Style==Style.Shadow);
+                m.GrabAndLeave=m.Rush && !m.Vault && m.Caution+.26f*m.Curiosity+m.Between(-.16f,.16f)>.61f;
+                m.WatchOpening=!m.Rush && m.Curiosity+m.Between(-.20f,.20f)>.51f;
                 if(!m.WatchOpening)continue;
                 Place post=Offset(new Place(0,0),Heading(a.X,a.Z)+m.Side*.11f,m.Between(21,25));
                 m.RimPost=Arena.CanStand(g,post.X,Arena.Ground(g,post.X,post.Z),post.Z)?post:new Place(a.X,a.Z);
@@ -236,7 +253,7 @@ namespace LastSignal
 
         static int OpeningPriority(Actor a,Mind m,int seed)
         {
-            int baseScore=m.Style==Style.Raider?90:m.Style==Style.Scout?74:m.Style==Style.Hunter?51:m.Style==Style.Builder?29:13;
+            int baseScore=(int)(18+58*m.Boldness-19*m.Caution+15*m.Curiosity);
             uint h=unchecked((uint)seed*2654435761u+(uint)a.Id*2246822519u);
             h^=h>>15;h*=3266489917u;h^=h>>16;
             return baseScore+(int)(h%35u);
@@ -292,9 +309,9 @@ namespace LastSignal
                         if(!pair)continue;
                         score-=8;
                     }
-                    if(m.Style==Style.Hunter)score+=4;
+                    score+=4f*m.HuntInterest;
                 }
-                else if(p.Item=="spear" || p.Item=="hatchet" || p.Item=="sword")score+=m.Style==Style.Raider?3.5f:1.7f;
+                else if(p.Item=="spear" || p.Item=="hatchet" || p.Item=="sword")score+=1.7f+1.8f*m.Boldness;
                 if(m.Vault && Interior(p))
                 {
                     score+=95f;
@@ -306,7 +323,7 @@ namespace LastSignal
                 bool seen=PrizeVisible(g,a,p);
                 score-=d*(seen?1f:1.25f);
                 if(!seen)score-=Interior(p)?5f:3f;
-                if(m.Style==Style.Raider && Math.Abs(a.X)<14 && a.Z>-8 && Inside(p.X,p.Z,9))score+=6.8f;
+                if(Math.Abs(a.X)<14 && a.Z>-8 && Inside(p.X,p.Z,9))score+=6.8f*m.Boldness;
                 if(score>bestScore){best=p;bestScore=score;}
             }
             return best;
@@ -368,9 +385,9 @@ namespace LastSignal
             }
             if(!m.Rush)
             {
-                if(radius<33 && (m.Age<17 || g.Time<m.ContestUntil))
+                if(radius<44 && (m.Age<23 || g.Time<m.ContestUntil))
                 {
-                    m.Goal=m.Home;m.Job=Aim.Travel;m.RunFor=.68f;return true;
+                    m.Goal=m.Home;m.Job=Aim.Travel;m.RunFor=radius<32f?1.15f:.3f;return true;
                 }
                 m.Opening=false;return false;
             }
@@ -399,12 +416,17 @@ namespace LastSignal
             m.Claim=null;
             if(!m.RushArmed)
             {
-                m.RushArmed=true;m.ContestUntil=g.Time+m.Between(15f,m.Style==Style.Raider?34f:25f);
+                m.RushArmed=true;m.ContestUntil=g.Time+m.Between(10f,16f+13f*m.Boldness);
                 m.PatrolTime=0;
                 if(m.Vault)m.VaultUntil=g.Time+12.5f;
             }
             if(a.Health<28 || g.Time>m.ContestUntil || radius>26f)
-            {m.Opening=false;return false;}
+            {
+                m.Opening=false;
+                if(radius>35f || m.Age>52f)return false;
+                m.OpeningExitUntil=g.Time+m.Between(3.8f,6.2f);
+                m.Goal=m.Home;m.Job=Aim.Evade;m.RunFor=1.8f;return true;
+            }
             bool vaultWatch=m.Vault && g.Time<m.VaultUntil;
             if(m.HasObservation && m.Enemy!=null && m.Enemy.Alive && Inside(m.LastSeen.X,m.LastSeen.Z,23f) &&
                (!vaultWatch || (m.LastSeen.Z<2.3f && Math.Abs(m.LastSeen.X)<6.4f) || Dist(a.X,a.Z,m.LastSeen.X,m.LastSeen.Z)<3f || a.Hurt>.20f))
@@ -453,8 +475,8 @@ namespace LastSignal
             return p;
         }
         static float Eye(Actor a) { return a.Y+(a.Crouch?1.04f:1.58f); }
-        static string[] labels={"moving","scavenging","tracking game","withdrawing","searching","hidden","engaged","tending camp","foraging","seeking water"};
-        static bool Defensive(Mind m) { return m.Style==Style.Shadow || m.Style==Style.Builder; }
+        static string[] labels={"moving","scavenging","tracking game","withdrawing","searching","hidden","engaged","tending camp","foraging","seeking water","building a fort","recovering"};
+        static bool Defensive(Mind m) { return m.Caution>.64f; }
         static bool Visible(Game g,Actor a, Actor b,float distance)
         {
             Mind m;
@@ -475,8 +497,9 @@ namespace LastSignal
                 if(d>(m.FocusTarget==b?78f:65f) || !Visible(g,a,b,d))continue;
                 m.VisibleRivals++;
                 bool exposed=b.Hurt>.04f || b.CrossbowReload>.12f;
-                float score=40f-d+(m.Enemy==b?3f:0f);
-                if(exposed && CombatReady(a))score+=m.Style==Style.Hunter?9f:6f;
+                float score=40f-d+(m.Enemy==b?4f:0f);
+                if(exposed && CombatReady(a))score+=7f+3f*m.Boldness;
+                if(CombatReady(a))score+=Math.Max(0,RankWeapon(a.Weapon)-RankWeapon(b.Weapon))*.85f;
                 if(d<4f && (b.Swing>0 || b.Windup>0))score+=7f;
                 if(m.Opening && m.Rush && m.RushArmed && Inside(b.X,b.Z,21f))score+=8f;
                 if(m.Vault && g.Time<m.VaultUntil && b.Z<2.3f && Math.Abs(b.X)<6.4f)score+=12f;
@@ -494,6 +517,7 @@ namespace LastSignal
                         m.SawDuelUntil=g.Time+2.8f;
                 }
                 m.Enemy=best;m.HasObservation=true;m.SeenAt=g.Time;
+                m.SeenWeaponRank=RankWeapon(best.Weapon);m.SeenRanged=Ranged(best);
                 m.LastSeen=new Place(best.X,best.Z);m.SeenFeet=best.Y;m.LostSight=m.Between(8f,15f);
                 if(m.FocusTarget==best && g.Time<m.FocusUntil)m.FocusUntil=g.Time+2.2f;
                 m.HeardEnemy=false;m.SearchLeg=0;
@@ -572,10 +596,13 @@ namespace LastSignal
 
         // Visible smoke is evidence of a campsite, even when the camper is already
         // gone. The observer gets a place to inspect, never an occupant to track.
-        static bool Smoke(Game g, Actor a, Mind m)
+        static bool NoticeSmoke(Game g, Actor a, Mind m,out Place smoke)
         {
-            bool career=m.Alliance!=null && m.Alliance.Active;
-            if((m.Style!=Style.Raider && m.Style!=Style.Scout && !career) || g.Time<m.SmokeTime)return false;
+            smoke=new Place();
+            if(g.Time<m.SmokeTime) {
+                if(g.Time>=m.SmokeLeadUntil || Dist(a.X,a.Z,m.SmokeLead.X,m.SmokeLead.Z)<2f)return false;
+                smoke=m.SmokeLead;return true;
+            }
             m.SmokeTime=g.Time+(g.IsNight?m.Between(1.8f,3.6f):m.Between(3f,7f));
             foreach(Prop p in g.CookingSites)
             {
@@ -585,11 +612,22 @@ namespace LastSignal
                 if(Math.Abs(Angle(Heading(p.X-a.X,p.Z-a.Z)-a.Yaw))>1.18f)continue;
                 FireCue cue;
                 if(!Perception.FireVisible(g,a.X,Eye(a),a.Z,p,out cue))continue;
-                m.Goal=new Place(p.X,p.Z);m.Heard=m.Goal;m.HeardFor=6f;m.Job=Aim.Search;m.Pause=0;
-                Report(g,a,m,m.Goal,Clue.Fire);
+                smoke=m.SmokeLead=new Place(p.X,p.Z);
+                m.SmokeLeadUntil=g.Time+Math.Min(20f,6f+dist*.55f);
+                Report(g,a,m,smoke,Clue.Fire);
                 m.SmokeTime=g.Time+m.Between(20,35);return true;
             }
             return false;
+        }
+        static bool CanCookAt(Game g,Actor a,Mind m,Prop p)
+        {
+            return p!=null && !p.Removed && (p!=m.DeferredFire || g.Time>=m.FireRetryAt) &&
+                (p.Kind=="stove" || (p.HasMeat && p.Cook>=1f) || p.Fuel>.01f || a.Count("branch")>0);
+        }
+        static bool CanRecoverCampMeat(Game g,Actor a,Mind m,Prop p)
+        {
+            return p!=null && !p.Removed && (p!=m.DeferredFire || g.Time>=m.FireRetryAt) &&
+                p.Owner==a.Id && p.HasMeat && Dist(a.X,a.Z,p.X,p.Z)<=2.35f;
         }
         static Prop FindFire(Game g,Actor a,Mind m)
         {
@@ -597,9 +635,11 @@ namespace LastSignal
             Prop best=null;float bestD=45f;
             foreach(Prop p in m.Nearby)
             {
-                if(p.Removed || !(p.Kind=="fire" || p.Kind=="stove" || p.Model=="campfire" || p.Model=="stove"))continue;
+                if(!(p.Kind=="fire" || p.Kind=="stove" || p.Model=="campfire" || p.Model=="stove") ||
+                   !CanCookAt(g,a,m,p))continue;
                 float d=Dist(a.X,a.Z,p.X,p.Z);
-                if(d<bestD && Inside(p.X,p.Z,g.SafeRadius)){best=p;bestD=d;}
+                if(d<bestD && ReachesInTime(g,a,new Place(p.X,p.Z),18) &&
+                   Arena.Clear(g,a.X,Eye(a),a.Z,p.X,p.Y+.45f,p.Z)){best=p;bestD=d;}
             }
             return best;
         }
@@ -633,14 +673,16 @@ namespace LastSignal
         {
             if(a.Hunger<78f) Survival.Eat(g,a);
             if(a.Hydration<68f && a.WaterCarried>=4f && Survival.SipSkin(g,a))m.Drinks++;
-            if(a.Count("spear")==0 && g.Time>m.RecoverUntil && (a.Count("sling")>0 || m.Style==Style.Hunter || m.Style==Style.Raider || m.Style==Style.Scout))
+            if(a.Count("spear")==0 && g.Time>m.RecoverUntil && (RankWeapon(a.Weapon)<3 || a.Count("sling")>0))
                 Survival.Craft(g,a,"spear");
-            if(a.Count("sling")==0 && (RankWeapon(a.Weapon)<3 || m.Style==Style.Hunter || m.Style==Style.Builder))
+            if(a.Count("sling")==0 && (RankWeapon(a.Weapon)<3 || a.Count("stone")>5))
                 Survival.Craft(g,a,"sling");
-            if(m.Style==Style.Hunter && a.Count("bow")==0 && a.Count("spear")+a.Count("sling")>0)
+            if(a.Count("bow")==0 && a.Count("crossbow")==0 &&
+               (a.Count("arrows")>1 || m.HuntInterest>.65f && a.Count("spear")>0))
                 Survival.Craft(g,a,"bow");
             if(a.Count("bow")>0 && a.Count("arrows")<2) Survival.Craft(g,a,"arrows");
-            if(a.Count("firekit")==0 && m.Fire==null && (a.Count("meat")>0 || m.Style==Style.Builder))
+            if(a.Count("firekit")==0 && a.Count("meat")>0 &&
+               (!CanCookAt(g,a,m,m.Fire) || !ReachesInTime(g,a,new Place(m.Fire.X,m.Fire.Z),18f)))
                 Survival.Craft(g,a,"fire");
             if(a.Count("waterskin")==0 && (a.Weapon!="fists" || a.Hydration<40f))
                 Survival.Craft(g,a,"waterskin");
@@ -648,13 +690,25 @@ namespace LastSignal
             if(!m.HasObservation && m.Job!=Aim.Combat)Armor.Outfit(g,a);
         }
 
+        static bool RetryLoot(Game g,Mind m,Prop p)
+        {
+            for(int i=0;i<m.FailedLoot.Length;i++)
+                if(m.FailedLoot[i]==p && g.Time<m.LootRetryAt[i])return false;
+            return true;
+        }
+        static void DeferLoot(Game g,Mind m,Prop p,float retry)
+        {
+            int i=m.FailedLootCursor;
+            m.FailedLoot[i]=p;m.LootRetryAt[i]=g.Time+retry;
+            m.FailedLootCursor=(i+1)%m.FailedLoot.Length;
+        }
         static Prop FindLoot(Game g,Actor a,Mind m,float radius)
         {
             Arena.Near(g,a.X,a.Z,radius,m.Nearby);
             Prop best=null;float bestScore=-1000f;
             foreach(Prop p in m.Nearby)
             {
-                if(p.Removed || !(p.Kind=="pickup"||p.Kind=="pack"))continue;
+                if(p.Removed || !(p.Kind=="pickup"||p.Kind=="pack") || !RetryLoot(g,m,p))continue;
                 if(!Inside(p.X,p.Z,g.SafeRadius-1f))continue;
                 float d=Dist(a.X,a.Z,p.X,p.Z);
                 if(d>radius)continue;
@@ -664,11 +718,11 @@ namespace LastSignal
                 {
                     case "meal":quality=a.Hunger<80?36:16;break;
                     case "stone":quality=cnt<4?19:cnt<9?9:0;break;
-                    case "fiber":quality=cnt<3?20:cnt<6?8:0;break;
-                    case "branch": quality=cnt<4?21:cnt<9 && (m.Style==Style.Builder||a.Count("meat")>0)?14:0;break;
+                    case "fiber":quality=cnt<3?20:cnt<(m.BuildInterest>=.82f?10:m.BuildInterest>=.64f?6:4)?16:0;break;
+                    case "branch":quality=cnt<4?21:cnt<(m.BuildInterest>=.82f?12:m.BuildInterest>=.64f?7:4)||cnt<7&&a.Count("meat")>0?17:0;break;
                     case "tinder":quality=cnt<2?18:0;break;
                     case "cloth":quality=cnt<2?17:cnt<4?7:0;break;
-                    case "scrap":quality=cnt<3?13:0;break;
+                    case "scrap":quality=cnt<(m.BuildInterest>=.82f?4:3)?13:0;break;
                     case "arrows":quality=a.Count("bow")>0 && cnt<12?26:cnt<4?8:0;break;
                     case "bolts":quality=a.Count("crossbow")>0 && cnt<8?29:cnt<3?8:0;break;
                     case "shield":quality=cnt==0&&(a.Count("sword")+a.Count("spear")>0)?28:0;break;
@@ -678,8 +732,9 @@ namespace LastSignal
                 if(p.Kind=="pack") quality=32;
                 if(quality<=0) continue;
                 float score=quality-d*1.1f;
-                if(m.Style==Style.Shadow)score+=3f*Arena.Cover(g,p.X,p.Z);
-                if(score>bestScore){best=p;bestScore=score;}
+                if(Defensive(m))score+=3f*Arena.Cover(g,p.X,p.Z);
+                if(score<=bestScore || d>2.4f && !Arena.Clear(g,a.X,Eye(a),a.Z,p.X,p.Y+.25f,p.Z))continue;
+                best=p;bestScore=score;
             }
             return best;
         }
@@ -709,7 +764,7 @@ namespace LastSignal
             Prop best=null;float nearest=999;
             foreach(Prop p in m.Nearby)
             {
-                if(p.Removed || p.Kind!="pickup" || p.Item!="spear" || !Inside(p.X,p.Z,g.SafeRadius-1))continue;
+                if(p.Removed || p.Kind!="pickup" || p.Item!="spear" || !RetryLoot(g,m,p) || !Inside(p.X,p.Z,g.SafeRadius-1))continue;
                 float d=Dist(m.ThrowSite.X,m.ThrowSite.Z,p.X,p.Z);
                 if(d>13 || d>=nearest || !Arena.Clear(g,a.X,Eye(a),a.Z,p.X,p.Y+.28f,p.Z))continue;
                 nearest=d;best=p;
@@ -750,9 +805,15 @@ namespace LastSignal
                !Arena.CanStand(g,x,Arena.Ground(g,x,z),z) || !Arena.Shore(g,x,z,out wx,out wz))return;
             nearest=d;best=null;where=new Place(x,z);
         }
-        static bool PlanWater(Game g,Actor a,Mind m)
+        static bool TryPlanWater(Game g,Actor a,Mind m,out Place where,out Prop source,out float deadline)
         {
-            if(m.Opening || a.Hydration>72f || m.WaterRecheck>g.Time)return false;
+            where=new Place();source=null;deadline=0f;
+            if(m.Opening || a.Hydration>72f)return false;
+            if(m.Job==Aim.Water && m.WaterDeadline>g.Time &&
+               (m.WaterSource==null || SuitableWater(m.WaterSource)) &&
+               Inside(m.Goal.X,m.Goal.Z,Math.Max(2,g.SafeRadius-1)))
+            {where=m.Goal;source=m.WaterSource;deadline=m.WaterDeadline;return true;}
+            if(m.WaterRecheck>g.Time || m.HasObservation)return false;
             if(a.WaterCarried>=4f && a.Hydration<68f && Survival.SipSkin(g,a))
             {
                 m.Drinks++;m.WaterRecheck=g.Time+3f;
@@ -760,11 +821,8 @@ namespace LastSignal
             }
             if(Survival.HasShore(g,a) && DrinkAt(g,a,m,null))
             {
-                m.WaterRecheck=g.Time+2f;m.Job=Aim.Forage;return false;
+                m.WaterRecheck=g.Time+2f;return false;
             }
-            if(m.Job==Aim.Water && m.WaterDeadline>g.Time &&
-               (m.WaterSource==null || SuitableWater(m.WaterSource)) &&
-               Inside(m.Goal.X,m.Goal.Z,Math.Max(2,g.SafeRadius-1)))return true;
             bool failed=m.Job==Aim.Water && m.WaterDeadline<=g.Time;
             Prop failedSource=failed?m.WaterSource:null;
 
@@ -772,7 +830,6 @@ namespace LastSignal
             // barrel can shorten a journey, but a distant unseen camp is private.
             Prop best=null;
             float nearest=999f;
-            Place where=new Place();
             foreach(Prop p in g.Props)
             {
                 if(!SuitableWater(p) || !Inside(p.X,p.Z,Math.Max(1,g.SafeRadius-1)))continue;
@@ -816,8 +873,8 @@ namespace LastSignal
             // urgent, walk past a nearby source or use a personal camp reservoir.
             if(a.Hydration>55 && nearest>10 && m.Job!=Aim.Water)
             {m.WaterRecheck=g.Time+4f;return false;}
-            m.WaterSource=best;m.Goal=where;m.Job=Aim.Water;
-            m.Pause=0;m.WaterDeadline=g.Time+Math.Max(12,nearest*1.1f+12);
+            source=best;
+            deadline=g.Time+Math.Max(12,nearest*1.1f+12);
             return true;
         }
 
@@ -835,194 +892,6 @@ namespace LastSignal
             a.Crouch=Defensive(m) && a.Hydration>35 && Arena.Cover(g,a.X,a.Z)>.5f;
             if(close){a.Speed=0;return;}
             Go(g,a,m,m.Goal.X-a.X,m.Goal.Z-a.Z,a.Crouch?1.65f:2.9f,dt,true);
-        }
-
-        static void Plan(Game g,Actor a,Mind m)
-        {
-            m.Replan=m.Between(.9f,1.65f);
-            float radius=Dist(0,0,a.X,a.Z);
-            if(radius>g.SafeRadius-1.2f && g.SafeRadius<Arena.Radius-1f)
-            {
-                m.Goal=Constrain(new Place(a.X,a.Z),Math.Max(1.5f,g.SafeRadius-6f));
-                m.Job=Aim.Travel;m.RunFor=1.7f;return;
-            }
-            if(m.Enemy!=null && (!m.Enemy.Alive || Allied(g,a,m.Enemy))) {m.Enemy=null;m.HasObservation=false;m.LostSight=0;}
-            if(m.ImpactUntil>g.Time && !m.HasObservation)
-            {
-                m.Goal=m.ImpactClue;m.Job=Aim.Search;m.Pause=0;return;
-            }
-            // A bot who has taken a prize still needs to clear the opening before
-            // it will compare targets. Contestants guarding the horn can disengage.
-            if(m.ImpactUntil<=g.Time && !(m.RushArmed && m.ExtraThreatUntil>g.Time) && OpeningPlan(g,a,m))return;
-            if(m.HasObservation && m.Enemy!=null)
-            {
-                float d=Dist(a.X,a.Z,m.LastSeen.X,m.LastSeen.Z);
-                if(!CombatReady(a) && a.Windup<=0)Arm(a);
-                if(!CombatReady(a) && m.RecoverUntil>g.Time && d>5)
-                {
-                    Prop spear=FindSpentSpear(g,a,m);
-                    if(spear!=null){m.Item=spear;m.Goal=new Place(spear.X,spear.Z);m.Job=Aim.Loot;return;}
-                }
-                bool supported=m.Alliance!=null && m.Alliance.Active && g.Time-m.AnchorTime<9f;
-                bool camp=m.Style==Style.Builder && m.Fire!=null && !m.Fire.Removed && m.Fire.Owner==a.Id &&
-                    Dist(a.X,a.Z,m.Fire.X,m.Fire.Z)<21f;
-                bool outmatched=a.Health<29 || (!CombatReady(a) && RankWeapon(m.Enemy.Weapon)>0 && d>1.6f);
-                bool shadow=m.Style==Style.Shadow && !supported && !ActiveHunter(a);
-                bool crowded=m.ExtraThreatUntil>g.Time && !supported;
-                bool exposed=m.ExposedTarget==m.Enemy && g.Time<m.ExposedUntil;
-                bool spent=a.Stamina<24 || a.Hunger<23 || a.Hydration<25;
-                bool endangered=crowded && (a.Health<56 || spent || !CombatReady(a));
-                bool intervene=crowded && exposed && CombatReady(a) && a.Health>=54 && !spent && d<(Ranged(a)?31f:13f);
-                bool flee=g.SafeRadius>6f && (outmatched || endangered || (shadow && !intervene && m.SawDuelUntil<=g.Time && d>2.8f));
-                if(!flee && !intervene && m.SawDuelUntil>g.Time && d>5f && a.Hurt<=.02f && g.Time>=m.ReconsiderAt)
-                {
-                    // Watch a real exchange briefly. A missed opening leads to a
-                    // fresh decision even if both rivals keep fighting.
-                    m.HoldBackUntil=g.Time+m.Between(1.7f,g.AliveCount<=3?4.8f:3.2f);
-                    m.ReconsiderAt=m.HoldBackUntil+m.Between(6f,10f);
-                }
-                if(!flee && !intervene && m.HoldBackUntil>g.Time && d>5f && a.Hurt<=.02f)
-                {
-                    m.Job=Aim.Wait;m.Goal=new Place(a.X,a.Z);m.Pause=.65f;m.NextScanPose=1f;
-                    m.Steering=Heading(m.LastSeen.X-a.X,m.LastSeen.Z-a.Z);m.Replan=.28f;return;
-                }
-                if(flee && m.Style==Style.Shadow && a.Hunger>32 && a.Hydration>33 && d>8 && Arena.Cover(g,a.X,a.Z)>.55f)
-                {
-                    a.Crouch=true;
-                    if(!Visible(g,m.Enemy,a,d))
-                    {
-                        m.Job=Aim.Wait;m.Goal=new Place(a.X,a.Z);m.Pause=m.Between(5,13);return;
-                    }
-                }
-                if(flee)
-                {
-                    if(m.Job!=Aim.Evade||Dist(a.X,a.Z,m.Goal.X,m.Goal.Z)<2.2f||m.Danger<=0)
-                    {
-                        m.Goal=Covered(g,a,m,m.LastSeen,true);m.Danger=m.Between(1.8f,3.4f);
-                    }
-                    m.Job=Aim.Evade;m.Pause=0;m.RunFor=d<15?1.8f:0;return;
-                }
-                // An armed camp guard owns this ground. Watch distant passers-by
-                // without deserting the site, then intercept someone who comes in.
-                if(camp && m.ChallengeUntil<g.Time && d>(Ranged(a)?25f:18f) &&
-                   Dist(m.LastSeen.X,m.LastSeen.Z,m.Fire.X,m.Fire.Z)>18f)
-                {
-                    m.Job=Aim.Wait;m.Goal=new Place(a.X,a.Z);m.Pause=1.2f;m.NextScanPose=1.5f;
-                    m.Steering=Heading(m.LastSeen.X-a.X,m.LastSeen.Z-a.Z);m.Replan=.35f;return;
-                }
-                if(!shadow && CombatReady(a))m.ChallengeUntil=g.Time+(camp?2.6f:m.Style==Style.Builder?4f:7f);
-                m.Job=Aim.Combat;m.Goal=m.LastSeen;m.Pause=0;return;
-            }
-            if(!m.HasObservation && m.CoverUntil>g.Time)
-            {m.Goal=m.TacticalCover;m.Job=Aim.Evade;return;}
-            Animal predator;
-            if(Wildlife.ThreatTo(g,a,out predator))
-            {
-                if(CombatReady(a) && a.Health>35 && !Defensive(m))
-                {m.Animal=predator;m.Goal=new Place(predator.X,predator.Z);m.Job=Aim.Stalk;}
-                else
-                {m.Goal=Covered(g,a,m,new Place(predator.X,predator.Z),true);m.Job=Aim.Evade;m.RunFor=2;}
-                return;
-            }
-            if(a.Hydration<28f && PlanWater(g,a,m))return;
-            if(FollowReport(g,a,m))return;
-            if(m.Job==Aim.Evade && m.LostSight>0 && Dist(a.X,a.Z,m.Goal.X,m.Goal.Z)>2) return;
-            if(m.Job==Aim.Evade && m.LostSight>0)
-            {
-                m.Job=Aim.Wait;m.Pause=m.Between(3f,8f);m.Goal=new Place(a.X,a.Z);return;
-            }
-            if(m.LostSight>0 && m.Enemy!=null && (!Defensive(m) || g.Time<m.ChallengeUntil))
-            {
-                if(m.Job!=Aim.Search){m.Goal=m.LastSeen;m.SearchLeg=0;}
-                m.Job=Aim.Search;
-                if(Dist(a.X,a.Z,m.Goal.X,m.Goal.Z)<1.8f)
-                {
-                    m.SearchLeg++;m.Pause=m.Between(.6f,1.6f);
-                    m.Goal=SearchExit(g,a,m);
-                }
-                return;
-            }
-            if(m.HeardEnemy && m.HeardFor>0 && m.LostSight<=0)
-            {
-                m.HeardEnemy=false;
-                if(m.Style==Style.Builder && CombatReady(a) && m.Fire!=null && m.Fire.Owner==a.Id &&
-                   !m.Fire.Removed && Dist(a.X,a.Z,m.Fire.X,m.Fire.Z)<15f)
-                {
-                    m.Job=Aim.Wait;m.Goal=new Place(a.X,a.Z);m.Pause=1.0f;m.NextScanPose=1.4f;
-                    m.Steering=Heading(m.Heard.X-a.X,m.Heard.Z-a.Z);return;
-                }
-                if(Defensive(m))
-                {
-                    m.Goal=Covered(g,a,m,m.Heard,true);m.Job=Aim.Evade;m.LostSight=m.Between(4,9);return;
-                }
-                if(m.Style==Style.Raider || m.Style==Style.Scout ||
-                    (m.Style==Style.Hunter && CombatReady(a) && Dist(a.X,a.Z,m.Heard.X,m.Heard.Z)<14f))
-                {m.Goal=m.Heard;m.Job=Aim.Search;m.Pause=0;return;}
-            }
-            if(m.Job==Aim.Search && m.HeardFor>0 && Dist(a.X,a.Z,m.Goal.X,m.Goal.Z)>1.9f) return;
-            if(PlanWater(g,a,m))return;
-            if(!m.HasObservation && TryHuntTrail(g,a,m))return;
-            if(m.Job==Aim.Wait && m.Pause>0 && a.Hunger>28 && a.Hydration>40)return;
-            if(!m.Opening && Smoke(g,a,m))return;
-            if(m.Job==Aim.Travel && !Inside(a.X,a.Z,g.SafeRadius-3))return;
-
-            if(m.RecoverUntil>g.Time && a.Count("spear")==0)
-            {
-                Prop lost=FindSpentSpear(g,a,m);
-                if(lost!=null)
-                {m.Item=lost;m.Goal=new Place(lost.X,lost.Z);m.Job=Aim.Loot;return;}
-            }
-            if(Regroup(g,a,m))return;
-            if(m.Expedition)
-            {
-                float left=Dist(a.X,a.Z,m.Home.X,m.Home.Z);
-                if(left<11 || !Inside(m.Home.X,m.Home.Z,g.SafeRadius-5))m.Expedition=false;
-                else if(m.Age>19 && a.Hunger>54 && a.Hydration>50 && a.Count("meat")==0)
-                {
-                    m.Item=FindLoot(g,a,m,a.Weapon=="fists"?10f:5f);
-                    if(m.Item!=null){m.Goal=new Place(m.Item.X,m.Item.Z);m.Job=Aim.Loot;return;}
-                    m.Goal=m.Home;m.Job=Aim.Travel;m.Watch=5f;return;
-                }
-            }
-            if(m.Fire!=null && (m.Fire.Removed || !Inside(m.Fire.X,m.Fire.Z,g.SafeRadius-1)))m.Fire=null;
-            if(a.Count("meat")>0 || (m.Fire!=null && m.Fire.HasMeat))
-            {
-                if(m.Fire==null)m.Fire=FindFire(g,a,m);
-                if(m.Fire!=null || a.Count("firekit")>0)
-                {
-                    m.Job=Aim.Camp;
-                    m.Goal=m.Fire==null?new Place(a.X,a.Z):new Place(m.Fire.X,m.Fire.Z);return;
-                }
-            }
-            if(m.Style==Style.Builder && m.Fire==null && a.Count("firekit")>0 && radius>35)
-            {m.Job=Aim.Camp;m.Goal=new Place(a.X,a.Z);return;}
-            if(m.Job==Aim.Stalk && m.Animal!=null && !m.Animal.Harvested && Dist(a.X,a.Z,m.Animal.X,m.Animal.Z)<33 && a.Count("meat")<2)
-            {
-                if(!m.Animal.Alive || Arena.Clear(g,a.X,Eye(a),a.Z,m.Animal.X,m.Animal.Y+.4f,m.Animal.Z))
-                {m.Goal=new Place(m.Animal.X,m.Animal.Z);return;}
-                m.Animal=null;
-            }
-            bool wantsGame=(a.Hunger<68 || m.Style==Style.Hunter || m.Style==Style.Builder) && a.Count("meat")<2 && a.Count("meal")<2;
-            if(wantsGame && a.Weapon!="fists")
-            {
-                m.Animal=FindPrey(g,a);
-                if(m.Animal!=null){m.Job=Aim.Stalk;m.Goal=new Place(m.Animal.X,m.Animal.Z);return;}
-            }
-            if(m.Job==Aim.Loot && m.Item!=null && !m.Item.Removed && Dist(a.X,a.Z,m.Item.X,m.Item.Z)<30)return;
-
-            if(Defensive(m) && a.Hunger>47 && a.Weapon!="fists" && radius>25 && Arena.Cover(g,a.X,a.Z)>.38f && m.Dice.Next(4)==0)
-            {m.Job=Aim.Wait;m.Pause=m.Between(7,24);m.Goal=new Place(a.X,a.Z);return;}
-            m.Item=FindLoot(g,a,m, m.Style==Style.Hunter?24:19);
-            if(m.Item!=null){m.Job=Aim.Loot;m.Goal=new Place(m.Item.X,m.Item.Z);return;}
-            if(m.Job==Aim.Travel && Dist(a.X,a.Z,m.Goal.X,m.Goal.Z)>3f && m.Watch>0)return;
-
-            if(Defensive(m) && radius>23 && g.SafeRadius>20) m.Goal=Covered(g,a,m,m.Home,false);
-            else
-            {
-                Place center= m.Style==Style.Hunter ? m.Home : new Place(a.X,a.Z);
-                m.Goal=Constrain(Offset(center,m.Between(0,Tau),m.Between(12,40)),Math.Min(Arena.Radius-4,Math.Max(1,g.SafeRadius-3)));
-            }
-            m.Job=Aim.Travel;m.Watch=m.Between(7,14);
         }
 
         static void Guard(Actor a,bool raised)
@@ -1090,6 +959,7 @@ namespace LastSignal
                     if(m.Stuck>6.5f)
                     {
                         m.Item=null;m.Animal=null;m.Stuck=0;m.Replan=0;
+                        RememberRoute(m,m.Goal);m.RouteUntil=0;
                         m.Goal=Constrain(Offset(new Place(a.X,a.Z),m.NavAngle,7f),Math.Max(2,g.SafeRadius-1));
                         m.Job=Aim.Travel;m.Watch=3f;
                     }
@@ -1296,9 +1166,9 @@ namespace LastSignal
             bool canCommit=!laneBlocked && a.Windup<=0 && a.Swing<=0 && a.NextAttack<=0 && a.DodgeTime<=.12f && !a.Guard && bearing && m.CanRead && (!crossbow||a.CrossbowLoaded);
             float away=dx*m.ReadVX+dz*m.ReadVZ;
             bool castLane=m.CanRead && !m.Opening && !laneBlocked && a.Weapon=="spear" &&
-                d>7 && d<16 && away>2.3f && m.Style!=Style.Shadow && a.Health>40 &&
+                d>7 && d<16 && away>2.3f && a.Health>40 &&
                 (a.Count("spear")>1 || a.Count("knife")+a.Count("hatchet")+a.Count("sling")+a.Count("bow")+a.Count("sword")+a.Count("crossbow")>0 ||
-                 (m.Style!=Style.Builder && d<14));
+                 (a.Stamina>50 && d<11+4f*m.Boldness));
             if(!castLane)m.RunnerSince=0;
             else if(m.RunnerSince==0)m.RunnerSince=g.Time;
             if(canCommit && castLane && g.Time-m.RunnerSince>.85f && a.Stamina>skill.Reserve+28 && m.RecoverUntil<g.Time)
@@ -1356,7 +1226,7 @@ namespace LastSignal
             a.Sprint=false;
             if(d>10 && !ranged && a.Stamina>skill.Reserve+30)speed=4.25f;
             bool pursuit=m.CanRead && !m.Opening && !ranged && !a.Guard && !laneBlocked &&
-                d>reach*.64f && away>1.05f && (m.Style!=Style.Shadow || ActiveHunter(a));
+                d>reach*.64f && away>1.05f && PursuitReady(a) && ReachesInTime(g,a,m.LastSeen,4f);
             if(pursuit)
             {
                 // Run toward a short visual intercept. The runner's next input
@@ -1377,7 +1247,9 @@ namespace LastSignal
                 if(a.Sprint)a.Stamina=Math.Max(0,a.Stamina-11*dt);
             }
             speed*=Math.Min(1,Dist(0,0,advance,side));
-            Go(g,a,m,dx*advance-dz*side,dz*advance+dx*side,speed,dt,false);
+            float forwardX=dx*advance-dz*side,forwardZ=dz*advance+dx*side;
+            if(ranged && WouldLeaveFiringDeck(g,a,forwardX,forwardZ)){a.Speed=0;return;}
+            Go(g,a,m,forwardX,forwardZ,speed,dt,false);
         }
 
         static void Hunt(Game g,Actor a,Mind m,float dt)
@@ -1389,15 +1261,20 @@ namespace LastSignal
                 if(Survival.Harvest(g,a,v)){m.Harvests++;m.Animal=null;m.Job=Aim.Forage;}
                 m.Replan=0;return;
             }
+            if(!Arena.Clear(g,a.X,Eye(a),a.Z,v.X,v.Y+(v.Alive?Wildlife.Height(v):.24f),v.Z))
+            {
+                if(g.Time-m.PreySeenAt>3.4f || Dist(a.X,a.Z,m.PreySeen.X,m.PreySeen.Z)<1.25f)
+                {m.Animal=null;m.Job=Aim.Forage;m.Replan=0;return;}
+                Go(g,a,m,m.PreySeen.X-a.X,m.PreySeen.Z-a.Z,2.2f,dt,true);return;
+            }
+            m.PreySeen=new Place(v.X,v.Z);m.PreySeenAt=g.Time;
             float dx=v.X-a.X,dz=v.Z-a.Z,d=Dist(0,0,dx,dz);
-            if(v.Alive && Wildlife.Predator(v) && !Arena.Clear(g,a.X,Eye(a),a.Z,v.X,v.Y+Wildlife.Height(v),v.Z))
-            {m.Animal=null;m.Job=Aim.Travel;m.Replan=0;return;}
 
             if(v.Alive && a.Windup<=0)
             {
                 if(HasRanged(a,"crossbow")&&(d>=6||BestMelee(a)=="fists"))Survival.EquipActor(a,"crossbow");
                 else if(HasRanged(a,"bow"))Survival.EquipActor(a,"bow");
-                else if(a.Count("spear")>0 && (d<6 || (d<=16 && (m.Style==Style.Hunter || a.Count("stone")<2 || a.Count("sling")==0))))
+                else if(a.Count("spear")>0 && (d<6 || (d<=16 && (a.Count("spear")>1 || a.Count("stone")<2 || a.Count("sling")==0))))
                     Survival.EquipActor(a,"spear");
                 else if(d<6&&BestMelee(a)!="fists")Survival.EquipActor(a,BestMelee(a));
                 else if(a.Count("sling")>0 && a.Count("stone")>0)Survival.EquipActor(a,"sling");
@@ -1448,6 +1325,13 @@ namespace LastSignal
             a.Sprint=v.Alive && v.Alert>0 && d>6 && !ranged && a.Stamina>35;
             Go(g,a,m,dx,dz,(a.Sprint?4.6f:a.Crouch?1.62f:2.8f)*(crossbow&&a.CrossbowReload>0?.72f:1),dt,true);
         }
+        static void LeaveCamp(Game g,Actor a,Mind m,Prop p)
+        {
+            if(CanRecoverCampMeat(g,a,m,p))Survival.Tend(g,a,p,"take");
+            m.DeferredFire=p;m.FireRetryAt=g.Time+25f;
+            m.Fire=m.CampProgressFire=null;m.Job=Aim.Forage;m.Replan=0;
+        }
+
         static void Camp(Game g,Actor a,Mind m,float dt)
         {
             if(m.Fire==null)
@@ -1458,20 +1342,23 @@ namespace LastSignal
                     float theta=yaw+i*.9f;
                     m.Fire=Survival.Build(g,a,"fire",a.X+Sin(theta)*1.7f,a.Z+Cos(theta)*1.7f,theta);
                 }
-                if(m.Fire==null){m.Job=Aim.Forage;m.Replan=0;return;}
-                m.Shelter=new Place(a.X,a.Z);
+                if(m.Fire==null){m.NewFireAfter=g.Time+14f;m.Job=Aim.Forage;m.Replan=0;return;}
             }
             Prop p=m.Fire;
-            if(p.Removed){m.Fire=null;m.Replan=0;return;}
+            if(!CanCookAt(g,a,m,p)){LeaveCamp(g,a,m,p);return;}
             float d=Dist(a.X,a.Z,p.X,p.Z);
             if(d>2.35f){Go(g,a,m,p.X-a.X,p.Z-a.Z,2.9f,dt,true);return;}
+            if(m.CampProgressFire!=p || p.Cook>m.CampProgress+.01f) {
+                m.CampProgressFire=p;m.CampProgress=p.Cook;m.CampProgressAt=g.Time;
+            }
+            if(g.Time-m.CampProgressAt>11f){LeaveCamp(g,a,m,p);return;}
             a.Crouch=true;a.Speed=0;
             a.Yaw=ApproachAngle(a.Yaw,Heading(p.X-a.X,p.Z-a.Z),2f*dt);
             if(m.Action>0)return;
             m.Action=m.Between(.85f,1.55f);
 
             if(m.Barrel!=null && m.Barrel.Removed)m.Barrel=null;
-            if(m.Style==Style.Builder && m.Barrel==null && (m.AtCamp || g.Rain))
+            if(m.Barrel==null && g.Rain && a.Hydration<70f)
             {
                 for(int k=0;k<4 && m.Barrel==null;k++)
                 {
@@ -1485,15 +1372,17 @@ namespace LastSignal
                 else if(a.WaterCarried>=32 && a.Hydration>=82 && m.Barrel.Water<16)
                     Survival.Pour(g,a,m.Barrel);
             }
-            if(p.HasMeat && p.Cook>=.999f){Survival.Tend(g,a,p,"take");Survival.Eat(g,a);m.Replan=0;return;}
-            if(!p.Lit)Survival.Tend(g,a,p,"light");
+            if(p.HasMeat && p.Cook>=1f) {
+                if(Survival.Tend(g,a,p,"take")) {
+                    Survival.Eat(g,a);m.CampProgress=0;m.CampProgressAt=g.Time;m.Replan=0;
+                }
+                return;
+            }
             if(p.Fuel<15 && a.Count("branch")>0)Survival.Tend(g,a,p,"fuel");
-            if(!p.HasMeat && a.Count("meat")>0){Survival.Tend(g,a,p,"cook");return;}
-            if(m.Style==Style.Builder && !m.AtCamp && a.Count("branch")>=3)
-            {
-                float theta=Heading(-p.X,-p.Z);
-                Prop wall=Survival.Build(g,a,"barricade",p.X+Sin(theta)*2.3f,p.Z+Cos(theta)*2.3f,theta);
-                if(wall!=null)m.AtCamp=true;
+            if(!p.Lit)Survival.Tend(g,a,p,"light");
+            if(!p.HasMeat && a.Count("meat")>0) {
+                if(Survival.Tend(g,a,p,"cook")){m.CampProgress=p.Cook;m.CampProgressAt=g.Time;}
+                return;
             }
             if(!p.HasMeat){m.Job=Aim.Wait;m.Pause=m.Between(2,6);m.Replan=0;}
         }
@@ -1503,13 +1392,15 @@ namespace LastSignal
             m.Age+=dt;m.Scan-=dt;m.Replan-=dt;m.NavTime-=dt;m.HitCooldown-=dt;
             m.GuardFor-=dt;m.GuardDelay-=dt;m.LostSight-=dt;m.HeardFor-=dt;m.Action-=dt;
             m.Pause-=dt;m.Danger-=dt;m.Watch-=dt;m.RunFor-=dt;m.Think-=dt;m.NextScanPose-=dt;
+            if(a.Health<m.LastHealth-1.5f)m.Replan=0;
+            m.LastHealth=a.Health;
             if(TickOffer(g,a,m,dt))return;
             if(m.Scan<=0)
             {
                 m.Scan=m.Between(.36f,.66f)*(1.12f-.13f*g.Level);
-                bool had=m.HasObservation;
+                bool had=m.HasObservation;Actor previous=m.Enemy;
                 Observe(g,a,m);
-                if(m.HasObservation!=had)m.Replan=0;
+                if(m.HasObservation!=had || (m.HasObservation && (previous!=m.Enemy || g.Time<m.ExposedUntil)))m.Replan=0;
             }
             if(m.Think<=0)
             {
@@ -1519,10 +1410,11 @@ namespace LastSignal
             if(TickPackCare(g,a,m,dt))return;
             if(m.Replan<=0) Plan(g,a,m);
             a.State=m.Job==Aim.Wait && m.LookoutUntil>g.Time?"keeping watch":labels[(int)m.Job];a.Sprint=false;a.Aiming=false;
-            if(WorkOnShelter(g,a,m,dt))return;
+            if(WorkOnFort(g,a,m,dt))return;
             if(ClimbObservedFort(g,a,m,dt))return;
             if(m.Job==Aim.Combat){Duel(g,a,m,dt);return;}
             Guard(a,false);
+            if(m.Job==Aim.Recover){Recover(g,a,m,dt);return;}
             if(m.Job==Aim.Stalk){Hunt(g,a,m,dt);return;}
             if(m.Job==Aim.Camp){Camp(g,a,m,dt);return;}
             if(m.Job==Aim.Water){Water(g,a,m,dt);return;}
@@ -1537,7 +1429,7 @@ namespace LastSignal
             if(m.Job==Aim.Loot && (m.Item==null || m.Item.Removed))
             {m.Replan=0;m.Job=Aim.Forage;m.Item=null;return;}
             float d=Dist(a.X,a.Z,m.Goal.X,m.Goal.Z);
-            float grab=2.45f;
+            float grab=2.3f;
             if(m.Job==Aim.Loot && m.Opening && m.Rush && m.Item!=null && m.Item.Y>Arena.Height(m.Item.X,m.Item.Z)+.36f)
             {
                 // Approach the stand closely enough for a visible reach. A blocked
@@ -1565,6 +1457,7 @@ namespace LastSignal
                     Go(g,a,m,edge.X-a.X,edge.Z-a.Z,2.8f,dt,true);
                     m.Replan=.12f;return;
                 }
+                else DeferLoot(g,m,m.Item,m.Between(18f,28f));
                 m.Item=null;m.Replan=0;m.Job=Aim.Forage;a.Speed=0;return;
             }
             if(d<1.25f){a.Speed=0;m.Replan=0;return;}
