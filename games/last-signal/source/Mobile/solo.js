@@ -1,7 +1,8 @@
 import { createSoloWorld } from "./solo-world.js";
 import {
   collapseFort, fortBlocksActor, fortGround, fortSizes, FORT_STEP_HEIGHT,
-  playerFortPiece, rivalFortApproach, rivalFortCandidate, rivalFortDescent, stepRivalFort
+  playerFortPiece, playerFortRecipes, previewPlayerFort, updatePlayerFort,
+  rivalFortApproach, rivalFortCandidate, rivalFortDescent, stepRivalFort
 } from "./solo-forts.js";
 
 const TAU = Math.PI * 2;
@@ -46,7 +47,7 @@ const crafts = [
   ["bow", 1, { branch: 3, fiber: 3, cloth: 1 }],
   ["woven_vest", 1, { cloth: 2, fiber: 2 }],
   ["scrap_cuirass", 1, { scrap: 3, cloth: 1, fiber: 2 }],
-  ["shield", 1, { branch: 3, scrap: 1, fiber: 2 }],
+  ["shield", 1, { branch: 3, scrap: 1 }],
   ["sword", 1, { scrap: 4, branch: 1, cloth: 1 }],
   ["bolts", 3, { scrap: 1, branch: 1 }]
 ];
@@ -70,6 +71,12 @@ const heading = (from, to) => Math.atan2(to.x - from.x, to.z - from.z);
 const angleDifference = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
 const label = (id) => names[id] || id.replaceAll("_", " ").replace(/^./, (letter) => letter.toUpperCase());
 const count = (actor, item) => actor.bag[item] || 0;
+const SHIELD_HEALTH = 100;
+const STRUCTURE_HEALTH = { wall: 100, gate: 80, floor: 90, ramp: 75 };
+const REPAIRABLE = new Set(["wall", "barricade", "floor", "ramp"]);
+const REPAIR_WOOD = 1;
+const REPAIR_SECONDS = 2;
+const REPAIR_FRACTION = 0.35;
 
 function add(actor, item, amount) {
   const total = count(actor, item) + amount;
@@ -86,6 +93,7 @@ function makeActor(id, name, style, spawn, groundY, random) {
     water: 0, alive: true, placement: 0, weapon: "fists", armor: "", speed: 0,
     cooldown, crouch: false, guard: false, swing: 0, hurt: 0, anim: 0,
     reload: 0, crossbowLoaded: false, jump: 0, verticalSpeed: 0, bag: {},
+    shieldStock: [], shieldRecovery: 0, guardStarted: -Infinity,
     decision, target: null, aggression, intent: "roam",
     lastSeen: null, lastSound: 0, soundMemory: null, opponent: null, openingLoot: false,
     attackedAt: -Infinity, woundedAt: -Infinity, nextStepNoise: 0, lookAt: null,
@@ -116,30 +124,111 @@ function chooseRivalWeapon(actor, reach) {
   if (best !== actor.weapon) equips(actor, best);
 }
 
-function recipeAffordable(actor, recipe, building) {
+function recipeAffordable(actor, recipe, building, batches = 1) {
   if (building && recipe[0] === "fire" && count(actor, "firekit")) return true;
-  return Object.entries(recipe[2]).every(([id, quantity]) => count(actor, id) >= quantity);
+  return Object.entries(recipe[2]).every(([id, quantity]) => count(actor, id) >= quantity * batches);
 }
 
 function recipeRows(actor, recipes, building = false) {
   return recipes.map(recipe => {
-    const [id, amount, materials] = recipe;
-    const cost = building && id === "fire" && count(actor, "firekit") ? "1 campfire kit" :
-      Object.entries(materials).map(([item, quantity]) => quantity + " " + label(item).toLowerCase()).join(" / ");
-    return [id, label(id) + (amount > 1 ? " x" + amount : ""), cost, recipeAffordable(actor, recipe, building)];
+    const [id, amount, materials, metadata] = recipe;
+    const kits = building && id === "fire" ? count(actor, "firekit") : 0;
+    const effective = kits ? { firekit: 1 } : materials;
+    const needs = Object.entries(effective).map(([item, required]) => ({ id: item, name: label(item),
+      held: count(actor, item), required, source: materialSources[item] || "Search supplies or the crafting menu." }));
+    const cost = needs.map(need => need.required + " " + need.name.toLowerCase()).join(" / ");
+    const copies = kits + Math.min(...Object.entries(materials).map(([item, n]) => Math.floor(count(actor, item) / n)));
+    const category = recipeCategory(id, building, metadata?.blueprint);
+    const available = metadata?.startCost ? Object.entries(metadata.startCost).every(([item, n]) => count(actor, item) >= n) : copies > 0;
+    return [id, metadata?.title || label(id) + (amount > 1 ? " x" + amount : ""), cost, available,
+      { category, needs, yield: amount, copies, description: metadata?.description || recipeDescriptions[id] || "",
+        blueprint: Boolean(metadata?.blueprint), saved: Boolean(metadata?.saved), kit: kits > 0 }];
   });
 }
 
-function pay(actor, recipe, building) {
+function recipeCategory(id, building, blueprint) {
+  if (blueprint) return "Blueprints";
+  if (building) {
+    if (["ramp", "floor"].includes(id)) return "Levels";
+    if (["fire", "rain_barrel", "lean_to"].includes(id)) return "Camp";
+    return "Cover";
+  }
+  if (["arrows", "bolts"].includes(id)) return "Ammo";
+  if (["sling", "spear", "hatchet", "bow", "sword", "shield", "woven_vest", "scrap_cuirass"].includes(id)) return "Weapons & Armor";
+  return "Essentials";
+}
+
+const materialSources = {
+  branch: "Cut trees with a hatchet or loot supply caches.", fiber: "Harvest plants or trees.",
+  stone: "Mine rocks with a hatchet or loot supply caches.", scrap: "Search supply caches and packs.",
+  cloth: "Search supply caches and packs.", tinder: "Gather dry plants.", firekit: "Craft a campfire kit."
+};
+
+const recipeDescriptions = {
+  sling: "Ranged weapon that throws stones.", spear: "Long melee reach. Can also be thrown.",
+  arrows: "Ammunition for the bow.", bolts: "Ammunition for the crossbow.",
+  hatchet: "Harvest wood and stone or use it in a fight.", bandage: "Recover health after a fight.",
+  firekit: "Build a campfire to cook game.", waterskin: "Carry fresh water between stops.",
+  bow: "Ranged weapon that fires arrows.", sword: "Heavy melee weapon that pairs with a shield.",
+  woven_vest: "Light protection that reduces incoming damage.", scrap_cuirass: "Heavier protection from incoming damage.",
+  shield: "Raise with a spear or sword to catch incoming hits.", barricade: "Crouch behind this low cover.",
+  wall: "Timber wall for cover or platform support.", gate: "The entrance opens and closes.",
+  lean_to: "Quick shelter for a small camp.", ramp: "The arrow marks the uphill end. Aim high at a landing to snap it.",
+  fire: "Cook game meat. Firelight and smoke can give away your location.",
+  rain_barrel: "A water storage barrel for camp.", floor: "Aim high to place a supported platform next to timber."
+};
+
+function pay(actor, recipe, building, batches = 1) {
   if (building && recipe[0] === "fire" && count(actor, "firekit")) {
     add(actor, "firekit", -1);
   } else {
-    for (const [id, quantity] of Object.entries(recipe[2])) add(actor, id, -quantity);
+    for (const [id, quantity] of Object.entries(recipe[2])) add(actor, id, -quantity * batches);
   }
 }
 
 function hasShield(actor) {
   return Boolean(count(actor, "shield") && (actor.weapon === "spear" || actor.weapon === "sword"));
+}
+
+function shieldDurabilities(actor) {
+  const quantity = count(actor, "shield");
+  const stock = actor.shieldStock;
+  if (stock.length > quantity) stock.length = quantity;
+  while (stock.length < quantity) stock.push(SHIELD_HEALTH);
+  return stock;
+}
+
+function shieldRaised(actor) {
+  return hasShield(actor) && actor.guard && actor.stamina >= 6 && actor.shieldRecovery <= 0 && actor.swing <= 0.19;
+}
+
+// The front face intercepts the actual swing or projectile segment.
+function shieldContact(actor, from, to) {
+  if (!shieldRaised(actor)) return null;
+  const sin = Math.sin(actor.yaw), cos = Math.cos(actor.yaw);
+  const dx = to.x - from.x, dy = to.y - from.y, dz = to.z - from.z;
+  const normalSpeed = dx * sin + dz * cos;
+  if (normalSpeed >= -0.0001) return null;
+  const t = (0.56 - (from.x - actor.x) * sin - (from.z - actor.z) * cos) / normalSpeed;
+  if (t < 0 || t > 1) return null;
+  const x = from.x + dx * t, y = from.y + dy * t, z = from.z + dz * t;
+  const side = ((x - actor.x) * cos - (z - actor.z) * sin + 0.24) / 0.41;
+  const vertical = (y - actor.y - (actor.crouch ? 0.80 : 1.19)) / 0.49;
+  return side * side + vertical * vertical <= 1 ? { t, x, y, z } : null;
+}
+
+function projectileBodyContact(actor, from, to) {
+  const dx = to.x - from.x, dz = to.z - from.z;
+  const px = from.x - actor.x, pz = from.z - actor.z;
+  const span = dx * dx + dz * dz;
+  const projection = px * dx + pz * dz;
+  const crossed = projection * projection - span * (px * px + pz * pz - 0.25);
+  if (span < 0.000001 || crossed < 0) return null;
+  const root = Math.sqrt(crossed);
+  const t = Math.max(0, (-projection - root) / span);
+  if (t > 1 || (-projection + root) / span < 0) return null;
+  const height = from.y + (to.y - from.y) * t - actor.y;
+  return height >= 0.13 && height < (actor.crouch ? 1.24 : 1.78) ? t : null;
 }
 
 function equips(actor, id) {
@@ -152,9 +241,20 @@ function itemRow(model, x, y, z, w, h, d, kind, yaw = 0, lit = false) {
   return [model, x, y, z, 1, yaw, w, h, d, kind, lit, -1, 0, false, model];
 }
 
+function fortPieceRow(piece, status) {
+  if (!piece) return null;
+  const row = itemRow(piece.id, piece.x, piece.y, piece.z, piece.w, piece.h, piece.d, "structure", piece.angle);
+  if (status) row[16] = status;
+  return row;
+}
+
 // Intersect the whole sight segment with a rotated building piece. A thin wall
 // can fall entirely between movement samples, and a low barricade only hides a crouched rival.
 function crossesPiece(from, to, eye, end, piece) {
+  return pieceContact(from, to, eye, end, piece) !== null;
+}
+
+function pieceContact(from, to, eye, end, piece) {
   const c = Math.cos(piece.angle), s = Math.sin(piece.angle);
   const ox = from.x - piece.x, oz = from.z - piece.z, dx = to.x - from.x, dz = to.z - from.z;
   let near = 0, far = 1;
@@ -167,12 +267,12 @@ function crossesPiece(from, to, eye, end, piece) {
   }
   const forward = ox * s + oz * c, forwardDelta = dx * s + dz * c;
   if (!slab(ox * c - oz * s, dx * c - dz * s, piece.w / 2) ||
-      !slab(forward, forwardDelta, piece.d / 2)) return false;
-  if (piece.id === "ramp") {
-    return slab(eye - piece.y - piece.h * (forward / piece.d + 0.5),
-      end - eye - piece.h * forwardDelta / piece.d, 0.18);
-  }
-  return slab(eye - piece.y - piece.h / 2, end - eye, piece.h / 2);
+      !slab(forward, forwardDelta, piece.d / 2)) return null;
+  const vertical = piece.id === "ramp"
+    ? slab(eye - piece.y - piece.h * (forward / piece.d + 0.5),
+      end - eye - piece.h * forwardDelta / piece.d, 0.18)
+    : slab(eye - piece.y - piece.h / 2, end - eye, piece.h / 2);
+  return vertical ? near : null;
 }
 
 export class SoloArena {
@@ -216,6 +316,7 @@ export class SoloArena {
     this.focus = [];
     this.build = null;
     this.buildAngle = 0;
+    this.playerFortPlans = new Map();
     this.drawStarted = null;
     this.throwStarted = null;
     this.notice = "";
@@ -225,6 +326,7 @@ export class SoloArena {
     this.hitUntil = 0;
     this.impactAngle = 0;
     this.useUntil = 0;
+    this.repairJob = null;
   }
 
   say(message, seconds = 2.5) {
@@ -243,13 +345,20 @@ export class SoloArena {
 
   command(action) {
     const actor = this.player;
-    const [verb, arg] = action.split(":");
+    const [verb, arg, amount, surplus] = action.split(":");
     if (action === "unfocus") {
       this.hold.clear();
       actor.guard = false;
       this.drawStarted = this.throwStarted = null;
+      this.repairJob = null;
       return;
     }
+    if (verb === "repair") {
+      this.beginRepair();
+      return;
+    }
+    if (this.repairJob && ["+Attack", "+Throw", "+Dodge", "+Shove", "build", "cancel"].includes(verb))
+      this.cancelRepair();
     if (verb === "+Attack") {
       this.hold.add("attack");
       const weapon = weapons[actor.weapon];
@@ -263,7 +372,12 @@ export class SoloArena {
         this.drawStarted = null;
       }
     }
-    if (verb === "+Guard" || verb === "-Guard") actor.guard = verb[0] === "+";
+    if (verb === "+Guard" && !actor.guard) {
+      actor.guard = true;
+      actor.guardStarted = this.clock;
+      if (hasShield(actor) && actor.stamina >= 6) actor.stamina -= 1;
+    }
+    if (verb === "-Guard") actor.guard = false;
     if (verb === "+Throw" && actor.weapon === "spear") this.throwStarted = this.clock;
     if (verb === "-Throw" && this.throwStarted !== null && actor.weapon === "spear") {
       if (this.projectile(actor, { damage: 41, shot: "spear", speed: 32, range: 36, delay: 0.9 }, clamp((this.clock - this.throwStarted) / 0.75, 0.3))) {
@@ -292,30 +406,52 @@ export class SoloArena {
     if (verb === "equip") equips(actor, arg);
     if (verb === "pack") this.usePack(arg);
     if (verb === "drop" && count(actor, arg) && actor.weapon !== arg) {
+      const shields = arg === "shield" ? [shieldDurabilities(actor).pop()] : undefined;
       add(actor, arg, -1);
       if (!count(actor, arg) && actor.armor === arg) actor.armor = "";
-      this.drop(actor.x + Math.sin(actor.yaw), actor.z + Math.cos(actor.yaw), { [arg]: 1 });
+      this.drop(actor.x + Math.sin(actor.yaw), actor.z + Math.cos(actor.yaw), { [arg]: 1 }, false, shields);
     }
-    if (verb === "craft") this.craft(arg);
+    if (verb === "craft" && surplus === undefined) this.craft(arg, amount === undefined ? 1 : amount === "3" ? 3 : 0);
     if (verb === "build") {
-      const recipe = builds.find(row => row[0] === arg);
-      if (recipe && recipeAffordable(actor, recipe, true)) {
+      const recipe = [...builds, ...playerFortRecipes(this)].find(row => row[0] === arg);
+      if (recipe && (recipe[3]?.blueprint || recipeAffordable(actor, recipe, true))) {
         this.build = recipe;
         this.buildAngle = 0;
       }
     }
     if (verb === "cancel") this.build = null;
-    if (verb === "rotate") this.buildAngle += (arg === "-1" ? -1 : 1) * Math.PI / 4;
+    if (verb === "abandon-blueprint") {
+      const recipe = playerFortRecipes(this).find(row => row[0] === arg && row[3].saved);
+      if (!recipe) return;
+      this.playerFortPlans.delete(recipe[3].kind);
+      if (this.build?.[0] === arg) this.build = null;
+      this.say("Blueprint cleared. Placed pieces stay in the arena.");
+    }
+    if (verb === "rotate" && this.build) {
+      const template = this.build[3]?.blueprint;
+      if (template && previewPlayerFort(this, actor, this.build[3].kind, this.buildAngle).anchored) {
+        this.say("The layout is fixed after the first piece is placed.");
+      } else {
+        this.buildAngle = (this.buildAngle + (arg === "-1" ? -1 : 1) * (template ? Math.PI / 2 : Math.PI / 4)) % TAU;
+      }
+    }
     if (verb === "place" || verb === "repeat") this.place(verb === "repeat");
   }
 
-  craft(id) {
+  craft(id, batches = 1) {
     const recipe = crafts.find(row => row[0] === id);
-    if (!recipe || !recipeAffordable(this.player, recipe)) return;
-    pay(this.player, recipe);
-    add(this.player, id, recipe[1]);
+    if (!recipe || !(batches === 1 || batches === 3 && (id === "arrows" || id === "bolts"))) return;
+    if (!recipeAffordable(this.player, recipe, false, batches)) {
+      const missing = Object.entries(recipe[2]).filter(([material, need]) => count(this.player, material) < need * batches)
+        .map(([material, need]) => (need * batches - count(this.player, material)) + " " + label(material).toLowerCase());
+      this.say("Need " + missing.join(" + ") + ".");
+      return;
+    }
+    pay(this.player, recipe, false, batches);
+    add(this.player, id, recipe[1] * batches);
     equips(this.player, id);
-    this.say("Made " + label(id).toLowerCase() + ".");
+    const output = recipe[1] * batches;
+    this.say("Made " + label(id).toLowerCase() + (output > 1 ? " ×" + output : "") + ".");
   }
 
   usePack(id) {
@@ -343,6 +479,7 @@ export class SoloArena {
 
   blueprint(actor = this.player, recipe = this.build, rotation = this.buildAngle, reach = 3.45) {
     if (!recipe) return null;
+    if (recipe[3]?.blueprint) return null;
     const { x, z, yaw, id: actorId } = actor;
     const id = recipe[0];
     const px = Math.round((x + Math.sin(yaw) * reach) * 2) / 2;
@@ -354,11 +491,14 @@ export class SoloArena {
     if (Object.hasOwn(fortSizes, id) || (id === "barricade" && actor === this.player)) {
       return playerFortPiece(this, actor, draft, actor === this.player ? this.input.pitch || 0 : 0);
     }
-    const fits = this.map.surfaceAt(px, pz) <= y + 0.25 &&
-      this.canOccupy(px, pz, 0.7) &&
-      this.pieces.every(piece => this.removed.has(piece.propIndex) || piece.id !== id || distance(piece, { x: px, z: pz }) > 0.75) &&
-      this.actors.every(actor => !actor.alive || actor.id === actorId || distance(actor, { x: px, z: pz }) > 1.5);
-    return { ...draft, fits };
+    let error = "";
+    if (this.map.surfaceAt(px, pz) > y + 0.25) error = "The footprint is in water.";
+    else if (!this.canOccupy(px, pz, 0.7) || this.pieces.some(piece => !this.removed.has(piece.propIndex) &&
+        piece.id === id && distance(piece, draft) <= 0.75)) error = "An obstacle blocks the footprint.";
+    else if (this.actors.some(other => other.alive && other.id !== actorId && distance(other, draft) <= 1.5)) {
+      error = "A contestant blocks the footprint.";
+    }
+    return { ...draft, fits: !error, error };
   }
 
   fortRecipe(id) { return builds.find(row => row[0] === id); }
@@ -366,9 +506,19 @@ export class SoloArena {
   equipFortTool(actor) { equips(actor, "hatchet"); }
 
   place(repeat) {
+    if (this.build?.[3]?.blueprint) {
+      const preview = previewPlayerFort(this, this.player, this.build[3].kind, this.buildAngle);
+      if (preview.error) { this.say(preview.error); return; }
+      if (!preview.piece) return;
+      updatePlayerFort(this, preview);
+      this.say(preview.remaining === 1 ? preview.plan.title + " complete." :
+        "Placed " + label(preview.piece.id).toLowerCase() + ". " + (preview.remaining - 1) + " remaining.");
+      if (preview.remaining === 1) this.build = null;
+      return;
+    }
     const piece = this.blueprint();
     if (!piece?.fits || !recipeAffordable(this.player, this.build, true)) {
-      this.say("Find clear ground and check materials.");
+      this.say(piece?.error || "Check the required materials.");
       return;
     }
     this.installPiece(this.player, this.build, piece);
@@ -380,7 +530,7 @@ export class SoloArena {
     pay(actor, recipe, true);
     piece.propIndex = this.nextProp++;
     piece.owner = actor.id;
-    piece.health = { wall: 100, gate: 80, floor: 90, ramp: 75 }[piece.id] ?? 48;
+    piece.health = STRUCTURE_HEALTH[piece.id] ?? 48;
     piece.lit = false;
     this.pieces.push(piece);
     this.showPiece(piece);
@@ -395,9 +545,9 @@ export class SoloArena {
     this.changes.set(piece.propIndex, record);
   }
 
-  drop(x, z, items, leavePack = false) {
+  drop(x, z, items, leavePack = false, shields) {
     const propIndex = this.nextProp++;
-    this.dropped.push({ x, z, propIndex, items, leavePack });
+    this.dropped.push({ x, z, propIndex, items, leavePack, shields });
     this.changes.set(propIndex, itemRow("pack", x, this.map.heightAt(x, z), z, 0.6, 0.48, 0.48, "pack"));
   }
 
@@ -405,6 +555,83 @@ export class SoloArena {
     this.removed.add(target.propIndex);
     this.changes.set(target.propIndex, null);
     if (this.pieces.includes(target)) collapseFort(this, target);
+  }
+
+  aimedRepairPiece() {
+    const actor = this.player;
+    if (!actor.alive || this.build) return null;
+    const pitch = this.input.pitch || 0;
+    const y = actor.y + (actor.crouch ? 1.04 : 1.6);
+    const reach = REACH * Math.cos(pitch);
+    const end = { x: actor.x + Math.sin(actor.yaw) * reach,
+      y: y + Math.sin(pitch) * REACH, z: actor.z + Math.cos(actor.yaw) * reach };
+    let target = null, range = Infinity;
+    for (const piece of this.pieces) {
+      if (piece.open || this.removed.has(piece.propIndex)) continue;
+      const contact = pieceContact(actor, end, y, end.y, piece);
+      if (contact !== null && contact < range) {
+        target = piece;
+        range = contact;
+      }
+    }
+    if (!target || !REPAIRABLE.has(target.id)) return null;
+    const hit = { x: actor.x + (end.x - actor.x) * range, z: actor.z + (end.z - actor.z) * range };
+    const height = y + (end.y - y) * range;
+    return this.map.clearSight(actor, hit, y, height, this.removed) ? target : null;
+  }
+
+  repairStatus(piece = this.aimedRepairPiece()) {
+    if (!piece) return null;
+    const maxHealth = STRUCTURE_HEALTH[piece.id] ?? 48;
+    const active = this.repairJob?.piece === piece;
+    let reason = "";
+    if (piece.repaired) reason = "Already repaired";
+    else if (piece.health >= maxHealth) reason = "At full health";
+    else if (count(this.player, "branch") < REPAIR_WOOD) reason = "Need 1 wood";
+    return { enabled: !active && !reason, reason, target: label(piece.id), woodNeeded: REPAIR_WOOD, active };
+  }
+
+  beginRepair() {
+    if (this.repairJob) return;
+    const piece = this.aimedRepairPiece();
+    const status = this.repairStatus(piece);
+    if (!status?.enabled) {
+      if (status?.reason) this.say(status.reason + ".");
+      return;
+    }
+    this.repairJob = { piece, started: this.clock, nextSound: this.clock + 0.7 };
+    this.hold.delete("attack");
+    this.drawStarted = this.throwStarted = null;
+    this.rivalNoise(this.player, 14, "build");
+  }
+
+  cancelRepair() {
+    if (!this.repairJob) return;
+    this.repairJob = null;
+    this.say("Repair interrupted.");
+  }
+
+  stepRepair() {
+    const job = this.repairJob;
+    if (!job) return;
+    const { piece, started } = job;
+    if (piece !== this.aimedRepairPiece() || this.repairStatus(piece)?.reason) {
+      this.cancelRepair();
+      return;
+    }
+    if (this.clock - started >= REPAIR_SECONDS) {
+      add(this.player, "branch", -REPAIR_WOOD);
+      const maxHealth = STRUCTURE_HEALTH[piece.id] ?? 48;
+      piece.health = Math.min(maxHealth, piece.health + maxHealth * REPAIR_FRACTION);
+      piece.repaired = true;
+      this.repairJob = null;
+      this.rivalNoise(this.player, 14, "build");
+      this.showPiece(piece);
+      this.say(label(piece.id) + " repaired.");
+    } else if (this.clock >= job.nextSound) {
+      this.rivalNoise(this.player, 14, "build");
+      job.nextSound = this.clock + 0.7;
+    }
   }
 
   refreshFocus() {
@@ -465,6 +692,10 @@ export class SoloArena {
   }
 
   use() {
+    if (this.repairStatus()?.enabled || this.repairJob) {
+      this.beginRepair();
+      return;
+    }
     const option = this.focus[this.focusChoice];
     if (!option || this.clock < this.useUntil) return;
     const { target, kind } = option;
@@ -509,7 +740,10 @@ export class SoloArena {
   loot(actor, cache) {
     if (this.removed.has(cache.propIndex)) return;
     for (const [id, amount] of Object.entries(cache.items)) {
+      const stock = id === "shield" ? shieldDurabilities(actor) : null;
       add(actor, id, amount);
+      if (stock)
+        for (let i = 0; i < amount; i++) stock.push(cache.shields?.[i] ?? SHIELD_HEALTH);
       if (actor.weapon === "fists") equips(actor, id);
     }
     const row = this.world.props[cache.propIndex] || this.changes.get(cache.propIndex);
@@ -748,6 +982,25 @@ export class SoloArena {
       const height = reachHeight(other);
       return height >= -0.2 && height <= (other.crouch ? 1.55 : 2.05);
     }).sort((a, b) => distance(actor, a) - distance(actor, b))[0];
+    const start = { x: actor.x, y: handHeight, z: actor.z };
+    const end = { x: actor.x + Math.sin(actor.yaw) * weapon.reach,
+      y: handHeight + incline * weapon.reach, z: actor.z + Math.cos(actor.yaw) * weapon.reach };
+    let guard = null, guardRange = target ? distance(actor, target) - 0.24 : Infinity;
+    for (const other of this.actors) {
+      if (other === actor || !other.alive || distance(actor, other) > weapon.reach + 0.8) continue;
+      const contact = shieldContact(other, start, end);
+      if (contact && contact.t * weapon.reach < guardRange &&
+          this.map.clearSight(start, contact, start.y, contact.y, this.removed) &&
+          !this.pieces.some(piece => !piece.open && !this.removed.has(piece.propIndex) &&
+            crossesPiece(start, contact, start.y, contact.y, piece))) {
+        guard = other;
+        guardRange = contact.t * weapon.reach;
+      }
+    }
+    if (guard) {
+      this.blockShield(guard, weapon.damage, actor, false);
+      return;
+    }
     if (target) {
       this.damage(target, weapon.damage, actor, { height: reachHeight(target) });
       return;
@@ -774,7 +1027,7 @@ export class SoloArena {
   }
 
   damageFort(piece, damage, actor) {
-    piece.health = (piece.health ?? 48) - damage;
+    piece.health = (piece.health ?? STRUCTURE_HEALTH[piece.id] ?? 48) - damage;
     if (piece.health > 0) return;
     this.remove(piece);
     const wood = Math.min(this.fortRecipe(piece.id)?.[2].branch ?? 0, piece.id === "fire" ? 1 : 2);
@@ -833,19 +1086,30 @@ export class SoloArena {
         crossesPiece(from, to, eye, end, piece));
   }
 
+  blockShield(actor, amount, source, ranged) {
+    const timed = !ranged && this.clock - actor.guardStarted <= 0.22 && actor.guardStarted > -Infinity;
+    const stock = shieldDurabilities(actor);
+    stock[0] -= Math.max(5, amount * (timed ? 0.51 : 0.69));
+    actor.stamina = Math.max(0, actor.stamina - 4 - amount * (timed ? 0.12 : 0.19));
+    if (timed) {
+      actor.guardStarted = -Infinity;
+      source.cooldown = Math.max(source.cooldown, 0.9);
+    }
+    const broken = stock[0] <= 0;
+    if (broken) {
+      stock.shift();
+      add(actor, "shield", -1);
+    }
+    if (broken || actor.stamina < 6) actor.shieldRecovery = broken ? 0.55 : 0.38;
+    if (actor === this.player)
+      this.say(broken ? "Shield broke." : timed ? "Shield parry." : "Shield blocked.");
+    this.rivalNoise(actor, 15, "strike");
+  }
+
   damage(actor, amount, source, contact = {}) {
     if (!actor.alive) return;
     if (source) {
       const incoming = contact.angle ?? heading(actor, source);
-      const height = contact.height ?? 1.1;
-      const shieldCenter = actor.crouch ? 0.78 : 1.12;
-      const hitsShield = Math.abs(angleDifference(incoming, actor.yaw)) < 0.79 &&
-        Math.abs(height - shieldCenter) < 0.48 && Math.abs(contact.side || 0) < 0.53;
-      if (hasShield(actor) && actor.guard && hitsShield && actor.stamina >= 6) {
-        actor.stamina -= 6;
-        amount *= 0.1;
-        if (actor === this.player) this.say("Shield caught the hit.");
-      }
       if (actor.armor) amount *= actor.armor === "scrap_cuirass" ? 0.64 : 0.79;
       if (actor === this.player) this.impactAngle = incoming;
       if (source === this.player) this.hitUntil = this.clock + 0.25;
@@ -853,11 +1117,13 @@ export class SoloArena {
       if (actor !== this.player) actor.decision = this.clock;
     }
     actor.health = Math.max(0, actor.health - amount);
+    if (amount > 0 && actor === this.player) this.cancelRepair();
     if (amount >= 1) actor.hurt = source ? 0.43 : Math.max(actor.hurt, 0.12);
     if (actor.health > 0) return;
     actor.alive = false;
     actor.placement = this.alive--;
-    if (Object.keys(actor.bag).length) this.drop(actor.x, actor.z, { ...actor.bag }, true);
+    if (Object.keys(actor.bag).length)
+      this.drop(actor.x, actor.z, { ...actor.bag }, true, shieldDurabilities(actor).slice());
     this.feed = source ? source.name + " eliminated " + actor.name + "." : actor.name + " was lost to the arena.";
     this.feedUntil = this.clock + 5;
     if (this.alive <= 1) this.winner = this.actors.find(candidate => candidate.alive)?.name || actor.name;
@@ -879,20 +1145,49 @@ export class SoloArena {
           ended = true;
           break;
         }
-        const piece = this.pieces.find(candidate => !candidate.open && !this.removed.has(candidate.propIndex) &&
-          crossesPiece(before, shot, before.y, shot.y, candidate));
+        let piece = null, hit = null, intercept = null, time = Infinity;
+        for (const candidate of this.pieces) {
+          if (candidate.open || this.removed.has(candidate.propIndex)) continue;
+          const t = pieceContact(before, shot, before.y, shot.y, candidate);
+          if (t !== null && t < time) { piece = candidate; time = t; }
+        }
+        if (!shot.deflected) {
+          for (const actor of this.actors) {
+            if (actor === shot.owner || !actor.alive || distance(actor, shot) > 1.35) continue;
+            const guard = shieldContact(actor, before, shot);
+            const body = projectileBodyContact(actor, before, shot);
+            const contact = guard && (body === null || guard.t <= body) ? guard.t : body;
+            if (contact !== null && contact < time) {
+              hit = actor;
+              intercept = contact === guard?.t ? guard : null;
+              time = contact;
+              piece = null;
+            }
+          }
+        }
         if (piece) {
-          this.damageFort(piece, shot.damage * 0.48, shot.owner);
+          if (!shot.deflected) this.damageFort(piece, shot.damage * 0.48, shot.owner);
           ended = true;
           break;
         }
-        const hit = this.actors.find(actor => actor !== shot.owner && actor.alive && distance(actor, shot) < 0.62 &&
-          shot.y >= actor.y + 0.13 && shot.y < actor.y + (actor.crouch ? 1.24 : 1.78));
+        if (shot.deflected) continue;
+        if (intercept) {
+          this.blockShield(hit, shot.damage, shot.owner, true);
+          const nx = Math.sin(hit.yaw), nz = Math.cos(hit.yaw);
+          const vx = Math.sin(shot.yaw), vz = Math.cos(shot.yaw);
+          const normal = vx * nx + vz * nz;
+          shot.yaw = Math.atan2(vx - 2 * normal * nx, vz - 2 * normal * nz);
+          shot.pitch = Math.max(-0.45, shot.pitch * 0.45 + 0.12);
+          shot.x = intercept.x + nx * 0.035;
+          shot.y = intercept.y;
+          shot.z = intercept.z + nz * 0.035;
+          shot.speed *= 0.24;
+          shot.range = Math.min(4, shot.range);
+          shot.deflected = true;
+          break;
+        }
         if (hit) {
-          this.damage(hit, shot.damage, shot.owner, {
-            angle: shot.yaw + Math.PI, height: shot.y - hit.y,
-            side: Math.cos(hit.yaw) * (shot.x - hit.x) - Math.sin(hit.yaw) * (shot.z - hit.z)
-          });
+          this.damage(hit, shot.damage, shot.owner, { angle: shot.yaw + Math.PI });
           ended = true;
           break;
         }
@@ -1454,6 +1749,7 @@ export class SoloArena {
     actor.cooldown = Math.max(0, actor.cooldown - seconds);
     actor.hurt = Math.max(0, actor.hurt - seconds);
     actor.swing = Math.max(0, actor.swing - seconds);
+    actor.shieldRecovery = Math.max(0, actor.shieldRecovery - seconds);
     if (actor.weapon === "crossbow" && !actor.crossbowLoaded && count(actor, "bolts")) {
       actor.reload += seconds;
       if (actor.reload >= 4) {
@@ -1462,7 +1758,9 @@ export class SoloArena {
       }
     }
     if (actor !== this.player) {
+      const wasGuarding = actor.guard;
       this.bot(actor, seconds);
+      if (actor.guard && !wasGuarding) actor.guardStarted = this.clock;
       actor.stamina = clamp(actor.stamina + seconds * (actor.speed > 5 ? -13 : 16), 0, 100);
       if (actor.stamina < 8) actor.winded = true;
       if (actor.stamina > 34) actor.winded = false;
@@ -1542,6 +1840,7 @@ export class SoloArena {
     }
     if (this.player.alive) this.refreshFocus();
     this.stepShots(seconds);
+    this.stepRepair();
     for (const [id, fall] of this.falling) {
       const age = this.clock - fall.born;
       if (age >= 1.65) {
@@ -1561,7 +1860,16 @@ export class SoloArena {
     const countdown = Math.max(0, ROUND_START - this.clock);
     const selected = this.focus[this.focusChoice];
     const blueprint = this.blueprint();
+    const template = this.build?.[3]?.blueprint && previewPlayerFort(this, actor, this.build[3].kind, this.buildAngle);
+    const building = template?.piece || blueprint;
+    const error = template?.error || blueprint?.error || "";
+    const support = template?.support || blueprint?.support;
+    const ramp = template?.ramp || (blueprint?.id === "ramp" ? blueprint : null);
     const shield = hasShield(actor);
+    const raised = shieldRaised(actor);
+    const repair = this.repairStatus();
+    const buildRows = recipeRows(actor, [...builds, ...playerFortRecipes(this)], true);
+    const selectedBuild = this.build && buildRows.find(row => row[0] === this.build[0]);
     const daylight = clamp(0.87 + Math.cos(this.clock / 82) * 0.14, 0.48, 1);
     const { x, y, z, yaw } = actor;
     const lean = this.input.lean * 0.28 || 0;
@@ -1578,44 +1886,54 @@ export class SoloArena {
       actors: this.actors.filter(other => other !== actor && distance(actor, other) < 105)
         .map(other => [other.x, other.y, other.z, other.yaw, other.alive, other.crouch,
           other.style, other.name, other.yaw, other.anim, other.speed, other.weapon,
-          hasShield(other), hasShield(other) && other.guard, Number(other.guard), other.reload / 4,
+          hasShield(other), shieldRaised(other), Number(hasShield(other) ? shieldRaised(other) : other.guard), other.reload / 4,
           other.crossbowLoaded, other.swing, this.clock - other.woundedAt < 0.43 ? other.hurt / 0.43 : 0]),
       wildlife: this.wildlife.filter(animal => !animal.harvested && distance(actor, animal) < 85)
         .map(animal => [animal.model, animal.x, this.map.heightAt(animal.x, animal.z), animal.z, animal.yaw, animal.health > 0, animal.phase]),
       tracks: this.footprints.filter(track => distance(actor, track) < 18)
         .map(track => [track.x, this.map.heightAt(track.x, track.z) + 0.026, track.z, track.yaw, clamp(1 - (this.clock - track.at) / 8)]),
       shots: this.shots.map(shot => [shot.model, shot.x, shot.y, shot.z, shot.yaw, Math.PI / 2 - shot.pitch]),
-      ghost: blueprint && itemRow(blueprint.id, blueprint.x, blueprint.y, blueprint.z,
-        blueprint.w, blueprint.h, blueprint.d, "structure", blueprint.angle),
-      ghostFits: Boolean(blueprint?.fits),
+      ghost: fortPieceRow(blueprint),
+      ghostFits: Boolean(building && !error),
+      fortGhosts: template ? template.ghosts.map(({ piece, status }) => fortPieceRow(piece, status)) : [],
+      fortGuide: building ? {
+        title: template?.plan.title || label(building.id), placed: template?.placed ?? 0,
+        remaining: template?.remaining ?? 1, total: template?.total ?? 1, error,
+        blueprint: Boolean(template), copies: template ? 0 : selectedBuild?.[4].copies ?? 0,
+        anchored: Boolean(template?.anchored),
+        support: fortPieceRow(support), ramp: ramp ? { x: ramp.x, y: ramp.y, z: ramp.z, w: ramp.w, h: ramp.h, d: ramp.d, angle: ramp.angle } : null
+      } : null,
       player: {
         id: actor.id, name: actor.name, yaw, pitch: this.input.pitch || 0,
         health: actor.health, stamina: actor.stamina, hunger: actor.hunger, hydration: actor.hydration,
         water: actor.water, weapon: actor.weapon, armor: actor.armor, aim: actor.guard && !shield,
-        hurt: actor.hurt, swing: actor.swing, shield, guard: actor.guard, shieldRaised: actor.guard && shield,
-        guardBlend: Number(actor.guard), crossbowLoaded: actor.crossbowLoaded, reload: actor.reload / 4, reloadSeconds: 4,
+        hurt: actor.hurt, swing: actor.swing, shield, guard: actor.guard, shieldRaised: raised,
+        shieldHealth: shieldDurabilities(actor)[0] ?? 0, shieldMaxHealth: SHIELD_HEALTH,
+        guardBlend: Number(shield ? raised : actor.guard), crossbowLoaded: actor.crossbowLoaded, reload: actor.reload / 4, reloadSeconds: 4,
         speed: actor.speed, alive: actor.alive, placement: actor.placement
       },
       alive: this.alive, countdown, winner: this.winner,
       hud: {
-        hint: blueprint ? blueprint.fits ? "[Attack] Place " + label(blueprint.id).toLowerCase() : "" :
+        hint: building ? error ? "" : "[Attack] Place " + label(building.id).toLowerCase() :
           selected ? "[E] " + selected.title : this.nearbyRemnant || (this.clock < 15 ? "Look for supplies near the center or along trails." : ""),
         notice: this.clock < this.noticeUntil ? this.notice : "",
         event: !countdown && this.clock < 9 ? "Outlast 23 arena bots." : "",
         feed: this.clock < this.feedUntil ? this.feed : "",
-        progress: 0,
+        progress: this.repairJob ? clamp((this.clock - this.repairJob.started) / REPAIR_SECONDS) : 0,
+        repair,
         charge: this.drawStarted !== null ? clamp((this.clock - this.drawStarted) / 0.8) :
           this.throwStarted !== null ? clamp((this.clock - this.throwStarted) / 0.75) : 0,
         zone: this.map.zoneAt?.(x, z) || "Arena",
         impact: actor.hurt > 0.15 ? actor.hurt : 0, impactAngle: this.impactAngle, impactStrength: 0.7,
         confirmed: Math.max(0, this.hitUntil - this.clock),
-        buildId: blueprint?.id || "", buildProblem: blueprint && !blueprint.fits ? "Find clear ground." : "",
-        useAction: selected?.kind || "", focusOptions: this.focus.map(option => option.title), focusChoice: this.focusChoice
+        buildId: this.build?.[0] || "", buildProblem: error,
+        useAction: repair?.enabled || repair?.active ? "repair" : selected?.kind || "",
+        focusOptions: this.focus.map(option => option.title), focusChoice: this.focusChoice
       },
       pack: Object.entries(actor.bag).map(([id, quantity]) => [id, label(id), quantity])
         .sort((a, b) => a[1].localeCompare(b[1])),
       craft: recipeRows(actor, crafts),
-      build: recipeRows(actor, builds, true)
+      build: buildRows
     };
   }
 }

@@ -69,12 +69,6 @@ namespace LastSignal {
             Action("back","Back",x,t+361,155,43);
             PadHelp(g,PadChordWaiting(g)?"Menu  Cancel chord assignment":padBind!=""?"View  Cancel assignment":"D-pad  Navigate      A  Rebind      B  Back");
         }
-        public void PadWheel(Game g,float x,float y){
-            if(!g.PadActive||(g.Panel!="build"&&g.Panel!="craft")||x*x+y*y<.12f)return;
-            Observe(g);int n=g.Panel=="build"?Survival.Builds.Length:Survival.Crafts.Length;
-            double phase=(Math.Atan2(x,y)+Math.PI*2+Math.PI/n)%(Math.PI*2);
-            selected="slot"+Math.Min(n-1,(int)(phase*n/(2*Math.PI)));hoverMoved=false;
-        }
         void FocusPackSlot(Game g){
             if(g.Panel!="pack"||!selected.StartsWith("pack"))return;int i;
             string[] items=Survival.PackItems(g.Player);
@@ -115,13 +109,22 @@ namespace LastSignal {
                 if(g.Panel!="")Close(g);else if(g.Mode=="menu")selected="quit";return true;
             }
             if(button=="A"){ActivateSelected(g);return true;}
+            if((g.Panel=="craft"||g.Panel=="build")&&(button=="LB"||button=="RB")){
+                if(materialView!="")WorkAction(g,button=="LB"?"workPrev":"workNext");
+                else {
+                    var categories=g.Panel=="build"?buildCategories:craftCategories;
+                    int index=Array.IndexOf(categories,workCategory);
+                    WorkAction(g,"workCat"+((index+(button=="LB"?-1:1)+categories.Length)%categories.Length));
+                }
+                return true;
+            }
             if(g.Panel=="pack"){
                 if(button=="X"||button=="Y"){Activate(g,button=="X"?"quickmeal":"quickdrink",1);return true;}
                 if(button=="LB"||button=="RB"){Activate(g,button=="LB"?"pageback":"pagenext",1);FocusPackSlot(g);return true;}
             }
             int dx=button=="Right"?1:button=="Left"?-1:0,dy=button=="Down"?1:button=="Up"?-1:0;
             if(dx!=0||dy!=0){
-                if(g.Panel=="craft"||g.Panel=="build"){StepWheel(g,dx+dy);return true;}
+                if(g.Panel=="craft"||g.Panel=="build"){PadGrid(g,dx,dy);return true;}
                 if(dx!=0&&IsField(Base(selected))){Activate(g,Base(selected),dx);return true;}
                 if(g.Panel=="pack"||g.Panel=="bindings"||g.Panel=="padbinds"){PadGrid(g,dx,dy);return true;}
                 if(dy!=0)Navigate(dy);return true;

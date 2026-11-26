@@ -1359,10 +1359,34 @@ export class ArenaRenderer {
     if (s?.warning && Number.isFinite(s.nextRadius)) this.draw(this.stormMesh(1, s.x, s.z, s.nextRadius), identity);
     this.drawBatch(flames, 4);
 
-    if (frame.ghost) {
+    if (frame.ghost || frame.fortGhosts?.length || frame.fortGuide?.support || frame.fortGuide?.ramp) {
       const batch = new Map();
-      const color = frame.ghostFits ? [0.34, 0.92, 0.65, 0.32] : [1, 0.28, 0.18, 0.32];
-      this.prop(batch, frame.ghost, 0, false, color);
+      const ready = [0.34, 0.92, 0.65, 0.32], blocked = [1, 0.28, 0.18, 0.32], pending = [1, 0.81, 0.38, 0.24];
+      if (frame.ghost) this.prop(batch, frame.ghost, 0, false, frame.ghostFits ? ready : blocked);
+      for (const ghost of frame.fortGhosts || []) {
+        const status = ghost[16];
+        this.prop(batch, ghost, 0, false, status === "ready" ? ready : status === "blocked" ? blocked : pending);
+      }
+      const support = frame.fortGuide?.support;
+      if (support) {
+        const [, x, y, z, , angle, w, h, d] = support;
+        const bracket = pose(x, y + h + 0.05, z, angle);
+        const color = [0.35, 0.79, 1, 0.93];
+        for (const side of [-1, 1]) {
+          this.queue(batch, this.box, multiply(bracket, pose(0, 0, d * 0.5 * side, 0, 0, w + 0.06, 0.035, 0.065)), color);
+          this.queue(batch, this.box, multiply(bracket, pose(w * 0.5 * side, 0, 0, 0, 0, 0.065, 0.035, d + 0.06)), color);
+        }
+      }
+      const ramp = frame.fortGuide?.ramp;
+      if (ramp) {
+        const { x, y, z, h, d, angle } = ramp;
+        const rampPlane = pose(x, y + h / 2 + 0.13, z, angle, -Math.atan2(h, d));
+        const color = [1, 0.87, 0.37, 0.96];
+        this.queue(batch, this.box, multiply(rampPlane, pose(0, 0, -0.18, 0, 0, 0.10, 0.024, 0.92)), color);
+        for (const side of [-1, 1]) {
+          this.queue(batch, this.box, multiply(rampPlane, pose(side * 0.17, 0, 0.34, -side * 0.66, 0, 0.085, 0.024, 0.50)), color);
+        }
+      }
       this.drawBatch(batch, 4);
     }
     gl.depthMask(true);

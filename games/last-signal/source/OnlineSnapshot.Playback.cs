@@ -168,6 +168,7 @@ namespace LastSignal
             g.UseProp=Item(g.Props,v.UseProp);g.UseAnimal=Item(g.Animals,v.UseAnimal);g.FocusShore=v.TargetShore;
             g.FocusOptions=v.Options;g.FocusChoice=v.Choice;g.Notice=v.Notice;g.NoticeTime=v.NoticeTime;
             g.BuildId=v.BuildId;g.BuildProblem=v.Problem;g.BuildAngle=v.BuildAngle;g.BuildJoined=v.Joined;g.GhostFits=v.Fits;g.Ghost=v.Ghost;
+            ApplyBlueprintGhost(g);
             g.Charging=v.Charging;g.Charge=v.Charge;g.ActionId=v.Action;g.ActionArgument=v.Argument;
             g.UseProgress=v.Use;g.UseX=v.UseX;g.UseY=v.UseY;g.UseZ=v.UseZ;
             g.IncomingImpact=v.Incoming;g.IncomingAngle=v.Angle;g.IncomingStrength=v.Strength;g.ConfirmedImpact=v.Confirm;

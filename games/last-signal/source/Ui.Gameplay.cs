@@ -93,6 +93,11 @@ namespace LastSignal {
             if(a.Weapon!="fists")Icon(a.Weapon,rx-ww+4,sh-52,31);
             T(weapon,rx-ww+(a.Weapon=="fists"?11:39),sh-46,16,Ivory,true);
             if(ammo!="")Right(ammo,rx-11,sh-44,13,Gold,false,true);
+            if(Game.CarriesShield(a)){
+                float shield=Game.ShieldDurability(a)/Game.ShieldMaxDurability;
+                Box(rx-ww,sh-25,ww,4,A(Muted,68));Box(rx-ww,sh-25,ww*shield,4,shield<=.30f?Rust:Moss);
+                Right("Shield "+(int)Math.Ceiling(shield*100)+"%",rx-3,sh-17,11,shield<=.30f?Rust:Muted,true,true);
+            }
             if(a.Weapon=="crossbow"&&a.CrossbowReload>0){
                 float remaining=Math.Max(0,Actor.CrossbowReloadTime-a.CrossbowReload);
                 string copy="Reloading   "+remaining.ToString("0.0")+"s";
@@ -125,6 +130,13 @@ namespace LastSignal {
                 if(teaching)w=Math.Max(w,Width(fortTip,13)+24);
                 Box(cx-w/2,cy+43,w,teaching?46:28,A(Ink,210));Mid(message,cx,cy+47,15,g.BuildId!=""&&!g.GhostFits?Gold:Ivory,true);
                 if(teaching)Mid(fortTip,cx,cy+68,13,Muted);
+            }
+            if(g.FortBlueprintCount>0&&g.BuildId!=""){
+                string progress=g.FortBlueprintName+"   "+g.FortBlueprintProgress+" / "+g.FortBlueprintCount+" pieces";
+                float width=Width(progress,14,true)+24;
+                Box(cx-width/2,cy+83,width,27,A(Ink,219));
+                Mid(progress,cx,cy+87,14,Ivory,true);
+                Box(cx-width/2,cy+107,width*g.FortBlueprintProgress/g.FortBlueprintCount,3,Moss);
             }
             string notice=g.NoticeTime>0?g.Notice:g.Time<needUntil?needTip:"";
             if(!string.IsNullOrEmpty(notice)){
@@ -184,41 +196,6 @@ namespace LastSignal {
             Box(x,y+17,w,4,Color.FromArgb(97,109,105));
             Box(x,y+17,w*value/100,4,healthy?A(color,159):color);
         }
-        void Wheel(Game g){
-            bool build=g.Panel=="build";var recipes=build?Survival.Builds:Survival.Crafts;int n=recipes.Length;if(n==0)return;
-            Gradient(0,0,sw,sh,A(Ink,60),A(Ink,122),true);
-            wheelType=g.Panel;wcount=n;wr=215;wx=sw/2;wy=sh/2-7;float inner=91;int index=0;
-            if(selected.StartsWith("slot"))int.TryParse(selected.Substring(4),out index);index=Math.Max(0,Math.Min(n-1,index));
-            for(int i=0;i<n;i++){float arc=360f/n,start=-90-arc/2+i*arc;bool hot=i==index,ok=Survival.CanMake(g.Player,recipes[i]);using(var gp=new GraphicsPath()){
-                    gp.AddArc(wx-wr,wy-wr,wr*2,wr*2,start+1,arc-2);gp.AddArc(wx-inner,wy-inner,inner*2,inner*2,start+arc-1,-arc+2);gp.CloseFigure();
-                    using(var b=new SolidBrush(hot?Color.FromArgb(243,83,77,53):Color.FromArgb(232,20,31,30)))pen.FillPath(b,gp);
-                    using(var p=new Pen(hot?Gold:A(Brass,160),hot?2:1))pen.DrawPath(p,gp);}
-                float a=(float)((i*arc-90)*Math.PI/180),r=153;float px=wx+(float)Math.Cos(a)*r, py=wy+(float)Math.Sin(a)*r;
-                Icon(recipes[i].Id,px-23,py-33,46);Mid(recipes[i].Name,px,py+14,n>8?13:14,hot||ok?Ivory:Muted,true);
-                if(!g.PadActive&&i<10){Dot(px-26,py-29,8,A(Ink,210));Mid(((i+1)%10).ToString(),px-26,py-36,11,hot?Gold:Muted,true,true);}}
-            Dot(wx,wy,inner-3,A(Ink,234));Mark(wx,wy-32,13);Mid(build?"BUILD":"CRAFT",wx,wy-3,24,Ivory,true,true);
-            Mid(recipes[index].Name,wx,wy+31,15,Gold,true);
-            float bw=526,bx=wx-bw/2,by=wy+wr+15;Box(bx,by,bw,87,A(Ink,224));WheelCost(g.Player,recipes[index],build,wx,by+7);
-            Mid(recipes[index].Info,wx,by+31,14,Ivory);
-            string controls=g.PadActive
-                ? (build?"L stick  Choose     A  Select     LT + A  Repeat placement":"L stick  Choose     A  Select     B  Close     R stick  Look")
-                : (build?"Number or click  Select     "+K(g,"Rotate")+"  Rotate     "+K(g,"Sprint")+" + "+K(g,"Attack")+"  Repeat placement":"Click or press a number to craft    RMB  Look around");
-            Mid(controls,wx,by+60,12,Muted,false,true);
-            if(g.NoticeTime>0&&!string.IsNullOrEmpty(g.Notice))Mid(g.Notice,wx,wy-wr-45,16,Gold,true);
-        }
-        void WheelCost(Actor a,Recipe recipe,bool build,float cx,float y){
-            if(build&&recipe.Id=="fire"&&a.Count("firekit")>0){Mid("Campfire kit ready",cx,y,15,Gold,true);return;}
-            float total=0;
-            var labels=new System.Collections.Generic.List<string>();
-            var colors=new System.Collections.Generic.List<Color>();
-            foreach(var need in recipe.Needs){
-                int held=a.Count(need.Key);
-                string text=Survival.Label(need.Key)+"  "+held+"/"+need.Value;
-                labels.Add(text);colors.Add(held>=need.Value?Gold:Rust);total+=Width(text,15,true);
-            }
-            const float gap=22;float x=cx-(total+gap*(labels.Count-1))/2;
-            for(int i=0;i<labels.Count;i++){T(labels[i],x,y,15,colors[i],true);x+=Width(labels[i],15,true)+gap;}
-        }
         static float MapSpan {get{return Arena.Radius*2.05f;}}
         void EnsureMap(int arena){
             if(map!=null&&arena==mapArena)return;if(map!=null)map.Dispose();mapArena=arena;
@@ -248,7 +225,7 @@ namespace LastSignal {
         }
         static string PackAction(Actor a,string id) {
             if(Armor.IsArmor(id))return a.WornArmor==id?"Remove armor":"Wear armor";
-            switch(id){case "knife":case "spear":case "sling":case "bow":case "hatchet":case "sword":case "crossbow":return "Equip";case "meal":return "Eat meal";case "waterskin":return "Drink";case "bandage":return "Apply bandage";case "firekit":return "Place fire";case "shield":case "bolts":case "meat":case "arrows":return "";default:return "View recipes";}
+            switch(id){case "knife":case "spear":case "sling":case "bow":case "hatchet":case "sword":case "crossbow":return "Equip";case "meal":return "Eat meal";case "waterskin":return "Drink";case "bandage":return "Apply bandage";case "firekit":return "Place";default:return IsWorkMaterial(id)?"View uses":"";}
         }
         static string PackDetail(Actor a,string id) {
             if(Armor.IsArmor(id))return Armor.Detail(a,id);
@@ -256,7 +233,7 @@ namespace LastSignal {
                 case "knife":return "A quick cutting weapon for close quarters.";
                 case "spear":return "A reach weapon. Recover thrown spears from the arena floor.";
                 case "sword":return "A one-handed blade. Carry it with a shield.";
-                case "shield":return "Raise it with Guard while wielding a spear or sword to intercept incoming hits.";
+                case "shield":return "Durability "+(int)Math.Ceiling(Game.ShieldDurability(a))+"%. Raise with Guard while wielding a spear or sword.";
                 case "crossbow":return "Fires long-range bolts. Keep it equipped to reload between shots.";
                 case "bolts":return "Ammunition for a crossbow.";
                 case "hatchet":return "Heavy strikes split timber structures.";
@@ -305,6 +282,10 @@ namespace LastSignal {
                     float condition=Armor.Condition(g.Player,id);
                     Box(bx+10,by+65,83,3,A(Muted,64));Box(bx+10,by+65,83*condition,3,condition<.25f?Rust:Gold);
                     if(g.Player.WornArmor==id)T("WORN",bx+5,by+4,10,Gold,true,true);
+                }
+                if(id=="shield"){
+                    float condition=Game.ShieldDurability(g.Player)/Game.ShieldMaxDurability;
+                    Box(bx+10,by+65,83,3,A(Muted,64));Box(bx+10,by+65,83*condition,3,condition<.30f?Rust:Moss);
                 }
                 string label=Survival.Label(id);float sz=Width(label,12,true)>98?10:12;Mid(label,bx+51.5f,by+49,sz,Ivory,true);}
             if(items.Length==0)T("Your pack is empty. Gather supplies with "+K(g,"Use")+".",gx,gy+267,17,Muted);

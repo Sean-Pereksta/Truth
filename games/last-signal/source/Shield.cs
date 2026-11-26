@@ -1,22 +1,75 @@
 using System;
+using System.Collections.Generic;
 
 namespace LastSignal {
     public partial class Game {
         public const float ShieldRight = -.24f, ShieldForward = .56f;
         public const float ShieldStandingHeight = 1.19f, ShieldCrouchedHeight = .80f;
         public const float ShieldHalfWidth = .41f, ShieldHalfHeight = .49f;
+        public const float ShieldMaxDurability=100f;
         const float ShieldTraceMargin = .87f;
 
+        public static float ShieldDurability(Actor actor) {
+            return actor==null || actor.Count("shield")==0 ? 0f :
+                Math.Max(0f,Math.Min(ShieldMaxDurability,ShieldMaxDurability-actor.ShieldWear));
+        }
+
         public static bool CarriesShield(Actor actor) {
-            return actor != null && (actor.Weapon == "spear" || actor.Weapon == "sword") && actor.Count("shield") > 0;
+            return actor!=null && (actor.Weapon=="spear" || actor.Weapon=="sword") && ShieldDurability(actor)>0;
         }
 
         public static bool ShieldRaised(Actor actor) {
-            return actor != null && actor.Alive && actor.Guard && actor.GuardTime >= GuardStart && CarriesShield(actor);
+            return actor!=null && actor.Alive && actor.Guard && CarriesShield(actor);
         }
 
         static bool GuardPoseActive(Actor actor) {
             return actor.Guard && (CarriesShield(actor) || !actor.GuardSpent && actor.GuardTime <= BlockEnd);
+        }
+
+        static void AddShield(Actor actor,float wear) {
+            int count=actor.Count("shield");
+            if(count==0)actor.ShieldWear=wear;
+            else {
+                if(actor.SpareShieldWear==null)actor.SpareShieldWear=new List<float>();
+                actor.SpareShieldWear.Add(wear);
+            }
+            actor.Bag["shield"]=count+1;
+        }
+
+        static float RemoveShield(Actor actor) {
+            int count=actor.Count("shield");
+            if(count==0)return 0;
+            float wear=actor.ShieldWear;
+            actor.ShieldWear=0;
+            if(count==1) {
+                if(actor.Weapon=="sword" || actor.Weapon=="spear")actor.Guard=false;
+                actor.Bag.Remove("shield");
+            } else {
+                actor.Bag["shield"]=count-1;
+                if(actor.SpareShieldWear!=null && actor.SpareShieldWear.Count>0) {
+                    actor.ShieldWear=actor.SpareShieldWear[0];
+                    actor.SpareShieldWear.RemoveAt(0);
+                }
+            }
+            return wear;
+        }
+
+        internal static void AdjustShields(Actor actor,int amount) {
+            for(int i=0;i<amount;i++)AddShield(actor,0);
+            for(int i=0;i>amount && actor.Count("shield")>0;i--)RemoveShield(actor);
+        }
+
+        internal static void PackShields(Actor actor,Prop pack,int count) {
+            if(count<=0 || actor.Count("shield")==0)return;
+            pack.PackedShieldWear=new List<float>();
+            for(int i=0;i<count && actor.Count("shield")>0;i++)pack.PackedShieldWear.Add(RemoveShield(actor));
+        }
+
+        internal static void CollectShields(Actor actor,Prop pack,int count) {
+            int preserved=pack.PackedShieldWear==null?0:Math.Min(count,pack.PackedShieldWear.Count);
+            for(int i=0;i<preserved;i++)AddShield(actor,pack.PackedShieldWear[i]);
+            for(int i=preserved;i<count;i++)AddShield(actor,0);
+            pack.PackedShieldWear=null;
         }
 
         // A ray must enter the face of the raised shield and cross its visible
@@ -36,25 +89,29 @@ namespace LastSignal {
 
         GuardOutcome BlockShield(Actor defender, ImpactSite hit, bool ranged, ref float damage) {
             bool timed = !ranged && !defender.GuardSpent && defender.GuardTime <= ParryEnd;
-            float stamina = timed ? 5 : 4 + damage * .26f;
-            bool broken = defender.Stamina <= stamina;
+            float stamina=4f+damage*(timed?.12f:.19f);
+            bool exhausted=defender.Stamina<=stamina;
             defender.Stamina = Math.Max(0, defender.Stamina - stamina);
-            if (broken) {
+            defender.ShieldWear+=Math.Max(5f,damage*(timed?.51f:.69f));
+            bool broken=defender.ShieldWear>=ShieldMaxDurability;
+            if(broken)RemoveShield(defender);
+            if (broken || exhausted) {
                 defender.Guard = false;
-                defender.GuardRecovery = Math.Max(.65f, defender.GuardRecovery);
+                defender.GuardRecovery = Math.Max(broken?.55f:.38f, defender.GuardRecovery);
             }
             if (timed) defender.GuardSpent = true;
             damage = 0;
             EmitImpact(hit, 0, false, true, timed, false);
-            if (defender == Player) ShieldNotice(broken, timed);
+            if(broken)HitEffect("wood",hit.X,hit.Y,hit.Z,9);
+            if (defender == Player) ShieldNotice(broken, exhausted, timed);
             else if (HostingOnlineRound && IsOnlineHuman(defender))
-                WithOnlineSeat(defender.Id, g => g.ShieldNotice(broken, timed));
+                WithOnlineSeat(defender.Id, g => g.ShieldNotice(broken, exhausted, timed));
             return timed ? GuardOutcome.Parry : GuardOutcome.Deflect;
         }
 
-        void ShieldNotice(bool broken, bool timed) {
-            if (broken) guardHeld = false;
-            Say(broken ? "Shield knocked down" : timed ? "Shield parry" : "Shield blocked");
+        void ShieldNotice(bool broken,bool exhausted,bool timed) {
+            if(broken&&Player.Count("shield")==0)guardHeld=false;
+            Say(broken?"Shield broke":exhausted?"Shield knocked down":timed?"Shield parry":"Shield blocked");
         }
 
         GuardOutcome GuardWildStrike(Actor defender, Animal attacker, ImpactSite hit, float yaw, float pitch, ref float damage) {

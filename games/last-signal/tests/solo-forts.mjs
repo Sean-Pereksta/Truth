@@ -126,3 +126,135 @@ test("building pauses for a seen rival and drops a site the storm will cut off",
   assert.equal(actor.fortWork, null);
   assert.equal(game.pieces.length, 1);
 });
+
+function selectPlayerTemplate(kind) {
+  const { game } = field(0.1);
+  const player = game.player;
+  Object.assign(player, { x: 30, y: 0, z: -20, yaw: 0, bag: { branch: 10, fiber: 8, scrap: 1 } });
+  game.command("build:blueprint_" + kind);
+  return game;
+}
+
+function moveToNextPiece(game) {
+  const row = game.frame().fortGhosts[0];
+  const [, x, , z] = row;
+  const player = game.player;
+  for (let direction = 0; direction < 16; direction++) {
+    const yaw = direction * Math.PI / 8;
+    Object.assign(player, { x: x + Math.sin(yaw) * 1.95, z: z + Math.cos(yaw) * 1.95, y: 0, yaw: yaw + Math.PI });
+    if (game.frame().ghostFits) return;
+  }
+  assert.fail(game.frame().fortGuide.error);
+}
+
+test("the player can place and pay for every template one piece at a time", () => {
+  for (const [name, pieces, wood, fiber] of [["hide", 2, 2, 2], ["camp", 4, 4, 4],
+    ["lookout", 5, 6, 5], ["stronghold", 8, 10, 8]]) {
+    const game = selectPlayerTemplate(name);
+    const first = game.frame();
+    assert.equal(first.fortGhosts.length, pieces, name);
+    assert.equal(first.fortGhosts[0][16], "ready", name);
+    assert.ok(first.fortGhosts.slice(1).every(row => row[16] === "pending"), name);
+    if (name === "lookout" || name === "stronghold") assert.ok(first.fortGuide.ramp, name);
+    game.command("place");
+    assert.equal(game.pieces.length, 1, name);
+    for (let step = 1; step < pieces; step++) {
+      moveToNextPiece(game);
+      game.command("repeat");
+      assert.equal(game.pieces.length, step + 1, `${name} piece ${step + 1}`);
+    }
+    assert.equal(game.frame().fortGuide, null, name);
+    assert.equal(game.player.bag.branch ?? 0, 10 - wood, name);
+    assert.equal(game.player.bag.fiber ?? 0, 8 - fiber, name);
+    assert.equal(game.player.bag.scrap ?? 0, name === "stronghold" ? 0 : 1, name);
+  }
+});
+
+test("player blueprint rotation pivots around the first piece and partial work resumes at its original site", () => {
+  const game = selectPlayerTemplate("lookout");
+  const before = game.frame().fortGhosts;
+  game.command("rotate:1");
+  const after = game.frame().fortGhosts;
+  assert.deepEqual(after[0].slice(1, 4), before[0].slice(1, 4));
+  assert.notDeepEqual(after[1].slice(1, 4), before[1].slice(1, 4));
+  game.command("place");
+  game.command("rotate:1");
+  assert.match(game.frame().hud.notice, /fixed/i);
+  game.command("cancel");
+  Object.assign(game.player, { x: 60, z: -25, yaw: Math.PI });
+  game.command("build:blueprint_lookout");
+  const frame = game.frame();
+  assert.equal(frame.fortGuide.placed, 1);
+  assert.equal(frame.fortGuide.remaining, 4);
+  assert.match(frame.fortGuide.error, /move closer/i);
+  assert.deepEqual(frame.fortGhosts.map(row => row.slice(1, 4)), after.slice(1).map(row => row.slice(1, 4)));
+  const listing = frame.build.find(row => row[0] === "blueprint_lookout");
+  assert.deepEqual(listing[4].needs.map(({ id, required }) => [id, required]), [["branch", 5], ["fiber", 4]]);
+  assert.equal(game.pieces.length, 1);
+});
+
+test("abandoning an active or paused blueprint allows a fresh site and keeps paid pieces", () => {
+  for (const paused of [false, true]) {
+    const game = selectPlayerTemplate("hide");
+    game.command("place");
+    const piece = game.pieces[0];
+    const buildRow = () => game.frame().build.find(row => row[0] === "blueprint_hide");
+    assert.equal(buildRow()[4].saved, true);
+    if (paused) game.command("cancel");
+    game.command("abandon-blueprint:blueprint_hide");
+    assert.equal(game.frame().fortGuide, null);
+    assert.equal(buildRow()[4].saved, false);
+    assert.deepEqual(game.pieces, [piece]);
+    assert.equal(game.removed.has(piece.propIndex), false);
+    assert.equal(game.player.bag.branch, 9);
+    Object.assign(game.player, { x: 80, z: -25, yaw: 0 });
+    game.command("build:blueprint_hide");
+    const frame = game.frame();
+    assert.equal(frame.fortGuide.placed, 0);
+    assert.equal(frame.fortGuide.remaining, 2);
+    assert.ok(frame.fortGhosts.every(row => row[1] > 75));
+  }
+});
+
+test("fort previews explain missing materials and blocked terrain and a selected ramp can snap to support", () => {
+  const game = selectPlayerTemplate("hide");
+  game.player.bag = {};
+  const missing = game.frame();
+  assert.equal(missing.ghostFits, false);
+  assert.match(missing.fortGuide.error, /wood.*fiber/i);
+  game.map.surfaceAt = () => 1;
+  assert.match(game.frame().fortGuide.error, /water/i);
+
+  game.map.surfaceAt = () => -Infinity;
+  game.player.bag = { branch: 2, fiber: 2 };
+  const support = { id: "wall", x: game.player.x, y: 0, z: game.player.z + 4.95,
+    angle: 0, w: 3, h: 2.3, d: 0.27, propIndex: game.nextProp++ };
+  game.pieces.push(support);
+  game.input.pitch = 0.3;
+  game.command("build:ramp");
+  const ramp = game.frame();
+  assert.ok(ramp.fortGuide.ramp);
+  assert.equal(ramp.fortGuide.support[0], "wall");
+  assert.equal(ramp.ghostFits, true);
+  assert.equal(ramp.fortGuide.ramp.angle % (Math.PI * 2), 0);
+});
+
+test("craft and build rows show inventory counts, acquisition hints and available recipe copies", () => {
+  const game = selectPlayerTemplate("camp");
+  game.player.bag = { branch: 2, stone: 2, tinder: 1, firekit: 2, fiber: 2 };
+  const { craft, build } = game.frame();
+  const arrows = craft.find(row => row[0] === "arrows")[4];
+  assert.equal(arrows.category, "Ammo");
+  assert.equal(arrows.yield, 5);
+  assert.equal(arrows.copies, 2);
+  assert.deepEqual(arrows.needs.map(({ id, held, required }) => [id, held, required]),
+    [["branch", 2, 1], ["stone", 2, 1], ["fiber", 2, 1]]);
+  assert.ok(arrows.needs.every(need => need.source.length > 0));
+  const fire = build.find(row => row[0] === "fire");
+  assert.equal(fire[2], "1 campfire kit");
+  assert.equal(fire[4].kit, true);
+  assert.equal(fire[4].copies, 3);
+  const camp = build.find(row => row[0] === "blueprint_camp");
+  assert.equal(camp[3], true, "the player can begin a blueprint with fewer than all materials");
+  assert.equal(camp[4].copies, 0);
+});

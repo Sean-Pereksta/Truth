@@ -146,11 +146,13 @@ namespace LastSignal {
                         seconds=Value(g.StormSecondsRemaining),warning=g.StormWarning,moving=g.StormMoving,active=g.StormActive},
                     propChanges=ChangesInView(g),actors,wildlife,shots,tracks=TracksInView(g),workSound=RecentWorkSound(g,player),
                     ghost=g.Ghost==null?null:PropRecord(g.Ghost,-1),ghostFits=g.GhostFits,
+                    fortGhosts=FortGhosts(g),fortGuide=FortGuide(g),
                     player=new {id=player.Id,name=player.Name,yaw=Value(player.Yaw),pitch=Value(g.Pitch),
                         health=Value(player.Health),stamina=Value(player.Stamina),hunger=Value(player.Hunger),
                         hydration=Value(player.Hydration),water=Value(player.WaterCarried),weapon=player.Weapon,
                         armor=player.WornArmor,aim=player.Aiming,hurt=Value(player.Hurt),swing=Value(player.Swing),
                         shield=Game.CarriesShield(player),guard=player.Guard,shieldRaised=Game.ShieldRaised(player),guardBlend=Value(player.GuardBlend),
+                        shieldHealth=Value(Game.ShieldDurability(player)),shieldMaxHealth=Game.ShieldMaxDurability,
                         crossbowLoaded=player.CrossbowLoaded,reload=Value(player.CrossbowReload/Actor.CrossbowReloadTime),
                         reloadSeconds=Actor.CrossbowReloadTime,
                         speed=Value(player.Speed),alive=player.Alive,placement=player.Placement},
@@ -158,9 +160,9 @@ namespace LastSignal {
                     hud=new {hint=g.Hint,notice=g.NoticeTime>0?g.Notice:"",@event=g.EventTime>0?g.EventText:"",
                         feed=g.FeedTime>0?g.KillFeed:"",progress=Value(g.UseProgress),charge=Value(g.Charge),zone=g.Zone,
                         impact=Value(g.IncomingImpact),impactAngle=Value(g.IncomingAngle),impactStrength=Value(g.IncomingStrength),
-                        confirmed=Value(g.ConfirmedImpact),
+                        confirmed=Value(g.ConfirmedImpact),repair=Survival.RepairStatus(g),
                         buildId=g.BuildId,buildProblem=g.BuildProblem,useAction=g.ActionId,focusOptions=g.FocusOptions,focusChoice=g.FocusChoice},
-                    pack,craft=Recipes(player,Survival.Crafts),build=Recipes(player,Survival.Builds)
+                    pack,craft=Recipes(g,false),build=Recipes(g,true)
                 });
             });
             return bytes!=null&&gzip?Compress(bytes):bytes;
@@ -235,10 +237,56 @@ namespace LastSignal {
                   Value(p.W),Value(p.H),Value(p.D),p.Kind,p.Lit,Value(fallAge),Value(p.FellDirection),p.Open,stage,Survival.IsShelterFrame(p)};
         }
 
-        static List<object[]> Recipes(Actor actor,Recipe[] recipes) {
-            var rows=new List<object[]>(recipes.Length);
+        static List<object[]> FortGhosts(Game g) {
+            var ghosts=new List<object[]>();
+            foreach(FortBlueprintPreview part in g.FortBlueprintPreviews) {
+                if(part.Complete || part.Piece==null)continue;
+                object[] row=PropRecord(part.Piece,-1);
+                Array.Resize(ref row,17);
+                row[16]=part.Next?(part.Fits?"ready":"blocked"):"pending";
+                ghosts.Add(row);
+            }
+            return ghosts;
+        }
+
+        static object FortGuide(Game g) {
+            if(String.IsNullOrEmpty(g.BuildId))return null;
+            FortBlueprint blueprint=FortBlueprint.Find(g.BuildId);
+            int placed=blueprint==null?0:g.FortBlueprintProgress;
+            int total=blueprint==null?1:g.FortBlueprintCount;
+            Prop ghost=g.Ghost;
+            Prop support=ghost==null?null:Arena.PreviewSupport(g,ghost);
+            bool isRamp=ghost!=null && ghost.Model=="ramp";
+            int copies=blueprint==null?Survival.RecipeCopies(g.Player,Survival.Find(Survival.Builds,g.BuildId),true):0;
+            return new {title=blueprint==null?Survival.Label(g.BuildId):blueprint.Name,placed,total,remaining=total-placed,
+                blueprint=blueprint!=null,copies,error=g.BuildProblem,anchored=g.FortBlueprintLocked,
+                support=support==null?null:PropRecord(support,-1),
+                ramp=isRamp?new {x=Value(ghost.X),y=Value(ghost.Y),z=Value(ghost.Z),w=Value(ghost.W),
+                    h=Value(ghost.H),d=Value(ghost.D),angle=Value(ghost.Yaw)}:null};
+        }
+
+        static object[] RecipeRow(Actor actor,Recipe recipe,bool build,FortBlueprint plan,bool available,bool saved=false) {
+            bool kit=build && recipe.Id=="fire" && actor.Count("firekit")>0;
+            var materials=new List<object>();
+            if(kit)materials.Add(new {id="firekit",name="Campfire Kit",held=actor.Count("firekit"),required=1,
+                source=Survival.MaterialSource("firekit")});
+            else foreach(var part in recipe.Needs)materials.Add(new {id=part.Key,name=Survival.Label(part.Key),
+                held=actor.Count(part.Key),required=part.Value,source=Survival.MaterialSource(part.Key)});
+            int copies=Survival.RecipeCopies(actor,recipe,build);
+            return new object[]{recipe.Id,recipe.Name,kit?"1 campfire kit":recipe.CostText,available,
+                new {category=plan==null?Survival.RecipeCategory(recipe,build):"Blueprints",needs=materials,yield=recipe.Yield,
+                    copies,description=recipe.Info,blueprint=plan!=null,kit,saved}};
+        }
+
+        static List<object[]> Recipes(Game g,bool build) {
+            Actor actor=g.Player;
+            Recipe[] recipes=build?Survival.Builds:Survival.Crafts;
+            var rows=new List<object[]>(recipes.Length+(build?FortBlueprint.All.Count:0));
             foreach(Recipe recipe in recipes)
-                rows.Add(new object[]{recipe.Id,recipe.Name,recipe.CostText,Survival.CanMake(actor,recipe)});
+                rows.Add(RecipeRow(actor,recipe,build,null,Survival.CanMake(actor,recipe)));
+            if(build)foreach(FortBlueprint plan in FortBlueprint.All)
+                rows.Add(RecipeRow(actor,Survival.BlueprintRemainingRecipe(g,plan),true,plan,Survival.CanStartBlueprint(g,plan),
+                    Survival.HasSavedBlueprint(g,plan)));
             return rows;
         }
 

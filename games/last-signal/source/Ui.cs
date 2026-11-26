@@ -16,7 +16,6 @@ namespace LastSignal {
         readonly List<Hit> hits=new List<Hit>();
         Bitmap image; Graphics pen; float sw=1280,sh=720,scale=1,fx=1,fy=1; int mx=-100,my=-100;
         string route="",selected="",bind="",backPanel=""; bool hoverMoved; int packOffset;
-        string wheelType=""; float wx,wy,wr; int wcount;
         readonly string[] bindings={"Forward","Back","Left","Right","Sprint","Crouch","Jump","Use","Dodge","Shove","Craft","Build","Pack","Rotate","Cycle","Dismiss","Lean left","Lean right","Attack","Guard","Throw","Previous weapon","Next weapon","Weapon 1","Weapon 2","Weapon 3","Weapon 4","Weapon 5","Weapon 6","Weapon 7"};
         class Hit { public RectangleF Rect; public string Id; public bool Nav; }
         internal static string SettingsOverride=null;
@@ -134,12 +133,12 @@ namespace LastSignal {
         }
         public void MouseMove(int x,int y) {if(x!=mx||y!=my)hoverMoved=true;mx=x;my=y;}
         string At(float x,float y) {
-            if(wheelType!=""){float dx=x-wx,dy=y-wy;float d=(float)Math.Sqrt(dx*dx+dy*dy);
-                if(d>wr*.42f&&d<=wr+9){double ang=Math.Atan2(dy,dx)+Math.PI/2+Math.PI/wcount; ang=(ang+2*Math.PI)%(2*Math.PI);return "slot"+Math.Min(wcount-1,(int)(ang*wcount/(Math.PI*2)));}}
             for(int i=hits.Count-1;i>=0;i--)if(hits[i].Rect.Contains(x,y))return hits[i].Id;return "";
         }
-        void Observe(Game g){string s=g.Mode+"/"+g.Panel;if(s==route)return;route=s;hits.Clear();wheelType="";bind="";padBind="";Looking=false;
-            string p=g.Panel; selected=p=="custom"?"startcustom":p=="pause"?"resume":p=="settings"?"sensitivity":p=="bindings"?"keyForward":p=="controller"?"padpreset":p=="padbinds"?"padkeyJump":p=="craft"||p=="build"?"slot0":p=="pack"?"pack0":g.Mode=="menu"?"play":g.Mode=="dead"?"spectate":g.Mode=="results"?"replay":"";
+        void Observe(Game g){string s=g.Mode+"/"+g.Panel;if(s==route)return;route=s;hits.Clear();bind="";padBind="";Looking=false;
+            string p=g.Panel; selected=p=="custom"?"startcustom":p=="pause"?"resume":p=="settings"?"sensitivity":p=="bindings"?"keyForward":p=="controller"?"padpreset":p=="padbinds"?"padkeyJump":p=="craft"||p=="build"?"workFirst":p=="pack"?"pack0":g.Mode=="menu"?"play":g.Mode=="dead"?"spectate":g.Mode=="results"?"replay":"";
+            if(p!="craft"&&p!="build"){materialView="";materialReturn="";}
+            workOffset=0;workRecipe="";
             selected=OnlineSelection(g,selected);packOffset=0;hoverMoved=false;}
         public bool Captures(Game g){return g.Panel!=""||g.Mode=="menu"||g.Mode=="dead"||g.Mode=="results";}
         public Bitmap Paint(Game g,int width,int height) {
@@ -147,11 +146,11 @@ namespace LastSignal {
             if(image==null||image.Width!=iw||image.Height!=ih){if(pen!=null)pen.Dispose();if(image!=null)image.Dispose();image=new Bitmap(iw,ih,PixelFormat.Format32bppPArgb);pen=Graphics.FromImage(image);}
             scale=Math.Min(iw/1280f,ih/720f);sw=iw/scale;sh=ih/scale;fx=(float)iw/width/scale;fy=(float)ih/height/scale;
             pen.ResetTransform();pen.Clear(Color.Transparent);pen.ScaleTransform(scale,scale);pen.SmoothingMode=SmoothingMode.AntiAlias;pen.TextRenderingHint=TextRenderingHint.AntiAliasGridFit;
-            Observe(g);if(hoverMoved&&!g.PadActive&&Captures(g)&&bind==""&&padBind==""){string over=At(mx*fx,my*fy);if(over!="")selected=over;hoverMoved=false;}hits.Clear();wheelType="";
+            Observe(g);if(hoverMoved&&!g.PadActive&&Captures(g)&&bind==""&&padBind==""){string over=At(mx*fx,my*fy);if(over!="")selected=over;hoverMoved=false;}hits.Clear();
             if(g.Mode!="menu"&&g.Player!=null&&g.Panel!="pause"&&g.Panel!="settings"&&g.Panel!="bindings"&&g.Panel!="controller"&&g.Panel!="padbinds"&&g.Mode!="results"&&g.Mode!="dead")Hud(g);
             if(PaintOnline(g))return image;
             if(g.Panel=="custom")Custom(g);else if(g.Panel=="settings")Settings(g);else if(g.Panel=="bindings")Bindings(g);else if(g.Panel=="controller")Controller(g);else if(g.Panel=="padbinds")PadBindings(g);else if(g.Panel=="pause")Pause(g);
-            else if(g.Panel=="craft"||g.Panel=="build")Wheel(g);else if(g.Panel=="pack")Pack(g);
+            else if(g.Panel=="craft"||g.Panel=="build")Workbench(g);else if(g.Panel=="pack")Pack(g);
             else if(g.Mode=="menu")Home(g);else if(g.Mode=="dead"||g.Mode=="results")Results(g);
             return image;
         }

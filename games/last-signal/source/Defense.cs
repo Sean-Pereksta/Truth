@@ -12,7 +12,8 @@ namespace LastSignal {
             if(!raised){a.Guard=false;return;}
             if(a.Guard||a.GuardRecovery>0||a.Stamina<6||a.DodgeTime>.12f)return;
             a.Guard=true;a.GuardTime=0;a.GuardSpent=false;
-            a.GuardRecovery=GuardRearm;a.Stamina-=3;
+            bool shield=CarriesShield(a);
+            a.GuardRecovery=shield?0:GuardRearm;a.Stamina-=shield?1:3;
         }
         // The input edge and movement both sample the current stick/keys. A strafe
         // pressed together with dodge must work even before the next movement tick.
@@ -54,7 +55,7 @@ namespace LastSignal {
             a.Guard=a.Aiming=a.Throwing=false;a.DrawPower=a.Windup=a.Swing=0;
             a.ProjectileId="";a.SpearThrust=a.ShoveStroke=a.MeleeStroke=false;
             a.NextAttack=Math.Max(a.NextAttack,.30f);
-            if(a==Player){guardHeld=false;bufferedWeapon="";Charging=false;Charge=0;}
+            if(a==Player){bufferedWeapon="";Charging=false;Charge=0;}
             Cue("step",a.X,a.Z,12);SoundAt(a,12);
         }
 

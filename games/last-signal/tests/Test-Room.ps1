@@ -31,7 +31,7 @@ if($Mode -eq 'socket'){
     if($LASTEXITCODE){throw 'Native Server Manager checks failed'}
 
     $armory = Join-Path (Split-Path $game) 'ArmoryChecks.exe'
-    $checks = 'ArmoryChecks.cs','ShieldChecks.cs','CrossbowChecks.cs' | ForEach-Object { Join-Path $PSScriptRoot $_ }
+    $checks = 'ArmoryChecks.cs','ShieldChecks.cs','CrossbowChecks.cs','WorkbenchChecks.cs' | ForEach-Object { Join-Path $PSScriptRoot $_ }
     & $compiler /nologo /optimize+ /platform:x64 /main:ArmoryChecks /r:System.Drawing.dll /r:System.Windows.Forms.dll "/r:$game" "/out:$armory" $checks
     if($LASTEXITCODE){throw 'Could not compile the armory checks'}
     & $armory

@@ -104,17 +104,21 @@ namespace LastSignal {
             case "Attack":
                 if(!String.IsNullOrEmpty(BuildId)){Survival.Place(this);break;}
                 if(Player.Weapon=="crossbow"){if(switchTo.Length==0)FireCrossbow(Player,Pitch);break;}
-                if(!Charging&&switchTo.Length==0&&Player.NextAttack<=(Ranged(Player)?0:.23f)&&!Player.Guard&&Player.Windup<=0){
+                if(!Charging&&switchTo.Length==0&&Player.NextAttack<=(Ranged(Player)?0:.23f)&&
+                   (!Player.Guard||CarriesShield(Player))&&Player.Windup<=0){
+                    Player.Guard=false;
                     Charge=0;Charging=true;Player.DrawPower=0;Player.Throwing=false;Player.LastThrow=false;
                 }break;
             case "Throw":
-                if(!Charging&&Player.Weapon=="spear"&&Player.NextAttack<=0&&Player.Windup<=0&&!Player.Guard&&String.IsNullOrEmpty(BuildId)){
+                if(!Charging&&Player.Weapon=="spear"&&Player.NextAttack<=0&&Player.Windup<=0&&
+                   (!Player.Guard||CarriesShield(Player))&&String.IsNullOrEmpty(BuildId)){
+                    Player.Guard=false;
                     Charging=true;Charge=0;Player.DrawPower=0;Player.Throwing=true;Player.LastThrow=false;Player.Aiming=true;
                 }break;
             case "Guard":
-                if(String.IsNullOrEmpty(BuildId)&&!Charging){
+                if(String.IsNullOrEmpty(BuildId)){
                     guardHeld=true;bufferedWeapon="";
-                    if(Player.Windup<=0&&Player.Swing<Player.SwingSpan*.42f&&Player.DodgeTime<=.12f){if(Ranged(Player))Player.Aiming=true;else SetGuard(Player,true);}
+                    RaiseHeldGuard(Player);
                 }break;
             }
         }
@@ -232,6 +236,7 @@ namespace LastSignal {
             PlaceFallenPack(a,p);
             Survival.TransferWaterOnDeath(a,p);
             Armor.PackOnDeath(a,p);
+            PackShields(a,p,a.Count("shield"));
             p.FoodProgress.AddRange(a.FoodProgress); Arena.Register(this,p);
             KillFeed=killer==null?a.Name+(cause??" fell to exposure"):killer.Name+" eliminated "+a.Name;FeedTime=4;GlobalCue("cannon");
             if(a==Player){Mode="dead";Panel="";Charging=false;Unfocus();Survival.Cancel(this);}
