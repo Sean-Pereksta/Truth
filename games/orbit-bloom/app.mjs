@@ -1,5 +1,5 @@
 import { FLOWERS, LEVELS, NEEDS, POTS, getLevel } from './levels.mjs';
-import { applyCommand, createMatch, getPlantNeed, getTruckWindow, getWeather, stepMatch } from './sim.mjs';
+import { applyCommand, canReachTarget, createMatch, getPlantNeed, getTruckWindow, getWeather, stepMatch } from './sim.mjs';
 import { createRoomClient, listPublicRooms, probeRoom, resolveRoomCode, roomJoinUrl } from './network.mjs';
 import { drawPlant } from './pixel-art.mjs';
 import { createBoardRenderer, drawMenuArt, THEME_COLORS } from './render.mjs';
@@ -80,6 +80,12 @@ function fillLevels(untimed = false) {
     const description = document.createElement('small');
     description.textContent = map.description;
     button.append(title, rating, description);
+    if (map.platforms?.length || map.conveyors?.length) {
+      const terrain = document.createElement('small');
+      terrain.className = 'level-terrain';
+      terrain.textContent = [map.platforms?.length && 'Moving platforms', map.conveyors?.length && 'Conveyor handoffs'].filter(Boolean).join(' · ');
+      button.append(terrain);
+    }
     button.addEventListener('click', () => startLocal(map.id));
     return button;
   });
@@ -95,6 +101,7 @@ function beginShift(nextState, round) {
   orderCards.clear();
   $('orders').replaceChildren();
   $('map-name').textContent = level.name;
+  $('map-hint').textContent = level.hint || '';
   target = undefined;
   held.clear();
   lastFrame = performance.now();
@@ -189,7 +196,8 @@ function updateHud() {
   const truck = getTruckWindow(state);
   const sky = getWeather(state);
   const doors = truck.remainingMs === null ? '' : `${truck.open ? 'Truck leaves' : 'Truck arrives'} in ${Math.ceil(truck.remainingMs / 1000)}s`;
-  $('map-event').textContent = [doors, sky ? `${sky.label}${sky.active ? ' active' : ` in ${Math.ceil(sky.remainingMs / 1000)}s`}` : ''].filter(Boolean).join(' · ');
+  const transport = level.platforms?.length ? 'Platform docks marked +' : level.conveyors?.length ? 'Load pots at gold belt ends' : '';
+  $('map-event').textContent = [doors, sky ? `${sky.label}${sky.active ? ' active' : ` in ${Math.ceil(sky.remainingMs / 1000)}s`}` : '', transport].filter(Boolean).join(' · ');
 
   const gardener = currentGardener();
   const plant = state.plants.find(item => item.id === gardener?.carryId);
@@ -202,11 +210,12 @@ function updateHud() {
   if (task) progress.value = 1 - Math.max(0, task.remainingMs / task.durationMs);
   $('carried').textContent = current?.name ?? 'Empty hands';
   const nextAction = need ? `${need.label}${need.kind === 'repot' ? ` · ${POTS[need.variant]}` : ''}` : 'Tap a seed tray or pick up a pot';
-  const prompt = (task && taskLabels[task.kind]) || notice || nextAction;
+  const prompt = (task && taskLabels[task.kind]) || (gardener?.platformId ? 'Riding the platform' : '') || notice || nextAction;
   if ($('prompt').textContent !== prompt) $('prompt').textContent = prompt;
   $('drop').disabled = !plant;
   const shortcut = findShortcut(gardener, plant, need);
   $('action').disabled = !gardener;
+  $('drop').textContent = plant && beltAt(Math.round(gardener.x), Math.round(gardener.y)) ? 'Send pot' : 'Set down';
   $('action').textContent = shortcut?.label ?? 'Act';
 }
 
@@ -214,20 +223,42 @@ function currentGardener() {
   return state?.players.find(player => player.id === localId);
 }
 
+function availableBelt(gardener, station) {
+  const belts = (level.conveyors ?? []).filter(belt => !state.plants.some(plant => plant.beltId === belt.id));
+  const score = belt => {
+    const from = belt.path[0];
+    const end = belt.path.at(-1);
+    return Math.hypot(from.x - gardener.x, from.y - gardener.y) + (station ? Math.hypot(end.x - station.x, end.y - station.y) : 0);
+  };
+  const candidate = belts.sort((a, b) => score(a) - score(b)).find(belt => canReachTarget(state, localId, { type: 'target', conveyorId: belt.id }));
+  return candidate ? { command: { type: 'target', conveyorId: candidate.id }, label: 'Send pot' } : null;
+}
+
 function findShortcut(gardener, plant, need) {
   if (!gardener) return null;
   const distance = station => Math.hypot(station.x - gardener.x, station.y - gardener.y);
+  const reachable = command => canReachTarget(state, localId, command);
+  const toStation = value => ({ type: 'target', stationId: value.id });
   if (plant && need) {
     const stationType = NEEDS[need.kind]?.station;
-    const candidate = state.stations.filter(station => station.type === stationType && !station.plantId &&
-      (!need.variant || station.variant === need.variant)).sort((a, b) => distance(a) - distance(b))[0];
-    return candidate ? { id: candidate.id, label: need.kind === 'repot' ? 'Repot' : need.label } : null;
+    const options = state.stations.filter(station => station.type === stationType &&
+      (!need.variant || station.variant === need.variant)).sort((a, b) => distance(a) - distance(b));
+    const reachableStations = options.filter(station => reachable(toStation(station)));
+    const candidate = reachableStations.find(station => !station.plantId && !station.busyBy && station.cooldownUntilMs <= state.elapsedMs);
+    if (candidate) return { command: toStation(candidate), label: need.kind === 'repot' ? 'Repot' : need.label };
+    return options.length && !reachableStations.length ? availableBelt(gardener, options[0]) : null;
   }
-  const ready = state.stations.filter(station => {
-    const staged = state.plants.find(item => item.id === station.plantId);
-    return staged && (station.type === 'shelf' || getPlantNeed(staged, state).kind === 'remove');
-  }).sort((a, b) => distance(a) - distance(b))[0];
-  return ready ? { id: ready.id, label: 'Pick up' } : null;
+  const ready = state.plants.flatMap(staged => {
+    if (staged.holderId || staged.beltId) return [];
+    const station = staged.stationId && state.stations.find(item => item.id === staged.stationId);
+    if (station && station.type !== 'shelf' && getPlantNeed(staged, state).kind !== 'remove') return [];
+    return [{ item: station || staged, command: station ? toStation(station) : { type: 'target', plantId: staged.id } }];
+  }).sort((a, b) => distance(a.item) - distance(b.item)).find(option => reachable(option.command));
+  return ready ? { command: ready.command, label: 'Pick up' } : null;
+}
+
+function beltAt(x, y) {
+  return level.conveyors?.find(({ path: [point] }) => point.x === x && point.y === y);
 }
 
 function send(command) {
@@ -287,9 +318,12 @@ canvas.addEventListener('pointerdown', event => {
   }
   const x = Math.max(0, Math.min(level.width - 1, Math.floor((event.clientX - rect.left) / rect.width * level.width)));
   const y = Math.max(0, Math.min(level.height - 1, Math.floor((event.clientY - rect.top) / rect.height * level.height)));
-  const plant = state.plants.find(item => !item.holderId && !item.stationId && item.x === x && item.y === y);
+  const plant = state.plants.find(item => !item.holderId && !item.stationId && !item.beltId && Math.round(item.x) === x && Math.round(item.y) === y);
   const station = state.stations.find(item => item.x === x && item.y === y);
-  if (plant && !currentGardener()?.carryId) send({ type: 'target', plantId: plant.id });
+  const carried = currentGardener()?.carryId;
+  const belt = beltAt(x, y);
+  if (plant && !carried) send({ type: 'target', plantId: plant.id });
+  else if (belt && carried) send({ type: 'target', conveyorId: belt.id });
   else if (station) send({ type: 'target', stationId: station.id });
   else send({ type: 'target', x, y });
 });
@@ -298,7 +332,7 @@ $('action').addEventListener('click', () => {
   const gardener = currentGardener();
   const plant = state.plants.find(item => item.id === gardener?.carryId);
   const shortcut = findShortcut(gardener, plant, plant && getPlantNeed(plant, state));
-  send(shortcut ? { type: 'target', stationId: shortcut.id } : { type: 'interact' });
+  send(shortcut?.command ?? { type: 'interact' });
   canvas.focus({ preventScroll: true });
 });
 $('drop').addEventListener('click', () => {

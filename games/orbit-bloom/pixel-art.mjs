@@ -11,7 +11,31 @@ const themes = {
   eclipse:  { floor: ['#342e43', '#41364f', '#50455b'], mortar: '#292538', leaf: ['#62597c', '#9781a2', '#d79ece'], flower: '#ffe093', sky: '#d39a71', metal: '#a99aaf' },
   aurora:   { floor: ['#273c46', '#314b53', '#3e5961'], mortar: '#1d303c', leaf: ['#356974', '#428f8c', '#8bd8ac'], flower: '#a4ffe3', sky: '#67c2bb', metal: '#71aeb6' },
   midnight: { floor: ['#252948', '#2c3158', '#41456c'], mortar: '#1d223c', leaf: ['#515381', '#626fa5', '#9bafce'], flower: '#f7e5ab', sky: '#868dd4', metal: '#9697bd' },
-  solstice: { floor: ['#43394a', '#554657', '#695769'], mortar: '#332e3c', leaf: ['#676349', '#8b9257', '#c0c66b'], flower: '#fff2ab', sky: '#eda877', metal: '#c5a7a4' },
+  pollenworks: { floor: ['#51434e', '#62504f', '#806450'], mortar: '#382e43', leaf: ['#665755', '#9f8957', '#e1bd67'], flower: '#ffe391', sky: '#c8926c', metal: '#c59abd' },
+  tidalglass:  { floor: ['#25505a', '#295a65', '#3c757a'], mortar: '#1e374e', leaf: ['#356b80', '#5894a2', '#87d8cb'], flower: '#f8b9ee', sky: '#8bd3cb', metal: '#afd7cd' },
+  switchyard:  { floor: ['#45384f', '#524358', '#67516a'], mortar: '#30293f', leaf: ['#513d69', '#765177', '#bc7b92'], flower: '#ffcb80', sky: '#df8b74', metal: '#8394b7' },
+  drawbridge:  { floor: ['#344469', '#435478', '#59688b'], mortar: '#25304d', leaf: ['#4d577e', '#776a9b', '#b79dca'], flower: '#f6e5c5', sky: '#8eabca', metal: '#b3bdd0' },
+  saturn:      { floor: ['#29284c', '#353458', '#494767'], mortar: '#211f3c', leaf: ['#3e5d77', '#4d8590', '#83c6bd'], flower: '#f6ba96', sky: '#c98091', metal: '#6ab8b2' },
+  solstice:    { floor: ['#43394a', '#554657', '#695769'], mortar: '#332e3c', leaf: ['#676349', '#8b9257', '#c0c66b'], flower: '#fff2ab', sky: '#eda877', metal: '#c5a7a4' },
+};
+
+// Dark trim, midtone, reflection, painted detail, and the water or night beneath each floor.
+const environments = {
+  dawn:        ['#172f39', '#4c7773', '#8caf89', '#e6a96e', '#24474d'],
+  moon:        ['#232b47', '#627f9e', '#a6bed1', '#d4d4e6', '#273653'],
+  comet:       ['#2b2844', '#726380', '#a285a6', '#eaacaa', '#323450'],
+  dune:        ['#352b45', '#916c66', '#bf9a78', '#f2d096', '#385064'],
+  meteor:      ['#35263e', '#9a646b', '#c78d81', '#ffd29a', '#3e364c'],
+  frost:       ['#233b55', '#5b90a7', '#9ec2cd', '#e3f5e3', '#253b58'],
+  nebula:      ['#352741', '#8566a1', '#bd91bf', '#f3bfe2', '#342c53'],
+  eclipse:     ['#30253d', '#956574', '#bd8380', '#ffce9b', '#382c49'],
+  aurora:      ['#223640', '#52878a', '#8ebcb2', '#a1eac9', '#223848'],
+  midnight:    ['#201b3d', '#666c9d', '#909ac7', '#e7ddbe', '#242746'],
+  pollenworks: ['#3b2e41', '#a27755', '#daa66c', '#f1bc9f', '#48354b'],
+  tidalglass:  ['#1c394c', '#508f99', '#9acbc1', '#d2f3de', '#214459'],
+  switchyard:  ['#322541', '#6c668c', '#a08ca6', '#f4b275', '#2d2847'],
+  drawbridge:  ['#263451', '#687ca6', '#a6aac4', '#d9c7db', '#263557'],
+  saturn:      ['#201938', '#4a7f8b', '#79b9b4', '#f0b39d', '#221b3c'],
 };
 
 const speciesColors = {
@@ -409,12 +433,120 @@ function floorMotif(ctx, key, theme, seed, time) {
     aurora: [[glint, x - 1, y + 2, 5, 1], [wash, x + 4, y + 1, 6, 2], [glint, x + 5, y, 4, 1]],
     eclipse: [[seam, x - 2, y - 2, 7, 1], [seam, x - 2, y, 7, 1], [seam, x - 2, y + 2, 7, 1], [glint, x + 6, y - 2, 1, 5]],
     midnight: [[seam, x - 1, y + 1, 6, 1], [glint, x - 2, y, 2, 2], [glint, x + 4, y - 2, 2, 3], [glint, x + 6, y - 3, 2, 1]],
+    pollenworks: [[glint, x - 1, y, 5, 1], [glint, x - 2, y + 1, 2, 3], [seam, x + 3, y + 1, 2, 3], [seam, x - 1, y + 4, 5, 1]],
+    tidalglass: [[glint, x - 3, y + 3, 8, 1], [glint, x + 5, y + 1, 2, 2], [seam, x + 3, y + 5, 7, 1]],
+    switchyard: [[seam, x - 2, y - 2, 8, 6], [glint, x - 1, y - 1, 6, 1], [wash, x - 1, y + 1, 6, 1], [wash, x - 1, y + 3, 6, 1]],
+    drawbridge: [[glint, x - 2, y - 2, 7, 1], [glint, x + 4, y - 1, 1, 4], [seam, x - 2, y + 3, 6, 1]],
+    saturn: [[glint, x - 2, y, 4, 1], [glint, x + 1, y - 1, 1, 3], [seam, x + 5, y - 2, 5, 1]],
   };
   if (markings[key]) blocks(ctx, markings[key]);
   if ((key === 'aurora' || key === 'midnight') && Math.floor(time * 2 + seed) % 5 === 0) {
     ctx.globalAlpha *= 0.39;
     rect(ctx, theme.sky, x + 4, y - 1, 1, 1);
   }
+}
+
+const honeycomb = ['..mmmm..', '.m....m.', 'm......m', 'm......m', '.m....m.', '..mmmm..'];
+const lilyPad = ['...mmmmm....', '..msllmm....', '.msllll..m..', 'mllllll.mm..', 'mllmlllllmm.', '.mlllllmmmm.', '..mmmmmmm...'];
+
+function waterOrVoid(ctx, key, colors, seed, time) {
+  const [dark, middle, light, accent, depth] = colors;
+  blocks(ctx, [[depth, 0, 0, 24, 24], [dark, 0, 0, 24, 3], [dark, 0, 0, 2, 24], [middle, 2, 2, 22, 1]]);
+  if (key === 'saturn') {
+    for (let i = 0; i < 6; i++) {
+      const x = (seed + i * 17) % 20 + 3;
+      const y = (seed * 2 + i * 7) % 18 + 4;
+      if (i === 0) spark(ctx, x, y, accent);
+      else rect(ctx, i % 2 ? light : middle, x, y, 1, 1);
+    }
+    return;
+  }
+  if (key === 'switchyard') {
+    blocks(ctx, [[dark, 4, 4, 16, 20], [middle, 4, 4, 2, 20], [middle, 18, 4, 2, 20], [depth, 6, 5, 12, 19]]);
+    for (let y = 6; y < 24; y += 6) {
+      blocks(ctx, [[middle, 7, y, 10, 2], [light, 8, y, 8, 1], [accent, (y + seed) % 2 ? 8 : 14, y, 2, 1]]);
+    }
+    return;
+  }
+  for (let i = 0; i < 4; i++) {
+    const x = (seed + i * 11) % 11 + 3;
+    const y = (seed + i * 7) % 16 + 5;
+    rect(ctx, middle, x, y, i % 2 ? 7 : 5, 1);
+    if (i % 2 === 0) rect(ctx, light, x + 1, y + 1, 2, 1);
+  }
+  if (key === 'tidalglass' && seed % 3 !== 2) {
+    const x = 4 + seed % 6;
+    const y = 8 + seed % 5 - Math.floor(time * 2) % 2;
+    paint(ctx, lilyPad, { m: '#6f6092', l: '#9a83a9', s: '#c6b1d5' }, x, y);
+    blocks(ctx, [['#ab769d', x + 4, y, 4, 2], [accent, x + 5, y, 2, 1]]);
+  } else if (key === 'drawbridge' && seed % 2 === 0) {
+    blocks(ctx, [[light, 12, 15, 4, 1], [middle, 11, 16, 6, 2], [middle, 17, 15, 2, 4], [accent, 12, 16, 1, 1]]);
+  }
+}
+
+function terrainBlock(ctx, key, colors, seed) {
+  const [dark, middle, light, accent] = colors;
+  blocks(ctx, [[dark, 1, 1, 22, 22], [middle, 2, 2, 20, 5], [light, 3, 2, 18, 1], [middle, 3, 8, 18, 13], [dark, 4, 9, 16, 11], [middle, 5, 19, 14, 1]]);
+  if (key === 'pollenworks') {
+    paint(ctx, honeycomb, { m: middle }, 5, 10);
+    paint(ctx, honeycomb, { m: light }, 11, 12);
+  } else if (key === 'tidalglass') {
+    blocks(ctx, [[light, 4, 9, 16, 10], [middle, 5, 10, 14, 8], [accent, 8, 10, 2, 5], [light, 13, 13, 4, 1]]);
+  } else if (key === 'switchyard' || key === 'eclipse' || key === 'meteor') {
+    blocks(ctx, [[middle, 5, 10, 14, 8], [dark, 6, 11, 12, 1], [dark, 6, 14, 12, 1], [dark, 6, 17, 12, 1], [accent, 3, 5, 2, 1], [accent, 19, 5, 2, 1]]);
+  } else if (key === 'drawbridge' || key === 'dune') {
+    blocks(ctx, [[middle, 5, 10, 7, 4], [middle, 13, 10, 6, 4], [light, 5, 10, 7, 1], [middle, 6, 15, 9, 4], [middle, 16, 15, 3, 4], [light, 6, 15, 9, 1]]);
+  } else if (seed % 2) {
+    spark(ctx, 12, 14, light);
+  }
+}
+
+export function drawEnvironmentTile(ctx, x, y, size, terrain, variant, time = 0) {
+  if (terrain !== '#' && terrain !== '~' && terrain !== '+' && terrain !== ':') return;
+  const key = normalized(variant);
+  const colors = environments[key] ?? environments.dawn;
+  const seed = Math.abs(Math.floor(x / size) * 37 + Math.floor(y / size) * 57);
+  at(ctx, x, y, size / 24);
+  if (terrain === '~' || terrain === ':') {
+    waterOrVoid(ctx, key, colors, seed, time);
+  } else if (terrain === '#') {
+    terrainBlock(ctx, key, colors, seed);
+  } else {
+    const [dark, middle, light, accent] = colors;
+    blocks(ctx, [[dark, 0, 8, 24, 8], [middle, 0, 9, 24, 6], [light, 0, 9, 24, 1], [dark, 0, 14, 24, 1]]);
+    for (let plank = 2; plank < 24; plank += 6) blocks(ctx, [[dark, plank, 10, 1, 4], [accent, plank + 2, 11, 2, 1]]);
+  }
+  ctx.restore();
+}
+
+export function drawBorderArt(ctx, width, height, tile, variant) {
+  const key = normalized(variant);
+  const [dark, middle, light, accent, depth] = environments[key] ?? environments.dawn;
+  const unit = tile / 24;
+  const across = width / unit;
+  const down = height / unit;
+  at(ctx, 0, 0, unit);
+  blocks(ctx, [[dark, 0, 0, across, 5], [middle, 0, 1, across, 1], [dark, 0, 0, 2, down], [dark, across - 2, 0, 2, down], [dark, 0, down - 3, across, 3]]);
+  for (let x = 5; x < across - 5; x += 24) {
+    if (key === 'pollenworks') {
+      paint(ctx, honeycomb, { m: light }, x, 1);
+      paint(ctx, honeycomb, { m: middle }, x + 8, 3);
+      rect(ctx, accent, x + 2, 3, 3, 1);
+    } else if (key === 'tidalglass' || key === 'aurora') {
+      blocks(ctx, [[middle, x, 2, 16, 4], [light, x + 1, 2, 14, 1], [depth, x + 2, 3, 12, 2], [light, x + 4, 3, 2, 1], [accent, x + 9, 4, 3, 1]]);
+    } else if (key === 'saturn') {
+      blocks(ctx, [[middle, x, 3, 18, 3], [dark, x + 2, 4, 14, 1], [light, x + 1, 5, 16, 1], [accent, x + 9, 3, 2, 1]]);
+      if (x % 48 === 5) spark(ctx, x + 17, 8, accent);
+    } else if (key === 'switchyard' || key === 'eclipse') {
+      blocks(ctx, [[middle, x, 2, 16, 4], [depth, x + 2, 3, 12, 2], [accent, x + 2, 3, 3, 1], [accent, x + 7, 4, 3, 1], [accent, x + 12, 3, 3, 1]]);
+    } else if (key === 'drawbridge' || key === 'dune') {
+      blocks(ctx, [[middle, x, 2, 8, 4], [middle, x + 10, 2, 10, 4], [light, x + 1, 2, 6, 1], [light, x + 11, 2, 8, 1], [accent, x + 8, 4, 2, 3]]);
+    } else {
+      blocks(ctx, [[middle, x, 2, 14, 4], [light, x + 1, 2, 12, 1], [depth, x + 2, 3, 10, 2], [accent, x + 6, 4, 3, 1], [middle, x + 18, 3, 2, 2]]);
+    }
+  }
+  for (let y = 7; y < down - 5; y += 24) blocks(ctx, [[middle, 1, y, 3, 5], [light, 2, y + 1, 1, 2], [middle, across - 4, y, 3, 5], [light, across - 3, y + 1, 1, 2]]);
+  ctx.restore();
 }
 
 function vine(ctx, theme, time, seed) {
@@ -493,13 +625,86 @@ function cometPennants(ctx, theme, time) {
   }
 }
 
+function hiveAwning(ctx, time, seed) {
+  const shade = '#654358';
+  const wood = '#b47959';
+  const pollen = '#ffdd90';
+  blocks(ctx, [
+    [ink, -9, -19, 18, 19], [wood, -8, -17, 16, 15], ['#d39b6a', -7, -17, 14, 11],
+    [shade, -7, -6, 14, 5], [ink, -8, -22, 16, 6], ['#9f74a0', -7, -23, 14, 5],
+    ['#d4a4bf', -6, -23, 12, 1], ['#f1bfcb', -5, -20, 3, 3], ['#f1bfcb', 2, -20, 3, 3],
+    [shade, -3, -10, 6, 3], ['#784c50', -2, -11, 4, 3], [pollen, -4, -13, 8, 1],
+    [pollen, -3, -7, 6, 1], [wood, -6, -4, 2, 3], [wood, 4, -4, 2, 3],
+  ]);
+  const orbit = time * 3.5 + seed;
+  const beeX = Math.round(Math.sin(orbit) * 10);
+  const beeY = -10 + Math.round(Math.cos(orbit) * 5);
+  const wing = Math.floor(time * 18) % 2;
+  blocks(ctx, [[ink, beeX - 1, beeY, 5, 2], [pollen, beeX, beeY, 1, 2], [pollen, beeX + 2, beeY, 1, 2], ['#fff1cf', beeX + wing, beeY - 2, 2, 1]]);
+}
+
+function tidePlanter(ctx, time, seed) {
+  const bob = Math.floor(time * 2 + seed) % 2;
+  blocks(ctx, [[ink, -10, -8, 20, 8], ['#57909a', -9, -7, 18, 6], ['#9cd0be', -8, -7, 16, 1], ['#41687c', -8, -6, 16, 3], ['#7fb8b4', -7, -3, 14, 1]]);
+  paint(ctx, lilyPad, { m: '#756693', l: '#a18ab7', s: '#cdbbe1' }, -7, -12 - bob);
+  blocks(ctx, [['#6e647e', -2, -15 - bob, 5, 4], ['#cb7fa6', -1, -16 - bob, 3, 4], ['#ffd7d6', 0, -17 - bob, 1, 2]]);
+  for (let i = 0; i < 3; i++) {
+    const y = -11 - Math.floor((time * 4 + i * 4 + seed) % 12);
+    const x = 4 + (i * 3 + seed) % 5;
+    blocks(ctx, [['#65a1ae', x, y, 2, 2], ['#b1d8cb', x, y, 1, 1]]);
+  }
+}
+
+function switchBeacon(ctx, time, seed) {
+  const amber = Math.floor(time * 3 + seed) % 4 < 2;
+  blocks(ctx, [
+    [ink, -8, -4, 16, 4], ['#727697', -7, -4, 14, 2], [ink, -3, -15, 6, 12],
+    ['#9e849c', -1, -15, 2, 10], [ink, -6, -21, 12, 9], ['#625878', -5, -20, 10, 7],
+    ['#967f98', -5, -21, 10, 1], ['#372d4a', -4, -19, 8, 3], ['#372d4a', -4, -15, 8, 2],
+    [amber ? '#ffcf81' : '#8b5a62', -3, -19, 6, 2], [amber ? '#51788a' : '#a7e0c5', -3, -15, 6, 2],
+    ['#ea9c71', -7, -6, 3, 1], ['#a893a5', 4, -6, 3, 1],
+  ]);
+  if (amber) spark(ctx, 8, -20, '#f3a275');
+}
+
+function moonLock(ctx, time, seed) {
+  const shutter = Math.floor(time * 2 + seed) % 3;
+  blocks(ctx, [
+    [ink, -8, -5, 16, 5], ['#7383a5', -7, -5, 14, 3], [ink, -6, -17, 12, 12],
+    ['#8393b7', -5, -17, 10, 10], ['#a7b6d1', -5, -18, 10, 2], ['#ac9cbe', -4, -6, 8, 1],
+    ['#45577f', -4, -15, 8, 7], ['#bcaad1', -3, -14, 6, 5], ['#645b94', -1, -15, 2, 5],
+    ['#f1e0ce', -2, -13, 1, 3], ['#f1e0ce', -1, -11, 3, 1], ['#8e92b0', -2, -20, 4, 2],
+  ]);
+  if (shutter !== 1) spark(ctx, 7, -16, '#c4d7de');
+}
+
+const ringedPlanet = [
+  '.......ss......', '.....sllm......', '...sslllmm.....', '..sllmmmmd.s...', '.mllmmmdd.slm..',
+  'mllmmmdd.slm...', 'lllmmmd.slm....', 'mmmmdd.slm.....', '...dd.slm......', '....slm........',
+];
+
+function saturnSpire(ctx, time, seed) {
+  blocks(ctx, [
+    [ink, -8, -4, 16, 4], ['#538393', -7, -3, 14, 2], [ink, -3, -13, 6, 11],
+    ['#78afa9', -2, -13, 4, 9], ['#37677f', 0, -11, 1, 6], ['#ba8ca8', -4, -12, 8, 2],
+  ]);
+  const bob = Math.floor(time * 2.5 + seed) % 2;
+  paint(ctx, ringedPlanet, { s: '#ffe1bc', l: '#f3aa92', m: '#d07f96', d: '#8d5982' }, -7, -23 - bob);
+  if (Math.floor(time * 4 + seed) % 6 < 2) spark(ctx, 9, -22, '#d3f6db');
+}
+
 export function drawScenery(ctx, x, y, size, variant, time, seed = 0) {
   const key = normalized(variant);
   const theme = themeFor(key);
   const choose = Math.abs(Math.floor(seed));
   at(ctx, x, y, size / 24);
   groundShadow(ctx, 15);
-  if (key === 'dune' || (key === 'midnight' && choose % 2)) scope(ctx, theme, time);
+  if (key === 'pollenworks') hiveAwning(ctx, time, choose);
+  else if (key === 'tidalglass') tidePlanter(ctx, time, choose);
+  else if (key === 'switchyard') switchBeacon(ctx, time, choose);
+  else if (key === 'drawbridge') moonLock(ctx, time, choose);
+  else if (key === 'saturn') saturnSpire(ctx, time, choose);
+  else if (key === 'dune' || (key === 'midnight' && choose % 2)) scope(ctx, theme, time);
   else if (key === 'comet' && choose % 2) cometPennants(ctx, theme, time);
   else if (key === 'nebula' || key === 'eclipse' || (key === 'meteor' && choose % 2)) steamVent(ctx, theme, time, choose, key !== 'nebula');
   else if (key === 'frost' && choose % 2) snowTree(ctx, theme, time, choose);
