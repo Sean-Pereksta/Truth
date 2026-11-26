@@ -56,9 +56,61 @@ test('Scattered troops choose their own nearest building or troop even with enem
   assert.equal(g.attackNearest([left.id,right.id]).count,2);targetPoint(left,post);targetPoint(right,enemy);
 });
 
-const advance=(g,seconds)=>{
-  for(let i=0;i<Math.round(seconds*30);i++){g.time+=1/30;g.navigation.beginUpdate();g.hash.rebuild(g.units);g.updateUnits(1/30);g.updateProjectiles(1/30);}
+const advance=(g,seconds,inspect)=>{
+  for(let i=0;i<Math.round(seconds*30);i++){
+    g.time+=1/30;g.navigation.beginUpdate();g.hash.rebuild(g.units);
+    g.updateUnits(1/30);g.updateProjectiles(1/30);
+    inspect?.(i);
+  }
 };
+
+function clusteredTroops(g,type,x,y,count,gap){
+  return Array.from({length:count},(_,i)=>{
+    const u=g.addUnit(0,type,x-(i%3)*gap,y+(Math.floor(i/3)-(Math.ceil(count/3)-1)/2)*gap);
+    u.facingX=1;u.facingY=0;u.cooldown=0;
+    return u;
+  });
+}
+function heldDefender(g,x,y){
+  const u=g.addUnit(1,'infantry',x,y);
+  g.hold([u.id]);u.cooldown=1e9;u.hp=u.maxHp=1e6;
+  return u;
+}
+const mean=values=>values.reduce((sum,value)=>sum+value,0)/values.length;
+const nearestAlly=(u,allies)=>Math.min(...allies.filter(v=>v!==u).map(v=>Math.hypot(u.x-v.x,u.y-v.y)));
+
+test('Independent melee charges spread across the enemy line and keep striking',()=>{
+  const g=fixture(),units=clusteredTroops(g,'infantry',39,41.05,24,.34),samples=[];
+  const defenders=Array.from({length:7},(_,i)=>heldDefender(g,43,39.5+i*.52));
+  g.attackNearest(units.map(u=>u.id));
+  advance(g,8.5,i=>{
+    if(i>=60&&i%10===0)samples.push(mean(units.map(u=>nearestAlly(u,units))));
+  });
+  assert.ok(mean(samples)>.50,'Attackers should keep room between them through contact.');
+  assert.ok(defenders.every(u=>u.hp<u.maxHp),'The attackers should reach the full enemy line.');
+  assert.ok(g.stats.battles>160,'Spacing should keep the attackers in striking range.');
+});
+
+test('Riders keep space during physical charges and still land their impacts',()=>{
+  const g=fixture(),units=clusteredTroops(g,'cavalry',39.5,40.5,12,.29),samples=[],charged=new Set();
+  heldDefender(g,47.5,40.5);
+  g.attackNearest(units.map(u=>u.id));
+  advance(g,7,()=>{
+    const riders=units.filter(u=>u.charging);
+    for(const rider of riders)charged.add(rider.id);
+    if(riders.length>=3)samples.push(mean(riders.map(u=>nearestAlly(u,units))));
+  });
+  assert.ok(mean(samples)>.50);
+  assert.ok(charged.size>=10&&g.stats.chargeImpacts>=4);
+});
+
+test('Independent move orders to the same point still leave room after arrival',()=>{
+  const g=fixture(),units=clusteredTroops(g,'infantry',34.5,40.5,12,.22),goal={x:42.5,y:40.5};
+  for(const u of units)g.command([u.id],goal.x,goal.y,'move','spread');
+  advance(g,10);
+  assert.ok(mean(units.map(u=>nearestAlly(u,units)))>.42);
+  assert.ok(units.every(u=>Math.hypot(u.x-goal.x,u.y-goal.y)<1.4&&g.isWalkable(u.x,u.y)));
+});
 
 test('An explicit building attack closes the distance and damages that building despite nearer troops',()=>{
   const g=fixture(),soldier=g.addUnit(0,'infantry',20.5,40.5),post=g.addBuilding(1,'barracks',27.5,40.5),enemy=g.addUnit(1,'infantry',20.5,43.5);

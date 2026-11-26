@@ -158,10 +158,14 @@ const MAX_UNIT_RADIUS=Math.max(...Object.values(UNIT_DEFS).map(unit=>unit.radius
 const ALLY_CLEARANCE=.57;
 const ALLY_BODY_CLEARANCE=.46;
 const ALLY_BODY_GAP=.10;
-function keepingAssignedSpacing(a,b){
+const meleeApproachAngles=[1.1,1.55].map(angle=>({back:Math.cos(angle),side:Math.sin(angle),cost:angle*.01}));
+const cavalryApproachAngles=[.42,.66].map(angle=>({back:Math.cos(angle),side:Math.sin(angle),cost:angle*.01}));
+function keepingAssignedSpacing(u,other){
+  const a=u.order,b=other.order;
   if(a?.mode==='hold'&&b?.mode==='hold')return a.formation!=='spread'&&b.formation!=='spread';
-  return a?.groupX!=null&&a.groupX===b?.groupX&&a.groupY===b.groupY&&
-    (a.mode==='move'||a.mode==='idle')&&(b.mode==='move'||b.mode==='idle');
+  return a?.marchTogether&&b?.marchTogether&&a.groupX===b.groupX&&a.groupY===b.groupY&&
+    (a.mode==='move'||a.mode==='idle')&&(b.mode==='move'||b.mode==='idle')&&
+    ds(u,a)<2.25&&ds(other,b)<2.25;
 }
 const sameFormation=(a,b)=>a&&b&&(a.advanceId!=null&&a.advanceId===b.advanceId||a.placementId!=null&&a.placementId===b.placementId);
 function tightFormationGround(g,u){
@@ -634,8 +638,10 @@ export class Game {
     // both sides of the line through one another as they get underway.
     const ordered=arr.length>1&&(mode==='move'||mode==='attack')?assignFormationSlots(this,arr,slots,center,angle,UNIT_DEFS):arr;
     const attackLane=mode==='attack'&&formation!=='spread'&&arr.length>1?{attackSideX:sideX,attackSideY:sideY}:null;
+    const marchTogether=mode==='move'&&arr.length>1;
     ordered.forEach((u,i)=>{const {side,back}=slots[i];
       let goal=this.bound({x:x+sideX*side-fx*back,y:y+sideY*side-fy*back});if(!this.isWalkable(goal.x,goal.y))goal=this.navigation.nearestPassable(goal)||destination;if(!this.navigation.isClearPoint(goal.x,goal.y,u.radius))goal={x:Math.floor(goal.x)+.5,y:Math.floor(goal.y)+.5};if(this.unitClass(u)==='cavalry'&&(mode!=='attack'||u.charging&&((goal.x-u.x)*u.chargeDir.x+(goal.y-u.y)*u.chargeDir.y)<0||locked&&fx*u.chargeDir.x+fy*u.chargeDir.y<.5))this.stopCharge(u);u.championRegroup=null;u.championCyclePending=false;this.interruptAction(u);u.order={...goal,mode,formation,groupX:x,groupY:y,...attackLane,...(locked?{facingX:fx,facingY:fy}:{})};u.braceTime=0;u.braceDir=null;u.target=null;u.aggroAnchor=null;u.seek=0;u.sweepWait=0;if(UNIT_DEFS[u.type].setupSeconds&&Math.hypot(goal.x-u.x,goal.y-u.y)>.16)u.setupProgress=0;
+      if(marchTogether)u.order.marchTogether=true;
     });
   }
   advance(ids,formation='line',options={},point){return startFormationAdvance(this,ids,formation,UNIT_DEFS,options,point);}
@@ -1412,6 +1418,48 @@ export class Game {
     }
     return {bins,size,stride};
   }
+  meleeApproach(u,target,reach,distance){
+    if(distance<=reach||distance>reach+2.1||u.charging||u.knockT>0||u.order?.advanceId!=null||
+      u.order?.placementId!=null||tightFormationGround(this,u)||tightFormationGround(this,target))return target;
+    const dx=(target.x-u.x)/distance,dy=(target.y-u.y)/distance;
+    const riders=this.unitClass(u)==='cavalry',radius=this.unitDefinition(u).radius,crowd=[];
+    this.hash.visit(u.x,u.y,1.75,ally=>{
+      if(ally===u||ally.hp<=0||!this.allied(u.team,ally.team))return;
+      const x=ally.x-u.x,y=ally.y-u.y,forward=x*dx+y*dy;
+      if(forward>.04&&forward<distance)crowd.push({x,y,clearance:radius+ally.radius+.16});
+    });
+    if(!crowd.length)return target;
+
+    // Offer a side route around the bodies already between us and the target.
+    // Check the path as well as the ending position so two units can pass.
+    const crowdCost=(x,y)=>{
+      const length2=x*x+y*y;
+      let cost=0;
+      for(const ally of crowd){
+        const along=clamp((ally.x*x+ally.y*y)/length2,0,1);
+        const gap2=(ally.x-x*along)**2+(ally.y-y*along)**2;
+        if(gap2<ally.clearance**2)cost+=ally.clearance-Math.sqrt(gap2);
+      }
+      return cost;
+    };
+    const ring=reach-.055,forward=distance-ring;
+    let best=target,bestCost=crowdCost(dx*forward,dy*forward);
+    if(bestCost<.05)return target;
+    // Horse approaches use shallower turns to let riders build a real run-up.
+    const firstSide=u.id%2?1:-1;
+    for(const angle of (riders?cavalryApproachAngles:meleeApproachAngles)){
+      for(const side of [firstSide,-firstSide]){
+        const depth=distance-ring*angle.back,lateral=ring*angle.side*side;
+        const x=dx*depth-dy*lateral,y=dy*depth+dx*lateral;
+        const cost=crowdCost(x,y)+angle.cost;
+        const end={x:u.x+x,y:u.y+y};
+        if(cost<bestCost-.025&&this.navigation.clearSegment(u,end,radius)){
+          bestCost=cost;best=end;
+        }
+      }
+    }
+    return best;
+  }
   updateUnits(dt){
     this.updateExpansionOrders();this.updatePatrolOrders();this.updateSpecialists(dt);updateFormationAdvances(this,dt,UNIT_DEFS);
     const collisionBuildings=this.buildingCollisionGrid(),emptyBuildings=[];
@@ -1485,7 +1533,12 @@ export class Game {
       if(target){const distance=Math.sqrt(ds(u,target)),extra=BUILD_DEFS[target.type]?this.buildingRadius(target):.07;
         const leash=mode==='hold'?range+1:6.5;if(distance>leash&&mode==='hold'){u.target=null;target=null;}
         else if(distance<=range+extra&&(order.targetId==null||!(this.isRanged(u)||u.type==='beacon_engineer'||d.lanceChampion)||this.combatTerrain.canShoot(u,target))){if(u.cooldown<=0)this.attack(u,target);if(u.charging&&BUILD_DEFS[target.type])this.stopCharge(u);}
-        else if(mode!=='hold'&&!locked){tx=target.x;ty=target.y;moving=true;}
+        else if(mode!=='hold'&&!locked){
+          const kind=this.unitClass(u);
+          const approach=(kind==='infantry'||kind==='cavalry')&&!this.isRanged(u)?
+            this.meleeApproach(u,target,range+extra,distance):target;
+          tx=approach.x;ty=approach.y;moving=true;
+        }
       }
       if(!target&&order){const goal=u.aggroAnchor?.returning?u.aggroAnchor:order,distance=Math.hypot(goal.x-u.x,goal.y-u.y);if(distance>arrival){tx=goal.x;ty=goal.y;moving=true;}}
       // A facing order is a deliberate formation march, never an invitation to
@@ -1495,7 +1548,10 @@ export class Game {
       if(u.disciplineUntil>this.time&&mode==='attack'&&order&&Math.hypot(order.x-u.x,order.y-u.y)>.16){tx=order.x;ty=order.y;moving=true;}
       if(u.charging){tx=u.x+u.chargeDir.x;ty=u.y+u.chargeDir.y;moving=true;}
       if(d.crossbow&&(u.reload||u.crossbowAim)&&!['move','advance','expand','patrol','retreat'].includes(mode)){moving=false;tx=u.x;ty=u.y;}
-      if(moving&&!u.charging&&!this.isHuman(u.team)&&this.unitClass(u)==='cavalry'&&!d.noCharge&&mode==='attack'&&!locked&&target){const approach=this.aiCavalryApproach(u,target);tx=approach.x;ty=approach.y;}
+      if(moving&&!u.charging&&!this.isHuman(u.team)&&this.unitClass(u)==='cavalry'&&!d.noCharge&&mode==='attack'&&!locked&&target){
+        const approach=this.aiCavalryApproach(u,target);
+        if(approach!==target){tx=approach.x;ty=approach.y;}
+      }
       if(trebuchetLocked)moving=false;
       if(moving&&!u.charging){const waypoint=this.navigation.steer(u,{x:tx,y:ty},this.unitClass(u));tx=waypoint.x;ty=waypoint.y;if(waypoint.blocked)moving=false;}
       let mx=0,my=0;
@@ -1532,7 +1588,7 @@ export class Game {
           const friendlyRoom=!tightGround&&this.allied(u.team,o.team)&&!sameFormation(order,o.order)&&!tightFormationGround(this,o);
           // Preserve the spacing of a held line or soldiers following the
           // same march order, including when the first ranks have arrived.
-          const widen=friendlyRoom&&!keepingAssignedSpacing(order,o.order);
+          const widen=friendlyRoom&&!keepingAssignedSpacing(u,o);
           const min=widen?allyClearance:friendlyRoom?Math.max(.48,body+.055):body+.055;
           if(dd>=min*min)return;
           if(dd<.000001){
@@ -1576,7 +1632,7 @@ export class Game {
       const body=radius+UNIT_DEFS[o.type].radius,allyBodyClearance=Math.max(ALLY_BODY_CLEARANCE,body+ALLY_BODY_GAP);
       if(dd>=allyBodyClearance**2)return;
       const friendlyRoom=!tightGround&&this.allied(u.team,o.team)&&!sameFormation(u.order,o.order)&&!tightFormationGround(this,o);
-      const min=friendlyRoom?(keepingAssignedSpacing(u.order,o.order)?body+.055:allyBodyClearance):body*.92;
+      const min=friendlyRoom?(keepingAssignedSpacing(u,o)?body+.055:allyBodyClearance):body*.92;
       if(dd>=min*min)return;
       if(dd<.0000001){dx=.0001*Math.cos(u.id);dy=.0001*Math.sin(u.id);dd=dx*dx+dy*dy;}
       const len=Math.sqrt(dd),shift=Math.min(.055,(min-len)*.4);
