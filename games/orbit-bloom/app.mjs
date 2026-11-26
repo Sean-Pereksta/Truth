@@ -1,7 +1,7 @@
 import { FLOWERS, LEVELS, NEEDS, POTS, getLevel } from './levels.mjs';
 import { applyCommand, canReachTarget, createMatch, getPlantNeed, getTruckWindow, getWeather, stepMatch } from './sim.mjs';
 import { createRoomClient, listPublicRooms, probeRoom, resolveRoomCode, roomJoinUrl } from './network.mjs';
-import { drawPlant } from './pixel-art.mjs';
+import { drawPaintedPlant, loadPaintedWorld } from './painted-world.mjs';
 import { createBoardRenderer, drawMenuArt, THEME_COLORS } from './render.mjs';
 
 const $ = id => document.getElementById(id);
@@ -33,6 +33,8 @@ let lastFrame = performance.now();
 let lastHud = 0;
 let lastMenuPaint = 0;
 let directoryRequest = 0;
+
+void loadPaintedWorld().then(() => { lastMenuPaint = 0; });
 
 function readPreference(key, fallback) {
   try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
@@ -151,7 +153,13 @@ function makeOrder(order) {
   const art = document.createElement('canvas');
   art.width = art.height = 32;
   art.setAttribute('aria-hidden', 'true');
-  drawPlant(art.getContext('2d'), flower.id, 'bloom', 16, 31, 30, 0, { pot: flower.pot });
+  const paintIcon = () => {
+    const context = art.getContext('2d');
+    context.clearRect(0, 0, 32, 32);
+    drawPaintedPlant(context, flower.id, 'bloom', 16, 31, 28, 0, { pot: flower.pot, effects: false });
+  };
+  paintIcon();
+  void loadPaintedWorld().then(() => { if (card.isConnected) paintIcon(); });
   const copy = document.createElement('div');
   copy.className = 'order-text';
   const title = document.createElement('strong');
