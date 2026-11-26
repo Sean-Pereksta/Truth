@@ -1,7 +1,9 @@
-import { drawBorderArt, drawEnvironmentTile, drawFloorTile, drawGreenhouseDressing, drawNeedBubble, drawPlant, drawScenery, drawStation } from './pixel-art.mjs';
+import { drawBorderArt, drawEnvironmentTile, drawFloorTile, drawGreenhouseDressing, drawNeedBubble } from './pixel-art.mjs';
 import { createAtmosphere } from './atmosphere.mjs';
-import { createGreenhouseEffects, drawBloomHalo } from './effects.mjs';
+import { createGreenhouseEffects, drawBloomHalo, drawStationEffect } from './effects.mjs';
 import { drawPaintedGardener } from './gardeners.mjs';
+import { drawPaintedFloor, drawWaterChannel, paintedFloorReady } from './painted-floor.mjs';
+import { drawPaintedPlant, drawPaintedScenery, drawPaintedStation } from './painted-world.mjs';
 import { getPlantNeed, getTruckWindow } from './sim.mjs';
 
 const tile = 48;
@@ -34,6 +36,18 @@ function isChannel(theme, x) {
   return theme === 'switchyard' && x === 5;
 }
 
+function rounded(ctx, x, y, width, height, radius, fill, stroke) {
+  ctx.beginPath();
+  ctx.roundRect(x, y, width, height, radius);
+  ctx.fillStyle = fill;
+  ctx.fill();
+  if (stroke) {
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = stroke;
+    ctx.stroke();
+  }
+}
+
 function drawBelt(ctx, belt, time) {
   const route = belt.path.map(center);
   for (const [i, point] of route.entries()) {
@@ -45,24 +59,34 @@ function drawBelt(ctx, belt, time) {
     ctx.translate(point.x, point.y);
     ctx.rotate(Math.atan2(dy, dx));
     const length = Math.hypot(dx, dy);
-    block(ctx, '#211825', -4, -11, length + 8, 24);
-    block(ctx, '#7d4c50', 0, -10, length, 20);
-    block(ctx, '#28283f', 0, -7, length, 14);
+    rounded(ctx, -3, -10, length + 6, 22, 4, '#352839', '#2a2134');
+    const track = ctx.createLinearGradient(0, -10, 0, 10);
+    track.addColorStop(0, '#d2a47e');
+    track.addColorStop(.24, '#7d6260');
+    track.addColorStop(.31, '#353147');
+    track.addColorStop(.74, '#3c394b');
+    track.addColorStop(.83, '#8d6257');
+    track.addColorStop(1, '#ddb08c');
+    rounded(ctx, 0, -10, length, 20, 2, track);
     for (let p = Math.floor(time * 20) % 8; p < length; p += 8) {
-      block(ctx, '#564f69', p, -7, 2, 14);
+      rounded(ctx, p, -6, 2.4, 12, .8, '#78698175');
     }
     for (let p = 8; p < length - 4; p += 16) {
-      block(ctx, '#ffd78c', p, -1, 7, 2);
-      block(ctx, '#ffd78c', p + 4, -4, 2, 2);
-      block(ctx, '#ffd78c', p + 4, 2, 2, 2);
+      ctx.strokeStyle = '#f6d492';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(p, -3);
+      ctx.lineTo(p + 4, 0);
+      ctx.lineTo(p, 3);
+      ctx.stroke();
     }
     ctx.restore();
   }
   for (const [i, point] of [route[0], route.at(-1)].entries()) {
-    block(ctx, '#282133', point.x - 14, point.y - 12, 28, 24);
-    block(ctx, i ? '#abd7d1' : '#f9bb72', point.x - 12, point.y - 10, 24, 20);
-    block(ctx, '#59485a', point.x - 9, point.y - 7, 18, 14);
-    block(ctx, i ? '#75e3cd' : '#ffe4ad', point.x - 8, point.y + 10, 16, 2);
+    const accent = i ? '#abd7d1' : '#f9bb72';
+    rounded(ctx, point.x - 14, point.y - 12, 28, 24, 5, '#3d3148', '#201d30');
+    rounded(ctx, point.x - 11, point.y - 9, 22, 18, 4, '#625167', accent);
+    rounded(ctx, point.x - 8, point.y + 8, 16, 2, 1, accent);
   }
 }
 
@@ -76,10 +100,9 @@ function drawPlatformRoute(ctx, layout, boat) {
   }
   for (const [index, point] of [a, b].entries()) {
     const arrived = boat?.mode === 'docked' && boat.stopIndex === index;
-    block(ctx, '#223248', point.x - 20, point.y - 15, 40, 30);
-    block(ctx, '#728a9f', point.x - 17, point.y - 12, 34, 24);
-    block(ctx, '#485b76', point.x - 14, point.y - 9, 28, 18);
-    block(ctx, arrived ? '#93f4c9' : '#f6bf7d', point.x - 15, point.y + 9, 30, 3);
+    rounded(ctx, point.x - 20, point.y - 15, 40, 30, 5, '#334157', '#25293d');
+    rounded(ctx, point.x - 15, point.y - 10, 30, 20, 4, '#566779', '#abc8b7');
+    rounded(ctx, point.x - 13, point.y + 8, 26, 2, 1, arrived ? '#93f4c9' : '#f6bf7d');
     block(ctx, '#dce9f5', point.x - 1, point.y - 5, 2, 10);
     block(ctx, '#dce9f5', point.x - 5, point.y - 1, 10, 2);
   }
@@ -87,14 +110,83 @@ function drawPlatformRoute(ctx, layout, boat) {
 
 function drawPlatform(ctx, boat) {
   const { x, y } = center(boat);
-  block(ctx, '#1c1832', x - 22, y - 16, 44, 35);
-  block(ctx, '#6e4c7d', x - 20, y - 15, 40, 31);
-  block(ctx, '#e7b78d', x - 18, y - 12, 36, 23);
-  for (let i = 0; i < 4; i++) block(ctx, '#a97887', x - 16, y - 9 + i * 5, 32, 1);
-  block(ctx, '#fbeba8', x - 15, y - 10, 30, 2);
-  block(ctx, '#a691c3', x - 17, y + 11, 34, 4);
-  block(ctx, '#8ce8d9', x - 17, y - 14, 4, 4);
-  block(ctx, '#8ce8d9', x + 13, y - 14, 4, 4);
+  ctx.save();
+  const deck = ctx.createLinearGradient(x, y - 16, x, y + 16);
+  deck.addColorStop(0, '#c88c69');
+  deck.addColorStop(.32, '#f4cf97');
+  deck.addColorStop(.92, '#a76360');
+  deck.addColorStop(1, '#634158');
+  ctx.beginPath();
+  ctx.roundRect(x - 21, y - 15, 42, 31, 5);
+  ctx.fillStyle = deck;
+  ctx.fill();
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#49384f';
+  ctx.stroke();
+  ctx.lineWidth = .7;
+  for (let i = 0; i < 5; i++) {
+    ctx.strokeStyle = i % 2 ? '#fff0b280' : '#5c395d72';
+    ctx.beginPath();
+    ctx.moveTo(x - 17, y - 9 + i * 4.5);
+    ctx.quadraticCurveTo(x, y - 8 + i * 4.5, x + 17, y - 9 + i * 4.5);
+    ctx.stroke();
+  }
+  for (const sign of [-1, 1]) {
+    ctx.fillStyle = '#cef4d3';
+    ctx.beginPath();
+    ctx.arc(x + sign * 15, y - 11, 2.3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function paintWindow(ctx, atmosphere, x, width, tile) {
+  const left = x * tile;
+  if (!atmosphere.drawWindowView(ctx, { x: left + 4, y: 4, width: tile - 8, height: tile * .63,
+    position: left / width, span: tile / width })) return;
+  ctx.save();
+  ctx.strokeStyle = '#473a4a';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.roundRect(left + 3, 3, tile - 6, tile * .67, 4);
+  ctx.stroke();
+  ctx.strokeStyle = '#e1c5a7aa';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(left + tile * .54, 4);
+  ctx.lineTo(left + tile * .54, tile * .69);
+  ctx.moveTo(left + 5, tile * .42);
+  ctx.lineTo(left + tile - 5, tile * .42);
+  ctx.stroke();
+  ctx.fillStyle = '#eeefe22c';
+  ctx.beginPath();
+  ctx.moveTo(left + 8, 8);
+  ctx.lineTo(left + 20, 8);
+  ctx.lineTo(left + 8, 26);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function paintDeckRim(ctx, width, height, theme) {
+  const brass = THEME_COLORS[theme] ?? '#e6ceb0';
+  ctx.save();
+  const wood = ctx.createLinearGradient(0, 0, width, height);
+  wood.addColorStop(0, '#5b4c58');
+  wood.addColorStop(.45, '#372d40');
+  wood.addColorStop(1, '#211f35');
+  ctx.strokeStyle = wood;
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.roundRect(3, 3, width - 6, height - 6, 6);
+  ctx.stroke();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = `${brass}a3`;
+  ctx.beginPath();
+  ctx.roundRect(4, 4, width - 8, height - 8, 5);
+  ctx.stroke();
+  ctx.restore();
 }
 
 function spotlight(station) {
@@ -127,6 +219,7 @@ export function createBoardRenderer(canvas) {
   let crossing;
   let edgeProps;
   let board;
+  let textured;
 
   function prepare(map) {
     level = map;
@@ -151,7 +244,10 @@ export function createBoardRenderer(canvas) {
       const seed = map.name.length % 3;
       edgeProps.push([2 + seed, 0], [map.width - 3 - seed, 0], [0, 3 + seed], [map.width - 1, 6 - seed]);
     }
+    for (let y = 1; y < map.height - 1; y += 3) edgeProps.push([0, y], [map.width - 1, y]);
+    for (let x = 1; x < map.width - 1; x += 3) edgeProps.push([x, map.height - 1]);
     edgeProps = edgeProps.filter(([x, y]) => map.layout[y]?.[x] === '.' && !crossing.has(`${x}:${y}`));
+    edgeProps = [...new Map(edgeProps.map(point => [point.join(':'), point])).values()];
     board = { x: 34, y: 20, width: map.width * tile, height: map.height * tile };
     background.width = board.width;
     background.height = board.height;
@@ -159,16 +255,7 @@ export function createBoardRenderer(canvas) {
     canvas.height = board.height + board.y + 44;
     ctx.imageSmoothingEnabled = false;
     floor.imageSmoothingEnabled = false;
-    for (const [y, row] of map.layout.entries()) {
-      for (const [x, cell] of [...row].entries()) {
-        const left = x * tile;
-        const top = y * tile;
-        drawFloorTile(floor, left, top, tile, map.theme);
-        drawEnvironmentTile(floor, left, top, tile, cell === '#' && isChannel(map.theme, x) ? ':' : cell, map.theme);
-      }
-    }
-    drawBorderArt(floor, board.width, board.height, tile, map.theme);
-    drawGreenhouseDressing(floor, map, tile, crossing);
+    paintGround();
     lights.clear();
     for (const station of map.stations) {
       if (!boothTypes.has(station.type) && station.type !== 'shower') continue;
@@ -176,11 +263,35 @@ export function createBoardRenderer(canvas) {
     }
   }
 
+  function paintGround() {
+    const map = level;
+    textured = paintedFloorReady();
+    if (textured) drawPaintedFloor(floor, map, tile);
+    for (const [y, row] of map.layout.entries()) {
+      for (const [x, cell] of [...row].entries()) {
+        const left = x * tile;
+        const top = y * tile;
+        if (!textured) drawFloorTile(floor, left, top, tile, map.theme);
+        drawEnvironmentTile(floor, left, top, tile, cell === '#' && isChannel(map.theme, x) ? ':' : cell, map.theme);
+      }
+    }
+    if (textured) paintDeckRim(floor, board.width, board.height, map.theme);
+    else {
+      drawBorderArt(floor, board.width, board.height, tile, map.theme);
+      drawGreenhouseDressing(floor, map, tile, crossing);
+    }
+  }
+
   function draw(state, myId, time, effects, selected) {
     atmosphere.draw(ctx, { width: canvas.width, height: canvas.height, board, theme: level.theme, time, effects });
     ctx.save();
     ctx.translate(board.x, board.y);
+    if (!textured && paintedFloorReady()) paintGround();
     ctx.drawImage(background, 0, 0);
+    drawWaterChannel(ctx, level, tile, time, effects);
+    for (let x = 1; x < level.width - 1; x++) {
+      if (level.layout[0][x] === '.' && !crossing.has(`${x}:0`)) paintWindow(ctx, atmosphere, x, board.width, tile);
+    }
     greenhouseEffects.update(state, time, effects);
     greenhouseEffects.drawAmbient(ctx, time);
     const visualTime = effects ? time : 0;
@@ -234,12 +345,12 @@ export function createBoardRenderer(canvas) {
     }
 
     for (const [x, y] of edgeProps) {
-      scene.push({ y: y - .1, paint: () => drawScenery(ctx, (x + .5) * tile, (y + .87) * tile, tile * 1.06, level.theme, visualTime, x + y + 3) });
+      scene.push({ y: y - .1, paint: () => drawPaintedScenery(ctx, (x + .5) * tile, (y + .87) * tile, tile * 1.06, level.theme, visualTime, x + y + 3) });
     }
 
     for (const [y, row] of level.layout.entries()) {
       for (const [x, cell] of [...row].entries()) {
-        if (cell === '#' && !isChannel(level.theme, x) && !crossing.has(`${x}:${y}`)) scene.push({ y, paint: () => drawScenery(ctx, (x + .5) * tile, (y + .87) * tile, tile * 1.06, level.theme, visualTime, x + y * 11) });
+        if (cell === '#' && !isChannel(level.theme, x) && !crossing.has(`${x}:${y}`)) scene.push({ y, paint: () => drawPaintedScenery(ctx, (x + .5) * tile, (y + .87) * tile, tile * 1.06, level.theme, visualTime, x + y * 11) });
       }
     }
 
@@ -252,11 +363,13 @@ export function createBoardRenderer(canvas) {
       const large = station.type === 'truck' ? 1.22 : 1.06;
       scene.push({ y: station.y, paint() {
         block(ctx, selected?.stationId === station.id ? '#fff2b4' : stationColor(station), x - 17, y + 1, 34, selected?.stationId === station.id ? 3 : 2);
-        drawStation(ctx, station.type, x, y, tile * large, visualTime, { active, variant: station.variant, palette: level.theme });
+        const size = tile * large;
+        drawPaintedStation(ctx, station.type, x, y, size, visualTime, { active, variant: station.variant, palette: level.theme, effects });
+        drawStationEffect(ctx, { type: station.type, x, y, size, time, active, effects });
         if (plant) {
           const need = getPlantNeed(plant, state);
           if (plant.phase === 'bloom') drawBloomHalo(ctx, x, y - tile * .13, tile * .75, plant.flowerId, visualTime, effects);
-          drawPlant(ctx, plant.flowerId, plant.phase, x, y - tile * .13, tile * .75, visualTime, { pot: plant.pot, quality: plant.quality, progress: need?.progress });
+          drawPaintedPlant(ctx, plant.flowerId, plant.phase, x, y - tile * .13, tile * .75, visualTime, { pot: plant.pot, quality: plant.quality, progress: need?.progress, effects });
           if (need) bubbles.push({ need, x: x + (boothTypes.has(station.type) ? 15 : 9), y: y - 38, stationId: station.id });
         }
       } });
@@ -290,7 +403,7 @@ export function createBoardRenderer(canvas) {
           const potX = x + view.facing * 9;
           const potY = y - height * .42;
           if (plant.phase === 'bloom') drawBloomHalo(ctx, potX, potY, tile * .58, plant.flowerId, visualTime, effects);
-          drawPlant(ctx, plant.flowerId, plant.phase, potX, potY, tile * .58, visualTime, { pot: plant.pot, quality: plant.quality, progress: need?.progress });
+          drawPaintedPlant(ctx, plant.flowerId, plant.phase, potX, potY, tile * .58, visualTime, { pot: plant.pot, quality: plant.quality, progress: need?.progress, effects, shadow: false });
           if (need) bubbles.push({ need, x: x + 18, y: y - 39 });
         }
       } });
@@ -303,7 +416,7 @@ export function createBoardRenderer(canvas) {
       scene.push({ y: plant.y, paint() {
         const need = getPlantNeed(plant, state);
         if (plant.phase === 'bloom') drawBloomHalo(ctx, x, y, tile * .79, plant.flowerId, visualTime, effects);
-        drawPlant(ctx, plant.flowerId, plant.phase, x, y, tile * .79, visualTime, { pot: plant.pot, quality: plant.quality, progress: need?.progress });
+        drawPaintedPlant(ctx, plant.flowerId, plant.phase, x, y, tile * .79, visualTime, { pot: plant.pot, quality: plant.quality, progress: need?.progress, effects });
         if (need) bubbles.push({ need, x, y: y - 36, plantId: plant.beltId ? undefined : plant.id });
       } });
     }
@@ -354,13 +467,13 @@ export function drawMenuArt(canvas, t) {
     if (bright && i % 9 === 0) block(ctx, '#d6b6e0', x - 3, y + 1, 8, 1);
   }
   for (let x = 0; x < width; x += 48) drawFloorTile(ctx, x, height - 28, 48, 'dawn');
-  for (const [index, x] of [18, 118, 407, 511].entries()) drawScenery(ctx, x, height - 15, 70, 'aurora', t, index);
-  drawStation(ctx, 'truck', 64, height - 15, 108, t, { active: true, palette: 'dawn' });
-  drawStation(ctx, 'moon', 256, height - 31, 145, t, { active: true, palette: 'moon' });
+  for (const [index, x] of [18, 118, 407, 511].entries()) drawPaintedScenery(ctx, x, height - 15, 70, 'aurora', t, index);
+  drawPaintedStation(ctx, 'truck', 64, height - 15, 108, t, { active: true, palette: 'dawn', effects: Boolean(t) });
+  drawPaintedStation(ctx, 'moon', 256, height - 31, 145, t, { active: true, palette: 'moon', effects: Boolean(t) });
   drawPaintedGardener(ctx, 169, height - 12, 111, t, { index: 0, facing: 1, carrying: true });
-  drawPlant(ctx, 'sunflare', 'bloom', 188, height - 54, 76, t, { pot: 'clay' });
-  drawPlant(ctx, 'moonbell', 'bloom', 262, height - 47, 86, t, { pot: 'silver' });
+  drawPaintedPlant(ctx, 'sunflare', 'bloom', 188, height - 54, 76, t, { pot: 'clay', effects: Boolean(t), shadow: false });
+  drawPaintedPlant(ctx, 'moonbell', 'bloom', 262, height - 47, 86, t, { pot: 'silver', effects: Boolean(t) });
   drawPaintedGardener(ctx, 367, height - 9, 111, t, { index: 1, facing: -1, carrying: true });
-  drawPlant(ctx, 'cometvine', 'bloom', 348, height - 51, 80, t, { pot: 'glass' });
-  drawStation(ctx, 'shower', 460, height - 17, 115, t, { active: true, palette: 'aurora' });
+  drawPaintedPlant(ctx, 'cometvine', 'bloom', 348, height - 51, 80, t, { pot: 'glass', effects: Boolean(t), shadow: false });
+  drawPaintedStation(ctx, 'shower', 460, height - 17, 115, t, { active: true, palette: 'aurora', effects: Boolean(t) });
 }
