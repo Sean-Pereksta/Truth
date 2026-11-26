@@ -1,7 +1,8 @@
-import { drawBorderArt, drawEnvironmentTile, drawFloorTile, drawGreenhouseDressing, drawNeedBubble } from './pixel-art.mjs';
+import { drawFloorTile, drawNeedBubble } from './pixel-art.mjs';
 import { createAtmosphere } from './atmosphere.mjs';
 import { createGreenhouseEffects, drawBloomHalo, drawStationEffect } from './effects.mjs';
 import { drawPaintedGardener } from './gardeners.mjs';
+import { drawCounters, drawDispatchApron, drawInterior, drawInteriorWindows, interiorArtReady, texture as paintMaterial } from './interior.mjs';
 import { drawPaintedFloor, drawWaterChannel, paintedFloorReady } from './painted-floor.mjs';
 import { drawPaintedPlant, drawPaintedScenery, drawPaintedStation } from './painted-world.mjs';
 import { getPlantNeed, getTruckWindow } from './sim.mjs';
@@ -28,12 +29,6 @@ function stationColor(station) {
 
 function center(point) {
   return { x: (point.x + .5) * tile, y: (point.y + .5) * tile };
-}
-
-function isChannel(theme, x) {
-  if (theme === 'tidalglass' || theme === 'drawbridge') return x >= 4 && x <= 6;
-  if (theme === 'saturn') return x === 3 || x === 7;
-  return theme === 'switchyard' && x === 5;
 }
 
 function rounded(ctx, x, y, width, height, radius, fill, stroke) {
@@ -68,6 +63,8 @@ function drawBelt(ctx, belt, time) {
     track.addColorStop(.83, '#8d6257');
     track.addColorStop(1, '#ddb08c');
     rounded(ctx, 0, -10, length, 20, 2, track);
+    paintMaterial(ctx, 'trim', 0, -10, length, 3.8, { radius: 1, opacity: .83 });
+    paintMaterial(ctx, 'trim', 0, 6.2, length, 3.8, { radius: 1, opacity: .83 });
     for (let p = Math.floor(time * 20) % 8; p < length; p += 8) {
       rounded(ctx, p, -6, 2.4, 12, .8, '#78698175');
     }
@@ -102,6 +99,7 @@ function drawPlatformRoute(ctx, layout, boat) {
     const arrived = boat?.mode === 'docked' && boat.stopIndex === index;
     rounded(ctx, point.x - 20, point.y - 15, 40, 30, 5, '#334157', '#25293d');
     rounded(ctx, point.x - 15, point.y - 10, 30, 20, 4, '#566779', '#abc8b7');
+    paintMaterial(ctx, 'dock', point.x - 14, point.y - 9, 28, 18, { radius: 3, opacity: .56 });
     rounded(ctx, point.x - 13, point.y + 8, 26, 2, 1, arrived ? '#93f4c9' : '#f6bf7d');
     block(ctx, '#dce9f5', point.x - 1, point.y - 5, 2, 10);
     block(ctx, '#dce9f5', point.x - 5, point.y - 1, 10, 2);
@@ -123,6 +121,7 @@ function drawPlatform(ctx, boat) {
   ctx.lineWidth = 2;
   ctx.strokeStyle = '#49384f';
   ctx.stroke();
+  paintMaterial(ctx, 'dock', x - 19, y - 13, 38, 27, { radius: 4, opacity: .82 });
   ctx.lineWidth = .7;
   for (let i = 0; i < 5; i++) {
     ctx.strokeStyle = i % 2 ? '#fff0b280' : '#5c395d72';
@@ -137,55 +136,6 @@ function drawPlatform(ctx, boat) {
     ctx.arc(x + sign * 15, y - 11, 2.3, 0, Math.PI * 2);
     ctx.fill();
   }
-  ctx.restore();
-}
-
-function paintWindow(ctx, atmosphere, x, width, tile) {
-  const left = x * tile;
-  if (!atmosphere.drawWindowView(ctx, { x: left + 4, y: 4, width: tile - 8, height: tile * .63,
-    position: left / width, span: tile / width })) return;
-  ctx.save();
-  ctx.strokeStyle = '#473a4a';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.roundRect(left + 3, 3, tile - 6, tile * .67, 4);
-  ctx.stroke();
-  ctx.strokeStyle = '#e1c5a7aa';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(left + tile * .54, 4);
-  ctx.lineTo(left + tile * .54, tile * .69);
-  ctx.moveTo(left + 5, tile * .42);
-  ctx.lineTo(left + tile - 5, tile * .42);
-  ctx.stroke();
-  ctx.fillStyle = '#eeefe22c';
-  ctx.beginPath();
-  ctx.moveTo(left + 8, 8);
-  ctx.lineTo(left + 20, 8);
-  ctx.lineTo(left + 8, 26);
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
-}
-
-function paintDeckRim(ctx, width, height, theme) {
-  const brass = THEME_COLORS[theme] ?? '#e6ceb0';
-  ctx.save();
-  const wood = ctx.createLinearGradient(0, 0, width, height);
-  wood.addColorStop(0, '#5b4c58');
-  wood.addColorStop(.45, '#372d40');
-  wood.addColorStop(1, '#211f35');
-  ctx.strokeStyle = wood;
-  ctx.lineWidth = 5;
-  ctx.beginPath();
-  ctx.roundRect(3, 3, width - 6, height - 6, 6);
-  ctx.stroke();
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = `${brass}a3`;
-  ctx.beginPath();
-  ctx.roundRect(4, 4, width - 8, height - 8, 5);
-  ctx.stroke();
   ctx.restore();
 }
 
@@ -216,41 +166,18 @@ export function createBoardRenderer(canvas) {
   const lights = new Map();
   let targets = [];
   let level;
-  let crossing;
-  let edgeProps;
   let board;
   let textured;
+  let furnished;
 
   function prepare(map) {
     level = map;
     actors.clear();
     targets = [];
     greenhouseEffects.reset(map);
-    crossing = new Set();
-    for (const belt of map.conveyors ?? []) {
-      for (const point of belt.path) crossing.add(`${point.x}:${point.y}`);
-    }
-    for (const platform of map.platforms ?? []) {
-      const [from, to] = platform.stops;
-      const count = Math.max(Math.abs(to.x - from.x), Math.abs(to.y - from.y));
-      for (let n = 0; n <= count; n++) {
-        const x = Math.round(from.x + (to.x - from.x) * n / count);
-        const y = Math.round(from.y + (to.y - from.y) * n / count);
-        crossing.add(`${x}:${y}`);
-      }
-    }
-    edgeProps = [[0, 0], [map.width - 1, 0], [0, map.height - 1], [map.width - 1, map.height - 1]];
-    if (map.platforms?.length || map.conveyors?.length) {
-      const seed = map.name.length % 3;
-      edgeProps.push([2 + seed, 0], [map.width - 3 - seed, 0], [0, 3 + seed], [map.width - 1, 6 - seed]);
-    }
-    for (let y = 1; y < map.height - 1; y += 3) edgeProps.push([0, y], [map.width - 1, y]);
-    for (let x = 1; x < map.width - 1; x += 3) edgeProps.push([x, map.height - 1]);
-    edgeProps = edgeProps.filter(([x, y]) => map.layout[y]?.[x] === '.' && !crossing.has(`${x}:${y}`));
-    edgeProps = [...new Map(edgeProps.map(point => [point.join(':'), point])).values()];
-    board = { x: 34, y: 20, width: map.width * tile, height: map.height * tile };
+    board = { x: 34, y: 42, width: map.width * tile, height: map.height * tile };
     background.width = board.width;
-    background.height = board.height;
+    background.height = board.height + board.y;
     canvas.width = board.width + board.x * 2;
     canvas.height = board.height + board.y + 44;
     ctx.imageSmoothingEnabled = false;
@@ -266,32 +193,25 @@ export function createBoardRenderer(canvas) {
   function paintGround() {
     const map = level;
     textured = paintedFloorReady();
-    if (textured) drawPaintedFloor(floor, map, tile);
-    for (const [y, row] of map.layout.entries()) {
-      for (const [x, cell] of [...row].entries()) {
-        const left = x * tile;
-        const top = y * tile;
-        if (!textured) drawFloorTile(floor, left, top, tile, map.theme);
-        drawEnvironmentTile(floor, left, top, tile, cell === '#' && isChannel(map.theme, x) ? ':' : cell, map.theme);
-      }
-    }
-    if (textured) paintDeckRim(floor, board.width, board.height, map.theme);
-    else {
-      drawBorderArt(floor, board.width, board.height, tile, map.theme);
-      drawGreenhouseDressing(floor, map, tile, crossing);
-    }
+    furnished = interiorArtReady();
+    floor.clearRect(0, 0, background.width, background.height);
+    floor.save();
+    floor.translate(0, board.y);
+    drawPaintedFloor(floor, map, tile);
+    drawInterior(floor, map, tile, THEME_COLORS[map.theme]);
+    drawCounters(floor, map, tile, THEME_COLORS[map.theme]);
+    floor.restore();
   }
 
   function draw(state, myId, time, effects, selected) {
     atmosphere.draw(ctx, { width: canvas.width, height: canvas.height, board, theme: level.theme, time, effects });
     ctx.save();
     ctx.translate(board.x, board.y);
-    if (!textured && paintedFloorReady()) paintGround();
-    ctx.drawImage(background, 0, 0);
+    if ((!textured && paintedFloorReady()) || (!furnished && interiorArtReady())) paintGround();
+    ctx.drawImage(background, 0, -board.y);
     drawWaterChannel(ctx, level, tile, time, effects);
-    for (let x = 1; x < level.width - 1; x++) {
-      if (level.layout[0][x] === '.' && !crossing.has(`${x}:0`)) paintWindow(ctx, atmosphere, x, board.width, tile);
-    }
+    drawDispatchApron(ctx, level, tile, THEME_COLORS[level.theme]);
+    drawInteriorWindows(ctx, level, tile, atmosphere);
     greenhouseEffects.update(state, time, effects);
     greenhouseEffects.drawAmbient(ctx, time);
     const visualTime = effects ? time : 0;
@@ -323,11 +243,13 @@ export function createBoardRenderer(canvas) {
         block(ctx, '#1a2037', at.x - 24, at.y - 24, 48, 48);
         if (state.solo) {
           block(ctx, '#4f695f', at.x - 24, at.y - 16, 48, 32);
+          paintMaterial(ctx, 'dock', at.x - 24, at.y - 16, 48, 32, { radius: 2, opacity: .82 });
           for (let slat = -23; slat < 24; slat += 8) block(ctx, '#8bc2a2', at.x + slat, at.y - 13, 2, 26);
           block(ctx, '#b0d8b3', at.x - 24, at.y - 16, 48, 2);
           block(ctx, '#759680', at.x - 24, at.y + 13, 48, 2);
         } else {
           block(ctx, '#5f5d77', at.x - 10, at.y - 12, 20, 24);
+          paintMaterial(ctx, 'trim', at.x - 10, at.y - 12, 20, 24, { radius: 2, opacity: .68 });
           for (let bar = -8; bar < 10; bar += 5) block(ctx, '#9391a7', at.x + bar, at.y - 11, 2, 22);
         }
       }
@@ -344,25 +266,19 @@ export function createBoardRenderer(canvas) {
       block(ctx, '#9bf1cc', at.x - 1, at.y - 7, 2, 15);
     }
 
-    for (const [x, y] of edgeProps) {
-      scene.push({ y: y - .1, paint: () => drawPaintedScenery(ctx, (x + .5) * tile, (y + .87) * tile, tile * 1.06, level.theme, visualTime, x + y + 3) });
-    }
-
-    for (const [y, row] of level.layout.entries()) {
-      for (const [x, cell] of [...row].entries()) {
-        if (cell === '#' && !isChannel(level.theme, x) && !crossing.has(`${x}:${y}`)) scene.push({ y, paint: () => drawPaintedScenery(ctx, (x + .5) * tile, (y + .87) * tile, tile * 1.06, level.theme, visualTime, x + y * 11) });
-      }
-    }
-
     for (const station of state.stations) {
       const x = (station.x + .5) * tile;
-      const y = (station.y + .91) * tile;
+      const appliance = boothTypes.has(station.type) || station.type === 'shower';
+      const courier = station.type === 'truck';
+      const y = (station.y + (courier ? .91 : appliance ? .77 : .73)) * tile;
       const plant = plants.get(station.plantId);
       const task = tasks.get(station.id);
       const active = station.type === 'truck' ? truck.open : Boolean(plant || task);
-      const large = station.type === 'truck' ? 1.22 : 1.06;
+      const large = courier ? 1.13 : appliance ? .88 : .8;
       scene.push({ y: station.y, paint() {
-        block(ctx, selected?.stationId === station.id ? '#fff2b4' : stationColor(station), x - 17, y + 1, 34, selected?.stationId === station.id ? 3 : 2);
+        const selectedHere = selected?.stationId === station.id;
+        const indicatorY = courier ? y + 2 : (station.y + .94) * tile;
+        if (selectedHere) rounded(ctx, x - 16, indicatorY, 32, 2.5, 1.1, '#fff2b4');
         const size = tile * large;
         drawPaintedStation(ctx, station.type, x, y, size, visualTime, { active, variant: station.variant, palette: level.theme, effects });
         drawStationEffect(ctx, { type: station.type, x, y, size, time, active, effects });
