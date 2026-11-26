@@ -1,9 +1,10 @@
 import {PROTOCOL_VERSION,GAME_VERSION,ASSET_VERSION} from './protocol.js';
 import {createRemoteGame,applySnapshot} from './snapshot.js';
 import {applySnapshotDelta} from './transport-delta.js';
+import {projectileDrawPose} from '../projectile-flight.js';
 
 const COMMANDS=new Set(['command','setFacingLock','idle','advance','placeFormation','attackNearest','attackTarget','hold','retreat','patrol','expand','setTrebuchetDeployment','setRally','clearRally','recruit','build','upgrade','upgradeTownHall','upgradeTower','useHousePower','callTeamOrder','plantStandard','retrieveStandard','refitStandard','reforgeStandard','cancelStandard']);
-const finiteFields=['x','y','motionVX','motionVY','vx','vy','facingX','facingY','faceX','faceY','angle','attackAnim','hit','life','t'];
+const finiteFields=['x','y','motionVX','motionVY','vx','vy','facingX','facingY','faceX','faceY','angle','attackAnim','hit','life','t','flightHeight','flightAngle'];
 const presentationKeys=['units','buildings','projectiles','effects','standards','placedFormations','formationAdvances'];
 const items=value=>value instanceof Map?value.values():value||[];
 const cloneArgs=value=>JSON.parse(JSON.stringify(value,(_key,v)=>v instanceof Set?[...v]:v));
@@ -20,6 +21,10 @@ export class PresentationBuffer{
   const entities=new Map();
   for(const key of presentationKeys)for(const item of items(snapshot[key])){
    const pose={};for(const field of finiteFields)if(Number.isFinite(item[field]))pose[field]=item[field];
+   if(key==='projectiles'){
+    const {height,angle}=projectileDrawPose(item);
+    pose.flightHeight=height;pose.flightAngle=angle;
+   }
    entities.set(key+':'+item.id,pose);
   }
   this.samples.push({time:snapshot.time,sequence:snapshot.sequence,receivedAt,entities});
@@ -36,7 +41,7 @@ export class PresentationBuffer{
    const a=before.entities.get(key+':'+item.id),b=after.entities.get(key+':'+item.id);if(!a||!b)continue;
    const values={};for(const field of finiteFields){
     if(!Number.isFinite(a[field])||!Number.isFinite(b[field]))continue;
-    values[field]=item[field];const change=field==='angle'?Math.atan2(Math.sin(b[field]-a[field]),Math.cos(b[field]-a[field])):b[field]-a[field];item[field]=a[field]+change*mix;
+    values[field]=item[field];const delta=b[field]-a[field];const change=field==='angle'||field==='flightAngle'?Math.atan2(Math.sin(delta),Math.cos(delta)):delta;item[field]=a[field]+change*mix;
    }
    restore.push([item,values]);
   }

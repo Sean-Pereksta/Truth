@@ -68,13 +68,130 @@ export function combatPose(u,g,definition={},moving=false){
 // Retained as a compatibility hook; UI markers are rendered separately.
 export function drawCombatAccents(){}
 
+const EARTH_IMPACT_COLORS={
+  turf:{rim:'#7a633e',pit:'#372a1d',dark:'#51402e',light:'#9b8055',dust:'#b49a71'},
+  forest:{rim:'#5d5032',pit:'#2f2718',dark:'#433923',light:'#8a724a',dust:'#a58c66'},
+  stone:{rim:'#73695a',pit:'#41392c',dark:'#564d40',light:'#a0947c',dust:'#bdb19a'},
+  ford:{rim:'#77918b',pit:'#385652',dark:'#597163',light:'#a7b5a5',dust:'#c0ccc0'}
+};
+const earthDustSprites=new Map();
+const tau=Math.PI*2;
+
+export function isSiegeEarthImpact(effect){
+  return effect.type==='explosion'&&(effect.kind==='catapult'||effect.kind==='trebuchet');
+}
+
+function earthImpactPalette(tile){
+  if(tile?.feature==='ford')return EARTH_IMPACT_COLORS.ford;
+  if(tile?.feature==='pass'||tile?.feature==='bridge'||tile?.terrain==='hill')return EARTH_IMPACT_COLORS.stone;
+  return tile?.terrain==='forest'?EARTH_IMPACT_COLORS.forest:EARTH_IMPACT_COLORS.turf;
+}
+
+function earthNoise(seed,index){
+  let n=Math.imul(seed+index+1,0x45d9f3b);
+  n=Math.imul(n^(n>>>16),0x45d9f3b);
+  return ((n^(n>>>16))>>>0)/0x100000000;
+}
+
+function dustSprite(palette){
+  let canvas=earthDustSprites.get(palette);
+  if(canvas)return canvas;
+  canvas=document.createElement('canvas');
+  canvas.width=canvas.height=48;
+  const c=canvas.getContext('2d'),dust=c.createRadialGradient(23,20,2,24,24,24);
+  dust.addColorStop(0,palette.dust);
+  dust.addColorStop(.48,palette.dust+'b8');
+  dust.addColorStop(.77,palette.dust+'48');
+  dust.addColorStop(1,palette.dust+'00');
+  c.fillStyle=dust;
+  c.fillRect(0,0,48,48);
+  earthDustSprites.set(palette,canvas);
+  return canvas;
+}
+
+function impactEllipse(c,x,y,rx,ry,color){
+  c.beginPath();
+  c.ellipse(x,y,rx,ry,0,0,tau);
+  c.fillStyle=color;
+  c.fill();
+}
+
+export function drawSiegeEarthImpact(c,f,p,tile,lowDetail,ground){
+  const age=clamp(1-f.life/(f.maxLife||1),0,1);
+  const heavy=f.kind==='trebuchet',scale=clamp(f.radius||1.3,.7,1.9);
+  const palette=earthImpactPalette(tile);
+  const seed=Math.round(f.x*1000)+Math.imul(Math.round(f.y*1000),421);
+  c.save();
+  c.translate(p.x,p.y);
+  c.scale(scale,scale);
+
+  if(ground){
+    // Keep the impact point beneath the troops while dust and clods rise above it.
+    c.globalAlpha=.58*(1-smooth(.42,1,age));
+    if(lowDetail||tile?.feature==='ford'){
+      impactEllipse(c,0,0,11,5,palette.rim);
+    }else{
+      c.beginPath();
+      for(let i=0;i<12;i++){
+        const angle=i*tau/12,radius=8+earthNoise(seed,i)*5;
+        const x=Math.cos(angle)*radius,y=Math.sin(angle)*radius*.44;
+        if(i===0)c.moveTo(x,y);else c.lineTo(x,y);
+      }
+      c.closePath();
+      c.fillStyle=palette.rim;
+      c.fill();
+    }
+    impactEllipse(c,0,-.6,7.5,2.8,palette.pit);
+  }else if(lowDetail){
+    c.globalAlpha=.49*(1-age);
+    impactEllipse(c,0,-2-age*7,5+age*14,3+age*5,palette.dust);
+  }else{
+    const puff=dustSprite(palette),count=heavy?8:6;
+    const spread=Math.sqrt(age),rotation=earthNoise(seed,23)*tau;
+    for(let i=0;i<count;i++){
+      const angle=rotation+i*tau/count;
+      const range=(4+earthNoise(seed,32+i)*16)*spread;
+      const size=(5+age*12)*(.74+earthNoise(seed,48+i)*.5);
+      const x=Math.cos(angle)*range+age*4;
+      const y=Math.sin(angle)*range*.36-(3+earthNoise(seed,64+i)*18)*spread;
+      c.globalAlpha=(.35+earthNoise(seed,80+i)*.2)*(1-age)**1.65*(.5+.5*smooth(0,.12,age));
+      c.drawImage(puff,x-size,y-size*.85,size*2,size*1.7);
+    }
+
+    // Uneven launch speeds send stone chips and sod up before they settle.
+    for(let i=0,n=heavy?14:10;i<n;i++){
+      const angle=rotation+i*2.399963;
+      const flight=.31+earthNoise(seed,96+i)*.45,travel=Math.min(1,age/flight);
+      const range=(9+earthNoise(seed,112+i)*22)*travel;
+      const x=Math.cos(angle)*range,y=Math.sin(angle)*range*.46;
+      const height=(4+earthNoise(seed,128+i)*(heavy?18:13))*4*travel*(1-travel);
+      const size=.55+earthNoise(seed,144+i)*1.45;
+      c.globalAlpha=.83*(1-smooth(flight,1,age));
+      c.save();
+      c.translate(x,y-height);
+      c.rotate(angle+travel*3);
+      c.beginPath();
+      c.moveTo(-size,-size*.27);
+      c.lineTo(size*.26,-size*.68);
+      c.lineTo(size,size*.3);
+      c.lineTo(-size*.3,size*.6);
+      c.closePath();
+      c.fillStyle=i%3===0?palette.light:palette.dark;
+      c.fill();
+      c.restore();
+    }
+  }
+  c.restore();
+}
+
 // A crowded rank needs one readable contact per effect/patch. Choose locally
 // visible events before assigning the budget, so hidden impacts cannot suppress
 // a visible cue or disclose a gunner in fog.
 export function visibleCombatEffects(g,bounds,lowDetail=false){
+  if(!g.effects?.length)return [];
   const bursts=new Map(),limit=lowDetail?24:48,cell=lowDetail?48:32;
   const cx=bounds?(bounds.left+bounds.right)/2:0,cy=bounds?(bounds.top+bounds.bottom)/2:0;
-  for(const f of g.effects||[]){
+  for(const f of g.effects){
     if(lowDetail&&f.type==='dust')continue;
     const p=iso(f.x,f.y);
     if(bounds&&(p.x<bounds.left||p.x>bounds.right||p.y<bounds.top||p.y>bounds.bottom))continue;
@@ -82,7 +199,7 @@ export function visibleCombatEffects(g,bounds,lowDetail=false){
     const key=[Math.floor(p.x/cell),Math.floor(p.y/cell),f.type,f.kind||'',f.team].join('|');
     const prior=bursts.get(key);
     if(!prior||f.life/(f.maxLife||1)>prior.f.life/(prior.f.maxLife||1)){
-      bursts.set(key,{f,p,priority:f.type==='dust'?2:f.type==='hit'?1:0,distance:(p.x-cx)**2+(p.y-cy)**2});
+      bursts.set(key,{f,p,priority:isSiegeEarthImpact(f)?-1:f.type==='dust'?2:f.type==='hit'?1:0,distance:(p.x-cx)**2+(p.y-cy)**2});
     }
   }
   const chosen=[...bursts.values()];

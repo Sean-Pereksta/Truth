@@ -2,6 +2,7 @@ import {Game,HOUSES,UNIT_DEFS,BUILD_DEFS,GAME_MODES} from '../core.js';
 import {LandsNavigation} from '../navigation.js';
 import {CombatTerrain} from '../cover.js';
 import {WarVision} from '../vision.js';
+import {projectileDrawPose} from '../projectile-flight.js';
 import {PROTOCOL_VERSION,GAME_VERSION,ASSET_VERSION,compatible} from './protocol.js';
 
 // Replication is an allowlist, never a JSON clone of the simulation. New AI,
@@ -152,9 +153,15 @@ export function snapshotWorld(game,team,{initial=false,sequence=0,projection=nul
     formationAdvances:[...(game.formationAdvances?.values()||[])].filter(value=>game.allied(team,value.team)).map(value=>({...pick(value,COHORT),slots:(value.slots||[]).map(slot=>pick(slot,SLOT))})),
     projectiles:game.projectiles.filter(value=>visible({x:value.x,y:value.y})).map(value=>{
       const out={...pick(value,PROJECTILE,true),id:transientId(game,value)};
-      // Seeing a projectile does not disclose a shooter or destination outside
-      // sight. Use its local tangent to retain the authored projectile heading.
-      if(fog&&(!visible({x:out.sx,y:out.sy})||!visible({x:out.tx,y:out.ty}))){const dx=out.tx-out.sx,dy=out.ty-out.sy,length=Math.hypot(dx,dy)||1;out.sx=out.x-dx/length*.1;out.sy=out.y-dy/length*.1;out.tx=out.x+dx/length*.1;out.ty=out.y+dy/length*.1;out.duration=1;out.t=.5;}
+      // Keep the visible shot on its arc while hiding out-of-sight endpoints.
+      if(fog&&(!visible({x:out.sx,y:out.sy})||!visible({x:out.tx,y:out.ty}))){
+        const {height,angle}=projectileDrawPose(value);
+        out.flightHeight=Math.round(height);
+        out.flightAngle=Math.round(angle*20)/20;
+        const dx=out.tx-out.sx,dy=out.ty-out.sy,length=Math.hypot(dx,dy)||1;
+        out.sx=out.x-dx/length*.1;out.sy=out.y-dy/length*.1;out.tx=out.x+dx/length*.1;out.ty=out.y+dy/length*.1;
+        out.duration=1;out.t=.5;
+      }
       return out;
     }),
     effects:game.effects.filter(value=>visible({x:value.x,y:value.y})).map(value=>({...pick(value,EFFECT,true),id:transientId(game,value)})),

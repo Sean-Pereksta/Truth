@@ -5,6 +5,7 @@ import {snapshotWorld,createRemoteGame,applySnapshot,decodeRuns} from '../../mul
 import {PROTOCOL_VERSION,GAME_VERSION,ASSET_VERSION,MAX_HUMANS,compatible} from '../../multiplayer/protocol.js';
 import {formationPreview} from '../../formation-placement.js';
 import {createSnapshotDelta,applySnapshotDelta} from '../../multiplayer/transport-delta.js';
+import {projectileDrawPose} from '../../projectile-flight.js';
 
 let cases=0;
 const test=(name,fn)=>{fn();cases++;console.log('PASS '+name);};
@@ -162,6 +163,20 @@ test('view hydration keeps stable identities and never generates hidden simulati
 test('effects and projectiles have stable presentation IDs without changing gameplay IDs',()=>{
   const before=fog.nextId,hero=fog.heroFor(1);fog.effects.push({type:'hit',x:hero.x,y:hero.y,team:1,life:.2});fog.projectiles.push({sx:hero.x,sy:hero.y,x:hero.x,y:hero.y,tx:hero.x+1,ty:hero.y,t:0,duration:.34,type:'arrow',team:1});
   const first=snapshotWorld(fog,1),second=snapshotWorld(fog,1);assert.equal(first.effects.at(-1).id,second.effects.at(-1).id);assert.equal(first.projectiles.at(-1).id,second.projectiles.at(-1).id);assert.equal(fog.nextId,before);
+});
+test('a visible arrow keeps its flight pose across fog without publishing hidden endpoints',()=>{
+  const match=createAuthority({...config,fogOfWar:true},{humanTeams:[0,1]});
+  const game=match.game,scout=game.heroFor(1),hidden=game.heroFor(2);
+  const shot={type:'arrow',team:2,sx:hidden.x,sy:hidden.y,tx:scout.x+1,ty:scout.y,
+    x:scout.x,y:scout.y,t:.3,duration:.34};
+  assert.equal(game.isVisibleTo(1,hidden),false);
+  game.projectiles.push(shot);
+  const [replica]=match.snapshot(1).projectiles;
+  assert.ok(Math.hypot(replica.sx-scout.x,replica.sy-scout.y)<.11);
+  assert.equal(replica.duration,1);
+  const expected=projectileDrawPose(shot),actual=projectileDrawPose(replica);
+  assert.ok(Math.abs(actual.height-expected.height)<=.5);
+  assert.ok(Math.abs(actual.angle-expected.angle)<=.0251);
 });
 test('compatibility is exact during the preview',()=>{
   assert.equal(compatible({v:PROTOCOL_VERSION,gameVersion:GAME_VERSION,assetVersion:ASSET_VERSION}),true);assert.equal(compatible({v:PROTOCOL_VERSION,gameVersion:'old',assetVersion:ASSET_VERSION}),false);
