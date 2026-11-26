@@ -67,6 +67,7 @@ export function createBoardRenderer(canvas) {
     const visualTime = effects ? time : 0;
     const plants = new Map(state.plants.map(plant => [plant.id, plant]));
     const players = new Map(state.players.map(player => [player.id, player]));
+    const tasks = new Map(state.players.filter(player => player.action).map(player => [player.action.stationId, player.action]));
     const truck = getTruckWindow(state);
     const bubbles = [];
     const scene = [];
@@ -88,7 +89,8 @@ export function createBoardRenderer(canvas) {
       const x = (station.x + .5) * tile;
       const y = (station.y + .91) * tile;
       const plant = plants.get(station.plantId);
-      const active = station.type === 'truck' ? truck.open : Boolean(plant) || state.players.some(player => player.action?.stationId === station.id);
+      const task = tasks.get(station.id);
+      const active = station.type === 'truck' ? truck.open : Boolean(plant || task);
       const large = station.type === 'truck' ? 1.22 : 1.06;
       scene.push({ y: station.y, paint() {
         block(ctx, selected?.stationId === station.id ? '#fff2b4' : stationColor(station), x - 17, y + 1, 34, selected?.stationId === station.id ? 3 : 2);
@@ -99,6 +101,9 @@ export function createBoardRenderer(canvas) {
           if (need) bubbles.push({ need, x: x + (boothTypes.has(station.type) ? 15 : 9), y: y - 38, stationId: station.id });
         }
       } });
+      if (task) {
+        bubbles.push({ task, x, y: y + 1 });
+      }
     }
 
     for (const [index, player] of state.players.entries()) {
@@ -163,7 +168,14 @@ export function createBoardRenderer(canvas) {
       }
     }
     targets = [];
-    for (const { need, x, y, stationId, plantId } of bubbles) {
+    for (const { need, x, y, stationId, plantId, task } of bubbles) {
+      if (task) {
+        const progress = 1 - Math.max(0, task.remainingMs / task.durationMs);
+        block(ctx, '#20182e', x - 18, y - 5, 36, 7);
+        block(ctx, '#7c6e92', x - 16, y - 3, 32, 3);
+        block(ctx, '#abffdc', x - 16, y - 3, Math.round(32 * progress), 3);
+        continue;
+      }
       const left = Math.min(canvas.width - 14, Math.max(14, x));
       const top = Math.max(21, y);
       drawNeedBubble(ctx, need.kind, left, top, 22, visualTime, need);

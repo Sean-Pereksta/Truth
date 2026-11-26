@@ -290,7 +290,7 @@ async function createRoomServer({ port = 0, name = 'Orbit Bloom', onFailure } = 
 }
 
 if (require.main === module) {
-  createRoomServer({ port: Number(process.env.PORT || 8796), onFailure: error => {
+  createRoomServer({ port: Number(process.env.PORT || 8797), onFailure: error => {
     console.error(error.message);
     process.exitCode = 1;
   } }).then(room => {

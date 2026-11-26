@@ -225,14 +225,14 @@ function interactionFor(state, player, station, explicit) {
     const carried = plantById(state, player.carryId);
     if (!carried) {
         if (station.plantId) return { kind: 'pickup', plantId: station.plantId };
-        if (station.type === 'seed') return { kind: 'sow', durationMs: 520 };
+        if (station.type === 'seed') return { kind: 'sow', durationMs: 800 };
         return null;
     }
     if (station.type === 'shelf' && !station.plantId) return { kind: 'place' };
-    if (station.type === 'compost' && explicit) return { kind: 'compost', durationMs: 600 };
+    if (station.type === 'compost' && explicit) return { kind: 'compost', durationMs: 900 };
     if (station.type === 'truck') {
         if (stageFor(carried) || !getTruckWindow(state).open || !activeOrder(state, carried.flowerId)) return null;
-        return { kind: 'deliver', durationMs: 550 };
+        return { kind: 'deliver', durationMs: 950 };
     }
     const stage = compatibleStage(carried, station);
     if (!stage || station.plantId || state.elapsedMs < station.cooldownUntilMs) return null;

@@ -19,12 +19,12 @@ export const POTS = {
     glass: 'Tall glass',
 };
 
-const water = { kind: 'water', durationMs: 620 };
-const prune = { kind: 'prune', durationMs: 875 };
-const repot = { kind: 'repot', durationMs: 1250 };
-const sunstone = { kind: 'sunstone', durationMs: 460 };
-const moonsoil = { kind: 'moonsoil', durationMs: 460 };
-const stardust = { kind: 'stardust', durationMs: 460 };
+const water = { kind: 'water', durationMs: 1000 };
+const prune = { kind: 'prune', durationMs: 1250 };
+const repot = { kind: 'repot', durationMs: 1600 };
+const sunstone = { kind: 'sunstone', durationMs: 775 };
+const moonsoil = { kind: 'moonsoil', durationMs: 775 };
+const stardust = { kind: 'stardust', durationMs: 775 };
 const roots = (kind, durationMs) => ({ kind, durationMs, growth: true, phase: 'sprout' });
 const bloom = (kind, durationMs) => ({ kind, durationMs, growth: true, phase: 'bloom' });
 
@@ -246,7 +246,7 @@ export const LEVELS = [
         hint: 'Move around blue puddles to stay fast when the roots are ready.',
         flowers: ['nebulalily', 'moonbell', 'cometvine', 'nebulalily'],
         goals: [4, 6, 7],
-        orderIntervalMs: 16500,
+        orderIntervalMs: 18000,
         layout: [
             '...........',
             '.d.b.m.m.i.',
@@ -346,9 +346,9 @@ export const LEVELS = [
         description: 'Grow the celestial collection beneath a star-glass dome. Every ingredient has a place.',
         hint: 'Use the central lane for long runs and the shelves for truck batches.',
         flowers: ['nebulalily', 'eclipseorchid', 'cometvine', 'moonbell', 'sunflare', 'eclipseorchid'],
-        goals: [5, 7, 9],
+        goals: [5, 7, 8],
         durationMs: 205000,
-        cutoffMs: 152000,
+        cutoffMs: 162000,
         orderIntervalMs: 16000,
         patienceMs: 56000,
         rootGraceMs: 9000,

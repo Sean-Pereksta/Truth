@@ -12,6 +12,9 @@ const controlledDirections = new Map([
   ['arrowleft', [-1, 0]], ['a', [-1, 0]], ['arrowright', [1, 0]], ['d', [1, 0]],
   ['arrowup', [0, -1]], ['w', [0, -1]], ['arrowdown', [0, 1]], ['s', [0, 1]],
 ]);
+const taskLabels = { sow: 'Sowing', water: 'Watering', repot: 'Repotting', prune: 'Pruning', deliver: 'Loading the truck',
+  sunstone: 'Adding sunstone', moonsoil: 'Mixing moonsoil', stardust: 'Dusting with stardust', compost: 'Composting',
+};
 const held = new Set();
 const orderCards = new Map();
 const managed = new URLSearchParams(location.hash.slice(1)).has('managed');
@@ -193,9 +196,13 @@ function updateHud() {
   const need = plant ? getPlantNeed(plant, state) : null;
   const notice = gardener?.notice?.untilMs > state.elapsedMs ? gardener.notice.text : '';
   const current = FLOWERS[plant?.flowerId];
+  const task = gardener?.action;
+  const progress = $('task-progress');
+  progress.hidden = !task;
+  if (task) progress.value = 1 - Math.max(0, task.remainingMs / task.durationMs);
   $('carried').textContent = current?.name ?? 'Empty hands';
   const nextAction = need ? `${need.label}${need.kind === 'repot' ? ` · ${POTS[need.variant]}` : ''}` : 'Tap a seed tray or pick up a pot';
-  const prompt = notice || nextAction;
+  const prompt = (task && taskLabels[task.kind]) || notice || nextAction;
   if ($('prompt').textContent !== prompt) $('prompt').textContent = prompt;
   $('drop').disabled = !plant;
   const shortcut = findShortcut(gardener, plant, need);

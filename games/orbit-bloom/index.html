@@ -70,14 +70,14 @@
       <div id="orders" class="orders" aria-label="Courier orders"></div>
       <div class="board"><canvas id="board" tabindex="0" aria-label="Greenhouse. Tap stations or use WASD or arrows to move, Space to act and Q to set down a plant."></canvas></div>
       <div class="action-bar">
-        <div><strong id="carried">Tap a seed tray</strong><div id="prompt" class="map-event" role="status"></div></div>
+        <div><strong id="carried">Tap a seed tray</strong><div id="prompt" class="map-event" role="status"></div><progress id="task-progress" max="1" value="0" aria-label="Task progress" hidden></progress></div>
         <button id="action" class="primary">Act</button>
         <button id="drop" class="quiet" aria-label="Set down plant">Set down</button>
       </div>
       <details class="help">
         <summary>Controls and greenhouse guide</summary>
         <p>Tap a station or plant to walk there and interact. Tap the floor to move. On a keyboard, use WASD or arrows to move, Space to use a nearby station and Q to set down a plant.</p>
-        <p>Start at a seed tray. Follow the bubbles through ingredients, showers, thermal booths, potting and pruning. Take the plant out when the booth flashes ready, then carry the finished flower to the truck. Use a shelf to hand a plant to another gardener.</p>
+        <p>Start at a seed tray. Hands-on tasks finish when their bars fill. Set pots down in thermal booths and tend another plant while they grow. Take the plant out when the booth flashes ready, then carry the finished flower to the truck. Use a shelf to hand a plant to another gardener.</p>
         <div id="station-list" class="station-list" aria-label="Station shortcuts"></div>
       </details>
     </section>

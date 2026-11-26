@@ -284,7 +284,7 @@ export function roomJoinUrl(room, name = '') {
     throw new Error('Choose a valid Orbit Bloom server.');
   }
   const url = new URL(room.url);
-  const displayName = name.replace(/[\x00-\x1f\x7f]/g, '').trim().slice(0, 24);
+  const displayName = name.replace(/[\x00-\x1f\x7f]/g, '').trim().slice(0, 22);
   if (displayName) url.searchParams.set('name', displayName);
   if (room.visibility === 'code') url.hash = 'code=' + room.code;
   return url.href;
