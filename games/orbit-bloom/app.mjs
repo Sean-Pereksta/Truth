@@ -1,5 +1,6 @@
 import { FLOWERS, LEVELS, NEEDS, POTS, getLevel } from './levels.mjs';
 import { applyCommand, canReachTarget, createMatch, getPlantNeed, getTruckWindow, getWeather, stepMatch } from './sim.mjs';
+import { getStationGuide } from './guide.mjs';
 import { createRoomClient, listPublicRooms, probeRoom, resolveRoomCode, roomJoinUrl } from './network.mjs';
 import { drawPaintedPlant, loadPaintedWorld } from './painted-world.mjs';
 import { createBoardRenderer, drawMenuArt, THEME_COLORS } from './render.mjs';
@@ -7,6 +8,12 @@ import { createBoardRenderer, drawMenuArt, THEME_COLORS } from './render.mjs';
 const $ = id => document.getElementById(id);
 const canvas = $('board');
 const renderer = createBoardRenderer(canvas);
+const stationFocus = document.createElement('strong');
+stationFocus.id = 'station-focus';
+stationFocus.hidden = true;
+$('carried').after(stationFocus);
+canvas.setAttribute('aria-describedby', 'carried station-focus prompt');
+$('action').setAttribute('aria-describedby', 'prompt');
 const views = ['menu', 'levels', 'directory', 'room', 'play', 'results'];
 const controlledDirections = new Map([
   ['arrowleft', [-1, 0]], ['a', [-1, 0]], ['arrowright', [1, 0]], ['d', [1, 0]],
@@ -27,6 +34,8 @@ let network;
 let roomSnapshot;
 let practice = false;
 let target;
+let targetCare;
+let guide = [];
 let localRound = 0;
 let playingRound;
 let lastFrame = performance.now();
@@ -105,6 +114,7 @@ function beginShift(nextState, round) {
   $('map-name').textContent = level.name;
   $('map-hint').textContent = level.hint || '';
   target = undefined;
+  targetCare = undefined;
   held.clear();
   lastFrame = performance.now();
   lastHud = 0;
@@ -115,8 +125,8 @@ function beginShift(nextState, round) {
     return button;
   });
   $('station-list').replaceChildren(...buttons);
-  show('play');
   updateHud();
+  show('play');
 }
 
 function startLocal(levelId) {
@@ -207,62 +217,89 @@ function updateHud() {
   const transport = level.platforms?.length ? 'Platform docks marked +' : level.conveyors?.length ? 'Load pots at gold belt ends' : '';
   $('map-event').textContent = [doors, sky ? `${sky.label}${sky.active ? ' active' : ` in ${Math.ceil(sky.remainingMs / 1000)}s`}` : '', transport].filter(Boolean).join(' · ');
 
-  const gardener = currentGardener();
-  const plant = state.plants.find(item => item.id === gardener?.carryId);
-  const need = plant ? getPlantNeed(plant, state) : null;
-  const notice = gardener?.notice?.untilMs > state.elapsedMs ? gardener.notice.text : '';
-  const current = FLOWERS[plant?.flowerId];
-  const task = gardener?.action;
-  const progress = $('task-progress');
-  progress.hidden = !task;
-  if (task) progress.value = 1 - Math.max(0, task.remainingMs / task.durationMs);
-  $('carried').textContent = current?.name ?? 'Empty hands';
-  const nextAction = need ? `${need.label}${need.kind === 'repot' ? ` · ${POTS[need.variant]}` : ''}` : 'Tap a seed tray or pick up a pot';
-  const prompt = (task && taskLabels[task.kind]) || (gardener?.platformId ? 'Riding the platform' : '') || notice || nextAction;
-  if ($('prompt').textContent !== prompt) $('prompt').textContent = prompt;
-  $('drop').disabled = !plant;
-  const shortcut = findShortcut(gardener, plant, need);
-  $('action').disabled = !gardener;
-  $('drop').textContent = plant && beltAt(Math.round(gardener.x), Math.round(gardener.y)) ? 'Send pot' : 'Set down';
-  $('action').textContent = shortcut?.label ?? 'Act';
+  guide = getStationGuide(state, localId);
+  updateControls();
 }
 
 function currentGardener() {
   return state?.players.find(player => player.id === localId);
 }
 
-function availableBelt(gardener, station) {
-  const belts = (level.conveyors ?? []).filter(belt => !state.plants.some(plant => plant.beltId === belt.id));
-  const score = belt => {
-    const from = belt.path[0];
-    const end = belt.path.at(-1);
-    return Math.hypot(from.x - gardener.x, from.y - gardener.y) + (station ? Math.hypot(end.x - station.x, end.y - station.y) : 0);
-  };
-  const candidate = belts.sort((a, b) => score(a) - score(b)).find(belt => canReachTarget(state, localId, { type: 'target', conveyorId: belt.id }));
-  return candidate ? { command: { type: 'target', conveyorId: candidate.id }, label: 'Send pot' } : null;
+function carriedPlant(gardener = currentGardener()) {
+  return state.plants.find(item => item.id === gardener?.carryId);
 }
 
-function findShortcut(gardener, plant, need) {
-  if (!gardener) return null;
-  const distance = station => Math.hypot(station.x - gardener.x, station.y - gardener.y);
-  const reachable = command => canReachTarget(state, localId, command);
-  const toStation = value => ({ type: 'target', stationId: value.id });
-  if (plant && need) {
-    const stationType = NEEDS[need.kind]?.station;
-    const options = state.stations.filter(station => station.type === stationType &&
-      (!need.variant || station.variant === need.variant)).sort((a, b) => distance(a) - distance(b));
-    const reachableStations = options.filter(station => reachable(toStation(station)));
-    const candidate = reachableStations.find(station => !station.plantId && !station.busyBy && station.cooldownUntilMs <= state.elapsedMs);
-    if (candidate) return { command: toStation(candidate), label: need.kind === 'repot' ? 'Repot' : need.label };
-    return options.length && !reachableStations.length ? availableBelt(gardener, options[0]) : null;
+function primaryGuide() {
+  return guide.find(item => item.primary && item.command);
+}
+
+function guidanceText(gardener, plant, need, shortcut) {
+  if (shortcut?.kind === 'belt') return 'Tap the gold belt end to send';
+  if (!need) {
+    if (shortcut?.kind === 'pickup') return 'Pick up the marked pot';
+    if (shortcut?.kind === 'seed') return `Starter pot + ${FLOWERS[shortcut.flowerId].name} seeds`;
+    if (gardener && level.conveyors?.length && !state.stations.some(station => station.type === 'seed' &&
+      canReachTarget(state, gardener.id, { stationId: station.id }))) return 'Pick up pots at the belt exit';
+    return 'Tap seeds to sow a starter pot';
   }
-  const ready = state.plants.flatMap(staged => {
-    if (staged.holderId || staged.beltId) return [];
-    const station = staged.stationId && state.stations.find(item => item.id === staged.stationId);
-    if (station && station.type !== 'shelf' && getPlantNeed(staged, state).kind !== 'remove') return [];
-    return [{ item: station || staged, command: station ? toStation(station) : { type: 'target', plantId: staged.id } }];
-  }).sort((a, b) => distance(a.item) - distance(b.item)).find(option => reachable(option.command));
-  return ready ? { command: ready.command, label: 'Pick up' } : null;
+  if (need.kind === 'repot') return `Repot in ${POTS[need.variant]}`;
+  if (need.kind === 'water') return 'Water at the shower';
+  if (need.kind === 'sun' || need.kind === 'moon' || need.kind === 'prism') return `Set in the ${need.label.toLowerCase()}`;
+  if (need.kind === 'prune') return 'Trim at the pruning station';
+  if (need.kind === 'truck') {
+    if (!getTruckWindow(state).open) return 'Wait for the courier truck';
+    return state.orders.some(order => order.status === 'open' && order.flowerId === plant.flowerId)
+      ? 'Load onto the courier truck' : 'No order for this flower';
+  }
+  return `Add ${need.label}`;
+}
+
+function updateControls() {
+  const gardener = currentGardener();
+  const plant = carriedPlant(gardener);
+  const need = plant && getPlantNeed(plant, state);
+  const task = gardener?.action;
+  const shortcut = primaryGuide();
+  const requested = target?.stationId && state.stations.find(item => item.id === target.stationId);
+  const sameCare = targetCare?.id === plant?.id && targetCare?.step === plant?.step;
+  const plantedHere = !plant && requested?.plantId && requested.plantId === targetCare?.id;
+  const needsIngredient = need && NEEDS[need.kind].station === 'ingredient';
+  const nearbyIngredient = needsIngredient && gardener && state.stations.find(item => item.type === 'ingredient' && item.variant !== need.variant &&
+    Math.abs(item.x - Math.round(gardener.x)) + Math.abs(item.y - Math.round(gardener.y)) === 1);
+  const selected = ((sameCare || plantedHere) && requested) || nearbyIngredient;
+  const wrongIngredient = selected?.type === 'ingredient' && need && selected.variant !== need.variant;
+  const notice = gardener?.notice?.untilMs > state.elapsedMs ? gardener.notice.text : '';
+  const selectedPlant = selected?.plantId && state.plants.find(item => item.id === selected.plantId);
+  const waitingInBooth = !plant && selectedPlant && getPlantNeed(selectedPlant, state).kind !== 'remove' &&
+    ['sun', 'moon', 'prism'].includes(selected.type);
+  const next = wrongIngredient && needsIngredient ? `Needs ${need.label}` : guidanceText(gardener, plant, need, shortcut);
+  const prompt = (task && taskLabels[task.kind]) || (gardener?.platformId ? 'Riding the platform' : '') ||
+    (notice && !notice.startsWith('Needs ') ? notice : '') || (waitingInBooth ? 'Growing here. Lift when ready.' : next);
+  const carried = $('carried');
+  const name = FLOWERS[plant?.flowerId]?.name ?? 'Empty hands';
+  if (carried.textContent !== name) carried.textContent = name;
+  carried.classList.toggle('carried-name-hidden', Boolean(selected));
+  stationFocus.hidden = !selected;
+  const stationName = selected?.label ?? '';
+  if (stationFocus.textContent !== stationName) {
+    stationFocus.textContent = stationName;
+    stationFocus.title = stationName;
+  }
+  stationFocus.classList.toggle('wrong-ingredient', Boolean(wrongIngredient));
+  const promptElement = $('prompt');
+  if (promptElement.textContent !== prompt) promptElement.textContent = prompt;
+  const progress = $('task-progress');
+  progress.hidden = !task;
+  if (task) progress.value = 1 - Math.max(0, task.remainingMs / task.durationMs);
+  const drop = $('drop');
+  const onBelt = plant && beltAt(Math.round(gardener.x), Math.round(gardener.y));
+  drop.disabled = !plant;
+  drop.textContent = onBelt ? 'Send pot' : 'Set down';
+  drop.setAttribute('aria-label', onBelt ? 'Send pot on conveyor' : 'Set down plant');
+  const action = $('action');
+  action.disabled = !gardener;
+  const actionLabel = shortcut?.actionLabel ?? 'Act';
+  if (action.textContent !== actionLabel) action.textContent = actionLabel;
 }
 
 function beltAt(x, y) {
@@ -271,10 +308,18 @@ function beltAt(x, y) {
 
 function send(command) {
   if (view !== 'play' || !state) return;
-  if (command.type === 'target') target = command;
-  if (command.type === 'move' || command.type === 'drop') target = undefined;
+  if (command.type === 'target') {
+    target = command;
+    const plant = carriedPlant();
+    targetCare = plant ? { id: plant.id, step: plant.step } : undefined;
+  }
+  if (command.type === 'move' || command.type === 'drop') {
+    target = undefined;
+    targetCare = undefined;
+  }
   if (network?.playerId) network.command(command);
   else applyCommand(state, localId, command);
+  if (command.type !== 'move') updateControls();
 }
 
 function movement() {
@@ -337,9 +382,9 @@ canvas.addEventListener('pointerdown', event => {
 });
 
 $('action').addEventListener('click', () => {
-  const gardener = currentGardener();
-  const plant = state.plants.find(item => item.id === gardener?.carryId);
-  const shortcut = findShortcut(gardener, plant, plant && getPlantNeed(plant, state));
+  if (!state || view !== 'play') return;
+  guide = getStationGuide(state, localId);
+  const shortcut = primaryGuide();
   send(shortcut?.command ?? { type: 'interact' });
   canvas.focus({ preventScroll: true });
 });
@@ -530,8 +575,8 @@ function frame(now) {
     if (!network?.playerId && !document.hidden) stepMatch(state, delta);
     if (state.phase === 'finished') finishShift();
     else {
-      renderer.draw(state, localId, now / 1000, effects, target);
       if (now - lastHud > 120) { updateHud(); lastHud = now; }
+      renderer.draw(state, localId, now / 1000, effects, target, guide);
     }
   } else if (view === 'menu' && (!lastMenuPaint || effects && now - lastMenuPaint > 50)) {
     drawMenuArt($('menu-art'), effects ? now / 1000 : 0);

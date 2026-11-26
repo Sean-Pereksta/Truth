@@ -158,7 +158,7 @@ export function drawNeedIcon(ctx, need, x, y, size = 16) {
   ctx.restore();
 }
 
-export function drawNeedBubble(ctx, need, x, y, size, time, { urgent = false, progress, variant } = {}) {
+export function drawNeedBubble(ctx, need, x, y, size, time, { urgent = false, progress, variant, drawIcon } = {}) {
   const bob = Math.floor(time * 3) % 3 === 1 ? 1 : 0;
   at(ctx, x, y - bob, size / 24);
   const edge = urgent ? '#d66c70' : '#405778';
@@ -169,7 +169,7 @@ export function drawNeedBubble(ctx, need, x, y, size, time, { urgent = false, pr
     [paper, -8, -12, 16, 6], [paper, -2, -5, 4, 2], [edge, -1, -3, 2, 2],
   ]);
   const potNeed = `repot${normalized(variant)}`;
-  icon(ctx, need === 'repot' && glyphs[potNeed] ? potNeed : need, -4, -13);
+  if (!drawIcon?.(ctx, 0, -9)) icon(ctx, need === 'repot' && glyphs[potNeed] ? potNeed : need, -4, -13);
   if (Number.isFinite(progress)) {
     rect(ctx, ink, -7, -2, 14, 2);
     rect(ctx, urgent ? '#f6ab68' : '#7ee0bd', -6, -2, Math.round(Math.max(0, Math.min(1, progress)) * 12), 1);
