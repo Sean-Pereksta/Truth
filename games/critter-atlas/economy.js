@@ -1,5 +1,5 @@
 import { BUFFS, MAX_LEVEL, REGIONS, SPECIES, getForm, makeMember } from './catalog.js';
-import { keyFor, requirements } from './frontier-routes.js';
+import { has, keyFor, requirements } from './frontier-routes.js';
 import { addCapture, awardXP } from './journal.js';
 
 // Each local item is sold by its home settlement. Items can travel in the bag.
@@ -134,7 +134,7 @@ export function trailFind(state, region, site) {
 
 export function gatherTrailFind(state, region, site) {
   const {world, economy} = state;
-  if (world.region !== region || world.node !== site || region > world.unlocked || requirements(world,region,site).length) {
+  if (world.region !== region || world.node !== site || requirements(world,region,site).length) {
     return failure('Reach the trail sign to gather the find.');
   }
   const item = trailFind(state,region,site);
@@ -148,7 +148,7 @@ export function gatherTrailFind(state, region, site) {
 
 function atMarket(state, region) {
   return Number.isInteger(region) && !!MARKETS[region] && state.world?.node === 'town' &&
-    state.world.region === region && region <= state.world.unlocked;
+    state.world.region === region;
 }
 
 export function awardCoins(state, encounter, firstClear = false) {
@@ -220,8 +220,12 @@ export function critterStock(region) {
     return {...member, price:Math.ceil(critterValue(member) * 2.05)};
   });
 }
+export function canRecruitIn(state, region) {
+  return region <= state.world.unlocked || has(state.world.cleared, region, 'grove');
+}
 export function buyCritter(state, region, speciesId) {
   if (!atMarket(state, region)) return failure('Visit this market to trade.');
+  if (!canRecruitIn(state, region)) return failure('Win the local trail battle to recruit here.');
   const offer = critterStock(region).find(row => row.speciesId === speciesId);
   if (!offer) return failure('This trader has no such Critter.');
   if (state.economy.coins < offer.price) return failure('You need ' + (offer.price - state.economy.coins) + ' more coins.');

@@ -10,13 +10,13 @@ export { AFFINITIES, AFFINITY_DAMAGE, AURAS, BUFFS, affinityMultiplier } from '.
 // Region, species, and combat definitions shared by the trail, party, and arena.
 const regionRows = [
   ['Mossbell Wood', 'forest', 2, 'Mossbell Foragers', 'Bramble Ring', 'Thorns', '#79b977'],
-  ['Lantern Fen', 'marsh', 5, 'Lantern Waders', 'Reedlight Crossing', 'Bog', '#75b7a4'],
-  ['Prism Hollows', 'cave', 8, 'Echo Borers', 'Quartz Gallery', 'Shards', '#aa99d1'],
-  ['Tidemark Coast', 'coast', 11, 'Foamrunners', 'Coral Shelf', 'Surf', '#73c4ce'],
-  ['Galehorn Peaks', 'mountains', 14, 'Galehorn Climbers', 'Windcut Pass', 'Ice', '#a7cbe0'],
-  ['Cinder Basin', 'volcanic', 17, 'Cinder Walkers', 'Obsidian Bowl', 'Embers', '#e28b68'],
-  ['Sunken Court', 'ruins', 20, 'Mosaic Keepers', 'Broken Sundial', 'Sunseal', '#d6b677'],
-  ['Starfall Reach', 'astral', 24, 'Nightgliders', 'Meteor Garden', 'Starfall', '#a69dda']
+  ['Lantern Fen', 'marsh', 10, 'Lantern Waders', 'Reedlight Crossing', 'Bog', '#75b7a4'],
+  ['Prism Hollows', 'cave', 16, 'Echo Borers', 'Quartz Gallery', 'Shards', '#aa99d1'],
+  ['Tidemark Coast', 'coast', 22, 'Foamrunners', 'Coral Shelf', 'Surf', '#73c4ce'],
+  ['Galehorn Peaks', 'mountains', 28, 'Galehorn Climbers', 'Windcut Pass', 'Ice', '#a7cbe0'],
+  ['Cinder Basin', 'volcanic', 33, 'Cinder Walkers', 'Obsidian Bowl', 'Embers', '#e28b68'],
+  ['Sunken Court', 'ruins', 38, 'Mosaic Keepers', 'Broken Sundial', 'Sunseal', '#d6b677'],
+  ['Starfall Reach', 'astral', 43, 'Nightgliders', 'Meteor Garden', 'Starfall', '#a69dda']
 ];
 export const REGIONS = regionRows.concat(EXPANSION_REGIONS.map(region => region.catalog))
   .map(([name, biome, minLevel, tribe, arena, hazard, color, artRegion, artFilter = 'none'], id) =>
@@ -240,7 +240,7 @@ export const localFamilies = region => regionalFamilies[region];
 // Ordinary patrols draw from six local families. Only a tracked
 // sighting can add a rare, legendary, or hyper-rare leader from its exact habitat.
 const encounterWeights = [8, 8, 6, 5, 3, 2];
-export function rollEncounter(region, { legendary = false, challenge = false, level, habitatId, leadSpeciesId, rng = Math.random } = {}) {
+export function rollEncounter(region, { legendary = false, challenge = false, level, habitatId, leadSpeciesId, patrolSize, rng = Math.random } = {}) {
   const area = REGIONS[region];
   if (!area) throw new RangeError('Unknown region');
   const strongest = clamp(Math.floor(Number(level) || area.minLevel), 1, MAX_LEVEL);
@@ -248,7 +248,7 @@ export function rollEncounter(region, { legendary = false, challenge = false, le
   const habitatMatch = sighted?.habitatId && sighted.habitatId === habitatId && sighted.region === region;
   const legacyLegend = legendary && (!habitatId || habitatId === 'hollow');
   const specialPair = legacyLegend || (habitatMatch && (sighted.legendary || sighted.hyperRare));
-  const packSize = specialPair ? 2 : challenge ? (region > 2 ? 4 : 3) : (region > 0 && rng() < .65 ? 3 : 2);
+  const packSize = specialPair ? 2 : patrolSize ?? (challenge ? (region > 2 ? 4 : 3) : (region > 0 && rng() < .65 ? 3 : 2));
   const local = localFamilies(region);
   const available = encounterWeights.map((weight, slot) => ({ id: local[slot].id, weight }));
   const pack = [];

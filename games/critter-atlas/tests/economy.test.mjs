@@ -74,6 +74,18 @@ test('purchases require reaching the right town and having the full price', () =
   assert.ok(!s.party.includes(s.roster.at(-1).uid));
 });
 
+test('visitors can trade in distant markets and earn local recruitment by fighting there', () => {
+  const state = visit(REGIONS.length - 1);
+  const region = state.world.region;
+  state.world.unlocked = 0;
+  state.economy.coins = 1000;
+  const [{speciesId}] = critterStock(region);
+  assert.ok(buyItem(state,region,'tonic').ok);
+  assert.equal(buyCritter(state,region,speciesId).ok,false);
+  state.world.cleared.push(region+'/grove');
+  assert.ok(buyCritter(state,region,speciesId).ok);
+});
+
 test('selling a duplicate addresses its UID, preserves the owned history and quotes reevaluate on confirm', () => {
   const s=visit(), first=s.roster[0], other=addCapture(s,makeMember(first.speciesId,5));
   const quote=critterOffer(s,0,other.uid), initial=s.economy.coins;
