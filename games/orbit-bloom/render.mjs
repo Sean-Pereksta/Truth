@@ -112,11 +112,12 @@ function drawStationSigns(ctx, stations, signs) {
   ctx.restore();
 }
 
-function paintGuide(ctx, station, guide, point, board, occupied, targets) {
+function paintGuide(ctx, station, guide, point, board, occupied, targets, urgent) {
   const sow = guide.kind === 'seed';
   const pickup = guide.kind === 'pickup';
   const iconKey = pickup ? 'remove' : station ? stationIconKey(station) : 'shelf';
-  const accent = station ? stationAccent(station) : '#acd9c5';
+  const accent = urgent ? '#ff9484' : station ? stationAccent(station) : '#acd9c5';
+  const outline = urgent ? '#a14b59' : '#3b2a3b';
   const { x, y } = point;
   // Keep the counter marked even when another bubble takes the space above it.
   rounded(ctx, x - 12, y + 8, 24, 4, 2, '#272034');
@@ -148,12 +149,12 @@ function paintGuide(ctx, station, guide, point, board, occupied, targets) {
   ctx.lineTo(anchor, top + height + 7);
   ctx.lineTo(anchor + 6, top + height - 1);
   ctx.closePath();
-  ctx.strokeStyle = '#3b2a3b';
+  ctx.strokeStyle = outline;
   ctx.lineWidth = 3;
   ctx.stroke();
   ctx.fillStyle = '#fff2cf';
   ctx.fill();
-  rounded(ctx, left - 1, top - 1, width + 2, height + 2, 7, '#3b2a3b');
+  rounded(ctx, left - 1, top - 1, width + 2, height + 2, 7, outline);
   rounded(ctx, left + 1, top + 1, width - 2, height - 2, 6, '#fff2cf');
   drawStationIcon(ctx, sow ? 'pot' : iconKey, left + (sow ? 12 : 15), mid, 19, accent);
   if (sow) {
@@ -493,6 +494,8 @@ export function createBoardRenderer(canvas) {
       ({ left, top, width, height, target: { stationId: station.id } }));
     ctx.drawImage(signage, -board.x, -board.y);
     const occupied = signs.slice();
+    const pickup = guide.find(hint => hint.kind === 'pickup');
+    let urgentPickup = false;
     for (const { need, x, y, stationId, plantId, task } of bubbles) {
       if (task) {
         const progress = 1 - Math.max(0, task.remainingMs / task.durationMs);
@@ -508,14 +511,16 @@ export function createBoardRenderer(canvas) {
         ...need,
         drawIcon: (context, iconX, iconY) => drawStationIcon(context, need.variant ?? need.kind, iconX, iconY, 11),
       });
-      occupied.push(rect);
+      if (pickup && (stationId && stationId === pickup.stationId || plantId && plantId === pickup.command.plantId)) {
+        urgentPickup = need.urgent;
+      } else occupied.push(rect);
       if (plantId || stationId) targets.push({ ...rect, target: plantId ? { plantId } : { stationId } });
     }
     for (const hint of guide) {
       const station = state.stations.find(item => item.id === hint.stationId);
       const belt = level.conveyors?.find(item => item.id === hint.command.conveyorId);
       const point = station ?? belt?.path[0] ?? plants.get(hint.command.plantId);
-      if (point) paintGuide(ctx, station, hint, center(point), board, occupied, targets);
+      if (point) paintGuide(ctx, station, hint, center(point), board, occupied, targets, hint === pickup && urgentPickup);
     }
     ctx.restore();
   }
