@@ -1,7 +1,9 @@
 'use strict';
 (() => {
-  const documents = 'projects/bible-game-246c0/databases/(default)/documents';
-  const api = 'https://firestore.googleapis.com/v1/' + documents;
+  const documents = 'projects/magic-servers-1ca0c/databases/(default)/documents';
+  const officialDocuments = 'projects/bible-game-246c0/databases/(default)/documents';
+  const firestore = 'https://firestore.googleapis.com/v1/';
+  const api = firestore + documents;
   const collection = 'acornRallyLobbies';
   const phases = new Set(['waiting', 'racing', 'finished']);
   const ticketLimit = 128;
@@ -91,10 +93,10 @@
   }
 
   async function officialServer() {
-    const doc = await json(api + '/acornRallyService/public', {}, 1600);
+    const doc = await json(firestore + officialDocuments + '/acornRallyService/public', {}, 1600);
     const f = doc?.fields;
     const origin = 'https://rally.catnmice.com';
-    if (doc?.name !== documents + '/acornRallyService/public' || f?.origin?.stringValue !== origin ||
+    if (doc?.name !== officialDocuments + '/acornRallyService/public' || f?.origin?.stringValue !== origin ||
         f.joinUrl?.stringValue !== origin + '/?room=join' || f.queueEnabled?.booleanValue !== true) return null;
     const now = Date.now(), updated = Date.parse(f.updatedAt?.timestampValue), expires = Date.parse(f.expiresAt?.timestampValue);
     const phase = f.phase?.stringValue, players = Number(f.players?.integerValue);
