@@ -311,13 +311,17 @@ function booth(ctx, kind, time, active, trim) {
     [light, 7, -16, 1, 13], [light, -4, -19, 8, 2], [lamp, -3, -19, 6, 1],
     [trim, -9, -5, 18, 4], [edge, -8, -5, 16, 1], [low, -8, -3, 16, 2],
     [lamp, -7, -2, 1, 1], [lamp, 6, -2, 1, 1],
+    [back, -9, -17, 1, 13], [shade, 8, -17, 1, 13], [low, -7, -17, 1, 12], [low, 6, -17, 1, 12],
+    [edge, -6, -5, 12, 1], [back, -3, -3, 6, 2], [light, -2, -3, 2, 1], [active ? lamp : trim, 1, -3, 1, 1],
+    [edge, 8, -12, 2, 4], [low, 8, -11, 2, 2], [light, 9, -11, 1, 1],
   ]);
   if (kind === 'sun') spark(ctx, 0, -21, '#fff4c2');
   if (kind === 'moon') blocks(ctx, [[lamp, -1, -22, 2, 3], [lamp, 0, -20, 3, 1], [edge, 1, -22, 1, 1]]);
   if (kind === 'prism') blocks(ctx, [['#9cebd0', -3, -21, 2, 2], [lamp, -1, -22, 2, 3], ['#e28eca', 1, -21, 2, 2]]);
   ctx.save();
   ctx.globalAlpha *= active ? 0.32 + Math.sin(time * 6) * 0.07 : 0.13;
-  blocks(ctx, [[light, -3, -17, 6, 3], [light, -4, -14, 8, 5], [light, -5, -9, 10, 5]]);
+  blocks(ctx, [[light, -3, -17, 6, 3], [light, -4, -14, 8, 5], [light, -5, -9, 10, 5], [lamp, -5, -16, 2, 1],
+    [lamp, -5, -15, 1, 3], [lamp, -4, -13, 1, 2], [lamp, 3, -8, 1, 3]]);
   ctx.restore();
   if (active) {
     for (let i = 0; i < 4; i++) {
@@ -334,6 +338,8 @@ function shower(ctx, time, active) {
     [ink, 5, -21, 4, 17], ['#558195', -8, -20, 2, 15], ['#77b5b9', 6, -20, 2, 15],
     [ink, -8, -24, 16, 5], ['#5799aa', -7, -23, 14, 4], ['#99dcd0', -6, -23, 12, 1],
     ['#e0f6e1', -4, -22, 8, 1], ['#348aa4', -5, -20, 10, 2], ['#a5e5e8', -4, -19, 8, 1],
+    [ink, 7, -15, 4, 8], ['#3e788c', 8, -15, 2, 7], ['#6497a3', 9, -14, 1, 5], ['#d78f86', 7, -15, 4, 2],
+    ['#f6bbb0', 8, -16, 2, 1], ['#5799aa', -5, -3, 10, 1], ['#253e59', -2, -4, 4, 2], [active ? '#c7ffeb' : '#689ca9', 0, -3, 2, 1],
   ]);
   for (let i = 0; i < (active ? 7 : 2); i++) {
     const drop = Math.floor((time * (active ? 27 : 8) + i * 4) % 13);
@@ -357,7 +363,9 @@ function truck(ctx, time, active) {
     ['#ef8b7e', -14, -6, 2, 1], [ink, -11, -5, 6, 6], [ink, 6, -5, 6, 6],
     ['#5b6173', -10, -4, 4, 4], ['#5b6173', 7, -4, 4, 4], ['#a7acaf', -9, -3, 2, 2],
     ['#a7acaf', 8, -3, 2, 2], ['#e2b86d', -13, -15, 16, 1],
-    ['#e9cf92', -2, -10, 2, 2], ['#e9cf92', -4, -9, 6, 1], ['#e9cf92', -3, -8, 4, 1],
+    ['#e9cf92', -2, -10, 2, 2], ['#e9cf92', -4, -9, 6, 1], ['#e9cf92', -3, -8, 4, 1], ['#b6d19c', -14, -13, 18, 1],
+    ['#3d8072', -11, -11, 6, 4], ['#4b9a78', -10, -10, 4, 2], ['#a0d0a4', -9, -10, 2, 1],
+    ['#a9bf97', 4, -6, 3, 1], ['#305d62', 3, -7, 1, 3], ['#baba8e', 11, -8, 3, 1],
   ]);
   if (active) spark(ctx, 14, -7, '#fff4b7');
 }
@@ -382,7 +390,9 @@ export function drawStation(ctx, kind, x, y, size, time, { active = false, varia
       const seed = speciesColors[normalized(variant)] ?? speciesColors.sunflare;
       blocks(ctx, [[ink, -7, -18, 14, 8], ['#9f6663', -6, -17, 12, 6], ['#d89270', -5, -17, 10, 1], ['#6d484e', -5, -16, 10, 4], ['#e7ac75', -6, -12, 12, 2]]);
       if (key === 'ingredient') icon(ctx, variant, -4, -21);
-      else blocks(ctx, [[seed.light, -4, -16, 3, 2], [seed.mid, 0, -16, 3, 2], [seed.shine, 3, -15, 2, 2], [seed.spark, -4, -15, 1, 1]]);
+      else blocks(ctx, [[ink, -6, -21, 6, 8], [ink, 0, -20, 6, 7], ['#d4a584', -5, -21, 4, 6],
+        ['#c18d73', 1, -19, 4, 5], [seed.light, -5, -18, 4, 3], [seed.mid, 1, -17, 4, 3],
+        [seed.shine, -4, -18, 1, 2], [seed.spark, 2, -17, 1, 1], ['#f1cda2', -5, -21, 4, 1], ['#e2ac84', 1, -19, 4, 1]]);
     } else if (key === 'prune') {
       icon(ctx, 'prune', -5, -18);
       blocks(ctx, [['#457e62', -7, -14, 2, 2], ['#7eae7b', 5, -14, 2, 1], ['#376658', 6, -13, 2, 1]]);
@@ -399,9 +409,17 @@ export function drawStation(ctx, kind, x, y, size, time, { active = false, varia
 export function drawFloorTile(ctx, x, y, size, variant, time = 0) {
   const key = normalized(variant);
   const theme = themeFor(key);
-  const n = Math.abs(Math.floor(x / size) * 47 + Math.floor(y / size) * 89);
+  const col = Math.floor(x / size);
+  const row = Math.floor(y / size);
+  const n = Math.abs(col * 47 + row * 89);
   at(ctx, x, y, size / 24);
-  blocks(ctx, [[theme.mortar, 0, 0, 24, 24], [theme.floor[n % 2], 0, 0, 23, 23], [theme.floor[1], 1, 1, 21, 1], [theme.floor[1], 1, 1, 1, 21]]);
+  blocks(ctx, [[theme.floor[n % 5 < 2 ? 1 : 0], 0, 0, 24, 24], [theme.mortar, 0, 23, 24, 1]]);
+  ctx.save();
+  ctx.globalAlpha *= .56;
+  const joint = row % 2 ? 12 : 23;
+  blocks(ctx, [[theme.floor[2], 0, 0, 24, 1], [theme.mortar, joint, 0, 1, 23], [theme.floor[2], (joint + 1) % 24, 1, 1, 20]]);
+  if (n % 3 === 0) blocks(ctx, [[theme.floor[2], 3, 4, 7, 1], [theme.mortar, 4, 20, 10, 1], [theme.floor[1], 3, 5, 3, 1]]);
+  ctx.restore();
   if (n % 6 === 0) {
     blocks(ctx, [[theme.floor[2], 3, 7, 4, 1], [theme.floor[2], 16, 18, 2, 1], [theme.mortar, 15, 19, 4, 1]]);
   } else if (n % 7 === 0) {
@@ -547,6 +565,119 @@ export function drawBorderArt(ctx, width, height, tile, variant) {
   }
   for (let y = 7; y < down - 5; y += 24) blocks(ctx, [[middle, 1, y, 3, 5], [light, 2, y + 1, 1, 2], [middle, across - 4, y, 3, 5], [light, across - 3, y + 1, 1, 2]]);
   ctx.restore();
+}
+
+const views = {
+  dawn: ['#78536d', '#bd7a78', '#efb186', '#57716f', '#3c655e', '#fff2bf', 'trees'],
+  moon: ['#293b64', '#4d5c8c', '#7388ad', '#424c77', '#343e66', '#d9effb', 'clouds'],
+  comet: ['#41456b', '#8a6190', '#d7959b', '#5b4e77', '#443b64', '#ffd8af', 'comet'],
+  dune: ['#815b71', '#bc806e', '#e4b084', '#bb8468', '#996b63', '#ffe6ad', 'dunes'],
+  meteor: ['#583d62', '#965872', '#dc896e', '#764b68', '#5b3f65', '#ffce98', 'comet'],
+  nebula: ['#473865', '#754788', '#ac6c9c', '#64457d', '#4d356b', '#ffd2f2', 'clouds'],
+  frost: ['#365071', '#6489a5', '#9dc9c9', '#618fa0', '#497283', '#eaf8ec', 'peaks'],
+  aurora: ['#24445e', '#346986', '#6baf9d', '#386273', '#284c61', '#b5f6cb', 'aurora'],
+  eclipse: ['#493a5b', '#97667c', '#d38b82', '#68516d', '#4a3a5c', '#ffd8af', 'eclipse'],
+  midnight: ['#28264e', '#4a5283', '#717bac', '#475680', '#343d63', '#f5e7bf', 'stars'],
+  pollenworks: ['#87616e', '#ba8a7a', '#ebbb84', '#9f875f', '#74675b', '#ffedaf', 'trees'],
+  tidalglass: ['#386a83', '#6191aa', '#99cdbf', '#4e9a9c', '#368683', '#e2ffda', 'tide'],
+  switchyard: ['#684d73', '#af707d', '#e1a67f', '#7c5976', '#513d66', '#ffd3a0', 'city'],
+  drawbridge: ['#344974', '#6476a4', '#98add0', '#5b6693', '#46547c', '#f9e0eb', 'city'],
+  saturn: ['#282449', '#604770', '#956082', '#534666', '#3b355b', '#f8d4a5', 'rings'],
+};
+
+function windowView(ctx, column, view) {
+  const [sky, cloud, horizon, hill, shade, sun, shape] = view;
+  blocks(ctx, [[sky, 0, 1, 24, 14], [cloud, 0, 5, 24, 9], [horizon, 0, 10, 24, 6]]);
+  const lightColumn = shape === 'eclipse' || shape === 'rings' || shape === 'peaks' ? 8 : 2;
+  if (column === lightColumn) {
+    blocks(ctx, [[sun, 8, 4, 6, 1], [sun, 7, 5, 8, 4], [sun, 8, 9, 6, 1]]);
+    if (shape === 'eclipse') blocks(ctx, [[sky, 9, 4, 5, 5], [sky, 14, 5, 1, 3]]);
+    if (shape === 'rings') blocks(ctx, [[sun, 4, 8, 14, 1], [sky, 3, 8, 2, 1], [sun, 15, 7, 6, 1]]);
+  }
+  if (shape === 'stars' || shape === 'rings' || shape === 'comet') {
+    blocks(ctx, [[sun, 4 + column * 3 % 7, 4, 1, 1], [horizon, 15 + column % 5, 3, 1, 1], [sun, 18, 8, 1, 1]]);
+    if (shape === 'comet' && column % 3 === 0) blocks(ctx, [[sun, 8, 5, 4, 1], [horizon, 12, 4, 4, 1], [cloud, 16, 3, 2, 1]]);
+  }
+  for (let x = 0; x < 24; x += 3) {
+    const i = column * 8 + x;
+    const rise = Math.round((Math.sin(i * .28) + 1) * (shape === 'peaks' ? 2.8 : 1.45));
+    rect(ctx, hill, x, 13 - rise, 3, 4 + rise);
+    if (shape === 'peaks' && rise >= 4) rect(ctx, horizon, x, 13 - rise, 2, 1);
+    if ((shape === 'city' || shape === 'trees') && i % 4 === 0) {
+      const height = 3 + i % 5;
+      rect(ctx, shade, x, 15 - height, 2, height + 1);
+      rect(ctx, hill, x + 1, 16 - height, 1, 2);
+    }
+  }
+  if (shape === 'tide' || shape === 'aurora' || shape === 'clouds') {
+    blocks(ctx, [[horizon, 3, 10, 9, 1], [cloud, 13, 9, 7, 1], [horizon, 16, 13, 5, 1]]);
+  }
+}
+
+function glassPane(ctx, theme, environment, view, column) {
+  const [dark, middle, light, accent] = environment;
+  windowView(ctx, column, view);
+  blocks(ctx, [[dark, 0, 0, 24, 2], [dark, 0, 0, 2, 17], [middle, 1, 2, 1, 13], [dark, 23, 1, 1, 15],
+    [middle, 2, 14, 21, 1], [light, 3, 15, 18, 1], [dark, 0, 16, 24, 2], [theme.mortar, 0, 18, 24, 1]]);
+  ctx.save();
+  ctx.globalAlpha *= .42;
+  blocks(ctx, [[light, 3, 2, 2, 7], [light, 5, 3, 1, 4], [accent, 6, 3, 1, 2], [light, 19, 11, 3, 1]]);
+  ctx.restore();
+}
+
+function plantedBorder(ctx, theme, environment, seed) {
+  const [dark, middle, light, accent] = environment;
+  const [stem, leaf, edge] = theme.leaf;
+  blocks(ctx, [[dark, 1, 9, 22, 8], [middle, 2, 9, 20, 7], [light, 2, 9, 20, 1], [dark, 3, 10, 18, 4],
+    [dark, 4, 16, 2, 2], [dark, 18, 16, 2, 2], [dark, 12, 14, 1, 2], [accent, 5, 15, 2, 1]]);
+  for (let n = 0; n < 4; n++) {
+    const x = 3 + n * 5;
+    const bud = (n + seed) % 3 === 1;
+    const height = 3 + (n + seed) % 4;
+    blocks(ctx, [[stem, x + 2, 12 - height, 1, height + 1], [leaf, x + 1, 9, 3, 2],
+      [leaf, x, 7 + n % 2, 2, 2], [edge, x + 1, 7 + n % 2, 2, 1], [stem, x + 2, 11, 2, 2]]);
+    if (bud) spark(ctx, x + 2, 12 - height, theme.flower);
+    else rect(ctx, edge, x + 2, 12 - height, 2, 1);
+  }
+}
+
+function quietInlay(ctx, theme) {
+  ctx.save();
+  ctx.globalAlpha *= .58;
+  const [base, , raised] = theme.floor;
+  blocks(ctx, [[theme.mortar, 7, 7, 10, 10], [raised, 8, 8, 8, 8], [base, 9, 9, 6, 6],
+    [theme.mortar, 7, 7, 2, 2], [theme.mortar, 15, 7, 2, 2], [theme.mortar, 7, 15, 2, 2], [theme.mortar, 15, 15, 2, 2]]);
+  spark(ctx, 12, 12, raised);
+  ctx.restore();
+}
+
+export function drawGreenhouseDressing(ctx, map, tile, crossing = new Set()) {
+  const theme = themeFor(map.theme);
+  const environment = environments[map.theme] ?? environments.dawn;
+  const view = views[map.theme] ?? views.dawn;
+  for (const [y, row] of map.layout.entries()) {
+    for (const [x, cell] of [...row].entries()) {
+      if (cell !== '.' || crossing.has(`${x}:${y}`)) continue;
+      const side = x === 0 || x === map.width - 1;
+      const end = y === 0 || y === map.height - 1;
+      if (y === 0 && !side) {
+        at(ctx, x * tile, 0, tile / 24);
+        glassPane(ctx, theme, environment, view, x);
+      } else if ((side && !end && y % 3 === 1) || (end && !side && x % 3 === 1)) {
+        const left = x * tile + (side ? tile * (x ? 1.1 : -.1) : 0);
+        const top = y * tile + (side ? (x ? 0 : tile) : tile * .24);
+        at(ctx, left, top, tile / 24);
+        if (side) ctx.rotate(x ? Math.PI / 2 : -Math.PI / 2);
+        plantedBorder(ctx, theme, environment, x + y);
+      } else if (!side && !end && (x * 7 + y * 11) % 17 === 0) {
+        at(ctx, x * tile, y * tile, tile / 24);
+        quietInlay(ctx, theme);
+      } else {
+        continue;
+      }
+      ctx.restore();
+    }
+  }
 }
 
 function vine(ctx, theme, time, seed) {

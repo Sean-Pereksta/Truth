@@ -1,8 +1,12 @@
-import { drawBorderArt, drawEnvironmentTile, drawFloorTile, drawGardener, drawNeedBubble, drawPlant, drawScenery, drawStation } from './pixel-art.mjs';
+import { drawBorderArt, drawEnvironmentTile, drawFloorTile, drawGreenhouseDressing, drawNeedBubble, drawPlant, drawScenery, drawStation } from './pixel-art.mjs';
+import { createAtmosphere } from './atmosphere.mjs';
+import { createGreenhouseEffects, drawBloomHalo } from './effects.mjs';
+import { drawPaintedGardener } from './gardeners.mjs';
 import { getPlantNeed, getTruckWindow } from './sim.mjs';
 
 const tile = 48;
 const boothTypes = new Set(['sun', 'moon', 'prism']);
+const menuSky = createAtmosphere();
 export const THEME_COLORS = {
   dawn: '#ffc280', moon: '#9adfff', comet: '#bd9cff', dune: '#f9aa73', meteor: '#ff8d79',
   nebula: '#f4a0d9', frost: '#a9eefb', aurora: '#91f4c5', eclipse: '#e1a7ff', midnight: '#a9a8ff',
@@ -93,24 +97,42 @@ function drawPlatform(ctx, boat) {
   block(ctx, '#8ce8d9', x + 13, y - 14, 4, 4);
 }
 
+function spotlight(station) {
+  const size = 88;
+  const layer = document.createElement('canvas');
+  layer.width = layer.height = size;
+  const ctx = layer.getContext('2d');
+  const color = stationColor(station);
+  const mid = size / 2;
+  const light = ctx.createRadialGradient(mid, mid, 1, mid, mid, mid);
+  light.addColorStop(0, `${color}ae`);
+  light.addColorStop(.26, `${color}6b`);
+  light.addColorStop(.58, `${color}29`);
+  light.addColorStop(1, `${color}00`);
+  ctx.fillStyle = light;
+  ctx.fillRect(0, 0, size, size);
+  return layer;
+}
+
 export function createBoardRenderer(canvas) {
   const ctx = canvas.getContext('2d');
   const background = document.createElement('canvas');
   const floor = background.getContext('2d');
   const actors = new Map();
-  const bursts = [];
+  const atmosphere = createAtmosphere();
+  const greenhouseEffects = createGreenhouseEffects(tile);
+  const lights = new Map();
   let targets = [];
-  let lastEvent;
   let level;
   let crossing;
   let edgeProps;
+  let board;
 
   function prepare(map) {
     level = map;
     actors.clear();
-    bursts.length = 0;
     targets = [];
-    lastEvent = undefined;
+    greenhouseEffects.reset(map);
     crossing = new Set();
     for (const belt of map.conveyors ?? []) {
       for (const point of belt.path) crossing.add(`${point.x}:${point.y}`);
@@ -130,8 +152,11 @@ export function createBoardRenderer(canvas) {
       edgeProps.push([2 + seed, 0], [map.width - 3 - seed, 0], [0, 3 + seed], [map.width - 1, 6 - seed]);
     }
     edgeProps = edgeProps.filter(([x, y]) => map.layout[y]?.[x] === '.' && !crossing.has(`${x}:${y}`));
-    canvas.width = background.width = map.width * tile;
-    canvas.height = background.height = map.height * tile;
+    board = { x: 34, y: 20, width: map.width * tile, height: map.height * tile };
+    background.width = board.width;
+    background.height = board.height;
+    canvas.width = board.width + board.x * 2;
+    canvas.height = board.height + board.y + 44;
     ctx.imageSmoothingEnabled = false;
     floor.imageSmoothingEnabled = false;
     for (const [y, row] of map.layout.entries()) {
@@ -142,22 +167,22 @@ export function createBoardRenderer(canvas) {
         drawEnvironmentTile(floor, left, top, tile, cell === '#' && isChannel(map.theme, x) ? ':' : cell, map.theme);
       }
     }
-    drawBorderArt(floor, canvas.width, canvas.height, tile, map.theme);
+    drawBorderArt(floor, board.width, board.height, tile, map.theme);
+    drawGreenhouseDressing(floor, map, tile, crossing);
+    lights.clear();
     for (const station of map.stations) {
       if (!boothTypes.has(station.type) && station.type !== 'shower') continue;
-      const shade = stationColor(station);
-      const at = center(station);
-      floor.globalAlpha = .1;
-      block(floor, shade, at.x - 29, at.y - 12, 58, 25);
-      block(floor, shade, at.x - 25, at.y - 18, 50, 37);
-      floor.globalAlpha = .16;
-      block(floor, shade, at.x - 17, at.y + 10, 34, 15);
-      floor.globalAlpha = 1;
+      if (!lights.has(station.type)) lights.set(station.type, spotlight(station));
     }
   }
 
   function draw(state, myId, time, effects, selected) {
+    atmosphere.draw(ctx, { width: canvas.width, height: canvas.height, board, theme: level.theme, time, effects });
+    ctx.save();
+    ctx.translate(board.x, board.y);
     ctx.drawImage(background, 0, 0);
+    greenhouseEffects.update(state, time, effects);
+    greenhouseEffects.drawAmbient(ctx, time);
     const visualTime = effects ? time : 0;
     const plants = new Map(state.plants.map(plant => [plant.id, plant]));
     const players = new Map(state.players.map(player => [player.id, player]));
@@ -166,6 +191,19 @@ export function createBoardRenderer(canvas) {
     const bubbles = [];
     const scene = [];
     const platformStates = new Map((state.platforms ?? []).map(boat => [boat.id, boat]));
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    for (const station of state.stations) {
+      const glow = lights.get(station.type);
+      if (!glow) continue;
+      const { x, y } = center(station);
+      const active = station.plantId || tasks.has(station.id);
+      const pulse = effects && active ? .09 * Math.sin(time * 3.5 + station.x + station.y) : 0;
+      ctx.globalAlpha = (active ? .62 : .23) + pulse;
+      ctx.drawImage(glow, x - glow.width / 2, y - glow.height / 2 + 6);
+    }
+    ctx.restore();
 
     for (const [y, row] of level.layout.entries()) {
       for (const [x, cell] of [...row].entries()) {
@@ -217,6 +255,7 @@ export function createBoardRenderer(canvas) {
         drawStation(ctx, station.type, x, y, tile * large, visualTime, { active, variant: station.variant, palette: level.theme });
         if (plant) {
           const need = getPlantNeed(plant, state);
+          if (plant.phase === 'bloom') drawBloomHalo(ctx, x, y - tile * .13, tile * .75, plant.flowerId, visualTime, effects);
           drawPlant(ctx, plant.flowerId, plant.phase, x, y - tile * .13, tile * .75, visualTime, { pot: plant.pot, quality: plant.quality, progress: need?.progress });
           if (need) bubbles.push({ need, x: x + (boothTypes.has(station.type) ? 15 : 9), y: y - 38, stationId: station.id });
         }
@@ -228,7 +267,7 @@ export function createBoardRenderer(canvas) {
 
     for (const [index, player] of state.players.entries()) {
       const last = actors.get(player.id);
-      const view = last ?? { x: player.x, y: player.y, facing: 1 };
+      const view = last ?? { x: player.x, y: player.y, facing: player.facing || 1 };
       const dx = player.x - view.x;
       const dy = player.y - view.y;
       if (Math.abs(dx) > .015) view.facing = dx > 0 ? 1 : -1;
@@ -244,11 +283,15 @@ export function createBoardRenderer(canvas) {
           block(ctx, '#1d2935', x - 14, y + 2, 28, 4);
           block(ctx, '#b3ffdc', x - 10, y + 3, 20, 2);
         }
-        drawGardener(ctx, x, y, tile * .92, visualTime, { index: player.seat ?? index, moving, facing: view.facing, carrying: Boolean(plant) });
+        const height = tile * 1.13;
+        drawPaintedGardener(ctx, x, y, height, visualTime, { index: player.seat ?? index, moving, facing: view.facing, carrying: Boolean(plant), effects });
         if (plant) {
           const need = getPlantNeed(plant, state);
-          drawPlant(ctx, plant.flowerId, plant.phase, x + view.facing * 10, y - 10, tile * .63, visualTime, { pot: plant.pot, quality: plant.quality, progress: need?.progress });
-          if (need) bubbles.push({ need, x: x + 13, y: y - 34 });
+          const potX = x + view.facing * 9;
+          const potY = y - height * .42;
+          if (plant.phase === 'bloom') drawBloomHalo(ctx, potX, potY, tile * .58, plant.flowerId, visualTime, effects);
+          drawPlant(ctx, plant.flowerId, plant.phase, potX, potY, tile * .58, visualTime, { pot: plant.pot, quality: plant.quality, progress: need?.progress });
+          if (need) bubbles.push({ need, x: x + 18, y: y - 39 });
         }
       } });
     }
@@ -259,34 +302,14 @@ export function createBoardRenderer(canvas) {
       const y = (plant.y + .87) * tile;
       scene.push({ y: plant.y, paint() {
         const need = getPlantNeed(plant, state);
+        if (plant.phase === 'bloom') drawBloomHalo(ctx, x, y, tile * .79, plant.flowerId, visualTime, effects);
         drawPlant(ctx, plant.flowerId, plant.phase, x, y, tile * .79, visualTime, { pot: plant.pot, quality: plant.quality, progress: need?.progress });
         if (need) bubbles.push({ need, x, y: y - 36, plantId: plant.beltId ? undefined : plant.id });
       } });
     }
 
     for (const entry of scene.sort((a, b) => a.y - b.y)) entry.paint();
-    const impactColors = { deliver: '#fff2aa', bloom: '#ffd3f1', roots: '#c8ffc7', repot: '#efb18e', water: '#98e7ff' };
-    if (effects && lastEvent !== undefined) {
-      for (const event of state.events) {
-        if (event.id > lastEvent && impactColors[event.kind]) bursts.push({ ...event, start: time, color: impactColors[event.kind] });
-      }
-    }
-    lastEvent = state.lastEventId;
-    while (bursts.length && time - bursts[0].start > .7) bursts.shift();
-    if (effects) {
-      for (const burst of bursts) {
-        const age = time - burst.start;
-        const x = (burst.x + .5) * tile;
-        const y = (burst.y + .45) * tile;
-        ctx.globalAlpha = 1 - age / .7;
-        for (let fleck = 0; fleck < 8; fleck++) {
-          const angle = fleck * Math.PI / 4 + burst.id;
-          const reach = 5 + age * 31;
-          block(ctx, burst.color, x + Math.cos(angle) * reach, y + Math.sin(angle) * reach - age * 8, fleck % 3 + 2, 2);
-        }
-        ctx.globalAlpha = 1;
-      }
-    }
+    greenhouseEffects.drawBursts(ctx, time);
     targets = [];
     for (const { need, x, y, stationId, plantId, task } of bubbles) {
       if (task) {
@@ -296,26 +319,33 @@ export function createBoardRenderer(canvas) {
         block(ctx, '#abffdc', x - 16, y - 3, Math.round(32 * progress), 3);
         continue;
       }
-      const left = Math.min(canvas.width - 14, Math.max(14, x));
-      const top = Math.max(21, y);
+      const left = Math.min(board.width + 7, Math.max(-7, x));
+      const top = Math.max(3, y);
       drawNeedBubble(ctx, need.kind, left, top, 22, visualTime, need);
       if (plantId || stationId) targets.push({ x: left, y: top, target: plantId ? { plantId } : { stationId } });
     }
+    ctx.restore();
   }
 
-  function bubbleAt(x, y) {
-    return targets.findLast(item => Math.abs(x - item.x) <= 10 && y >= item.y - 17 && y <= item.y + 2)?.target;
+  function hitTest(x, y) {
+    const relativeX = x - board.x;
+    const relativeY = y - board.y;
+    const bubble = targets.findLast(item => Math.abs(relativeX - item.x) <= 10 && relativeY >= item.y - 17 && relativeY <= item.y + 2)?.target;
+    const column = Math.floor(relativeX / tile);
+    const row = Math.floor(relativeY / tile);
+    const cell = column >= 0 && column < level.width && row >= 0 && row < level.height ? { x: column, y: row } : null;
+    return { bubble, cell };
   }
 
-  return { prepare, draw, bubbleAt };
+  return { prepare, draw, hitTest };
 }
 
 export function drawMenuArt(canvas, t) {
   const ctx = canvas.getContext('2d');
   const { width, height } = canvas;
   ctx.imageSmoothingEnabled = false;
-  block(ctx, '#25173b', 0, 0, width, height);
-  block(ctx, '#30244e', 0, 64, width, 115);
+  const board = { x: 14, y: height - 49, width: width - 28, height: 29 };
+  menuSky.draw(ctx, { width, height, board, theme: 'comet', time: t, effects: Boolean(t) });
   for (let i = 0; i < 72; i++) {
     const x = (i * 77 + 36) % width;
     const y = (i * 39 + 13) % (height - 42);
@@ -327,10 +357,10 @@ export function drawMenuArt(canvas, t) {
   for (const [index, x] of [18, 118, 407, 511].entries()) drawScenery(ctx, x, height - 15, 70, 'aurora', t, index);
   drawStation(ctx, 'truck', 64, height - 15, 108, t, { active: true, palette: 'dawn' });
   drawStation(ctx, 'moon', 256, height - 31, 145, t, { active: true, palette: 'moon' });
-  drawGardener(ctx, 169, height - 12, 91, t, { index: 0, facing: 1, carrying: true });
-  drawPlant(ctx, 'sunflare', 'bloom', 197, height - 31, 92, t, { pot: 'clay' });
+  drawPaintedGardener(ctx, 169, height - 12, 111, t, { index: 0, facing: 1, carrying: true });
+  drawPlant(ctx, 'sunflare', 'bloom', 188, height - 54, 76, t, { pot: 'clay' });
   drawPlant(ctx, 'moonbell', 'bloom', 262, height - 47, 86, t, { pot: 'silver' });
-  drawGardener(ctx, 367, height - 9, 91, t, { index: 1, facing: -1, carrying: true });
-  drawPlant(ctx, 'cometvine', 'bloom', 341, height - 29, 104, t, { pot: 'glass' });
+  drawPaintedGardener(ctx, 367, height - 9, 111, t, { index: 1, facing: -1, carrying: true });
+  drawPlant(ctx, 'cometvine', 'bloom', 348, height - 51, 80, t, { pot: 'glass' });
   drawStation(ctx, 'shower', 460, height - 17, 115, t, { active: true, palette: 'aurora' });
 }
