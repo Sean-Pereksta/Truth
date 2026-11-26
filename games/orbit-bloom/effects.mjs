@@ -19,10 +19,15 @@ const themes = {
   switchyard: ['#f7a785', '#f4d59a'], drawbridge: ['#a7b9f7', '#cfb0ed'], saturn: ['#ecc081', '#c0a8f2'],
 };
 
-const bloomColors = {
-  sunflare: ['#ffbd6b', '#fff4a5', '#fff7cf'], moonbell: ['#80bbef', '#a9e7ff', '#eefcff'],
-  cometvine: ['#70e4b6', '#bafbd1', '#e2fee4'], nebulalily: ['#e990d9', '#f8bdf1', '#ffe9f7'],
-  eclipseorchid: ['#b98aec', '#d8b6f4', '#f4e1fc'],
+const bloomStyles = {
+  sunflare: { colors: ['#ff963c', '#ffd174', '#fff7b9'], crown: .83, count: 7, span: .70, pace: .24, motif: 'ray' },
+  moonbell: { colors: ['#618dff', '#9ddcff', '#effeff'], crown: .78, count: 5, span: .58, pace: .39, motif: 'bead' },
+  cometvine: { colors: ['#23c5a5', '#89f3c0', '#e7ffc8'], crown: .96, count: 6, span: .73, pace: .27, motif: 'comet' },
+  nebulalily: { colors: ['#cf5cac', '#fa9de1', '#ffe0fa'], crown: .82, count: 6, span: .76, pace: .21, motif: 'petal' },
+  eclipseorchid: { colors: ['#8e63e5', '#dba5fa', '#fbdbf0'], crown: .87, count: 5, span: .68, pace: .23, motif: 'orbit' },
+  emberhibiscus: { colors: ['#ff623e', '#ff9b62', '#ffe0a2'], crown: .88, count: 7, span: .64, pace: .43, motif: 'ember' },
+  aurorairis: { colors: ['#36d7d7', '#b995ff', '#bcffe8'], crown: .87, count: 6, span: .70, pace: .23, motif: 'aurora' },
+  starjasmine: { colors: ['#eab269', '#ffe3a4', '#fffdec'], crown: .83, count: 7, span: .66, pace: .18, motif: 'constellation' },
 };
 
 const thermalColors = {
@@ -181,10 +186,63 @@ export function drawStationEffect(ctx, { type, x, y, size, time, active, effects
   ctx.restore();
 }
 
+function bloomStroke(ctx, color, x, y, size, angle, curve = 0) {
+  const dx = Math.cos(angle) * size;
+  const dy = Math.sin(angle) * size;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = Math.max(.7, size * .28);
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x - dx, y - dy);
+  ctx.quadraticCurveTo(x - dy * curve, y + dx * curve, x + dx, y + dy);
+  ctx.stroke();
+}
+
+function bloomMote(ctx, motif, color, x, y, size, angle) {
+  ctx.fillStyle = color;
+  switch (motif) {
+    case 'ray':
+      bloomStroke(ctx, color, x, y, size * 1.45, angle);
+      break;
+    case 'bead':
+      ellipse(ctx, x, y, size * .57, size * .92);
+      ctx.fill();
+      break;
+    case 'comet':
+      bloomStroke(ctx, color, x, y, size * 1.5, angle, .7);
+      ellipse(ctx, x + Math.cos(angle) * size, y + Math.sin(angle) * size, size * .48, size * .48);
+      ctx.fill();
+      break;
+    case 'petal':
+      ellipse(ctx, x, y, size * 1.17, size * .56, angle);
+      ctx.fill();
+      break;
+    case 'orbit':
+      ctx.strokeStyle = color;
+      ctx.lineWidth = Math.max(.75, size * .27);
+      ellipse(ctx, x, y, size, size * .65, angle);
+      ctx.stroke();
+      break;
+    case 'ember':
+      ellipse(ctx, x, y, size * .55, size * 1.12, -.22 + Math.cos(angle) * .3);
+      ctx.fill();
+      break;
+    case 'aurora':
+      bloomStroke(ctx, color, x, y, size * 1.42, angle, .76);
+      bloomStroke(ctx, color, x + size * .8, y - size * .62, size * .68, angle, .35);
+      break;
+    default:
+      star(ctx, color, x, y, Math.max(1, Math.round(size)));
+      break;
+  }
+}
+
 function scatter(ctx, particle, x, y, scale) {
   const size = Math.max(1, Math.round(particle.size * scale));
   const { motion, color } = particle;
-  if (motion === 'star') {
+  if (particle.bloom) {
+    bloomMote(ctx, motion, color, x, y, size, Math.atan2(particle.vy, particle.vx));
+  } else if (motion === 'star') {
     star(ctx, color, x, y, size);
   } else if (motion === 'petal') {
     ctx.fillStyle = color;
@@ -224,13 +282,15 @@ function drawScore(ctx, score, x, y) {
   }
 }
 
-function createBurst(event, preset, time, tileSize, colors = preset.colors) {
+function createBurst(event, preset, time, tileSize, bloom) {
+  const colors = bloom?.colors ?? preset.colors;
   const particles = Array.from({ length: preset.count }, (_, index) => {
     const seed = event.id * 111 + index;
     const angle = index * Math.PI * 2 / preset.count + unit(seed + 41) * .5;
     const velocity = lerp(.23, .65, unit(seed + 91)) * tileSize;
-    return { motion: preset.motion, color: colors[index % colors.length], size: 1 + index % 3,
-      vx: Math.cos(angle) * velocity, vy: Math.sin(angle) * velocity * .48,
+    return { motion: bloom ? index % 4 === 0 ? 'constellation' : bloom.motif : preset.motion,
+      bloom: Boolean(bloom), color: colors[index % colors.length], size: 1 + index % 3,
+      vx: Math.cos(angle) * velocity, vy: Math.sin(angle) * velocity * (bloom?.motif === 'bead' ? .78 : .48),
     };
   });
   return { kind: event.kind, text: event.text, time, life: preset.life, particles, color: colors[0],
@@ -240,21 +300,61 @@ function createBurst(event, preset, time, tileSize, colors = preset.colors) {
 
 export function drawBloomHalo(ctx, x, y, size, flowerId, time, effects) {
   if (!effects) return;
-  const colors = bloomColors[flowerId] ?? bloomColors.sunflare;
-  const crown = y - size * (flowerId === 'cometvine' ? 1.02 : .92);
-  glow(ctx, colors[0], x, crown, size * .54, size * .45, .44);
-  glow(ctx, colors[1], x, crown + size * .05, size * .32, size * .31, .40);
+  const style = bloomStyles[flowerId] ?? bloomStyles.sunflare;
+  const { colors, count, span, pace, motif } = style;
+  const crown = y - size * style.crown;
+  const phase = x * .071 + y * .034;
+  const breath = .95 + Math.sin(time * 1.5 + phase) * .05;
+  glow(ctx, colors[0], x, y - size * .035, size * .83, size * .17, .27);
+  glow(ctx, colors[0], x, crown, size * span * 1.24, size * .72, .78 * breath);
+  glow(ctx, colors[1], x, crown + size * .035, size * span * .84, size * .49, .69 * breath);
+  glow(ctx, colors[2], x, crown, size * .37, size * .31, .68);
   ctx.save();
-  for (let index = 0; index < 3; index++) {
-    const progress = fraction(time * (.27 + index * .03) + index / 3 + x / 113);
-    const px = x + Math.cos(time + index * 2.6) * size * (.38 + index * .05);
-    const py = crown + size * (.47 - progress * .92);
-    ctx.globalAlpha = Math.sin(progress * Math.PI) * .57;
-    star(ctx, colors[2], px, py, index ? 1 : 2);
+  const surface = ctx.globalAlpha;
+  if (motif === 'orbit') {
+    ctx.globalAlpha *= .46;
+    ctx.strokeStyle = colors[1];
+    ctx.lineWidth = Math.max(1, size * .025);
+    ellipse(ctx, x, crown + size * .13, size * .63, size * .22, -.33);
+    ctx.stroke();
+  }
+  for (let index = 0; index < count; index++) {
+    const progress = fraction(time * (pace + index * .014) + index / count + phase * .17);
+    const angle = index * Math.PI * 2 / count + phase * .74 + time * (motif === 'comet' ? 1.12 : .31);
+    const radius = size * span * (.73 + progress * .27);
+    let px = x + Math.cos(angle) * radius;
+    let py = crown + Math.sin(angle) * radius * .67;
+    if (motif === 'bead' || motif === 'ember') {
+      px = x + (index % 2 ? -1 : 1) * size * (.32 + index * .049) + Math.cos(angle) * size * .09;
+      py = crown + size * (motif === 'bead' ? progress * .98 - .40 : .48 - progress * .99);
+    }
+    ctx.globalAlpha = surface * Math.sin(progress * Math.PI) * .88;
+    const radiusOfMote = Math.max(1, size * (index % 3 === 0 ? .065 : .042));
+    bloomMote(ctx, motif, colors[1 + (index % 2)], px, py, radiusOfMote, angle);
   }
   ctx.restore();
 }
 
+export function drawBloomHighlights(ctx, x, y, size, flowerId, time, effects) {
+  if (!effects) return;
+  const style = bloomStyles[flowerId] ?? bloomStyles.sunflare;
+  const { colors, motif } = style;
+  const crown = y - size * style.crown;
+  const phase = x * .042 + y * .019;
+  ctx.save();
+  const surface = ctx.globalAlpha;
+  for (let index = 0; index < 3; index++) {
+    const progress = fraction(time * .38 + phase + index * .31);
+    const light = Math.sin(progress * Math.PI) ** 2;
+    const side = index % 2 ? 1 : -1;
+    const cx = x + side * size * (.25 + .1 * progress) + index * size * .027;
+    const cy = crown + size * (index * .13 - progress * .15 - .03);
+    ctx.globalAlpha = surface * light * .75;
+    const moteSize = Math.max(1.2, size * (.032 + .026 * light));
+    bloomMote(ctx, index === 1 ? 'constellation' : motif, colors[2], cx, cy, moteSize, -.8 * side);
+  }
+  ctx.restore();
+}
 export function createGreenhouseEffects(tileSize = 48) {
   let active = false;
   let lastEvent;
@@ -290,8 +390,13 @@ export function createGreenhouseEffects(tileSize = 48) {
       for (const event of state.events) {
         const preset = effectsByEvent[event.kind];
         if (event.id <= since || !preset || !Number.isFinite(event.x) || !Number.isFinite(event.y)) continue;
-        const boothPlant = event.kind === 'bloom' && state.plants?.find(plant => plant.stationId === event.stationId);
-        bursts.push(createBurst(event, preset, time, tileSize, bloomColors[boothPlant?.flowerId]));
+        let bloom;
+        if (event.kind === 'bloom') {
+          const flowerId = event.flowerId ?? event.text;
+          const boothPlant = state.plants?.find(plant => plant.stationId === event.stationId);
+          bloom = bloomStyles[flowerId] ?? bloomStyles[boothPlant?.flowerId] ?? bloomStyles.nebulalily;
+        }
+        bursts.push(createBurst(event, preset, time, tileSize, bloom));
       }
       if (bursts.length > 16) bursts = bursts.slice(-16);
     }

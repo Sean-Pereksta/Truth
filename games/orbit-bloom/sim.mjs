@@ -808,7 +808,7 @@ function updatePlant(state, level, plant, weather, deltaMs) {
         emit(state, 'roots', station, null, station.id);
     } else {
         plant.heatDeadlineMs = state.elapsedMs + level.bloomGraceMs;
-        emit(state, 'bloom', station, null, station.id);
+        emit(state, 'bloom', station, null, station.id, plant.flowerId);
     }
 }
 

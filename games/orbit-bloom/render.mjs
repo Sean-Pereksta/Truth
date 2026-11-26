@@ -1,10 +1,11 @@
 import { drawFloorTile, drawNeedBubble } from './pixel-art.mjs';
 import { createAtmosphere } from './atmosphere.mjs';
-import { createGreenhouseEffects, drawBloomHalo, drawStationEffect } from './effects.mjs';
+import { createGreenhouseEffects, drawBloomHalo, drawBloomHighlights, drawStationEffect } from './effects.mjs';
 import { drawPaintedGardener } from './gardeners.mjs';
 import { drawCounters, drawDispatchApron, drawInterior, drawInteriorWindows, interiorArtReady, texture as paintMaterial } from './interior.mjs';
 import { drawPaintedFloor, drawWaterChannel, paintedFloorReady } from './painted-floor.mjs';
 import { drawPaintedPlant, drawPaintedScenery, drawPaintedStation } from './painted-world.mjs';
+import { createSunlight } from './sunlight.mjs';
 import { getPlantNeed, getTruckWindow } from './sim.mjs';
 
 const tile = 48;
@@ -156,12 +157,22 @@ function spotlight(station) {
   return layer;
 }
 
+function paintFlower(ctx, plant, x, y, size, time, effects, options = {}) {
+  const lit = plant.phase === 'bloom';
+  if (lit) drawBloomHalo(ctx, x, y, size, plant.flowerId, time, effects);
+  drawPaintedPlant(ctx, plant.flowerId, plant.phase, x, y, size, time, {
+    pot: plant.pot, quality: plant.quality, effects, ...options,
+  });
+  if (lit) drawBloomHighlights(ctx, x, y, size, plant.flowerId, time, effects);
+}
+
 export function createBoardRenderer(canvas) {
   const ctx = canvas.getContext('2d');
   const background = document.createElement('canvas');
   const floor = background.getContext('2d');
   const actors = new Map();
   const atmosphere = createAtmosphere();
+  const sunlight = createSunlight();
   const greenhouseEffects = createGreenhouseEffects(tile);
   const lights = new Map();
   let targets = [];
@@ -175,6 +186,7 @@ export function createBoardRenderer(canvas) {
     actors.clear();
     targets = [];
     greenhouseEffects.reset(map);
+    sunlight.prepare(map, tile);
     board = { x: 34, y: 42, width: map.width * tile, height: map.height * tile };
     background.width = board.width;
     background.height = board.height + board.y;
@@ -212,6 +224,7 @@ export function createBoardRenderer(canvas) {
     drawWaterChannel(ctx, level, tile, time, effects);
     drawDispatchApron(ctx, level, tile, THEME_COLORS[level.theme]);
     drawInteriorWindows(ctx, level, tile, atmosphere);
+    sunlight.drawFloor(ctx, time, effects);
     greenhouseEffects.update(state, time, effects);
     greenhouseEffects.drawAmbient(ctx, time);
     const visualTime = effects ? time : 0;
@@ -284,8 +297,7 @@ export function createBoardRenderer(canvas) {
         drawStationEffect(ctx, { type: station.type, x, y, size, time, active, effects });
         if (plant) {
           const need = getPlantNeed(plant, state);
-          if (plant.phase === 'bloom') drawBloomHalo(ctx, x, y - tile * .13, tile * .75, plant.flowerId, visualTime, effects);
-          drawPaintedPlant(ctx, plant.flowerId, plant.phase, x, y - tile * .13, tile * .75, visualTime, { pot: plant.pot, quality: plant.quality, progress: need?.progress, effects });
+          paintFlower(ctx, plant, x, y - tile * .13, tile * .75, visualTime, effects, { progress: need?.progress });
           if (need) bubbles.push({ need, x: x + (boothTypes.has(station.type) ? 15 : 9), y: y - 38, stationId: station.id });
         }
       } });
@@ -318,8 +330,7 @@ export function createBoardRenderer(canvas) {
           const need = getPlantNeed(plant, state);
           const potX = x + view.facing * 9;
           const potY = y - height * .42;
-          if (plant.phase === 'bloom') drawBloomHalo(ctx, potX, potY, tile * .58, plant.flowerId, visualTime, effects);
-          drawPaintedPlant(ctx, plant.flowerId, plant.phase, potX, potY, tile * .58, visualTime, { pot: plant.pot, quality: plant.quality, progress: need?.progress, effects, shadow: false });
+          paintFlower(ctx, plant, potX, potY, tile * .58, visualTime, effects, { progress: need?.progress, shadow: false });
           if (need) bubbles.push({ need, x: x + 18, y: y - 39 });
         }
       } });
@@ -331,14 +342,14 @@ export function createBoardRenderer(canvas) {
       const y = (plant.y + .87) * tile;
       scene.push({ y: plant.y, paint() {
         const need = getPlantNeed(plant, state);
-        if (plant.phase === 'bloom') drawBloomHalo(ctx, x, y, tile * .79, plant.flowerId, visualTime, effects);
-        drawPaintedPlant(ctx, plant.flowerId, plant.phase, x, y, tile * .79, visualTime, { pot: plant.pot, quality: plant.quality, progress: need?.progress, effects });
+        paintFlower(ctx, plant, x, y, tile * .79, visualTime, effects, { progress: need?.progress });
         if (need) bubbles.push({ need, x, y: y - 36, plantId: plant.beltId ? undefined : plant.id });
       } });
     }
 
     for (const entry of scene.sort((a, b) => a.y - b.y)) entry.paint();
     greenhouseEffects.drawBursts(ctx, time);
+    sunlight.drawLens(ctx, time, effects);
     targets = [];
     for (const { need, x, y, stationId, plantId, task } of bubbles) {
       if (task) {
@@ -387,9 +398,9 @@ export function drawMenuArt(canvas, t) {
   drawPaintedStation(ctx, 'truck', 64, height - 15, 108, t, { active: true, palette: 'dawn', effects: Boolean(t) });
   drawPaintedStation(ctx, 'moon', 256, height - 31, 145, t, { active: true, palette: 'moon', effects: Boolean(t) });
   drawPaintedGardener(ctx, 169, height - 12, 111, t, { index: 0, facing: 1, carrying: true });
-  drawPaintedPlant(ctx, 'sunflare', 'bloom', 188, height - 54, 76, t, { pot: 'clay', effects: Boolean(t), shadow: false });
-  drawPaintedPlant(ctx, 'moonbell', 'bloom', 262, height - 47, 86, t, { pot: 'silver', effects: Boolean(t) });
+  paintFlower(ctx, { flowerId: 'sunflare', phase: 'bloom', pot: 'clay' }, 188, height - 54, 76, t, Boolean(t), { shadow: false });
+  paintFlower(ctx, { flowerId: 'aurorairis', phase: 'bloom', pot: 'silver' }, 262, height - 47, 86, t, Boolean(t));
   drawPaintedGardener(ctx, 367, height - 9, 111, t, { index: 1, facing: -1, carrying: true });
-  drawPaintedPlant(ctx, 'cometvine', 'bloom', 348, height - 51, 80, t, { pot: 'glass', effects: Boolean(t), shadow: false });
+  paintFlower(ctx, { flowerId: 'starjasmine', phase: 'bloom', pot: 'glass' }, 348, height - 51, 80, t, Boolean(t), { shadow: false });
   drawPaintedStation(ctx, 'shower', 460, height - 17, 115, t, { active: true, palette: 'aurora', effects: Boolean(t) });
 }
