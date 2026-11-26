@@ -5,12 +5,19 @@ import { drawPaintedGardener } from './gardeners.mjs';
 import { drawCounters, drawDispatchApron, drawInterior, drawInteriorWindows, interiorArtReady, texture as paintMaterial } from './interior.mjs';
 import { drawPaintedFloor, drawWaterChannel, paintedFloorReady } from './painted-floor.mjs';
 import { drawPaintedPlant, drawPaintedScenery, drawPaintedStation } from './painted-world.mjs';
+import { FLOWERS } from './levels.mjs';
+import { drawStationIcon } from './station-icons.mjs';
 import { createSunlight } from './sunlight.mjs';
 import { getPlantNeed, getTruckWindow } from './sim.mjs';
 
 const tile = 48;
 const boothTypes = new Set(['sun', 'moon', 'prism']);
 const menuSky = createAtmosphere();
+const supplyLabels = {
+  clay: 'Terracotta', silver: 'Silver pots', glass: 'Glass pots',
+  sunstone: 'Sunstone', moonsoil: 'Moonsoil', stardust: 'Stardust',
+};
+const signFont = '800 15px system-ui, sans-serif';
 export const THEME_COLORS = {
   dawn: '#ffc280', moon: '#9adfff', comet: '#bd9cff', dune: '#f9aa73', meteor: '#ff8d79',
   nebula: '#f4a0d9', frost: '#a9eefb', aurora: '#91f4c5', eclipse: '#e1a7ff', midnight: '#a9a8ff',
@@ -42,6 +49,131 @@ function rounded(ctx, x, y, width, height, radius, fill, stroke) {
     ctx.strokeStyle = stroke;
     ctx.stroke();
   }
+}
+
+function stationIconKey(station) {
+  return station.type === 'repot' || station.type === 'ingredient' ? station.variant : station.type;
+}
+
+function stationAccent(station) {
+  return station.type === 'seed' ? FLOWERS[station.variant].color : stationColor(station);
+}
+
+function overlaps(a, b) {
+  return a.left < b.left + b.width + 2 && a.left + a.width + 2 > b.left &&
+    a.top < b.top + b.height + 2 && a.top + a.height + 2 > b.top;
+}
+
+function supplySigns(ctx, level) {
+  const signs = [];
+  ctx.save();
+  ctx.font = signFont;
+  for (const station of level.stations) {
+    if (station.type !== 'repot' && station.type !== 'ingredient') continue;
+    const label = supplyLabels[station.variant];
+    const { x, y } = center(station);
+    const width = Math.ceil(ctx.measureText(label).width) + 29;
+    const left = Math.max(-20, Math.min(x - width / 2, level.width * tile + 20 - width));
+    const sign = { left, top: y + 12, width, height: 19, label, station };
+    // Adjacent supply bins can share a counter without their labels covering each other.
+    while (signs.some(other => overlaps(sign, other))) sign.top += 22;
+    signs.push(sign);
+  }
+  ctx.restore();
+  return signs;
+}
+
+function drawStationSigns(ctx, stations, signs) {
+  ctx.save();
+  ctx.font = signFont;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  for (const station of stations) {
+    if (station.type === 'repot' || station.type === 'ingredient') continue;
+    const { x, y } = center(station);
+    const iconX = x + 14;
+    const iconY = y + 15;
+    rounded(ctx, iconX - 10, iconY - 10, 20, 20, 5, '#232137', '#c8b3b2');
+    drawStationIcon(ctx, stationIconKey(station), iconX, iconY, 16, stationAccent(station));
+  }
+  for (const sign of signs) {
+    const { left, top, width, height, station, label } = sign;
+    const y = top + height / 2;
+    const anchor = center(station);
+    if (top > anchor.y + 12) {
+      block(ctx, stationColor(station), anchor.x - 2, anchor.y + 11, 4, 4);
+      block(ctx, stationColor(station), anchor.x - 1, anchor.y + 15, 2, top - anchor.y - 15);
+    }
+    rounded(ctx, left, top, width, height, 4, '#302538', '#ac8e85');
+    drawStationIcon(ctx, station.variant, left + 11, y, 16);
+    ctx.fillStyle = '#fff0d9';
+    ctx.fillText(label, left + 23, y);
+  }
+  ctx.restore();
+}
+
+function paintGuide(ctx, station, guide, point, board, occupied, targets, urgent) {
+  const sow = guide.kind === 'seed';
+  const pickup = guide.kind === 'pickup';
+  const iconKey = pickup ? 'remove' : station ? stationIconKey(station) : 'shelf';
+  const accent = urgent ? '#ff9484' : station ? stationAccent(station) : '#acd9c5';
+  const outline = urgent ? '#a14b59' : '#3b2a3b';
+  const { x, y } = point;
+  // Keep the counter marked even when another bubble takes the space above it.
+  rounded(ctx, x - 12, y + 8, 24, 4, 2, '#272034');
+  rounded(ctx, x - 10, y + 9, 20, 2, 1, accent);
+
+  const label = sow ? 'Empty pot + seeds' : pickup ? guide.label : guide.actionLabel;
+  const stationName = station && (supplyLabels[station.variant] ?? station.label);
+  const detail = sow ? FLOWERS[guide.flowerId].name : stationName && stationName.toLowerCase() !== label.toLowerCase() ? stationName : '';
+  const iconWidth = sow ? 47 : 29;
+  const height = detail ? 38 : 27;
+  ctx.save();
+  ctx.font = '850 17px system-ui, sans-serif';
+  const width = Math.ceil(Math.max(ctx.measureText(label).width, ctx.measureText(detail || '').width)) + iconWidth + 9;
+  const left = Math.max(-25, Math.min(x - width / 2, board.width + 25 - width));
+  const rect = { left, top: Math.max(4 - board.y, y - 24 - height), width, height };
+  if (occupied.some(area => overlaps(rect, area))) {
+    rect.top -= 18;
+    if (rect.top < 2 - board.y || occupied.some(area => overlaps(rect, area))) {
+      ctx.restore();
+      return;
+    }
+  }
+  occupied.push(rect);
+  const { top } = rect;
+  const mid = top + height / 2;
+  const anchor = Math.min(left + width - 9, Math.max(left + 9, x));
+  ctx.beginPath();
+  ctx.moveTo(anchor - 6, top + height - 1);
+  ctx.lineTo(anchor, top + height + 7);
+  ctx.lineTo(anchor + 6, top + height - 1);
+  ctx.closePath();
+  ctx.strokeStyle = outline;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  ctx.fillStyle = '#fff2cf';
+  ctx.fill();
+  rounded(ctx, left - 1, top - 1, width + 2, height + 2, 7, outline);
+  rounded(ctx, left + 1, top + 1, width - 2, height - 2, 6, '#fff2cf');
+  drawStationIcon(ctx, sow ? 'pot' : iconKey, left + (sow ? 12 : 15), mid, 19, accent);
+  if (sow) {
+    block(ctx, '#785b59', left + 21, mid - 1, 7, 2);
+    block(ctx, '#785b59', left + 23, mid - 3, 2, 6);
+    drawStationIcon(ctx, 'seed', left + 36, mid, 18, accent);
+  }
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#3b2a3b';
+  ctx.fillText(label, left + iconWidth, mid - (detail ? 8 : 0));
+  if (detail) {
+    ctx.font = '700 14px system-ui, sans-serif';
+    ctx.fillStyle = '#69505b';
+    ctx.fillText(detail, left + iconWidth, mid + 9);
+  }
+  ctx.restore();
+  const { type, ...target } = guide.command;
+  targets.push({ left, top, width, height: height + 7, target });
 }
 
 function drawBelt(ctx, belt, time) {
@@ -169,6 +301,7 @@ function paintFlower(ctx, plant, x, y, size, time, effects, options = {}) {
 export function createBoardRenderer(canvas) {
   const ctx = canvas.getContext('2d');
   const background = document.createElement('canvas');
+  const signage = document.createElement('canvas');
   const floor = background.getContext('2d');
   const actors = new Map();
   const atmosphere = createAtmosphere();
@@ -178,6 +311,7 @@ export function createBoardRenderer(canvas) {
   let targets = [];
   let level;
   let board;
+  let signs;
   let textured;
   let furnished;
 
@@ -188,10 +322,16 @@ export function createBoardRenderer(canvas) {
     greenhouseEffects.reset(map);
     sunlight.prepare(map, tile);
     board = { x: 34, y: 42, width: map.width * tile, height: map.height * tile };
+    signs = supplySigns(ctx, map);
     background.width = board.width;
     background.height = board.height + board.y;
     canvas.width = board.width + board.x * 2;
     canvas.height = board.height + board.y + 44;
+    signage.width = canvas.width;
+    signage.height = canvas.height;
+    const signLayer = signage.getContext('2d');
+    signLayer.translate(board.x, board.y);
+    drawStationSigns(signLayer, map.stations, signs);
     ctx.imageSmoothingEnabled = false;
     floor.imageSmoothingEnabled = false;
     paintGround();
@@ -215,7 +355,7 @@ export function createBoardRenderer(canvas) {
     floor.restore();
   }
 
-  function draw(state, myId, time, effects, selected) {
+  function draw(state, myId, time, effects, selected, guide = []) {
     atmosphere.draw(ctx, { width: canvas.width, height: canvas.height, board, theme: level.theme, time, effects });
     ctx.save();
     ctx.translate(board.x, board.y);
@@ -350,7 +490,12 @@ export function createBoardRenderer(canvas) {
     for (const entry of scene.sort((a, b) => a.y - b.y)) entry.paint();
     greenhouseEffects.drawBursts(ctx, time);
     sunlight.drawLens(ctx, time, effects);
-    targets = [];
+    targets = signs.map(({ left, top, width, height, station }) =>
+      ({ left, top, width, height, target: { stationId: station.id } }));
+    ctx.drawImage(signage, -board.x, -board.y);
+    const occupied = signs.slice();
+    const pickup = guide.find(hint => hint.kind === 'pickup');
+    let urgentPickup = false;
     for (const { need, x, y, stationId, plantId, task } of bubbles) {
       if (task) {
         const progress = 1 - Math.max(0, task.remainingMs / task.durationMs);
@@ -361,8 +506,21 @@ export function createBoardRenderer(canvas) {
       }
       const left = Math.min(board.width + 7, Math.max(-7, x));
       const top = Math.max(3, y);
-      drawNeedBubble(ctx, need.kind, left, top, 22, visualTime, need);
-      if (plantId || stationId) targets.push({ x: left, y: top, target: plantId ? { plantId } : { stationId } });
+      const rect = { left: left - 13, top: top - 19, width: 26, height: 22 };
+      drawNeedBubble(ctx, need.kind, left, top, 26, visualTime, {
+        ...need,
+        drawIcon: (context, iconX, iconY) => drawStationIcon(context, need.variant ?? need.kind, iconX, iconY, 11),
+      });
+      if (pickup && (stationId && stationId === pickup.stationId || plantId && plantId === pickup.command.plantId)) {
+        urgentPickup = need.urgent;
+      } else occupied.push(rect);
+      if (plantId || stationId) targets.push({ ...rect, target: plantId ? { plantId } : { stationId } });
+    }
+    for (const hint of guide) {
+      const station = state.stations.find(item => item.id === hint.stationId);
+      const belt = level.conveyors?.find(item => item.id === hint.command.conveyorId);
+      const point = station ?? belt?.path[0] ?? plants.get(hint.command.plantId);
+      if (point) paintGuide(ctx, station, hint, center(point), board, occupied, targets, hint === pickup && urgentPickup);
     }
     ctx.restore();
   }
@@ -370,7 +528,8 @@ export function createBoardRenderer(canvas) {
   function hitTest(x, y) {
     const relativeX = x - board.x;
     const relativeY = y - board.y;
-    const bubble = targets.findLast(item => Math.abs(relativeX - item.x) <= 10 && relativeY >= item.y - 17 && relativeY <= item.y + 2)?.target;
+    const bubble = targets.findLast(item => relativeX >= item.left && relativeX <= item.left + item.width &&
+      relativeY >= item.top && relativeY <= item.top + item.height)?.target;
     const column = Math.floor(relativeX / tile);
     const row = Math.floor(relativeY / tile);
     const cell = column >= 0 && column < level.width && row >= 0 && row < level.height ? { x: column, y: row } : null;
