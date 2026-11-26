@@ -6,6 +6,7 @@ const { Readable, PassThrough } = require('node:stream');
 const { createRallyServer } = require('../server/host.cjs');
 const WebSocket = require('../server/vendor/ws');
 const { socketPair } = require('./test-support/socket-pair.cjs');
+require('./test-community-directory.cjs');
 const hostGrid = '1'.repeat(16);
 const rivalGrid = '2'.repeat(16);
 const refreshedGrid = '3'.repeat(16);

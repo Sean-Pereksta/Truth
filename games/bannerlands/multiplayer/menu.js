@@ -130,7 +130,7 @@ export function setupMultiplayer({getConfig,onGame,onOrderResult,onPending,onCon
    if(!window.CatnmiceServers){
     discovery??=new Promise((resolve,reject)=>{
      const script=document.createElement('script');
-     script.src='https://catnmice.com/shared/managed-servers.js';
+     script.src='https://catnmice.com/shared/managed-servers.js?v=magic-servers-1';
      script.onload=resolve;script.onerror=()=>{script.remove();reject(new Error('The server directory could not load. Check your connection and try again.'));};
      document.head.append(script);
     });

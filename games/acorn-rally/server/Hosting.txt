@@ -11,8 +11,9 @@ code shown by the launcher. Leave the laptop awake while hosting.
 Players open multiplayer in Acorn Rally to see available public servers
 or enter a code. Live Join in the game menu first tries available public
 servers where the race has yet to start. Each laptop controls its own
-queue and races independently. Firebase stores directory listings and
-the host's queue. The launcher opens an outbound tunnel for game traffic.
+queue and races independently. Magic Servers stores the directory listings.
+The existing Catnmice Firebase project stores each host's race queue.
+The launcher opens an outbound tunnel for game traffic.
 Use Diagnostics next to Acorn Rally in Server Manager to see the tunnel,
 directory, players and capacity, queue, uptime, player ping and jitter,
 snapshot timing, and track loading. Diagnostics update every three seconds.

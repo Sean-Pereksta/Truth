@@ -4,8 +4,14 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const { randomUUID, randomInt } = require('node:crypto');
 
-// Firebase's public web settings are the same ones the arcade and Bannerlands use.
-const firebaseConfig = {"apiKey":"AIzaSyB7twY7z31ucB6pGA8JC_HrVMZhA8lNaJA","projectId":"bible-game-246c0"};
+const listingFirebase = {
+  apiKey: 'AIzaSyC_Pf_pwVsBKhX0hxJimSqOj_HYCM-fi0w',
+  projectId: 'magic-servers-1ca0c'
+};
+const queueFirebase = {
+  apiKey: 'AIzaSyB7twY7z31ucB6pGA8JC_HrVMZhA8lNaJA',
+  projectId: 'bible-game-246c0'
+};
 const leaseMs = 90_000;
 const queueCollection = 'acornRallyHostQueues';
 const lobbyCollection = 'acornRallyLobbies';
@@ -19,11 +25,11 @@ class FirebaseError extends Error {
   }
 }
 
-function createFirebaseDirectory({
-  dataDir, fetchImpl = globalThis.fetch, config = firebaseConfig, now = Date.now, timeoutMs = 4000,
-  listingCollection = lobbyCollection, joinPath = '/?room=join', listingExtras = () => ({})
-}) {
-  const identityPath = path.join(dataDir, 'community-firebase.json');
+function createStore({ dataDir, fetchImpl, config, now, timeoutMs }) {
+  // Keep the original queue owner's identity when an existing host upgrades.
+  const identityFile = config.projectId === queueFirebase.projectId ? 'community-firebase.json' :
+    'community-firebase.' + config.projectId + '.json';
+  const identityPath = path.join(dataDir, identityFile);
   const database = 'projects/' + config.projectId + '/databases/(default)/documents';
   const firestore = 'https://firestore.googleapis.com/v1/' + database;
   const apiKey = encodeURIComponent(config.apiKey);
@@ -41,7 +47,11 @@ function createFirebaseDirectory({
     const raw = await response.text();
     if (raw.length > 131_072) throw new Error('Firebase response was too large.');
     const data = raw && JSON.parse(raw);
-    if (!response.ok) throw new FirebaseError(response.status, data?.error?.status);
+    if (!response.ok) {
+      const error = data?.error;
+      const code = error?.message === 'OPERATION_NOT_ALLOWED' ? 'OPERATION_NOT_ALLOWED' : error?.status;
+      throw new FirebaseError(response.status, code);
+    }
     return data;
   }
 
@@ -141,8 +151,28 @@ function createFirebaseDirectory({
     return updateTime;
   }
 
-  const string = stringValue => ({ stringValue });
-  const count = integerValue => ({ integerValue: String(integerValue) });
+  function remove(doc, updateTime, identity) {
+    return request(firestore + ':commit', {
+      method: 'POST',
+      body: { writes: [{ delete: database + '/' + doc, currentDocument: { updateTime } }] },
+      token: identity.token
+    });
+  }
+
+  return { withAuth, read, write, remove };
+}
+
+const string = stringValue => ({ stringValue });
+const count = integerValue => ({ integerValue: String(integerValue) });
+
+function createFirebaseDirectory({
+  dataDir, fetchImpl = globalThis.fetch, config = listingFirebase, queueConfig = queueFirebase,
+  now = Date.now, timeoutMs = 4000,
+  listingCollection = lobbyCollection, joinPath = '/?room=join', listingExtras = () => ({})
+}) {
+  const listings = createStore({ dataDir, fetchImpl, config, now, timeoutMs });
+  const queue = createStore({ dataDir, fetchImpl, config: queueConfig, now, timeoutMs });
+
   function lobbyFields(record, uid) {
     const { name, visibility, origin, phase, players, capacity, queued } = record;
     return {
@@ -157,7 +187,7 @@ function createFirebaseDirectory({
     (err.status === 409 || err.status === 412 || err.code === 'FAILED_PRECONDITION' || err.code === 'ALREADY_EXISTS');
 
   async function reserve(record, preferred) {
-    return withAuth(async identity => {
+    return listings.withAuth(async identity => {
       const tried = new Set();
       let code = preferred;
       for (let attempt = 0; attempt < 8; attempt++) {
@@ -165,11 +195,11 @@ function createFirebaseDirectory({
         if (tried.has(code)) continue;
         tried.add(code);
         const doc = listingCollection + '/' + code;
-        const previous = await read(doc, identity);
+        const previous = await listings.read(doc, identity);
         if (previous && previous.fields?.ownerUid?.stringValue !== identity.uid &&
             !(Date.parse(previous.fields?.expiresAt?.timestampValue) <= now())) continue;
         try {
-          const updateTime = await write(doc, lobbyFields(record, identity.uid), identity,
+          const updateTime = await listings.write(doc, lobbyFields(record, identity.uid), identity,
             previous ? { updateTime: previous.updateTime } : { exists: false });
           return { code, uid: identity.uid, updateTime };
         } catch (err) { if (!conflict(err)) throw err; }
@@ -179,10 +209,10 @@ function createFirebaseDirectory({
   }
 
   async function renew(record, lease) {
-    return withAuth(async identity => {
+    return listings.withAuth(async identity => {
       if (identity.uid !== lease.uid) return null;
       try {
-        const updateTime = await write(listingCollection + '/' + lease.code, lobbyFields(record, identity.uid), identity,
+        const updateTime = await listings.write(listingCollection + '/' + lease.code, lobbyFields(record, identity.uid), identity,
           { updateTime: lease.updateTime });
         return { ...lease, updateTime };
       } catch (err) {
@@ -193,13 +223,9 @@ function createFirebaseDirectory({
   }
 
   async function release(lease) {
-    return withAuth(identity => {
+    return listings.withAuth(identity => {
       if (identity.uid !== lease.uid) return;
-      const doc = database + '/' + listingCollection + '/' + lease.code;
-      return request(firestore + ':commit', {
-        method: 'POST', body: { writes: [{ delete: doc, currentDocument: { updateTime: lease.updateTime } }] },
-        token: identity.token
-      }).catch(() => {});
+      return listings.remove(listingCollection + '/' + lease.code, lease.updateTime, identity);
     }).catch(() => {});
   }
 
@@ -212,8 +238,8 @@ function createFirebaseDirectory({
   }
 
   const queueStore = {
-    load: () => withAuth(async identity => {
-      const doc = await read(queueCollection + '/' + identity.uid, identity);
+    load: () => queue.withAuth(async identity => {
+      const doc = await queue.read(queueCollection + '/' + identity.uid, identity);
       if (!doc) return [];
       const payload = doc.fields?.payload?.stringValue;
       if (typeof payload !== 'string' || payload.length > 32_768) throw new Error('Stored race queue is invalid.');
@@ -221,9 +247,9 @@ function createFirebaseDirectory({
       if (!validTickets(tickets)) throw new Error('Stored race queue is invalid.');
       return tickets;
     }),
-    save: tickets => withAuth(async identity => {
+    save: tickets => queue.withAuth(async identity => {
       if (!validTickets(tickets)) throw new Error('Race queue cannot be saved.');
-      await write(queueCollection + '/' + identity.uid, { payload: string(JSON.stringify(tickets)) }, identity);
+      await queue.write(queueCollection + '/' + identity.uid, { payload: string(JSON.stringify(tickets)) }, identity);
     })
   };
 

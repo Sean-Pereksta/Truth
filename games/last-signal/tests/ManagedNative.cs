@@ -13,7 +13,7 @@ using System.Web.Script.Serialization;
 using LastSignal;
 
 class ManagedNativeChecks {
-    const string Root="https://firestore.googleapis.com/v1/projects/bible-game-246c0/databases/(default)/documents/managedGameDirectories/lastsignal";
+    const string Root="https://firestore.googleapis.com/v1/projects/magic-servers-1ca0c/databases/(default)/documents/managedGameDirectories/lastsignal";
     const string Public="https://arena-public.trycloudflare.com", Private="https://arena-private.trycloudflare.com";
     static readonly CancellationToken None=CancellationToken.None;
     static object Json(object value){var json=new JavaScriptSerializer();return json.DeserializeObject(json.Serialize(value));}

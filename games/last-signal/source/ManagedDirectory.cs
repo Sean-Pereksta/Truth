@@ -17,7 +17,7 @@ namespace LastSignal {
     }
 
     internal sealed class ManagedDirectory {
-        const string Documents="projects/bible-game-246c0/databases/(default)/documents";
+        const string Documents="projects/magic-servers-1ca0c/databases/(default)/documents";
         const string Parent=Documents+"/managedGameDirectories/lastsignal";
         const string Api="https://firestore.googleapis.com/v1/"+Parent;
         static readonly Regex Origin=new Regex(@"\Ahttps://[a-z0-9]+(?:-[a-z0-9]+)*\.trycloudflare\.com\z");
