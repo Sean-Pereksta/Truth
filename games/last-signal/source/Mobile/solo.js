@@ -1887,7 +1887,8 @@ export class SoloArena {
         .map(other => [other.x, other.y, other.z, other.yaw, other.alive, other.crouch,
           other.style, other.name, other.yaw, other.anim, other.speed, other.weapon,
           hasShield(other), shieldRaised(other), Number(hasShield(other) ? shieldRaised(other) : other.guard), other.reload / 4,
-          other.crossbowLoaded, other.swing, this.clock - other.woundedAt < 0.43 ? other.hurt / 0.43 : 0]),
+          other.crossbowLoaded, other.swing, this.clock - other.woundedAt < 0.43 ? other.hurt / 0.43 : 0,
+          other.armor, 0, count(other, "arrows") > 0]),
       wildlife: this.wildlife.filter(animal => !animal.harvested && distance(actor, animal) < 85)
         .map(animal => [animal.model, animal.x, this.map.heightAt(animal.x, animal.z), animal.z, animal.yaw, animal.health > 0, animal.phase]),
       tracks: this.footprints.filter(track => distance(actor, track) < 18)

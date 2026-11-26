@@ -23,8 +23,14 @@ if($LASTEXITCODE){throw "Mobile room journey failed in $Mode mode"}
 if($Mode -eq 'socket'){
     & $mobile managed-socket
     if($LASTEXITCODE){throw 'Managed arena lifecycle failed'}
-    $nativeChecks=Join-Path (Split-Path $game) 'ManagedNativeChecks.exe'
     $nativeSources=(Get-ChildItem -LiteralPath (Join-Path (Split-Path $game) 'Source') -Filter '*.cs').FullName
+    $rockChecks=Join-Path (Split-Path $game) 'RockMovementChecks.exe'
+    & $compiler /nologo /optimize+ /platform:x64 /main:RockMovementChecks /r:System.Web.Extensions.dll /r:System.Drawing.dll /r:System.Windows.Forms.dll "/out:$rockChecks" $nativeSources (Join-Path $PSScriptRoot 'RockMovementChecks.cs')
+    if($LASTEXITCODE){throw 'Could not compile rock movement checks'}
+    & $rockChecks
+    if($LASTEXITCODE){throw 'Rock movement checks failed'}
+
+    $nativeChecks=Join-Path (Split-Path $game) 'ManagedNativeChecks.exe'
     & $compiler /nologo /optimize+ /platform:x64 /main:ManagedNativeChecks /r:System.Web.Extensions.dll /r:System.Drawing.dll /r:System.Windows.Forms.dll "/out:$nativeChecks" $nativeSources (Join-Path $PSScriptRoot 'ManagedNative.cs') (Join-Path $PSScriptRoot 'OnlinePipe.cs')
     if($LASTEXITCODE){throw 'Could not compile native Server Manager checks'}
     & $nativeChecks socket

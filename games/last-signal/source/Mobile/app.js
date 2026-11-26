@@ -419,8 +419,7 @@ function resetRound() {
   worldRound = -1;
   frame = null;
   closeDrawer(false);
-  extra = false;
-  $("more").setAttribute("aria-expanded", "false");
+  setExtra(false);
   renderer?.clearLook();
 }
 
@@ -506,20 +505,23 @@ function renderHud() {
   setText($("countdown-seconds"), Math.ceil(frame.countdown));
   $("place-tools").hidden = !building;
   $("rotate-build").disabled = Boolean(fort?.anchored);
-  $("extra-actions").hidden = !extra || building;
-  $("more").disabled = building;
+  if (building && extra) setExtra(false);
+  $("more").hidden = building;
+  $("jump").hidden = building;
   $("throw").hidden = player.weapon !== "spear";
-  $("cycle").hidden = !Array.isArray(hud.focusOptions) || hud.focusOptions.length < 2 || building;
-  $("use").hidden = building || hud.useAction === "repair";
-  const repair = $("repair");
-  repair.hidden = building || !repairInfo || repairInfo.reason === "At full health";
-  repair.disabled = countdown || !repairInfo?.enabled || Boolean(repairInfo?.active);
-  setText(repair, repairInfo?.active ? "Repairing" : "Repair");
-  repair.title = repairInfo?.reason || (repairInfo?.woodNeeded ? repairInfo.woodNeeded + " wood" : "Repair structure");
+  const focusCount = hud.focusOptions?.length;
+  $("cycle").hidden = building || !(focusCount > 1);
+  const use = $("use");
+  const repair = Boolean(repairInfo?.enabled || repairInfo?.active);
+  use.hidden = building || (!repair && focusCount === 0);
+  use.disabled = countdown || Boolean(repairInfo?.active);
+  use.dataset.command = repair ? "repair" : "+Use";
+  setText(use, repairInfo?.active ? "Repairing" : repair ? "Repair" : "Use");
   const ammoId = crossbow ? "bolts" : player.weapon === "bow" ? "arrows" : player.weapon === "sling" ? "stone" : "";
   const ammo = ammoId ? frame.pack.find(([id]) => id === ammoId)?.[2] || 0 : null;
-  setText(attack, building ? "Place" : !crossbow ? "Attack" : !player.crossbowLoaded && ammo ? "Loading…" : "Fire");
-  attack.disabled = countdown || (building && !frame.ghostFits) || (!building && crossbow && !player.crossbowLoaded && !ammo);
+  const crossbowEmpty = crossbow && !player.crossbowLoaded;
+  setText(attack, building ? "Place" : crossbowEmpty ? (ammo ? "Loading" : "No bolts") : crossbow ? "Fire" : "Attack");
+  attack.disabled = countdown || (building ? !frame.ghostFits : crossbowEmpty);
   const ranged = crossbow || player.weapon === "bow" || player.weapon === "sling";
   const shield = shieldCondition(player);
   guard.hidden = building || !(player.shield || ranged || extra);
@@ -528,15 +530,10 @@ function renderHud() {
   guard.setAttribute("aria-label", player.shield && shield ? "Hold to raise shield. Durability " + shield.current + " of " + shield.max : guardLabel);
   guard.dataset.worn = String(Boolean(player.shield && shield && shield.current <= shield.max / 3));
   guard.setAttribute("aria-pressed", String(player.guard || player.aim || false));
-  let gear = "";
-  if (reload > 0) gear = reload < 0.22 ? "Lowering crossbow" : reload < 0.54 ? "Cocking string" :
-    reload < 0.79 ? "Seating bolt" : "Setting crossbow";
-  else if (crossbow && !player.crossbowLoaded && !ammo) gear = "Out of bolts";
-  else if (player.shieldRaised) gear = shield ? "Shield raised · " + shield.current + "/" + shield.max : "Shield raised";
-  else if (player.shield && shield) gear = "Shield " + shield.current + "/" + shield.max;
-  setText($("gear-status"), gear);
   const weapon = weaponNames[player.weapon] || player.weapon;
-  setText($("weapon"), (ammo === null ? weapon : weapon + " · " + ammo) + " ↻");
+  const weaponText = ammo === null ? weapon : weapon + " · " + ammo;
+  setText($("weapon"), weaponText + " ↻");
+  $("weapon").setAttribute("aria-label", "Switch weapon. Equipped: " + weaponText);
   $("outcome").hidden = playing;
   setText($("outcome-title"), frame.winner && player.alive ? "Last survivor" :
     !player.alive ? "Eliminated" : "");
@@ -778,16 +775,22 @@ $("crouch").addEventListener("click", () => {
   $("sprint").setAttribute("aria-pressed", String(sprint));
   $("crouch").setAttribute("aria-pressed", String(crouch));
 });
+function setExtra(open) {
+  extra = open;
+  $("extra-actions").hidden = !open;
+  $("more").setAttribute("aria-expanded", String(open));
+}
+
 $("more").addEventListener("click", () => {
-  extra = !extra;
-  $("extra-actions").hidden = !extra;
-  $("more").setAttribute("aria-expanded", String(extra));
-  if (frame) renderHud();
+  if (!canPlay()) return;
+  setExtra(!extra);
+  renderHud();
 });
 
 function openDrawer(section, trigger, gearTab = "pack") {
   if (drawer) return;
   neutralize(true);
+  setExtra(false);
   drawer = section;
   if (section === "gear") {
     tab = gearTab;
@@ -796,7 +799,7 @@ function openDrawer(section, trigger, gearTab = "pack") {
   }
   closeFocus = trigger;
   backdrop.hidden = false;
-  setText($("drawer-title"), section === "menu" ? "Room menu" : "Pack");
+  setText($("drawer-title"), section === "menu" ? "Menu" : "Gear");
   $("gear-tabs").hidden = section === "menu";
   $("gear-options").hidden = true;
   $("gear-list").hidden = section === "menu";
@@ -864,8 +867,7 @@ function packRow([id, name, count], player, usable) {
   const selected = id === player.weapon;
   const water = id === "waterskin" ? Math.floor(player.water || 0) + " water" : "";
   const shield = id === "shield" ? shieldCondition(player) : null;
-  const shieldHint = id === "shield" ? (player.shield ? "Hold Shield to raise" : "Equip a sword or spear") : "";
-  const detail = [shield ? "Durability " + shield.current + "/" + shield.max : "", shieldHint].filter(Boolean).join(" · ");
+  const detail = id === "shield" && !player.shield ? "Equip a sword or spear" : "";
   const { row, copy, actions } = gearRow(id, name + (count > 1 ? " ×" + count : ""), water || detail || (selected ? "Equipped" : ""));
   if (shield) {
     const meter = document.createElement("progress");
@@ -873,7 +875,7 @@ function packRow([id, name, count], player, usable) {
     meter.max = shield.max;
     meter.value = shield.current;
     meter.setAttribute("aria-label", "Shield durability");
-    copy.append(meter);
+    if (shield.current > 0) copy.append(meter);
   }
   let action = "";
   if (id in weaponNames && id !== "fists" && !selected) action = "Equip";
@@ -962,12 +964,10 @@ function recipeRow(recipe, section, usable) {
     const missing = needs.filter(need => need.required > need.held);
     if (missing.length) {
       const quantities = missing.map(need => (need.required - need.held) + " " + (need.name || materialName(need.id)).toLowerCase());
-      const summary = addRecipeNote(copy, "Need " + quantities.join(", ") + (recipe.blueprint ? " for the full blueprint" : ""));
+      const source = missing.length === 1 ? missing[0].source || materialInfo[missing[0].id]?.[1] : "";
+      const summary = addRecipeNote(copy, "Need " + quantities.join(", ") + (recipe.blueprint ? " for the full blueprint" : "") +
+        (source ? ". " + source : ""));
       summary.dataset.missing = "true";
-      for (const need of missing) {
-        const source = need.source || materialInfo[need.id]?.[1];
-        if (source) addRecipeNote(copy, (need.name || materialName(need.id)) + " · " + source);
-      }
     }
   } else if (recipe.cost) {
     addRecipeNote(copy, recipe.cost);
@@ -1004,7 +1004,7 @@ function materialUses(id, usable) {
   const back = document.createElement("button");
   back.type = "button";
   back.id = "material-back";
-  back.textContent = "All pack items";
+  back.textContent = "Back to pack";
   back.addEventListener("click", () => {
     selectGearTab("pack");
     $("gear-list").querySelector('[data-gear-key="material:' + id + '"]')?.focus();
@@ -1040,12 +1040,11 @@ function packContents(usable) {
     actions.append(gearAction("Equip", "equip:fists", usable));
     rows.unshift(row);
   }
-  return [gearGroup("Materials", [strip]), ...(rows.length ? [gearGroup("Equipment and supplies", rows)] : [])];
+  return [...(rows.length ? [gearGroup("Items", rows)] : []), gearGroup("Materials", [strip])];
 }
 
 function recipeContents(usable) {
-  const recipes = frame[tab].map(entry => recipeInfo(entry, tab)).filter(recipe =>
-    (!readyOnly || recipe.affordable) && (!materialFilter || recipe.needs.some(need => need.id === materialFilter)));
+  const recipes = frame[tab].map(entry => recipeInfo(entry, tab)).filter(recipe => !readyOnly || recipe.affordable);
   return Object.entries(recipeGroups[tab]).flatMap(([category, [title]]) => {
     const rows = recipes.filter(recipe => recipe.category === category).map(recipe => recipeRow(recipe, tab, usable));
     return rows.length ? [gearGroup(title, rows)] : [];
@@ -1061,13 +1060,9 @@ function renderDrawer() {
   const refresh = JSON.stringify([tab, usable, guide, entries, readyOnly, materialFilter]);
   if (drawerKey === refresh) return;
   drawerKey = refresh;
-  setText($("drawer-title"), tab === "pack" ? "Pack" : tab === "craft" ? "Craft" : "Build");
   for (const item of $("gear-tabs").children) item.setAttribute("aria-pressed", String(item.dataset.section === tab));
   $("gear-options").hidden = tab === "pack";
   $("gear-ready").checked = readyOnly;
-  const filter = $("gear-material-filter");
-  filter.hidden = !materialFilter;
-  if (materialFilter) setText(filter, "Clear " + materialName(materialFilter) + " filter");
   const list = $("gear-list");
   const scroll = list.scrollTop;
   const active = document.activeElement;
@@ -1091,14 +1086,13 @@ function renderDrawer() {
 
 $("gear-tabs").addEventListener("click", (event) => {
   const button = event.target.closest("[data-section]");
-  if (button) selectGearTab(button.dataset.section, Boolean(materialFilter));
+  if (button) selectGearTab(button.dataset.section);
 });
 $("gear-ready").addEventListener("change", (event) => {
   readyOnly = event.currentTarget.checked;
   $("gear-list").scrollTop = 0;
   renderDrawer();
 });
-$("gear-material-filter").addEventListener("click", () => selectGearTab(tab));
 
 join.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -1131,8 +1125,6 @@ readyButton.addEventListener("click", () => {
 $("lobby-leave").addEventListener("click", leave);
 $("menu").addEventListener("click", (event) => openDrawer("menu", event.currentTarget));
 $("pack").addEventListener("click", (event) => openDrawer("gear", event.currentTarget));
-$("craft-shortcut").addEventListener("click", (event) => openDrawer("gear", event.currentTarget, "craft"));
-$("build-shortcut").addEventListener("click", (event) => openDrawer("gear", event.currentTarget, "build"));
 $("drawer-close").addEventListener("click", () => closeDrawer());
 $("leave").addEventListener("click", leave);
 backdrop.addEventListener("click", (event) => { if (event.target === backdrop) closeDrawer(); });
@@ -1161,8 +1153,7 @@ document.addEventListener("keydown", (event) => {
   event.preventDefault();
   if (event.repeat) return;
   if (gearTab) {
-    const shortcut = gearTab === "pack" ? $("pack") : $(gearTab + "-shortcut");
-    openDrawer("gear", shortcut, gearTab);
+    openDrawer("gear", $("pack"), gearTab);
   } else if (action) {
     queue(action);
   } else if (frame.player.weapon === "spear") {
@@ -1226,7 +1217,7 @@ if (soloMode) {
   $("solo-settings").hidden = false;
   $("browse-rooms").hidden = false;
   $("replay").hidden = false;
-  $("leave").textContent = "End solo match";
+  setText($("leave"), "Leave match");
 }
 const suggestedName = new URLSearchParams(location.search).get("name");
 if (validKey && suggestedName && !resume) nameInput.value = suggestedName.slice(0, 20);

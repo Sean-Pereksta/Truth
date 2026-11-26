@@ -98,7 +98,7 @@ namespace LastSignal {
             case "Pack":case "Craft":case "Build":
                 Panel=action.ToLowerInvariant();Unfocus();break;
             case "Jump":
-                if(Player.Y<=Arena.GroundBelow(this,Player.X,Player.Z,Player.Y+.08f)+.10f&&Player.Stamina>=9){Player.Vertical=5.8f*(1-.18f*Player.NeedStrain);Player.Stamina-=9;Cue("step",Player.X,Player.Z,9);}break;
+                if(Player.Stamina>=9&&Arena.CanJump(this,Player)){Player.Vertical=5.8f*(1-.18f*Player.NeedStrain);Player.Stamina-=9;Cue("step",Player.X,Player.Z,9);}break;
             case "Dodge": PlayerDodge();break;
             case "Shove":Shove(Player);break;
             case "Attack":

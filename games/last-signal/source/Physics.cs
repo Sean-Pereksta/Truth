@@ -226,37 +226,57 @@ namespace LastSignal
             }
             if(b.Type=="disc" || b.Type=="trunk" || b.Type=="stone")
             {
-                float rx=b.HalfX,rz=b.HalfZ;
-                if(b.Type=="stone")
-                {
-                    float q=Math.Max(0,(y+.14f-b.Y-b.H*.32f)/(b.H*.68f));
-                    float s=(float)Math.Sqrt(Math.Max(0.0f,1f-q*q));rx*=s;rz*=s;
-                }
-                lx/=rx+radius;lz/=rz+radius;return lx*lx+lz*lz<1 && (!b.Floor||b.Y+b.H-y>.44f);
+                float scale=b.Type=="stone"?StoneScale(b,y):1;
+                return EllipseDistanceSquared(lx,lz,b.HalfX*scale+radius,b.HalfZ*scale+radius)<1 &&
+                    (!b.Floor||b.Y+b.H-y>.44f);
             }
             if(b.Floor&&b.Y+b.H-y<=.45f)return false;
             float ex=Math.Max(0,Math.Abs(lx)-b.HalfX),ez=Math.Max(0,Math.Abs(lz)-b.HalfZ);
             return ex*ex+ez*ez<radius*radius;
         }
+        static float StoneScale(Body b,float foot)
+        {
+            float q=Math.Max(0,(foot+.14f-b.Y-b.H*.32f)/(b.H*.68f));
+            return (float)Math.Sqrt(Math.Max(0,1-q*q));
+        }
+        static float EllipseDistanceSquared(float x,float z,float rx,float rz)
+        {
+            x/=rx;z/=rz;
+            return x*x+z*z;
+        }
+        static bool AdvancesOutOfStone(Body b,Actor mover,float x,float z,float radius,float h)
+        {
+            if(!Blocks(b,mover.X,mover.Y,mover.Z,radius,h))return false;
+            float beforeX,beforeZ,afterX,afterZ;
+            Local(b,mover.X,mover.Z,out beforeX,out beforeZ);
+            Local(b,x,z,out afterX,out afterZ);
+            float scale=StoneScale(b,mover.Y);
+            float rx=b.HalfX*scale+radius,rz=b.HalfZ*scale+radius;
+            return EllipseDistanceSquared(afterX,afterZ,rx,rz)>EllipseDistanceSquared(beforeX,beforeZ,rx,rz);
+        }
         public static bool CanStand(Game g,float x,float footY,float z){return CanStand(g,x,footY,z,.30f,1.68f);}
-        static bool CanStand(Game g,float x,float footY,float z,float radius,float h,Prop tread=null)
+        static bool CanStand(Game g,float x,float footY,float z,float radius,float h,Prop tread=null,Actor mover=null)
         {
             if(x*x+z*z>(Radius-radius)*(Radius-radius))return false;
             List<Body> list=fields.GetOrCreateValue(g).Bodies[Index(x,z)];
             if(list!=null)for(int i=0;i<list.Count;i++){
                 Body b=list[i];
-                if(!Blocks(b,x,footY,z,radius,h))continue;
+                bool stone=b.Type=="stone";
+                float y=mover!=null&&!stone?footY+.009f:footY;
+                if(!Blocks(b,x,y,z,radius,h))continue;
+                if(stone&&mover!=null&&AdvancesOutOfStone(b,mover,x,z,radius,h))continue;
                 // The last portion of a tread overlaps the lip of its supporting
                 // wall. Let feet on the ramp step over that lip as they crest it.
                 if(tread!=null && tread.Model=="ramp" && FencePiece(b.Prop.Model) &&
-                   Math.Abs(tread.Y+tread.H-b.Y-b.H)<.20f && b.Y+b.H-footY<=.44f)continue;
+                   Math.Abs(tread.Y+tread.H-b.Y-b.H)<.20f && b.Y+b.H-y<=.44f)continue;
                 return false;
             }
             return true;
         }
         static bool FreeStep(Game g,Actor actor,float x,float y,float z,float h,Prop tread)
         {
-            if(!CanStand(g,x,y,z,.30f,h,tread))return false;
+            if(!CanStand(g,x,y,z,.30f,h,tread,actor))return false;
+            y+=.009f;
             const float gap=.56f;
             for(int i=0;i<g.Actors.Count;i++)
             {
@@ -289,32 +309,61 @@ namespace LastSignal
             Prop support;
             float next=FindFloor(g,x,z,a.Y+available,true,out support);
             float foot=Math.Max(a.Y,next);
-            if(!FreeStep(g,a,x,foot+.009f,z,h,support))return false;
+            if(!FreeStep(g,a,x,foot,z,h,support))return false;
             a.X=x;a.Z=z;a.Y=foot;
             // Track a descending tread. Larger drops belong to the vertical sweep.
-            if(a.Vertical<=0 && a.Y-next<.32f)a.Y=next;
+            if(a.Vertical<=0 && foot-next<.32f)a.Y=StoneLanding(g,x,z,foot,next,h);
             return true;
+        }
+        static float StoneLanding(Game g,float x,float z,float from,float to,float h)
+        {
+            if(from<=to)return to;
+            List<Body> bodies=fields.GetOrCreateValue(g).Bodies[Index(x,z)];
+            if(bodies==null)return to;
+            foreach(Body body in bodies){
+                if(body.Type!="stone")continue;
+                // A rock widens toward its base. Find the last clear foot height
+                // along the drop so a landing cannot put the actor inside that wider part.
+                float blocked=Math.Max(to,body.Y);
+                if(blocked>=from || !Blocks(body,x,blocked,z,.30f,h) || Blocks(body,x,from,z,.30f,h))continue;
+                float clear=from;
+                for(int i=0;i<12;i++){
+                    float middle=(blocked+clear)*.5f;
+                    if(Blocks(body,x,middle,z,.30f,h))blocked=middle;else clear=middle;
+                }
+                to=clear;
+            }
+            return to;
+        }
+        internal static bool CanJump(Game g,Actor a)
+        {
+            float below=a.Y-.10f;
+            return GroundBelow(g,a.X,a.Z,a.Y+.08f)>=below ||
+                StoneLanding(g,a.X,a.Z,a.Y,below,a.Crouch?1.10f:1.70f)>below;
         }
         internal static void StepVertical(Game g,Actor a,float dt)
         {
             float foot=a.Y,baseY=GroundBelow(g,a.X,a.Z,foot+.06f);
             a.Vertical-=15.8f*dt;
             float next=foot+a.Vertical*dt;
-            if(next<=baseY){a.Y=baseY;a.Vertical=0;return;}
-            if(next>foot){
-                float h=a.Crouch?1.10f:1.70f;
-                List<Body> bodies=fields.GetOrCreateValue(g).Bodies[Index(a.X,a.Z)];
-                if(bodies!=null)foreach(Body body in bodies){
-                    if(body.Retired||body.Prop.Removed||!body.Prop.Solid)continue;
-                    float lx,lz;Local(body,a.X,a.Z,out lx,out lz);
-                    float ex=Math.Max(0,Math.Abs(lx)-body.HalfX),ez=Math.Max(0,Math.Abs(lz)-body.HalfZ);
-                    if(ex*ex+ez*ez>.30f*.30f)continue;
-                    float bottom=body.Y;
-                    if(body.Type=="ramp"||body.Type=="roof")
-                        bottom+=body.H*Clamp01((lz-.30f+body.HalfZ)/(2*body.HalfZ))-(body.Type=="ramp"?.15f:.055f);
-                    if(bottom<foot+h-.012f || bottom>next+h)continue;
-                    next=Math.Max(foot,bottom-h-.004f);a.Vertical=0;
-                }
+            float h=a.Crouch?1.10f:1.70f;
+            if(next<=foot || next<=baseY){
+                float end=Math.Max(next,baseY);
+                a.Y=StoneLanding(g,a.X,a.Z,foot,end,h);
+                if(next<=baseY||a.Y>end)a.Vertical=0;
+                return;
+            }
+            List<Body> bodies=fields.GetOrCreateValue(g).Bodies[Index(a.X,a.Z)];
+            if(bodies!=null)foreach(Body body in bodies){
+                if(body.Retired||body.Prop.Removed||!body.Prop.Solid)continue;
+                float lx,lz;Local(body,a.X,a.Z,out lx,out lz);
+                float ex=Math.Max(0,Math.Abs(lx)-body.HalfX),ez=Math.Max(0,Math.Abs(lz)-body.HalfZ);
+                if(ex*ex+ez*ez>.30f*.30f)continue;
+                float bottom=body.Y;
+                if(body.Type=="ramp"||body.Type=="roof")
+                    bottom+=body.H*Clamp01((lz-.30f+body.HalfZ)/(2*body.HalfZ))-(body.Type=="ramp"?.15f:.055f);
+                if(bottom<foot+h-.012f || bottom>next+h)continue;
+                next=Math.Max(foot,bottom-h-.004f);a.Vertical=0;
             }
             a.Y=next;
         }
