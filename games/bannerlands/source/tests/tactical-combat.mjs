@@ -3,6 +3,7 @@ import {Game,UNIT_DEFS,HOUSES,BUILD_DEFS} from '../../core.js';
 import {regimentForHouse,regimentAllowed,migrateLegacyRegiments} from '../../regiments.js';
 import {sweptWeaponContact} from '../../tactical-combat.js';
 import {placeFormation,updatePlacedFormations} from '../../formation-placement.js';
+import {projectileDrawPose} from '../../projectile-flight.js';
 
 let checks=0;
 const test=(name,fn)=>{fn();checks++;console.log('PASS '+name);};
@@ -16,6 +17,29 @@ function fixture(){
 function step(g,seconds,dt=.025){for(let i=0;i<Math.ceil(seconds/dt);i++){g.time+=dt;g.hash.rebuild(g.units);g.updateUnits(dt);g.updateProjectiles(dt);}}
 function pair(type){const g=fixture(),u=g.addUnit(0,type,30,30),v=g.addUnit(1,'cavalry',34,30);v.hp=v.maxHp=10000;v.cooldown=1e9;g.hold([u.id,v.id]);v.facingX=0;v.facingY=1;v.order.facingX=0;v.order.facingY=1;u.cooldown=0;g.hash.rebuild(g.units);return {g,u,v};}
 const specs=[['gilded_crossbow',60,3,1.8],['tollhouse_crossbow',72,3.6,2],['sharpshooter',100,5,2],['vale_sentinel',64,3.2,1.9]];
+
+test('Bow arrows arc and pitch into their descent while crossbow bolts arrive sooner on a flatter path',()=>{
+  const bow=pair('archer'),crossbow=pair('gilded_crossbow');
+  bow.v.x=crossbow.v.x=33.25;
+  bow.g.attack(bow.u,bow.v);
+  crossbow.g.attack(crossbow.u,crossbow.v);
+  crossbow.g.updateCrossbowAim(crossbow.u,.1);
+  assert.equal(crossbow.g.projectiles.length,0);
+  crossbow.g.updateCrossbowAim(crossbow.u,.025);
+  const [arrow]=bow.g.projectiles,[bolt]=crossbow.g.projectiles;
+  assert.equal(arrow.type,'arrow');
+  assert.equal(bolt.type,'bolt');
+  assert.ok(bolt.duration<arrow.duration*.6);
+  const poseAt=(shot,progress)=>projectileDrawPose({...shot,t:shot.duration*progress});
+  assert.ok(poseAt(arrow,.5).height>poseAt(bolt,.5).height+30);
+  assert.ok(poseAt(arrow,.15).angle<0);
+  assert.ok(poseAt(arrow,.85).angle>.6);
+  assert.ok(Math.abs(poseAt(bolt,.15).angle-poseAt(bolt,.85).angle)<.12);
+  bow.g.updateProjectiles(bolt.duration);
+  crossbow.g.updateProjectiles(bolt.duration);
+  assert.equal(bow.v.hp,bow.v.maxHp);
+  assert.ok(crossbow.v.hp<crossbow.v.maxHp);
+});
 
 test('Four crossbows use exact impact and reload targets, release once at the firing frame, and apply cavalry bonus once',()=>{
   for(const [type,damage,reload,bonus]of specs){

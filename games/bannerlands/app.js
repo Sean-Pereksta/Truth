@@ -479,7 +479,7 @@ $('mobilePause').onclick=togglePause;
 $('soundButton').onclick=()=>{sound=!sound;if(sound)initAudio();soundscape?.mute(!sound);$('soundButton').textContent=sound?'♫':'♪';$('soundButton').style.opacity=sound?'1':'.4';};
 $('fullscreenButton').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}catch{toast('Use your browser’s fullscreen control.');}};
 function openMenu(){if(!started)return;cancelBuild();battleHud.close();edgeMouse=null;wasPaused=game.paused;if(!game.remote)game.paused=true;menuOpen=true;$('menuOverlay').hidden=false;$('resumeButton').hidden=false;$('startButton').innerHTML='START A NEW CONQUEST <span>→</span>';updatePause();}
-function resume(){menuOpen=false;$('menuOverlay').hidden=true;game.paused=wasPaused;updatePause();canvas.focus();}
+function resume(){ui.quality=$('qualitySelect').value;menuOpen=false;$('menuOverlay').hidden=true;game.paused=wasPaused;updatePause();canvas.focus();}
 $('settingsMenuButton').onclick=openMenu;$('menuButton').onclick=openMenu;$('campaignMenuButton').onclick=openMenu;$('resumeButton').onclick=resume;
 let helpWasPaused=false;function showHelp(){helpWasPaused=game.paused;if(!game.remote)game.paused=true;$('helpDialog').showModal();updatePause();}
 function closeHelp(){$('helpDialog').close();game.paused=helpWasPaused;updatePause();canvas.focus();}

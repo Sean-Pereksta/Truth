@@ -67,6 +67,24 @@ test('Trebuchets outrange ordinary siege and bombard buildings heavily with a sl
   const hp=fort.hp;g.updateProjectiles(shot.duration);assert.ok(hp-fort.hp>=540);
 });
 
+test('Catapult and trebuchet earth bursts spawn only where the projectile lands',()=>{
+  const g=fixture('beacon'),fort=g.addBuilding(1,'barracks',40,30);
+  let catapultLife=0;
+  for(const [type,kind] of [['siege','catapult'],['trebuchet','trebuchet']]){
+    g.effects=[];
+    const engine=g.addUnit(0,type,36,30);
+    engine.setupProgress=15;g.attack(engine,fort);
+    const shot=g.projectiles[0];
+    g.updateProjectiles(shot.duration/2);
+    assert.equal(g.effects.length,0);
+    g.updateProjectiles(shot.duration/2);
+    const burst=g.effects.find(effect=>effect.type==='explosion');
+    assert.deepEqual([burst.kind,burst.x,burst.y,burst.radius],[kind,fort.x,fort.y,shot.splash]);
+    if(kind==='catapult')catapultLife=burst.maxLife;
+    else assert.ok(burst.maxLife>catapultLife);
+  }
+});
+
 test('Bolton trebuchets set up in 10 seconds and take down in 5, with no automatic deployment or fire during transitions',()=>{
   const g=fixture(),engine=g.addUnit(0,'trebuchet',30,30),fort=g.addBuilding(1,'barracks',38,30);
   engine.cooldown=0;

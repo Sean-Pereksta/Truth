@@ -50,6 +50,28 @@ test('Allied companies can cross the same bridge in opposite directions',()=>{
   assert.ok(left.every(id=>g.byId.get(id).x>62));assert.ok(right.every(id=>g.byId.get(id).x<52));
 });
 
+test('Idle allies make room in open terrain and use closer spacing on a bridge deck',()=>{
+  const separation=feature=>{
+    const g=fixture(),x=40.5,y=40.5;
+    Object.assign(g.tileAt(x,y),{feature,featureAxis:'x'});
+    g.navigation.invalidate();
+    const a=g.addUnit(0,'infantry',x,y),b=g.addUnit(0,'infantry',x,y);
+    for(let i=0;i<45;i++){g.hash.rebuild(g.units);g.updateUnits(1/60);}
+    return Math.hypot(a.x-b.x,a.y-b.y);
+  };
+  const open=separation(null),crossing=separation('bridge');
+  assert.ok(open>.44);
+  assert.ok(crossing>.2&&crossing<.37);
+});
+
+test('Movement and attack orders give nearby soldiers nearby slots in their rank',()=>{
+  const g=fixture(),south=g.addUnit(0,'infantry',30,42),north=g.addUnit(0,'infantry',30,38);
+  for(const mode of ['move','attack']){
+    g.command([south.id,north.id],47,40,mode,'line');
+    assert.ok(north.order.y<south.order.y);
+  }
+});
+
 test('Spawns and every formation destination stay on legal terrain',()=>{
   const g=fixture();river(g,55);const displaced=g.addUnit(0,'siege',55.5,20.5);assert.ok(g.isWalkable(displaced.x,displaced.y));
   const soldiers=[];for(let i=0;i<35;i++)soldiers.push(g.addUnit(0,'infantry',45.5+i%7*.5,43.5+Math.floor(i/7)*.5).id);

@@ -1,4 +1,5 @@
 import {checkpointReload,advanceReload,sweptWeaponContact} from './tactical-combat.js';
+import {projectileFlightDuration} from './projectile-flight.js';
 import {heroProfile} from './heroes.js';
 import {heroMovementMultiplier,heroActionRate,heroSettleDuration,heroKnockbackMultiplier,heroCaptureMultiplier,heroWeaponMultiplier,heroRangeBonus,heroDamageTakenMultiplier,heroBurnMultiplier,heroTrainingMultiplier,heroRecruitmentMultiplier,heroKillReward} from './hero-benefits.js';
 import * as BattleStandards from './battle-standards.js';
@@ -10,7 +11,7 @@ import {WarVision} from './vision.js';
 import {evaluateRivals,observedStrength,campaignRoute} from './rival-intelligence.js';
 import {BattleAftermath} from './aftermath.js';
 import {startFormationAdvance,updateFormationAdvances} from './formation-advance.js';
-import {marchSlot} from './formation-placement.js';
+import {assignFormationSlots,marchSlot} from './formation-placement.js';
 import {registerRegiments,regimentForHouse,regimentAllowed,regimentRequiredBuilding,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,houseCanRecruit,houseCanBuild,shieldFacingMultiplier,migrateLegacyRegiments,BOLTON_TREBUCHET_TIMES,trebuchetAnchored} from './regiments.js';
 export const HOUSES = [
   {name:'House Stark',motto:'Winter is coming',sigil:'wolf',color:'#8ac9e8',dark:'#234c61',trait:'Steadfast in the North'},
@@ -154,7 +155,18 @@ UNIT_DEFS.gilded_crossbow.impact='60-damage bolts; 108 against cavalry. A belt-a
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const ds=(a,b)=> (a.x-b.x)**2+(a.y-b.y)**2;
 const MAX_UNIT_RADIUS=Math.max(...Object.values(UNIT_DEFS).map(unit=>unit.radius||0));
-const ALLY_CLEARANCE=.48;
+const ALLY_CLEARANCE=.57;
+const ALLY_BODY_CLEARANCE=.46;
+const ALLY_BODY_GAP=.10;
+const meleeApproachAngles=[1.1,1.55].map(angle=>({back:Math.cos(angle),side:Math.sin(angle),cost:angle*.01}));
+const cavalryApproachAngles=[.42,.66].map(angle=>({back:Math.cos(angle),side:Math.sin(angle),cost:angle*.01}));
+function keepingAssignedSpacing(u,other){
+  const a=u.order,b=other.order;
+  if(a?.mode==='hold'&&b?.mode==='hold')return a.formation!=='spread'&&b.formation!=='spread';
+  return a?.marchTogether&&b?.marchTogether&&a.groupX===b.groupX&&a.groupY===b.groupY&&
+    (a.mode==='move'||a.mode==='idle')&&(b.mode==='move'||b.mode==='idle')&&
+    ds(u,a)<2.25&&ds(other,b)<2.25;
+}
 const sameFormation=(a,b)=>a&&b&&(a.advanceId!=null&&a.advanceId===b.advanceId||a.placementId!=null&&a.placementId===b.placementId);
 function tightFormationGround(g,u){
   if(u.order?.advanceStatus==='Crossing')return true;
@@ -621,9 +633,15 @@ export class Game {
     const rank=u=>this.unitClass(u)==='siege'?4:this.unitClass(u)==='archer'?3:UNIT_DEFS[u.type].spearBrace?0:UNIT_DEFS[u.type].shieldBearer?.5:1;
     arr.sort((a,b)=>rank(a)-rank(b)||a.id-b.id);
     const cols=Math.max(3,Math.ceil(Math.sqrt(arr.length)*1.45));
+    const slots=arr.map((_,i)=>marchSlot(i,arr.length,cols,formation));
+    // Keep nearby soldiers in nearby files so a fresh order does not send
+    // both sides of the line through one another as they get underway.
+    const ordered=arr.length>1&&(mode==='move'||mode==='attack')?assignFormationSlots(this,arr,slots,center,angle,UNIT_DEFS):arr;
     const attackLane=mode==='attack'&&formation!=='spread'&&arr.length>1?{attackSideX:sideX,attackSideY:sideY}:null;
-    arr.forEach((u,i)=>{const {side,back}=marchSlot(i,arr.length,cols,formation);
+    const marchTogether=mode==='move'&&arr.length>1;
+    ordered.forEach((u,i)=>{const {side,back}=slots[i];
       let goal=this.bound({x:x+sideX*side-fx*back,y:y+sideY*side-fy*back});if(!this.isWalkable(goal.x,goal.y))goal=this.navigation.nearestPassable(goal)||destination;if(!this.navigation.isClearPoint(goal.x,goal.y,u.radius))goal={x:Math.floor(goal.x)+.5,y:Math.floor(goal.y)+.5};if(this.unitClass(u)==='cavalry'&&(mode!=='attack'||u.charging&&((goal.x-u.x)*u.chargeDir.x+(goal.y-u.y)*u.chargeDir.y)<0||locked&&fx*u.chargeDir.x+fy*u.chargeDir.y<.5))this.stopCharge(u);u.championRegroup=null;u.championCyclePending=false;this.interruptAction(u);u.order={...goal,mode,formation,groupX:x,groupY:y,...attackLane,...(locked?{facingX:fx,facingY:fy}:{})};u.braceTime=0;u.braceDir=null;u.target=null;u.aggroAnchor=null;u.seek=0;u.sweepWait=0;if(UNIT_DEFS[u.type].setupSeconds&&Math.hypot(goal.x-u.x,goal.y-u.y)>.16)u.setupProgress=0;
+      if(marchTogether)u.order.marchTogether=true;
     });
   }
   advance(ids,formation='line',options={},point){return startFormationAdvance(this,ids,formation,UNIT_DEFS,options,point);}
@@ -1048,7 +1066,11 @@ export class Game {
       u.knockVX=dx/len*kick;u.knockVY=dy/len*kick;u.knockT=duration;u.knockDuration=duration;if(this.unitClass(u)==='cavalry')this.stopCharge(u);
     });
     for(const b of this.buildings){if(!this.hostile(b.team,p.team)||b.hp<=0)continue;const distance=Math.sqrt(ds(b,point));if(distance<radius+this.buildingRadius(b)*.35)this.damage(b,base*3*Math.max(.45,1-.4*distance/radius),{team:p.team,type:p.sourceType,sourceId:p.sourceId,impactKind:'siege',projectileType:'rock'});}
-    if(this.effects.length<230)this.effects.push({x:p.tx,y:p.ty,type:'explosion',life:.7,maxLife:.7,team:p.team,radius,strength:1.25});
+    if(this.effects.length<230){
+      const kind=p.sourceType==='trebuchet'?'trebuchet':p.sourceType==='siege'?'catapult':undefined;
+      const life=kind==='trebuchet'?1.2:kind==='catapult'?.95:.7;
+      this.effects.push({x:p.tx,y:p.ty,type:'explosion',kind,life,maxLife:life,team:p.team,radius,strength:1.25});
+    }
   }
   aiHousePower(s,army){
     const status=this.powerStatus(s.id);if(!status.ready||this.time<12)return;const economic=['lion','bridge','rose','beacon','bone'].includes(s.sigil);if(economic){if(!status.cost||s.gold-status.cost>=(s.aiPlan?.economyReserve??s.aiPlan?.production?.reserved??0))this.useHousePower([],s.id);return;}
@@ -1119,7 +1141,7 @@ export class Game {
     const dx=target.x-u.x,dy=target.y-u.y,length=Math.hypot(dx,dy)||1;
     if((dx*(u.facingX||0)+dy*(u.facingY||0))/length<(u.type==='hero'?.9:.5)){aim.elapsed=0;return;}
     aim.elapsed+=dt*heroActionRate(this,u,'aim');
-    if(aim.elapsed>=.18)this.attack(u,target,true);
+    if(aim.elapsed>=.12)this.attack(u,target,true);
   }
   attack(u,target,release=false){
     if(u.standardAction?.phase==='handling')return;
@@ -1146,8 +1168,9 @@ export class Game {
     const visualDX=target.x-u.x,visualDY=target.y-u.y,visualDistance=Math.hypot(visualDX,visualDY)||1;u.attackVisual={at:this.time,elapsed:0,cycle:u.cooldown,dx:visualDX/visualDistance,dy:visualDY/visualDistance,distance:visualDistance,action:d.crossbow||this.isRanged(u)?'fire':d.weaponKind==='halberd'?((u.weaponSwings=(u.weaponSwings||0)+1)%2===0?'swing':'thrust'):'thrust'};
     if(d.crossbow){u.reload={progress:0,duration:u.cooldown,baseDuration:d.rate,stage:'lower',completedStage:-1};u.reloading=true;u.crossbowState='fire';u.reloadX=u.x;u.reloadY=u.y;}
     if(this.isRanged(u)||this.unitClass(u)==='siege'){
-      const duration=d.setupSeconds?1.15+Math.sqrt(ds(u,target))*.025:this.unitClass(u)==='siege'?.8:.24+Math.sqrt(ds(u,target))*.035;
-      this.projectiles.push({sx:u.x,sy:u.y,x:u.x,y:u.y,tx:target.x,ty:target.y,t:0,duration,type:d.projectile||(u.type==='beacon_engineer'?'bolt':this.unitClass(u)==='siege'?'rock':'arrow'),team:u.team,target:target.id,sourceId:u.id,sourceType:u.type,crossbow:!!d.crossbow,cavalryBonus:d.cavalryBonus||1,held:u.order?.mode==='hold',weaponScale:this.upgradeMultiplier('weapons',s.upgrades.weapons),damage:amount,siegeBaseDamage:d.damage*this.upgradeMultiplier('weapons',s.upgrades.weapons)*(u.elite?1.35:1)*heroWeapon,venom:this.isRanged(u)&&u.venomUntil>this.time,piercing:u.type==='beacon_engineer',splash:this.unitClass(u)==='siege'&&u.type!=='beacon_engineer'?(d.splashRadius||1.3):0});
+      const type=d.projectile||(u.type==='beacon_engineer'?'bolt':this.unitClass(u)==='siege'?'rock':'arrow');
+      const duration=projectileFlightDuration(type,u.type,Math.sqrt(ds(u,target)));
+      this.projectiles.push({sx:u.x,sy:u.y,x:u.x,y:u.y,tx:target.x,ty:target.y,t:0,duration,type,team:u.team,target:target.id,sourceId:u.id,sourceType:u.type,crossbow:!!d.crossbow,cavalryBonus:d.cavalryBonus||1,held:u.order?.mode==='hold',weaponScale:this.upgradeMultiplier('weapons',s.upgrades.weapons),damage:amount,siegeBaseDamage:d.damage*this.upgradeMultiplier('weapons',s.upgrades.weapons)*(u.elite?1.35:1)*heroWeapon,venom:this.isRanged(u)&&u.venomUntil>this.time,piercing:u.type==='beacon_engineer',splash:this.unitClass(u)==='siege'&&u.type!=='beacon_engineer'?(d.splashRadius||1.3):0});
     }else{const source=this.unitSource(u);if(u.type==='bear_mauler'){u.maulSwings=(u.maulSwings||0)+1;source.cleaveReady=u.maulSwings%3===0;}this.damage(target,amount,source);if(d.hammer)this.hammerImpact(u,target);if(u.type==='giant'){
       const center={x:target.x,y:target.y},radius=d.splashRadius;
       const shove=(foe,travel)=>{
@@ -1378,7 +1401,7 @@ export class Game {
     for(const b of this.buildings){if(b.hp<=0)continue;const d=BUILD_DEFS[b.type],s=this.teams[b.team];b.hit=Math.max(0,b.hit-dt);b.cooldown-=dt;if(b.musterCooldown>0)b.musterCooldown=Math.max(0,b.musterCooldown-dt);
       if(d.unit&&houseCanRecruit(d.unit,s.sigil)){const training=this.trainingRate(b);b.spawnTimer+=dt*training;if(b.spawnTimer>=d.interval){if(s.count<s.cap&&!(b.musterCooldown>0)){this.spawnBatch(b,d.unit,d.batch);b.spawnTimer=0;}else b.spawnTimer=d.interval;}}
       const defense=b.type==='keep'?HALL_LEVELS[b.level||1]:b.type==='tower'?TOWER_LEVELS[b.level||1]:null;const falcon=s.sigil==='falcon'&&b.type==='tower',guard=falcon&&s.buffs.falconUntil>this.time,towerRange=(defense?.range||d.range||0)+(falcon?.7:0)+(guard?1.2:0);
-      if(d.range&&b.cooldown<=0){let target=null,best=towerRange*towerRange;this.hash.visit(b.x,b.y,towerRange,u=>{if(this.hostile(u.team,b.team)&&u.hp>0&&this.isVisibleTo(b.team,u)){const dd=ds(b,u);if(dd<best&&this.combatTerrain.canShoot(b,u)){target=u;best=dd;}}},b.team);if(target){this.projectiles.push({sx:b.x,sy:b.y,x:b.x,y:b.y,tx:target.x,ty:target.y,t:0,duration:.34,type:'arrow',team:b.team,target:target.id,damage:(defense?.damage||d.damage)*this.upgradeMultiplier('weapons',s.upgrades.weapons),splash:0});b.cooldown=d.rate/(guard?1.4:1);}}
+      if(d.range&&b.cooldown<=0){let target=null,best=towerRange*towerRange;this.hash.visit(b.x,b.y,towerRange,u=>{if(this.hostile(u.team,b.team)&&u.hp>0&&this.isVisibleTo(b.team,u)){const dd=ds(b,u);if(dd<best&&this.combatTerrain.canShoot(b,u)){target=u;best=dd;}}},b.team);if(target){this.projectiles.push({sx:b.x,sy:b.y,x:b.x,y:b.y,tx:target.x,ty:target.y,t:0,duration:.34,type:'arrow',sourceType:b.type,team:b.team,target:target.id,damage:(defense?.damage||d.damage)*this.upgradeMultiplier('weapons',s.upgrades.weapons),splash:0});b.cooldown=d.rate/(guard?1.4:1);}}
       if(b.type==='keep'&&b.hp<b.maxHp&&this.time%1<dt)b.hp=Math.min(b.maxHp,b.hp+2);
     }
   }
@@ -1394,6 +1417,48 @@ export class Game {
       }
     }
     return {bins,size,stride};
+  }
+  meleeApproach(u,target,reach,distance){
+    if(distance<=reach||distance>reach+2.1||u.charging||u.knockT>0||u.order?.advanceId!=null||
+      u.order?.placementId!=null||tightFormationGround(this,u)||tightFormationGround(this,target))return target;
+    const dx=(target.x-u.x)/distance,dy=(target.y-u.y)/distance;
+    const riders=this.unitClass(u)==='cavalry',radius=this.unitDefinition(u).radius,crowd=[];
+    this.hash.visit(u.x,u.y,1.75,ally=>{
+      if(ally===u||ally.hp<=0||!this.allied(u.team,ally.team))return;
+      const x=ally.x-u.x,y=ally.y-u.y,forward=x*dx+y*dy;
+      if(forward>.04&&forward<distance)crowd.push({x,y,clearance:radius+ally.radius+.16});
+    });
+    if(!crowd.length)return target;
+
+    // Offer a side route around the bodies already between us and the target.
+    // Check the path as well as the ending position so two units can pass.
+    const crowdCost=(x,y)=>{
+      const length2=x*x+y*y;
+      let cost=0;
+      for(const ally of crowd){
+        const along=clamp((ally.x*x+ally.y*y)/length2,0,1);
+        const gap2=(ally.x-x*along)**2+(ally.y-y*along)**2;
+        if(gap2<ally.clearance**2)cost+=ally.clearance-Math.sqrt(gap2);
+      }
+      return cost;
+    };
+    const ring=reach-.055,forward=distance-ring;
+    let best=target,bestCost=crowdCost(dx*forward,dy*forward);
+    if(bestCost<.05)return target;
+    // Horse approaches use shallower turns to let riders build a real run-up.
+    const firstSide=u.id%2?1:-1;
+    for(const angle of (riders?cavalryApproachAngles:meleeApproachAngles)){
+      for(const side of [firstSide,-firstSide]){
+        const depth=distance-ring*angle.back,lateral=ring*angle.side*side;
+        const x=dx*depth-dy*lateral,y=dy*depth+dx*lateral;
+        const cost=crowdCost(x,y)+angle.cost;
+        const end={x:u.x+x,y:u.y+y};
+        if(cost<bestCost-.025&&this.navigation.clearSegment(u,end,radius)){
+          bestCost=cost;best=end;
+        }
+      }
+    }
+    return best;
   }
   updateUnits(dt){
     this.updateExpansionOrders();this.updatePatrolOrders();this.updateSpecialists(dt);updateFormationAdvances(this,dt,UNIT_DEFS);
@@ -1468,7 +1533,12 @@ export class Game {
       if(target){const distance=Math.sqrt(ds(u,target)),extra=BUILD_DEFS[target.type]?this.buildingRadius(target):.07;
         const leash=mode==='hold'?range+1:6.5;if(distance>leash&&mode==='hold'){u.target=null;target=null;}
         else if(distance<=range+extra&&(order.targetId==null||!(this.isRanged(u)||u.type==='beacon_engineer'||d.lanceChampion)||this.combatTerrain.canShoot(u,target))){if(u.cooldown<=0)this.attack(u,target);if(u.charging&&BUILD_DEFS[target.type])this.stopCharge(u);}
-        else if(mode!=='hold'&&!locked){tx=target.x;ty=target.y;moving=true;}
+        else if(mode!=='hold'&&!locked){
+          const kind=this.unitClass(u);
+          const approach=(kind==='infantry'||kind==='cavalry')&&!this.isRanged(u)?
+            this.meleeApproach(u,target,range+extra,distance):target;
+          tx=approach.x;ty=approach.y;moving=true;
+        }
       }
       if(!target&&order){const goal=u.aggroAnchor?.returning?u.aggroAnchor:order,distance=Math.hypot(goal.x-u.x,goal.y-u.y);if(distance>arrival){tx=goal.x;ty=goal.y;moving=true;}}
       // A facing order is a deliberate formation march, never an invitation to
@@ -1478,7 +1548,10 @@ export class Game {
       if(u.disciplineUntil>this.time&&mode==='attack'&&order&&Math.hypot(order.x-u.x,order.y-u.y)>.16){tx=order.x;ty=order.y;moving=true;}
       if(u.charging){tx=u.x+u.chargeDir.x;ty=u.y+u.chargeDir.y;moving=true;}
       if(d.crossbow&&(u.reload||u.crossbowAim)&&!['move','advance','expand','patrol','retreat'].includes(mode)){moving=false;tx=u.x;ty=u.y;}
-      if(moving&&!u.charging&&!this.isHuman(u.team)&&this.unitClass(u)==='cavalry'&&!d.noCharge&&mode==='attack'&&!locked&&target){const approach=this.aiCavalryApproach(u,target);tx=approach.x;ty=approach.y;}
+      if(moving&&!u.charging&&!this.isHuman(u.team)&&this.unitClass(u)==='cavalry'&&!d.noCharge&&mode==='attack'&&!locked&&target){
+        const approach=this.aiCavalryApproach(u,target);
+        if(approach!==target){tx=approach.x;ty=approach.y;}
+      }
       if(trebuchetLocked)moving=false;
       if(moving&&!u.charging){const waypoint=this.navigation.steer(u,{x:tx,y:ty},this.unitClass(u));tx=waypoint.x;ty=waypoint.y;if(waypoint.blocked)moving=false;}
       let mx=0,my=0;
@@ -1505,18 +1578,24 @@ export class Game {
       // choke use body clearance so the rear can follow through the gap.
       if(!trebuchetLocked){
         const tightGround=tightFormationGround(this,u);
+        const anchored=this.unitClass(u)==='infantry'&&order.formation!=='spread'&&this.formationSettled(u)&&!stagger;
         let pushX=0,pushY=0;
-        this.hash.visit(u.x,u.y,Math.max(ALLY_CLEARANCE,d.radius+MAX_UNIT_RADIUS+.055),o=>{
+        this.hash.visit(u.x,u.y,Math.max(ALLY_CLEARANCE,d.radius+MAX_UNIT_RADIUS+ALLY_BODY_GAP),o=>{
           if(o===u||o.hp<=0)return;
           let dx=u.x-o.x,dy=u.y-o.y,dd=dx*dx+dy*dy;
-          const bodyClearance=d.radius+UNIT_DEFS[o.type].radius+.055,allyClearance=Math.max(ALLY_CLEARANCE,bodyClearance);
+          const body=d.radius+UNIT_DEFS[o.type].radius,allyClearance=Math.max(ALLY_CLEARANCE,body+ALLY_BODY_GAP);
           if(dd>=allyClearance**2)return;
           const friendlyRoom=!tightGround&&this.allied(u.team,o.team)&&!sameFormation(order,o.order)&&!tightFormationGround(this,o);
-          const min=friendlyRoom?allyClearance:bodyClearance;
+          // Preserve the spacing of a held line or soldiers following the
+          // same march order, including when the first ranks have arrived.
+          const widen=friendlyRoom&&!keepingAssignedSpacing(u,o);
+          const min=widen?allyClearance:friendlyRoom?Math.max(.48,body+.055):body+.055;
           if(dd>=min*min)return;
-          if(dd<.000001){const a=(u.id*2.399+o.id)*1.1;dx=Math.cos(a)*.001;dy=Math.sin(a)*.001;dd=.000001;}
-          const anchored=this.unitClass(u)==='infantry'&&order.formation!=='spread'&&this.formationSettled(u)&&!stagger;
-          const distance=Math.sqrt(dd),force=(min-distance)/min*(friendlyRoom?4.1:2.6)*(u.charging&&this.hostile(o.team,u.team)?.12:d.lanceChampion&&mode==='move'?.4:anchored?.3:1);
+          if(dd<.000001){
+            const angle=Math.min(u.id,o.id)*2.399963+Math.max(u.id,o.id),side=u.id<o.id?1:-1;
+            dx=Math.cos(angle)*side*.001;dy=Math.sin(angle)*side*.001;dd=.000001;
+          }
+          const distance=Math.sqrt(dd),force=(min-distance)/min*(widen?4.5:friendlyRoom?4.1:2.6)*(u.charging&&this.hostile(o.team,u.team)?.12:d.lanceChampion&&mode==='move'?.4:anchored?.3:1);
           pushX+=dx/distance*force;pushY+=dy/distance*force;
         });
         for(const b of collisionBuildings.bins.get(Math.floor(u.y/collisionBuildings.size)*collisionBuildings.stride+Math.floor(u.x/collisionBuildings.size))||emptyBuildings){if(b.hp<=0)continue;const rad=this.buildingRadius(b)+d.radius,dx=u.x-b.x,dy=u.y-b.y,dd=dx*dx+dy*dy;if(dd<rad*rad&&dd>.000001){const len=Math.sqrt(dd),force=(rad-len)/rad*3.5;pushX+=dx/len*force;pushY+=dy/len*force;}}
@@ -1547,12 +1626,13 @@ export class Game {
     for(const u of this.units){
       if(u.hp<=0)continue;
       const tightGround=tightFormationGround(this,u),radius=UNIT_DEFS[u.type].radius;
-      this.hash.visit(u.x,u.y,radius+MAX_UNIT_RADIUS+.055,o=>{
+      this.hash.visit(u.x,u.y,Math.max(ALLY_BODY_CLEARANCE,radius+MAX_UNIT_RADIUS+ALLY_BODY_GAP),o=>{
       if(o.id<=u.id||o.hp<=0)return;
       let dx=u.x-o.x,dy=u.y-o.y,dd=dx*dx+dy*dy;
-      const body=radius+UNIT_DEFS[o.type].radius;
-      if(dd>=(body+.055)**2)return;
-      const friendlyRoom=!tightGround&&this.allied(u.team,o.team)&&!sameFormation(u.order,o.order)&&!tightFormationGround(this,o),min=friendlyRoom?body+.055:body*.92;
+      const body=radius+UNIT_DEFS[o.type].radius,allyBodyClearance=Math.max(ALLY_BODY_CLEARANCE,body+ALLY_BODY_GAP);
+      if(dd>=allyBodyClearance**2)return;
+      const friendlyRoom=!tightGround&&this.allied(u.team,o.team)&&!sameFormation(u.order,o.order)&&!tightFormationGround(this,o);
+      const min=friendlyRoom?(keepingAssignedSpacing(u,o)?body+.055:allyBodyClearance):body*.92;
       if(dd>=min*min)return;
       if(dd<.0000001){dx=.0001*Math.cos(u.id);dy=.0001*Math.sin(u.id);dd=dx*dx+dy*dy;}
       const len=Math.sqrt(dd),shift=Math.min(.055,(min-len)*.4);

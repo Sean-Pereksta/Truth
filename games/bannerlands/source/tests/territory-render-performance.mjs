@@ -46,4 +46,34 @@ test('Passability, palette, new maps and replaced pixel buffers invalidate cache
   const other=fixture();other.g.tiles[1].owner=1;r.updateTerritory(other.g);assert.deepEqual(f.pixel(0),[0,0,0,0]);assert.deepEqual(f.pixel(1),[160,176,192,255]);
 });
 
-console.log(`${checks} territory rendering performance checks passed.`);
+test('High graphics depth-sort swaying trees with soldiers; Performance uses cached scenery',()=>{
+  const calls=[],alpha=[];
+  const ctx={
+    globalAlpha:1,save(){alpha.push(this.globalAlpha);},restore(){this.globalAlpha=alpha.pop();},
+    setTransform(){},translate(){},scale(){},fillRect(){},transform(){},beginPath(){},
+    moveTo(){},lineTo(){},stroke(){},createRadialGradient:()=>({addColorStop(){}}),
+    drawImage(image){if(image==='tree'||image==='cached scenery')calls.push([image,this.globalAlpha]);}
+  };
+  const units=[{id:1,hp:100,x:5,y:5},{id:2,hp:100,x:6,y:6}];
+  const game={W:16,H:16,time:1,buildings:[],units,teams:[],
+    tiles:Array.from({length:256},()=>({claim:-1})),effects:[],projectiles:[]};
+  const r=new Renderer({getContext:()=>ctx});
+  Object.assign(r,{w:320,h:200,dpr:1,left:-448,top:0,mapW:896,mapH:448,terrainReady:true,
+    cachedGame:game,lastBuildingCount:0,lastBuildingId:0,territoryTime:1,territoryEdges:[],
+    decorChunks:new Map([['0,0',[{x:5.5,y:5.5,kind:'tree',variant:0,scale:1}]]]),
+    terrainChunk:()=>({image:'terrain'}),treeSprite:()=> 'tree',
+    drawStrategicScenery(c){c.drawImage('cached scenery');},
+    unit(_c,unit){calls.push(['unit '+unit.id,1]);},
+    drawBridgeArchitecture(){},formationBannerLayer:{draw(){}}
+  });
+  const view={x:0,y:154,w:320,h:200,zoom:1};
+  const draw=(quality,selected,lowDetail=false)=>{
+    calls.length=0;r.draw(game,view,{quality,selected:new Set(selected),lowDetail});return calls.slice();
+  };
+  assert.deepEqual(draw('high',[2]),[['unit 1',1],['tree',1],['unit 2',1]]);
+  assert.deepEqual(draw('high',[1]),[['unit 1',1],['tree',.42],['unit 2',1]]);
+  assert.deepEqual(draw('performance',[1]),[['cached scenery',1],['unit 1',1],['unit 2',1]]);
+  assert.deepEqual(draw('auto',[1],true),[['cached scenery',1],['unit 1',1],['unit 2',1]]);
+});
+
+console.log(`${checks} battlefield rendering performance checks passed.`);
