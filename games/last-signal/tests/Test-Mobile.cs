@@ -294,7 +294,7 @@ class TestMobile {
                 Check(Get("/mobile/ws","https://unrelated.example").Status==403,"Cross-origin mobile connection was accepted.");
                 Check(Get("/ws",origin).Status==403,"Browser origin entered native WebSocket.");
                 Check(Get("/mobile/assets/Last%20Signal.exe").Status==404,"Mobile server exposed a file outside its allowlist.");
-                foreach(string pack in new[]{"landmarks.bin.gz","survivors.bin.gz","field.bin.gz"}) {
+                foreach(string pack in new[]{"landmarks.bin.gz","survivors.bin.gz","field.bin.gz","equipment.bin.gz"}) {
                     ReplyHeaders response=Get("/mobile/assets/"+pack);
                     Check(response.Status==200&&response.ContentType=="application/octet-stream"&&(publish||response.ContentEncoding=="gzip"),
                           "Online browser art is missing or has the wrong encoding: "+pack);

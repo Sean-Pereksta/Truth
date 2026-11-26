@@ -17,7 +17,7 @@ namespace LastSignal {
         static readonly Dictionary<string,string> Assets=new Dictionary<string,string> {
             {"models.bin","application/octet-stream"},{"modelpaint.png","image/png"},{"paint.png","image/png"},
             {"landmarks.bin.gz","application/octet-stream"},{"survivors.bin.gz","application/octet-stream"},
-            {"field.bin.gz","application/octet-stream"},
+            {"field.bin.gz","application/octet-stream"},{"equipment.bin.gz","application/octet-stream"},
             {"ground.png","image/png"},{"soil.png","image/png"},{"pavers.png","image/png"},{"sky.png","image/png"},
             {"gorge_floor.png","image/png"},{"gorge_path.png","image/png"},
             {"frost_floor.png","image/png"},{"frost_path.png","image/png"},{"Audio/wood.wav","audio/wav"}

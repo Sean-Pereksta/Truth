@@ -191,7 +191,6 @@ progress::-moz-progress-bar { background: var(--fill, var(--accent)); border-rad
 .reticle[data-hit="true"] { border-color: var(--accent); box-shadow: 0 0 5px #ffd588aa; }
 .aim progress { width: 42px; }
 .aim span { font-size: 0.9em; }
-#gear-status { color: var(--accent); }
 .impact {
   position: absolute;
   top: 50%;
@@ -213,7 +212,7 @@ progress::-moz-progress-bar { background: var(--fill, var(--accent)); border-rad
 .countdown strong { font-family: Georgia, serif; font-size: clamp(40px, 12vh, 88px); line-height: 0.95; }
 
 .messages {
-  bottom: max(56px, 19%);
+  bottom: max(calc(var(--bottom) + 100px), 19%);
   left: 50%;
   display: grid;
   justify-items: center;
@@ -256,8 +255,9 @@ progress::-moz-progress-bar { background: var(--fill, var(--accent)); border-rad
 
 .controls button, .stick { pointer-events: auto; touch-action: none; }
 .move-controls, .play-actions { display: grid; gap: 5px; align-items: end; }
-.move-tools, .main-actions, .equipment, .extra-actions, .gear-shortcuts { display: flex; gap: 4px; }
-.play-actions { justify-items: end; }
+.move-tools, .action-row, #place-tools { display: flex; gap: 4px; }
+.play-actions { justify-items: end; min-width: 0; max-width: min(70vw, 390px); }
+.action-row { align-items: end; justify-content: end; flex-wrap: wrap; max-width: 100%; }
 .stick {
   position: relative;
   display: grid;
@@ -271,12 +271,9 @@ progress::-moz-progress-bar { background: var(--fill, var(--accent)); border-rad
   border-radius: 50%;
 }
 .stick-thumb { width: 43%; aspect-ratio: 1; border-radius: 50%; border: 1px solid #eeeeda9c; background: #b6c5a855; pointer-events: none; }
-.attack { min-width: 66px; }
-#weapon { max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.extra-actions { flex-wrap: wrap; justify-content: end; max-width: min(47vw, 280px); }
-.main-actions { align-items: end; justify-content: end; flex-wrap: wrap; max-width: min(67vw, 420px); }
+.attack { min-width: 72px; }
+#weapon { max-width: min(29vw, 132px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .controls button { padding: 0.25rem 0.43rem; }
-.gear-shortcuts button { min-width: 54px; }
 #guard[data-worn="true"] { border-color: #ef997d; color: #ffd0ae; }
 #fort-guide { max-width: 100%; border: 1px solid #c8d0b225; color: var(--accent); }
 
@@ -319,22 +316,19 @@ progress::-moz-progress-bar { background: var(--fill, var(--accent)); border-rad
 .drawer-heading h2 { font-family: Georgia, serif; font-size: 1.5rem; }
 .gear-tabs { display: flex; flex: 0 0 auto; gap: 4px; margin: 6px 0; }
 .gear-tabs button { flex: 1; }
-.gear-options { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 2px 0 6px; }
+.gear-options { margin: 2px 0 6px; }
 .gear-options label { display: flex; align-items: center; gap: 6px; min-height: 38px; cursor: pointer; }
 .gear-options input { width: 17px; height: 17px; accent-color: var(--accent); }
-.gear-options button { min-height: 36px; }
 .gear-list { display: grid; flex: 0 1 auto; gap: 10px; min-height: 0; padding: 0 2px 2px; overflow-y: auto; overscroll-behavior: contain; }
-.gear-group { display: grid; min-width: 0; gap: 5px; }
+.gear-group { display: grid; min-width: 0; }
 .gear-group h3 { margin: 3px 2px; color: var(--accent); font-size: 0.81rem; letter-spacing: 0.035em; }
 .gear-item {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 7px;
-  padding: 7px;
-  background: #121c15;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  padding: 6px 2px;
+  border-bottom: 1px solid var(--line);
 }
 .gear-item strong, .gear-item small { display: block; }
 .gear-item small { color: var(--muted); margin-top: 3px; line-height: 1.35; overflow-wrap: anywhere; }
@@ -371,7 +365,7 @@ button.gear-need { min-height: 44px; }
 .gear-detail small { color: var(--muted); }
 .gear-shield-meter { margin-top: 5px; --fill: #d3c18f; }
 .menu-actions { display: grid; }
-.menu-actions p, .gear-list p { margin: 4px 0; color: var(--muted); padding: 0 4px; }
+.gear-list p { margin: 4px 0; color: var(--muted); padding: 0 4px; }
 
 @media (orientation: landscape) {
   .vitals { grid-template-columns: repeat(4, auto); }
@@ -384,7 +378,6 @@ button.gear-need { min-height: 44px; }
 
 @media (max-width: 355px) {
   .heading { max-width: 24vw; }
-  #weapon { max-width: 88px; }
   .controls button { padding-inline: 4px; }
   .gear-item-actions { flex-wrap: wrap; justify-content: end; }
 }

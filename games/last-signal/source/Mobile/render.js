@@ -1,12 +1,13 @@
 const TAU = Math.PI * 2;
 const PROP_CELL = 26;
 const PROP_RANGE = 160;
-const modelFiles = ["landmarks.bin.gz", "survivors.bin.gz", "field.bin.gz"];
+const modelFiles = ["survivors.bin.gz", "equipment.bin.gz", "landmarks.bin.gz", "field.bin.gz"];
 const clamp = (n, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, n));
 const mix = (a, b, t) => a + (b - a) * t;
 const solid = [1, 1, 1, 1];
-const nativeGear = new Set(["arrows", "arrow", "spear", "hatchet", "knife", "bow", "sling"]);
-const fieldGear = new Set(["sword", "shield", "crossbow", "bolt", "bolts"]);
+const longGear = new Set(["arrows", "arrow", "spear", "hatchet", "knife", "bow", "sling", "sword", "crossbow", "bolt", "bolts"]);
+const solidGear = new Set(["sword", "shield", "crossbow", "crossbow_half", "crossbow_cocked", "bolt", "bolts"]);
+const cuffFor = { woven_vest: "vest_cuff", scrap_cuirass: "cuirass_cuff" };
 const tallLandmarks = new Set(["cornucopia", "watchtower", "aqueduct", "signal_lodge", "sand_arch"]);
 const trees = new Set(["tree", "oak", "pine", "birch", "pinon", "snow_fir"]);
 const rocks = new Set(["rock", "boulder", "snow_boulder", "ice_teeth", "mesa_rock", "sand_hoodoo", "shore_rocks"]);
@@ -188,6 +189,38 @@ function multiply(a, b) {
     }
   }
   return joined;
+}
+
+function cross(a, b) {
+  return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+}
+
+function unit(vector) {
+  const length = Math.hypot(...vector) || 1;
+  return vector.map(n => n / length);
+}
+
+function align(from, to) {
+  const a = unit(from), b = unit(to);
+  const axis = cross(a, b);
+  const cosine = a.reduce((sum, n, i) => sum + n * b[i], 0);
+  if (cosine < -0.99999) {
+    const perpendicular = unit(cross(a, Math.abs(a[0]) < 0.75 ? [1, 0, 0] : [0, 1, 0]));
+    return [0, 1, 2].flatMap(i => [...perpendicular.map((n, j) => 2 * n * perpendicular[i] - Number(i === j)), 0])
+      .concat(0, 0, 0, 1);
+  }
+  return [0, 1, 2].flatMap(i => {
+    const basis = [0, 0, 0];
+    basis[i] = 1;
+    const turn = cross(axis, basis);
+    const correction = cross(axis, turn);
+    return [...basis.map((n, j) => n + turn[j] + correction[j] / (1 + cosine)), 0];
+  }).concat(0, 0, 0, 1);
+}
+
+function span(start, delta, width = 1) {
+  const orientation = align([0, 1, 0], delta);
+  return multiply(pose(...start), multiply(orientation, pose(0, 0, 0, 0, 0, width, Math.hypot(...delta), width)));
 }
 
 function readModels(bytes) {
@@ -570,6 +603,7 @@ export class ArenaRenderer {
     this.shield = this.makeMesh(shieldVertices());
     this.crossbow = this.makeMesh(crossbowVertices());
     this.bolt = this.makeMesh(boltVertices());
+    this.gearFallback = { sword: this.sword, shield: this.shield, bolt: this.bolt };
     this.textures = new Map();
     this.painted = false;
     this.modelRequest = false;
@@ -718,7 +752,7 @@ export class ArenaRenderer {
     const parts = model.parts;
     const root = parts[0];
     if (parts.length === 1 && !root.x && !root.y && !root.z) {
-      model.flattened = this.makeMesh(root.bytes, 2);
+      model.flattened = this.makeMesh(root.bytes, solidGear.has(id) ? 0 : 2);
       return model.flattened;
     }
     const offsets = [];
@@ -741,11 +775,17 @@ export class ArenaRenderer {
       }
       offset += part.bytes.byteLength;
     }
-    model.flattened = this.makeMesh(merged, 2);
+    model.flattened = this.makeMesh(merged, solidGear.has(id) ? 0 : 2);
     return model.flattened;
   }
 
-  rig(batch, id, start, color, move) {
+  partMesh(part) {
+    if (!part?.bytes.length) return null;
+    part.mesh ||= this.makeMesh(part.bytes, 2);
+    return part.mesh;
+  }
+
+  rig(batch, id, start, color, move, equip) {
     const model = this.models.get(id);
     if (!model) return false;
     const joints = [];
@@ -754,9 +794,8 @@ export class ArenaRenderer {
       const local = move(part);
       const matrix = multiply(root, local ?? pose(part.x, part.y, part.z));
       joints.push(matrix);
-      if (!part.bytes.length) continue;
-      part.mesh ||= this.makeMesh(part.bytes, 2);
-      this.queue(batch, part.mesh, matrix, color);
+      this.queue(batch, this.partMesh(part), matrix, color);
+      equip?.(part, matrix);
     }
     return true;
   }
@@ -1032,22 +1071,25 @@ export class ArenaRenderer {
       const tilt = Math.PI * 0.4833 * clamp(age / 1.18) ** 2;
       const root = pose(x, y - Math.max(0, age - 1.24) * 2.3, z, fallYaw, tilt);
       matrix = multiply(root, pose(0, 0, 0, yaw - fallYaw, 0, size));
-    } else if (kind === "pickup" && fieldGear.has(id)) {
+    } else if (kind === "pickup") {
       if (id === "crossbow") {
-        this.drawCrossbow(batch, pose(x, y + 0.11, z, yaw, 0, size), 0, false);
-      } else if (id === "sword") {
-        this.queue(batch, this.sword, pose(x, y + 0.15, z, yaw, 1.50, size));
-      } else if (id === "shield") {
-        this.queue(batch, this.shield, pose(x, y + 0.15, z, yaw, -1.35, size));
-      } else {
-        const count = id === "bolts" ? 3 : 1;
-        for (let i = 0; i < count; i++) {
+        this.drawCrossbow(batch, pose(x, y + 0.13, z, yaw, -0.07, size), 0, false);
+        return;
+      }
+      if (id === "bolts" && !this.models.has(id)) {
+        for (let i = 0; i < 3; i++) {
           this.queue(batch, this.bolt, pose(x + i * 0.045, y + 0.15 + i * 0.015, z, yaw + i * 0.075, 0, size));
         }
+        return;
       }
-      return;
-    } else if (kind === "pickup" && nativeGear.has(id)) {
-      matrix = pose(x, y + (id === "spear" ? 0.074 : 0.13), z, yaw, 1.50, size);
+      if (id === "shield") matrix = pose(x, y + 0.115, z, yaw, -Math.PI / 2, size);
+      else if (longGear.has(id)) matrix = pose(x, y + (id === "spear" ? 0.074 : 0.13), z, yaw, 1.50, size);
+      const gear = this.gearMesh(id);
+      if (gear) {
+        if (gear === this.bolt) matrix = pose(x, y + 0.13, z, yaw, 0, size);
+        this.queue(batch, gear, matrix);
+        return;
+      }
     }
 
     const model = damagedMesh || id;
@@ -1104,39 +1146,56 @@ export class ArenaRenderer {
   }
 
   actor(batch, a, clock, nearby) {
-    const [x, y, z, yaw, alive, crouch, style, , fallYaw, anim, speed, weapon, shield, guard, guardBlend, reload, loaded, striking, recoil = 0] = a;
+    const [x, y, z, yaw, alive, crouch, style, , fallYaw, anim, speed, weapon, shield, guard,
+      guardBlend, reload, loaded, striking, recoil = 0, armor, draw = 0, arrow = false] = a;
     const tint = costume[nativeCostume[style] ?? style] ?? solid;
     const gait = alive ? Math.sin(anim ?? clock * 5) * clamp((speed ?? 0) * 0.25) : 0;
     const matrix = alive ? pose(x, y - (crouch ? 0.20 : 0) - recoil * 0.1, z, yaw, -0.19 * recoil, 1, crouch ? 0.86 : 1, 1)
       : pose(x, y + 0.18, z, fallYaw ?? yaw, -Math.PI / 2);
     if (alive && nearby) {
       const advance = shield ? clamp(Math.max(guard ? 0.85 : 0, guardBlend || 0)) : 0;
-      if (shield) this.queue(batch, this.shield, multiply(matrix,
+      if (shield) this.queue(batch, this.gearMesh("shield"), multiply(matrix,
         pose(-0.30 + advance * 0.09, 0.77 + advance * 0.42, 0.14 + advance * 0.42, -0.58 * (1 - advance), 0.05, 0.98)));
-      if (weapon === "sword") {
-        const swing = Math.sin(clamp((striking || 0) / 0.36) * Math.PI);
-        this.queue(batch, this.sword, multiply(matrix, pose(0.31 - 0.28 * swing, 0.85 + swing * 0.28, 0.23,
-          0.28 - swing * 0.81, 0.43 + swing * 0.76)));
-      } else if (weapon === "crossbow") {
+      if (weapon === "crossbow") {
         const movement = reloadMotion(reload || 0);
-        this.drawCrossbow(batch, multiply(matrix, pose(0.21, 1.0 - movement.lower * 0.27, 0.27,
+        this.drawCrossbow(batch, multiply(matrix, pose(-0.21, 1.14 - movement.lower * 0.27, 0.31,
           0.3 * movement.lower, 0.2 + movement.lower * 0.45)), reload || 0, loaded);
+      } else if (weapon === "bow") {
+        this.drawBow(batch, multiply(matrix, pose(0.29 - draw * 0.09, 1.32 + draw * 0.04, 0.35 + draw * 0.10, 0.21)),
+          draw, arrow && !striking);
       }
     }
+    const armorMesh = this.flatModel(armor);
+    const cuff = nearby ? this.flatModel(cuffFor[armor]) : null;
+    const armed = weapon && !["fists", "bow", "crossbow"].includes(weapon);
+    const swing = Math.sin(clamp((striking || 0) / 0.36) * Math.PI);
     if (nearby && this.rig(batch, "contestant", matrix, tint, part => {
       if (!alive) return null;
-      if (part.name === "upperarmL" && (shield || weapon === "crossbow")) {
-        return pose(part.x, part.y, part.z, 0, guard || weapon === "crossbow" ? 0.82 : 0.26);
+      if (part.name === "upperarmL" && (weapon === "bow" || weapon === "crossbow")) {
+        return pose(part.x, part.y, part.z, 0, -1.04);
       }
-      if (part.name === "upperarmR" && weapon === "crossbow") return pose(part.x, part.y, part.z, 0, 0.87);
+      if (part.name === "upperarmR" && (shield || armed || weapon === "crossbow" || weapon === "bow")) {
+        return pose(part.x, part.y, part.z, 0, -0.58 - swing * 0.64 - (guard ? 0.31 : 0));
+      }
+      if (part.name === "forearmR" && armed) return pose(part.x, part.y, part.z, 0, -0.34);
       const move = part.name === "thighL" || part.name === "upperarmR" ? 0.4 * gait
         : part.name === "thighR" || part.name === "upperarmL" ? -0.4 * gait
         : crouch && part.name === "torso" ? 0.24 : 0;
       return move ? pose(part.x, part.y, part.z, 0, move) : null;
+    }, (part, joint) => {
+      if (part.name === "torso") this.queue(batch, armorMesh, joint);
+      if (cuff && (part.name === "forearmR" || part.name === "forearmL")) {
+        this.queue(batch, cuff, multiply(joint, span([0, 0, 0], [0, -0.225, 0.059])));
+      }
+      if (alive && armed && part.name === "gripR") {
+        const pitch = weapon === "spear" ? 2.28 : 1.22;
+        this.queue(batch, this.gearMesh(weapon), multiply(joint, pose(0, weapon === "hatchet" ? 0.07 : 0, 0, 0, pitch)));
+      }
     })) return;
     const mesh = this.flatModel("contestant");
     if (mesh) {
       this.queue(batch, mesh, matrix, tint);
+      this.queue(batch, armorMesh, multiply(matrix, pose(0, 0.93, 0)));
       return;
     }
     const add = (mesh, x2, y2, z2, w, h, d, c, pitch = 0) => {
@@ -1169,35 +1228,69 @@ export class ArenaRenderer {
       [0.42, 0.34, 0.26, 1]);
   }
 
+  gearMesh(id) {
+    return this.flatModel(id) ?? this.gearFallback[id];
+  }
+
+  drawBow(batch, matrix, draw, loaded) {
+    const style = Math.round(draw * 2);
+    const drawn = style ? this.flatModel("bow_draw" + style) : null;
+    this.queue(batch, drawn ?? this.flatModel("bow"), matrix);
+    const nock = drawn ? [-0.16, -0.32, -0.50][style] : -0.16;
+    if (loaded) this.queue(batch, this.flatModel("arrow"), multiply(matrix, pose(0, 0.035, nock + 0.30, 0, Math.PI / 2)));
+  }
+
   drawCrossbow(batch, matrix, reload, loaded) {
-    this.queue(batch, this.crossbow, matrix);
-    const center = loaded ? -0.12 : mix(0.27, -0.12, reloadMotion(reload).cock);
+    const cock = loaded ? 1 : reloadMotion(reload).cock;
+    const limbPose = Math.round(cock * 2) / 2;
+    const native = this.flatModel(limbPose === 1 ? "crossbow_cocked" : limbPose === 0.5 ? "crossbow_half" : "crossbow");
+    this.queue(batch, native ?? this.crossbow, native ? multiply(matrix, pose(0, 0, 0, 0, Math.PI / 2)) : matrix);
+    const center = native ? 0.425 - 0.34 * cock : mix(0.27, -0.12, cock);
+    const tipX = native ? 0.382 - 0.025 * limbPose : 0.333;
+    const tipZ = native ? 0.421 - 0.063 * limbPose : 0.27;
+    const stringY = native ? 0.084 : 0.026;
     for (const side of [-1, 1]) {
-      const dx = side * 0.333;
-      const dz = 0.27 - center;
+      const dx = side * tipX;
+      const dz = tipZ - center;
       this.queue(batch, this.box, multiply(matrix,
-        pose(dx / 2, 0.026, center + dz / 2, Math.atan2(dx, dz), 0, 0.009, 0.009, Math.hypot(dx, dz) + 0.01)),
-      [0.71, 0.63, 0.48, 1]);
+        pose(dx / 2, stringY - 0.004, center + dz / 2, Math.atan2(dx, dz), 0, 0.008, 0.008, Math.hypot(dx, dz))),
+      [0.66, 0.58, 0.42, 1]);
     }
-    if (loaded || reload >= 0.79) this.queue(batch, this.bolt, multiply(matrix, pose(0, 0.047, 0.42)));
+    if (loaded || reload >= 0.79) this.crossbowBolt(batch, matrix, 0, 0.087, 0.208, 0);
   }
 
-  forearm(batch, shoulder, hand, cloth, skin) {
-    const [x, y, z] = hand.map((n, i) => n - shoulder[i]);
-    const length = Math.hypot(x, y, z);
-    if (length > 0.001) {
-      const horizontal = Math.hypot(x, z);
-      const axis = [x / length, y / length, z / length];
-      const side = horizontal < 0.01 ? [1, 0, 0] : [z / horizontal, 0, -x / horizontal];
-      const depth = [side[1] * axis[2] - side[2] * axis[1], side[2] * axis[0] - side[0] * axis[2],
-        side[0] * axis[1] - side[1] * axis[0]];
-      const matrix = [...side.map(n => n * 0.14), 0, x, y, z, 0, ...depth.map(n => n * 0.13), 0, ...shoulder, 1];
-      this.queue(batch, this.trunk, matrix, cloth);
-    }
-    this.queue(batch, this.rock, pose(hand[0], hand[1] - 0.042, hand[2], 0, 0.18, 0.105, 0.12, 0.098), skin);
+  crossbowBolt(batch, matrix, x, y, z, yaw) {
+    const native = this.flatModel("bolt");
+    const local = native ? pose(x, y, z, yaw, Math.PI / 2) : pose(x, y - 0.04, z + 0.212, yaw);
+    this.queue(batch, native ?? this.bolt, multiply(matrix, local));
   }
 
-  crossbowHands(batch, frame, clock, bob, cloth, skin) {
+  forearm(batch, shoulder, hand, left, armor) {
+    const suffix = left ? "L" : "R";
+    const parts = this.models.get("arms")?.parts;
+    const sleeve = parts?.find(part => part.name === "forearm" + suffix);
+    const glove = parts?.find(part => part.name === "hand" + suffix);
+    const reach = hand.map((n, i) => n - shoulder[i]);
+    if (sleeve && glove) {
+      const rest = [glove.x, glove.y, glove.z];
+      const size = 0.77;
+      const turn = align(rest, reach);
+      const grip = transformedPoint(turn, glove.x, glove.y + 0.026, glove.z + 0.066);
+      const elbow = hand.map((n, i) => n - grip[i] * size);
+      const matrix = multiply(pose(...elbow), multiply(turn, pose(0, 0, 0, 0, 0, size)));
+      const upper = elbow.map((n, i) => n - shoulder[i]);
+      this.queue(batch, this.trunk, span(shoulder, upper, 0.15), [0.30, 0.35, 0.28, 1]);
+      this.queue(batch, this.partMesh(sleeve), matrix);
+      this.queue(batch, this.partMesh(glove), multiply(matrix, pose(...rest)));
+      this.queue(batch, this.flatModel(cuffFor[armor]), multiply(matrix, span([0, 0, 0], rest, 1.32)));
+      return;
+    }
+    this.queue(batch, this.trunk, span(shoulder, reach, 0.14), [0.30, 0.35, 0.28, 1]);
+    this.queue(batch, this.rock, pose(hand[0], hand[1] - 0.042, hand[2], 0, 0.18, 0.105, 0.12, 0.098),
+      [0.53, 0.40, 0.30, 1]);
+  }
+
+  crossbowHands(batch, frame, clock, bob) {
     const { player } = frame;
     const reload = player.reload ? clamp(player.reload + (clock - frame.clock) / (player.reloadSeconds || 4)) : 0;
     const motion = reloadMotion(reload);
@@ -1206,28 +1299,28 @@ export class ArenaRenderer {
     const matrix = pose(0.16 - 0.14 * aim + motion.lower * 0.10,
       -0.24 + bob + 0.15 * aim - 0.22 * motion.lower,
       0.58 - 0.09 * motion.lower - 0.075 * recoil, 0.07 + 0.20 * motion.lower, motion.lower * 0.32 - recoil * 0.12, 0.77);
-    const right = transformedPoint(matrix, 0, -0.09, -0.015, 1);
-    this.forearm(batch, [0.27, -0.46, 0.08], right, cloth, skin);
+    const right = transformedPoint(matrix, 0, -0.096, -0.062, 1);
+    this.forearm(batch, [0.27, -0.46, 0.08], right, false, player.armor);
 
-    const grip = [-0.086, -0.075, 0.28];
+    const grip = [-0.072, -0.035, 0.333];
     let left = transformedPoint(matrix, ...grip, 1);
     if (reload > 0) {
-      const fingertips = [-0.025, 0.054, mix(0.26, -0.12, motion.cock)];
+      const fingertips = [-0.025, 0.084, mix(0.425, 0.085, motion.cock)];
       const start = smooth(reload / 0.22);
       const withdraw = smooth((reload - 0.79) / 0.21);
       const motionWeight = start * (1 - withdraw);
       if (reload >= 0.54 && reload < 0.79) {
-        const boltX = mix(-0.34, 0, motion.seat);
-        const boltY = mix(0.20, 0.047, motion.seat);
-        const boltZ = mix(0.12, 0.42, motion.seat);
+        const boltX = mix(-0.205, 0, motion.seat);
+        const boltY = mix(-0.043, 0.087, motion.seat);
+        const boltZ = mix(0.015, 0.208, motion.seat);
         const grabbing = pose(boltX, boltY, boltZ, (1 - motion.seat) * -0.63);
-        this.queue(batch, this.bolt, multiply(matrix, grabbing));
-        left = transformedPoint(multiply(matrix, grabbing), -0.016, -0.04, -0.15, 1);
+        this.crossbowBolt(batch, matrix, boltX, boltY, boltZ, (1 - motion.seat) * -0.63);
+        left = transformedPoint(multiply(matrix, grabbing), -0.016, -0.04, -0.078, 1);
       } else {
         left = transformedPoint(matrix, ...grip.map((n, i) => mix(n, fingertips[i], motionWeight)), 1);
       }
     }
-    this.forearm(batch, [-0.28, -0.43, 0.10], left, cloth, skin);
+    this.forearm(batch, [-0.28, -0.43, 0.10], left, true, player.armor);
     this.drawCrossbow(batch, matrix, reload, player.crossbowLoaded);
   }
 
@@ -1241,30 +1334,30 @@ export class ArenaRenderer {
     const bob = Math.cos(clock * 11.5) * stride * 0.012;
     const left = -0.18 - swing * 0.03;
     const right = 0.24 - aiming * 0.13 - swing * 0.21;
-    const cloth = [0.30, 0.35, 0.28, 1];
-    const skin = [0.53, 0.40, 0.30, 1];
     if (weapon === "crossbow") {
-      this.crossbowHands(batch, frame, clock, bob, cloth, skin);
+      this.crossbowHands(batch, frame, clock, bob);
       return;
     }
     const armY = -0.31 + bob + swing * 0.15 + aiming * 0.10;
-    this.queue(batch, this.trunk, pose(right, armY - 0.08, 0.17, -0.63 + swing, 1.32, 0.13, 0.44, 0.11), cloth);
-    this.queue(batch, this.rock, pose(right - 0.03, armY + 0.03, 0.50, 0, 0.28, 0.12, 0.14, 0.13), skin);
+    this.forearm(batch, [0.30, -0.53, 0.08], [right - 0.04, armY + 0.03, 0.49], false, player.armor);
     if (player.shield) {
       const raised = clamp(Math.max(player.shieldRaised ? 0.84 : 0, player.guardBlend || 0));
       const shield = pose(-0.39 + 0.12 * raised, -0.52 + 0.33 * raised + bob, 0.59 - 0.025 * raised,
         -0.52 * (1 - raised), -0.25 + 0.18 * raised, 0.73);
-      this.forearm(batch, [-0.28, -0.46, 0.10], transformedPoint(shield, -0.1, 0, -0.105, 1), cloth, skin);
-      this.queue(batch, this.shield, shield);
-    } else if (!weapon || weapon === "fists" || weapon === "bow") {
-      this.queue(batch, this.trunk, pose(left, armY - 0.10, 0.13, 0.6, 1.36, 0.13, 0.42, 0.11), cloth);
-      this.queue(batch, this.rock, pose(left + 0.03, armY + 0.02, 0.46, 0, 0.28, 0.12, 0.14, 0.13), skin);
+      this.forearm(batch, [-0.28, -0.46, 0.10], transformedPoint(shield, -0.16, 0, -0.105, 1), true, player.armor);
+      this.queue(batch, this.gearMesh("shield"), shield);
+    } else if (!weapon || weapon === "fists" || weapon === "bow" || weapon === "spear") {
+      this.forearm(batch, [-0.30, -0.53, 0.08], [left + 0.03, armY + 0.02, 0.46], true, player.armor);
     }
     if (!weapon || weapon === "fists") return;
     const tilt = weapon === "spear" ? 1.12 : weapon === "bow" ? 0.12 : 0.29;
     const position = pose(right - 0.04, armY + 0.03, 0.49, -0.04 - swing * 0.74, tilt - swing * 0.76, 0.77);
-    const mesh = weapon === "sword" ? this.sword
-      : this.flatModel(player.aim && weapon === "bow" ? "bow_draw1" : weapon) ?? this.flatModel(weapon);
+    if (weapon === "bow") {
+      const draw = clamp(player.draw ?? (frame.hud?.charge || (player.aim ? 0.5 : 0)));
+      this.drawBow(batch, position, draw, !player.swing && frame.pack?.some(([id, , count]) => id === "arrows" && count > 0));
+      return;
+    }
+    const mesh = this.gearMesh(weapon);
     if (mesh) this.queue(batch, mesh, position);
     else this.queue(batch, this.box, multiply(position, pose(0, 0.03, 0, 0, 0, 0.06, 0.35, 0.055)), [0.57, 0.54, 0.44, 1]);
   }
@@ -1322,15 +1415,16 @@ export class ArenaRenderer {
     }
     for (const [id, x, y, z, yaw = 0, pitch] of frame.shots ?? []) {
       if (!this.visible(camera, x, z, 120, horizontal, 2)) continue;
-      if (id === "bolt") {
+      const bolt = id === "bolt" && this.flatModel(id);
+      if (id === "bolt" && !bolt) {
         this.queue(nearby, this.bolt, pose(x, y, z, yaw, (pitch ?? Math.PI / 2) - Math.PI / 2));
         continue;
       }
-      const mesh = this.flatModel(id) ?? this.rock;
+      const mesh = bolt || this.flatModel(id) || this.rock;
       const scale = id === "stone" ? 0.38 : mesh === this.rock ? 0.12 : 1;
       let transform = pose(x, y, z, yaw, pitch ?? 0, scale);
-      if (pitch != null && (id === "spear" || id === "arrow") && mesh !== this.rock) {
-        transform = multiply(transform, pose(0, id === "spear" ? -1.355 : -0.432, 0));
+      if (pitch != null && mesh !== this.rock && (id === "spear" || id === "arrow" || id === "bolt")) {
+        transform = multiply(transform, pose(0, id === "spear" ? -1.355 : id === "bolt" ? -0.260 : -0.432, 0));
       }
       this.queue(nearby, mesh, transform);
     }

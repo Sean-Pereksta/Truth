@@ -116,7 +116,7 @@ namespace LastSignal {
                         actor.Alive,actor.Crouch,actor.Style,actor.Name,Value(actor.FallYaw),Value(actor.Anim),Value(actor.Speed),
                         actor.Weapon,Game.CarriesShield(actor),Game.ShieldRaised(actor),Value(actor.GuardBlend),
                         Value(actor.CrossbowReload/Actor.CrossbowReloadTime),actor.CrossbowLoaded,Value(actor.Swing),
-                        Value(Math.Min(1f,actor.Hurt/.42f))});
+                        Value(Math.Min(1f,actor.Hurt/.42f)),actor.WornArmor,Value(actor.DrawPower),actor.Count("arrows")>0});
                 }
                 var wildlife=new List<object[]>();
                 foreach(Animal animal in g.Animals) {
@@ -150,7 +150,7 @@ namespace LastSignal {
                     player=new {id=player.Id,name=player.Name,yaw=Value(player.Yaw),pitch=Value(g.Pitch),
                         health=Value(player.Health),stamina=Value(player.Stamina),hunger=Value(player.Hunger),
                         hydration=Value(player.Hydration),water=Value(player.WaterCarried),weapon=player.Weapon,
-                        armor=player.WornArmor,aim=player.Aiming,hurt=Value(player.Hurt),swing=Value(player.Swing),
+                        armor=player.WornArmor,aim=player.Aiming,draw=Value(player.DrawPower),hurt=Value(player.Hurt),swing=Value(player.Swing),
                         shield=Game.CarriesShield(player),guard=player.Guard,shieldRaised=Game.ShieldRaised(player),guardBlend=Value(player.GuardBlend),
                         shieldHealth=Value(Game.ShieldDurability(player)),shieldMaxHealth=Game.ShieldMaxDurability,
                         crossbowLoaded=player.CrossbowLoaded,reload=Value(player.CrossbowReload/Actor.CrossbowReloadTime),
