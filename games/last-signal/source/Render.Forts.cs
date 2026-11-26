@@ -30,14 +30,14 @@ namespace LastSignal
 
         // Only draw a short piece of each adjoining grid line. The targeted socket
         // stays readable from below without laying a persistent grid over the arena.
-        static void DrawFortGuide(Prop p,float red,float green,float blue)
+        static void DrawFortGuide(Prop p,float red,float green,float blue,float intensity=1f)
         {
             bool deck=p.Model=="floor",slope=p.Model=="ramp";
             bool wall=p.Model=="wall"||p.Model=="gate"||p.Model=="barricade";
             if(!deck&&!slope&&!wall)return;
             float x=p.W*.5f,z=p.D*.5f,h=p.H;
             glLineWidth(1.5f);
-            glColor4f(red,green,blue,.87f);
+            glColor4f(red,green,blue,.87f*intensity);
             glBegin(Lines);
             if(slope)
             {
@@ -65,7 +65,7 @@ namespace LastSignal
             }
             if(deck)
             {
-                glColor4f(red,green,blue,.43f);
+                glColor4f(red,green,blue,.43f*intensity);
                 for(int side=-1;side<=1;side+=2)
                 for(int end=-1;end<=1;end+=2)
                 {
@@ -74,6 +74,36 @@ namespace LastSignal
                 }
             }
             glEnd();
+        }
+
+        void DrawBuildPreview(Game g)
+        {
+            if(g.Panel!="" || g.Mode!="match" || g.Player==null || !g.Player.Alive)return;
+            if(g.FortBlueprintPreviews.Length>0)
+            {
+                foreach(FortBlueprintPreview part in g.FortBlueprintPreviews)
+                {
+                    if(part.Complete || part.Piece==null)continue;
+                    if(part.Next)DrawBuildSupport(part.Support);
+                    DrawGhost(part.Piece,part.Fits,part.Next);
+                }
+                return;
+            }
+            if(g.Ghost==null)return;
+            DrawBuildSupport(Arena.PreviewSupport(g,g.Ghost));
+            DrawGhost(g.Ghost,g.GhostFits);
+        }
+
+        static void DrawBuildSupport(Prop piece)
+        {
+            if(piece==null || piece.Removed)return;
+            glDisable(Fog);glDisable(Light);glDisable(Texture);
+            Alpha();glDepthMask(0);
+            glPushMatrix();
+            glTranslatef(piece.X,piece.Y+.04f,piece.Z);glRotatef(piece.Yaw*Deg,0,1,0);
+            DrawFortGuide(piece,1,.76f,.29f);
+            glPopMatrix();
+            glLineWidth(1);glDepthMask(1);glDisable(Blend);glEnable(Fog);glEnable(Light);
         }
 
         void DrawFortFalls(Game g)

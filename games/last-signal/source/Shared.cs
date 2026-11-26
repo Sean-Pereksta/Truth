@@ -6,7 +6,9 @@ namespace LastSignal {
     public class Actor {
         public int Id, Kills, Placement, TeamColor;
         public string Name="", Style="hunter", Weapon="fists", State="idle";
-        public float X,Y,Z,Yaw,Health=100,Stamina=100,Hunger=90,Speed, GuardTime, DodgeTime, Swing, Windup, Hurt, NextAttack, Anim, Vertical, Cooked;
+        public float X,Y,Z,Yaw,Health=100,Stamina=100,Hunger=90,Speed, GuardTime, DodgeTime, Swing, Windup, Hurt, NextAttack, Anim, Vertical;
+        internal float ShieldWear;
+        internal List<float> SpareShieldWear;
         public float Hydration=92,WaterCarried,NeedStrain,EmptyFoodTime,EmptyWaterTime;
         public float DrawPower,ProjectilePower,WindupSpan,ActionPitch;
         public const float CrossbowReloadTime=4f;
@@ -47,6 +49,7 @@ namespace LastSignal {
         public int Count(string item) { int v; return Bag.TryGetValue(item,out v)?v:0; }
         public void Add(string item,int amount) {
             if(Armor.IsArmor(item))Armor.Adjust(this,item,amount);
+            else if(item=="shield")Game.AdjustShields(this,amount);
             else {
                 int remaining=Math.Max(0,Count(item)+amount);
                 Bag[item]=remaining;
@@ -68,6 +71,7 @@ namespace LastSignal {
         internal Arena.FortFrame Fort;
         public int FortLevel;
         internal List<ArmorPiece> PackedArmor;
+        internal List<float> PackedShieldWear;
         public bool Latched;
         public Dictionary<string,int> Bag=new Dictionary<string,int>();
         public List<float> FoodProgress=new List<float>();

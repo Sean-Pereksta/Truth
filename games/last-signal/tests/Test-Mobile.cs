@@ -194,6 +194,13 @@ class TestMobile {
         Check(Number(player,"id")==seat&&(string)player["name"]==name,"Frame exposes another seat's perspective.");
         Check(player["shield"] is bool && player["shieldRaised"] is bool && player["crossbowLoaded"] is bool &&
             Number(player,"reload")>=0 && Number(player,"reload")<=1, "Incomplete mobile equipment state.");
+        Check(Number(player,"shieldHealth")>=0&&Number(player,"shieldMaxHealth")==100,"Missing shield durability.");
+        var bow=((object[])frame["craft"]).Cast<object[]>().First(row=>(string)row[0]=="bow");
+        var bowDetails=(Dictionary<string,object>)bow[4];
+        Check((string)bowDetails["category"]=="Weapons & Armor" && ((object[])bowDetails["needs"]).Length==3,
+            "Mobile craft frame is missing grouped ingredients.");
+        var blueprints=((object[])frame["build"]).Cast<object[]>().Where(row=>((string)row[0]).StartsWith("blueprint_",StringComparison.Ordinal));
+        Check(blueprints.Count()==4,"Mobile build frame is missing fort blueprints.");
         Check(Number(frame,"alive")>0&&Number(frame,"alive")<=24&&frame.ContainsKey("propChanges")&&frame.ContainsKey("tracks")&&((object[])frame["craft"]).Length>0,
             "Frame is missing arena contestants, prop changes, or recipes.");
         foreach(object[] actor in (object[])frame["actors"])

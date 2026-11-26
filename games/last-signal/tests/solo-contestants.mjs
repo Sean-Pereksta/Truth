@@ -283,6 +283,22 @@ test("walls, ramps and platforms each cost exactly one wood and one fiber", () =
   }
 });
 
+test("ammo batches debit exact materials and shields use wood plus scrap", () => {
+  const game = clearing();
+  game.player.bag = { branch: 2, stone: 3, fiber: 3 };
+  game.command("craft:arrows:3");
+  assert.deepEqual(game.player.bag, { branch: 2, stone: 3, fiber: 3 });
+  game.player.bag.branch = 3;
+  game.command("craft:arrows:3");
+  assert.deepEqual(game.player.bag, { arrows: 15 });
+  game.player.bag = { branch: 3, scrap: 1 };
+  game.command("craft:shield:3");
+  assert.deepEqual(game.player.bag, { branch: 3, scrap: 1 });
+  game.command("craft:shield");
+  assert.deepEqual(game.player.bag, { shield: 1 });
+  assert.equal(game.frame().player.shieldHealth, 100);
+});
+
 test("all three maps run complete 24-contestant solo matches", () => {
   for (let arena = 0; arena < 3; arena++) {
     const game = new SoloArena({ arena, seed: 1776 + arena });

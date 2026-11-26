@@ -31,7 +31,7 @@ namespace LastSignal {
             if(id==a.Weapon){switchTo="";return true;}
             // An attack that has committed gets its contact before the weapon changes.
             // A held draw can still be lowered without spending an arrow.
-            Charging=false;Charge=0;bufferedWeapon="";guardHeld=false;
+            Charging=false;Charge=0;bufferedWeapon="";
             a.Guard=a.Aiming=false;
             if(a.Windup<=0){a.Throwing=false;a.DrawPower=0;}
             switchTo=id;ResolveSwitch(a);
@@ -54,18 +54,23 @@ namespace LastSignal {
                 bufferedWeapon=a.Weapon;bufferedPower=power;bufferedUntil=Time+.25f;
             }
         }
+        void RaiseHeldGuard(Actor a){
+            if(guardHeld&&!a.Guard&&!a.Aiming&&!Charging&&switchTo.Length==0&&a.Windup<=0&&a.Swing<a.SwingSpan*.42f&&a.DodgeTime<=.12f){
+                if(Ranged(a))a.Aiming=true;
+                else SetGuard(a,true);
+            }
+        }
         void PlayerFollowThrough(){
             Actor a=Player;
             if(a==null||!a.Alive||!CanAct)return;
             ResolveSwitch(a);
-            if(guardHeld&&!a.Guard&&!a.Aiming&&!Charging&&a.Windup<=0&&a.Swing<a.SwingSpan*.42f&&a.DodgeTime<=.12f){
-                if(Ranged(a))a.Aiming=true;
-                else SetGuard(a,true);
+            if(bufferedWeapon.Length>0){
+                if(bufferedUntil<Time||a.Weapon!=bufferedWeapon||a.Guard||switchTo.Length>0)bufferedWeapon="";
+                else if(a.NextAttack<=0&&a.Windup<=0){
+                    bufferedWeapon="";a.DrawPower=bufferedPower;Attack(a,bufferedPower>.32f/.72f,Pitch);
+                }
             }
-            if(bufferedWeapon.Length==0)return;
-            if(bufferedUntil<Time||a.Weapon!=bufferedWeapon||a.Guard||switchTo.Length>0){bufferedWeapon="";return;}
-            if(a.NextAttack>0||a.Windup>0)return;
-            bufferedWeapon="";a.DrawPower=bufferedPower;Attack(a,bufferedPower>.32f/.72f,Pitch);
+            if(bufferedWeapon.Length==0)RaiseHeldGuard(a);
         }
         public static string RangedProjectile(string weapon){
             switch(weapon){case "bow":return "arrow";case "crossbow":return "bolt";case "sling":return "stone";default:return "";}

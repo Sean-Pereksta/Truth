@@ -38,6 +38,7 @@ namespace LastSignal
         internal Animal UseAnimal, FocusAnimal;
         internal string ActionId = "", ActionArgument = "";
         internal float ActionElapsed, ActionTotal;
+        internal int ActionBatches;
         internal int FocusChoice;
         internal List<string> FocusOptions = new List<string>();
         internal List<Prop> FocusNearby = new List<Prop>(32), CookingSites = new List<Prop>(16);
@@ -63,7 +64,7 @@ namespace LastSignal
             new Recipe("bow","Field bow","Hold Attack to draw. Aim to steady. Release to loose.",1,"branch",3,"fiber",3,"cloth",1),
             new Recipe(Armor.Woven,"Woven vest","Padded torso armor. Absorbs 24% of damage to the vest.",1,"cloth",2,"fiber",2),
             new Recipe(Armor.Scrap,"Scrap cuirass","Plated torso armor. Absorbs 40% of damage to the cuirass.",1,"scrap",3,"cloth",1,"fiber",2),
-            new Recipe("shield","Round shield","Carried with a spear or sword. Hold Guard to cover the space in front of you.",1,"branch",3,"scrap",1,"fiber",2),
+            new Recipe("shield","Round shield","Hold Guard with a spear or sword. The shield deflects hits on its face until it breaks.",1,"branch",3,"scrap",1),
             new Recipe("sword","Arena sword","A one-handed blade for close combat. Pairs with a shield.",1,"scrap",4,"branch",1,"cloth",1),
             new Recipe("bolts","Bolts x3","Ammunition for the arena crossbow.",3,"scrap",1,"branch",1)
         };
@@ -121,16 +122,16 @@ namespace LastSignal
                 if (a.Count(part.Key)<part.Value) return false;
             return true;
         }
-        private static void Pay(Actor a,Recipe r)
+        private static void Pay(Actor a,Recipe r,int batches=1)
         {
-            foreach (KeyValuePair<string,int> part in r.Needs) a.Add(part.Key,-part.Value);
+            foreach (KeyValuePair<string,int> part in r.Needs) a.Add(part.Key,-part.Value*batches);
         }
-        private static string Missing(Actor a,Recipe r)
+        internal static string Missing(Actor a,Recipe r,int batches=1)
         {
             List<string> missing=new List<string>();
             foreach (KeyValuePair<string,int> part in r.Needs)
             {
-                int remain=part.Value-Count(a,part.Key);
+                int remain=part.Value*batches-Count(a,part.Key);
                 if (remain>0) missing.Add(remain+" "+Label(part.Key).ToLowerInvariant());
             }
             return "Need " + String.Join(" + ",missing.ToArray());
@@ -157,10 +158,14 @@ namespace LastSignal
         }
         public static bool Craft(Game g, Actor a,string id)
         {
+            return Craft(g,a,id,1);
+        }
+        private static bool Craft(Game g, Actor a,string id,int batches)
+        {
             Recipe r=Find(Crafts,id);
-            if (!CanMake(a,r)) return false;
-            Pay(a,r);
-            a.Add(id=="fire"?"firekit":id,r.Yield);
+            if (!CanCraftBatches(a,r,batches)) return false;
+            Pay(a,r,batches);
+            a.Add(id=="fire"?"firekit":id,r.Yield*batches);
             if (Weapon(id) && (a==g.Player || a.Weapon=="fists")) EquipActor(a,id);
             return true;
         }
@@ -210,6 +215,7 @@ namespace LastSignal
                     if (it.Value<=0) continue;
                     total+=it.Value;
                     if(Armor.IsArmor(it.Key))Armor.Collect(a,p,it.Key,it.Value);
+                    else if(it.Key=="shield")Game.CollectShields(a,p,it.Value);
                     else a.Add(it.Key,it.Value);
                     if (Weapon(it.Key)){
                         gear=true;
@@ -340,6 +346,7 @@ namespace LastSignal
                 if (progress>0) p.FoodProgress.Add(progress);
             }
             else if(Armor.IsArmor(id)) Armor.PackOne(a,p,id);
+            else if(id=="shield")Game.PackShields(a,p,1);
             else a.Add(id,-1);
             if(a.Weapon==id && a.Count(id)==0) a.Weapon="fists";
             Arena.Register(g,p);
@@ -349,6 +356,7 @@ namespace LastSignal
         public static void Restart(Game g)
         {
             Cancel(g); g.FocusProp=null; g.FocusAnimal=null; g.FocusChoice=0;
+            g.PatchedTimber.Clear();
             g.FocusOptions.Clear(); g.CookingSites.Clear(); g.RainBarrels.Clear(); g.IndexedCookingProps=0; g.FocusShore=false; g.Hint="";
         }
         public static void Cancel(Game g)
@@ -359,18 +367,29 @@ namespace LastSignal
         private static void StopAction(Game g)
         {
             g.ActionId=""; g.ActionArgument=""; g.ActionElapsed=0; g.ActionTotal=0;
+            g.ActionBatches=0;
             g.UseProp=null; g.UseAnimal=null; g.UseProgress=0;
         }
         public static bool ChooseCraft(Game g,string id)
         {
+            return ChooseCraft(g,id,1);
+        }
+        public static bool ChooseCraft(Game g,string id,int batches)
+        {
             Recipe r=Find(Crafts,id);
             if (r==null || g.Player==null || !g.Player.Alive) return false;
-            if(!CanMake(g.Player,r)) { g.Say(Missing(g.Player,r)); return false; }
-            Cancel(g); g.ActionId="craft"; g.ActionArgument=id; g.ActionTotal=.65f; g.Panel="";
+            if(g.ActionId=="craft") { g.Say("Finish the current craft first"); return false; }
+            if(!CanCraftBatches(g.Player,r,batches))
+            {
+                if(batches==1 || batches==3&&(id=="arrows" || id=="bolts"))g.Say(Missing(g.Player,r,batches));
+                return false;
+            }
+            Cancel(g); g.ActionId="craft"; g.ActionArgument=id; g.ActionBatches=batches; g.ActionTotal=.65f*batches;
             return true;
         }
         public static bool ChooseBuild(Game g,string id)
         {
+            if(FortBlueprint.Find(id)!=null)return SelectBlueprint(g,id);
             Recipe r=Find(Builds,id);
             if(r==null || g.Player==null || !g.Player.Alive) return false;
             if(!CanMake(g.Player,r)) { g.Say(Missing(g.Player,r)); return false; }
@@ -380,6 +399,7 @@ namespace LastSignal
         }
         public static bool Rotate(Game g,int steps)
         {
+            if(FortBlueprint.Find(g.BuildId)!=null)return RotateBlueprint(g,steps);
             if(String.IsNullOrEmpty(g.BuildId)) return false;
             // Keep the orientation relative to sight until the user starts rotating.
             if(!g.BuildTurned) g.BuildAngle=g.Player.Yaw;
@@ -391,6 +411,7 @@ namespace LastSignal
         }
         private static void Preview(Game g)
         {
+            if(FortBlueprint.Find(g.BuildId)!=null){PreviewBlueprint(g);return;}
             Actor a=g.Player;
             if(a==null || !a.Alive || String.IsNullOrEmpty(g.BuildId)) { g.Ghost=null; g.GhostFits=g.BuildJoined=false; return; }
             // Looking down pulls the piece in. A horizontal gaze places it a short step away.
@@ -400,14 +421,25 @@ namespace LastSignal
             float yaw=g.BuildTurned?g.BuildAngle:a.Yaw;
             Prop p=Arena.PlayerFortPreview(g,a,g.BuildId,x,z,yaw,g.BuildTurned,out g.BuildJoined);
             g.Ghost=p;
-            bool supported=p!=null&&Arena.HasFortSupport(g,p);
-            g.GhostFits=supported && CanMake(a,Find(Builds,g.BuildId)) && Arena.BuildFits(g,p) && Arena.FortVisible(g,a,p);
-            g.BuildProblem=g.GhostFits?"":!supported?"Needs a grounded support":"Needs clear space within reach";
+            g.BuildProblem=BuildPreviewProblem(g,p);
+            g.GhostFits=g.BuildProblem.Length==0;
             if(p!=null) { g.UseX=p.X; g.UseY=p.Y+.8f; g.UseZ=p.Z; }
+        }
+        static string BuildPreviewProblem(Game g,Prop piece)
+        {
+            Recipe recipe=Find(Builds,g.BuildId);
+            if(recipe!=null && !CanMake(g.Player,recipe))return Missing(g.Player,recipe);
+            if(piece==null || !InReach(g.Player,piece.X,piece.Z,3.1f))return "Too far";
+            string blocker=Arena.BuildBlocker(g,piece);
+            if(blocker!="")return piece.Model=="floor"&&blocker=="Needs grounded support"?
+                "Aim at the top of a wall or an attached floor":blocker;
+            if(!Arena.FortVisible(g,g.Player,piece))return "Move where you can see the piece";
+            return "";
         }
         public static bool Place(Game g){ return Place(g,!g.PadActive&&g.Down("Sprint")); }
         public static bool Place(Game g,bool repeat)
         {
+            if(FortBlueprint.Find(g.BuildId)!=null)return PlaceBlueprint(g);
             if(String.IsNullOrEmpty(g.BuildId) || g.Player==null || !g.Player.Alive) return false;
             Preview(g);
             if(!g.GhostFits) { g.Say(g.BuildProblem); return false; }
@@ -529,6 +561,8 @@ namespace LastSignal
                 float score=SelectScore(a,ray,v.X,v.Y+.22f,v.Z,.25f,null);
                 if (score>best && Visible(g,a,v.X,v.Y+.25f,v.Z,null)) { best=score; target=null; animal=v; }
             }
+            Prop timber=AimedTimber(g,ray);
+            if(timber!=null) { target=timber;animal=null; }
             float waterX=0,waterZ=0;
             bool shore=target==null && animal==null && Math.Abs(a.Y-Arena.Ground(g,a.X,a.Z))<1.9f &&
                 Arena.Shore(g,a.X,a.Z,out waterX,out waterZ);
@@ -538,7 +572,11 @@ namespace LastSignal
             if(target!=null)
             {
                 g.UseX=target.X; g.UseY=target.Y+UseAnchor(target); g.UseZ=target.Z;
-                if(Fire(target))
+                if(timber!=null)
+                {
+                    if(RepairProblem(g,timber).Length==0)g.FocusOptions.Add("repair");
+                }
+                else if(Fire(target))
                 {
                     if(target.HasMeat && target.Cook>=1) g.FocusOptions.Add("take");
                     if(!target.Lit && !Stove(target) && target.Fuel>0) g.FocusOptions.Add("light");
@@ -587,6 +625,7 @@ namespace LastSignal
                     "Pick up " + (p==null ? "item" : Label(p.Item).ToLowerInvariant() + (p.Amount>1?" ×"+p.Amount:""));
                 case "harvest": return "Harvest " + (a==null?"game":Wildlife.Name(a));
                 case "craft": return "Craft " + Label(g.ActionArgument).ToLowerInvariant();
+                case "repair": return "Patch " + (p==null?"timber":Label(p.Model).ToLowerInvariant()) + " (1 wood)";
             }
             return "";
         }
@@ -595,10 +634,12 @@ namespace LastSignal
             if(g.Player==null || !g.Player.Alive) return "";
             if(!String.IsNullOrEmpty(g.BuildId))
             {
+                if(FortBlueprint.Find(g.BuildId)!=null)return BlueprintPrompt(g);
                 string site=Label(g.BuildId);
                 if(!g.GhostFits)site=String.IsNullOrEmpty(g.BuildProblem)?"Find a clear site":g.BuildProblem;
                 else if(g.Ghost!=null&&g.Ghost.FortLevel>0)site+="  /  Level "+(g.Ghost.FortLevel+1);
                 else if(g.BuildJoined)site+="  /  Ground joint";
+                if(g.GhostFits)site+="  /  "+RecipeCopies(g.Player,Find(Builds,g.BuildId),true)+" available";
                 string place=g.GhostFits?"   ["+g.InputLabel("Place")+"] Place":"";
                 return site+place+"   ["+g.InputLabel("Rotate")+"] Rotate   ["+g.InputLabel("Cancel")+"] Cancel";
             }
@@ -606,6 +647,7 @@ namespace LastSignal
             int count=g.FocusOptions.Count;
             Prop p=g.FocusProp;
             if(p!=null && p.Kind=="remnant") return "Emptied pack";
+            if(count==0 && RepairableTimber(p) && p.HP<p.MaxHP)return RepairProblem(g,p);
             if(IsShelterFrame(p))return ShelterFrameLabel;
             string status="";
             if(WaterSource(p) || g.FocusShore)
@@ -640,11 +682,24 @@ namespace LastSignal
         {
             if(g.Player==null || !g.Player.Alive || g.ActionId!="") return false;
             if(!String.IsNullOrEmpty(g.BuildId)) return Place(g);
-            Focus(g); if(g.FocusOptions.Count==0) return false;
+            Focus(g);
+            return BeginFocusedAction(g);
+        }
+        internal static bool BeginRepair(Game g)
+        {
+            if(g.Player==null || !g.Player.Alive || g.ActionId!="" || g.BuildId!="")return false;
+            Focus(g);
+            if(g.FocusOptions.Count!=1 || g.FocusOptions[0]!="repair")return false;
+            return BeginFocusedAction(g);
+        }
+        static bool BeginFocusedAction(Game g)
+        {
+            if(g.FocusOptions.Count==0) return false;
             g.ActionId=g.FocusOptions[g.FocusChoice]; g.UseProp=g.FocusProp; g.UseAnimal=g.FocusAnimal;
             switch(g.ActionId)
             {
                 case "harvest": g.ActionTotal=1.15f; break;
+                case "repair": g.ActionTotal=2f;g.RepairStartHealth=g.Player.Health;break;
                 case "light": g.ActionTotal=.85f; break;
                 case "fuel": case "cook": g.ActionTotal=.48f; break;
                 case "drink": g.ActionTotal=.5f;break;
@@ -656,17 +711,19 @@ namespace LastSignal
         }
         private static void CompleteAction(Game g)
         {
-            string action=g.ActionId; string argument=g.ActionArgument;
+            string action=g.ActionId; string argument=g.ActionArgument;int batches=g.ActionBatches;
             Prop p=g.UseProp; Animal a=g.UseAnimal; Actor player=g.Player;
             StopAction(g); g.FocusChoice=0;
             if(action=="craft")
             {
-                if(Craft(g,player,argument))
+                if(Craft(g,player,argument,batches))
                 {
-                    string result=argument=="fire"?"campfire kit":Label(argument).ToLowerInvariant();
+                    Recipe recipe=Find(Crafts,argument);
+                    string result=argument=="fire"?"campfire kit":
+                        Label(argument).ToLowerInvariant()+(recipe.Yield*batches>1?" ×"+recipe.Yield*batches:"");
                     g.Say("Crafted "+result+(Armor.IsArmor(argument) && player.WornArmor==argument?"  /  Equipped":""));
-                    if(argument=="fire") ChooseBuild(g,"fire");
                 }
+                else g.Say(Missing(player,Find(Crafts,argument),batches));
                 return;
             }
             if(action=="harvest") { Harvest(g,player,a); return; }
@@ -674,6 +731,7 @@ namespace LastSignal
             if(action=="fill") {Fill(g,player,p);return;}
             if(action=="pour") {Pour(g,player,p);return;}
             if(p==null || p.Removed) return;
+            if(action=="repair"){if(Patch(g,player,p))g.Say("Patched "+Label(p.Model).ToLowerInvariant());return;}
             if(action=="pick") { Take(g,player,p); return; }
             if(action=="gate"||action=="latch")
             {
@@ -730,7 +788,8 @@ namespace LastSignal
                 Focus(g); g.Hint=Prompt(g); return;
             }
             Prop p=g.UseProp; Animal animal=g.UseAnimal;
-            if(p!=null && (p.Removed || !InReach(a,p.X,p.Z,Gate(p)?.8f:.35f)) ||
+            if(g.ActionId=="repair" && !CanContinueRepair(g,a,p) ||
+                p!=null && (p.Removed || !InReach(a,p.X,p.Z,Gate(p)?.8f:.35f)) ||
                 animal!=null && (animal.Harvested || !InReach(a,animal.X,animal.Z,.35f)))
             { StopAction(g); Focus(g); g.Hint=Prompt(g); return; }
             if(p!=null) {g.UseX=p.X;g.UseY=p.Y+UseAnchor(p);g.UseZ=p.Z;}

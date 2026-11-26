@@ -179,7 +179,7 @@ namespace LastSignal
         }
         void MenuFrame(Game g,Ui ui,PadButtons held,PadButtons down,float lx,float ly,float rx,float ry,float dt)
         {
-            bool capture=ui.PadWaiting(g),radial=g.Panel=="craft"||g.Panel=="build";
+            bool capture=ui.PadWaiting(g),workbench=g.Panel=="craft"||g.Panel=="build";
             if(ui.PadChordWaiting(g)){
                 if(Has(down,PadButtons.Start)){ui.Pad(g,"Start");return;}
                 if(Has(held,PadButtons.Back))foreach(PadButtons button in buttons){
@@ -188,7 +188,7 @@ namespace LastSignal
                 }
                 return;
             }
-            if(radial&&!capture){ui.PadWheel(g,lx,ly);Look(g,rx,ry,dt);}
+            if(workbench&&!capture)Look(g,rx,ry,dt);
             foreach(PadButtons b in buttons)
             {
                 if(!Has(down,b))continue;
@@ -198,7 +198,7 @@ namespace LastSignal
             string dir="";
             if(Has(held,PadButtons.Up))dir="Up";else if(Has(held,PadButtons.Down))dir="Down";
             else if(Has(held,PadButtons.Left))dir="Left";else if(Has(held,PadButtons.Right))dir="Right";
-            else if(!radial&&Math.Max(Math.Abs(lx),Math.Abs(ly))>.45f)
+            else if(Math.Max(Math.Abs(lx),Math.Abs(ly))>.45f)
                 dir=Math.Abs(ly)>Math.Abs(lx)?(ly>0?"Up":"Down"):(lx>0?"Right":"Left");
             if(dir==""){repeat="";repeatIn=0;return;}
             if(dir!=repeat)

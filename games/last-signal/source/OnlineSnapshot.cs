@@ -92,7 +92,7 @@ namespace LastSignal
                     FocusAnimal=g.Animals.IndexOf(g.FocusAnimal),UseAnimal=g.Animals.IndexOf(g.UseAnimal),UseProp=PropId(source,g.UseProp),
                     Options=g.FocusOptions,Choice=Math.Min(g.FocusChoice,Math.Max(0,g.FocusOptions.Count-1)),
                     Mode=g.Mode,Pitch=g.Pitch,Hint=g.Hint,Notice=g.Notice,NoticeTime=g.NoticeTime,BuildId=g.BuildId,Problem=g.BuildProblem,
-                    BuildAngle=g.BuildAngle,Fits=g.GhostFits,Joined=g.BuildJoined,Ghost=g.Ghost,Charging=g.Charging,Charge=g.Charge,
+                    BuildAngle=g.BuildAngle,Fits=g.GhostFits,Joined=g.BuildJoined,Ghost=CaptureBlueprintGhost(g,source),Charging=g.Charging,Charge=g.Charge,
                     TargetShore=g.FocusShore,Use=g.UseProgress,UseX=g.UseX,UseY=g.UseY,UseZ=g.UseZ,Action=g.ActionId,Argument=g.ActionArgument,
                     Incoming=g.IncomingImpact,Angle=g.IncomingAngle,Strength=g.IncomingStrength,Confirm=g.ConfirmedImpact});
             });

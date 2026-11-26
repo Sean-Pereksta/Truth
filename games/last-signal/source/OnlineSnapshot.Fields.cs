@@ -68,7 +68,8 @@ namespace LastSignal
             Field(ref data.Health); Field(ref data.Stamina); Field(ref data.Hunger); Field(ref data.Speed);
             Field(ref data.GuardTime); Field(ref data.DodgeTime); Field(ref data.Swing); Field(ref data.Windup);
             Field(ref data.Hurt); Field(ref data.NextAttack); Field(ref data.Anim); Field(ref data.Vertical);
-            Field(ref data.Cooked); Field(ref data.Hydration); Field(ref data.WaterCarried); Field(ref data.NeedStrain);
+            // The formerly unused Cooked float keeps the existing snapshot layout.
+            Field(ref data.ShieldWear); Field(ref data.Hydration); Field(ref data.WaterCarried); Field(ref data.NeedStrain);
             Field(ref data.EmptyFoodTime); Field(ref data.EmptyWaterTime); Field(ref data.DrawPower); Field(ref data.ProjectilePower);
             Field(ref data.WindupSpan); Field(ref data.ActionPitch); Field(ref data.SwingSpan); Field(ref data.AttackCharge);
             Field(ref data.GuardBlend); Field(ref data.GuardRecovery); Field(ref data.GuardPitch); Field(ref data.DodgeDX);
@@ -90,7 +91,7 @@ namespace LastSignal
             dst.Health=src.Health; dst.Stamina=src.Stamina; dst.Hunger=src.Hunger; dst.Speed=src.Speed;
             dst.GuardTime=src.GuardTime; dst.DodgeTime=src.DodgeTime; dst.Swing=src.Swing; dst.Windup=src.Windup;
             dst.Hurt=src.Hurt; dst.NextAttack=src.NextAttack; dst.Anim=src.Anim; dst.Vertical=src.Vertical;
-            dst.Cooked=src.Cooked; dst.Hydration=src.Hydration; dst.WaterCarried=src.WaterCarried; dst.NeedStrain=src.NeedStrain;
+            dst.ShieldWear=src.ShieldWear; dst.Hydration=src.Hydration; dst.WaterCarried=src.WaterCarried; dst.NeedStrain=src.NeedStrain;
             dst.EmptyFoodTime=src.EmptyFoodTime; dst.EmptyWaterTime=src.EmptyWaterTime; dst.DrawPower=src.DrawPower; dst.ProjectilePower=src.ProjectilePower;
             dst.WindupSpan=src.WindupSpan; dst.ActionPitch=src.ActionPitch; dst.SwingSpan=src.SwingSpan; dst.AttackCharge=src.AttackCharge;
             dst.GuardBlend=src.GuardBlend; dst.GuardRecovery=src.GuardRecovery; dst.GuardPitch=src.GuardPitch; dst.DodgeDX=src.DodgeDX;

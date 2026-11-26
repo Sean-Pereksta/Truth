@@ -47,6 +47,27 @@ const weaponNames = {
   sword: "Sword",
   crossbow: "Crossbow"
 };
+const materialInfo = {
+  branch: ["Wood", "Chop a tree with a hatchet or check supply caches."],
+  fiber: ["Fiber", "Gather plants or harvest a tree by hand."],
+  stone: ["Stone", "Mine rock with a hatchet or check supply caches."],
+  scrap: ["Scrap", "Search supply chests and abandoned packs."],
+  cloth: ["Cloth", "Search supply chests and abandoned packs."],
+  tinder: ["Tinder", "Gather dry plants or check supply caches."]
+};
+const recipeGroups = {
+  craft: { essentials: ["Essentials", ["fire", "firekit", "bandage", "waterskin", "hatchet"]],
+    gear: ["Weapons & Armor", ["sling", "spear", "bow", "sword", "shield", "woven_vest", "scrap_cuirass"]],
+    ammo: ["Ammo", ["arrows", "bolts"]] },
+  build: { cover: ["Cover", ["barricade", "wall", "gate"]], camp: ["Camp", ["lean_to", "fire", "rain_barrel"]],
+    levels: ["Levels", ["ramp", "floor"]], blueprints: ["Blueprints", []] }
+};
+const gearSymbols = {
+  spear: "↑", knife: "†", sword: "†", bow: ")", crossbow: "⋈", sling: "⌁", hatchet: "⚒",
+  arrows: "➶", bolts: "➳", shield: "⬟", woven_vest: "▧", scrap_cuirass: "▩",
+  bandage: "+", meal: "◒", meat: "◒", waterskin: "♦", fire: "♨", firekit: "♨",
+  barricade: "≋", wall: "▥", gate: "⊓", lean_to: "◩", ramp: "◢", rain_barrel: "⊙", floor: "▰", blueprint: "▤"
+};
 
 let socket;
 let solo;
@@ -75,6 +96,8 @@ let frame = null;
 let drawer = "";
 let tab = "pack";
 let drawerKey = "";
+let readyOnly = false;
+let materialFilter = "";
 let closeFocus = null;
 let extra = false;
 let yaw = 0;
@@ -430,6 +453,12 @@ function handleFrame(packet) {
   renderHud();
 }
 
+function shieldCondition(player) {
+  const max = Number(player.shieldMaxHealth);
+  if (!(max > 0)) return null;
+  return { max: Math.ceil(max), current: Math.max(0, Math.min(Math.ceil(max), Math.ceil(Number(player.shieldHealth) || 0))) };
+}
+
 function renderHud() {
   const { player, hud, storm } = frame;
   for (const stat of ["health", "stamina", "hunger", "hydration"]) $(stat).value = player[stat];
@@ -448,7 +477,20 @@ function renderHud() {
     .replace(/\s*\[[^\]]+\]\s*(?:Next action|Place|Rotate|Cancel)\b/g, "")
     .replace(/\[[^\]]+\]\s*/g, "").trim();
   const showKeyHints = mouseLayout.matches && arena.dataset.input !== "touch";
-  setText($("hint"), (showKeyHints ? hud.hint : touchHint) || hud.buildProblem);
+  const repairInfo = hud.repair;
+  const repairHint = repairInfo && (repairInfo.enabled ? (showKeyHints ? "[Y] Repair" : "Repair") +
+    (repairInfo.target ? " " + repairInfo.target : "") : repairInfo.reason);
+  const fort = frame.fortGuide;
+  setText($("hint"), hud.buildProblem || fort?.error || (showKeyHints ? hud.hint : touchHint) || repairHint || "");
+  const copies = fort?.copies ?? frame.build.find(([id]) => id === hud.buildId)?.[4]?.copies;
+  const template = hud.buildId?.startsWith("blueprint_");
+  const fortNotes = fort ? [
+    template ? fort.placed + "/" + fort.total + " placed" : Number.isFinite(copies) ? copies + " affordable" : "",
+    fort.support ? "Support highlighted" : "",
+    fort.ramp ? "Arrow shows uphill" : ""
+  ].filter(Boolean) : [];
+  $("fort-guide").hidden = !fortNotes.length;
+  setText($("fort-guide"), fortNotes.join(" · "));
   const crossbow = player.weapon === "crossbow";
   const reload = crossbow ? player.reload || 0 : 0;
   const currentProgress = Math.max(hud.progress || 0, hud.charge || 0, reload);
@@ -463,24 +505,35 @@ function renderHud() {
   $("countdown").hidden = !playing || !countdown;
   setText($("countdown-seconds"), Math.ceil(frame.countdown));
   $("place-tools").hidden = !building;
+  $("rotate-build").disabled = Boolean(fort?.anchored);
   $("extra-actions").hidden = !extra || building;
   $("more").disabled = building;
   $("throw").hidden = player.weapon !== "spear";
   $("cycle").hidden = !Array.isArray(hud.focusOptions) || hud.focusOptions.length < 2 || building;
-  $("use").hidden = building;
+  $("use").hidden = building || hud.useAction === "repair";
+  const repair = $("repair");
+  repair.hidden = building || !repairInfo || repairInfo.reason === "At full health";
+  repair.disabled = countdown || !repairInfo?.enabled || Boolean(repairInfo?.active);
+  setText(repair, repairInfo?.active ? "Repairing" : "Repair");
+  repair.title = repairInfo?.reason || (repairInfo?.woodNeeded ? repairInfo.woodNeeded + " wood" : "Repair structure");
   const ammoId = crossbow ? "bolts" : player.weapon === "bow" ? "arrows" : player.weapon === "sling" ? "stone" : "";
   const ammo = ammoId ? frame.pack.find(([id]) => id === ammoId)?.[2] || 0 : null;
   setText(attack, building ? "Place" : !crossbow ? "Attack" : !player.crossbowLoaded && ammo ? "Loading…" : "Fire");
   attack.disabled = countdown || (building && !frame.ghostFits) || (!building && crossbow && !player.crossbowLoaded && !ammo);
   const ranged = crossbow || player.weapon === "bow" || player.weapon === "sling";
+  const shield = shieldCondition(player);
   guard.hidden = building || !(player.shield || ranged || extra);
-  setText(guard, player.shield ? "Shield" : ranged ? "Aim" : "Guard");
+  const guardLabel = player.shield ? "Shield" : ranged ? "Aim" : "Guard";
+  setText(guard, player.shield && shield ? "Shield " + shield.current : guardLabel);
+  guard.setAttribute("aria-label", player.shield && shield ? "Hold to raise shield. Durability " + shield.current + " of " + shield.max : guardLabel);
+  guard.dataset.worn = String(Boolean(player.shield && shield && shield.current <= shield.max / 3));
   guard.setAttribute("aria-pressed", String(player.guard || player.aim || false));
   let gear = "";
   if (reload > 0) gear = reload < 0.22 ? "Lowering crossbow" : reload < 0.54 ? "Cocking string" :
     reload < 0.79 ? "Seating bolt" : "Setting crossbow";
   else if (crossbow && !player.crossbowLoaded && !ammo) gear = "Out of bolts";
-  else if (player.shieldRaised) gear = "Shield raised";
+  else if (player.shieldRaised) gear = shield ? "Shield raised · " + shield.current + "/" + shield.max : "Shield raised";
+  else if (player.shield && shield) gear = "Shield " + shield.current + "/" + shield.max;
   setText($("gear-status"), gear);
   const weapon = weaponNames[player.weapon] || player.weapon;
   setText($("weapon"), (ammo === null ? weapon : weapon + " · " + ammo) + " ↻");
@@ -732,14 +785,20 @@ $("more").addEventListener("click", () => {
   if (frame) renderHud();
 });
 
-function openDrawer(section, trigger) {
+function openDrawer(section, trigger, gearTab = "pack") {
   if (drawer) return;
   neutralize(true);
   drawer = section;
+  if (section === "gear") {
+    tab = gearTab;
+    materialFilter = "";
+    $("gear-list").scrollTop = 0;
+  }
   closeFocus = trigger;
   backdrop.hidden = false;
-  setText($("drawer-title"), section === "menu" ? "Room menu" : "Gear");
+  setText($("drawer-title"), section === "menu" ? "Room menu" : "Pack");
   $("gear-tabs").hidden = section === "menu";
+  $("gear-options").hidden = true;
   $("gear-list").hidden = section === "menu";
   $("menu-actions").hidden = section !== "menu";
   $("aim").hidden = true;
@@ -757,39 +816,65 @@ function closeDrawer(restoreFocus = true) {
   closeFocus = null;
 }
 
-function gearAction(text, action, available = true) {
+function gearAction(text, action, available = true, keepOpen = false) {
   const button = document.createElement("button");
   button.type = "button";
   button.textContent = text;
   button.disabled = !available;
+  button.dataset.gearKey = action;
   button.addEventListener("click", () => {
     queue(action);
-    closeDrawer();
+    if (keepOpen) sendInput();
+    else closeDrawer();
   });
   return button;
 }
 
-function gearRow(title, description) {
+function gearIcon(id) {
+  const icon = document.createElement("span");
+  icon.className = "gear-icon";
+  icon.setAttribute("aria-hidden", "true");
+  if (materialInfo[id]) icon.dataset.material = id;
+  else icon.dataset.symbol = gearSymbols[id] || (id.startsWith("blueprint_") ? gearSymbols.blueprint : "·");
+  return icon;
+}
+
+function gearRow(id, title, description) {
   const row = document.createElement("div");
   row.className = "gear-item";
   const copy = document.createElement("div");
   const heading = document.createElement("strong");
   heading.textContent = title;
   copy.append(heading);
-  if (description) {
-    const detail = document.createElement("small");
-    detail.textContent = description;
-    copy.append(detail);
-  }
-  row.append(copy);
-  return row;
+  if (description) addRecipeNote(copy, description);
+  const actions = document.createElement("div");
+  actions.className = "gear-item-actions";
+  row.append(gearIcon(id), copy, actions);
+  return { row, copy, actions };
+}
+
+function addRecipeNote(parent, text) {
+  const detail = document.createElement("small");
+  detail.textContent = text;
+  parent.append(detail);
+  return detail;
 }
 
 function packRow([id, name, count], player, usable) {
   const selected = id === player.weapon;
   const water = id === "waterskin" ? Math.floor(player.water || 0) + " water" : "";
-  const detail = id === "shield" ? (player.shield ? "Off hand · hold Shield to raise" : "Off hand · equip a sword or spear") : "";
-  const row = gearRow(name + (count > 1 ? " ×" + count : ""), water || detail || (selected ? "Equipped" : ""));
+  const shield = id === "shield" ? shieldCondition(player) : null;
+  const shieldHint = id === "shield" ? (player.shield ? "Hold Shield to raise" : "Equip a sword or spear") : "";
+  const detail = [shield ? "Durability " + shield.current + "/" + shield.max : "", shieldHint].filter(Boolean).join(" · ");
+  const { row, copy, actions } = gearRow(id, name + (count > 1 ? " ×" + count : ""), water || detail || (selected ? "Equipped" : ""));
+  if (shield) {
+    const meter = document.createElement("progress");
+    meter.className = "gear-shield-meter";
+    meter.max = shield.max;
+    meter.value = shield.current;
+    meter.setAttribute("aria-label", "Shield durability");
+    copy.append(meter);
+  }
   let action = "";
   if (id in weaponNames && id !== "fists" && !selected) action = "Equip";
   if (id === "bandage") action = "Apply";
@@ -797,54 +882,223 @@ function packRow([id, name, count], player, usable) {
   if (id === "firekit") action = "Place";
   if (id === "waterskin" && player.water > 0.5) action = "Drink";
   if (id === "woven_vest" || id === "scrap_cuirass") action = id === player.armor ? "Remove" : "Wear";
-  if (action) row.append(gearAction(action, "pack:" + id, usable));
-  const drop = gearAction("Drop", "drop:" + id, usable);
+  if (action) actions.append(gearAction(action, "pack:" + id, usable));
+  const drop = gearAction("Drop", "drop:" + id, usable, true);
   drop.classList.add("drop");
   drop.setAttribute("aria-label", "Drop one " + name);
-  row.append(drop);
+  actions.append(drop);
   return row;
+}
+
+function gearGroup(title, rows) {
+  const group = document.createElement("div");
+  group.className = "gear-group";
+  const heading = document.createElement("h3");
+  heading.textContent = title;
+  group.append(heading, ...rows);
+  return group;
+}
+
+function recipeInfo(entry, section) {
+  const [id, name, cost, affordable, details = {}] = entry;
+  const groups = recipeGroups[section];
+  const category = id.startsWith("blueprint_") ? "blueprints" :
+    Object.entries(groups).find(([, [title, ids]]) => title === details.category || ids.includes(id))?.[0] ||
+    (Object.hasOwn(groups, details.category) ? details.category : Object.keys(groups)[0]);
+  return { ...details, id, name, cost, affordable, category, needs: details.needs || [] };
+}
+
+function materialName(id) {
+  return materialInfo[id]?.[0] || id.replaceAll("_", " ");
+}
+
+function selectGearTab(section, keepMaterial = false) {
+  tab = section;
+  if (!keepMaterial) materialFilter = "";
+  $("gear-list").scrollTop = 0;
+  renderDrawer();
+}
+
+function showMaterial(id) {
+  if (!materialInfo[id]) return;
+  materialFilter = id;
+  selectGearTab("pack", true);
+  $("material-back")?.focus();
+}
+
+function ingredientChips(recipe, section) {
+  const row = document.createElement("div");
+  row.className = "gear-needs";
+  for (const need of recipe.needs) {
+    const name = need.name || materialName(need.id);
+    const inspectable = Boolean(materialInfo[need.id]);
+    const chip = document.createElement(inspectable ? "button" : "span");
+    chip.className = "gear-need";
+    chip.dataset.missing = String(need.held < need.required);
+    const tally = document.createElement("b");
+    tally.textContent = need.held + "/" + need.required;
+    chip.append(gearIcon(need.id), name, tally);
+    if (inspectable) {
+      chip.type = "button";
+      chip.dataset.gearKey = section + ":" + recipe.id + ":material:" + need.id;
+      chip.setAttribute("aria-label", name + ": have " + need.held + " of " + need.required + ". View uses.");
+      chip.title = need.source || materialInfo[need.id][1];
+      chip.addEventListener("click", () => showMaterial(need.id));
+    }
+    row.append(chip);
+  }
+  return row;
+}
+
+function recipeRow(recipe, section, usable) {
+  const { id, name, description, needs } = recipe;
+  const building = section === "build";
+  const batch = !building && recipe.category === "ammo" && recipe.yield > 1;
+  const { row, copy, actions } = gearRow(id, name, description);
+  row.classList.add("gear-item--recipe");
+  row.dataset.ready = String(recipe.affordable);
+  if (needs.length) {
+    copy.append(ingredientChips(recipe, section));
+    const missing = needs.filter(need => need.required > need.held);
+    if (missing.length) {
+      const quantities = missing.map(need => (need.required - need.held) + " " + (need.name || materialName(need.id)).toLowerCase());
+      const summary = addRecipeNote(copy, "Need " + quantities.join(", ") + (recipe.blueprint ? " for the full blueprint" : ""));
+      summary.dataset.missing = "true";
+      for (const need of missing) {
+        const source = need.source || materialInfo[need.id]?.[1];
+        if (source) addRecipeNote(copy, (need.name || materialName(need.id)) + " · " + source);
+      }
+    }
+  } else if (recipe.cost) {
+    addRecipeNote(copy, recipe.cost);
+  }
+  if (building && Number.isFinite(recipe.copies)) {
+    addRecipeNote(copy, "Can afford " + recipe.copies).className = "gear-count";
+  }
+  if (recipe.kit) addRecipeNote(copy, "Uses a Campfire Kit from your pack.");
+  const action = building ? recipe.saved ? "Resume" : recipe.blueprint ? "Preview" : "Select" : batch ? "Make " + recipe.yield : "Make";
+  actions.append(gearAction(action, section + ":" + id, usable && (recipe.affordable || Boolean(recipe.blueprint)), !building));
+  if (recipe.saved && recipe.blueprint) {
+    const reset = gearAction("Start over", "abandon-blueprint:" + id, usable, true);
+    reset.title = "Forget this plan and leave the pieces already built.";
+    actions.append(reset);
+  }
+  if (batch) {
+    const multiple = gearAction("Make " + recipe.yield * 3, section + ":" + id + ":3", usable && recipe.copies >= 3, true);
+    if (recipe.copies < 3) multiple.title = "Requires materials for three batches";
+    actions.append(multiple);
+  }
+  return row;
+}
+
+function materialUses(id, usable) {
+  const detail = document.createElement("div");
+  detail.className = "gear-detail";
+  const copy = document.createElement("div");
+  const title = document.createElement("h3");
+  const [name, source] = materialInfo[id];
+  const held = frame.pack.find(([item]) => item === id)?.[2] || 0;
+  title.textContent = name + " · " + held + " in pack";
+  copy.append(title);
+  addRecipeNote(copy, source);
+  const back = document.createElement("button");
+  back.type = "button";
+  back.id = "material-back";
+  back.textContent = "All pack items";
+  back.addEventListener("click", () => {
+    selectGearTab("pack");
+    $("gear-list").querySelector('[data-gear-key="material:' + id + '"]')?.focus();
+  });
+  detail.append(copy, back);
+  if (held > 0) detail.append(gearAction("Drop one", "drop:" + id, usable, true));
+  const groups = [detail];
+  for (const section of ["craft", "build"]) {
+    const recipes = frame[section].map(entry => recipeInfo(entry, section)).filter(recipe => recipe.needs.some(need => need.id === id));
+    if (recipes.length) groups.push(gearGroup(section === "craft" ? "Craft with " + name : "Build with " + name,
+      recipes.map(recipe => recipeRow(recipe, section, usable))));
+  }
+  return groups;
+}
+
+function packContents(usable) {
+  if (materialFilter) return materialUses(materialFilter, usable);
+  const strip = document.createElement("div");
+  strip.className = "gear-materials";
+  for (const [id, [name, source]] of Object.entries(materialInfo)) {
+    const held = frame.pack.find(([item]) => item === id)?.[2] || 0;
+    const material = document.createElement("button");
+    material.type = "button";
+    material.title = source;
+    material.dataset.gearKey = "material:" + id;
+    material.append(gearIcon(id), name + " " + held);
+    material.addEventListener("click", () => showMaterial(id));
+    strip.append(material);
+  }
+  const rows = frame.pack.filter(([id]) => !materialInfo[id]).map(entry => packRow(entry, frame.player, usable));
+  if (frame.player.weapon !== "fists") {
+    const { row, actions } = gearRow("fists", "Unarmed");
+    actions.append(gearAction("Equip", "equip:fists", usable));
+    rows.unshift(row);
+  }
+  return [gearGroup("Materials", [strip]), ...(rows.length ? [gearGroup("Equipment and supplies", rows)] : [])];
+}
+
+function recipeContents(usable) {
+  const recipes = frame[tab].map(entry => recipeInfo(entry, tab)).filter(recipe =>
+    (!readyOnly || recipe.affordable) && (!materialFilter || recipe.needs.some(need => need.id === materialFilter)));
+  return Object.entries(recipeGroups[tab]).flatMap(([category, [title]]) => {
+    const rows = recipes.filter(recipe => recipe.category === category).map(recipe => recipeRow(recipe, tab, usable));
+    return rows.length ? [gearGroup(title, rows)] : [];
+  });
 }
 
 function renderDrawer() {
   if (drawer !== "gear" || !frame) return;
-  const guide = tab === "pack" ? [frame.player.weapon, frame.player.armor, frame.player.shield, Math.floor(frame.player.water || 0)] : [];
+  const guide = tab === "pack" ? [frame.player.weapon, frame.player.armor, frame.player.shield,
+    Math.floor(frame.player.water || 0), shieldCondition(frame.player)] : [];
   const usable = frame.countdown <= 0;
-  const entries = frame[tab];
-  const refresh = JSON.stringify([tab, usable, guide, entries]);
+  const entries = tab === "pack" && materialFilter ? [frame.pack, frame.craft, frame.build] : frame[tab];
+  const refresh = JSON.stringify([tab, usable, guide, entries, readyOnly, materialFilter]);
   if (drawerKey === refresh) return;
   drawerKey = refresh;
+  setText($("drawer-title"), tab === "pack" ? "Pack" : tab === "craft" ? "Craft" : "Build");
+  for (const item of $("gear-tabs").children) item.setAttribute("aria-pressed", String(item.dataset.section === tab));
+  $("gear-options").hidden = tab === "pack";
+  $("gear-ready").checked = readyOnly;
+  const filter = $("gear-material-filter");
+  filter.hidden = !materialFilter;
+  if (materialFilter) setText(filter, "Clear " + materialName(materialFilter) + " filter");
   const list = $("gear-list");
   const scroll = list.scrollTop;
-  const rows = entries.map((entry) => {
-    if (tab === "pack") return packRow(entry, frame.player, usable);
-    const [id, name, cost, available] = entry;
-    const row = gearRow(name, cost);
-    row.classList.add("gear-item--recipe");
-    row.append(gearAction(tab === "craft" ? "Make" : "Select", tab + ":" + id, usable && available));
-    return row;
-  });
-  if (tab === "pack" && frame.player.weapon !== "fists") {
-    const fists = gearRow("Unarmed");
-    fists.append(gearAction("Equip", "equip:fists", usable));
-    rows.unshift(fists);
-  }
+  const active = document.activeElement;
+  const activeKey = list.contains(active) ? active?.dataset.gearKey : "";
+  const rows = tab === "pack" ? packContents(usable) : recipeContents(usable);
   if (!rows.length) {
     const empty = document.createElement("p");
-    empty.textContent = "Your pack is empty.";
+    empty.textContent = readyOnly ? "No recipes are ready with your current supplies." : "No matching recipes.";
     rows.push(empty);
   }
   list.replaceChildren(...rows);
+  if (activeKey) {
+    const activeButton = Array.from(list.querySelectorAll("[data-gear-key]")).find(button => button.dataset.gearKey === activeKey);
+    if (activeButton && !activeButton.disabled) activeButton.focus({ preventScroll: true });
+    else if (tab !== "pack") $("gear-ready").focus({ preventScroll: true });
+  } else if (active?.id === "material-back" && materialFilter && tab === "pack") {
+    $("material-back")?.focus({ preventScroll: true });
+  }
   list.scrollTop = scroll;
 }
 
 $("gear-tabs").addEventListener("click", (event) => {
   const button = event.target.closest("[data-section]");
-  if (!button) return;
-  tab = button.dataset.section;
+  if (button) selectGearTab(button.dataset.section, Boolean(materialFilter));
+});
+$("gear-ready").addEventListener("change", (event) => {
+  readyOnly = event.currentTarget.checked;
   $("gear-list").scrollTop = 0;
-  for (const item of $("gear-tabs").children) item.setAttribute("aria-pressed", String(item === button));
   renderDrawer();
 });
+$("gear-material-filter").addEventListener("click", () => selectGearTab(tab));
 
 join.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -877,6 +1131,8 @@ readyButton.addEventListener("click", () => {
 $("lobby-leave").addEventListener("click", leave);
 $("menu").addEventListener("click", (event) => openDrawer("menu", event.currentTarget));
 $("pack").addEventListener("click", (event) => openDrawer("gear", event.currentTarget));
+$("craft-shortcut").addEventListener("click", (event) => openDrawer("gear", event.currentTarget, "craft"));
+$("build-shortcut").addEventListener("click", (event) => openDrawer("gear", event.currentTarget, "build"));
 $("drawer-close").addEventListener("click", () => closeDrawer());
 $("leave").addEventListener("click", leave);
 backdrop.addEventListener("click", (event) => { if (event.target === backdrop) closeDrawer(); });
@@ -899,14 +1155,14 @@ document.addEventListener("keydown", (event) => {
   }
   if (event.ctrlKey && document.pointerLockElement !== look) return;
   const gearTab = desktopGearTabs[code] || (code === "Tab" && document.pointerLockElement === look ? "pack" : null);
-  const action = desktopActions[code];
+  const action = code === "KeyY" && frame.hud.repair?.enabled ? "repair" : desktopActions[code];
   if (!(gearTab || action || code === "KeyT")) return;
   if (code === "Space" && document.pointerLockElement !== look && event.target?.matches?.("button")) return;
   event.preventDefault();
   if (event.repeat) return;
   if (gearTab) {
-    openDrawer("gear", $("pack"));
-    document.querySelector('[data-section="' + gearTab + '"]').click();
+    const shortcut = gearTab === "pack" ? $("pack") : $(gearTab + "-shortcut");
+    openDrawer("gear", shortcut, gearTab);
   } else if (action) {
     queue(action);
   } else if (frame.player.weapon === "spear") {
@@ -924,7 +1180,8 @@ document.addEventListener("keyup", (event) => {
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && drawer) closeDrawer();
   if (event.key !== "Tab" || !drawer) return;
-  const focusable = [...$("drawer").querySelectorAll("button:not(:disabled)")].filter((button) => button.getClientRects().length);
+  const focusable = [...$("drawer").querySelectorAll("button:not(:disabled), input:not(:disabled)")]
+    .filter(control => control.getClientRects().length);
   const next = event.shiftKey ? focusable.at(-1) : focusable[0];
   const end = event.shiftKey ? focusable[0] : focusable.at(-1);
   if (document.activeElement === end && next) {

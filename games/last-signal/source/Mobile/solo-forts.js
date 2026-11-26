@@ -32,6 +32,13 @@ const blueprints = {
   ]
 };
 
+const blueprintDescriptions = {
+  hide: ["Trail Hide", "Two timber walls form a corner for quick cover."],
+  camp: ["Field Camp", "Four walls cover a two-tile camp with two exits."],
+  lookout: ["Raised Lookout", "Build a supported deck, uphill ramp and low railing."],
+  stronghold: ["Stronghold", "Two roof decks above a gated camp with a rear exit and outside ramp."]
+};
+
 const distance = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
 const heading = (a, b) => Math.atan2(b.x - a.x, b.z - a.z);
 const top = piece => piece.y + piece.h;
@@ -87,14 +94,17 @@ function footprintsOverlap(a, b) {
     Math.abs(v) < (a.d + b.w * s + b.d * c) / 2 - 0.15;
 }
 
-function dryGround(arena, piece) {
+function groundProblem(arena, piece) {
   for (const [u, v] of [[0, 0], [-0.45, -0.45], [-0.45, 0.45], [0.45, -0.45], [0.45, 0.45]]) {
     const { x, z } = offset(piece, u * piece.w, v * piece.d);
     const ground = arena.map.heightAt(x, z);
-    if (arena.map.surfaceAt(x, z) > ground + 0.22 || !arena.map.canOccupy(x, z, arena.removed)) return false;
-    if (!piece.supports?.length && Math.abs(piece.y - ground) > (piece.id === "wall" ? 0.54 : 0.43)) return false;
+    if (arena.map.surfaceAt(x, z) > ground + 0.22) return "The footprint is in water.";
+    if (!arena.map.canOccupy(x, z, arena.removed)) return "Terrain or a prop blocks the footprint.";
+    if (!piece.supports?.length && Math.abs(piece.y - ground) > (piece.id === "wall" ? 0.54 : 0.43)) {
+      return "The ground is too steep.";
+    }
   }
-  return true;
+  return "";
 }
 
 function actorOverlaps(piece, actor) {
@@ -102,10 +112,11 @@ function actorOverlaps(piece, actor) {
     fortFootprint(piece, actor.x, actor.z, 0.32);
 }
 
-function piecesFit(arena, piece, earlier = [], actor = null) {
-  if (!dryGround(arena, piece)) return false;
-  if (arena.actors.some(other => other !== actor && actorOverlaps(piece, other))) return false;
-  return ![...arena.pieces, ...earlier].some(other => {
+function placementProblem(arena, piece, earlier = [], actor = null) {
+  const ground = groundProblem(arena, piece);
+  if (ground) return ground;
+  if (arena.actors.some(other => other !== actor && actorOverlaps(piece, other))) return "A contestant blocks the footprint.";
+  const overlap = [...arena.pieces, ...earlier].some(other => {
     if (!active(arena, other) || piece.supports?.includes(other) || other.supports?.includes(piece) ||
         piece.y >= top(other) - 0.055 || other.y >= top(piece) - 0.055) return false;
     // The upper ramp lip may meet a timber wall at deck height.
@@ -116,6 +127,7 @@ function piecesFit(arena, piece, earlier = [], actor = null) {
     }
     return footprintsOverlap(piece, other) && footprintsOverlap(other, piece);
   });
+  return overlap ? "Another structure occupies the footprint." : "";
 }
 
 export function playerFortPiece(arena, actor, draft, pitch) {
@@ -123,26 +135,145 @@ export function playerFortPiece(arena, actor, draft, pitch) {
   // Snap to a visible upper surface if the aim is raised or the builder is
   // already standing above ground. Ground pieces remain freely placeable.
   const raised = pitch > 0.16 || actor.y > arena.map.heightAt(actor.x, actor.z) + 0.7;
-  if (raised && draft.id !== "ramp") {
+  if (raised) {
     for (const support of arena.pieces) {
       if (!active(arena, support) || (support.id !== "floor" && support.id !== "wall")) continue;
       if (Math.abs(top(support) - actor.y) > 3.25) continue;
       const turns = support.id === "wall" ? [0, Math.PI] : [0, QUARTER, Math.PI, 3 * QUARTER];
       for (const turn of turns) {
-        if (support.id === "wall" && draft.id !== "floor") continue;
-        const angle = support.angle + turn;
-        const spacing = draft.id === "floor" && support.id === "floor" ? TILE : TILE / 2;
-        const position = offset(support, 0, spacing, angle);
-        const error = distance(draft, position);
-        if (error >= nearest || distance(actor, position) > BUILD_REACH + 0.55) continue;
+        if (support.id === "wall" && draft.id !== "floor" && draft.id !== "ramp") continue;
+        const fromSupport = support.angle + turn;
+        const spacing = support.id === "floor" && (draft.id === "floor" || draft.id === "ramp") ? TILE : TILE / 2;
+        const position = offset(support, 0, spacing, fromSupport);
+        const angle = draft.id === "ramp" ? fromSupport + Math.PI : fromSupport;
+        const error = distance(draft, position) + (draft.id === "ramp" ?
+          (1 - Math.cos(draft.angle - angle)) * 0.6 : 0);
+        if (distance(actor, position) > BUILD_REACH + 0.55) continue;
+        const depth = draft.id === "floor" ? DECK : draft.id === "ramp" ? draft.h : 0;
+        const y = top(support) - depth;
+        if (draft.id === "floor" && piece.support && distance(piece, position) < 0.1 && Math.abs(piece.y - y) < 0.09) {
+          if (!piece.supports.includes(support)) piece.supports.push(support);
+          continue;
+        }
+        if (error >= nearest) continue;
         nearest = error;
-        piece = { ...draft, ...position, angle, y: top(support) - (draft.id === "floor" ? DECK : 0), supports: [support] };
+        const groundedRamp = draft.id === "ramp" && y <= arena.map.heightAt(position.x, position.z) + 0.43;
+        piece = { ...draft, ...position, angle, y, support, supports: groundedRamp ? [] : [support] };
       }
     }
   }
-  const fits = piecesFit(arena, piece, [], actor) && !actorOverlaps(piece, actor) &&
-    (!piece.supports || placementVisible(arena, actor, piece));
-  return { ...piece, fits };
+  const error = livePlacementProblem(arena, actor, piece, false) ||
+    (draft.id === "floor" && raised && !piece.support ? "Aim at the top of a wall or the edge of a platform for support." : "");
+  return { ...piece, fits: !error, error };
+}
+
+function livePlacementProblem(arena, actor, piece, checkReach = true) {
+  if (actorOverlaps(piece, actor)) return "Step out of the footprint.";
+  const problem = placementProblem(arena, piece, [], actor);
+  if (problem) return problem;
+  if (piece.supports?.length && !piece.supports.some(support => support.propIndex != null && active(arena, support))) {
+    return "Build a supporting wall or platform first.";
+  }
+  if (checkReach && distance(actor, piece) > BUILD_REACH) return "Move closer to the highlighted piece.";
+  if ((checkReach || piece.support) && !placementVisible(arena, actor, piece)) return "The placement is out of sight. Move to a clear angle.";
+  return "";
+}
+
+function layout(arena, kind, site) {
+  const groundCover = kind === "hide" || kind === "camp";
+  const pieces = [];
+  for (const [id, x, z, quarter = 0, height = 0, supports = []] of blueprints[kind]) {
+    const [w, h, d] = fortSizes[id] ?? [TILE, 1, 0.26];
+    const point = offset(site, x, z);
+    pieces.push({ id, ...point, y: groundCover ? arena.map.heightAt(point.x, point.z) : site.y + height,
+      w, h, d, angle: site.angle + quarter * QUARTER, fortKind: kind, supports: supports.map(index => pieces[index]) });
+  }
+  return pieces;
+}
+
+function blueprintBill(arena, pieces) {
+  const materials = {};
+  for (const piece of pieces) {
+    const id = Array.isArray(piece) ? piece[0] : piece.id;
+    for (const [material, quantity] of Object.entries(arena.fortRecipe(id)[2])) {
+      materials[material] = (materials[material] || 0) + quantity;
+    }
+  }
+  return materials;
+}
+
+function installed(arena, piece) {
+  return piece.propIndex != null && active(arena, piece);
+}
+
+export function playerFortRecipes(arena) {
+  return Object.entries(blueprints).map(([kind, dimensions]) => {
+    const [title, description] = blueprintDescriptions[kind];
+    const saved = arena.playerFortPlans.get(kind);
+    const remaining = saved?.pieces.filter(piece => !installed(arena, piece));
+    const continuing = Boolean(remaining?.length && saved.pieces.some(piece => piece.propIndex != null));
+    const bill = blueprintBill(arena, continuing ? remaining : dimensions);
+    const next = continuing ? remaining[0] : dimensions[0];
+    const startCost = arena.fortRecipe(Array.isArray(next) ? next[0] : next.id)[2];
+    const recipe = [`blueprint_${kind}`, 1, bill, { title, description, blueprint: true, kind, startCost, saved: continuing }];
+    if (continuing) {
+      recipe[3].description = `Resume the existing ${title.toLowerCase()}. ${remaining.length} ${remaining.length === 1 ? "piece" : "pieces"} remaining.`;
+    }
+    return recipe;
+  });
+}
+
+export function startPlayerFort(arena, kind, actor, rotation) {
+  const saved = arena.playerFortPlans.get(kind);
+  if (saved?.pieces.some(piece => piece.propIndex != null) &&
+      saved.pieces.some(piece => !installed(arena, piece))) return saved;
+  const [title] = blueprintDescriptions[kind];
+  const reach = 3.15;
+  const point = offset(actor, 0, reach, actor.yaw);
+  point.x = Math.round(point.x * 2) / 2;
+  point.z = Math.round(point.z * 2) / 2;
+  const angle = Math.round(actor.yaw / QUARTER) * QUARTER + rotation;
+  const [, u, v] = blueprints[kind][0];
+  const anchor = offset(point, -u, -v, angle);
+  const site = { ...anchor, angle, y: arena.map.heightAt(anchor.x, anchor.z) };
+  return { kind, title, site, pieces: layout(arena, kind, site) };
+}
+
+export function previewPlayerFort(arena, actor, kind, rotation) {
+  const plan = startPlayerFort(arena, kind, actor, rotation);
+  const pending = plan.pieces.filter(piece => !installed(arena, piece));
+  const piece = pending[0];
+  const placed = plan.pieces.length - pending.length;
+  const anchored = plan.pieces.some(item => item.propIndex != null);
+  let layoutError = "";
+  const ghosts = pending.map((item, index) => {
+    const problem = placementProblem(arena, item, pending.slice(0, index), actor);
+    layoutError ||= problem;
+    return { piece: item, status: problem ? "blocked" : "pending" };
+  });
+  const recipe = piece && arena.fortRecipe(piece.id);
+  const missing = recipe && Object.entries(recipe[2]).filter(([id, n]) => (actor.bag[id] || 0) < n);
+  const placement = piece && livePlacementProblem(arena, actor, piece);
+  const missingText = missing?.map(([id, n]) => `${n - (actor.bag[id] || 0)} ${id === "branch" ? "wood" : id}`).join(", ");
+  const error = (placed ? "" : layoutError) || placement || (missingText ? `Need ${missingText} for this piece.` : "");
+  if (ghosts.length) ghosts[0].status = error ? "blocked" : "ready";
+  const supports = piece?.supports ?? [];
+  const support = supports.find(item => item.propIndex != null && active(arena, item)) || supports[0];
+  const ramp = piece?.id === "ramp" ? piece : pending.find(item => item.id === "ramp");
+  return { plan, piece, recipe, placed, remaining: pending.length, total: plan.pieces.length, ghosts, error, support, ramp, anchored };
+}
+
+export function updatePlayerFort(arena, preview) {
+  const { plan, piece, recipe } = preview;
+  const restored = { ...piece };
+  const index = plan.pieces.indexOf(piece);
+  plan.pieces[index] = restored;
+  for (const dependent of plan.pieces) {
+    const slot = dependent.supports.indexOf(piece);
+    if (slot >= 0) dependent.supports[slot] = restored;
+  }
+  arena.installPiece(arena.player, recipe, restored);
+  arena.playerFortPlans.set(plan.kind, plan);
 }
 
 export function collapseFort(arena, struck) {
@@ -170,26 +301,16 @@ function fortPreference(arena, actor) {
 
 function constructionSite(arena, actor, kind) {
   const dimensions = blueprints[kind];
-  const groundCover = kind === "hide" || kind === "camp";
   const bearing = Math.round(actor.yaw / QUARTER) * QUARTER;
   for (const [u, v] of [[0, 0], [-3, 1], [3, 1], [0, 4], [0, -4], [-5, -3], [5, -3]]) {
     const point = offset(actor, u, v, bearing);
     if (!siteIsSafe(arena, point, dimensions.length * 2.5 + 13)) continue;
     for (const turn of [0, QUARTER, -QUARTER, Math.PI]) {
       const site = { ...point, angle: bearing + turn, y: arena.map.heightAt(point.x, point.z) };
-      const pieces = [];
-      for (const [id, x, z, quarter = 0, height = 0, supports = []] of dimensions) {
-        const [w, h, d] = fortSizes[id] ?? [TILE, 1, 0.26];
-        const point = offset(site, x, z);
-        const piece = {
-          id, ...point, y: groundCover ? arena.map.heightAt(point.x, point.z) : site.y + height,
-          w, h, d, angle: site.angle + quarter * QUARTER, fortKind: kind,
-          supports: supports.map(index => pieces[index])
-        };
-        if (!piecesFit(arena, piece, pieces, actor) || !siteIsSafe(arena, piece, 14)) break;
-        pieces.push(piece);
+      const pieces = layout(arena, kind, site);
+      if (pieces.every((piece, index) => !placementProblem(arena, piece, pieces.slice(0, index), actor) && siteIsSafe(arena, piece, 14))) {
+        return { kind, site, pieces, next: 0 };
       }
-      if (pieces.length === dimensions.length) return { kind, site, pieces, next: 0 };
     }
   }
   return null;
@@ -387,7 +508,7 @@ export function stepRivalFort(arena, actor, seconds) {
     if (work.blockedFor > 2) { actor.nextFortAt = arena.clock + 8; stop(); }
     return;
   }
-  if (!canPlace || missingMaterial(arena, actor, piece) || !piecesFit(arena, piece, [], actor)) {
+  if (!canPlace || missingMaterial(arena, actor, piece) || placementProblem(arena, piece, [], actor)) {
     actor.nextFortAt = arena.clock + 5;
     return stop();
   }

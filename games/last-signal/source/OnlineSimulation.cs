@@ -39,11 +39,12 @@ namespace LastSignal {
             public float PadMoveX,PadMoveY,PadLean;
             public string BuildId="",BuildProblem="",ActionId="",ActionArgument="";
             public float BuildAngle,UseX,UseY,UseZ,UseProgress,ActionElapsed,ActionTotal;
+            public float RepairStartHealth;
             public bool BuildTurned,BuildJoined,GhostFits,FocusShore;
             public Prop UseProp,FocusProp,Ghost;
             public Animal UseAnimal,FocusAnimal;
             public List<string> FocusOptions=new List<string>();
-            public int FocusChoice;
+            public int FocusChoice,ActionBatches;
 
             // Exchange just the first-person view and its input/action state.
             // The world, its timers, actors, heating and the physics index stay shared.
@@ -64,6 +65,7 @@ namespace LastSignal {
                 Swap(ref PadMoveX,ref g.PadMoveX); Swap(ref PadMoveY,ref g.PadMoveY); Swap(ref PadLean,ref g.PadLean);
                 Swap(ref BuildId,ref g.BuildId); Swap(ref BuildProblem,ref g.BuildProblem);
                 Swap(ref ActionId,ref g.ActionId); Swap(ref ActionArgument,ref g.ActionArgument);
+                Swap(ref ActionBatches,ref g.ActionBatches); Swap(ref RepairStartHealth,ref g.RepairStartHealth);
                 Swap(ref BuildAngle,ref g.BuildAngle); Swap(ref UseX,ref g.UseX); Swap(ref UseY,ref g.UseY); Swap(ref UseZ,ref g.UseZ);
                 Swap(ref UseProgress,ref g.UseProgress); Swap(ref ActionElapsed,ref g.ActionElapsed); Swap(ref ActionTotal,ref g.ActionTotal);
                 Swap(ref BuildTurned,ref g.BuildTurned); Swap(ref BuildJoined,ref g.BuildJoined);
@@ -176,7 +178,9 @@ namespace LastSignal {
             string arg=separator<0?"":action.Substring(separator+1);
             switch(verb) {
                 case "build":Survival.ChooseBuild(this,arg);break;
-                case "craft":Survival.ChooseCraft(this,arg);break;
+                case "abandon-blueprint":Survival.CancelBlueprint(this,arg);break;
+                case "craft":Survival.ChooseCraftCommand(this,arg);break;
+                case "repair":Survival.BeginRepair(this);break;
                 case "pack":Survival.UsePack(this,arg);break;
                 case "drop":Survival.Drop(this,arg);break;
                 case "equip":RequestWeapon(arg);break;

@@ -122,16 +122,27 @@ namespace LastSignal
 
         internal static bool BuildFits(Game g,Prop p,Actor ignore)
         {
-            if(p==null||!BuildType(p.Model)||p.X*p.X+p.Z*p.Z>(Radius-1.65f)*(Radius-1.65f)||
-                Surface(p.X,p.Z,false)-p.Y>.42f)return false;
-            if(!HasFortSupport(g,p))return false;
+            return BuildBlocker(g,p,ignore,true)=="";
+        }
+
+        internal static bool FutureFortPieceFits(Game g,Prop p,Actor builder)
+        {
+            return p!=null&&BuildBlocker(g,p,builder,p.FortLevel==0)=="";
+        }
+
+        internal static string BuildBlocker(Game g,Prop p,Actor ignore=null,bool requireSupport=true)
+        {
+            if(p==null||!BuildType(p.Model))return "No valid placement";
+            if(p.X*p.X+p.Z*p.Z>(Radius-1.65f)*(Radius-1.65f))return "Too close to the arena edge";
+            if(Surface(p.X,p.Z,false)-p.Y>.42f)return "Choose a dry spot";
+            if(requireSupport&&!HasFortSupport(g,p))return "Needs grounded support";
             float c=Cos(p.Yaw),s=Sin(p.Yaw), min=10000,max=-10000;
             for(int i=0;i<4;i++)
             {
                 float lx=(i%2==0?-1:1)*p.W*.46f,lz=(i<2?-1:1)*p.D*.46f;
                 float y=Height(p.X+c*lx+s*lz,p.Z-s*lx+c*lz);min=Math.Min(min,y);max=Math.Max(max,y);
             }
-            if(p.Support==null && p.FortLevel==0 && max-min>(p.Model=="fire"?.73f:1.15f))return false;
+            if(p.Support==null && p.FortLevel==0 && max-min>(p.Model=="fire"?.73f:1.15f))return "Ground is too steep";
             Field f=fields.GetOrCreateValue(g);int stamp=++f.Stamp;
             for(int iz=Cell(p.Z-2.4f);iz<=Cell(p.Z+2.4f);iz++)
             for(int ix=Cell(p.X-2.4f);ix<=Cell(p.X+2.4f);ix++)
@@ -143,7 +154,7 @@ namespace LastSignal
                     if(p.Y>=b.Y+b.H-.06f||p.Y+p.H<=b.Y+.05f)continue;
                     if(b.Type=="horn")
                     {
-                        if(HornBlocks(p.X,p.Y,p.Z,.5f,p.H))return false;
+                        if(HornBlocks(p.X,p.Y,p.Z,.5f,p.H))return "The Cornucopia blocks this piece";
                         continue;
                     }
                     if(b.Type=="roof")
@@ -153,7 +164,8 @@ namespace LastSignal
                         float bottom=b.Y+b.H*Clamp01((lz-span+b.HalfZ)/(2*b.HalfZ))-.055f;
                         if(p.Y+p.H<bottom)continue;
                     }
-                    if(Overlap(p,b,.065f)&&!CornerJoint(p,b)&&!FortJoint(p,b.Prop))return false;
+                    if(Overlap(p,b,.065f)&&!CornerJoint(p,b)&&!FortJoint(p,b.Prop))
+                        return b.Prop.Kind=="structure"?"Another structure blocks this piece":"Scenery blocks this piece";
                 }
             }
             // Fires are walkable, but cannot be built over an existing fire.
@@ -165,15 +177,15 @@ namespace LastSignal
                 {
                     Prop q=list[i];if(q.Removed||q.Kind!="fire"||Math.Abs(q.Y-p.Y)>.6f)continue;
                     float dx=q.X-p.X,dz=q.Z-p.Z;
-                    if(Math.Abs(dx*c-dz*s)<p.W*.5f+.38f && Math.Abs(dx*s+dz*c)<p.D*.5f+.38f)return false;
+                    if(Math.Abs(dx*c-dz*s)<p.W*.5f+.38f && Math.Abs(dx*s+dz*c)<p.D*.5f+.38f)return "A campfire is in the way";
                 }
             }
             for(int i=0;i<g.Actors.Count;i++)
             {
                 Actor a=g.Actors[i];
-                if(a!=ignore&&a.Alive&&FortOccupies(p,a.X,a.Y,a.Z))return false;
+                if(a!=ignore&&a.Alive&&FortOccupies(p,a.X,a.Y,a.Z))return "A contestant is in the way";
             }
-            return true;
+            return "";
         }
 
         internal static bool FortOccupies(Prop p,float x,float y,float z)

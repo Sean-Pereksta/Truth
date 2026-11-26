@@ -339,7 +339,7 @@ namespace LastSignal
             foreach(Shot s in g.Shots)DrawShot(s);
             DrawWater(g);
             DrawStormFront(g);
-            if(g.Ghost!=null) DrawGhost(g.Ghost,g.GhostFits);
+            DrawBuildPreview(g);
             DrawImpactWorld(g);
             DrawAtmosphere(g);
             if(g.Mode=="match" && g.Player!=null && g.Player.Alive){
@@ -419,18 +419,20 @@ namespace LastSignal
             glPushMatrix();glTranslatef(p.x,p.y,p.z);if(p.id=="leaf")glRotatef(90,0,1,0);
             if(p.draw!=0)glCallList(p.draw);foreach(Part c in p.children)GatePart(c);glPopMatrix();
         }
-        void DrawGhost(Prop p,bool ok){
+        void DrawGhost(Prop p,bool ok,bool immediate=true){
             glDisable(Fog);glDisable(Light);glDisable(Texture);
             Alpha();glDepthMask(0);
-            float r=ok?.44f:1,g=ok?.88f:.27f,b=ok?.66f:.14f;
+            float r=ok?(immediate?.44f:.50f):1f;
+            float g=ok?(immediate?.88f:.73f):.27f;
+            float b=ok?(immediate?.66f:.86f):.14f;
             glPushMatrix();glTranslatef(p.X,p.Y+.03f,p.Z);glRotatef(p.Yaw*Deg,0,1,0);
-            Model m;glColor4f(r,g,b,.23f);
+            Model m;glColor4f(r,g,b,immediate?.23f:.11f);
             if(models.TryGetValue(p.Model,out m)&&m.preview!=0){glPushMatrix();glScalef(p.Scale,p.Scale,p.Scale);glCallList(m.preview);glPopMatrix();}
-            glColor4f(r,g,b,.90f);glLineWidth(2);float x=p.W/2,z=p.D/2;
+            glColor4f(r,g,b,immediate?.90f:.45f);glLineWidth(immediate?2:1);float x=p.W/2,z=p.D/2;
             glBegin(2);glVertex3f(-x,0,-z);glVertex3f(x,0,-z);glVertex3f(x,0,z);glVertex3f(-x,0,z);glEnd();
             glBegin(Lines);for(int i=0;i<4;i++){float px=(i%2==0?-x:x),pz=(i/2==0?-z:z);
                 glVertex3f(px,0,pz);glVertex3f(px,Math.Min(.18f,p.H),pz);}glEnd();
-            DrawFortGuide(p,r,g,b);
+            DrawFortGuide(p,r,g,b,immediate?1f:.48f);
             glPopMatrix();glLineWidth(1);glDepthMask(1);glDisable(Blend);glEnable(Fog);glEnable(Light);Bind(paint);
         }
         void DrawActor(Game g,Actor a){

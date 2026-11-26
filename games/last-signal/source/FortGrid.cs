@@ -189,6 +189,24 @@ namespace LastSignal
             if(p.Model=="floor"&&level==0&&!frame.StartsOnDeck)p.Y+=DeckThickness;
         }
 
+        public static Prop PreviewSupport(Game g,Prop piece)
+        {
+            if(piece==null || !FortMember(piece) || GroundedPiece(g,piece))return null;
+            Field field=fields.GetOrCreateValue(g);
+            var stable=StablePieces(g,field.Forts);
+            Prop support=piece.Support;
+            if(support!=null && stable.Contains(support) && Carries(support,piece))return support;
+            for(int iz=Cell(piece.Z-3.4f);iz<=Cell(piece.Z+3.4f);iz++)
+            for(int ix=Cell(piece.X-3.4f);ix<=Cell(piece.X+3.4f);ix++)
+            {
+                var cell=field.Nearby[ix+iz*Cells];
+                if(cell==null)continue;
+                foreach(Prop candidate in cell)
+                    if(stable.Contains(candidate) && Carries(candidate,piece))return candidate;
+            }
+            return null;
+        }
+
         internal static bool FortVisible(Game g,Actor a,Prop p)
         {
             return a!=null && FortVisibleFrom(g,a.X,a.Y,a.Z,a.Y+(a.Crouch?1.03f:1.45f),p);

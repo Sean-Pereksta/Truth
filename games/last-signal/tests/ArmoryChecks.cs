@@ -56,6 +56,7 @@ public static class ArmoryChecks {
             CheckBuildingCosts();
             ShieldChecks.Run();
             CrossbowChecks.Run();
+            WorkbenchChecks.Run();
             Console.WriteLine("Passed sword, shield, rare loot, crossbow and building cost checks.");
             return 0;
         } catch (Exception error) {

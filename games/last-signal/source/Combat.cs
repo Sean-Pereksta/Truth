@@ -60,12 +60,18 @@ namespace LastSignal {
                 if(Math.Abs(a.X-x)>nearest+margin||Math.Abs(a.Z-z)>nearest+margin)continue;
                 float t=BodyHit(x,y,z,dx,dy,dz,a.X,a.Y+h*.52f,a.Z,hr,h*.52f+pad,hr);
                 float peekX,peekY,peekZ;
-                if(LeanEye(a,out peekX,out peekY,out peekZ)&&Distance(a.X,a.Z,peekX,peekZ)>.09f)
+                bool leaning=LeanEye(a,out peekX,out peekY,out peekZ)&&Distance(a.X,a.Z,peekX,peekZ)>.09f;
+                if(leaning)
                     t=Math.Min(t,BodyHit(x,y,z,dx,dy,dz,peekX,peekY-.08f,peekZ,.21f+pad,.22f+pad,.21f+pad));
                 float shield=shieldReady?ShieldContact(a,x,y,z,dx,dy,dz):float.MaxValue;
-                // The visible shield lies ahead of the real body. Aiming padding
-                // on the body must not pass through the face of the raised shield.
-                bool blocked=shield<float.MaxValue;
+                bool blocked=false;
+                if(shield<nearest){
+                    // Aim padding does not override the shield, but a genuinely
+                    // exposed body part encountered first can still be struck.
+                    float body=BodyHit(x,y,z,dx,dy,dz,a.X,a.Y+h*.52f,a.Z,.39f,h*.52f,.39f);
+                    if(leaning)body=Math.Min(body,BodyHit(x,y,z,dx,dy,dz,peekX,peekY-.08f,peekZ,.21f,.22f,.21f));
+                    blocked=shield<=body;
+                }
                 if(blocked)t=shield;
                 if(t<nearest){nearest=t;actor=a;creature=null;shieldHit=blocked;}
             }
@@ -169,7 +175,7 @@ namespace LastSignal {
         }
         public void Shove(Actor a){
             if(a==null||!a.Alive||a.Stamina<16||a.NextAttack>0)return;
-            a.Stamina-=16;a.NextAttack=.7f;a.SwingSpan=.30f;a.Swing=a.SwingSpan;
+            a.Stamina-=16;a.NextAttack=.7f;a.SwingSpan=.30f;a.Swing=a.SwingSpan;a.Guard=false;
             a.MeleeStroke=a.SpearThrust=false;a.ShoveStroke=true;
             float dx=(float)Math.Sin(a.Yaw),dz=(float)Math.Cos(a.Yaw),y=a.Y+(a.Crouch?.86f:1.16f);
             float d;Arena.RayProp(this,a.X,y,a.Z,dx,0,dz,1.85f,out d);
@@ -199,12 +205,16 @@ namespace LastSignal {
                 float v=(float)Math.Sqrt(vx*vx+vy*vy+vz*vz),advance=v*dt;
                 if(v<.0001f)return true;
                 float dx=vx/v,dy=vy/v,dz=vz/v,dist;Prop obstacle=Arena.RayProp(this,s.X,s.Y,s.Z,dx,dy,dz,advance,out dist);
-                Actor victim; Animal animal;bool shieldHit;
-                TraceBodies(s.Owner,s.X,s.Y,s.Z,dx,dy,dz,.035f,true,ref dist,out victim,out animal,out shieldHit);
+                Actor victim=null;Animal animal=null;bool shieldHit=false;
+                if(s.Damage>0)TraceBodies(s.Owner,s.X,s.Y,s.Z,dx,dy,dz,.035f,true,ref dist,out victim,out animal,out shieldHit);
                 if(victim!=null||animal!=null||obstacle!=null||dist<advance-.0002f||s.Life<=0){
                     ImpactSite contact=new ImpactSite(s.X+dx*dist,s.Y+dy*dist,s.Z+dz*dist,dx,dy,dz,s.Model);
+                    if(victim!=null && shieldHit && !Evading(victim) && !Brains.Allied(this,s.Owner,victim)){
+                        HitActor(victim,s.Owner,s.Damage,true,contact,true);
+                        DeflectShot(s,victim,contact);return false;
+                    }
                     if(victim!=null)HitActor(victim,s.Owner,s.Damage,true,contact,shieldHit);else if(animal!=null)HitAnimal(animal,s.Owner,s.Damage,true,contact);
-                    else if(obstacle!=null&&obstacle.Kind=="structure"){
+                    else if(obstacle!=null&&obstacle.Kind=="structure"&&s.Damage>0){
                         Arena.HitStructure(this,obstacle,s.Model=="spear"?11:4);
                         HitEffect("wood",contact.X,contact.Y,contact.Z,s.Model=="spear"?6:3);
                         Cue("wood",contact.X,contact.Z,12);
@@ -221,6 +231,15 @@ namespace LastSignal {
                 }
                 s.X+=vx*dt;s.Y+=vy*dt;s.Z+=vz*dt;s.DY-=s.Gravity*dt;
                 return false;
+        }
+
+        static void DeflectShot(Shot shot,Actor defender,ImpactSite contact){
+            float nx=(float)Math.Sin(defender.Yaw),nz=(float)Math.Cos(defender.Yaw);
+            float dot=shot.DX*nx+shot.DZ*nz;
+            shot.X=contact.X+nx*.025f;shot.Y=contact.Y;shot.Z=contact.Z+nz*.025f;
+            shot.DX=(shot.DX-2*dot*nx)*.24f;shot.DZ=(shot.DZ-2*dot*nz)*.24f;
+            shot.DY=Math.Max(.8f,shot.DY*.20f+2.2f);
+            shot.Damage=0;shot.Life=Math.Min(.4f,shot.Life);
         }
     }
 }

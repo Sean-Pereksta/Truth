@@ -15,7 +15,7 @@ namespace LastSignal {
         public bool Scroll(Game g,int delta){
             if(!Captures(g))return false;int d=delta>0?-1:1;
             if(g.Panel=="pack"){packOffset=Math.Max(0,Math.Min(Math.Max(0,Survival.PackItems(g.Player).Length-12),packOffset+4*d));}
-            else if(g.Panel=="craft"||g.Panel=="build")StepWheel(g,d);
+            else if(g.Panel=="craft"||g.Panel=="build")StepWorkbench(g,d);
             else Navigate(d);return true;
         }
         static void AssignKey(Config c,string action,Keys key){
@@ -38,12 +38,15 @@ namespace LastSignal {
             if(!Captures(g))return false;
             if(g.Panel=="craft"||g.Panel=="build"){
                 string a=g.Panel=="craft"?"Craft":"Build";
-                if(key==g.Settings.KeysMap[a]){g.Panel="";return true;}
+                if(key==g.Settings.KeysMap[a]){Close(g);return true;}
+                string other=a=="Craft"?"Build":"Craft";
+                if(key==g.Settings.KeysMap[other]){materialView=materialReturn="";g.Panel=other.ToLowerInvariant();return true;}
                 if(key==g.Settings.KeysMap["Dismiss"]){g.Dismissed=true;return true;}
-                if(key==Keys.D0||key==Keys.NumPad0){Activate(g,"slot9",1);return true;}
-                if(key>=Keys.D1&&key<=Keys.D9){Activate(g,"slot"+((int)key-(int)Keys.D1),1);return true;}
-                if(key>=Keys.NumPad1&&key<=Keys.NumPad9){Activate(g,"slot"+((int)key-(int)Keys.NumPad1),1);return true;}
-                if(key==Keys.Left||key==Keys.Up){StepWheel(g,-1);return true;}if(key==Keys.Right||key==Keys.Down){StepWheel(g,1);return true;}
+                if(key==Keys.D0||key==Keys.NumPad0){WorkShortcut(g,9);return true;}
+                if(key>=Keys.D1&&key<=Keys.D9){WorkShortcut(g,(int)key-(int)Keys.D1);return true;}
+                if(key>=Keys.NumPad1&&key<=Keys.NumPad9){WorkShortcut(g,(int)key-(int)Keys.NumPad1);return true;}
+                int dx=key==Keys.Right?1:key==Keys.Left?-1:0,dy=key==Keys.Down?1:key==Keys.Up?-1:0;
+                if(dx!=0||dy!=0){PadGrid(g,dx,dy);return true;}
             }
             if(g.Panel=="pack"&&key==g.Settings.KeysMap["Pack"]){Close(g);return true;}
             if(g.Panel=="pack"&&(key==Keys.D1||key==Keys.NumPad1||key==Keys.D2||key==Keys.NumPad2)){Activate(g,key==Keys.D1||key==Keys.NumPad1?"quickmeal":"quickdrink",1);return true;}
@@ -55,10 +58,6 @@ namespace LastSignal {
             if(key==Keys.Left||key==Keys.Right){int d=key==Keys.Left?-1:1;if(IsField(Base(selected)))Activate(g,Base(selected),d);else if(g.Panel=="bindings"||g.Panel=="pack")Navigate(d);return true;}
             if(key==Keys.Tab){Navigate((Control.ModifierKeys&Keys.Shift)!=0?-1:1);return true;}
             return true;
-        }
-        void StepWheel(Game g,int d){
-            int n=g.Panel=="craft"?Survival.Crafts.Length:Survival.Builds.Length;if(n==0)return;
-            int i=0;if(selected.StartsWith("slot"))int.TryParse(selected.Substring(4),out i);selected="slot"+((i+d+n)%n);hoverMoved=false;
         }
         void Navigate(int d){
             var choices=new List<string>();foreach(Hit h in hits)if(h.Nav&&!choices.Contains(h.Id))choices.Add(h.Id);if(choices.Count==0)return;
@@ -75,6 +74,18 @@ namespace LastSignal {
         }
         void Close(Game g){
             if(CloseOnline(g))return;
+            if((g.Panel=="craft"||g.Panel=="build")&&materialView!=""){
+                string previous=materialReturn;materialView=materialReturn="";workOffset=0;workRecipe="";selected="workFirst";
+                if(previous!=""){
+                    g.Panel=previous;
+                    if(previous=="pack"){
+                        Observe(g);packOffset=workReturnPackOffset;
+                        int index=Array.IndexOf(Survival.PackItems(g.Player),packId);
+                        if(index>=packOffset&&index<packOffset+12)selected="pack"+(index-packOffset);
+                    }
+                }
+                return;
+            }
             if(g.Panel=="padbinds"){g.Panel="controller";return;}
             if(g.Panel=="bindings"||g.Panel=="controller"){g.Panel="settings";return;}
             if(g.Panel=="settings"){g.Panel=backPanel;Save(g.Settings);return;}
@@ -84,6 +95,7 @@ namespace LastSignal {
             if(string.IsNullOrEmpty(id))return;
             if(id.EndsWith("-"))step=-1;string k=Base(id);
             if(ActivateOnline(g,k))return;
+            if(WorkAction(g,k))return;
             if(IsField(k)){
                 Config c=g.Settings;
                 if(k=="arena")c.ArenaId=(c.ArenaId+step+3)%3;
@@ -105,18 +117,19 @@ namespace LastSignal {
             if(k=="bindings"){g.Panel="bindings";return;}if(k.StartsWith("key")&&g.Panel=="bindings"){bind=k.Substring(3);return;}
             if(k=="back"||k=="resume"){Close(g);return;}if(k=="leave"){if(g.NetworkMatch)ConfirmLeave(g);else g.Menu();return;}if(k=="quit"){g.Quit=true;return;}
             if(k=="replay"){if(g.NetworkMatch){if(g.Mode=="results"&&g.Online.IsHost)g.Online.Replay();}else g.Replay();return;}if(k=="spectate"){g.Spectate(1);return;}
-            if(k.StartsWith("slot")&&(g.Panel=="craft"||g.Panel=="build")){
-                int n;if(!int.TryParse(k.Substring(4),out n)||n<0)return;bool build=g.Panel=="build";var recipes=build?Survival.Builds:Survival.Crafts;if(n>=recipes.Length)return;
-                selected=k;hoverMoved=false;
-                if(g.InputRecipe(recipes[n],build))g.Panel="";return;
-            }
             if(g.Panel=="pack"){
                 if(k=="quickmeal"||k=="quickdrink"){string idToUse=k=="quickmeal"?"meal":"waterskin";if(g.InputUseItem(idToUse))g.Panel="";return;}
                 string[] items=Survival.PackItems(g.Player);
                 if(k=="pagenext"||k=="pageback"){packOffset=Math.Max(0,Math.Min(Math.Max(0,items.Length-12),packOffset+(k=="pagenext"?12:-12)));return;}
                 if(k.StartsWith("pack")){int n;if(int.TryParse(k.Substring(4),out n)&&n>=0&&n+packOffset<items.Length)packId=items[n+packOffset];return;}
                 if(packId==""||Array.IndexOf(items,packId)<0)return;
-                if(k=="useitem"){if(PackAction(g.Player,packId)=="View recipes"){g.Panel="craft";Observe(g);for(int i=0;i<Survival.Crafts.Length;i++)if(Survival.Crafts[i].Needs.ContainsKey(packId)){selected="slot"+i;break;}}else if(g.InputUseItem(packId)&&!Armor.IsArmor(packId))g.Panel="";return;}if(k=="dropitem"){g.InputDrop(packId);return;}
+                if(k=="useitem"){
+                    if(PackAction(g.Player,packId)=="View uses"){
+                        materialView=packId;materialReturn="pack";workReturnPackOffset=packOffset;g.Panel="craft";Observe(g);
+                    }else if(g.InputUseItem(packId)&&!Armor.IsArmor(packId))g.Panel="";
+                    return;
+                }
+                if(k=="dropitem"){g.InputDrop(packId);return;}
             }
         }
     }

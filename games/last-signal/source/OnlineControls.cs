@@ -63,10 +63,31 @@ namespace LastSignal {
             else Survival.Place(this,repeat);
         }
         public bool InputRecipe(Recipe recipe,bool build) {
-            if(!RemoteInput)return build?Survival.ChooseBuild(this,recipe.Id):Survival.ChooseCraft(this,recipe.Id);
+            if(recipe==null)return false;
+            if(!build)return InputCraft(recipe,1);
+            if(!RemoteInput)return Survival.ChooseBuild(this,recipe.Id);
             if(Player==null)return false;
-            if(!Survival.CanMake(Player,recipe)){Say(recipe.Name+" needs "+recipe.CostText);return false;}
-            Online.Command(build?"build":"craft",recipe.Id);return true;
+            if(!Survival.CanMake(Player,recipe)){Say(Survival.Missing(Player,recipe));return false;}
+            Online.Command("build",recipe.Id);return true;
+        }
+        public bool InputCraft(Recipe recipe,int batches) {
+            if(recipe==null)return false;
+            if(!RemoteInput)return Survival.ChooseCraft(this,recipe.Id,batches);
+            if(Player==null || !Survival.CanCraftBatches(Player,recipe,batches))return false;
+            Online.Command("craft",batches==3?recipe.Id+":3":recipe.Id);
+            return true;
+        }
+        public bool InputBlueprint(string id) {
+            if(Player==null || FortBlueprint.Find(id)==null)return false;
+            if(!RemoteInput)return Survival.ChooseBuild(this,id);
+            Online.Command("build",id);
+            return true;
+        }
+        public bool InputAbandonBlueprint(string id) {
+            if(Player==null || FortBlueprint.Find(id)==null)return false;
+            if(!RemoteInput)return Survival.CancelBlueprint(this,id);
+            Online.Command("abandon-blueprint",id);
+            return true;
         }
         public bool InputUseItem(string id) {
             if(!RemoteInput)return Survival.UsePack(this,id);

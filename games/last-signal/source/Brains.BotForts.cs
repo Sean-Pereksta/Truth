@@ -2,60 +2,18 @@ using System;
 
 namespace LastSignal {
     public static partial class Brains {
-        sealed class FortPart
-        {
-            public readonly string Model;
-            public readonly float U, V;
-            public readonly int Quarter, Level;
-
-            public FortPart(string model,float u,float v,int quarter=0,int level=0)
-            { Model=model; U=u; V=v; Quarter=quarter; Level=level; }
-        }
-
-        sealed class FortTemplate
-        {
-            public readonly string Name;
-            public readonly float Reach;
-            public readonly Place[] Exits;
-            public readonly FortPart[] Parts;
-
-            public FortTemplate(string name,float reach,Place[] exits,params FortPart[] parts)
-            { Name=name; Reach=reach; Exits=exits; Parts=parts; }
-        }
-
         sealed class BotFort
         {
-            public readonly FortTemplate Template;
+            public readonly FortBlueprint Template;
             public readonly Arena.FortFrame Frame;
             public readonly Prop[] Placed;
             public Place WorkSpot;
             public int NextPiece;
             public float ApproachUntil, LastProgress;
 
-            public BotFort(FortTemplate template,Arena.FortFrame frame)
+            public BotFort(FortBlueprint template,Arena.FortFrame frame)
             { Template=template; Frame=frame; Placed=new Prop[template.Parts.Length]; }
         }
-
-        // Offsets are on the construction grid. Positive V is forward and a
-        // ramp's high end follows its rotation. Lay down useful cover first.
-        static readonly FortTemplate trailHide=new FortTemplate("Trail Hide",2.9f,
-            new[]{new Place(-3.2f,0),new Place(0,-3.2f)},
-            new FortPart("wall",0,1.5f),new FortPart("wall",1.5f,0,1));
-        static readonly FortTemplate fieldCamp=new FortTemplate("Field Camp",5f,
-            new[]{new Place(-3.2f,0),new Place(3.2f,3)},
-            new FortPart("wall",0,4.5f),new FortPart("wall",-1.5f,3,1),
-            new FortPart("wall",0,-1.5f),new FortPart("wall",1.5f,0,1));
-        static readonly FortTemplate raisedLookout=new FortTemplate("Raised Lookout",5f,
-            new[]{new Place(0,-5),new Place(0,3.2f)},
-            new FortPart("wall",-1.5f,0,1),new FortPart("wall",1.5f,0,1),
-            new FortPart("floor",0,0,0,1),new FortPart("ramp",0,-3),
-            new FortPart("barricade",0,1.5f,0,1));
-        static readonly FortTemplate stronghold=new FortTemplate("Stronghold",5.8f,
-            new[]{new Place(0,-3.2f),new Place(0,6.2f)},
-            new FortPart("wall",-1.5f,3,1),new FortPart("wall",1.5f,3,1),
-            new FortPart("wall",-1.5f,0,1),new FortPart("wall",1.5f,0,1),
-            new FortPart("floor",0,3,0,1),new FortPart("floor",0,0,0,1),
-            new FortPart("ramp",3,3,3),new FortPart("gate",0,4.5f));
 
         static bool FortWorkSafe(Game g,Actor a,Mind m)
         {
@@ -76,22 +34,14 @@ namespace LastSignal {
 
         static Prop PlannedFortPiece(Game g,BotFort fort,int index)
         {
-            FortPart part=fort.Template.Parts[index];
-            return Arena.PreviewFortGridPiece(g,fort.Frame,part.Model,part.U,part.V,part.Quarter,part.Level);
+            return fort.Template.Preview(g,fort.Frame,index);
         }
 
-        static bool CanFundFort(Actor a,FortTemplate template)
+        static bool CanFundFort(Actor a,FortBlueprint template)
         {
-            int wood=0,fiber=0,scrap=0;
-            foreach(FortPart part in template.Parts)
-            {
-                Recipe recipe=Survival.Find(Survival.Builds,part.Model);
-                int count;
-                if(recipe.Needs.TryGetValue("branch",out count))wood+=count;
-                if(recipe.Needs.TryGetValue("fiber",out count))fiber+=count;
-                if(recipe.Needs.TryGetValue("scrap",out count))scrap+=count;
-            }
-            return a.Count("branch")>=wood && a.Count("fiber")>=fiber+1 && a.Count("scrap")>=scrap;
+            foreach(var need in template.Needs)
+                if(a.Count(need.Key)<need.Value+(need.Key=="fiber"?1:0))return false;
+            return true;
         }
 
         static bool StandForFortPiece(Game g,Actor a,Prop piece,out Place stand)
@@ -117,27 +67,7 @@ namespace LastSignal {
             return best<float.PositiveInfinity;
         }
 
-        static bool FortExitClear(Game g,BotFort fort,Place exit)
-        {
-            float into=(fort.Template==fieldCamp||fort.Template==stronghold)&&exit.Z>2f?3f:0f;
-            float last=fort.Frame.Y;
-            // Check the whole lane. On a slope it also needs room beneath the
-            // stronghold's future ceiling, not just space on the open ground.
-            for(int i=0;i<=8;i++)
-            {
-                float fraction=i/8f,v=into+(exit.Z-into)*fraction;
-                float x,z;
-                fort.Frame.World(exit.X*fraction,v,out x,out z);
-                float y=Arena.Ground(g,x,z);
-                if(Math.Abs(y-last)>.38f || Arena.WetDepth(g,x,z,y)>.15f || !Arena.CanStand(g,x,y,z))return false;
-                if(fort.Template==stronghold && v>=-1.85f && v<=4.85f &&
-                    y+1.77f>fort.Frame.Y+Arena.Story-Arena.DeckThickness)return false;
-                last=y;
-            }
-            return true;
-        }
-
-        static BotFort FindFortSite(Game g,Actor a,Mind m,FortTemplate template)
+        static BotFort FindFortSite(Game g,Actor a,Mind m,FortBlueprint template)
         {
             BotFort best=null;
             float bestScore=float.NegativeInfinity;
@@ -153,8 +83,7 @@ namespace LastSignal {
                 {
                     var frame=new Arena.FortFrame{X=x,Y=y,Z=z,Yaw=front+rotation*(float)Math.PI/2};
                     var site=new BotFort(template,frame){LastProgress=g.Time};
-                    if(!FortSiteSafe(g,site) || !FortExitClear(g,site,template.Exits[0]) ||
-                        !FortExitClear(g,site,template.Exits[1]))continue;
+                    if(!FortSiteSafe(g,site) || !template.HasClearExits(g,frame))continue;
                     bool fits=true;
                     for(int i=0;i<template.Parts.Length;i++)
                     {
@@ -239,17 +168,17 @@ namespace LastSignal {
             {
                 if(g.Time<m.NextFortCheck || m.FortsStarted>=2 || m.BuildInterest<.60f)return false;
                 m.NextFortCheck=g.Time+m.Between(5f,9f);
-                bool strongholdFunds=m.BuildInterest>=.82f && CanFundFort(a,stronghold);
-                if(strongholdFunds)fort=FindFortSite(g,a,m,stronghold);
+                bool strongholdFunds=m.BuildInterest>=.82f && CanFundFort(a,FortBlueprint.Stronghold);
+                if(strongholdFunds)fort=FindFortSite(g,a,m,FortBlueprint.Stronghold);
                 bool savingForFort=m.BuildInterest>=.82f && m.FortsStarted==0 && a.Count("hatchet")>0 &&
                     a.Count("scrap")>0 && !strongholdFunds && !g.IsNight;
                 if(!savingForFort)
                 {
                     bool useHighGround=m.BuildInterest>=.73f || (m.BuildInterest>=.64f && Ranged(a));
-                    if(fort==null && useHighGround && CanFundFort(a,raisedLookout))
-                        fort=FindFortSite(g,a,m,raisedLookout);
-                    if(fort==null && m.BuildInterest>=.62f && CanFundFort(a,fieldCamp))fort=FindFortSite(g,a,m,fieldCamp);
-                    if(fort==null && CanFundFort(a,trailHide))fort=FindFortSite(g,a,m,trailHide);
+                    if(fort==null && useHighGround && CanFundFort(a,FortBlueprint.RaisedLookout))
+                        fort=FindFortSite(g,a,m,FortBlueprint.RaisedLookout);
+                    if(fort==null && m.BuildInterest>=.62f && CanFundFort(a,FortBlueprint.FieldCamp))fort=FindFortSite(g,a,m,FortBlueprint.FieldCamp);
+                    if(fort==null && CanFundFort(a,FortBlueprint.TrailHide))fort=FindFortSite(g,a,m,FortBlueprint.TrailHide);
                 }
                 if(fort==null)return false;
             }
