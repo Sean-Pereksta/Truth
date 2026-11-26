@@ -118,7 +118,10 @@ h1 span { color: #b2f4d0; }
   #board { max-width: min(100%, calc((100dvh - 65px) * 1.23)); min-width: 0; }
   .shift-bar { grid-template-columns: 1fr auto; gap: .3rem; align-items: start; }
   .deliveries { grid-column: 1 / -1; }
-  .orders { grid-auto-flow: row; grid-auto-columns: 1fr; grid-template-columns: 1fr; }
+  .orders { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .order { min-height: 35px; }
+  .order canvas { width: 20px; height: 20px; flex-basis: 20px; }
+  .order-text strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .action-bar { grid-template-columns: 1fr 1fr; }
   .action-bar div { grid-column: 1 / -1; }
 }
