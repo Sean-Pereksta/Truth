@@ -47,7 +47,11 @@ function createStore({ dataDir, fetchImpl, config, now, timeoutMs }) {
     const raw = await response.text();
     if (raw.length > 131_072) throw new Error('Firebase response was too large.');
     const data = raw && JSON.parse(raw);
-    if (!response.ok) throw new FirebaseError(response.status, data?.error?.status);
+    if (!response.ok) {
+      const error = data?.error;
+      const code = error?.message === 'OPERATION_NOT_ALLOWED' ? 'OPERATION_NOT_ALLOWED' : error?.status;
+      throw new FirebaseError(response.status, code);
+    }
     return data;
   }
 

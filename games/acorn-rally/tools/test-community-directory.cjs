@@ -87,3 +87,18 @@ test('community listings use Magic Servers while an upgrade preserves the race q
     uid: 'new-owner', refreshToken: 'listing-refresh'
   });
 });
+
+test('disabled anonymous sign-in reports a fixed diagnostics code', async t => {
+  const dataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'acorn-firebase-'));
+  t.after(() => fs.rm(dataDir, { recursive: true, force: true }));
+  const directory = createFirebaseDirectory({
+    dataDir,
+    fetchImpl: async () => Response.json({
+      error: { status: 'INVALID_ARGUMENT', message: 'OPERATION_NOT_ALLOWED' }
+    }, { status: 400 })
+  });
+
+  await assert.rejects(directory.reserve({}, '0123'), {
+    status: 400, code: 'OPERATION_NOT_ALLOWED', message: 'Firebase rejected the lobby operation.'
+  });
+});
