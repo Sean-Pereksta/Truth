@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#17142d">
+  <title>Orbit Bloom</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="masthead">
+      <button id="back" class="quiet" hidden>Back</button>
+      <h1>Orbit <span>Bloom</span></h1>
+      <label class="effects"><input type="checkbox" id="effects"> Reduced effects</label>
+    </header>
+
+    <section id="menu" class="menu" aria-label="Choose a game mode">
+      <canvas id="menu-art" width="528" height="216" aria-hidden="true"></canvas>
+      <div class="menu-actions">
+        <button id="campaign" class="primary">Solo campaign</button>
+        <button id="practice">Untimed practice</button>
+        <button id="live">Live Join</button>
+      </div>
+    </section>
+
+    <section id="levels" class="panel" hidden aria-labelledby="levels-heading">
+      <h2 id="levels-heading">Choose a greenhouse</h2>
+      <div id="level-list" class="level-list"></div>
+    </section>
+
+    <section id="directory" class="panel" hidden aria-labelledby="directory-heading">
+      <div class="row spread">
+        <h2 id="directory-heading">Live lobbies</h2>
+        <button id="refresh" class="quiet">Refresh</button>
+      </div>
+      <form id="join-by-code" class="join-form">
+        <label>Gardener name<input id="directory-name" autocomplete="nickname" maxlength="24" placeholder="Gardener"></label>
+        <label>Room code<input id="room-code" autocomplete="off" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required></label>
+        <button class="primary">Join by code</button>
+      </form>
+      <p id="directory-status" class="message" role="status"></p>
+      <div id="rooms" class="room-list"></div>
+      <a href="https://catnmice.com/lobby/lobby.html#live-lobbies/orbitbloom">Open Catnmice Live Lobbies</a>
+    </section>
+
+    <section id="room" class="panel" hidden aria-labelledby="room-heading">
+      <h2 id="room-heading">Orbit Bloom lobby</h2>
+      <form id="enter-room" class="row">
+        <label>Gardener name<input id="room-name" required autocomplete="nickname" maxlength="24" placeholder="Gardener"></label>
+        <button class="primary">Join lobby</button>
+      </form>
+      <div id="room-controls" hidden>
+        <div id="players" class="room-list"></div>
+        <label id="host-level" hidden>Greenhouse<select id="room-level"></select></label>
+        <div class="row">
+          <button id="ready" type="button">Ready</button>
+          <button id="start" type="button" class="primary" hidden>Start shift</button>
+        </div>
+      </div>
+      <p id="room-status" class="message" role="status"></p>
+    </section>
+
+    <section id="play" class="play" hidden aria-label="Greenhouse shift">
+      <div class="shift-bar">
+        <div><strong id="map-name"></strong><div id="map-event" class="map-event"></div></div>
+        <span id="clock" class="clock"></span>
+        <span id="deliveries" class="deliveries"></span>
+      </div>
+      <div id="orders" class="orders" aria-label="Courier orders"></div>
+      <div class="board"><canvas id="board" tabindex="0" aria-label="Greenhouse. Tap stations or use WASD or arrows to move, Space to act and Q to set down a plant."></canvas></div>
+      <div class="action-bar">
+        <div><strong id="carried">Tap a seed tray</strong><div id="prompt" class="map-event" role="status"></div></div>
+        <button id="action" class="primary">Act</button>
+        <button id="drop" class="quiet" aria-label="Set down plant">Set down</button>
+      </div>
+      <details class="help">
+        <summary>Controls and greenhouse guide</summary>
+        <p>Tap a station or plant to walk there and interact. Tap the floor to move. On a keyboard, use WASD or arrows to move, Space to use a nearby station and Q to set down a plant.</p>
+        <p>Start at a seed tray. Follow the bubbles through ingredients, showers, thermal booths, potting and pruning. Take the plant out when the booth flashes ready, then carry the finished flower to the truck. Use a shelf to hand a plant to another gardener.</p>
+        <div id="station-list" class="station-list" aria-label="Station shortcuts"></div>
+      </details>
+    </section>
+
+    <section id="results" class="panel results" hidden aria-labelledby="results-heading">
+      <h2 id="results-heading">Shift complete</h2>
+      <div id="result-stars" class="result-stars"></div>
+      <p id="result-summary"></p>
+      <div class="row">
+        <button id="replay" class="quiet">Play again</button>
+        <button id="next" class="primary">Next greenhouse</button>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>
