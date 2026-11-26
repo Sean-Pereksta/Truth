@@ -18,7 +18,7 @@ export function ensureWorld(world) {
   world.unlocked = regionIndex(world.unlocked);
   for (const key of ['cleared', 'clues', 'hunts']) if (!Array.isArray(world[key])) world[key] = [];
   while (world.unlocked < REGIONS.length - 1 && has(world.cleared,world.unlocked,'warden')) world.unlocked++;
-  world.region = Math.min(regionIndex(world.region), world.unlocked);
+  world.region = regionIndex(world.region);
   if (!hasSite(world.region,world.node)) world.node = 'camp';
   if (!world.sightings || typeof world.sightings !== 'object') world.sightings = {};
   if (!world.patrols || typeof world.patrols !== 'object') world.patrols = {};
@@ -31,6 +31,13 @@ export function ensureWorld(world) {
     world.node = entrances.reverse().find(site => !requirements(world,world.region,site).length);
   }
   return world;
+}
+
+export function travelToRegion(world, region) {
+  if (regionIndex(region) !== region || world.region === region) return false;
+  world.region = region;
+  world.node = 'camp';
+  return true;
 }
 
 function hasTrail(world, region = world.region) {
@@ -58,7 +65,7 @@ export function wonderProgress(world,region = world.region) {
   const progress = trail?.progress ?? 0;
   return {
     name:landmark.name, clue:landmark.clue, patrols:landmark.patrols,
-    open:region <= world.unlocked && !requirements(world,region,'wonder').length,
+    open:!requirements(world,region,'wonder').length,
     ready:trail?.ready === true, lastSite:trail?.lastSite ?? null, progress,
     chance:progress >= SEARCH_LIMIT-1 ? 1 : (4+progress*2)/100
   };
@@ -141,19 +148,20 @@ function button(className, label, onClick) {
 // A venue keeps its rank on rematches and when the player changes companions.
 // The elite route opens after the warden and culminates at the level cap.
 const venueLevels = {
-  trial:    [4,  8, 12, 16, 21, 26, 31, 35],
-  warden:   [5, 10, 14, 19, 24, 29, 32, 38],
-  den:      [6, 12, 18, 24, 30, 35, 39, 41],
-  sentinel: [7, 13, 20, 26, 32, 37, 41, 43],
-  vault:    [8, 15, 22, 28, 34, 39, 43, 45]
+  trial:    [7, 13, 19, 25, 31, 36, 41, 46],
+  warden:   [9, 15, 21, 27, 33, 38, 43, 48],
+  den:      [10, 16, 22, 28, 34, 39, 44, 49],
+  sentinel: [11, 17, 23, 29, 35, 40, 45, 50],
+  vault:    [12, 18, 24, 30, 36, 41, 46, 51]
 };
-const trailOffsets = { outpost: 1, ridge: 1, habitat: 2, rookery: 3, hollow: 3 };
+const trailOffsets = { outpost: 2, ridge: 2, habitat: 2, rookery: 4 };
 function combatLevel(region, site) {
-  if (site === 'wonder') return Math.min(45,venueLevels.vault[region]+2);
-  if (region === 0 && site === 'grove') return 1;
+  if (site === 'wonder') return Math.min(MAX_LEVEL,combatLevel(region,'vault') + 2);
+  if (site === 'hollow') return combatLevel(region,'warden') + 1;
   const expansion = EXPANSION_REGIONS[region - venueLevels.trial.length];
   const offset = TRAIL_HABITATS[site]?.levelOffset ?? trailOffsets[site] ?? 0;
-  return expansion?.levels[site] ?? venueLevels[site]?.[region] ?? Math.min(MAX_LEVEL, REGIONS[region].minLevel + offset);
+  const rank = expansion?.levels[site] ?? venueLevels[site]?.[region] ?? Math.min(MAX_LEVEL, REGIONS[region].minLevel + offset);
+  return site === 'refuge' ? Math.max(rank,combatLevel(region,'warden')) : rank;
 }
 function countWins(world,site) { return world.patrols[keyFor(world.region,site)] || 0; }
 const newResident = (r,site) => SPECIES.find(s => s.region === r && s.habitatId === site);
@@ -172,16 +180,19 @@ export function encounterAt(world,site,{youngling=false} = {}) {
   if (site !== world.node || !unlockedSites(world).includes(site)) return null;
   const type = siteType(site), region = world.region;
   if (!['tribe','guardian','habitat','arena','warden','vault','hollow','wonder'].includes(type)) return null;
+  const firstClear = !has(world.cleared,region,site);
   if (type === 'wonder') {
     const resident = newResident(region,site);
     if (!wonderProgress(world,region)?.ready || !resident) return null;
-    return {region,kind:'wonder',node:site,name:siteName(region,site),level:combatLevel(region,site),
+    return {region,kind:'wonder',node:site,name:siteName(region,site),level:combatLevel(region,site),firstClear,
       habitatId:site,leadSpeciesId:resident.id,youngling:youngling === true};
   }
   const legendary = type === 'hollow' || type === 'vault';
   if (legendary && !legendaryPresent(world,site)) return null;
   const kind = legendary ? 'legendary' : type === 'warden' ? 'warden' : type === 'arena' ? 'arena' : 'tribe';
-  return {region,kind,node:site,name:siteName(region,site),level:combatLevel(region,site),
+  const deepPatrol = region >= 5 && (type === 'guardian' || ['rookery','refuge'].includes(site));
+  const patrolSize = kind !== 'tribe' ? undefined : region === 0 ? 2 : deepPatrol ? 4 : 3;
+  return {region,kind,node:site,name:siteName(region,site),level:combatLevel(region,site),firstClear,patrolSize,
     arenaId:type === 'arena' ? 'trial' : type === 'warden' ? 'warden' : undefined,
     habitatId:legendary || type === 'habitat' ? site : undefined,
     leadSpeciesId:kind === 'tribe' || legendary ? leadSpecies(world,site) : undefined};
@@ -195,12 +206,12 @@ function trailPoint(region, a, b, t) {
   return { x:p.x+(q.x-p.x)*t - (q.y-p.y)*bend, y:p.y+(q.y-p.y)*t + (q.x-p.x)*bend };
 }
 
-export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, onEncounter, onCamp, onMarket, onRegion, sprite, getFind, onGather } = {}) {
+export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, onEncounter, onCamp, onMarket, onRegion, sprite, getFind, onGather, partyLevel = 0 } = {}) {
   ensureWorld(world);
   let dead = false, walking = false, frame = 0, atlasOpen = false, notice = '';
   let target = hasSite(world.region,inspectSite) ? inspectSite : world.node;
   let page = districtOf(target), primaryAction = null;
-  let camera = { x: 0, y: 0 }, cameraKey, fitMap = false, pointer = null, suppressClick = false, rangerPoint;
+  let camera = { x: 0, y: 0 }, cameraKey, fitMap = true, pointer = null, suppressClick = false, rangerPoint;
   const districtCameras = new Map();
   const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const panel = element('section','ca-world');
@@ -214,12 +225,12 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
   const atlas = element('div','cw-atlas'); atlas.hidden = true;
   const districtNav = element('nav','cw-district-nav'); districtNav.setAttribute('aria-label','District maps');
   const mapControls = element('div','cw-map-controls');
-  const mapHint = element('span','cw-map-hint','Drag to explore');
+  const mapHint = element('span','cw-map-hint','District overview');
   const findRanger = button('cw-map-action','Find ranger', () => {
     if (walking) revealCamera(rangerPoint, true);
     else viewHere();
   });
-  const zoomButton = button('cw-map-action','Fit map', () => {
+  const zoomButton = button('cw-map-action','Zoom in', () => {
     fitMap = !fitMap;
     stage.classList.toggle('cw-fit-map', fitMap);
     zoomButton.textContent = fitMap ? 'Zoom in' : 'Fit map';
@@ -229,7 +240,7 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
     paintRails();
   });
   mapControls.append(mapHint,zoomButton,findRanger);
-  const stage = element('div','cw-stage');
+  const stage = element('div','cw-stage cw-fit-map');
   stage.setAttribute('role','group');
   stage.tabIndex = 0;
   stage.setAttribute('aria-label','Trail map. Drag or press Shift and an arrow key to pan. Select a landmark or use the arrow keys to walk.');
@@ -250,6 +261,10 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
   const status = element('div','cw-status'); status.setAttribute('role','status');
   panel.append(heading,atlas,districtNav,mapControls,stage,detail,status); root.replaceChildren(panel);
   const landmark = site => siteName(world.region,site);
+  const threat = level => {
+    if (!partyLevel || level - partyLevel < 4) return '';
+    return level - partyLevel >= 9 ? 'Severe danger' : 'High danger';
+  };
   const did = site => has(world.cleared,world.region,site);
   const open = site => !requirements(world,world.region,site).length;
   const typeNames = {camp:'Trail camp',town:'Market town',tribe:'Tribal ground',guardian:'Route guardian',sign:'Trail sign',pass:'District crossing',habitat:'Wild habitat',arena:'Qualifier arena',warden:'Warden arena',hollow:'Legendary habitat',vault:'Legendary sanctuary',wonder:'Hyper Rare lair'};
@@ -399,6 +414,10 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
     const r=world.region,site=target,type=siteType(site);
     if(!open(site)) {inspectClosed(site);return;}
     name.textContent=landmark(site);kicker.textContent=typeNames[type];
+    if (['tribe','guardian','habitat','arena','warden','vault','hollow'].includes(type)) {
+      const level = combatLevel(r,site), danger = threat(level);
+      kicker.textContent += ' · Lv. '+level+(danger ? ' · '+danger : '');
+    }
     if(type==='wonder') {
       const trail=wonderProgress(world), resident=newResident(r,site);
       wonderScene.hidden=false;
@@ -442,7 +461,6 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
     } else if(type==='tribe' || type==='guardian' || type==='habitat') {
       const lid=leadSpecies(world,site), leader=getForm({speciesId:lid,level:combatLevel(r,site)}).name, resident=newResident(r,site);
       const unlock={grove:districtName(r,1),ridge:landmark('trial'),outpost:landmark('habitat'),den:landmark('sentinel'),sentinel:landmark('vault')};
-      kicker.textContent+= ' · Lv. '+combatLevel(r,site);
       if(TRAIL_HABITATS[site]) desc.textContent=leader+' leads a patrol in this habitat. Return here to find another if it slips away.';
       else if(type==='habitat') desc.textContent=resident
         ? (lid===resident.id?'A rare '+resident.name+' is here. Encounter its group to try a capture.':'Tracks of '+resident.name+' lead through this habitat. Win local patrols to find it. '+leader+' is here now.')
@@ -486,16 +504,13 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
       },true);
     } else if(type==='arena'||type==='warden') {
       const trial=type==='arena';
-      const nextRegion=REGIONS[r+1];
-      kicker.textContent+=' · Lv. '+combatLevel(r,site);
       if(trial) desc.textContent='Win the qualifier in this regional stadium. Its pennant opens '+districtName(r,2)+' and '+landmark('rookery')+'.';
-      else desc.textContent=did(site)?'Your crest opens the elite den'+(nextRegion?' and the next region.':'.'):'Defeat the warden in the stadium to open '+landmark('den')+(nextRegion?' and '+nextRegion.name+'.':'.');
-      if(did(site) && !trial && nextRegion) {addAction('Next region',() => travel(r+1));addAction('Rematch warden',challenge,true);}
-      else addAction(trial?(did(site)?'Rematch qualifier':'Enter qualifier'):(did(site)?'Rematch warden':'Challenge warden'),challenge);
+      else desc.textContent=did(site)?'Your crest opens '+landmark('den')+'.':'Defeat the warden to earn the regional crest and open '+landmark('den')+'.';
+      addAction(trial?(did(site)?'Rematch qualifier':'Enter qualifier'):(did(site)?'Rematch warden':'Challenge warden'),challenge);
+      if(did(site) && !trial && REGIONS[r+1]) addAction('Next region',() => travel(r+1),true);
       if(did(site)) addAction(trial?'Take the high pass':'Find elite den',() => go(trial?'farpost':'den'),true);
     } else {
       const found=legendaryPresent(world,site);
-      kicker.textContent+=' · Lv. '+combatLevel(r,site);
       if(found) {
         const resident=getForm({speciesId:leadSpecies(world,site),level:combatLevel(r,site)});
         desc.textContent=resident.name+' waits in the sanctuary. Weaken it to improve your capture chance.';
@@ -510,14 +525,15 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
   function updateAtlas() {
     atlas.replaceChildren();
     REGIONS.forEach((item,i) => {
-      const allowed=i<=world.unlocked;
-      const row=button('cw-region','',() => travel(i));row.disabled=!allowed;
+      const level = combatLevel(i,'grove'), danger = threat(level);
+      const row=button('cw-region','',() => travel(i));
       row.setAttribute('aria-current',i===world.region?'location':'false');
       const thumb=element('span','cw-region-thumb'), source=item.artRegion;
       thumb.style.backgroundPosition=(source%2*100)+'% '+(Math.floor(source/2)*100/3)+'%';
       if(item.artFilter!=='none') thumb.style.setProperty('--region-filter',item.artFilter);
       const info=element('span','cw-region-info');
-      info.append(element('b','',item.name),element('small','',allowed?(i===world.region?'Exploring':'Level '+combatLevel(i,'grove')+'+'):'Earn the '+REGIONS[i-1].name+' crest'));
+      const status = [i===world.region ? 'Here' : '', 'Lv. '+level+'+', danger].filter(Boolean).join(' · ');
+      info.append(element('b','',item.name),element('small',danger ? 'cw-region-danger' : '',status));
       row.append(thumb,info);atlas.append(row);
     });
   }
@@ -529,7 +545,8 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
   }
   function render(focus) {
     const r=world.region, area=REGIONS[r];
-    eyebrow.textContent='Region '+String(r+1).padStart(2,'0')+' / '+REGIONS.length+' · Lv. '+combatLevel(r,'grove')+'+';
+    const level = combatLevel(r,'grove'), danger = threat(level);
+    eyebrow.textContent='Region '+String(r+1).padStart(2,'0')+' / '+REGIONS.length+' · Lv. '+level+'+'+(danger ? ' · '+danger : '');
     title.textContent=area.name;
     art.style.backgroundImage='url("'+new URL('./assets/frontier-map-'+area.artRegion+'.webp',import.meta.url).href+'")';
     art.style.backgroundPosition='center '+page*50+'%';
@@ -544,10 +561,10 @@ export function mountWorld(root, { world = freshWorld(), inspectSite, onChange, 
     if(atlasOpen) updateAtlas();
   }
   function travel(r) {
-    if(dead || walking || regionIndex(r)!==r || r>world.unlocked) return;
+    if(dead || walking) return;
     toggleAtlas(false);
-    if(r===world.region) {viewHere();return;}
-    world.region=r;world.node='camp';page=0;target='camp';notice='Arrived at '+REGIONS[r].name+'.';
+    if(!travelToRegion(world,r)) {viewHere();return;}
+    page=0;target=world.node;notice='Arrived at '+REGIONS[r].name+'.';
     onRegion?.(r);onChange?.(world);if(!dead) render();
   }
   function go(site) {

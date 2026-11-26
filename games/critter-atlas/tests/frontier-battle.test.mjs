@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { BUFFS, REGIONS, SPECIES, makeMember } from '../catalog.js';
+import { BUFFS, REGIONS, SPECIES, MAX_LEVEL, getStats, makeMember } from '../catalog.js';
 import { ITEMS, battleSupplies, spendSupply } from '../economy.js';
+import { encounterAt, freshWorld, travelToRegion } from '../world.js';
 import { ARENA_COURSES } from '../arena-courses.js';
-import { attemptCapture, createBattle, encounterOpponents, hexDistance, previewAction, reachable, takeBattleEvents, useBattleSupply } from '../battle.js';
+import { attemptCapture, createBattle, encounterOpponents, encounterXP, hexDistance, previewAction, reachable, takeBattleEvents, useBattleSupply } from '../battle.js';
 
 const active = battle => battle.units[battle.order[battle.cursor]];
 
@@ -48,6 +49,29 @@ test('all regional trials and wardens have distinct, connected courts and local 
     }
   }
   assert.equal(floors.size,2 * REGIONS.length);
+});
+
+test('travel skips preserve the destination ranks and battle XP favors fresh, suitable challenges', () => {
+  const world = freshWorld();
+  assert.ok(travelToRegion(world, REGIONS.length - 1));
+  world.node = 'grove';
+  const far = encounterAt(world,'grove');
+  const opponents = encounterOpponents(far, () => .5);
+  const battle = createBattle(far, [makeMember(0,3), makeMember(1,3)], opponents);
+  assert.equal(opponents.length,3);
+  assert.ok(opponents.every(member => member.level >= 50));
+  assert.equal(battle.units[0].stats.maxHp,getStats(battle.units[0].member).maxHp);
+  assert.ok(battle.units[2].stats.maxHp > getStats(opponents[0]).maxHp);
+
+  assert.ok(travelToRegion(world,0));
+  world.node = 'grove';
+  const first = encounterAt(world,'grove');
+  const normal = encounterXP(first,2,3);
+  world.cleared.push('0/grove');
+  const replay = encounterAt(world,'grove');
+  assert.ok(encounterXP(replay,2,3) < normal);
+  assert.ok(encounterXP(replay,2,15) < normal / 5);
+  assert.equal(encounterXP(first,2,MAX_LEVEL),0);
 });
 
 test('off-court encounters retain sanctuary and habitat leaders', () => {

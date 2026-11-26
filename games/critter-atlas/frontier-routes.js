@@ -172,7 +172,7 @@ export function requirements(world, region, site) {
   return missing;
 }
 export function unlockedSites(world, region = world.region) {
-  if (region > world.unlocked) return [];
+  if (!hasSite(region,'camp')) return [];
   return sitesFor(region).filter(site => !requirements(world,region,site).length);
 }
 export function routeHint(region, site) {

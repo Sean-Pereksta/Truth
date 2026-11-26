@@ -47,7 +47,7 @@ dialog.addEventListener('click', event => { if (event.target === dialog) {
 }});
 document.querySelector('#help-button').addEventListener('click', () => showDialog('How to play', `
   <ol class="help-list">
-    <li><b>Explore.</b> Drag the map to look around, or use Shift + arrow keys while the map is focused. Fit map shows the whole district and Find ranger returns to your location. Tap a landmark to walk there or see what opens a locked trail.</li>
+    <li><b>Explore.</b> The trail map starts with the whole district in view. Zoom in to pan by dragging or using Shift + arrow keys. Find ranger returns to your location. The Regions menu lets you travel to any camp and shows the local starting level.</li>
     <li><b>Gather and trade.</b> Look for finds at trail signs. Use tactical supplies in battle, feed training food from your Bag, and sell regional trade goods where they fetch the best price. Visit markets to buy and sell Critters.</li>
     <li><b>Battle.</b> Pick a lit hex to move, then choose an ability. Check targets for predicted damage or healing. A matching weakness raises damage, while resistance reduces it. The Field guide lists every affinity matchup.</li>
     <li><b>Support allies.</b> Use wards, boosts, and cleansing to help companions. Auras work automatically within the listed range and move with their source. Bring the right Critters together and check the Field guide for aura unlock levels.</li>
@@ -55,7 +55,7 @@ document.querySelector('#help-button').addEventListener('click', () => showDialo
     <li><b>Read the terrain.</b> Cover reduces ranged damage. A hazard triggers when a Critter ends its turn there. The battle’s effects key explains the symbols.</li>
     <li><b>Capture.</b> Move within three hexes, choose Capture, then select a wild Critter. Lower its health or apply a status to improve the displayed odds. A capture attempt uses the turn.</li>
     <li><b>Build your party.</b> Take up to four companions. Captures fill spare slots and then go to your reserve. Switch companions in Party between battles. Everyone recovers their health after a fight.</li>
-    <li><b>Open new paths.</b> Beat the trail tribes, win the local arena trial, then take on the warden to enter the next region. Optional guardians open rare habitats. Each new family’s Field guide entry names its habitat and the victory that opens it.</li>
+    <li><b>Open new paths.</b> Beat trail tribes and the arena trial to reach the local warden. Wardens and optional guardians open rare habitats. First victories earn more XP, and low-level opponents award less as your party grows.</li>
     <li><b>Track a Hyper Rare.</b> In five regions, a vault victory uncovers a clue. Alternate between the named patrols to find tracks, then follow them to the lair. The Field guide records the trail and all four forms.</li>
   </ol><p class="field-note">Your trail and completed encounters autosave on this browser. Open Save game to download a portable backup or load one. The Field guide records all ${SPECIES.length} families and their evolutions.</p>`));
 
@@ -206,9 +206,11 @@ function companionAura(member) {
 }
 function showMap(inspectSite) {
   const main = shell('map');
-  main.innerHTML = `<div id="map-panel"></div><section class="explore-party"><div class="subhead"><h2>Traveling party</h2><button class="link-action" data-view="party">Manage party →</button></div><div class="companion-strip">${getParty(state).map(companionTile).join('')}</div></section>`;
+  const party = getParty(state);
+  main.innerHTML = `<div id="map-panel"></div><section class="explore-party"><div class="subhead"><h2>Traveling party</h2><button class="link-action" data-view="party">Manage party →</button></div><div class="companion-strip">${party.map(companionTile).join('')}</div></section>`;
   cleanup = mountWorld(main.querySelector('#map-panel'), {
     world: state.world, sprite, inspectSite, onChange: persist, onCamp: () => showParty(), onEncounter: beginBattle, onMarket: showMarket,
+    partyLevel: party.reduce((total, member) => total + member.level, 0) / party.length,
     getFind: (region, site) => trailFind(state, region, site),
     onGather: (region, site) => gatherTrailFind(state, region, site),
     onRegion(id) { game.querySelector('.trail-progress').textContent = `Region ${id + 1} / ${REGIONS.length}`; }
@@ -226,7 +228,6 @@ function showBag() {
 }
 function beginBattle(encounter) {
   const party = getParty(state);
-  const participants = party.map(m => m.uid);
   persist();
   resetView('battle');
   notices = [];
@@ -235,7 +236,6 @@ function beginBattle(encounter) {
     spendSupply: id => spendSupply(state, id),
     onResolved(outcome) {
     const won = outcome.result === 'won';
-    const prior = state.world.unlocked;
     const firstClear = won && !state.world.cleared.includes(encounter.region+'/'+encounter.node);
     const oldSites = firstClear ? new Set(unlockedSites(state.world, encounter.region)) : null;
     const oldTrail = wonderProgress(state.world,encounter.region);
@@ -254,15 +254,14 @@ function beginBattle(encounter) {
     const trail = wonderProgress(state.world,encounter.region);
     if (trail?.open && !oldTrail?.open) notices.push(trail.clue);
     if (trail?.ready && !oldTrail?.ready) notices.push(`Fresh tracks lead to ${trail.name}. The Hyper Rare is there now.`);
-    if (outcome.xp > 0) {
-      notices.push(`Traveling party earned ${outcome.xp} XP each.`, ...awardXP(state, outcome.xp, participants));
+    for (const {uid, xp} of outcome.experience) {
+      notices.push(...awardXP(state, xp, [uid]));
     }
     for (const member of outcome.captured) {
       const stored = addCapture(state, member);
       notices.push(`${getForm(stored).name} joined your ${state.party.includes(stored.uid) ? 'party' : 'reserve'}.`);
     }
-    if (state.world.unlocked > prior) notices.push(`The trail to ${REGIONS[state.world.unlocked].name} is open. Choose it in the region menu.`);
-    if (won && encounter.kind === 'warden' && encounter.region === REGIONS.length - 1) notices.push(`You earned the final crest. All ${REGIONS.length} regions are open.`);
+    if (firstClear && encounter.kind === 'warden') notices.push(`You earned the ${REGIONS[encounter.region].name} crest.`);
     if (outcome.result === 'lost') notices.push('Your party regrouped at full health. You can revisit earlier tribes to train.');
     persist();
     return {coins};

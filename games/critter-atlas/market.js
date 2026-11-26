@@ -1,6 +1,6 @@
 import { MAX_LEVEL, REGIONS, SPECIES, getForm } from './catalog.js';
 import {
-  ITEMS, MARKETS, buyItem, buyCritter, itemOffer, sellItem, critterStock,
+  ITEMS, MARKETS, buyItem, buyCritter, canRecruitIn, itemOffer, sellItem, critterStock,
   critterOffer, sellCritter, feedCritter
 } from './economy.js';
 import { fightIcon } from './fight-icons.js';
@@ -55,13 +55,14 @@ export function mountMarket(root, {state, region, sprite, onChange, onExit}) {
     }).join('');
   }
   function recruitCards() {
+    const canRecruit = canRecruitIn(state, region);
     return critterStock(region).map(offer => {
       const species = SPECIES[offer.speciesId], form = getForm(offer);
       return `<article class="mk-card"><div class="mk-card-head">${portrait(sprite,offer)}
         <div><small>${species.rarity} · Lv. ${offer.level}</small><h3>${form.name}</h3>
         <span class="mk-role">${roleNames[species.role]}${form.stage ? ' · ' + species.name + ' family' : ''}</span></div></div>
         <p>${species.lore}</p><div class="mk-card-foot">
-        ${priceButton('buy-critter',species.id,offer.price,state.economy.coins,'Recruit')}</div></article>`;
+        ${canRecruit ? priceButton('buy-critter',species.id,offer.price,state.economy.coins,'Recruit') : '<small>Win the local trail battle to recruit here.</small>'}</div></article>`;
     }).join('');
   }
   function sellCard(member) {

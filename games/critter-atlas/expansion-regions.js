@@ -1,7 +1,7 @@
 // Region IDs follow the original eight, so existing atlas and journal keys stay valid.
 export const EXPANSION_REGIONS = [
   {
-    catalog: ['Amberwind Steppe', 'steppe', 36, 'Goldenrun Herds', 'Kitewheel Course', 'Bristlegrass', '#d6ac61', 0, 'sepia(.58) saturate(1.25) hue-rotate(-16deg)'],
+    catalog: ['Amberwind Steppe', 'steppe', 47, 'Goldenrun Herds', 'Kitewheel Course', 'Bristlegrass', '#d6ac61', 0, 'sepia(.58) saturate(1.25) hue-rotate(-16deg)'],
     land: {
       districts: ['Kitewheel Downs', 'The Gallopways', 'Thunder Crown'],
       names: ['Tassel Camp', 'Kitewheel Exchange', 'Goldenrun Pasture', 'Storm Pennants', 'Grainspan Watch', 'The Windbreak',
@@ -12,7 +12,7 @@ export const EXPANSION_REGIONS = [
     },
     points: [[15,70],[29,48],[48,65],[48,22],[75,72],[84,34], [13,62],[31,48],[27,77],[50,17],[61,58],[85,32],[72,80], [13,60],[48,53],[37,19],[75,70],[85,29],[54,81]],
     shortcuts: [['camp','outpost'], ['ford','grove'], ['entry','habitat'], ['habitat','trial'], ['farpost','den']],
-    levels: {trial:39, warden:43, den:46, sentinel:48, vault:50},
+    levels: {trial:50, warden:52, den:53, sentinel:54, vault:55},
     battle: {cover:'Hay ridge', hazard:'Bristlegrass', effect:'slow', pattern:['..c....', '.h..#..', '..#..c.', '..ch...', '...h.c.']},
     courses: {
       trial: {
@@ -27,7 +27,7 @@ export const EXPANSION_REGIONS = [
       }
     }
   }, {
-    catalog: ['Mirror Saltflats', 'saltflats', 42, 'Glasspan Wanderers', 'Mirage Forum', 'Salt glare', '#dfcbaf', 6, 'saturate(.46) brightness(1.19) hue-rotate(9deg)'],
+    catalog: ['Mirror Saltflats', 'saltflats', 51, 'Glasspan Wanderers', 'Mirage Forum', 'Salt glare', '#dfcbaf', 6, 'saturate(.46) brightness(1.19) hue-rotate(9deg)'],
     land: {
       districts: ['Whitepan Market', 'Shiverglass Flats', 'The Drowned Mirror'],
       names: ['Saltwick Camp', 'Whitepan Caravanserai', 'Mirage Tracks', 'Tide Posts', 'Brineshell Causeway', 'Saltgate',
@@ -38,7 +38,7 @@ export const EXPANSION_REGIONS = [
     },
     points: [[14,67],[28,29],[44,55],[65,19],[74,73],[86,45], [12,58],[38,34],[27,78],[52,20],[63,56],[89,35],[76,81], [12,58],[54,50],[43,20],[76,70],[84,30],[47,80]],
     shortcuts: [['town','outpost'], ['ford','pass'], ['ridge','lookout'], ['rookery','highpass'], ['hollow','vault']],
-    levels: {trial:45, warden:49, den:52, sentinel:54, vault:56},
+    levels: {trial:53, warden:55, den:56, sentinel:57, vault:58},
     battle: {cover:'Salt columns', hazard:'Salt glare', effect:'exposed', pattern:['....#..', '.c.h...', '..h..c.', '...#.h.', '..c....']},
     courses: {
       trial: {
@@ -53,7 +53,7 @@ export const EXPANSION_REGIONS = [
       }
     }
   }, {
-    catalog: ['Northlight Expanse', 'tundra', 48, 'Polar Beacon Clans', 'Aurora Bastion', 'Cold vent', '#90d7e3', 4, 'hue-rotate(23deg) saturate(1.18) brightness(.89)'],
+    catalog: ['Northlight Expanse', 'tundra', 54, 'Polar Beacon Clans', 'Aurora Bastion', 'Cold vent', '#90d7e3', 4, 'hue-rotate(23deg) saturate(1.18) brightness(.89)'],
     land: {
       districts: ['Beacon Sound', 'The Aurora Steps', 'Stillnight Crown'],
       names: ['Northlight Camp', 'Beacon Sound Storehouse', 'Floe Tracks', 'Polaris Cairn', 'Driftglass Bridge', 'The Blue March',
@@ -64,7 +64,7 @@ export const EXPANSION_REGIONS = [
     },
     points: [[14,74],[26,32],[46,57],[58,20],[78,72],[87,39], [12,61],[30,38],[27,78],[57,16],[65,57],[87,37],[72,83], [13,58],[48,49],[39,17],[76,69],[88,30],[49,80]],
     shortcuts: [['camp','outpost'], ['town','grove'], ['lookout','trial'], ['habitat','highpass'], ['warden','sentinel'], ['den','vault']],
-    levels: {trial:51, warden:55, den:57, sentinel:59, vault:60},
+    levels: {trial:56, warden:57, den:58, sentinel:59, vault:60},
     battle: {cover:'Blue ice ridge', hazard:'Cold vent', effect:'hurt', pattern:['..h..c.', '.c..#..', '...h...', '..#..c.', '.h..#..']},
     courses: {
       trial: {

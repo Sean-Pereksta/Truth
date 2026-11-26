@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { MAX_LEVEL, REGIONS, SPECIES, makeMember, rollEncounter } from '../catalog.js';
-import { freshWorld, ensureWorld, completeEncounter, encounterAt, wonderProgress, restoreWonderTrails } from '../world.js';
+import { freshWorld, ensureWorld, completeEncounter, encounterAt, wonderProgress, restoreWonderTrails, travelToRegion } from '../world.js';
 import { DISTRICTS, SITE_IDS, linksFor, routeTo, unlockedSites, siteName, districtName, districtOf, routeHint, sitesFor, WONDERS } from '../frontier-routes.js';
 import { addCapture, newJournal, parseJournal } from '../journal.js';
 
@@ -216,7 +216,7 @@ test('returning expeditions on newly gated routes start at their closest open di
   assert.equal(ensureWorld(oldSave('ridge',['0/grove'])).node,'ridge');
 });
 
-test('the Starfall crest opens expansion travel for older journals and new journeys persist', () => {
+test('legacy crests persist and expeditions can save in any region before earning a crest there', () => {
   const journal = newJournal();
   Object.assign(journal.world,{region:7,unlocked:7,node:'warden'});
   journal.world.cleared = ['7/warden'];
@@ -225,17 +225,22 @@ test('the Starfall crest opens expansion travel for older journals and new journ
   assert.equal(restored.world.node,'warden');
   assert.equal(restored.world.unlocked,8);
   assert.equal(restored.unlocked,8);
-  assert.equal(unlockedSites(restored.world,9).length,0);
+  assert.ok(unlockedSites(restored.world,9).includes('grove'));
+  assert.ok(!unlockedSites(restored.world,9).includes('warden'));
 
-  Object.assign(restored.world,{region:8,node:'camp'});
-  for (const site of ['grove','ridge','trial','warden']) win(restored.world,site);
-  Object.assign(restored.world,{region:9,node:'camp'});
+  assert.equal(travelToRegion(restored.world,REGIONS.length),false);
+  assert.equal(travelToRegion(restored.world,9),true);
+  assert.equal(restored.world.node,'camp');
+  assert.equal(restored.world.unlocked,8);
   walk(restored.world,'town');
   const recruit = addCapture(restored,makeMember(92,49));
   const reloaded = parseJournal(JSON.stringify(restored));
   assert.deepEqual(reloaded.world,restored.world);
   assert.equal(reloaded.region,9);
+  assert.equal(reloaded.world.unlocked,8);
   assert.deepEqual(reloaded.roster.find(member => member.uid === recruit.uid),recruit);
+  assert.equal(travelToRegion(reloaded.world,7),true);
+  assert.ok(unlockedSites(reloaded.world).includes('warden'));
 });
 
 test('fixed venue levels rise through each region and culminate at the level cap', () => {
@@ -244,7 +249,8 @@ test('fixed venue levels rise through each region and culminate at the level cap
   for (const {id} of REGIONS) {
     const world = {...freshWorld(), region:id, unlocked:id};
     const grove = win(world, 'grove');
-    if (id === 0) assert.equal(grove.level, 1);
+    assert.equal(grove.level, REGIONS[id].minLevel);
+    if (id) assert.ok(grove.level > REGIONS[id-1].minLevel);
     win(world, 'ridge');
     const ranks = venues.map(site => win(world, site).level);
     for (let i = 0; i < ranks.length; i++) {
@@ -253,9 +259,9 @@ test('fixed venue levels rise through each region and culminate at the level cap
       assert.ok(ranks[i] <= MAX_LEVEL);
     }
     assert.equal(win(world, 'warden').level, ranks[1], 'rematches retain the same rank');
-    if (id === 0) assert.deepEqual(ranks, [4, 5, 6, 7, 8]);
-    if (id === 7) assert.deepEqual(ranks, [35, 38, 41, 43, 45]);
-    if (id === REGIONS.length - 1) assert.deepEqual(ranks, [51, 55, 57, 59, MAX_LEVEL]);
+    if (id === 0) assert.deepEqual(ranks, [7, 9, 10, 11, 12]);
+    if (id === 7) assert.deepEqual(ranks, [46, 48, 49, 50, 51]);
+    if (id === REGIONS.length - 1) assert.deepEqual(ranks, [56, 57, 58, 59, MAX_LEVEL]);
     previous = ranks;
   }
 });

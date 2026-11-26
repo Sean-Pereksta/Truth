@@ -132,8 +132,10 @@ function movementPath(battle, actor, destination) {
   return path;
 }
 
-function buildUnit(member, team, slot, id) {
+function buildUnit(member, team, slot, id, pressure = 0) {
   const stats = getStats(member);
+  stats.maxHp = Math.round(stats.maxHp * (1 + pressure));
+  stats.attack = Math.round(stats.attack * (1 + pressure * .6));
   const lane = [2, 1, 3, 0, 4][slot % ROWS];
   const edge = Math.floor(slot / ROWS);
   return {
@@ -153,6 +155,7 @@ export function encounterOpponents(encounter, rng = Math.random) {
   }
   const pack = rollEncounter(encounter.region, {
     level: encounter.level, leadSpeciesId: encounter.leadSpeciesId, habitatId: encounter.habitatId,
+    patrolSize: encounter.patrolSize,
     legendary: encounter.kind === "legendary", rng
   });
   if (encounter.youngling && huntLair(encounter, SPECIES[pack[0].speciesId])) {
@@ -172,7 +175,13 @@ export function createBattle(encounter, party, opponents, rng = Math.random) {
   const ground = formation ? formation.terrain.join("") :
     biome.pattern.map(row => mirror ? [...row].reverse().join("") : row).join("");
   const tiles = [...ground].map(t => GROUND[t] || "plain");
-  const units = [...party.map((m,i) => buildUnit(m,"you",i,i)), ...opponents.map((m,i) => buildUnit(m,"wild",i,party.length+i))];
+  const elite = ["warden", "legendary", "wonder"].includes(encounter.kind);
+  const pressure = region * .015 + (elite ? .10 : 0);
+  const units = [
+    ...party.map((member, slot) => buildUnit(member, "you", slot, slot)),
+    ...opponents.map((member, slot) => buildUnit(member, "wild", slot, party.length + slot,
+      lair && encounter.youngling && slot === 0 ? 0 : pressure))
+  ];
   units.forEach((unit, index) => {
     if (formation) {
       const mark = index < party.length ? "ABCD"[index] : String(index - party.length + 1);
@@ -622,6 +631,25 @@ function auraPositionValue(battle, actor, destination, opponents) {
   }, 0);
 }
 
+function enemyPositionRisk(battle, actor, key, opponents, reach) {
+  const caution = reach > 1 ? 1 : .45;
+  const wounded = actor.hp < actor.stats.maxHp * .4 ? 1.5 : 1;
+  let total = 0, primary = 0;
+  for (const opponent of opponents) {
+    if (opponent.status.stun) continue;
+    const distance = hexDistance(key, opponent.key);
+    const enemyReach = attackReach(opponent);
+    if (distance > enemyReach + movementAllowance(battle, opponent)) continue;
+    const exposed = distance <= enemyReach ? 1 : .25;
+    const cover = distance > 1 && battle.tiles[key] === "cover" ? .65 : 1;
+    const threat = Math.min(5, opponent.stats.attack * .12) * exposed * cover;
+    total += threat;
+    primary = Math.max(primary, threat);
+  }
+  // Keep pressure on the closest fight while avoiding crossfire from its allies.
+  return (total - primary) * caution * wounded;
+}
+
 export function planEnemyTurn(battle) {
   const actor = activeUnit(battle), options = reachable(battle, actor);
   const opponents = battle.units.filter(u => u.team !== actor.team && living(u));
@@ -632,7 +660,8 @@ export function planEnemyTurn(battle) {
     const tile = battle.tiles[key];
     const ground = (tile === "cover" ? 1.6 : tile === "hazard" ? -6 : 0);
     // Ranged species seek firing distance. A tiny movement cost keeps equivalent choices stable.
-    const position = ground - Math.abs(distance-reach)*1.7 - steps*.06 + auraPositionValue(battle, actor, key, opponents);
+    const position = ground - Math.abs(distance-reach)*1.7 - steps*.06 +
+      auraPositionValue(battle, actor, key, opponents) - enemyPositionRisk(battle, actor, key, opponents, reach);
     const consider = (score, i, target) => { if (score > best.score) best = { score, key, i, target }; };
     consider(position, null, null);
     actor.abilities.forEach((skill,i) => {
@@ -648,9 +677,13 @@ export function planEnemyTurn(battle) {
           if (value > 0) consider(position + value, i, target);
         } else {
           const dmg = damageFor(battle,actor,target,skill,key);
-          const finisher = target.hp <= dmg ? 14 : 0;
-          const status = !finisher && skill.status && !target.status[skill.status] ? (skill.status === "stun" ? 7 : 3) : 0;
-          consider(position + Math.min(dmg,target.hp) + finisher + status, i, target);
+          const finisher = target.hp <= dmg ? Math.max(14, target.stats.attack * .45) : 0;
+          const role = SPECIES[target.member.speciesId].role;
+          const priority = role === "healer" ? 3 : role === "ranged" ? 1.5 : 0;
+          const focus = (1 - target.hp / target.stats.maxHp) * 8;
+          const status = !finisher && skill.status && !target.status[skill.status] ?
+            (skill.status === "stun" ? Math.max(7, target.stats.attack * .3) : 3) : 0;
+          consider(position + Math.min(dmg,target.hp) + finisher + priority + focus + status, i, target);
         }
       });
     });
@@ -658,11 +691,24 @@ export function planEnemyTurn(battle) {
   return best;
 }
 
+export function encounterXP(encounter, opponentCount, memberLevel) {
+  if (memberLevel >= MAX_LEVEL) return 0;
+  const level = encounter.level ?? REGIONS[encounter.region].minLevel;
+  const gap = level - memberLevel;
+  const penalty = Math.max(0, -gap - 2) * .14;
+  const catchup = Math.min(.35, Math.max(0, gap - 2) * .07);
+  const challenge = Math.max(.12, 1 - penalty + catchup);
+  const clear = encounter.firstClear === false ? .55 : 1;
+  const base = 12 + 3 * level + Math.max(0, level - 9) + 3 * opponentCount;
+  return Math.max(1, Math.round(base * challenge * clear));
+}
+
 function outcome(battle) {
   const wild = battle.units.filter(u => u.team === "wild");
-  const xp = battle.result === "won" ? Math.round(10 + wild.reduce((total,u) => total+4+2*u.member.level,0)) : 0;
-  return { result: battle.result, encounter: battle.encounter, xp,
-    party: battle.units.filter(u => u.team === "you").map(u => ({...u.member,hp:u.hp})),
+  const party = battle.units.filter(u => u.team === "you").map(u => ({...u.member,hp:u.hp}));
+  const experience = battle.result === "won" ?
+    party.map(member => ({uid: member.uid, xp: encounterXP(battle.encounter, wild.length, member.level)})) : [];
+  return { result: battle.result, encounter: battle.encounter, experience, party,
     captured: wild.filter(u => u.caught).map(u => ({...u.member})) };
 }
 
@@ -941,13 +987,16 @@ export function mountBattle(root, { encounter, party, sprite, onFinish, onResolv
     if (!interactive) hint = retreat ? "Confirm or cancel retreat." : "The wild tribe is taking its turn.";
     if (note) hint = note;
     const end = resolution;
+    const awarded = end?.experience.map(reward => reward.xp).filter(Boolean) ?? [];
+    const minXP = Math.min(...awarded), maxXP = Math.max(...awarded);
+    const xpLabel = minXP === maxXP ? String(maxXP) : minXP + "–" + maxXP;
     const resultName = {won:"Victory", lost:"Party exhausted", fled:"Retreated"};
     const outcomeGlyph = {won:"victory", lost:"defeat", fled:"retreat"};
     const outcomeBody = end ? '<section class="cb-outcome" aria-live="polite"><div><span class="cb-outcome-seal">'+icon(outcomeGlyph[end.result])+'</span><h3>'+resultName[end.result]+'</h3>'+
-      (end.xp ? '<p>'+icon("xp")+'+'+end.xp+' XP for each party member.</p>' : '')+
+      (awarded.length ? '<p>'+icon("xp")+'+'+xpLabel+' XP per eligible party member.</p>' : '')+
       (end.coins ? '<p class="cb-coin-reward">+'+end.coins+' coins</p>' : '')+
       (end.captured.length ? '<p>'+icon("caught")+'Captured '+end.captured.map(m => escape(getForm(m).name)+(SPECIES[m.speciesId].hyperRare ? ' (Hyper Rare)' : '')).join(", ")+'.</p>' : '')+
-      (!end.xp && !end.captured.length ? '<p>Your party regroups on the trail.</p>' : '')+
+      (end.result !== "won" && !end.captured.length ? '<p>Your party regroups on the trail.</p>' : '')+
       '<button type="button" data-act="return">Return to trail</button></div></section>' : "";
     const orders = turnOrder.map((u,index) => {
       const title = (index === 0 ? "Acting now" : "Upcoming") + " · " + nameOf(u) + (u.team === "you" ? " · Ally" : " · Wild") + (u === quarry ? " · Hyper Rare" : "");

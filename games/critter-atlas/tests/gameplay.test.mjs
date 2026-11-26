@@ -65,7 +65,7 @@ test('captured reserves do not displace companions or receive XP until selected'
   assert.deepEqual(getParty(state).map(m => m.uid),swapped);
 });
 
-test('only warden victories unlock the next region, and rematches preserve progress', () => {
+test('only warden victories advance crest progression, and rematches preserve progress', () => {
   const world = freshWorld();
   for (const region of REGIONS) {
     const encounter = {region:region.id,node:'warden',kind:'warden'};

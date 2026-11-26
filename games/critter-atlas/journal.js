@@ -38,7 +38,7 @@ function restoreWorld(data, region, unlocked) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) data = {};
   fresh.wonders = restoreWonderTrails(data.wonders);
   fresh.unlocked = validRegion(data.unlocked) ? data.unlocked : (validRegion(unlocked) ? unlocked : 0);
-  fresh.region = Math.min(fresh.unlocked, validRegion(data.region) ? data.region : (validRegion(region) ? region : 0));
+  fresh.region = validRegion(data.region) ? data.region : (validRegion(region) ? region : 0);
   if (hasSite(fresh.region, data.node)) fresh.node = data.node;
   fresh.visits = nonnegative(data.visits);
   const isSite = value => {
