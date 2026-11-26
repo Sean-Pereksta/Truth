@@ -310,14 +310,14 @@ canvas.addEventListener('pointerdown', event => {
   canvas.focus({ preventScroll: true });
   stopMovement();
   const rect = canvas.getBoundingClientRect();
-  const hit = renderer.bubbleAt((event.clientX - rect.left) / rect.width * canvas.width,
+  const { bubble, cell } = renderer.hitTest((event.clientX - rect.left) / rect.width * canvas.width,
     (event.clientY - rect.top) / rect.height * canvas.height);
-  if (hit && (!hit.plantId || !currentGardener()?.carryId)) {
-    send({ type: 'target', ...hit });
+  if (bubble && (!bubble.plantId || !currentGardener()?.carryId)) {
+    send({ type: 'target', ...bubble });
     return;
   }
-  const x = Math.max(0, Math.min(level.width - 1, Math.floor((event.clientX - rect.left) / rect.width * level.width)));
-  const y = Math.max(0, Math.min(level.height - 1, Math.floor((event.clientY - rect.top) / rect.height * level.height)));
+  if (!cell) return;
+  const { x, y } = cell;
   const plant = state.plants.find(item => !item.holderId && !item.stationId && !item.beltId && Math.round(item.x) === x && Math.round(item.y) === y);
   const station = state.stations.find(item => item.x === x && item.y === y);
   const carried = currentGardener()?.carryId;
