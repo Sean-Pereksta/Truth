@@ -8,6 +8,7 @@ const ACTIVE_BOOTH_TYPES = new Set(['sun', 'moon', 'prism']);
 const ROOT_WARNING_MS = 4000;
 const DIRECTIONS = [[1, 0], [0, 1], [-1, 0], [0, -1]];
 const DOCK_REACH = 0.52;
+const FLOOR_TILES = new Set(['.', '~', '+', '1', '2', '3', '4']);
 
 function distance(a, b) {
     return Math.hypot(a.x - b.x, a.y - b.y);
@@ -242,14 +243,14 @@ function looseAt(state, point, ignoredId) {
 }
 
 function availableFloor(state, level, point, ignoredId) {
-    return cellIsOpen(level, point.x, point.y, state.solo) && !looseAt(state, point, ignoredId) &&
-        !state.stations.some(station => station.x === point.x && station.y === point.y);
+    return cellIsOpen(level, point.x, point.y, state.solo) && !looseAt(state, point, ignoredId);
 }
 
 function freeDropPoint(state, level, origin, ignoredId, forced = false) {
     if (availableFloor(state, level, origin, ignoredId)) return origin;
     const queue = [origin];
     const visited = new Set([`${origin.x},${origin.y}`]);
+    let fallback = cellIsOpen(level, origin.x, origin.y, state.solo) ? origin : null;
     for (let i = 0; i < queue.length; i++) {
         const point = queue[i];
         for (const [dx, dy] of DIRECTIONS) {
@@ -257,11 +258,14 @@ function freeDropPoint(state, level, origin, ignoredId, forced = false) {
             const key = `${next.x},${next.y}`;
             if (visited.has(key) || !cellIsOpen(level, next.x, next.y, state.solo)) continue;
             if (availableFloor(state, level, next, ignoredId)) return next;
+            fallback ??= next;
             visited.add(key);
             if (forced) queue.push(next);
         }
     }
-    return forced ? origin : null;
+    if (!forced) return null;
+    return fallback ?? level.spawns.filter(point => cellIsOpen(level, point.x, point.y, state.solo))
+        .sort((a, b) => distance(origin, a) - distance(origin, b))[0];
 }
 
 function loadConveyor(state, player, belt, plant) {
@@ -415,28 +419,32 @@ function finishAction(state, level, player) {
 
 function cellIsOpen(level, x, y, solo) {
     const tile = level.layout[y]?.[x];
-    return tile !== undefined && tile !== '#' && (solo || tile !== '=');
+    return FLOOR_TILES.has(tile) || solo && tile === '=';
 }
 
-function routeTo(level, state, player, destination, usePlatforms = false) {
+function neighborCells(point) {
+    return DIRECTIONS.map(([dx, dy]) => ({ x: point.x + dx, y: point.y + dy }));
+}
+
+function routeTo(level, state, player, destinations, usePlatforms = false) {
     const start = { x: Math.round(player.x), y: Math.round(player.y) };
-    const end = { x: Math.round(destination.x), y: Math.round(destination.y) };
-    if (start.x === end.x && start.y === end.y) return [end];
+    if (!destinations.length || !cellIsOpen(level, start.x, start.y, state.solo)) return null;
     const key = ({ x, y }) => y * level.width + x;
     const startKey = key(start);
-    const endKey = key(end);
+    const ends = new Set(destinations.map(key));
+    if (ends.has(startKey)) return [start];
     const queue = [start];
     const cameFrom = new Map([[startKey, null]]);
     for (let index = 0; index < queue.length; index += 1) {
         const current = queue[index];
-        if (key(current) === endKey) {
+        if (ends.has(key(current))) {
             const route = [];
             for (let point = current; point && key(point) !== startKey; point = cameFrom.get(key(point))) {
                 route.push(point);
             }
             return route.reverse();
         }
-        const neighbors = DIRECTIONS.map(([dx, dy]) => ({ x: current.x + dx, y: current.y + dy }));
+        const neighbors = neighborCells(current);
         if (usePlatforms) {
             for (const platform of level.platforms) {
                 const dock = platform.stops.findIndex(point => key(point) === key(current));
@@ -470,10 +478,22 @@ function targetPoint(state, target) {
     return target;
 }
 
-function targetIsReached(player, location, target) {
+function stationFaceReached(level, state, player, station) {
+    const x = Math.round(player.x);
+    const y = Math.round(player.y);
+    return Math.abs(x - station.x) + Math.abs(y - station.y) === 1 &&
+        cellIsOpen(level, x, y, state.solo) && distance(player, station) <= INTERACT_REACH;
+}
+
+function targetIsReached(level, state, player, location, target) {
     if (location.platformId && location.platformId !== player.platformId) return false;
-    const reach = target.stationId || target.plantId ? TAP_REACH : 0.075;
-    return distance(player, location) <= reach;
+    if (target.stationId) return stationFaceReached(level, state, player, location);
+    return distance(player, location) <= (target.plantId ? TAP_REACH : 0.075);
+}
+
+function targetDestinations(level, state, point, target) {
+    const cells = target.stationId ? neighborCells(point) : [{ x: Math.round(point.x), y: Math.round(point.y) }];
+    return cells.filter(cell => cellIsOpen(level, cell.x, cell.y, state.solo));
 }
 
 function triggerTarget(state, player, target, location) {
@@ -490,20 +510,21 @@ function triggerTarget(state, player, target, location) {
 function beginTarget(state, player, target) {
     const point = targetPoint(state, target);
     if (!point) return false;
+    const level = getLevel(state.levelId);
     player.moveX = 0;
     player.moveY = 0;
     const platform = platformById(state, player.platformId);
     if (platform?.mode === 'moving') {
-        if (target.plantId && targetIsReached(player, point, target)) return triggerTarget(state, player, target, point);
+        if (target.plantId && targetIsReached(level, state, player, point, target)) return triggerTarget(state, player, target, point);
         clearTarget(player);
         player.pending = { type: 'target', ...target };
         player.rideTo = platform.nextStopIndex;
         return true;
     }
-    if (targetIsReached(player, point, target)) return triggerTarget(state, player, target, point);
-    const level = getLevel(state.levelId);
-    const route = routeTo(level, state, player, point) ??
-        (level.platforms?.length ? routeTo(level, state, player, point, true) : null);
+    if (targetIsReached(level, state, player, point, target)) return triggerTarget(state, player, target, point);
+    const goals = targetDestinations(level, state, point, target);
+    const route = routeTo(level, state, player, goals) ??
+        (level.platforms?.length ? routeTo(level, state, player, goals, true) : null);
     if (!route) {
         notice(state, player, 'Path is blocked');
         return false;
@@ -519,12 +540,15 @@ export function canReachTarget(state, playerId, target, { walkOnly = false } = {
     const player = state.players.find(gardener => gardener.id === playerId);
     const point = targetPoint(state, target);
     if (!player || !point) return false;
-    if (targetIsReached(player, point, target)) return true;
     const level = getLevel(state.levelId);
     const platform = platformById(state, player.platformId);
-    const start = platform?.mode === 'moving'
+    const travelling = platform?.mode === 'moving';
+    if ((!travelling || target.plantId && point.platformId === player.platformId) &&
+        targetIsReached(level, state, player, point, target)) return true;
+    const start = travelling
         ? level.platforms.find(item => item.id === platform.id).stops[platform.nextStopIndex] : player;
-    return Boolean(routeTo(level, state, start, point, !walkOnly && Boolean(level.platforms?.length)));
+    return Boolean(routeTo(level, state, start, targetDestinations(level, state, point, target),
+        !walkOnly && Boolean(level.platforms?.length)));
 }
 
 function nearbyInteraction(state, player) {
@@ -538,7 +562,8 @@ function nearbyInteraction(state, player) {
         return true;
     }
     if (travelling) return false;
-    const nearby = state.stations.filter(station => distance(player, station) <= INTERACT_REACH)
+    const level = getLevel(state.levelId);
+    const nearby = state.stations.filter(station => stationFaceReached(level, state, player, station))
         .sort((a, b) => distance(player, a) - distance(player, b));
     const belt = player.carryId && state.conveyors.find(item => distance(item.path[0], player) <= DOCK_REACH);
     if (belt) return loadConveyor(state, player, belt, plantById(state, player.carryId));
@@ -580,10 +605,10 @@ export function applyCommand(state, playerId, command) {
     if (player.action) return false;
     if (command.type === 'interact') {
         if (platformById(state, player.platformId)?.mode === 'moving') {
-            return nearbyInteraction(state, player);
+            return !command.stationId && nearbyInteraction(state, player);
         }
         const station = stationById(state, command.stationId);
-        if (command.stationId && (!station || distance(player, station) > INTERACT_REACH)) return false;
+        if (command.stationId && (!station || !stationFaceReached(getLevel(state.levelId), state, player, station))) return false;
         clearTarget(player);
         return station ? triggerStation(state, player, station) : nearbyInteraction(state, player);
     }
@@ -627,7 +652,7 @@ function movePlayer(state, level, player, deltaMs) {
             notice(state, player, 'Already taken');
             return;
         }
-        if (targetIsReached(player, location, player.target)) {
+        if (targetIsReached(level, state, player, location, player.target)) {
             triggerTarget(state, player, player.target, location);
             return;
         }
