@@ -5,6 +5,11 @@ const crestTroopHeights={giant:58,trebuchet:55,lance_champion:56,hornhill_halber
 const bannerPoint=(x,y)=>({x:(x-y)*BANNER_HW,y:(x+y)*BANNER_HH});
 const bannerDirections=[[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]];
 const bannerClamp=(value,low,high)=>Math.max(low,Math.min(high,value));
+const formationCues=new Map([
+  ['pike',[-5,2,-5,-2,0,2,0,-3,5,2,5,-2]],
+  ['shield',[-7,-2,-7,1,-7,1,7,1,7,1,7,-2]],
+  ['wedge',[-6,2,0,-2,0,-2,6,2]]
+]);
 
 export function collectFormationBanners(units,teams,options={}){
   const zoom=options.zoom??1;if(zoom<.42)return [];
@@ -79,20 +84,25 @@ export class FormationBannerLayer{
     }
     const groups=[];
     for(const cached of this.groups){
-      let count=0,x=0,y=0,height=0,selected=false;
+      let count=0,x=0,y=0,height=0,selected=false,preset;
       if(teams[cached.team]?.alive===false)continue;
       for(const member of cached.members){
         if(!(member.hp>0)||options.visible&&!options.visible(member))continue;
         const p=bannerPoint(member.x,member.y);if(bounds&&(p.x<bounds.left||p.x>bounds.right||p.y<bounds.top||p.y>bounds.bottom))continue;
-        count++;x+=member.x;y+=member.y;height=Math.max(height,options.troopHeight?.(member)??crestTroopHeights[member.type]??35);selected||=!!options.selected?.has(member.id);
+        count++;x+=member.x;y+=member.y;height=Math.max(height,options.troopHeight?.(member)??crestTroopHeights[member.type]??35);
+        if(options.selected?.has(member.id)){
+          selected=true;
+          const next=member.order?.formationPreset??member.order?.formation??null;
+          preset=preset===undefined?next:preset===next?preset:null;
+        }
       }
       if(count<(options.minimum??6))continue;x/=count;y/=count;
       if(options.visible&&!options.visible({x,y,team:cached.team}))continue;
-      groups.push({...cached,count,x,y,height,selected});
+      groups.push({...cached,count,x,y,height,selected,preset});
     }
     const size=options.crestSize??17,scale=1/zoom;
-    // Crests stay small and a fixed screen size, fading at strategic zoom.
-    const opacity=bannerClamp((zoom-.42)/.2,0,1)*.92;
+    // Crests stay a fixed screen size and remain readable at wide battle zoom.
+    const opacity=.32+bannerClamp((zoom-.42)/.2,0,1)*.6;
     for(const group of groups){
       active.add(group.key);let anchor=this.anchors.get(group.key);
       if(!anchor){anchor={x:group.x,y:group.y,time};this.anchors.set(group.key,anchor);}
@@ -110,6 +120,16 @@ export class FormationBannerLayer{
         context.beginPath();context.ellipse(0,0,size*.62,size*.66,0,0,BANNER_TAU);context.stroke();
       }
       options.drawCrest(context,team,0,0,size);
+      const cue=group.selected&&formationCues.get(group.preset);
+      if(cue){
+        context.beginPath();
+        for(let i=0;i<cue.length;i+=4){
+          context.moveTo(cue[i],cue[i+1]+size*.85);
+          context.lineTo(cue[i+2],cue[i+3]+size*.85);
+        }
+        context.strokeStyle='#172521';context.lineWidth=3;context.stroke();
+        context.strokeStyle='#f0d49a';context.lineWidth=1.25;context.stroke();
+      }
       context.restore();
     }
     for(const key of this.anchors.keys())if(!active.has(key))this.anchors.delete(key);

@@ -18,11 +18,13 @@ export class PresentationBuffer{
  push(snapshot,receivedAt=clock()){
   const last=this.samples.at(-1);if(last&&snapshot.sequence<=last.sequence)return;
   if(last){const interval=Math.max(snapshot.time-last.time,(receivedAt-last.receivedAt)/1000);this.interval=this.interval*.8+Math.min(1,interval)*.2;this.delay=Math.max(this.baseDelay,Math.min(.75,this.interval*1.25));}
-  const entities={};
+  const entities={},unitPhases=new Map();
   for(const key of presentationKeys){
    const group=entities[key]=new Map();
+   const units=key==='units';
    for(const item of items(snapshot[key])){
     const pose={};for(const field of finiteFields)if(Number.isFinite(item[field]))pose[field]=item[field];
+    if(units&&Number.isFinite(item.phase))unitPhases.set(item.id,item.phase);
     if(key==='projectiles'){
      const {height,angle}=projectileDrawPose(item);
      pose.flightHeight=height;pose.flightAngle=angle;
@@ -31,13 +33,15 @@ export class PresentationBuffer{
    }
   }
   this.frame=null;
-  this.samples.push({time:snapshot.time,sequence:snapshot.sequence,receivedAt,entities});
+  this.samples.push({time:snapshot.time,sequence:snapshot.sequence,receivedAt,entities,unitPhases});
   while(this.samples.length>20||this.samples.length>2&&this.samples[1].time<snapshot.time-1)this.samples.shift();
  }
  prepareFrame(game,before,after){
   // Several display frames share the same pair of network ticks. Match the
   // entities once, and only touch fields which differ from the live snapshot.
-  const changes=[];
+  // Keep hot interpolation data packed. A large battle can change tens of
+  // thousands of fields, so reuse arrays across display frames for the tick pair.
+  const changedEntities=[],fields=[],ranges=[];
   for(const key of presentationKeys){
    const first=before.entities[key],second=after.entities[key];
    for(const entity of items(game[key])){
@@ -48,11 +52,15 @@ export class PresentationBuffer{
      if(!Number.isFinite(end)||(start===end&&start===entity[field]))continue;
      const difference=end-start;
      const delta=field==='angle'||field==='flightAngle'?Math.atan2(Math.sin(difference),Math.cos(difference)):difference;
-     changes.push({entity,field,start,delta,original:entity[field]});
+     changedEntities.push(entity);
+     fields.push(field);
+     ranges.push(start,delta);
     }
    }
   }
-  return {game,before,after,changes,active:false};
+  // Sample gait only for drawn units, outside the per-field interpolation loop.
+  const stride={previous:before.unitPhases,next:after.unitPhases,mix:1};
+  return {game,before,after,changedEntities,fields,ranges,originals:new Array(fields.length),stride,active:false};
  }
  draw(game,now,callback){
   const last=this.samples.at(-1);if(!last)return callback();
@@ -63,17 +71,21 @@ export class PresentationBuffer{
   let frame=this.frame;
   if(frame?.active)frame=this.prepareFrame(game,before,after);
   else if(frame?.game!==game||frame.before!==before||frame.after!==after)frame=this.frame=this.prepareFrame(game,before,after);
-  const oldTime=game.time;
+  const oldTime=game.time,oldStride=game.unitStrideBlend;
+  frame.stride.mix=mix;
+  game.unitStrideBlend=frame.stride;
   frame.active=true;
-  for(const change of frame.changes){
-   const {entity,field,start,delta}=change;
-   change.original=entity[field];
-   entity[field]=start+delta*mix;
+  const {changedEntities,fields,ranges,originals}=frame;
+  for(let i=0;i<fields.length;i++){
+   const entity=changedEntities[i],field=fields[i];
+   originals[i]=entity[field];
+   entity[field]=ranges[i*2]+ranges[i*2+1]*mix;
   }
   game.time=Math.max(before.time,Math.min(last.time,target));
   try{return callback();}finally{
    game.time=oldTime;
-   for(const change of frame.changes)change.entity[change.field]=change.original;
+   game.unitStrideBlend=oldStride;
+   for(let i=0;i<fields.length;i++)changedEntities[i][fields[i]]=originals[i];
    frame.active=false;
   }
  }

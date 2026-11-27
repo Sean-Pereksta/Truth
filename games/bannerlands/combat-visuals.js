@@ -59,7 +59,8 @@ export function combatPose(u,g,definition={},moving=false){
   if(reacting){
     const dir=iso(hit.dx,hit.dy),len=Math.hypot(dir.x,dir.y)||1,kick=Math.sin(Math.PI*hitAge/.18)*(hit.blocked?1:2.2);
     pose??={attack:false,dx:0,dy:0,tilt:0,contact:0};
-    pose.dx+=dir.x/len*kick;pose.dy+=dir.y/len*kick;pose.tilt+=(hit.blocked?.012:.035)*Math.sin(Math.PI*hitAge/.18);pose.blocked=hit.blocked;
+    pose.hitX=dir.x/len*kick;pose.hitY=dir.y/len*kick;
+    pose.dx+=pose.hitX;pose.dy+=pose.hitY;pose.tilt+=(hit.blocked?.012:.035)*Math.sin(Math.PI*hitAge/.18);pose.blocked=hit.blocked;
   }
   return pose;
 }
@@ -132,8 +133,9 @@ export function drawSiegeEarthImpact(c,f,p,tile,lowDetail,ground){
       impactEllipse(c,0,0,11,5,palette.rim);
     }else{
       c.beginPath();
+      const spread=(heavy?1.25:1)*(1+.24*(1-smooth(0,.38,age)));
       for(let i=0;i<12;i++){
-        const angle=i*tau/12,radius=8+earthNoise(seed,i)*5;
+        const angle=i*tau/12,radius=(8+earthNoise(seed,i)*5)*spread;
         const x=Math.cos(angle)*radius,y=Math.sin(angle)*radius*.44;
         if(i===0)c.moveTo(x,y);else c.lineTo(x,y);
       }
@@ -141,7 +143,7 @@ export function drawSiegeEarthImpact(c,f,p,tile,lowDetail,ground){
       c.fillStyle=palette.rim;
       c.fill();
     }
-    impactEllipse(c,0,-.6,7.5,2.8,palette.pit);
+    impactEllipse(c,0,-.6,heavy?9:7.5,heavy?3.4:2.8,palette.pit);
   }else if(lowDetail){
     c.globalAlpha=.49*(1-age);
     impactEllipse(c,0,-2-age*7,5+age*14,3+age*5,palette.dust);

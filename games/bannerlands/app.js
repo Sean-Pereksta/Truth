@@ -1,4 +1,5 @@
 import {Game,HOUSES,UNIT_DEFS,BUILD_DEFS,HOUSE_CONTENT} from './core.js';
+import {unitPresentationMix} from './local-presentation.js';
 import {Renderer,worldToScreen,screenToWorld} from './render.js';
 import {BattleAudio} from './battle-audio.js';
 import {LAND_MAPS,isPassableTile,tileTravelCost} from './lands.js';
@@ -588,13 +589,19 @@ function standardAt(p){
   if(distance<=1&&distance<best){target=standard;best=distance;}
  }return target;
 }
+function unitScreenFoot(unit){
+ const mix=unitPresentationMix(unit,ui.localPoseMix);
+ const x=mix===1?unit.x:unit.previousRenderX+(unit.x-unit.previousRenderX)*mix;
+ const y=mix===1?unit.y:unit.previousRenderY+(unit.y-unit.previousRenderY)*mix;
+ return worldToScreen(x,y,view);
+}
 function unitAt(point,enemy=false,dragonOnly=false,reach=22,center=9){
  const player=game.playerTeam??0;
  let closest=null,best=reach,dragon=null;
  for(const u of game.units){
   if(u.hp<=0||dragonOnly&&u.type!=='dragon')continue;
   if(enemy?!game.hostile(player,u.team)||!game.teams[u.team]?.alive||!game.isVisibleTo(player,u):u.team!==player)continue;
-  const foot=worldToScreen(u.x,u.y,view);
+  const foot=unitScreenFoot(u);
   if(u.type==='dragon'&&renderer.dragonContainsScreenPoint(u,game,foot,point,view.zoom)){
    if(!dragon||u.x+u.y>dragon.x+dragon.y)dragon=u;
   }else{
@@ -616,7 +623,7 @@ function finishPointer(e,cancel=false){
  if(ui.rallyMode&&!z.moved){setSelectedRally(w.x,w.y);return;}
  if(ui.buildMode&&!z.moved){const r=game.build(ui.buildMode,Math.floor(w.x)+.5,Math.floor(w.y)+.5);toast(r.message,!r.ok);if(r.ok){tone(200);if(!e.shiftKey&&!$('repeatBuild').checked)cancelBuild();}updateHud();return;}
  if(!z.moved&&ui.selected.size){const target=standardAt(p);if(target){issueTarget(target);updateHud();return;}}
- if(z.moved){troopFilter.reset();cancelBuild();clearBuildingSelection();if(!z.shift)ui.selected.clear();const x0=Math.min(z.x0,p.x),x1=Math.max(z.x0,p.x),y0=Math.min(z.y0,p.y),y1=Math.max(z.y0,p.y);for(const u of game.units){if(u.team!==(game.playerTeam??0)||u.hp<=0)continue;const s=worldToScreen(u.x,u.y,view);if(s.x>=x0&&s.x<=x1&&s.y>=y0&&s.y<=y1)ui.selected.add(u.id);}allSelected=false;tone(420);updateHud();return;}
+ if(z.moved){troopFilter.reset();cancelBuild();clearBuildingSelection();if(!z.shift)ui.selected.clear();const x0=Math.min(z.x0,p.x),x1=Math.max(z.x0,p.x),y0=Math.min(z.y0,p.y),y1=Math.max(z.y0,p.y);for(const u of game.units){if(u.team!==(game.playerTeam??0)||u.hp<=0)continue;const s=unitScreenFoot(u);if(s.x>=x0&&s.x<=x1&&s.y>=y0&&s.y<=y1)ui.selected.add(u.id);}allSelected=false;tone(420);updateHud();return;}
  const closest=unitAt(p),building=buildingAt(p);if(building&&!(closest?.type==='dragon'&&closest.x+closest.y>=building.x+building.y)){troopFilter.reset();ui.selected.clear();allSelected=false;allBuildingsSelected=false;if(!z.shift)ui.selectedBuildings.clear();if(z.shift&&ui.selectedBuildings.has(building.id))ui.selectedBuildings.delete(building.id);else ui.selectedBuildings.add(building.id);tone(430);updateHud();return;}
  if(closest){troopFilter.reset();clearBuildingSelection();if(!z.shift)ui.selected.clear();if(z.shift&&ui.selected.has(closest.id))ui.selected.delete(closest.id);else ui.selected.add(closest.id);if(z.touch){const previous=ui.lastTouchTap,now=performance.now();if(previous&&previous.type===closest.type&&now-previous.time<450&&Math.hypot(p.x-previous.x,p.y-previous.y)<35){ui.selected=new Set(game.units.filter(u=>u.team===(game.playerTeam??0)&&u.hp>0&&u.type===closest.type).map(u=>u.id));ui.lastTouchTap=null;}else ui.lastTouchTap={type:closest.type,time:now,x:p.x,y:p.y};}allSelected=false;tone(430);updateHud();}
  else if(ui.selected.size){const enemy=z.touch&&(unitAt(p,true)||buildingAt(p,true));if(enemy)issueTarget(enemy);else issue(w.x,w.y,z.touch?'move':orderMode);}
@@ -865,9 +872,30 @@ function drawBattlePresentation(){
 function frame(now){
  const dt=Math.min(.1,(now-lastNow)/1000);lastNow=now;frameMs=frameMs*.95+Math.max(.001,dt*1000)*.05;fps=1000/frameMs;
  ui.lowDetail=ui.quality==='auto'&&fps<46;
+ const advancingLocally=started&&!menuOpen&&!game.remote&&!game.paused&&game.winner===null;
+ ui.localPoseMix=null;
+ if(!advancingLocally){
+  accumulator=0;
+  if(game.captureUnitPresentation)game.captureUnitPresentation=false;
+ }
  if(!menuOpen&&started){const pan=600*dt/view.zoom,mouse=mousePan(),keyX=(keys.has('arrowright')?1:0)-(keys.has('arrowleft')?1:0),keyY=(keys.has('arrowdown')?1:0)-(keys.has('arrowup')?1:0);view.x+=(keyX||mouse.x)*pan;view.y+=(keyY||mouse.y)*pan;boundCamera();
   if(edgeMouse&&(mouse.x||mouse.y||keyX||keyY)){const r=canvas.getBoundingClientRect();ui.hover=screenToWorld(edgeMouse.clientX-r.left,edgeMouse.clientY-r.top,view);}
-  if(!game.remote&&!game.paused&&game.winner===null){accumulator+=dt*speed;let ticks=0;const deadline=performance.now()+8;while(accumulator>=1/30&&ticks<6){game.update(1/30);accumulator-=1/30;ticks++;if(performance.now()>=deadline)break;}if(ticks>=6||accumulator>1/15)accumulator=Math.min(accumulator,1/30);}else accumulator=0;
+  if(advancingLocally){
+   accumulator+=dt*speed;
+   const step=1/30,deadline=performance.now()+8;
+   let ticks=0;
+   if(accumulator>=step&&!game.captureUnitPresentation)game.captureUnitPresentation=true;
+   while(accumulator>=step&&ticks<6){
+    game.update(step);
+    accumulator-=step;
+    ticks++;
+    if(performance.now()>=deadline)break;
+   }
+   if(ticks>=6||accumulator>step*2)accumulator=Math.min(accumulator,step);
+   if(game.captureUnitPresentation&&!game.paused&&game.winner===null){
+    ui.localPoseMix=Math.min(1,accumulator/step);
+   }
+  }
   if(!game.remote&&!game.paused&&game.winner!==null)game.updateAftermath?.(dt*speed);
   if(sound&&soundscape&&game.time!==lastBattle&&now-lastSfx>=100){soundscape.update(game,view,now);lastBattle=game.time;lastSfx=now;}
   const events=game.events.filter(e=>e.id>lastEvent);if(events.length){lastEvent=events[events.length-1].id;const important=events.find(e=>e.team===(game.playerTeam??0)&&/lost|fallen|eliminated/.test(e.text))||events.find(e=>/eliminated/.test(e.text));const reward=events.find(e=>game.allied((game.playerTeam??0),e.team)&&/Royal Guard/.test(e.text));if(important){
