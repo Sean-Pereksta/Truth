@@ -56,6 +56,10 @@
       heat:[24,25,26,28,29].includes(id),charged:[11,12,15].includes(id),
       pointTargeted:[15,18,19,20,21,22,23,29,33,35,37,39,40,41,42].includes(id)};
   });
+  const creatureGear = window.CinderCreatureGear;
+  for (const weapon of creatureGear.weapons) {
+    guns.push({...weapon,id:guns.length,familyIndex:families.indexOf(weapon.family),magazine:weapon.mag,heat:!!weapon.heat});
+  }
   const skillRows = [
     ['Repulsor Sweep','Push a cone of enemies and clear eight ordinary shots.',12,'#91efff','Wideband','Rebound'],
     ['Bastion Screen','Project a directional bullet barrier for 2.5 seconds.',20,'#a3e9ff','Stored Charge','Mobile Wall'],
@@ -92,10 +96,17 @@
   };
   function eligibleAffixes(id) {
     const d=guns[id];
+    if(d.creatureId){
+      const prefix=d.heat?['Heavy-Bore','Cold-Jacket']:['Heavy-Bore','Shortstroke','Drumfed','Quickdraw'];
+      if(d.creatureId==='unicorn-sniper')prefix.push('Threaded','Longglass','Compact');
+      if(d.family==='Ordnance')prefix.push('Soft-Fused');
+      return {prefix,suffix:['of the Hunter','of Cinders']};
+    }
     return {prefix:Object.keys(prefixRules).filter(k=>prefixRules[k](d)),suffix:Object.keys(suffixRules).filter(k=>suffixRules[k](d))};
   }
   function compatibleChips(id) {
     const d=guns[id];
+    if(d.creatureId)return d.heat?['Condensate Coil']:d.family==='Ordnance'?['Split Fuse','Primer Cap']:d.family==='Fabricator'?['Relay Antenna','Primer Cap']:['Primer Cap'];
     return chips.filter(c=>c==='Condensate Coil'?d.heat:c==='Split Fuse'?d.family==='Ordnance':c==='Relay Antenna'?d.family==='Fabricator':c==='Primer Cap'||c==='Field Spool'?!d.heat:true);
   }
   const pick=(a,r)=>a[Math.min(a.length-1,Math.floor(r()*a.length))];
@@ -395,7 +406,8 @@
   function damageFor(g,w) {
     const d=guns[w.id],fam=g.player.stats?.familyDamage?.[d.family]||0;
     const precision=d.family==='Precision'?1+stat(g,'precisionBoost'):1;
-    return d.damage*weaponPower(w)*(1+stat(g,'damage')+fam)*precision*(w.prefix==='Heavy-Bore'?1.16:w.prefix==='Threaded'?.9:w.prefix==='Splitcore'?.90:1);
+    const creatureBoost=1+(g.player.stats?.creatureDamage?.[d.creatureClass]||0);
+    return d.damage*creatureBoost*weaponPower(w)*(1+stat(g,'damage')+fam)*precision*(w.prefix==='Heavy-Bore'?1.16:w.prefix==='Threaded'?.9:w.prefix==='Splitcore'?.90:1);
   }
   function rateFor(g,w) {
     const d=guns[w.id];
@@ -431,6 +443,37 @@
     if(guns[next.id].family==='Assault'&&handling(g,guns[next.id])===3){next.stable=.45;next.focusTime=.8;}
     g.sound('swap');return true;
   }
+  function creatureCombat(g) {
+    const c=state(g);
+    if(c.creatures)return c.creatures;
+    const rayLength=(x,y,dx,dy,range,blocked)=>{
+      if(blocked(x,y,0))return 0;
+      let distance=0;
+      while(distance<range){
+        const next=Math.min(distance+6,range);
+        if(blocked(x+dx*next,y+dy*next,0))break;
+        distance=next;
+      }
+      return distance;
+    };
+    const shotRay=(x,y,dx,dy,range)=>rayLength(x,y,dx,dy,range,g.shotBlocked||g.blocked);
+    return c.creatures=new CinderCreatureCombat({
+      enemies:()=>g.enemies,
+      isAlive:e=>live(e)&&!(e.boss&&e.arrive>0),
+      clearLine(a,b){
+        if(g.map?.lab)return clearLab(g,a,b);
+        const dx=b.x-a.x,dy=b.y-a.y,range=Math.hypot(dx,dy);
+        return !range||shotRay(a.x,a.y,dx/range,dy/range,range)>=range;
+      },
+      damageEnemy(e,amount,attack){
+        const {w,push,x,y}=attack;
+        const a=Math.atan2(e.y-y,e.x-x);
+        statusHit(g,e,{id:w.id,w,damage:amount,a,push,color:attack.color,first:attack.first,last:attack.last,firstMark:attack.firstMark});
+      },
+      limitRay:shotRay,
+      movementRay:(x,y,dx,dy,range)=>rayLength(x,y,dx,dy,range,g.blocked)
+    });
+  }
   function fire(g,w,charge=0) {
     const p=g.player,d=guns[w.id],c=state(g),m=weaponMemory(w),id=w.id;
     if(w.reload>0||w.cd>0||m.burst)return;
@@ -456,6 +499,14 @@
     const noise=x=>(g.rng()-.5)*2*x*spreadMod;
     const pt=d.pointTargeted?targetPoint(g,range):null;
     g.sound('fire',d.familyIndex*6+id%6);
+    if(d.creatureId){
+      const origin=d.creatureId==='catana'?p:f;
+      const deployLife=1+stat(g,'deployLife')+.1*hand+(w.chip==='Relay Antenna'?.20:0);
+      creatureCombat(g).fire({id:d.creatureId,owner:p,w,x:origin.x,y:origin.y,angle:a,damage,push,
+        range,speed,penetration:pierce,deploy:pt,deployLife,first,last,color:d.color,firstMark:base.firstMark,blastScale:blastRadius(g,w,1)*(w.chip==='Split Fuse'?1.15:1)});
+      if(d.heat&&w.heat>=1)reload(g,false);
+      return;
+    }
     const pellet=(count,spread,extra={})=>{
       count+=(w.prefix==='Splitcore'?1:0)+(d.family==='Scatter'&&hand===3?1:0);
       for(let i=0;i<count;i++)spawn((i-(count-1)/2)*spread/Math.max(1,count-1)*spreadMod+noise(.019),{...extra,speed:speed*(.92+g.rng()*.13),shape:extra.shape||'pellet',r:extra.r||2});
@@ -1031,6 +1082,7 @@
     if(w.id===23&&input.fireReleased)detonateStitch(g,w);
     if(!d.heat&&w.ammo<=0&&w.reload<=0&&!weaponMemory(w).burst)reload(g,false);
     moveShots(g,dt);
+    c.creatures?.update(dt);
     const entities=c.entities.slice();for(const v of entities)if(v.life>0)updateEntity(g,v,dt);c.entities=c.entities.filter(v=>v.life>0);
     for(const l of c.lines)l.life-=dt;c.lines=c.lines.filter(l=>l.life>0);
     for(let i=c.impacts.length-1;i>=0;i--)if((c.impacts[i].life-=dt)<=0)c.impacts.splice(i,1);
@@ -1205,6 +1257,7 @@
     for(const v of c.entities)drawEntity(ctx,g,v);
     if(w.flash>0&&!p.downed)window.BlastArt?.muzzle(ctx,p,w,guns[w.id],g.settings?.flashes!==false);
     for(const s of c.shots)drawShot(ctx,s,g.time);
+    c.creatures?.draw(ctx);
     for(const impact of c.impacts)drawImpact(ctx,impact,g.settings?.flashes!==false);
     for(const l of c.lines){const t=l.life/l.max;ctx.save();ctx.globalAlpha*=Math.min(1,t*2);
       let pts=[[l.x,l.y],[l.tx,l.ty]];

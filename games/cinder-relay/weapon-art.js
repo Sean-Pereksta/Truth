@@ -15,6 +15,28 @@
     [12,0],[15,0],[15,0],[12,0],[10,-1],[13,0],
     [19,-1],[14,-1],[15,0],[11,-8],[12,-1],[14,0],[13,0]];
 
+  const creatureMuzzle={catLauncher:30,unicornSniper:36,unicornStream:28,rainbowLaser:30,rainbowExploder:33};
+
+  function drawCreatureGun(ctx,def,x,y,scale,angle,item){
+    const art=window.CinderCreatureArt;
+    if(!art)return;
+    const key=art.artId(def.creatureId), size=scale*.64;
+    const firing=item?.flash>0, mx=creatureMuzzle[key];
+    const recoil=firing&&mx?1.5*scale:0;
+    ctx.save();ctx.imageSmoothingEnabled=false;
+    ctx.translate(Math.round(x)-Math.cos(angle)*recoil,Math.round(y)-Math.sin(angle)*recoil);
+    art.drawGear(ctx,key,0,0,size,angle);
+    ctx.rotate(angle);ctx.scale(size,Math.cos(angle)<0?-size:size);
+    if(item?.prefix){ctx.fillStyle='#93ddbc';ctx.fillRect(-10,2,3,2);}
+    if(item?.suffix){ctx.fillStyle='#d1aedb';ctx.fillRect(-6,2,2,2);}
+    if(firing&&mx){
+      ctx.fillStyle=def.color;ctx.fillRect(mx,-2,6,4);
+      ctx.fillStyle='#fff7dc';ctx.fillRect(mx+1,-1,9,2);
+      ctx.fillRect(mx+3,-4,2,8);
+    }
+    ctx.restore();
+  }
+
   function bake(id,accent){
     const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
     const c=canvas.getContext('2d');c.translate(ox,oy);
@@ -256,6 +278,7 @@
   }
 
   function draw(ctx,def,x,y,scale=1,angle=0,item=null){
+    if(def.creatureId){drawCreatureGun(ctx,def,x,y,scale,angle,item);return;}
     const id=def.id,sprite=cells[id]||(cells[id]=bake(id,def.color)),[mx,my]=muzzle[id];
     ctx.save();ctx.imageSmoothingEnabled=false;ctx.translate(Math.round(x),Math.round(y));ctx.rotate(angle);
     ctx.scale(scale,Math.cos(angle)<0?-scale:scale);
