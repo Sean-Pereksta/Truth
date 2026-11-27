@@ -1,4 +1,4 @@
-// One original foot hero per owning army. Artwork always uses two visual facings.
+// One foot hero per owning army. The original portrait and action source is retained alongside the directional battlefield sheets.
 const profile=(sigil,name,weapon,sidearm,stats,carried,planted,personality)=>Object.freeze({
   sigil,id:sigil,name,title:name,weapon,sidearmName:sidearm,facings:2,sourceFacing:'screen-right',otherFacing:'horizontal-mirror',
   hp:800,speed:1.72,carry:Object.freeze({damage:25,range:.8,rate:.85}),sidearm:Object.freeze({damage:25,range:.8,rate:.85}),

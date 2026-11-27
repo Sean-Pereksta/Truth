@@ -67,7 +67,7 @@ test('Castle capture state and territorial ownership remain deliberately stale o
 });
 
 test('Troops cannot acquire or fire at hidden targets and drop enemies that leave sight',()=>{
-  const g=fixture(),siege=g.addUnit(0,'trebuchet',20.5,20.5),enemy=g.addUnit(1,'infantry',29.5,20.5);siege.setupProgress=15;siege.cooldown=0;refresh(g);
+  const g=fixture(),siege=g.addUnit(0,'trebuchet',20.5,20.5),enemy=g.addUnit(1,'infantry',29.5,20.5);g.hold([siege.id]);siege.trebuchetState='deployed';siege.cooldown=0;refresh(g);
   assert.equal(g.findTarget(siege),null);g.attack(siege,enemy);assert.equal(g.projectiles.length,0);
   const scout=g.addUnit(0,'cavalry',24.5,20.5);refresh(g);assert.equal(g.findTarget(siege),enemy);g.attack(siege,enemy);assert.equal(g.projectiles.length,1);
   siege.target=enemy;scout.hp=0;g.time=1;refresh(g);g.updateUnits(.01);assert.equal(siege.target,null);assert.equal(g.projectiles.length,1,'Already launched attacks may finish, but no new hidden shot is launched.');

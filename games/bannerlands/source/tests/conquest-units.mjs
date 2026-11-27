@@ -37,32 +37,52 @@ test('New regiments and dedicated facilities are exclusive to their requested ho
   }
 });
 
-test('Hightower trebuchets cannot fire before fifteen stationary seconds and movement restarts setup',()=>{
-  const g=fixture('beacon'),engine=g.addUnit(0,'trebuchet',30,30),fort=g.addBuilding(1,'barracks',38,30);
-  engine.cooldown=0;g.hold([engine.id]);
-  for(let i=0;i<149;i++)step(g,.1);
-  step(g,.09);assert.equal(g.projectiles.length,0);assert.ok(engine.setupProgress<15);
-  step(g,.02);assert.equal(g.projectiles.length,1);assert.equal(g.projectiles[0].target,fort.id);
-  assert.equal(engine.setupProgress,15);assert.equal(engine.cooldown,7.5);
-  g.command([engine.id],35,30,'move','line');assert.equal(engine.setupProgress,0);
-  step(g,.1);assert.equal(engine.setupProgress,0);assert.ok(Math.hypot(engine.vx,engine.vy)>.03);
-  g.hold([engine.id]);engine.vx=engine.vy=0;engine.setupX=engine.x;engine.setupY=engine.y;
-  for(let i=0;i<100;i++)step(g,.1);
-  assert.ok(engine.setupProgress<15);engine.cooldown=0;g.attack(engine,fort);assert.equal(g.projectiles.length,1,'A partially rebuilt engine cannot attack directly.');
+test('Both player houses queue deployment at their assigned slot and ignore later army moves',()=>{
+  for(const house of ['flayed','beacon']){
+    const g=fixture(house),engine=g.addUnit(0,'trebuchet',30,30),guard=g.addUnit(0,'infantry',26,30);
+    const ids=[engine.id,guard.id];
+    g.command(ids,33,30,'move','line');
+    const destination={x:engine.order.x,y:engine.order.y};
+    assert.equal(g.setTrebuchetDeployment(ids,true,true).ok,true);
+    assert.equal(engine.order.setupOnArrival,true);
+    g.command(ids,27,30,'move','line');
+    assert.equal(guard.order.groupX,27);
+    for(let i=0;i<700&&engine.trebuchetState==='packed';i++)step(g,.05);
+    assert.equal(engine.trebuchetState,'settingUp');
+    assert.ok(Math.hypot(engine.x-destination.x,engine.y-destination.y)<.23);
+    const anchor=[engine.x,engine.y];
+    guard.x=engine.x;guard.y=engine.y;
+    engine.knockVX=7;engine.knockVY=3;engine.knockT=engine.knockDuration=.4;
+    g.command(ids,45,42,'move');g.hold(ids);g.retreat(ids);
+    for(let i=0;i<200;i++)step(g,.05);
+    assert.equal(engine.trebuchetState,'deployed');
+    assert.deepEqual([engine.x,engine.y],anchor);
+  }
 });
-
-test('Physical displacement and knockback invalidate a prepared Hightower trebuchet',()=>{
-  const g=fixture('beacon'),engine=g.addUnit(0,'trebuchet',30,30),fort=g.addBuilding(1,'barracks',38,30);
-  engine.setupProgress=15;engine.x+=.2;engine.cooldown=0;step(g,.01);
-  assert.equal(g.projectiles.length,0);assert.equal(engine.setupProgress,0);
-  engine.setupProgress=15;engine.knockT=.2;engine.knockVX=2;engine.knockVY=0;g.attack(engine,fort);assert.equal(g.projectiles.length,0);
+test('Take down is available during setup and while setup is queued',()=>{
+  const g=fixture('beacon'),u=g.addUnit(0,'trebuchet',30,30);
+  g.command([u.id],34,30,'move');
+  g.setTrebuchetDeployment([u.id],true,true);
+  assert.equal(g.setTrebuchetDeployment([u.id],false).ok,true);
+  assert.equal(u.order.setupOnArrival,undefined);
+  assert.equal(u.order.mode,'move');
+  g.setTrebuchetDeployment([u.id],true);step(g,1);
+  assert.equal(g.setTrebuchetDeployment([u.id],false).ok,true);
+  step(g,4.9);assert.equal(u.trebuchetState,'takingDown');
+  step(g,.1);assert.equal(u.trebuchetState,'packed');
+});
+test('AI trebuchets still deploy after fifteen stationary seconds',()=>{
+  const g=fixture(),u=g.addUnit(1,'trebuchet',30,30);
+  g.hold([u.id]);for(let i=0;i<151;i++)step(g,.1);
+  assert.equal(u.setupProgress,15);
+  g.command([u.id],34,30,'move');step(g,.1);assert.equal(u.setupProgress,0);
 });
 
 test('Trebuchets outrange ordinary siege and bombard buildings heavily with a slow reload',()=>{
   const g=fixture('beacon'),engine=g.addUnit(0,'trebuchet',30,30),fort=g.addBuilding(1,'barracks',40,30);
   assert.ok(UNIT_DEFS.trebuchet.range>UNIT_DEFS.siege.range*1.8);
   assert.ok(UNIT_DEFS.trebuchet.rate>UNIT_DEFS.siege.rate*2);
-  engine.setupProgress=15;engine.cooldown=0;g.hash.rebuild(g.units);g.attack(engine,fort);
+  g.setTrebuchetDeployment([engine.id],true);step(g,10);g.projectiles=[];engine.cooldown=0;g.hash.rebuild(g.units);g.attack(engine,fort);
   const shot=g.projectiles[0];assert.equal(shot.type,'rock');assert.equal(shot.splash,1.7);
   const hp=fort.hp;g.updateProjectiles(shot.duration);assert.ok(hp-fort.hp>=540);
 });
@@ -73,7 +93,8 @@ test('Catapult and trebuchet earth bursts spawn only where the projectile lands'
   for(const [type,kind] of [['siege','catapult'],['trebuchet','trebuchet']]){
     g.effects=[];
     const engine=g.addUnit(0,type,36,30);
-    engine.setupProgress=15;g.attack(engine,fort);
+    if(type==='trebuchet'){g.setTrebuchetDeployment([engine.id],true);step(g,10);g.projectiles=[];g.effects=[];}
+    g.attack(engine,fort);
     const shot=g.projectiles[0];
     g.updateProjectiles(shot.duration/2);
     assert.equal(g.effects.length,0);

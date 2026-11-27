@@ -53,6 +53,6 @@ test('Tully building protection applies at actual siege impact, with no carried 
 });
 test('Frey nearest production and Hightower setup advance the existing physical clocks',()=>{
   const {g}=fixture('bridge','planted');const post=g.addBuilding(0,'barracks',42,40);close(g.trainingRate(post),1.1);post.x=46;close(g.trainingRate(post),1);
-  const beacon=fixture('beacon'),engine=beacon.g.addUnit(0,'trebuchet',41,40);beacon.g.hold([engine.id]);engine.cooldown=1e9;engine.setupProgress=0;beacon.g.updateUnits(.025);close(engine.setupProgress,.027);
+  const beacon=fixture('beacon'),engine=beacon.g.addUnit(0,'trebuchet',41,40);beacon.g.hold([engine.id]);engine.cooldown=1e9;beacon.g.setTrebuchetDeployment([engine.id],true);beacon.g.updateUnits(.025);close(engine.trebuchetRemaining,10-.027);
 });
 console.log(`${checks} live hero integration checks passed.`);

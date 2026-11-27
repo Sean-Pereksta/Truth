@@ -31,7 +31,7 @@ export function projectileDrawPose(projectile,kind=projectileKind(projectile)){
     arc=Math.min(2.8,distance*.5);
   }else if(kind==='rock'){
     arc=sourceType==='trebuchet'?89:65;
-    startHeight=sourceType==='trebuchet'?30:18;
+    startHeight=sourceType==='trebuchet'?54:30;
     endHeight=0;
   }else if(kind==='firepot'){
     arc=42;

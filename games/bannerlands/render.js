@@ -1,3 +1,5 @@
+import {atlasPose,atlasPoses,facingRow,attackFacing} from './directional-art.js';
+import {directionalSheets} from './directional-sheets.js';
 import {queueArtwork} from './asset-loader.js';
 import {BUILD_DEFS,UNIT_DEFS} from './core.js';
 import {corpseOpacity} from './aftermath.js';
@@ -7,7 +9,7 @@ import {PAINTED_HEROES,HERO_ACTIONS,selectHeroFrame,selectStandardFrame,heroOwns
 import {paintTerrainPolish,roadsideFields,preparePaintedGround,bakePaintedGround,onPaintedApproach} from './terrain-polish.js';
 import {FormationBannerLayer} from './formation-banners.js';
 import {BridgeArtwork,bridgeSurface} from './bridge-art.js';
-import {BOLTON_TREBUCHET_TIMES} from './regiments.js';
+import {TREBUCHET_TIMES} from './regiments.js';
 import {HALF_TILE_WIDTH as HW,HALF_TILE_HEIGHT as HH,projectileKind,projectileDrawPose} from './projectile-flight.js';
 
 const TAU=Math.PI*2;
@@ -97,6 +99,67 @@ function compactAtlasFrame(frame,scale){
 
 export class Renderer{
   constructor(canvas){this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.sprites=new Map();this.treeSprites=new Map();this.structureSprites=new Map();this.structureFrames={};this.structuresReady=false;this.houseArtReady=false;this.houseTroopFrames={};this.houseKeepFrames={};this.houseProductionFrames={};this.regimentArtReady=false;this.regimentTroopFrames={};this.regimentBuildingsReady=false;this.regimentBuildingFrames={};this.campaignArtReady=false;this.campaignFrames={keep:[],tower:[],flag:[]};this.campaignSprites=new Map();this.cachedGame=null;this.territoryTime=-1;this.frame=0;this.minimapTransform=null;this.rasterSpritesReady=false;this.troopFrames={};this.assetError=null;this.terrainReady=false;this.terrainChunkCache=new Map();this.maxTerrainChunks=24;this.terrainChunkSize=16;this.terrainTileSprites=new Map();}
+  async loadDirectionalSheets(game){
+    this.directionalRows=new Map();
+    this.directionalTints=new Map();
+    for(const [id,d] of Object.entries(directionalSheets)){
+      const poses=atlasPoses(d.kit,id.startsWith('hero-'));
+      this.directionalRows.set(id,{...d,columns:new Map(poses.map((pose,i)=>[pose,i]))});
+    }
+    // Decode the companies in this battle first. Reinforcements request their
+    // own painting on first appearance, so unused houses cost no image memory.
+    const initial=new Set((game?.units||[]).map(u=>this.directionalRow(u.type,game.teams[u.team]?.sigil)));
+    await Promise.all([...initial].filter(Boolean).map(row=>this.loadDirectionalRow(row)));
+  }
+  directionalRow(type,sigil){
+    return this.directionalRows?.get(type+'-'+sigil)||this.directionalRows?.get(type);
+  }
+  loadDirectionalRow(row){
+    if(!row.loading){
+      row.loading=loadBattlefieldSheet(row.src).then(img=>{
+        if(img.width!==row.w*row.columns.size||img.height!==row.h*8)throw Error('Invalid directional sheet: '+row.src);
+        row.img=img;
+      }).catch(error=>{row.failed=true;throw error;});
+    }
+    return row.loading;
+  }
+  drawDirectional(c,u,g,sigil,color,p,direction,moving,windup=0){
+    const row=this.directionalRow(u.type,sigil);
+    if(!row)return false;
+    if(!row.img){
+      if(!row.loading&&!row.failed)this.loadDirectionalRow(row).catch(error=>{this.assetError=error.message;});
+      return false;
+    }
+    const pose=atlasPose(u,g,moving,windup);
+    const col=row.columns.get(pose)??row.columns.get(pose==='block'?'hit':'idle');
+    const front=attackFacing(u,g,direction),angle=facingRow(front.x,front.y);
+    let img=row.img,sx=col*row.w,sy=angle*row.h;
+    if(row.tint&&/^#[0-9a-f]{6}$/i.test(color||'')){
+      // Only visible generic poses need heraldic tint. Keep memory bounded in
+      // long campaigns with many factions instead of copying whole sheets.
+      const key=[u.type,col,angle,color].join('|');
+      let tinted=this.directionalTints.get(key);
+      if(!tinted){
+        tinted=makeCanvas(row.w,row.h);
+        const ctx=tinted.getContext('2d',{willReadFrequently:true});
+        ctx.drawImage(img,sx,sy,row.w,row.h,0,0,row.w,row.h);
+        const pixels=ctx.getImageData(0,0,row.w,row.h),data=pixels.data;
+        const target=[1,3,5].map(i=>parseInt(color.slice(i,i+2),16));
+        for(let i=0;i<data.length;i+=4){
+          if(data[i+3]&&data[i+2]>data[i]*1.8&&data[i+2]>data[i+1]*1.28){
+            const shade=data[i+2]/186;
+            for(let k=0;k<3;k++)data[i+k]=target[k]*shade;
+          }
+        }
+        ctx.putImageData(pixels,0,0);
+        if(this.directionalTints.size>=1024)this.directionalTints.delete(this.directionalTints.keys().next().value);
+        this.directionalTints.set(key,tinted);
+      }
+      img=tinted;sx=sy=0;
+    }
+    c.drawImage(img,sx,sy,row.w,row.h,p.x-row.ax/2,p.y-row.ay/2,row.w/2,row.h/2);
+    return true;
+  }
   async loadBridgeArt(src='./assets/bridges/stone-edges.png'){
     this.bridgeArtwork??=new BridgeArtwork();const info=await this.bridgeArtwork.load(src);
     this.bridgeArchitectureCache=new Map();this.bridgeArchitectureBytes=0;return info;
@@ -1170,7 +1233,9 @@ export class Renderer{
     for(const body of aftermath.bodies){
       const alpha=corpseOpacity(body,time);if(alpha<=0||g.config?.fogOfWar&&!g.vision?.isVisible((g.playerTeam??0),body.x,body.y))continue;
       const p=iso(body.x,body.y);if(p.x<bounds.left-140||p.x>bounds.right+140||p.y<bounds.top-70||p.y>bounds.bottom+70)continue;
-      const painted=this.getPaintedTroop(body.type,body.sigil);c.globalAlpha=alpha*.92;
+      c.globalAlpha=alpha*.92;
+      if(this.drawDirectional(c,{...body,hp:0},{time},body.sigil,body.color,p,{x:body.facingX??1,y:body.facingY??0},false))continue;
+      const painted=this.getPaintedTroop(body.type,body.sigil);
       if(painted){const index=body.type==='hero'?selectHeroFrame({...body,hp:0,heroMode:time-(body.bornAt??time)>.65?'signature':body.heroMode},{time}):selectPaintedFrame({...body,hp:0},g,painted),direction=iso(body.facingX??1,body.facingY??0);this.drawPaintedTroop(c,painted,index,direction.x<-.03?-1:1,p.x,p.y,body.color);}
       else c.drawImage(this.corpseSprite(body),p.x-40,p.y-22,80,44);
     }
@@ -1200,7 +1265,7 @@ export class Renderer{
     return markers;
   }
   unit(c,u,g,ui,zoom,markers=null){
-    if(!this.heroArtReady&&!this.paintedArtReady&&!this.rasterSpritesReady&&!this.houseArtReady&&!this.regimentArtReady&&!this.conquestArtReady&&!this.reinforcementArtReady)return;
+    if(!this.directionalRows&&!this.heroArtReady&&!this.paintedArtReady&&!this.rasterSpritesReady&&!this.houseArtReady&&!this.regimentArtReady&&!this.conquestArtReady&&!this.reinforcementArtReady)return;
     const p=iso(u.x,u.y),team=g.teams[u.team];if(!team)return;const specialHouse=REGIMENT_ART_TYPES.includes(u.type)||CONQUEST_ART_HOUSES[u.type]||REINFORCEMENT_HOUSES[u.type]||g.houseContent?.(u.team)?.unit===u.type?team.sigil:null,unitClass=g.unitClass?.(u)||HOUSE_UNIT_CLASSES[specialHouse]||u.type,vx=Number.isFinite(u.motionVX)?u.motionVX:(u.vx||0),vy=Number.isFinite(u.motionVY)?u.motionVY:(u.vy||0),selected=ui.selected?.has(u.id),moving=Math.hypot(vx,vy)>.07;
     if(this.bridgeArtwork?.spanReady)p.y-=this.bridgeArtwork.deckLift(g,u.x,u.y);
     if(g.mode?.teams&&zoom>.32){const color=team.teamColor||team.color;c.save();c.globalAlpha=.55;ellipse(c,p.x,p.y+2,unitClass==='cavalry'?8:5,unitClass==='cavalry'?3.3:2.2,color);c.globalAlpha=.95;polygon(c,[[p.x-2,p.y+2],[p.x,p.y+4],[p.x+2,p.y+2],[p.x,p.y]],team.color);c.restore();}
@@ -1224,7 +1289,8 @@ export class Renderer{
     if(u.backpedaling&&moving&&!attack)frame=3-frame;
     if(pose?.attack)frame=pose.frame;
     const braced=zoom>.6&&u.braceDir&&(u.braceTime||0)>=.45&&!(u.knockT>0);
-    if(painted){
+    const drawn=this.drawDirectional(c,u,g,team.sigil,team.color,{x:p.x+(pose?.dx||0),y:p.y+(pose?.dy||0)},direction,moving,pose?.windup);
+    if(!drawn&&painted){
       const index=u.type==='hero'?selectHeroFrame(u,g,moving):selectPaintedFrame(u,g,painted,moving,pose?.windup,screenFacing);
       // Contact and deflection carry the whole authored weapon/hand pose together.
       let x=p.x+(pose?.dx||0),y=p.y+(pose?.dy||0);
@@ -1240,24 +1306,24 @@ export class Renderer{
       }
       this.drawPaintedTroop(c,painted,index,facing,x,y,team.color);
     }
-    else{
+    else if(!drawn){
       const deployed=u.type==='trebuchet'&&(u.trebuchetState?u.trebuchetState==='deployed'||u.trebuchetState==='takingDown':(u.setupProgress||0)>=UNIT_DEFS.trebuchet.setupSeconds);
       const sprite=this.soldierSprite(u.type,team.color,team.dark,facing,frame,attack||deployed,specialHouse);
       if(sprite)c.drawImage(sprite,p.x-32,p.y-64,64,72);
     }
     if(u.type==='trebuchet'&&zoom>.5){
       const state=u.trebuchetState,takingDown=state==='takingDown',packed=state==='packed';
-      const duration=state?BOLTON_TREBUCHET_TIMES[takingDown?'takedown':'setup']:UNIT_DEFS.trebuchet.setupSeconds;
+      const duration=state?TREBUCHET_TIMES[takingDown?'takedown':'setup']:UNIT_DEFS.trebuchet.setupSeconds;
       const remaining=state?u.trebuchetRemaining||0:duration-(u.setupProgress||0);
       const ready=state?state==='deployed':remaining<=0;
       if(!packed){
         const progress=clamp(1-remaining/duration,0,1);
-        c.fillStyle='#142c2c';c.fillRect(p.x-20,p.y-61,40,4);
-        c.fillStyle=ready?'#b8d4a0':'#d6b773';c.fillRect(p.x-20,p.y-61,40*progress,4);
+        c.fillStyle='#142c2c';c.fillRect(p.x-20,p.y-97,40,4);
+        c.fillStyle=ready?'#b8d4a0':'#d6b773';c.fillRect(p.x-20,p.y-97,40*progress,4);
       }
       if(selected){
-        const label=ready?'DEPLOYED':packed?'PACKED':`${takingDown?'TAKEDOWN':'SETUP'} ${Math.ceil(remaining)}s`;
-        c.font='bold 8px Segoe UI';c.textAlign='center';c.fillStyle='#f2deac';c.fillText(label,p.x,p.y-65);
+        const label=ready?'DEPLOYED':packed?(u.order?.setupOnArrival?'SET UP QUEUED':'PACKED'):`${takingDown?'TAKEDOWN':'SETUP'} ${Math.ceil(remaining)}s`;
+        c.font='bold 8px Segoe UI';c.textAlign='center';c.fillStyle='#f2deac';c.fillText(label,p.x,p.y-101);
       }
     }
     if(marked&&zoom>.55&&Math.hypot(direction.x,direction.y)>.01){
@@ -1282,9 +1348,14 @@ export class Renderer{
       if((u.specialGuardUntil||0)>g.time){c.beginPath();c.ellipse(p.x,p.y,10,4.4,0,0,TAU);c.strokeStyle='#b6dbe5';c.lineWidth=1;c.stroke();}
       if((u.berserkUntil||0)>g.time||u.type==='freefolk_berserker'&&u.hp<u.maxHp*.4){line(c,p.x-7,p.y-9,p.x-5,p.y-18,'#ef9a69',1.2);line(c,p.x+6,p.y-8,p.x+8,p.y-17,'#ef9a69',1.2);}
     }
-    if(attack&&!UNIT_DEFS[u.type].ranged&&unitClass!=='archer'&&unitClass!=='siege'&&u.attackAnim>.64){const a=(1-u.attackAnim)*5;c.beginPath();c.arc(p.x+facing*9,p.y-12,12,-1.7+a,-.4+a);c.strokeStyle=`rgba(248,226,156,${u.attackAnim*.7})`;c.lineWidth=1.4;c.stroke();}
+    if(attack&&!UNIT_DEFS[u.type].ranged&&unitClass!=='archer'&&unitClass!=='siege'&&u.attackAnim>.64){
+      const front=attackFacing(u,g,direction),axis=iso(front.x,front.y);
+      const angle=Math.atan2(axis.y,axis.x),sweep=(1-u.attackAnim)*2;
+      c.beginPath();c.ellipse(p.x,p.y-(unitClass==='cavalry'?28:16),15,7,0,angle-1.1+sweep,angle+.22+sweep);
+      c.strokeStyle=`rgba(248,226,156,${u.attackAnim*.7})`;c.lineWidth=1.4;c.stroke();
+    }
     const showHealth=selected?(!markers||u.hp<u.maxHp):u.hp<u.maxHp*.7;
-    if(u.type!=='hero'&&showHealth&&zoom>.57){const w=12;c.fillStyle='#15302f';c.fillRect(p.x-w/2,p.y-29-(unitClass==='cavalry'?9:0),w,2);c.fillStyle=(g.allied?.(u.team,(g.playerTeam??0))??u.team===(g.playerTeam??0))?'#b9d9a1':'#d4a18a';c.fillRect(p.x-w/2,p.y-29-(unitClass==='cavalry'?9:0),w*clamp(u.hp/u.maxHp,0,1),2);}
+    if(u.type!=='hero'&&showHealth&&zoom>.57){const w=12,barY=p.y-(u.type==='trebuchet'?89:unitClass==='siege'?64:unitClass==='cavalry'?49:34);c.fillStyle='#15302f';c.fillRect(p.x-w/2,barY,w,2);c.fillStyle=(g.allied?.(u.team,(g.playerTeam??0))??u.team===(g.playerTeam??0))?'#b9d9a1':'#d4a18a';c.fillRect(p.x-w/2,barY,w*clamp(u.hp/u.maxHp,0,1),2);}
     if(u.isKing){c.save();if(zoom>.57){c.fillStyle='#15302f';c.fillRect(p.x-8,p.y-29,16,3);c.fillStyle='#f3d77d';c.fillRect(p.x-8,p.y-29,16*clamp(u.hp/u.maxHp,0,1),3);}c.lineWidth=1.6;c.strokeStyle='#f0d78b';c.beginPath();c.ellipse(p.x,p.y+1,14,6,0,0,TAU);c.stroke();
       polygon(c,[[p.x-6,p.y-42],[p.x-7,p.y-49],[p.x-3,p.y-46],[p.x,p.y-51],[p.x+3,p.y-46],[p.x+7,p.y-49],[p.x+6,p.y-42]],'#f3d77d','#6a5633');
       if(zoom>.5){c.font='bold 8px Segoe UI';c.textAlign='center';c.lineWidth=3;c.strokeStyle='#11241f';c.strokeText('KING',p.x,p.y-56);c.fillStyle='#f3dda0';c.fillText('KING',p.x,p.y-56);}c.restore();}
