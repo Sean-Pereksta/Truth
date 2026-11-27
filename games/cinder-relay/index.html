@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101b1e">
+  <title>Cinder Relay</title>
+  <link rel="icon" type="image/png" href="art/relay-icon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="app">
+    <section id="bay" aria-label="Launch bay">
+      <header class="site-head">
+        <div class="identity"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span><span>CINDER RELAY</span></div>
+        <nav class="main-nav" aria-label="Launch bay navigation">
+          <button class="nav-btn current" data-op="bay">Launch bay</button>
+          <button class="nav-btn" data-op="guide">Field guide</button>
+          <button class="icon-btn" data-op="settings" aria-label="Settings" title="Settings"><span data-icon="settings"></span></button>
+        </nav>
+      </header>
+      <section class="hero">
+        <div class="hero-art"></div>
+        <div class="hero-vignette"></div>
+        <div class="hero-content">
+          <div class="genre"><i></i> BULLET HELL ROGUELITE</div>
+          <h1>CINDER<br><em>RELAY</em></h1>
+          <p>Find the key. Survive the swarm.<br class="wide-break"> Explore the colony one labyrinth at a time.</p>
+          <div id="launch-actions" class="launch-actions"></div>
+          <small id="checkpoint-summary" hidden></small>
+        </div>
+        <div class="scene-label"><span class="target-mark"></span><div><small>DROP SITE 01</small><strong>Saltglass Causeway</strong></div></div>
+      </section>
+      <div class="bay-readouts">
+        <button class="kit-readout" data-op="kits"><span class="gear-frame"><canvas id="bay-kit" width="52" height="46"></canvas></span><span class="readout-copy"><small>STARTER KIT</small><strong id="bay-kit-name"></strong></span><span class="open-arrow" aria-hidden="true">↗</span></button>
+        <button class="records-readout" data-op="records"><span class="records-icon" data-icon="flag"></span><span class="readout-copy"><small>DEEPEST GATE</small><strong id="bay-record"></strong></span><span class="open-arrow" aria-hidden="true">↗</span></button>
+        <div class="data-readout"><span class="records-icon" data-icon="data"></span><span class="readout-copy"><small>RELAY DATA</small><strong id="bay-data"></strong></span></div>
+      </div>
+      <div class="bay-foot"><div class="input-legend"><span><kbd>WASD</kbd> Move</span><span><kbd>LMB</kbd> Fire</span><span><kbd>SPACE</kbd> Dash</span><span><kbd>Q</kbd><kbd>E</kbd> Actives</span></div><button class="text-btn" data-op="controls">All controls <b>↗</b></button></div>
+    </section>
+
+    <section id="flight" aria-label="Expedition" hidden>
+      <header class="mission-head">
+        <div class="mission-location"><span class="mark small-mark" aria-hidden="true"><i></i><i></i><i></i></span><div><small id="mission-sector"></small><strong id="mission-loc"></strong></div></div>
+        <div class="mission-goal" id="mission-goal"></div>
+        <div class="mission-end"><span id="mission-clock"></span><button class="icon-btn" data-op="pause" title="Pause (Esc)" aria-label="Pause expedition"><span data-icon="pause"></span></button></div>
+      </header>
+      <div class="viewport">
+        <canvas id="arena" width="960" height="540" aria-label="Combat arena"></canvas>
+        <div id="boss-readout" hidden>
+          <div><b id="boss-name"></b><span id="boss-phase"></span></div>
+          <i><b id="boss-bar"></b></i>
+          <div id="boss-intent" hidden><b id="boss-attack"></b><span id="boss-target"></span></div>
+        </div>
+        <button id="interact-prompt" class="prompt" data-op="interact" hidden></button>
+        <div id="touch-hint">Left side to move · Right side to aim and fire</div>
+      </div>
+      <div class="combat-hud">
+        <div class="vitals"><strong id="pilot-label" hidden></strong><div class="pilot-icon"><canvas id="pilot-icon" width="42" height="44"></canvas></div><div class="vital-pairs"><div class="vital"><span data-icon="hull"></span><i><b id="hull-bar"></b></i><small id="hull-value"></small></div><div class="vital shield"><span data-icon="shield"></span><i><b id="shield-bar"></b></i><small id="shield-value"></small></div></div></div>
+        <button class="weapon-slot" id="weapon-a" data-op="swap" title="Swap ready weapon (Tab)"><canvas width="49" height="28"></canvas><span></span></button>
+        <button class="weapon-slot" id="weapon-b" data-op="swap" title="Swap ready weapon (Tab)"><canvas width="49" height="28"></canvas><span></span></button>
+        <button class="act-slot" id="act-a" data-op="active1" title="Active 1 (Q)"><canvas width="28" height="28"></canvas><span></span></button>
+        <button class="act-slot" id="act-b" data-op="active2" title="Active 2 (E)"><canvas width="28" height="28"></canvas><span></span></button>
+        <button class="dash-slot" data-op="dash" title="Dash (Space)"><span data-icon="dash"></span><span><b>DASH</b><i id="dash-pips"></i></span></button>
+        <button class="pack-btn" data-op="inventory" title="Equipment (I)" aria-label="Inspect equipment"><span data-icon="pack"></span></button>
+      </div>
+      <div class="xp-row"><b id="level-value"></b><i><b id="level-bar"></b></i><span id="scrap-value"></span></div>
+      <div id="partner-hud" class="partner-hud" role="group" aria-label="Player 2 status" hidden>
+        <strong id="partner-name">P2</strong>
+        <span><small>HULL / SHIELD</small><b id="partner-vitals"></b></span>
+        <span><small>WEAPON</small><b id="partner-weapon"></b></span>
+        <span><small>ACTIVES</small><b id="partner-actives"></b></span>
+        <span><small>DASH / LEVEL</small><b id="partner-dash"></b></span>
+      </div>
+      <div class="touch-actions"><button data-op="reload">Reload</button><button data-op="swap">Swap</button><button data-op="interact">Interact</button></div>
+      <div class="touch-pads" aria-label="Touch controls"><div data-stick="move" aria-label="Movement stick"><i></i><b>MOVE</b></div><div data-stick="aim" aria-label="Aim and fire stick"><i></i><b>AIM + FIRE</b></div></div>
+    </section>
+  </main>
+  <div id="scrim" hidden><section id="panel" role="dialog" aria-modal="true" aria-label="Expedition menu" tabindex="-1"></section></div>
+  <div id="relay-toast" role="status" aria-live="polite"></div>
+  <script defer src="weapon-art.js"></script>
+  <script defer src="effects.js"></script>
+  <script defer src="combat.js"></script>
+  <script defer src="boss-colony.js"></script>
+  <script defer src="boss-relay.js"></script>
+  <script defer src="boss-tell-art.js"></script>
+  <script defer src="enemies.js"></script>
+  <script defer src="sprites.js"></script>
+  <script defer src="progression.js"></script>
+  <script defer src="sector-art.js"></script>
+  <script defer src="topology.js"></script>
+  <script defer src="labyrinth.js"></script>
+  <script defer src="sight.js"></script>
+  <script defer src="camera.js"></script>
+  <script defer src="world.js"></script>
+  <script defer src="chassis-art.js"></script>
+  <script defer src="mechanic-art.js"></script>
+  <script defer src="field-art.js"></script>
+  <script defer src="interface.js"></script>
+  <script defer src="audio.js"></script>
+  <script defer src="crew-input.js"></script>
+  <script defer src="main.js"></script>
+</body>
+</html>
