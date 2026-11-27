@@ -119,7 +119,7 @@
   }
   const bindings=[
     ['Move','WASD / Arrows','Left stick','Drag the left half of the arena'],
-    ['Aim and fire','Mouse / Left click','Right stick / RT','Drag the right half to aim and fire'],
+    ['Aim and fire','Mouse / Left click','Point the right stick to swivel the crosshair. Release to hold that direction. RT fires.','Drag the right half to aim and fire'],
     ['Dash','Space','LT','Dash'],
     ['Active abilities','Q / E · hold to aim, release to cast directional skills','LB / RB · hold to aim directional skills','Tap a fitted ability'],
     ['Swap weapon','Tab / Wheel','Y','Tap the other weapon or Swap'],
