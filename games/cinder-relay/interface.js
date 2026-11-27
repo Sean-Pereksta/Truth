@@ -198,6 +198,7 @@
   }
   const guideTabs={gun:'Weapons',ability:'Actives',suit:'Armor',enemy:'Enemies',boss:'Bosses',map:'Sectors'};
   const collections=()=>({gun:Combat.guns,ability:Combat.abilities,suit:Progress.suits,enemy:Foes.defs,boss:Foes.bosses,map:World.maps});
+  const weaponType=def=>def.creatureClass?def.creatureClass[0].toUpperCase()+def.creatureClass.slice(1)+' · '+def.family:def.family;
   const guidePageSize=4;
   function guide(){
     const tab=ui.guide;const coll=collections()[tab];
@@ -206,7 +207,7 @@
     const start=ui.guidePage*guidePageSize;
     const list=coll.slice(start,start+guidePageSize).map((v,offset)=>{
       const i=start+offset;
-      const tag=v.family||v.role||v.faction||(tab==='ability'?'Cooldown '+v.cooldown+'s':tab==='map'?(i<5?'Opening sector':'Endless sector'):'Major encounter');
+      const tag=(tab==='gun'?weaponType(v):v.family)||v.role||v.faction||(tab==='ability'?'Cooldown '+v.cooldown+'s':tab==='map'?(i<5?'Opening sector':'Endless sector'):'Major encounter');
       const notes=[v.desc||v.description||'',tab==='ability'&&v.augments?'Augments · '+v.augments.join(' / '):'',tab==='boss'&&v.phases?'Phases · '+v.phases.join(' / '):''].filter(Boolean).join(' ');
       const inspect=tab==='boss'?act('boss-intel','Attack patterns','small-btn',i):'';
       return '<article class="entry"'+(inspect?'':' tabindex="0"')+'>'+(tab==='map'?vista(i,'map-thumb'):art(tab,i))+'<div class="entry-copy"><div class="eyeline">'+escape(String(tag).toUpperCase())+'</div><h3>'+escape(v.name)+'</h3><p>'+escape(notes)+'</p></div>'+inspect+'</article>';
@@ -271,7 +272,7 @@
         '<span><small>Fire rate</small><b>'+stat(Combat.rateFor,'/s')+'</b></span></span>';
       return '<button class="tune-option" data-op="tune-apply" data-value="'+i+'"'+(rank>=3?' disabled':'')+'>'+
         art('gun',gun.id)+'<span class="tune-copy">'+gunMeta(gun,location)+'<strong>'+escape(gunName(gun))+'</strong>'+
-        '<small>'+escape(def.family)+(rank<3?' · Upgrade to '+(rank+1)+'/3':'')+'</small></span>'+body+'</button>';
+        '<small>'+escape(weaponType(def))+(rank<3?' · Upgrade to '+(rank+1)+'/3':'')+'</small></span>'+body+'</button>';
     }).join('');
     const owner=g.players?.length>1?'PLAYER '+((g.rewardOwner||0)+1)+'  /  ':'';
     titled(owner+'LEVEL '+(g.draftLevel||p.level)+'  /  FIELD REQUISITION','Choose a weapon to upgrade',
@@ -286,7 +287,7 @@
     const cards=g.choices||[];const type=g.draftKind||cards[0]?.kind;
     const title={gun:'Weapon cache',active:'Active cache',armor:'Armor locker',chip:'Weapon chip',level:'Choose an upgrade',overclock:'Overclock'}[type]||'Choose an upgrade';
     const list=cards.map((v,i)=>{
-      const tag=v.kind==='gun'?gunMeta(v.item,Combat.guns[v.id].family):'<span class="eyeline">'+escape(String(v.tag||v.kind||'').toUpperCase())+'</span>';
+      const tag=v.kind==='gun'?gunMeta(v.item,weaponType(Combat.guns[v.id])):'<span class="eyeline">'+escape(String(v.tag||v.kind||'').toUpperCase())+'</span>';
       const tier=v.kind==='gun'?' data-rarity="'+escape(Combat.rarityOf(v.item))+'"':'';
       return '<button class="gear-card" data-op="choice" data-value="'+i+'"'+tier+'>'+rewardArt(v)+tag+'<h3>'+escape(v.name)+'</h3><p>'+escape(v.desc)+'</p>'+(v.detail?'<span class="item-meta">'+escape(v.detail)+'</span>':'')+(v.traits?.length?'<p>'+escape(v.traits.join(' '))+'</p>':'')+'<span class="card-action">'+(v.kind==='tuneGun'?'Choose weapon':'Select')+' →</span></button>';
     }).join('');

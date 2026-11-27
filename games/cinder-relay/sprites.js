@@ -23,6 +23,16 @@
     ['#573e52','#946978','#d2a0a3','#ff9878'], ['#594f43','#947657','#cbaa7e','#d4ef95'],
     ['#3f5369','#63829b','#abc3cd','#ffc57a'], ['#3e655f','#769a8a','#c0d7bc','#aef1df']
   ];
+  const creatureSuitColors = {
+    catArmor: ['#412137','#70384b','#f59c57','#ff749f'],
+    unicornArmor: ['#32325a','#656b9f','#b9c6f0','#93f4ed']
+  };
+  const prismBands=['#ff698f','#ffb771','#f5e985','#79f0bf','#77d5ff','#bf9dff'];
+  function creatureSuit(id) {
+    const suit=window.Progress?.suits[id]?.creatureId;
+    if(suit)return window.CinderCreatureArt?.artId(suit)||suit;
+    return '';
+  }
   const cache = new Map();
   const keyColor = ['#ffaf77','#a9ebe7','#ffca91','#abf9ec','#b2ffe4','#ffe18e','#e9c0ff','#ffd89c','#a5ebe3','#d8fcff','#efe4ff','#ff9390','#ffb69f','#ffda89','#9eecd5','#d9b1ff','#ffae99','#cce79b','#ffc584','#aff3da'];
   function pixels(canvas, origin) {
@@ -89,7 +99,8 @@
     });
   }
   function trooper(D,id,f,back,walking) {
-    const [dark,mid,hi,light]=suitColors[id]||suitColors[0];
+    const creature=creatureSuit(id);
+    const [dark,mid,hi,light]=creatureSuitColors[creature]||suitColors[id]||suitColors[0];
     const {rect:r,line:l,oval:o,ell,limb,plate:p,poly,offset}=D;
     const step=walking?[0,2,0,-2][f]:0,bob=walking?(f%2):0;
     const heavy=[2,3,7,9,13,15,17,18,19].includes(id), scout=[1,6,8,10,14,16].includes(id);
@@ -97,7 +108,15 @@
     const ceramic=id===0?'#e2dfc7':hi, trim=id===0?'#f29557':light;
     const lens=id===0?'#73e8db':light;
     // A split field tabard, stabilizer vanes or paired thrusters identify the suit at a glance.
-    if(id===16){
+    if(creature==='catArmor'){
+      const tail=walking?step:0;
+      l(-7,1,-12,6,INK,4);l(-12,6,-17+tail,5,INK,4);l(-17+tail,5,-18+tail,0,INK,4);
+      l(-7,1,-12,6,mid,2);l(-12,6,-17+tail,5,hi,2);l(-17+tail,5,-18+tail,0,hi,2);
+    }else if(creature==='unicornArmor'){
+      const tail=walking?step:0;
+      p([[-8,-5],[-4,-2],[-8,7],[-15+tail,12],[-13+tail,7],[-17+tail,10],[-12,3]],'#ac7bea','#f49fdf');
+      l(-11,5,-15+tail,8,'#93f4ed');
+    }else if(id===16){
       const sway=walking?step:0;
       p([[-8,-7],[-4,-5],[-7,5],[-13+sway,16],[-18+sway,18],[-17+sway,11],[-12,1]],'#ac5557','#f19a86');
       p([[4,-5],[7,-6],[12,4],[16-sway,11],[14-sway,15],[7,6]],'#ba6965','#ffc295');
@@ -193,6 +212,22 @@
         if(id===7){r(6,-15,4,4,INK);r(7,-14,3,2,light);}
       }
       r(-7,-11,4,5,INK);r(-7,-10,3,3,mid);r(-7,-10,2,1,hi);
+      if(creature==='catArmor'){
+        p([[-7,-15],[-8,-24],[-1,-18]],hi,'#ffe9b0');
+        p([[3,-18],[8,-24],[9,-15]],hi,'#ffe9b0');
+        l(-6,-21,-4,-18,light);l(7,-21,7,-18,light);
+        if(!back){
+          l(0,-12,3,-11,light);l(5,-11,8,-12,light);
+          r(4,-9,2,1,'#ffe9b0');
+        }
+        for(const [x,y] of [[-4,-2],[-2,-3],[0,-3],[2,-2]])r(x,y,1,1,light);
+        o(-1,0,2,1,light);
+      }else if(creature==='unicornArmor'){
+        p([[0,-17],[2,-22],[8,-26],[6,-19],[4,-16]],'#fff0b5','#f5f3ff');
+        l(3,-22,5,-21,'#ac7bea');l(5,-24,7,-23,'#ac7bea');
+        if(!back)l(0,-12,8,-12,light,2);
+        prismBands.forEach((c,i)=>r(i-4,-3,1,3,c));
+      }
       switch(id){
         case 12: // Field Surgeon: ceramic trauma visor and an outsized white medical satchel.
           p([[-7,-16],[-4,-20],[2,-20],[6,-18],[9,-15],[7,-14],[-6,-14]],'#d2d4b9','#fff0d9');
@@ -637,13 +672,20 @@
     ctx.save();ctx.imageSmoothingEnabled=false;ctx.translate(Math.round(x),Math.round(y));ctx.scale(mirror?-scale:scale,scale);
     ctx.drawImage(img,-img.width/2,-img.height/2);ctx.restore();
   }
-  function dashTrail(ctx,p,suit,color,t){
+  function dashTrail(ctx,p,suit,color,t,creature){
     const phase=Math.floor(t*32)%4;
     ctx.save();
     ctx.translate(Math.round(p.x),Math.round(p.y+4));
     ctx.rotate(Math.atan2(p.dashY||0,p.dashX||0));
     ctx.fillStyle=color;
-    if(suit===18||suit===19){
+    if(creature==='catArmor'){
+      for(let i=0;i<3;i++){
+        const x=-13-phase-i*6,y=i%2?3:-4;
+        ctx.fillRect(x,y,3,2);ctx.fillRect(x-1,y-2,1,1);ctx.fillRect(x+1,y-3,1,1);ctx.fillRect(x+3,y-2,1,1);
+      }
+    }else if(creature==='unicornArmor'){
+      prismBands.forEach((c,i)=>{ctx.fillStyle=c;ctx.fillRect(-24-phase+(i%2)*3,i-3,16-i%3,1);});
+    }else if(suit===18||suit===19){
       ctx.fillStyle=color;
       for(const side of [-1,1]){
         const y=side*(suit===18?4:6);
@@ -680,13 +722,14 @@
   }
   function player(ctx,p,t=0) {
     const suit=p.skin??p.suit??0,a=p.a||0,mirror=Math.cos(a)<0,back=Math.sin(a)<-.48;
+    const creature=creatureSuit(suit),palette=creatureSuitColors[creature]||suitColors[suit];
     const frame=p.moving?Math.floor(p.walkCycle||0)%4:0;
     const img=sprite('suit',suit,frame,false,1,back,p.moving,!!(p.flash>.03));
-    const color=keyColor[suit]||keyColor[0],item=p.guns?.[p.ready?.[p.selected??0]??0];
+    const color=creature?palette?.[3]:keyColor[suit]||keyColor[0],item=p.guns?.[p.ready?.[p.selected??0]??0];
     shadow(ctx,p.x,p.y+8,10,4);
     ctx.save();
     if(p.invuln>0&&p.dashTime<=0)ctx.globalAlpha*=.68+.32*Math.cos(t*45)**2;
-    if(p.dashTime>0)dashTrail(ctx,p,suit,color,t);
+    if(p.dashTime>0)dashTrail(ctx,p,suit,color,t,creature);
     const handX=p.x+Math.cos(a)*7,handY=p.y+Math.sin(a)*4+1.5;
     const gun=()=>{if(item && window.Combat?.drawGun)window.Combat.drawGun(ctx,item.id,handX+Math.cos(a)*5,handY+Math.sin(a)*5,.76,a,item);};
     if(back)gun();
@@ -698,7 +741,7 @@
       insignia(ctx,roll.suffix,6,-7,PARCHMENT);
       ctx.restore();
     }
-    if(!back){gun();ctx.fillStyle=suitColors[suit]?.[1]||human[2];ctx.fillRect(Math.round(handX)-2,Math.round(handY)-1,4,3);}
+    if(!back){gun();ctx.fillStyle=palette?.[1]||human[2];ctx.fillRect(Math.round(handX)-2,Math.round(handY)-1,4,3);}
     ctx.restore();
   }
   function enemy(ctx,e,t=0) {
@@ -732,6 +775,10 @@
   function portrait(ctx,kind,id,x,y,size,t=0) {
     if(kind==='gun'){window.Combat?.drawGun(ctx,id,x,y,Math.max(.25,size/40),-.12);return;}
     if(kind==='armor')kind='suit';
+    if(kind==='suit'){
+      const creature=creatureSuit(id);
+      if(creature&&window.CinderCreatureArt?.drawGear(ctx,creature,x,y+size*.04,size/59))return;
+    }
     if(kind==='active')kind='ability';
     const f=Math.floor(t*3)%4||0,s=sprite(kind,id||0,f);
     const native=kind==='boss'?80:kind==='ability'?26:kind==='suit'?36:38;

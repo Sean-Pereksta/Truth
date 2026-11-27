@@ -2,6 +2,7 @@
 (() => {
   'use strict';
 
+  const creatureGear = window.CinderCreatureGear;
   const kits = [
     {name:'Breach Trooper', gun:0, ability:0, suit:0, cost:0, desc:'Linebreaker rifle and Repulsor Sweep. A balanced kit for fighting through the docks.'},
     {name:'Field Scout', gun:13, ability:2, suit:1, cost:12, desc:'Horizon Nail and Slip Beacon. Tag one target, change angles and return to safety.'},
@@ -10,7 +11,9 @@
     {name:'Field Medic',gun:36,ability:12,suit:12,cost:0,desc:'Suture Carbine and Rescue Flare. Your Field Surgeon plates pulse hull repairs after a wound.'},
     {name:'Warden',gun:38,ability:13,suit:13,cost:0,desc:'Bulwark Repeater and Aegis Canopy. Hold the line with armor that can intercept a nearby partner’s hit.'},
     {name:'Engineer',gun:37,ability:14,suit:14,cost:0,desc:'Switchyard Driver and Relay Overcharger. Every fifth kill powers nearby shields and readies crew equipment.'},
-    {name:'Fabricator',gun:40,ability:15,suit:7,cost:0,desc:'Honeycomb Harvester and Foamseed Nursery. Send out worker bees and grow pod mines. Your Sapper Exoframe extends deployable life by 35%.'}
+    {name:'Fabricator',gun:40,ability:15,suit:7,cost:0,desc:'Honeycomb Harvester and Foamseed Nursery. Send out worker bees and grow pod mines. Your Sapper Exoframe extends deployable life by 35%.'},
+    {name:'Cat Handler',gun:43,ability:0,suit:20,cost:0,desc:'Deploy hunting cats from the Cat Spawner. The Cat Armor Set boosts their bites and other cat weapons.'},
+    {name:'Rainbow Ranger',gun:46,ability:2,suit:21,cost:0,desc:'Pierce enemy lines with the Unicorn Sniper. The Unicorn Armor Set boosts its horn lance and the other unicorn weapons.'}
   ].map((kit,id) => ({...kit,id}));
 
   const suits = [
@@ -35,6 +38,8 @@
     ['Resonance Greaves','Kinetic pulse','Every 7s of wear, a shockwave pushes enemies within 120. Elites resist the push. Bosses hold position. Gain 8 hull and move 4% slower.','#82cce7',{hull:8,move:-.04}],
     ['Chorus Dynamo','Shield relay','Every 9s of wear, restore 8 shields to yourself and living allies in sight within 170. Gain 5 shield capacity and lose 5 hull.','#9de6cb',{shield:5,hull:-5}]
   ].map(([name,role,desc,color,mods],id) => ({id,name,role,desc,color,mods}));
+
+  for (const suit of creatureGear.armors) suits.push({...suit,id:suits.length,mods:{}});
 
   const contracts = [
     {id:'glass',name:'Glass Cannon',cost:12,bonus:4,desc:'Deploy with 18 less maximum hull. Earn 4 extra Relay Data per gate.'},
@@ -218,6 +223,7 @@
     };
     const suit = suits[p.suit] || suits[0];
     addMods(suit.mods);
+    if (suit.creatureClass) stats.creatureDamage={[suit.creatureClass]:suit.damageBonus};
     const roll=p.suitRolls?.[suit.id] || {};
     addMods(armorPrefixes[roll.prefix]);
     stats.armorMark=roll.suffix || '';
@@ -279,6 +285,8 @@
     const notes=[damage+' base hit',cadence.toFixed(1)+'/s',range+' range',stagger+' stagger',
       def.heat?'heat cycle':Combat.capacity(g,item)+' rounds',cycle.toFixed(1)+'s '+(def.heat?'vent':'reload')];
     if (bonus) notes.push((bonus>0?'+':'')+bonus+'% build damage');
+    const creatureBonus = s.creatureDamage?.[def.creatureClass] || 0;
+    if (creatureBonus) notes.push('+'+Math.round(100*creatureBonus)+'% matching armor damage');
     if (item.id===36) notes.push('Stored healing charge '+Math.round(Math.max(0,Math.min(18,item.sutureCharge??12)))+'/18');
     if (item.chip) notes.push(item.chip);
     return notes.join(' · ');
@@ -289,7 +297,9 @@
     const pool=Combat.guns.filter(def=>!owned.includes(def.id) && available('gun',def.id));
     const matched=random(g,pool.filter(d=>familiesHeld.has(d.family)));
     const other=random(g,pool.filter(d=>!familiesHeld.has(d.family)));
-    const chosen=[matched,other].filter(Boolean);
+    const creatureClass = suits[g.player.suit]?.creatureClass;
+    const matchingCreature = creatureClass && random(g,pool.filter(d=>d.creatureClass===creatureClass && d!==matched));
+    const chosen=[...new Set([matched,other,matchingCreature].filter(Boolean))];
     chosen.push(...sample(g,pool.filter(d=>!chosen.includes(d)),3-chosen.length));
     return chosen.map(d=>gunCard(g,d.id));
   }
