@@ -76,7 +76,10 @@
   function vista(id,cls='vista'){return '<canvas aria-hidden="true" class="'+cls+'" width="400" height="76" data-vista="'+Number(id)+'"></canvas>'}
   function paintPanel(){
     for(const cv of byId('panel').querySelectorAll('canvas[data-art]'))portrait(cv,cv.dataset.art,cv.dataset.id);
-    if(window.Art?.landscape)for(const cv of byId('panel').querySelectorAll('canvas[data-vista]'))Art.landscape(cv.getContext('2d'),Number(cv.dataset.vista),0,0,cv.width,cv.height);
+    for(const cv of byId('panel').querySelectorAll('canvas[data-vista]')){
+      const ctx=cv.getContext('2d'),id=Number(cv.dataset.vista);
+      if(!window.RegionTerrain?.arenaVista(ctx,World.maps[id]?.type,cv.width,cv.height))window.Art?.landscape(ctx,id,0,0,cv.width,cv.height);
+    }
   }
   function titled(kicker,title,body,{close=true,narrow=false}={}){
     const panel=byId('panel');const opening=byId('scrim').hidden;
@@ -207,7 +210,7 @@
     const start=ui.guidePage*guidePageSize;
     const list=coll.slice(start,start+guidePageSize).map((v,offset)=>{
       const i=start+offset;
-      const tag=(tab==='gun'?weaponType(v):v.family)||v.role||v.faction||(tab==='ability'?'Cooldown '+v.cooldown+'s':tab==='map'?(i<5?'Opening sector':'Endless sector'):'Major encounter');
+      const tag=(tab==='gun'?weaponType(v):v.family)||v.role||v.faction||(tab==='ability'?'Cooldown '+v.cooldown+'s':tab==='map'?(i<5?'Opening sector':'Route sector'):'Major encounter');
       const notes=[v.desc||v.description||'',tab==='ability'&&v.augments?'Augments · '+v.augments.join(' / '):'',tab==='boss'&&v.phases?'Phases · '+v.phases.join(' / '):''].filter(Boolean).join(' ');
       const inspect=tab==='boss'?act('boss-intel','Attack patterns','small-btn',i):'';
       return '<article class="entry"'+(inspect?'':' tabindex="0"')+'>'+(tab==='map'?vista(i,'map-thumb'):art(tab,i))+'<div class="entry-copy"><div class="eyeline">'+escape(String(tag).toUpperCase())+'</div><h3>'+escape(v.name)+'</h3><p>'+escape(notes)+'</p></div>'+inspect+'</article>';

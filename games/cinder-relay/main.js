@@ -108,11 +108,11 @@
       if(!e.boss && !e.elite && push>95) e.stagger=Math.max(e.stagger||0,.16);
     }
     if(actual>0 && (g.time-(e.lastSpark??-1))>.065) {
-      e.lastSpark=g.time; g.fx(e.x,e.y,e.id>=24?'#ccb7ff':e.id>=12?'#a7d8a3':'#ffc193',3);
+      e.lastSpark=g.time; g.fx(e.x,e.y,e.id>=39?e.def.color:e.id>=24?'#ccb7ff':e.id>=12?'#a7d8a3':'#ffc193',3);
     }
     if(e.hp<=0) {
       e.hp=0; e.dead=true; g.kills++;
-      const boss=e.boss, elite=e.elite, color=boss?'#ffd59c':e.id>=24?'#bba1ff':e.id>=12?'#acc48c':'#e99765';
+      const boss=e.boss, elite=e.elite, color=boss?'#ffd59c':e.id>=39?e.def.color:e.id>=24?'#bba1ff':e.id>=12?'#acc48c':'#e99765';
       g.fx(e.x,e.y,color,boss?32:elite?19:9);
       Combat.deathFX?.(g,e);
       g.sound(boss?'boss-death':'kill');
