@@ -70,7 +70,7 @@ test('Collision jitter preserves work, whereas real knockback resets only the in
 });
 test('Pikemen replace only Stark and Tyrell Shield Bearers and retain their own facilities',()=>{
   assert.equal(regimentForHouse('wolf'),'winter_pikeman');assert.equal(regimentForHouse('rose'),'thornwall_pikeman');
-  assert.equal(regimentForHouse('lion'),'shield_bearer');assert.equal(regimentForHouse('dragon'),'shield_bearer');
+  assert.equal(regimentForHouse('lion'),'shield_bearer');assert.equal(regimentForHouse('dragon'),'dragon');
   for(const type of ['winter_pikeman','thornwall_pikeman']){assert.equal(UNIT_DEFS[type].shieldType,undefined);assert.ok(UNIT_DEFS[type].spearBrace);}
   assert.equal(regimentAllowed('shield_bearer','wolf'),false);assert.equal(BUILD_DEFS.winter_pike_hall.unit,'winter_pikeman');assert.equal(BUILD_DEFS.thornwall_pavilion.unit,'thornwall_pikeman');assert.equal(UNIT_DEFS.winter_guard.shieldType,'small');assert.equal(UNIT_DEFS.dread_pike.shieldType,undefined,'Two-handed Dread Pikes carry no shield.');
 });

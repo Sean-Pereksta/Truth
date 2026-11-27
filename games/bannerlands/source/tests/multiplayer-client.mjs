@@ -58,4 +58,18 @@ buffer.draw(game,10000,()=>assert.equal(unit.x,10,'A stale connection never extr
 buffer.push({sequence:3,time:2.1,units:[{id:7,x:20,y:0}]},10010);unit.x=20;game.time=2.1;
 buffer.draw(game,10010,()=>assert.ok(unit.x>=10,'A new update after a stall never reverses presentation time.'));
 assert.throws(()=>buffer.draw(game,2000,()=>{throw new Error('draw');}));assert.equal(unit.x,20);
+const sharedId=unit.id;
+const building={id:sharedId,x:30,y:3},fx={id:sharedId,x:5,y:0};
+game.buildings=[building];game.effects=[fx];
+const motion=new PresentationBuffer({delay:.1});
+for(const [sequence,x] of [[1,0],[2,10],[3,20]]){
+  motion.push({sequence,time:sequence/10,units:[{id:sharedId,x,y:0}],buildings:[{id:sharedId,x:30,y:3}],effects:[{id:sharedId,x:x/2,y:0}]},sequence*100);
+}
+const seen=[];
+for(const now of [300,309,320])motion.draw(game,now,()=>{
+  seen.push(unit.x);assert.equal(building.x,30);assert.equal(fx.x,unit.x/2);
+});
+assert.ok(seen[0]<seen[1]&&seen[1]<seen[2]);assert.equal(unit.x,20);assert.equal(fx.x,5);
+assert.throws(()=>motion.draw(game,325,()=>{throw Error('aborted draw');}),/aborted draw/);
+assert.equal(unit.x,20);assert.equal(fx.x,5);
 console.log('PASS interpolation restores authoritative state even on draw errors and never extrapolates hidden or stale movement.');

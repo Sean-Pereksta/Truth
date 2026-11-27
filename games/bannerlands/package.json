@@ -9,6 +9,8 @@
     "test:render": "node source/tests/reload-render.mjs && node source/tests/lands-render.mjs && node source/tests/facing-render.mjs && node source/tests/regiment-render.mjs && node source/tests/conquest-render.mjs && node source/tests/fog-render.mjs && node source/tests/aftermath-render.mjs && node source/tests/reinforcement-render.mjs && node source/tests/terrain-polish.mjs && node source/tests/visual-polish-render.mjs && node source/tests/bridge-art.mjs && node source/tests/painted-crossings.mjs && node source/tests/strategic-render-cache.mjs",
     "benchmark": "node source/tests/performance.mjs",
     "benchmark:render": "node source/tests/render-performance.mjs",
+    "benchmark:crowd-browser": "node source/tests/directional-crowd-browser.mjs",
+    "benchmark:presentation": "node source/tests/multiplayer-presentation-benchmark.mjs",
     "test:formations-browser": "node source/tests/formation-controls-browser.mjs && node source/tests/formation-placement-browser.mjs",
     "test:mobile": "node source/tests/mobile-hud.mjs",
     "test:reinforcement-browser": "node source/tests/reinforcement-browser.mjs",

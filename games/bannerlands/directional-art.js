@@ -4,9 +4,23 @@ export function facingRow(x=1,y=0){
   return (Math.round(Math.atan2(x+y,x-y)/(Math.PI/4))+8)%8;
 }
 
+export const DRAGON_BREATH_SECONDS=.85;
+const dragonRecoveryEnd=DRAGON_BREATH_SECONDS+.2;
+
+export function dragonBreathAge(u,g){
+  const attack=u.attackVisual;
+  if(attack?.action!=='dragonBreath')return Infinity;
+  // The guest presentation interpolates game time between authoritative frames.
+  return Number.isFinite(attack.at)&&Number.isFinite(g.time)?g.time-attack.at:attack.elapsed??Infinity;
+}
+
 export function attackFacing(u,g,usual){
   const a=u.attackVisual;
   if(!a||!Number.isFinite(a.faceX)||!Number.isFinite(a.faceY))return usual;
+  if(u.type==='dragon'){
+    const age=dragonBreathAge(u,g);
+    return age>=0&&age<dragonRecoveryEnd?{x:a.faceX,y:a.faceY}:usual;
+  }
   const age=a.elapsed??g.time-a.at;
   return age>=0&&age<.32?{x:a.faceX,y:a.faceY}:usual;
 }
@@ -32,6 +46,13 @@ export function atlasPose(u,g,moving,windup=0){
   if(u.hp<=0){
     const early=(g.time||0)-(u.bornAt??0)<.3;
     return carry?(early?'carryFall':'carryDown'):(early?'fall':'down');
+  }
+  if(u.type==='dragon'){
+    const age=dragonBreathAge(u,g);
+    if(age>=0&&age<dragonRecoveryEnd)return age<DRAGON_BREATH_SECONDS?'strike':'recover';
+    if(windup>0)return 'wind';
+    const wing=Math.floor((g.time||0)*(moving?4.6:3.3)+(u.id||0))&3;
+    return 'walk'+wing;
   }
   if(u.type==='trebuchet'){
     const state=u.trebuchetState;

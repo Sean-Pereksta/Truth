@@ -39,6 +39,12 @@ try{
   assert.equal(loaded.ready,true);assert.equal(loaded.painted,23);
   assert.equal(loaded.heroReady,true);assert.equal(loaded.heroes,16);
   assert.deepEqual(loaded.pikeBuildings.sort(),['thornwall_pavilion','winter_pike_hall']);assert.equal(loaded.moduleScript,false);
+  const dragonArt=await page.evaluate(async()=>{
+    const {renderer}=window.__bannerlands,row=renderer.directionalRow('dragon');
+    await renderer.loadDirectionalRow(row);
+    return [row.img,renderer.dragonspireFrame.image,renderer.dragonIcon,renderer.dragonFlame].map(img=>img.complete&&img.naturalWidth>0&&img.src.startsWith('data:image/webp;'));
+  });
+  assert.deepEqual(dragonArt,[true,true,true,true],'Dragon, Dragonspire, recruitment portrait and breath frames load offline.');
   await page.waitForFunction(()=>performance.getEntriesByName('bannerlands-detail-art-finished').length>0,null,{timeout:120000});
   const landscapeArt=await page.evaluate(()=>{
     const r=window.__bannerlands.renderer;

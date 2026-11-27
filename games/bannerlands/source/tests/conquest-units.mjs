@@ -17,7 +17,7 @@ const step=(g,dt)=>{g.time+=dt;g.hash.rebuild(g.units);g.updateUnits(dt);};
 test('New regiments and dedicated facilities are exclusive to their requested houses',()=>{
   for(const house of HOUSES){
     const g=fixture(house.sigil),expected=CONQUEST_BUILDINGS[house.sigil];
-    for(const type of ['trebuchet','giant','sharpshooter']){
+    for(const type of ['dragon','trebuchet','giant','sharpshooter']){
       assert.equal(regimentAllowed(type,house.sigil),expected?.unit===type);
       assert.equal(g.recruitDetails(type).unlocked,false);
     }
@@ -31,6 +31,10 @@ test('New regiments and dedicated facilities are exclusive to their requested ho
     assert.equal(regimentBuildingForHouse(house.sigil),expected.type);
     const b=g.buildings.find(b=>b.type===expected.type);
     assert.equal(g.recruitDetails(expected.unit).unlocked,true);
+    if(expected.unit==='dragon'){
+      assert.equal(g.recruit('dragon').ok,false,'A paid dragon still requires full incubation.');
+      b.spawnTimer=expected.interval;
+    }
     assert.equal(g.recruit(expected.unit).ok,true);
     assert.equal(g.units.length,UNIT_DEFS[expected.unit].batch,'Free Folk giants must not receive the mass-infantry batch bonus.');
     b.hp=0;assert.equal(g.recruitDetails(expected.unit).unlocked,false);
@@ -225,6 +229,115 @@ test('Tully sharpshooters shoot beyond archer range but reload much more slowly'
   step(g,.2);assert.equal(g.projectiles.length,1);assert.equal(g.projectiles[0].sourceType,'sharpshooter');
   for(let i=0;i<30;i++)step(g,.1);assert.equal(g.projectiles.length,1);
   for(let i=0;i<24;i++)step(g,.1);assert.equal(g.projectiles.length,2);
+});
+
+test('Dragonspires incubate for 120 seconds, wait for 50 supply, and share one living dragon',()=>{
+  const g=fixture('dragon'),team=g.teams[0],other=g.teams[1];
+  const a=g.addBuilding(0,'dragonspire',24,30),b=g.addBuilding(0,'dragonspire',40,31);
+  const archer=g.addUnit(0,'archer',20,20);
+  team.cap=50;const gold=team.gold;
+  assert.equal(g.recruitDetails('dragon').cost,0);
+  assert.equal(g.recruitDetails('dragon').supplyRequired,50);
+  assert.equal(g.recruitDetails('shield_bearer').unlocked,false);
+  g.updateBuildings(119.9);
+  assert.equal(g.units.filter(u=>u.type==='dragon').length,0);
+  assert.equal(g.recruit('dragon').ok,false);
+  assert.equal(g.spawnBatch(a,'dragon',2),0);
+  g.updateBuildings(40);
+  assert.deepEqual(g.productionStatus(a),{unit:'dragon',remaining:0,ready:true,blocked:'supply'});
+  assert.equal(b.spawnTimer,120);
+  g.damage(archer,1e6,{team:other.id});
+  g.updateBuildings(.04);
+  const dragon=g.byId.get(team.dragonId);
+  assert.equal(dragon.type,'dragon');assert.equal(dragon.hp,5400);
+  assert.equal(team.count,50);assert.equal(team.gold,gold);
+  assert.equal(g.units.filter(u=>u.type==='dragon'&&u.hp>0).length,1);
+  assert.deepEqual(g.productionStatus(b),{unit:'dragon',remaining:120,ready:false,blocked:'unique'});
+  const late=g.addBuilding(0,'dragonspire',44,34);g.updateBuildings(240);
+  for(const spire of [a,b,late])assert.equal(spire.spawnTimer,0);
+  assert.equal(g.recruit('dragon').ok,false);assert.equal(gold,team.gold);
+  g.recount();assert.equal(team.count,50,'The periodic census counts dragon supply.');
+  g.damage(dragon,1e6,{team:other.id});assert.equal(team.count,0);
+  g.updateBuildings(119.99);assert.equal(g.recruit('dragon').ok,false);
+  g.updateBuildings(.01);
+  assert.ok(g.byId.get(team.dragonId)?.hp>0);assert.notEqual(team.dragonId,dragon.id);
+  assert.equal(team.count,50);assert.equal(gold,team.gold);
+});
+
+test('Production timers use effective training rates, stay ready at cap, and reset after spawning',()=>{
+  const g=fixture('lion'),team=g.teams[0],hall=g.addBuilding(0,'gilded_guard_hall',30,34);
+  const delay=BUILD_DEFS[hall.type].interval/g.trainingRate(hall);
+  assert.ok(Math.abs(g.productionStatus(hall).remaining-delay)<1e-8);
+  team.cap=team.count;
+  g.updateBuildings(delay+20);
+  assert.deepEqual(g.productionStatus(hall),{unit:'shield_bearer',remaining:0,ready:true,blocked:'supply'});
+  team.cap++;g.updateBuildings(.02);assert.equal(team.count,1);
+  assert.ok(Math.abs(g.productionStatus(hall).remaining-delay)<1e-8);
+  assert.equal(g.productionStatus(g.addBuilding(0,'tower',22,23)),null);
+});
+
+test('A charged Dragonspire gets the first 50 supply freed alongside a waiting infantry company',()=>{
+  const g=fixture('dragon'),team=g.teams[0],barracks=g.addBuilding(0,'barracks',30,30);
+  const spire=g.addBuilding(0,'dragonspire',33,34);
+  team.cap=0;g.updateBuildings(120);assert.equal(g.productionStatus(spire).ready,true);
+  assert.equal(g.productionStatus(barracks).ready,true);
+  team.cap=50;g.updateBuildings(.05);
+  assert.equal(g.units.length,1);assert.equal(g.units[0].type,'dragon');
+  assert.equal(team.count,50);assert.equal(g.productionStatus(barracks).blocked,'supply');
+  team.cap=1;assert.equal(g.recruit('infantry').ok,false);
+  g.damage(g.units[0],1e6,{team:1});assert.equal(team.count,0);
+  g.updateBuildings(.05);assert.equal(team.count,1);
+  assert.equal(g.units.filter(u=>u.hp>0)[0].type,'infantry');
+});
+
+test('Losing a king clears dragon supply, Dragonspire production and the defeated house’s burn damage',()=>{
+  const g=new Game({mode:'defend-king',house:HOUSES.findIndex(h=>h.sigil==='dragon'),seed:44277});
+  const king=g.kingFor(0),dragon=g.addUnit(0,'dragon',king.x,king.y),team=g.teams[0];
+  const spire=g.addBuilding(0,'dragonspire',king.x+1,king.y+1);
+  assert.ok(dragon.hp>0);assert.ok(team.count>=50);
+  const enemy=g.addUnit(1,'giant',king.x+2,king.y);
+  g.dragonBurns=new Map([[enemy.id,{team:0,dps:28,until:5}]]);
+  g.addFireZone(0,enemy.x,enemy.y,1.65,5,28);
+  g.damage(king,1e6,{team:1});
+  assert.equal(team.alive,false);assert.equal(team.count,0);assert.equal(team.dragonId,undefined);
+  assert.equal(dragon.hp,0);assert.equal(g.productionStatus(spire),null);
+  assert.equal(g.dragonBurns.size,0);assert.equal(g.fireZones.length,0);assert.equal(g.recruit('dragon').ok,false);
+  assert.equal(g.spawnBatch(spire,'dragon',1),0);assert.equal(g.addUnit(0,'dragon',king.x,king.y),null);
+});
+
+test('Dragon breath hits its target, cone and splash rim; surviving enemies continue burning after moving',()=>{
+  const g=fixture('dragon');
+  for(const tile of g.tiles)tile.height=0;
+  const dragon=g.addUnit(0,'dragon',30,30),victim=g.addUnit(1,'giant',35,30);
+  const cone=g.addUnit(1,'giant',33,30.45),rim=g.addUnit(1,'giant',35.8,30);
+  const behind=g.addUnit(1,'giant',28,30),outside=g.addUnit(1,'giant',32,33);
+  const friend=g.addUnit(0,'giant',34,30),fort=g.addBuilding(1,'barracks',34,30.1);
+  const hp=victim.hp;
+  dragon.facingX=1;dragon.facingY=0;g.hash.rebuild(g.units);
+  g.attack(dragon,victim);
+  assert.equal(dragon.attackVisual.action,'dragonBreath');assert.equal(g.projectiles.length,0);
+  assert.equal(dragon.attackVisual.distance,5);
+  assert.ok(victim.hp<hp&&cone.hp<hp&&rim.hp<hp&&fort.hp<fort.maxHp);
+  assert.equal(friend.hp,hp);assert.equal(behind.hp,hp);assert.equal(outside.hp,hp);
+  assert.equal(g.fireZones.length,1);assert.equal(g.fireZones[0].life,5);
+  cone.x=15;cone.y=15;g.hash.rebuild(g.units);
+  const after=cone.hp,afterVictim=victim.hp;
+  g.time+=1;g.updateHouseEffects(1);
+  assert.ok(cone.hp<after,'Ignited enemies burn when they leave the scorch mark.');
+  assert.ok(Math.abs((after-cone.hp)-(afterVictim-victim.hp))<1e-6,'Ground and attached fire cannot double-tick.');
+  g.time+=6;const finalHP=cone.hp;g.updateHouseEffects(6);
+  assert.equal(cone.hp,finalHP);assert.equal(friend.hp,hp);
+});
+
+test('Old Targaryen guards become swordsmen and their foundries start fresh Dragonspire incubations',()=>{
+  const g=fixture('dragon'),guard=g.addUnit(0,'shield_bearer',30,30),spire=g.addBuilding(0,'dragonspire',31,27);
+  guard.hp=guard.maxHp/2;g.command([guard.id],34,30,'move');
+  const oldOrder=guard.order;
+  spire.type='dragonshield_foundry';spire.maxHp=1150;spire.hp=575;spire.spawnTimer=31;
+  g.migrateLegacyRegiments();g.migrateLegacyRegiments();
+  assert.equal(guard.type,'infantry');assert.equal(guard.hp,guard.maxHp/2);assert.equal(guard.order,oldOrder);
+  assert.equal(spire.type,'dragonspire');assert.equal(spire.hp,1200);assert.equal(spire.spawnTimer,0);
+  assert.equal(g.productionStatus(spire).remaining,120);
 });
 
 console.log(`${checks} conquest regiment checks passed.`);

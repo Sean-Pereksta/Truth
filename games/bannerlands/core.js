@@ -35,7 +35,7 @@ export const HOUSES = [
 const HOUSE_IDENTITIES={
  wolf:{playstyle:'Defensive battle lines',advantages:['Held infantry resists charge knockback by an extra 45%.','Troops holding owned ground recover health 2.5× faster.'],power:{name:'Northern Resolve',description:'Heal your selected soldiers by 16% and strengthen their resolve and recovery for 8 seconds. With no selection, affects your army.',cooldown:45,cost:0}},
  lion:{playstyle:'Forward mercenary warfare',advantages:['Paid companies muster at the owned building closest to your rally point.','Hire a mixed sellsword company at your forward recruitment post.'],power:{name:'Sellsword Contract',description:'Spend 150 gold for 8 swordsmen and 4 archers at the building closest to your rally. Requires 12 free supply.',cooldown:45,cost:150}},
- dragon:{playstyle:'Siege and area denial',advantages:['Catapult impacts leave burning ground for 3 seconds.','Fire zones damage enemies only; overlapping flames do not stack damage.'],power:{name:'Firestorm',description:'Burn an enemy position within 8 cells of your selected force for 5 seconds. Select a frontline force to aim the fire.',cooldown:55,cost:0}},
+ dragon:{playstyle:'Siege and area denial',advantages:['Catapult impacts leave burning ground for 3 seconds.','Fire zones damage enemies only; overlapping flames do not stack damage.','Dragonspire hatches one dragon in 120 seconds. It needs 50 free supply and incubates again after your dragon falls.'],power:{name:'Firestorm',description:'Burn an enemy position within 8 cells of your selected force for 5 seconds. Select a frontline force to aim the fire.',cooldown:55,cost:0}},
  stag:{playstyle:'Cavalry shock assaults',advantages:['Cavalry loses 25% less momentum on collision.','Charges push enemies 20% farther.'],power:{name:'Storm Charge',description:'For 10 seconds, selected cavalry builds its charge faster and retains more momentum on impact. A real run-up is still required.',cooldown:45,cost:0}},
  rose:{playstyle:'Territory and rapid mustering',advantages:['Each completed Bannerland speeds automatic training by 2%, up to 20%.','Muster extra companies across your production network.'],power:{name:'Rapid Muster',description:'Immediately train one company at up to 4 production buildings, within your supply limit.',cooldown:60,cost:0}},
  sun:{playstyle:'Mobile archer skirmishing',advantages:['Attack-ordered archers back away from nearby melee troops while firing.','Venom arrows apply a non-stacking poison and a light slow.'],power:{name:'Viper Venom',description:'For 10 seconds, selected archers poison enemies hit by their arrows for 4 seconds.',cooldown:45,cost:0}},
@@ -155,6 +155,7 @@ UNIT_DEFS.gilded_crossbow.impact='60-damage bolts; 108 against cavalry. A belt-a
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const ds=(a,b)=> (a.x-b.x)**2+(a.y-b.y)**2;
 const MAX_UNIT_RADIUS=Math.max(...Object.values(UNIT_DEFS).map(unit=>unit.radius||0));
+const REGULAR_UNIT_RADIUS=Math.max(...Object.values(UNIT_DEFS).filter(unit=>!unit.unique).map(unit=>unit.radius||0));
 const ALLY_CLEARANCE=.57;
 const ALLY_BODY_CLEARANCE=.46;
 const ALLY_BODY_GAP=.10;
@@ -210,12 +211,25 @@ class SpatialHash {
     // Large worlds are mostly empty. Reset only buckets populated on the last
     // pass, preserving insertion order for identical combat and separation.
     for(const b of this.occupied)b.length=0;this.occupied.length=0;
+    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
     for(const u of units)if(u.hp>0){
       const x=clamp(Math.floor(u.x/this.size),0,this.w-1),y=clamp(Math.floor(u.y/this.size),0,this.h-1),bucket=this.buckets[y*this.w+x];
       if(!bucket.length){this.occupied.push(bucket);bucket.onlyTeam=u.team;}
       else if(bucket.onlyTeam!==u.team)bucket.onlyTeam=null;
       bucket.push(u);
+      if(u.radius>REGULAR_UNIT_RADIUS){
+        minX=Math.min(minX,u.x);maxX=Math.max(maxX,u.x);
+        minY=Math.min(minY,u.y);maxY=Math.max(maxY,u.y);
+      }
     }
+    // Bounds use the same positions as the hash. Include the entire outer
+    // bucket so normal army spacing still visits every potential large body.
+    const margin=MAX_UNIT_RADIUS*2+ALLY_BODY_GAP+this.size;
+    this.largeLeft=minX-margin;this.largeRight=maxX+margin;
+    this.largeTop=minY-margin;this.largeBottom=maxY+margin;
+  }
+  bodyRadiusNear(x,y){
+    return x>=this.largeLeft&&x<=this.largeRight&&y>=this.largeTop&&y<=this.largeBottom?MAX_UNIT_RADIUS:REGULAR_UNIT_RADIUS;
   }
   visit(x,y,r,fn,excludedTeam=-1){
     const x0=clamp(Math.floor((x-r)/this.size),0,this.w-1),x1=clamp(Math.floor((x+r)/this.size),0,this.w-1);
@@ -241,7 +255,7 @@ export class Game {
     if(!MAP_SIZES[this.config.scale])this.config.scale='epic';
     const map=MAP_SIZES[this.config.scale];this.W=map.width;this.H=map.height;this.mapName=map.name;
     this.seed=(Number(this.config.seed)||44277)>>>0;this.time=0;this.paused=false;this.winner=null;this.units=[];this.buildings=[];this.projectiles=[];this.effects=[];this.events=[];this.tiles=[];this.teams=[];this.nextId=1;this.eventId=0;this.captureClock=0;this.economyClock=0;this.cleanClock=0;this.byId=new Map();this.stats={battles:0,captured:0,dead:0,chargeImpacts:0};
-    this.standards=[];this.standardRemains=[];
+    this.standards=[];this.standardRemains=[];this.regimentSchemaVersion=3;
     this.aftermath=new BattleAftermath();this.controlScores=[];this.nextFlagWaveAt=this.mode.flagWaves?15:null;this.flagWave=0;this.nextFlagId=1000000;
     this.hash=new SpatialHash(this.W,this.H);this.capturePower=new Float32Array(this.W*this.H*(this.config.enemies+1));this.captureTouched=[];this.playable=0;
     const terrainSeed=this.seed;
@@ -429,18 +443,27 @@ export class Game {
     for(const site of this.castles)site.progress=Array(this.objectiveScores.length).fill(0);
     if(this.mode.kingSurvival)return;
     const count={standard:3,epic:5,continent:6}[this.config.scale]||3;
+    const candidates=[],center={x:this.W/2,y:this.H/2};
+    for(const tile of this.tiles){
+      if(!isPassableTile(tile)||tile.x<8||tile.y<8||tile.x>this.W-9||tile.y>this.H-9)continue;
+      const p={x:tile.x+.5,y:tile.y+.5};
+      let homeGap=Infinity;for(const team of this.teams)homeGap=Math.min(homeGap,ds(team.home,p));
+      if(homeGap<14**2||this.objectives.some(o=>ds(o,p)<9**2)||this.buildings.some(b=>ds(b,p)<6**2))continue;
+      let room=0;for(let y=-2;y<=2;y++)for(let x=-2;x<=2;x++)if(this.isWalkable(p.x+x,p.y+y))room++;
+      if(room<21||!this.navigation.isClearPoint(p.x,p.y,BUILD_DEFS.keep.radius))continue;
+      let castleGap=Infinity;for(const site of this.castles)if(site.ruined)castleGap=Math.min(castleGap,ds(site,p));
+      candidates.push({...p,homeGap,castleGap,centerCost:ds(p,center)*.08,variation:tile.variation*.01});
+    }
     for(let i=0;i<count;i++){
       let best=null,bestScore=-Infinity;
-      for(const tile of this.tiles){
-        if(!isPassableTile(tile)||tile.x<8||tile.y<8||tile.x>this.W-9||tile.y>this.H-9)continue;
-        const p={x:tile.x+.5,y:tile.y+.5},homeGap=Math.min(...this.teams.map(s=>ds(s.home,p))),castleGap=Math.min(...this.castles.filter(c=>c.ruined).map(c=>ds(c,p)),Infinity);
-        if(homeGap<14**2||castleGap<18**2||this.objectives.some(o=>ds(o,p)<9**2)||this.buildings.some(b=>ds(b,p)<6**2))continue;
-        let room=0;for(let y=-2;y<=2;y++)for(let x=-2;x<=2;x++)if(this.isWalkable(p.x+x,p.y+y))room++;
-        if(room<21||!this.navigation.isClearPoint(p.x,p.y,BUILD_DEFS.keep.radius))continue;
-        const score=Math.min(homeGap,castleGap*.8)-ds(p,{x:this.W/2,y:this.H/2})*.08+tile.variation*.01;
+      for(const p of candidates){
+        if(p.castleGap<18**2)continue;
+        const score=Math.min(p.homeGap,p.castleGap*.8)-p.centerCost+p.variation;
         if(score>bestScore){best=p;bestScore=score;}
       }
-      if(best)this.createCastleSite(best);
+      if(!best)break;
+      this.createCastleSite(best);
+      for(const p of candidates)p.castleGap=Math.min(p.castleGap,ds(best,p));
     }
   }
   updateCastles(dt){
@@ -477,6 +500,8 @@ export class Game {
   }
   eliminate(team,reason='castle',location=null){
     const s=this.teams[team];if(!s?.alive)return;s.alive=false;s.count=0;s.tiles=0;s.value=0;s.banners=0;s.keeps=0;s.income=0;s.heroTimer=0;s.rally=null;
+    delete s.dragonId;
+    if(this.dragonBurns)for(const [id,burn] of this.dragonBurns)if(burn.team===team||this.byId.get(id)?.team===team)this.dragonBurns.delete(id);
     BattleStandards.eliminateStandards(this,team);
     for(const u of this.units)if(u.team===team){u.hp=0;u.target=null;u.order=null;}
     for(const b of this.buildings)if(b.team===team)b.hp=0;
@@ -530,6 +555,7 @@ export class Game {
     }
   }
   trainingRate(b){
+    if(b.type==='dragonspire')return 1;
     const s=this.teams[b.team];let rate=(s.sigil==='rose'?1+Math.min(.2,s.banners*.02):s.sigil==='lion'?.9:1)*(BUILD_DEFS[b.type]?.trainingFactor||1)*heroTrainingMultiplier(this,b,BUILD_DEFS);
     if(b.type==='workshop')rate*=s.sigil==='beacon'?1.25:s.sigil==='rose'?.75:s.sigil==='frog'?.8:1;
     if(b.type==='range'&&s.sigil==='huntsman')rate*=.85;
@@ -554,10 +580,20 @@ export class Game {
     this.events.push(event);if(this.events.length>35)this.events.shift();}
   addUnit(team,type,x,y){
     if(type==='hero'){const existing=this.heroFor(team);if(existing)return existing;}
-    const d=UNIT_DEFS[type],s=this.teams[team],armor=this.upgradeMultiplier('armor',s.upgrades.armor),angle=Math.atan2(this.H/2-y,this.W/2-x);const u={id:this.nextId++,team,type,x,y,radius:d.radius,hp:d.hp*armor,maxHp:d.hp*armor,vx:0,vy:0,facingX:Math.cos(angle),facingY:Math.sin(angle),backpedaling:false,attackAnim:0,phase:this.random()*6.28,cooldown:this.random()*d.rate,seek:this.random()*.2,target:null,order:null,charge:0,momentum:0,charging:false,chargeSpeed:0,chargeDir:{x:1,y:0},chargeRunup:0,chargeTravel:0,chargeCooldown:0,chargeElapsed:0,chargeHits:this.unitClass(type)==='cavalry'?new Map():null,knockT:0,knockVX:0,knockVY:0,alive:true,spawn:this.time,hit:0,shieldType:d.shieldType,shieldGuard:'lowered',shieldGuardTime:0,spearState:d.spearBrace?'moving':undefined};this.bound(u);if(!this.isWalkable(u.x,u.y))Object.assign(u,this.navigation.nearestPassable(u));this.units.push(u);this.byId.set(u.id,u);s.count++;if(d.setupSeconds){
+    if(type==='dragon'){
+      const s=this.teams[team],existing=this.byId.get(s.dragonId);
+      if(existing?.hp>0)return existing;
+      if(!s.alive||s.sigil!=='dragon'||s.count+UNIT_DEFS.dragon.supply>s.cap)return null;
+    }
+    const d=UNIT_DEFS[type],s=this.teams[team],armor=this.upgradeMultiplier('armor',s.upgrades.armor),angle=Math.atan2(this.H/2-y,this.W/2-x);const u={id:this.nextId++,team,type,x,y,radius:d.radius,hp:d.hp*armor,maxHp:d.hp*armor,vx:0,vy:0,facingX:Math.cos(angle),facingY:Math.sin(angle),backpedaling:false,attackAnim:0,phase:this.random()*6.28,cooldown:this.random()*d.rate,seek:this.random()*.2,target:null,order:null,charge:0,momentum:0,charging:false,chargeSpeed:0,chargeDir:{x:1,y:0},chargeRunup:0,chargeTravel:0,chargeCooldown:0,chargeElapsed:0,chargeHits:this.unitClass(type)==='cavalry'?new Map():null,knockT:0,knockVX:0,knockVY:0,alive:true,spawn:this.time,hit:0,shieldType:d.shieldType,shieldGuard:'lowered',shieldGuardTime:0,spearState:d.spearBrace?'moving':undefined};this.bound(u);if(!this.isWalkable(u.x,u.y))Object.assign(u,this.navigation.nearestPassable(u));this.units.push(u);this.byId.set(u.id,u);s.count+=d.supply||1;if(d.setupSeconds){
       if(this.isHuman(team))u.trebuchetState='packed';
       else{u.setupProgress=0;u.setupX=u.x;u.setupY=u.y;}
-    }if(type==='hero')BattleStandards.attachHero(this,u);return u;
+    }if(type==='hero')BattleStandards.attachHero(this,u);
+    if(type==='dragon'){
+      s.dragonId=u.id;
+      for(const b of this.buildings)if(b.team===team&&b.type==='dragonspire')b.spawnTimer=0;
+    }
+    return u;
   }
   addBuilding(team,type,x,y){const d=BUILD_DEFS[type],rally=this.teams[team]?.rally,b={id:this.nextId++,team,type,x,y,hp:d.hp,maxHp:d.hp,level:type==='keep'||type==='tower'?1:undefined,radius:d.radius,spawnTimer:0,cooldown:this.random(),hit:0,progress:1,rally:rally?{...rally}:null};this.bound(b);this.buildings.push(b);this.byId.set(b.id,b);if(type==='keep'){const site=this.castles.find(c=>c.ruined&&ds(c,b)<.01)||this.createCastleSite(b,team,b.id);Object.assign(site,{team,buildingId:b.id,ruined:false});b.castleId=site.id;}return b;}
   group(team){return this.units.filter(u=>u.team===team&&u.hp>0);}
@@ -613,7 +649,7 @@ export class Game {
     return !!field&&field.distance[origin]<=leash*1.5;
   }
   hasFacingOrder(u){return Number.isFinite(u.order?.facingX)&&Number.isFinite(u.order?.facingY);}
-  formationSettled(u){return !!u.order&&!u.order.slotBlocked&&Math.hypot(u.x-u.order.x,u.y-u.order.y)<.35&&(u.order.mode==='hold'||this.hasFacingOrder(u));}
+  formationSettled(u){return !!u.order&&!u.order.slotBlocked&&(u.order.mode==='hold'||this.hasFacingOrder(u))&&ds(u,u.order)<.35**2;}
   turnFacing(u,dx,dy,dt){
     const length=Math.hypot(dx,dy);if(length<.001)return;dx/=length;dy/=length;
     const dot=(u.facingX??dx)*dx+(u.facingY??dy)*dy;if(dot>.9999){u.facingX=dx;u.facingY=dy;return;}
@@ -891,9 +927,10 @@ export class Game {
       if(s.sigil==='bone'&&s.tiles<100)batch+=2;
     }
     const requiredBuilding=d.regiment?regimentRequiredBuilding(type,s.sigil):special?HOUSE_CONTENT[d.house]?.building:null,unlocked=houseCanRecruit(type,s.sigil)&&(!d.regiment||regimentAllowed(type,s.sigil))&&(!special||d.house===s.sigil)&&(!requiredBuilding||this.buildings.some(b=>b.team===team&&b.type===requiredBuilding&&b.hp>0));
-    const remaining=d.musterSeconds?Math.max(0,this.recruitmentOrigin(team,type)?.musterCooldown||0):0;
-    multiplier*=heroRecruitmentMultiplier(this,team,this.recruitmentOrigin(team,type));
-    return {...d,cost:Math.ceil(d.cost*multiplier-1e-9),batch,requiredBuilding,unlocked,remaining};
+    const origin=this.recruitmentOrigin(team,type),incubation=type==='dragon'&&origin?this.productionStatus(origin):null;
+    const remaining=incubation?.remaining??(d.musterSeconds?Math.max(0,origin?.musterCooldown||0):0);
+    multiplier*=heroRecruitmentMultiplier(this,team,origin);
+    return {...d,cost:Math.max(0,Math.ceil(d.cost*multiplier-1e-9)),batch,requiredBuilding,unlocked,remaining,supplyRequired:batch*(d.supply||1),blocked:incubation?.blocked||''};
   }
   recruit(type,team=0){
     const s=this.teams[team],d=this.recruitDetails(type,team);if(!s||!s.alive||!d||this.unitClass(type)==='hero')return result(false,'Choose a regiment to recruit.');
@@ -901,17 +938,30 @@ export class Game {
     if(d.house&&d.house!==s.sigil)return result(false,'Only this house can recruit its own specialist troops.');
     if(d.regiment&&!regimentAllowed(type,s.sigil))return result(false,'This regiment is not available to your house.');
     if(!d.unlocked)return result(false,`Build a ${BUILD_DEFS[d.requiredBuilding].label} to recruit ${d.label.toLowerCase()}.`);
-    if(d.remaining>0)return result(false,`${d.label} need ${Math.ceil(d.remaining)} more seconds to muster at their camp.`);
+    if(d.blocked==='unique')return result(false,'Your army already fields a dragon.');
+    if(d.remaining>0)return result(false,type==='dragon'?`Dragon hatches in ${Math.ceil(d.remaining)} seconds.`:`${d.label} need ${Math.ceil(d.remaining)} more seconds to muster at their camp.`);
     const origin=this.recruitmentOrigin(team,type);if(!origin)return result(false,'A recruitment building is required.');
-    if(s.count+d.batch>s.cap)return result(false,'Supply limit. Capture another castle to field a larger army.');
+    if(s.count+d.supplyRequired>s.cap)return result(false,type==='dragon'?'A dragon requires 50 free supply.':'Supply limit. Capture another castle to field a larger army.');
     if(s.gold<d.cost)return result(false,`You need ${d.cost} gold.`);
     s.gold-=d.cost;const anchor=s.rally||s.home,twins=s.sigil==='bridge'?this.buildings.filter(b=>b.team===team&&b.hp>0&&(!d.house&&!d.regiment||b.type===d.requiredBuilding)).sort((a,b)=>ds(a,anchor)-ds(b,anchor)).slice(0,2):[];if(twins.length===2){this.spawnBatch(twins[0],type,Math.ceil(d.batch/2));this.spawnBatch(twins[1],type,Math.floor(d.batch/2));}else this.spawnBatch(origin,type,d.batch);return result(true,`${d.batch} ${d.label.toLowerCase()} join your banner.`);
   }
   spawnBatch(origin,type,n){
     const team=this.teams[origin.team],spawned=[],definition=UNIT_DEFS[type];
-    if(!houseCanRecruit(type,team.sigil)||definition.musterSeconds&&(origin.musterCooldown||0)>0)return;
-    for(let i=0;i<n&&team.count<team.cap;i++){const angle=this.random()*Math.PI*2,r=Math.max(.85,this.buildingRadius(origin)+UNIT_DEFS[type].radius+.3)+this.random()*.45;const u=this.addUnit(origin.team,type,origin.x+Math.cos(angle)*r,origin.y+Math.sin(angle)*r);if(definition.lanceChampion)u.spawnOriginId=origin.id;spawned.push(u.id);}
+    if(!team.alive||origin.hp<=0||!houseCanRecruit(type,team.sigil)||definition.regiment&&!regimentAllowed(type,team.sigil)||definition.musterSeconds&&(origin.musterCooldown||0)>0)return 0;
+    if(type==='dragon'){
+      if(origin.type!=='dragonspire'||!this.productionStatus(origin)?.ready)return 0;
+      n=Math.min(n,1);
+    }
+    for(let i=0;i<n&&team.count+(definition.supply||1)<=team.cap;i++){const angle=this.random()*Math.PI*2,r=Math.max(.85,this.buildingRadius(origin)+definition.radius+.3)+this.random()*.45;const u=this.addUnit(origin.team,type,origin.x+Math.cos(angle)*r,origin.y+Math.sin(angle)*r);if(definition.lanceChampion)u.spawnOriginId=origin.id;spawned.push(u.id);}
     if(spawned.length){if(definition.musterSeconds){origin.musterCooldown=definition.musterSeconds;origin.spawnTimer=0;}const rally=this.isHuman(origin.team)?origin.rally:team.rally;if(rally&&(this.isHuman(origin.team)||ds(origin,rally)>2.5))this.command(spawned,rally.x,rally.y,'attack','spread');else this.idle(spawned);}
+    return spawned.length;
+  }
+  productionStatus(b){
+    const d=b&&BUILD_DEFS[b.type],team=b&&this.teams[b.team];
+    if(!d?.unit||!team?.alive||b.hp<=0||!houseCanRecruit(d.unit,team.sigil))return null;
+    if(d.unit==='dragon'&&this.byId.get(team.dragonId)?.hp>0)return {unit:d.unit,remaining:d.interval,ready:false,blocked:'unique'};
+    const remaining=Math.max(0,(d.interval-(b.spawnTimer||0))/this.trainingRate(b),b.musterCooldown||0),ready=remaining<=1e-7;
+    return {unit:d.unit,remaining:ready?0:remaining,ready,blocked:ready&&team.cap-team.count<(UNIT_DEFS[d.unit].supply||1)?'supply':''};
   }
   buildingStatus(team=0){
     const tiles=this.teams[team]?.tiles||0;
@@ -947,7 +997,7 @@ export class Game {
   recruitmentOrigin(team=0,type=null){
     const s=this.teams[team],buildings=this.buildings.filter(b=>b.team===team&&b.hp>0);if(!s||!buildings.length)return null;const anchor=s.rally||s.home;
     if(UNIT_DEFS[type]?.house&&!UNIT_DEFS[type]?.regiment){const required=HOUSE_CONTENT[UNIT_DEFS[type].house].building;return buildings.filter(b=>b.type===required).sort((a,b)=>ds(a,anchor)-ds(b,anchor))[0]||null;}
-    if(UNIT_DEFS[type]?.regiment){const required=regimentRequiredBuilding(type,s.sigil);return buildings.filter(b=>b.type===required).sort((a,b)=>(UNIT_DEFS[type].musterSeconds?Math.max(0,a.musterCooldown||0)-Math.max(0,b.musterCooldown||0):0)||ds(a,anchor)-ds(b,anchor))[0]||null;}
+    if(UNIT_DEFS[type]?.regiment){const required=regimentRequiredBuilding(type,s.sigil);return buildings.filter(b=>b.type===required).sort((a,b)=>(type==='dragon'?(b.spawnTimer||0)-(a.spawnTimer||0):UNIT_DEFS[type].musterSeconds?Math.max(0,a.musterCooldown||0)-Math.max(0,b.musterCooldown||0):0)||ds(a,anchor)-ds(b,anchor))[0]||null;}
     return s.sigil==='lion'?buildings.sort((a,b)=>ds(a,anchor)-ds(b,anchor))[0]:buildings.find(b=>b.type==='keep')||buildings[0];
   }
   powerStatus(team=0){const s=this.teams[team],p=s?.power;if(!p)return {name:'House power',description:'',cooldown:0,remaining:0,ready:false,cost:0};const remaining=Math.max(0,(s.powerReadyAt||0)-this.time);return {...p,remaining,ready:s.alive&&remaining<=0};}
@@ -1057,8 +1107,42 @@ export class Game {
     const near=this.fireZones.find(z=>z.team===team&&(z.x-x)**2+(z.y-y)**2<.16);if(near){near.life=Math.max(near.life,life);near.maxLife=Math.max(near.maxLife,life);near.radius=Math.max(near.radius,radius);near.dps=Math.max(near.dps,dps);return;}
     if(this.fireZones.length>=24)this.fireZones.shift();this.fireZones.push({team,x,y,radius,life,maxLife:life,dps});
   }
+  breatheFire(u,target,baseDamage){
+    const d=UNIT_DEFS.dragon,breath=u.attackVisual;
+    breath.action='dragonBreath';
+    const length=Math.hypot(target.x-u.x,target.y-u.y),radius=d.splashRadius;
+    const dx=length>0?(target.x-u.x)/length:u.facingX,dy=length>0?(target.y-u.y)/length:u.facingY;
+    breath.faceX=breath.dx=u.facingX=dx;breath.faceY=breath.dy=u.facingY=dy;breath.distance=length;
+    const team=u.team,source={team,type:u.type,sourceId:u.id,impactKind:'fire'};
+    const weaponScale=this.upgradeMultiplier('weapons',this.teams[team].upgrades.weapons);
+    const scorch=(foe,damage)=>{
+      this.damage(foe,damage*(BUILD_DEFS[foe.type]?1.65:1),source);
+      if(foe.hp<=0||foe.type==='standard')return;
+      this.dragonBurns??=new Map();
+      const old=this.dragonBurns.get(foe.id),dps=d.burnDps*weaponScale;
+      this.dragonBurns.set(foe.id,{team:old&&old.dps>dps?old.team:team,dps:Math.max(dps,old?.dps||0),until:this.time+d.burnSeconds});
+    };
+    const splash=foe=>{
+      if(foe===target||foe.hp<=0||!this.hostile(team,foe.team))return;
+      const rx=foe.x-u.x,ry=foe.y-u.y,along=rx*dx+ry*dy;
+      if(along<=0)return;
+      const width=.25+radius*Math.min(1,along/Math.max(length,.01));
+      if(along<=length?Math.abs(rx*dy-ry*dx)>width:ds(foe,target)>radius*radius)return;
+      scorch(foe,baseDamage*.76);
+    };
+    scorch(target,baseDamage);
+    this.hash.visit((u.x+target.x)/2,(u.y+target.y)/2,length/2+radius+.25,splash);
+    for(const building of this.buildings)splash(building);
+    this.addFireZone(team,target.x,target.y,radius,d.burnSeconds,d.burnDps*weaponScale);
+  }
   updateHouseEffects(dt){
+    if(!this.fireZones.length&&!this.dragonBurns?.size)return;
     const burning=new Map();for(const z of this.fireZones){z.life-=dt;if(z.life<=0)continue;this.hash.visit(z.x,z.y,z.radius,u=>{if(this.hostile(u.team,z.team)&&u.hp>0&&ds(u,z)<z.radius*z.radius){const old=burning.get(u.id);if(!old||old.dps<z.dps)burning.set(u.id,{u,dps:z.dps,team:z.team});}});}
+    if(this.dragonBurns)for(const [id,burn] of this.dragonBurns){
+      const u=this.byId.get(id);
+      if(!u||u.hp<=0||burn.until<=this.time||!this.teams[burn.team]?.alive){this.dragonBurns.delete(id);continue;}
+      if((burning.get(id)?.dps||0)<burn.dps)burning.set(id,{u,dps:burn.dps,team:burn.team});
+    }
     for(const {u,dps,team}of burning.values())this.damage(u,dps*dt*heroBurnMultiplier(this,team,u),{team});this.fireZones=this.fireZones.filter(z=>z.life>0);
   }
   houseProjectileImpact(p){
@@ -1103,26 +1187,30 @@ export class Game {
     }
     const attacker=this.teams[source.team],attackerUnit=this.sourceUnit(source);if(this.unitClass(source)==='infantry'&&attacker?.sigil==='flayed'&&attackerUnit?.hp>0){if(attackerUnit.harvestUntil>this.time)attackerUnit.hp=Math.min(attackerUnit.maxHp,attackerUnit.hp+dealt*.25);if(target.hp<=0&&UNIT_DEFS[target.type])attackerUnit.hp=Math.min(attackerUnit.maxHp,attackerUnit.hp+8);}
     this.specialistHit(target,amount,source);
-    if(target.hp<=0){const s=this.teams[source.team];if(s){s.kills++;s.gold+=heroKillReward(this,target,source);}this.stats.dead++;if(UNIT_DEFS[target.type]){if(target.type==='hero'){target.heroDeathMode=target.heroMode;BattleStandards.heroDied(this,target);}this.aftermath.record(target,this.teams[target.team],this.aftermath.time,this.unitClass(target));this.teams[target.team].count--;if(target.isKing&&this.mode.kingSurvival){this.eliminate(target.team,'king',target);return;}if(this.unitClass(target)==='hero'){this.teams[target.team].heroTimer=35;this.event(`${heroProfile(this.teams[target.team]).name} has fallen.`,target.team,target);}}else{this.event(`${this.teams[target.team].name} lost a ${BUILD_DEFS[target.type].label.toLowerCase()}.`,target.team,target);this.effects.push({x:target.x,y:target.y,type:'explosion',life:1.1,maxLife:1.1,team:target.team});if(target.type==='keep')this.ruinCastle(target);}}
+    if(target.hp<=0){const s=this.teams[source.team];if(s){s.kills++;s.gold+=heroKillReward(this,target,source);}this.stats.dead++;if(UNIT_DEFS[target.type]){if(target.type==='hero'){target.heroDeathMode=target.heroMode;BattleStandards.heroDied(this,target);}this.aftermath.record(target,this.teams[target.team],this.aftermath.time,this.unitClass(target));this.teams[target.team].count-=UNIT_DEFS[target.type].supply||1;if(target.type==='dragon')delete this.teams[target.team].dragonId;if(target.isKing&&this.mode.kingSurvival){this.eliminate(target.team,'king',target);return;}if(this.unitClass(target)==='hero'){this.teams[target.team].heroTimer=35;this.event(`${heroProfile(this.teams[target.team]).name} has fallen.`,target.team,target);}}else{this.event(`${this.teams[target.team].name} lost a ${BUILD_DEFS[target.type].label.toLowerCase()}.`,target.team,target);this.effects.push({x:target.x,y:target.y,type:'explosion',life:1.1,maxLife:1.1,team:target.team});if(target.type==='keep')this.ruinCastle(target);}}
   }
   trebuchetTargetInRange(u,target){return ds(u,target)<=(this.unitRange(u)+(BUILD_DEFS[target.type]?this.buildingRadius(target):.07))**2;}
   findTarget(u){
     if(u.standardAction||u.trebuchetState&&u.trebuchetState!=='deployed')return null;
     const autonomous=this.autonomousAggro(u),direct=this.isRanged(u)||u.type==='beacon_engineer',reach=this.unitRange(u),range=autonomous?this.aggroRange(u):this.unitClass(u)==='cavalry'&&u.order?.mode==='attack'?6.2:reach+1.5;let best=null,bestScore=Infinity;
     const lane=u.order?.mode==='attack'&&Number.isFinite(u.order.attackSideX)?u.order:null;
-    this.hash.visit(u.x,u.y,range,e=>{if(!this.hostile(e.team,u.team)||e.hp<=0||!this.isVisibleTo(u.team,e))return;const distance=ds(u,e);if(distance>range*range||!this.canAttackFacing(u,e))return;let score=distance;
-      if(u.trebuchetState==='deployed'&&!this.trebuchetTargetInRange(u,e))return;
-      if(this.unitClass(u)==='cavalry'&&this.unitClass(e)==='archer')score*=.58;
-      if(!this.isHuman(u.team)&&this.unitClass(u)==='cavalry'&&!UNIT_DEFS[u.type].noCharge){
+    const kind=this.unitClass(u),aiCavalry=kind==='cavalry'&&!this.isHuman(u.team)&&!UNIT_DEFS[u.type].noCharge;
+    const range2=range*range,reach2=(reach+.07)**2,deployed=u.trebuchetState==='deployed';
+    this.hash.visit(u.x,u.y,range,e=>{
+      if(e.hp<=0)return;
+      const distance=ds(u,e);if(distance>range2||deployed&&distance>reach2||!this.hostile(e.team,u.team))return;
+      const enemyKind=this.unitClass(e);let score=distance;
+      if(kind==='cavalry'&&enemyKind==='archer')score*=.58;
+      if(aiCavalry){
         const approach=((u.x-e.x)*(e.facingX||0)+(u.y-e.y)*(e.facingY||0))/(Math.sqrt(distance)||1);
         if(UNIT_DEFS[e.type].spearBrace&&e.spearState==='braced'&&approach>Math.SQRT1_2)score*=4;
         else if(UNIT_DEFS[e.type].shieldType){if(approach<-.5)score*=.6;else if(approach>.5&&e.shieldGuard==='guard')score*=1.5;}
       }
-      if(this.unitClass(u)==='archer'&&this.unitClass(e)==='infantry')score*=.78;
-      if(this.unitClass(u)==='infantry'&&this.unitClass(e)==='cavalry')score*=.75;
+      if(kind==='archer'&&enemyKind==='infantry')score*=.78;
+      if(kind==='infantry'&&enemyKind==='cavalry')score*=.75;
       // A formed attack-move prefers enemies in each soldier's own file.
-      if(lane&&distance>(reach+.07)**2)score+=Math.min(4,((e.x-lane.x)*lane.attackSideX+(e.y-lane.y)*lane.attackSideY)**2)*.75;
-      if(score<bestScore&&(!direct||this.combatTerrain.canShoot(u,e))&&(!autonomous||this.canAggro(u,e))){best=e;bestScore=score;}
+      if(lane&&distance>reach2)score+=Math.min(4,((e.x-lane.x)*lane.attackSideX+(e.y-lane.y)*lane.attackSideY)**2)*.75;
+      if(score<bestScore&&this.isVisibleTo(u.team,e)&&this.canAttackFacing(u,e)&&(!direct||this.combatTerrain.canShoot(u,e))&&(!autonomous||this.canAggro(u,e))){best=e;bestScore=score;}
     },u.team);
     // Guards and patrols ignore forts; expanders defending an actual attack
     // may retaliate against nearby structures within the same pursuit leash.
@@ -1183,6 +1271,10 @@ export class Game {
     const disciplined=s.sigil==='huntsman'&&this.unitClass(u)==='infantry'&&u.order?.formation==='line',woodland=s.sigil==='frog'&&this.unitClass(u)==='archer'&&this.tileAt(u.x,u.y)?.terrain==='forest';amount*=counter;if(d.hammer&&!building&&this.isSpearBraced(target,{x:target.x-u.x,y:target.y-u.y}))amount*=1.25;u.cooldown=d.rate/(!d.crossbow&&(disciplined||woodland)?1.15:1);u.attackAnim=1;
     const visualDX=target.x-u.x,visualDY=target.y-u.y,visualDistance=Math.hypot(visualDX,visualDY)||1;u.attackVisual={at:this.time,elapsed:0,faceX:u.facingX,faceY:u.facingY,cycle:u.cooldown,dx:visualDX/visualDistance,dy:visualDY/visualDistance,distance:visualDistance,action:d.crossbow||this.isRanged(u)?'fire':d.weaponKind==='halberd'?((u.weaponSwings=(u.weaponSwings||0)+1)%2===0?'swing':'thrust'):'thrust'};
     if(d.crossbow){u.reload={progress:0,duration:u.cooldown,baseDuration:d.rate,stage:'lower',completedStage:-1};u.reloading=true;u.crossbowState='fire';u.reloadX=u.x;u.reloadY=u.y;}
+    if(u.type==='dragon'){
+      this.breatheFire(u,target,d.damage*this.upgradeMultiplier('weapons',s.upgrades.weapons)*heroWeapon*(u.elite?1.35:1));
+      return;
+    }
     if(this.isRanged(u)||this.unitClass(u)==='siege'){
       const type=d.projectile||(u.type==='beacon_engineer'?'bolt':this.unitClass(u)==='siege'?'rock':'arrow');
       const duration=projectileFlightDuration(type,u.type,Math.sqrt(ds(u,target)));
@@ -1400,7 +1492,7 @@ export class Game {
 
   updateAftermath(dt){if(!this.paused&&Number.isFinite(dt)&&dt>0)this.aftermath.update(this.aftermath.time+dt);}
   update(dt){
-    if(this.regimentSchemaVersion!==2)this.migrateLegacyRegiments();
+    if(this.regimentSchemaVersion!==3)this.migrateLegacyRegiments();
     if(this.paused)return;dt=clamp(dt,0,.06);this.updateAftermath(dt);if(this.winner!==null)return;this.time+=dt;this.navigation.beginUpdate();this.hash.rebuild(this.units);this.vision?.update();
     for(const s of this.teams)if(s.alive){s.gold+=s.income*dt;if(!this.isHuman(s.id)){s.aiClock-=dt;if(s.aiClock<=0){this.ai(s);s.aiClock=this.aiRules.decision;}}
       if(s.heroTimer>0&&!this.mode.kingSurvival){s.heroTimer-=dt;if(s.heroTimer<=0){const keep=this.buildings.find(b=>b.team===s.id&&b.type==='keep'&&b.hp>0);if(keep){this.addUnit(s.id,'hero',keep.x+this.buildingRadius(keep)+.5,keep.y);this.event(`${heroProfile(s).name} returns.`,s.id);}}}
@@ -1414,11 +1506,24 @@ export class Game {
   }
 
   updateBuildings(dt){
+    // Resolve hatching before other ready Targaryen companies. If exactly 50
+    // supply opens, building creation order cannot starve a ready Dragonspire.
+    let waitingCompanies;
     for(const b of this.buildings){if(b.hp<=0)continue;const d=BUILD_DEFS[b.type],s=this.teams[b.team];b.hit=Math.max(0,b.hit-dt);b.cooldown-=dt;if(b.musterCooldown>0)b.musterCooldown=Math.max(0,b.musterCooldown-dt);
-      if(d.unit&&houseCanRecruit(d.unit,s.sigil)){const training=this.trainingRate(b);b.spawnTimer+=dt*training;if(b.spawnTimer>=d.interval){if(s.count<s.cap&&!(b.musterCooldown>0)){this.spawnBatch(b,d.unit,d.batch);b.spawnTimer=0;}else b.spawnTimer=d.interval;}}
+      if(d.unit&&houseCanRecruit(d.unit,s.sigil)&&!(d.unit==='dragon'&&this.byId.get(s.dragonId)?.hp>0)){
+        b.spawnTimer=Math.min(d.interval,(b.spawnTimer||0)+dt*this.trainingRate(b));
+        if(b.spawnTimer>=d.interval-1e-7&&s.cap-s.count>=(UNIT_DEFS[d.unit].supply||1)&&!(b.musterCooldown>0)){
+          if(s.sigil==='dragon'&&d.unit!=='dragon'){
+            (waitingCompanies??=[]).push(b);
+          }else if(this.spawnBatch(b,d.unit,d.batch))b.spawnTimer=0;
+        }
+      }
       const defense=b.type==='keep'?HALL_LEVELS[b.level||1]:b.type==='tower'?TOWER_LEVELS[b.level||1]:null;const falcon=s.sigil==='falcon'&&b.type==='tower',guard=falcon&&s.buffs.falconUntil>this.time,towerRange=(defense?.range||d.range||0)+(falcon?.7:0)+(guard?1.2:0);
       if(d.range&&b.cooldown<=0){let target=null,best=towerRange*towerRange;this.hash.visit(b.x,b.y,towerRange,u=>{if(this.hostile(u.team,b.team)&&u.hp>0&&this.isVisibleTo(b.team,u)){const dd=ds(b,u);if(dd<best&&this.combatTerrain.canShoot(b,u)){target=u;best=dd;}}},b.team);if(target){this.projectiles.push({sx:b.x,sy:b.y,x:b.x,y:b.y,tx:target.x,ty:target.y,t:0,duration:.34,type:'arrow',sourceType:b.type,team:b.team,target:target.id,damage:(defense?.damage||d.damage)*this.upgradeMultiplier('weapons',s.upgrades.weapons),splash:0});b.cooldown=d.rate/(guard?1.4:1);}}
       if(b.type==='keep'&&b.hp<b.maxHp&&this.time%1<dt)b.hp=Math.min(b.maxHp,b.hp+2);
+    }
+    if(waitingCompanies)for(const b of waitingCompanies){
+      const d=BUILD_DEFS[b.type];if(this.spawnBatch(b,d.unit,d.batch))b.spawnTimer=0;
     }
   }
   buildingCollisionGrid(){
@@ -1606,7 +1711,7 @@ export class Game {
         const tightGround=tightFormationGround(this,u);
         const anchored=this.unitClass(u)==='infantry'&&order.formation!=='spread'&&this.formationSettled(u)&&!stagger;
         let pushX=0,pushY=0;
-        this.hash.visit(u.x,u.y,Math.max(ALLY_CLEARANCE,d.radius+MAX_UNIT_RADIUS+ALLY_BODY_GAP),o=>{
+        this.hash.visit(u.x,u.y,Math.max(ALLY_CLEARANCE,d.radius+this.hash.bodyRadiusNear(u.x,u.y)+ALLY_BODY_GAP),o=>{
           if(o===u||o.hp<=0)return;
           let dx=u.x-o.x,dy=u.y-o.y,dd=dx*dx+dy*dy;
           const body=d.radius+UNIT_DEFS[o.type].radius,allyClearance=Math.max(ALLY_CLEARANCE,body+ALLY_BODY_GAP);
@@ -1652,7 +1757,7 @@ export class Game {
     for(const u of this.units){
       if(u.hp<=0)continue;
       const tightGround=tightFormationGround(this,u),radius=UNIT_DEFS[u.type].radius;
-      this.hash.visit(u.x,u.y,Math.max(ALLY_BODY_CLEARANCE,radius+MAX_UNIT_RADIUS+ALLY_BODY_GAP),o=>{
+      this.hash.visit(u.x,u.y,Math.max(ALLY_BODY_CLEARANCE,radius+this.hash.bodyRadiusNear(u.x,u.y)+ALLY_BODY_GAP),o=>{
       if(o.id<=u.id||o.hp<=0)return;
       let dx=u.x-o.x,dy=u.y-o.y,dd=dx*dx+dy*dy;
       const body=radius+UNIT_DEFS[o.type].radius,allyBodyClearance=Math.max(ALLY_BODY_CLEARANCE,body+ALLY_BODY_GAP);
@@ -1708,9 +1813,9 @@ export class Game {
     }
   }
   recount(){
-    for(const s of this.teams){s.tiles=0;s.count=0;s.value=0;s.banners=0;s.keeps=0;}
+    for(const s of this.teams){s.tiles=0;s.count=0;s.value=0;s.banners=0;s.keeps=0;if(s.sigil==='dragon')s.dragonId=null;}
     for(const t of this.tiles)if(t.owner>=0){this.teams[t.owner].tiles++;this.teams[t.owner].value+=t.value;}
-    for(const u of this.units)if(u.hp>0)this.teams[u.team].count++;
+    for(const u of this.units)if(u.hp>0){const team=this.teams[u.team];team.count+=UNIT_DEFS[u.type].supply||1;if(u.type==='dragon')team.dragonId=u.id;}
     for(let y=1;y<this.H-4;y+=4)for(let x=1;x<this.W-4;x+=4){const team=this.tiles[y*this.W+x].owner;if(team<0)continue;let owned=true;for(let yy=y;yy<y+4&&owned;yy++)for(let xx=x;xx<x+4;xx++)if(this.tiles[yy*this.W+xx].owner!==team){owned=false;break;}if(owned)this.teams[team].banners++;}
     for(const b of this.buildings)if(b.type==='keep'&&b.hp>0)this.teams[b.team].keeps++;
     // The starting castle is included in 280; only additional standing castles raise army capacity.
@@ -2041,11 +2146,15 @@ export class Game {
     const sum=kinds.reduce((n,k)=>n+Math.max(.03,ratios[k]),0);for(const k of kinds)ratios[k]=Math.max(.03,ratios[k])/sum;
     const previousIds=plan.productionArmyIds||[],elapsed=Math.max(1,this.time-(plan.productionSampleAt??this.time-8)),lost=previousIds.filter(id=>!this.byId.get(id)||this.byId.get(id).hp<=0).length;
     plan.productionLossRate=(plan.productionLossRate||0)*.65+lost/elapsed*.35;plan.productionSampleAt=this.time;plan.productionArmyIds=army.map(u=>u.id);
-    const spare=Math.max(0,s.cap-army.length),income=Math.max(0,s.income||this.incomeFor(s.id)),desired=Math.min(s.cap/24,.65+Math.sqrt(Math.max(0,s.tiles))/28+income*.12+plan.productionLossRate*1.5),current=kinds.reduce((n,k)=>n+throughput[k],0);
+    const spare=Math.max(0,s.cap-s.count),income=Math.max(0,s.income||this.incomeFor(s.id)),desired=Math.min(s.cap/24,.65+Math.sqrt(Math.max(0,s.tiles))/28+income*.12+plan.productionLossRate*1.5),current=kinds.reduce((n,k)=>n+throughput[k],0);
     const total=owned.filter(b=>b.type!=='keep'&&BUILD_DEFS[b.type].unit).length,slots=this.buildingStatus(s.id),value=kinds.reduce((n,k)=>n+counts[k],0),forceValue=value+spare*.8;
     const target=Math.max(total,Math.min(slots.cap-1,total+Math.ceil(Math.max(0,desired-current)/Math.max(.1,current/Math.max(1,total+1))))),previous=plan.production,options=[];
     const reasonFor=(type,kind,rebuild)=>rebuild?`Rebuild lost ${BUILD_DEFS[type].label.toLowerCase()} training.`:counter==='archers'&&kind==='cavalry'?'Scouted archers call for more cavalry training.':counter==='cavalry'&&kind==='infantry'?'Enemy cavalry calls for a stronger infantry screen.':counter==='infantry'&&kind==='archer'?'Scouted infantry calls for more ranged volleys.':counter==='artillery'&&kind==='cavalry'?'Train riders to hunt enemy artillery.':counter==='forts'&&kind==='siege'?'Scouted enemy forts require more siege support.':(type===content?.building||BUILD_DEFS[type].regimentBuilding||BUILD_DEFS[type].conquestBuilding)&&!sites[type]?`Unlock ${UNIT_DEFS[BUILD_DEFS[type].unit].label.toLowerCase()} and strengthen the ${kind} force.`:plan.productionLossRate>.25?'Expand training to replace battlefield losses.':`Add ${kind} training for the ${plan.label.toLowerCase()}.`;
+    const reserveAfterPurchase=100;
     for(const type of ['barracks','range','stables','workshop',content?.building,...regimentBuildingsForHouse(s.sigil)].filter(type=>type&&houseCanBuild(type,s.sigil))){
+      // Establish ordinary artillery before saving for a unique, two-minute hatch.
+      // A rich opening can afford the spire outright; one spire serves the whole army.
+      if(type==='dragonspire'&&(sites[type]||!sites.workshop&&!sites.dragonfire_foundry&&s.gold<BUILD_DEFS[type].cost+reserveAfterPurchase))continue;
       const d=BUILD_DEFS[type],kind=this.unitClass(d.unit),gap=desired*ratios[kind]-throughput[kind],rebuild=(plan.productionKnown?.[type]||0)>0&&!sites[type];
       if(gap<=desired*.025&&!rebuild)continue;
       const rate=d.batch/d.interval*weights[kind]*(d.trainingFactor||1),deficit=Math.max(0,forceValue*ratios[kind]-counts[kind])/Math.max(12,forceValue*ratios[kind]);
@@ -2067,7 +2176,7 @@ export class Game {
     if(threatened){state.status='threat';state.reason='Capital under attack: spend on immediate defenders.';}
     else if(spare<Math.max(16,s.cap*.1)&&!(this.config.fogOfWar&&chosen?.type==='tower')){state.status='supply';state.reason='Army supply is nearly full; resume construction after losses or capturing another castle.';}
     else if(chosen&&slots.count>=slots.cap){state.status='blocked';state.reason='All land-based structure slots are occupied; capture more land.';}
-    else if(chosen){state.status='saving';state.reserved=chosen.cost+100;state.decidedAt=previous?.type===chosen.type?previous.decidedAt:this.time;}
+    else if(chosen){state.status='saving';state.reserved=chosen.cost+reserveAfterPurchase;state.decidedAt=previous?.type===chosen.type?previous.decidedAt:this.time;}
     plan.production=state;return state;
   }
   aiProductionSite(s,type){
@@ -2113,7 +2222,7 @@ export class Game {
     const candidates=['infantry','archer','cavalry','siege'].filter(type=>houseCanRecruit(type,s.sigil)),weights={infantry:1,archer:1.05,cavalry:1.35,siege:3.2},total=candidates.reduce((n,k)=>n+(counts[k]||0)*weights[k],0);
     let type=candidates.sort((a,b)=>(production.ratios[b]*(total+18)-(counts[b]||0)*weights[b])/weights[b]-(production.ratios[a]*(total+18)-(counts[a]||0)*weights[a])/weights[a])[0];
     const regiment=regimentsForHouse(s.sigil).filter(type=>this.recruitDetails(type,s.id)?.unlocked).sort((a,b)=>army.filter(u=>u.type===a).length-army.filter(u=>u.type===b).length)[0],regimentDetails=regiment?this.recruitDetails(regiment,s.id):null;
-    if(regimentDetails?.unlocked&&this.unitClass(regiment)===type&&army.filter(u=>u.type===regiment).length+regimentDetails.batch<=Math.max(regimentDetails.batch,army.length*.12)&&s.gold>=regimentDetails.cost+reserve)type=regiment;
+    if(regimentDetails?.unlocked&&!regimentDetails.remaining&&!regimentDetails.blocked&&regimentDetails.supplyRequired<=s.cap-s.count&&this.unitClass(regiment)===type&&army.filter(u=>u.type===regiment).length+regimentDetails.batch<=Math.max(regimentDetails.batch,army.length*.12)&&s.gold>=regimentDetails.cost+reserve)type=regiment;
     else if(content){const special=this.recruitDetails(content.unit,s.id);if(special.unlocked&&this.unitClass(content.unit)===type&&army.filter(u=>u.type===content.unit).length<army.length*.22&&s.gold>=special.cost+reserve)type=content.unit;}
     const purchase=this.recruitDetails(type,s.id);if(s.gold>=purchase.cost+reserve)this.recruit(type,s.id);
   }

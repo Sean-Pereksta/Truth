@@ -63,7 +63,7 @@ function fixture({house=0,realMenu=false}={}){
     const line=source.split('\n').find(line=>line.startsWith(prefix));assert.ok(line,prefix);vm.runInContext(line,context);
   }
   const actionsStart=source.indexOf('const MENU_ACTIONS='),actionsEnd=source.indexOf('\n};',actionsStart);vm.runInContext(source.slice(actionsStart,actionsEnd+3),context);
-  for(const name of ['filterTroops','clearBuildingSelection','selectTroopType','commandGroup','cancelBuild','showTab','activateMenuAction','handleMenuHotkey','beginFacing','beginForm','refreshFormationPreview','confirmFormation','formPointer','patrolBorder','issue','issueTarget','buildingAt','standardAt','selectedHero','standardCommand','performStandardAction','placeStandard','cancelStandardInteraction','beginFormAtStandard','setSelectedRally','pointerPos','rememberMouse','finishPointer','bonusText','upgradeSummary','specialistTooltip','labelMenuHotkeys','buildActionLists'])vm.runInContext(extract(name),context);
+  for(const name of ['filterTroops','clearBuildingSelection','selectTroopType','commandGroup','cancelBuild','showTab','activateMenuAction','handleMenuHotkey','beginFacing','beginForm','refreshFormationPreview','confirmFormation','formPointer','patrolBorder','issue','issueTarget','unitAt','buildingAt','standardAt','selectedHero','standardCommand','performStandardAction','placeStandard','cancelStandardInteraction','beginFormAtStandard','setSelectedRally','pointerPos','rememberMouse','finishPointer','bonusText','upgradeSummary','specialistTooltip','labelMenuHotkeys','buildActionLists'])vm.runInContext(extract(name),context);
   vm.runInContext(listener('canvas','pointerdown'),context);vm.runInContext(listener('canvas','pointermove'),context);vm.runInContext(listener('window','keydown'),context);
   const cancelLine=source.split('\n').find(line=>line.startsWith("canvas.addEventListener('pointerup'"));vm.runInContext(cancelLine,context);
   const blurLine=source.split('\n').find(line=>line.startsWith("window.addEventListener('keyup'"));vm.runInContext(blurLine,context);
@@ -215,6 +215,21 @@ test('Right-clicking enemy building artwork targets that building even when it a
   }
 });
 
+test('Painted dragon wings can be selected and targeted without capturing clicks in transparent space or fog',()=>{
+  const f=fixture({house:HOUSES.findIndex(h=>h.sigil==='dragon')});
+  const dragon=f.game.addUnit(0,'dragon',30,30);
+  const wing={x:340,y:245},gap={x:335,y:245};
+  f.context.renderer.dragonContainsScreenPoint=(_unit,_game,_foot,p)=>p.x===wing.x&&p.y===wing.y;
+  assert.equal(f.context.unitAt(wing),dragon);
+  assert.equal(f.context.unitAt(gap),null);
+  f.game.teams[1].sigil='dragon';
+  const foe=f.game.addUnit(1,'dragon',31,30);
+  f.game.isVisibleTo=()=>true;
+  assert.equal(f.context.unitAt(wing,true,true),foe);
+  f.game.isVisibleTo=()=>false;
+  assert.equal(f.context.unitAt(wing,true,true),null);
+});
+
 test('Right-click ignores allied, hidden, destroyed and eliminated buildings as attack targets',()=>{
   for(const state of ['own','allied','hidden','destroyed','eliminated']){
     const f=fixture(),u=f.game.addUnit(0,'infantry',26,30),building=f.game.addBuilding(state==='own'?0:1,'barracks',30,30);f.ui.selected.add(u.id);
@@ -315,7 +330,7 @@ test('Alt-type hotkeys and Ctrl command groups avoid menu and battle key conflic
 });
 
 test('All sixteen houses retain their original menus while eligible houses gain the sixth regiment and seventh building shortcuts',()=>{
-  const expectedRegiments={wolf:'winter_pikeman',lion:'shield_bearer',dragon:'shield_bearer',rose:'thornwall_pikeman',bear:'lance_champion',sun:'lance_champion',falcon:'lance_champion',flayed:'trebuchet',beacon:'trebuchet',bone:'giant',fish:'sharpshooter',stag:'stormbreaker',kraken:'saltwind_axethrower',bridge:'tollhouse_crossbow',frog:'crannog_spearhand',huntsman:'hornhill_halberdier'};
+  const expectedRegiments={wolf:'winter_pikeman',lion:'shield_bearer',dragon:'dragon',rose:'thornwall_pikeman',bear:'lance_champion',sun:'lance_champion',falcon:'lance_champion',flayed:'trebuchet',beacon:'trebuchet',bone:'giant',fish:'sharpshooter',stag:'stormbreaker',kraken:'saltwind_axethrower',bridge:'tollhouse_crossbow',frog:'crannog_spearhand',huntsman:'hornhill_halberdier'};
   for(let house=0;house<HOUSES.length;house++){
     const f=fixture({house,realMenu:true}),sigil=HOUSES[house].sigil,regiment=expectedRegiments[sigil]||null,building=regimentBuildingForHouse(sigil),original=f.game.houseContent(0);
     assert.equal(regimentForHouse(sigil),regiment);f.context.buildActionLists();const rows=f.refreshMenu();
@@ -329,7 +344,8 @@ test('All sixteen houses retain their original menus while eligible houses gain 
       assert.equal(rows.recruit[5].dataset.recruit,regiment);assert.equal(rows.recruit[5].attributes.has('data-regiment-recruit'),true);assert.equal(rows.recruit[5].getAttribute('aria-keyshortcuts'),'Shift+6');
       assert.equal(rows.build[6].dataset.build,building);assert.equal(rows.build[6].attributes.has('data-regiment-build'),true);assert.equal(rows.build[6].getAttribute('aria-keyshortcuts'),'Shift+J');
       assert.ok(rows.recruit[5].innerHTML.includes('Requires '+BUILD_DEFS[building].label));assert.equal(BUILD_DEFS[building].house,sigil);
-      f.game.teams[0].gold=100000;f.game.addBuilding(0,building,40.5,40.5);
+      f.game.teams[0].gold=100000;const producer=f.game.addBuilding(0,building,40.5,40.5);
+      if(regiment==='dragon'){producer.spawnTimer=120;producer.musterCooldown=0;}
     }else{assert.equal(f.actions.has('[data-regiment-recruit]'),false);assert.equal(f.actions.has('[data-regiment-build]'),false);}
     f.win.dispatch('keydown',f.event({key:'^',code:'Digit6',shiftKey:true}));
     assert.equal(f.game.units.length,regiment?UNIT_DEFS[regiment].batch:0);assert.ok(f.game.units.every(unit=>unit.type===regiment&&unit.team===0));
@@ -339,12 +355,33 @@ test('All sixteen houses retain their original menus while eligible houses gain 
   }
 });
 
+test('Selected production buildings show their own countdown and keep a green ready state while supply is full',()=>{
+  const house=HOUSES.findIndex(h=>h.sigil==='dragon'),f=fixture({house}),g=f.game,team=g.teams[0];
+  f.context.setHudHTML=(element,markup)=>{element.innerHTML=markup;};
+  vm.runInContext(extract('updateProductionTimers'),f.context);
+  const list=f.element('buildingProductionTimers'),spire=g.addBuilding(0,'dragonspire',40,40),tower=g.addBuilding(0,'tower',45,40);
+  const show=selection=>f.context.updateProductionTimers(selection);
+  show([tower]);assert.equal(list.hidden,true);
+  show([spire]);assert.equal(list.hidden,false);assert.match(list.innerHTML,/>2:00</);
+  team.cap=49;
+  g.updateBuildings(119.4);show([spire]);assert.match(list.innerHTML,/>1s</);
+  g.updateBuildings(.7);show([spire]);assert.match(list.innerHTML,/class="production-ready"/);assert.match(list.innerHTML,/Ready/);assert.match(list.innerHTML,/Needs 50 free supply/);
+  const barracks=g.addBuilding(0,'barracks',46,41);
+  show([tower,spire,barracks]);assert.match(list.innerHTML,/Dragonspire/);assert.match(list.innerHTML,/Barracks/);assert.doesNotMatch(list.innerHTML,/Watchtower/);
+  team.cap=100;g.updateBuildings(.1);show([spire]);assert.match(list.innerHTML,/Dragon afield/);assert.doesNotMatch(list.innerHTML,/production-ready/);
+  f.context.buildActionLists();
+  assert.equal(f.element('selectDragon').hidden,false);assert.equal(f.element('selectShieldBearers').hidden,true);
+  f.win.dispatch('keydown',f.event({key:'d',code:'KeyD',altKey:true}));
+  assert.deepEqual([...f.ui.selected],[team.dragonId]);
+  show([]);assert.equal(list.hidden,true);assert.equal(list.innerHTML,'');
+});
+
 await testAsync('Play Solo waits for critical art and a load failure offers a retry',async()=>{
-  for(const failed of [null,'loadDirectionalSheets','loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt','loadPaintedBridge','loadCavalryCharge','loadBattlefieldProjectiles','loadPaintedTroops','loadPikeBuildings','loadPaintedHeroes']){
+  for(const failed of [null,'loadDirectionalSheets','loadDragonArt','loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt','loadPaintedBridge','loadCavalryCharge','loadBattlefieldProjectiles','loadPaintedTroops','loadPikeBuildings','loadPaintedHeroes']){
     const f=fixture({realMenu:true}),loads=[],errors=[],effects=[];
     f.context.console={warn(){},error:(...args)=>errors.push(args)};f.context.renderer={};f.context.lastArtworkFailure=()=>null;
     f.context.renderer.refreshLandscape=()=>{assert.equal(f.context.renderer.deferLandscapeRefresh,false);effects.push('landscape');};
-    for(const method of ['loadTroops','loadDirectionalSheets','loadStructures','loadCampaignArt','loadTerrain','loadHouseArt','loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt','loadPaintedBridge','loadCavalryCharge','loadBattlefieldProjectiles','loadPaintedTroops','loadPikeBuildings','loadPaintedHeroes','loadLandsArt','loadLandsGround','loadRiverMaterials','loadHighlandCrags','loadCartway','loadBattlefieldArt'])f.context.renderer[method]=(...args)=>{loads.push({method,args});return method===failed?Promise.reject(new Error('Missing test artwork')):Promise.resolve();};
+    for(const method of ['loadTroops','loadDirectionalSheets','loadDragonArt','loadStructures','loadCampaignArt','loadTerrain','loadHouseArt','loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt','loadPaintedBridge','loadCavalryCharge','loadBattlefieldProjectiles','loadPaintedTroops','loadPikeBuildings','loadPaintedHeroes','loadLandsArt','loadLandsGround','loadRiverMaterials','loadHighlandCrags','loadCartway','loadBattlefieldArt'])f.context.renderer[method]=(...args)=>{loads.push({method,args});return method===failed?Promise.reject(new Error('Missing test artwork')):Promise.resolve();};
     for(const name of ['paintBuildingIcons','paintHousePreview','paintTownHall','fitMap','updateHud'])f.context[name]=()=>effects.push(name);
     f.context.online=null;f.context.performance={mark:()=>{}};f.context.frame=()=>{};f.context.requestAnimationFrame=()=>effects.push('frame');
     for(const prefix of ['const HOUSE_ART_SOURCES=','const REGIMENT_ART_SOURCES=','const CONQUEST_ART_SOURCES=','const REINFORCEMENT_ART_SOURCES=','const PAINTED_TROOP_SOURCES=','const HERO_ART_SOURCES=']){const line=source.split('\n').find(line=>line.startsWith(prefix));assert.ok(line);vm.runInContext(line,f.context);}
@@ -352,6 +389,7 @@ await testAsync('Play Solo waits for critical art and a load failure offers a re
     await boot;
     const sheets=loads.find(load=>load.method==='loadRegimentArt')?.args[0];assert.ok(sheets);assert.deepEqual(Object.keys(sheets).sort(),['bear','dragon','falcon','lion','rose','sun','wolf']);assert.equal(new Set(Object.values(sheets)).size,7);
     assert.equal(loads.find(load=>load.method==='loadRegimentBuildings')?.args[0],'assets/regiments/production-buildings.png');
+    assert.deepEqual(loads.find(load=>load.method==='loadDragonArt')?.args,['assets/dragon/dragonspire.webp','assets/dragon/dragon-icon.webp','assets/dragon/fire-breath.webp']);
     assert.equal(Object.keys(loads.find(load=>load.method==='loadPaintedHeroes')?.args[0]||{}).length,16);
     if(failed){assert.equal(f.element('startButton').disabled,false);assert.equal(f.element('startButton').textContent,'RETRY BATTLE ART');assert.equal(typeof f.element('startButton').onclick,'function');assert.equal(errors.length,1);assert.equal(effects.includes('frame'),false);}
     else{assert.equal(f.element('startButton').disabled,false);assert.ok(f.element('startButton').innerHTML.includes('PLAY SOLO'));assert.equal(errors.length,0);assert.equal(effects.includes('frame'),true);}
