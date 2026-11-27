@@ -53,7 +53,7 @@ test('Wounded health, brace and charge survive the large-group marker budget',()
   const selected=new Set(Array.from({length:70},(_,i)=>i+1));
   const probe=(u,markers)=>{
     const ctx=canvas().getContext('2d'),bars=[],rings=[],labels=[],rect=ctx.fillRect.bind(ctx),stroke=ctx.stroke.bind(ctx),label=ctx.fillText.bind(ctx);
-    ctx.fillRect=(x,y,w,h)=>{if(w===12&&h===2&&y===-29)bars.push(w);rect(x,y,w,h);};
+    ctx.fillRect=(x,y,w,h)=>{if(w===12&&h===2&&y===-34)bars.push(w);rect(x,y,w,h);};
     ctx.stroke=()=>{rings.push(ctx.strokeStyle);stroke();};
     ctx.fillText=(s,x,y)=>{labels.push(s);label(s,x,y);};
     r.unit(ctx,u,g,{selected},1,markers);return {bars,rings,labels};

@@ -74,6 +74,55 @@ test('foreign, allied and mixed ownership cannot be commanded',()=>{
   assert.equal(command(1,'upgradeTower',[game.buildings.find(value=>value.team===0).id]).ok,false);
   assert.equal(command(1,'retrieveStandard',[other.id]).ok,false);
 });
+test('a Targaryen guest sees Dragonspire readiness, weighted supply and the dragon’s attack across deltas',()=>{
+  const house=HOUSES.findIndex(h=>h.sigil==='dragon');
+  const match=createAuthority({...config,houses:[0,house,1,3],fogOfWar:true},{humanTeams:[0,1]});
+  const world=match.game,team=world.teams[1],{x,y}=team.home;
+  const spire=world.addBuilding(1,'dragonspire',x+2,y);
+  let sequence=1;
+  let baseline=match.snapshot(1,{initial:true,sequence});
+  const remote=createRemoteGame(baseline);
+  function synchronize(){
+    const next=match.snapshot(1,{sequence:++sequence});
+    const delta=createSnapshotDelta(baseline,next,baseline.sequence,next.sequence);
+    baseline=applySnapshotDelta(baseline,delta);
+    applySnapshot(remote,baseline);
+  }
+  const status=()=>remote.productionStatus(remote.byId.get(spire.id));
+  assert.equal(status().remaining,120);
+  spire.spawnTimer=72.5;synchronize();
+  assert.equal(status().remaining,47.5);
+  const before=team.count;
+  spire.spawnTimer=120;team.cap=before+49;synchronize();
+  assert.deepEqual(status(),{unit:'dragon',remaining:0,ready:true,blocked:'supply'});
+  team.cap=before+50;
+  assert.equal(world.spawnBatch(spire,'dragon',1),1);
+  const dragon=world.byId.get(team.dragonId);
+  const victim=world.addBuilding(0,'tower',dragon.x+2,dragon.y);
+  const guard=world.addUnit(0,'infantry',dragon.x+1,dragon.y);
+  guard.hp=guard.maxHp=1000;
+  world.hash.rebuild(world.units);
+  dragon.attackVisual={at:world.time,elapsed:0};
+  world.breatheFire(dragon,victim,100);
+  world.vision.update(true);
+  synchronize();
+  assert.equal(remote.teams[1].count,before+50);
+  assert.equal(status().blocked,'unique');
+  assert.equal(remote.recruitDetails('dragon').blocked,'unique');
+  const breath=remote.byId.get(dragon.id).attackVisual;
+  assert.equal(breath.action,'dragonBreath');assert.equal(breath.distance,2);
+  assert.equal(breath.dx,1);assert.equal(breath.dy,0);
+  assert.ok(remote.fireZones.some(z=>z.team===1&&z.life>0));
+  for(const id of [victim.id,guard.id])assert.ok(remote.byId.get(id).dragonBurnUntil>remote.time);
+  const hidden=match.snapshot(0).teams[1];
+  assert.equal(hidden.count,undefined);assert.equal(hidden.dragonId,undefined);
+  world.damage(dragon,dragon.hp*100,{team:0});
+  world.time+=UNIT_DEFS.dragon.burnSeconds+1;synchronize();
+  assert.equal(remote.teams[1].count,before);
+  assert.equal(remote.byId.has(dragon.id),false);
+  assert.equal(status().remaining,120);assert.equal(status().blocked,'');
+  assert.equal(remote.byId.get(victim.id).dragonBurnUntil,undefined);
+});
 test('coordinates, enums and unexposed mutation methods are rejected',()=>{
   const ids=[game.heroFor(1).id];
   for(const coordinate of [NaN,Infinity,-1,game.W])assert.equal(command(1,'command',[ids,coordinate,4]).ok,false);

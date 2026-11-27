@@ -138,13 +138,18 @@ fire, woods give missile cover and hills extend archer range. Troop-type
 shortcuts, nine command groups and letter-based building shortcuts are listed
 in `docs/Combat-Update.txt`.
 
-Stark, Lannister, Targaryen and Tyrell can train Shield Bearers from distinct
-shield halls. Mormont, Martell and Arryn can train Lance Champions from their
-own mounted academies. Each of these seven houses has a separate troop sprite
-sheet with its own armor and colors, plus illustrated production buildings.
-The new facilities unlock paid companies and train automatically under normal
-supply and rally rules. River Rangers, Free Folk Berserkers and Ironborn Reavers
-move 10% faster.
+Lannister trains Shield Bearers at the Gilded Guard Hall. Mormont, Martell and
+Arryn can train Lance Champions at their mounted academies. River Rangers,
+Free Folk Berserkers and Ironborn Reavers move 10% faster.
+
+Targaryen's Dragonspire hatches one dragon per army. Hatching takes 120 seconds
+and requires 50 free supply at the moment the dragon emerges. A completed egg
+waits if the army is full. Incubation restarts after the living dragon dies.
+The dragon breathes fire across a group of enemies and leaves burning ground.
+The Dragonfire Foundry still trains Dragonfire Acolytes independently.
+
+Select a production building to see the time until its next unit or company.
+Green means the next spawn is ready and waiting for enough free supply.
 
 Lance Champions now have 400 base health and 18 base damage. Their charge remains
 their strongest strike. Move orders improve disengagement with 30% extra speed,
@@ -202,6 +207,8 @@ available. Desktop controls are unchanged.
 - Gameplay regression checks: `npm test`.
 - Optional mobile browser checks: `npm run test:mobile` with Playwright and Chromium available.
 - Repeatable large-army simulation benchmark: `npm run benchmark`.
+- Crowded battlefield rendering in Chromium: `npm run benchmark:crowd-browser`.
+- Multiplayer guest interpolation with 4,480 moving troops: `npm run benchmark:presentation`.
 - Optional native graphics checks: `npm run test:render` and `npm run benchmark:render`
   with `@napi-rs/canvas` installed or `LANDS_CANVAS_MODULE` pointing to it.
 - Build a standalone offline copy: `node source/build-standalone.mjs <output-directory>`.

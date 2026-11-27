@@ -14,21 +14,45 @@ export class ConnectionError extends Error{constructor(message,status=0,data=nul
 // Interpolation only touches the presentation during a synchronous draw. UI
 // queries and commands always read the latest authoritative coordinates.
 export class PresentationBuffer{
- constructor({delay=.15}={}){this.baseDelay=delay;this.delay=delay;this.interval=.1;this.renderTime=-Infinity;this.samples=[];}
+ constructor({delay=.15}={}){this.baseDelay=delay;this.delay=delay;this.interval=.1;this.renderTime=-Infinity;this.samples=[];this.frame=null;}
  push(snapshot,receivedAt=clock()){
   const last=this.samples.at(-1);if(last&&snapshot.sequence<=last.sequence)return;
   if(last){const interval=Math.max(snapshot.time-last.time,(receivedAt-last.receivedAt)/1000);this.interval=this.interval*.8+Math.min(1,interval)*.2;this.delay=Math.max(this.baseDelay,Math.min(.75,this.interval*1.25));}
-  const entities=new Map();
-  for(const key of presentationKeys)for(const item of items(snapshot[key])){
-   const pose={};for(const field of finiteFields)if(Number.isFinite(item[field]))pose[field]=item[field];
-   if(key==='projectiles'){
-    const {height,angle}=projectileDrawPose(item);
-    pose.flightHeight=height;pose.flightAngle=angle;
+  const entities={};
+  for(const key of presentationKeys){
+   const group=entities[key]=new Map();
+   for(const item of items(snapshot[key])){
+    const pose={};for(const field of finiteFields)if(Number.isFinite(item[field]))pose[field]=item[field];
+    if(key==='projectiles'){
+     const {height,angle}=projectileDrawPose(item);
+     pose.flightHeight=height;pose.flightAngle=angle;
+    }
+    group.set(item.id,pose);
    }
-   entities.set(key+':'+item.id,pose);
   }
+  this.frame=null;
   this.samples.push({time:snapshot.time,sequence:snapshot.sequence,receivedAt,entities});
   while(this.samples.length>20||this.samples.length>2&&this.samples[1].time<snapshot.time-1)this.samples.shift();
+ }
+ prepareFrame(game,before,after){
+  // Several display frames share the same pair of network ticks. Match the
+  // entities once, and only touch fields which differ from the live snapshot.
+  const changes=[];
+  for(const key of presentationKeys){
+   const first=before.entities[key],second=after.entities[key];
+   for(const entity of items(game[key])){
+    const a=first.get(entity.id),b=second.get(entity.id);
+    if(!a||!b)continue;
+    for(const field in a){
+     const start=a[field],end=b[field];
+     if(!Number.isFinite(end)||(start===end&&start===entity[field]))continue;
+     const difference=end-start;
+     const delta=field==='angle'||field==='flightAngle'?Math.atan2(Math.sin(difference),Math.cos(difference)):difference;
+     changes.push({entity,field,start,delta,original:entity[field]});
+    }
+   }
+  }
+  return {game,before,after,changes,active:false};
  }
  draw(game,now,callback){
   const last=this.samples.at(-1);if(!last)return callback();
@@ -36,17 +60,22 @@ export class PresentationBuffer{
   let before=this.samples[0],after=last;
   for(const sample of this.samples){if(sample.time<=target)before=sample;else{after=sample;break;}}
   const mix=after.time>before.time?Math.max(0,Math.min(1,(target-before.time)/(after.time-before.time))):1;
-  const restore=[],oldTime=game.time;
-  for(const key of presentationKeys)for(const item of items(game[key])){
-   const a=before.entities.get(key+':'+item.id),b=after.entities.get(key+':'+item.id);if(!a||!b)continue;
-   const values={};for(const field of finiteFields){
-    if(!Number.isFinite(a[field])||!Number.isFinite(b[field]))continue;
-    values[field]=item[field];const delta=b[field]-a[field];const change=field==='angle'||field==='flightAngle'?Math.atan2(Math.sin(delta),Math.cos(delta)):delta;item[field]=a[field]+change*mix;
-   }
-   restore.push([item,values]);
+  let frame=this.frame;
+  if(frame?.active)frame=this.prepareFrame(game,before,after);
+  else if(frame?.game!==game||frame.before!==before||frame.after!==after)frame=this.frame=this.prepareFrame(game,before,after);
+  const oldTime=game.time;
+  frame.active=true;
+  for(const change of frame.changes){
+   const {entity,field,start,delta}=change;
+   change.original=entity[field];
+   entity[field]=start+delta*mix;
   }
   game.time=Math.max(before.time,Math.min(last.time,target));
-  try{return callback();}finally{game.time=oldTime;for(const [item,values]of restore)Object.assign(item,values);}
+  try{return callback();}finally{
+   game.time=oldTime;
+   for(const change of frame.changes)change.entity[change.field]=change.original;
+   frame.active=false;
+  }
  }
 }
 

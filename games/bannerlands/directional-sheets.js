@@ -1,4 +1,4 @@
-// Painted battlefield sheets. Anchors and cell dimensions are in source pixels (2x).
+// Painted battlefield sheets. Anchors and dimensions are source pixels.
 export const directionalSheets={
   "infantry": {
     "src": "assets/directions/infantry.webp",
@@ -484,6 +484,16 @@ export const directionalSheets={
     "h": 112,
     "ax": 86,
     "ay": 110,
+    "tint": false
+  },
+  "dragon": {
+    "src": "assets/directions/dragon.webp",
+    "kit": "dragon",
+    "w": 252,
+    "h": 253,
+    "ax": 126.0,
+    "ay": 172.5,
+    "worldScale": 0.6666666666666666,
     "tint": false
   }
 };

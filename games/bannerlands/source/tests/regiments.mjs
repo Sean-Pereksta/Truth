@@ -16,7 +16,7 @@ const post=(g,type,team=0,x=20,y=20)=>g.addBuilding(team,type,x,y);
 const members=(g,type)=>g.units.filter(u=>u.type===type&&u.hp>0);
 
 test('Only the requested houses gain shield or lance regiments and existing spears stay exclusive',()=>{
-  assert.deepEqual(SHIELD_HOUSES,['lion','dragon']);assert.deepEqual(PIKE_HOUSES,['wolf','rose']);assert.deepEqual(CHAMPION_HOUSES,['bear','sun','falcon']);
+  assert.deepEqual(SHIELD_HOUSES,['lion']);assert.deepEqual(PIKE_HOUSES,['wolf','rose']);assert.deepEqual(CHAMPION_HOUSES,['bear','sun','falcon']);
   assert.equal(UNIT_DEFS.shield_bearer.class,'infantry');assert.equal(UNIT_DEFS.lance_champion.class,'cavalry');
   assert.deepEqual(Object.keys(UNIT_DEFS).filter(type=>UNIT_DEFS[type].spearBrace).sort(),['bridge_warden','crannog_spearhand','dread_pike','hornhill_halberdier','thornwall_pikeman','winter_pikeman']);
   for(const house of HOUSES){
@@ -61,7 +61,7 @@ test('Paid regiments require their own living facility and obey gold, supply and
   }
 });
 
-test('Seven dedicated buildings train the matching shield or lance troops with supply limits and independent rallies',()=>{
+test('Dedicated regiment buildings train their troops with supply limits and independent rallies',()=>{
   assert.equal(CHAMPION_TRAINING_SECONDS,90);
   for(const sigil of Object.keys(REGIMENT_BUILDINGS)){
     const g=fixture(sigil),type=regimentForHouse(sigil),buildingType=regimentBuildingForHouse(sigil),building=post(g,buildingType),definition=BUILD_DEFS[buildingType];building.rally={x:44,y:26};

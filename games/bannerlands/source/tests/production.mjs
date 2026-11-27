@@ -20,6 +20,7 @@ test('Faction planners build their new facilities, reserve the price and unlock 
   for(const [sigil,definition]of Object.entries(CONQUEST_BUILDINGS)){
     const g=new Game({house:HOUSES.findIndex(h=>h.sigil===sigil),landscape:'open',scale:'standard',enemies:3,seed:44277}),s=g.teams[0];
     if(sigil==='flayed')s.strategy='siege';
+    if(sigil==='dragon')g.addBuilding(0,'workshop',s.home.x+3,s.home.y+2);
     const p=g.aiPlanFor(s);g.time=60;s.gold=0;s.powerReadyAt=1e9;g.hash.rebuild(g.units);g.aiEconomy(s,p,g.group(s.id),false);
     assert.equal(p.production.type,definition.type,sigil);assert.equal(p.production.status,'saving');assert.ok(p.production.reserved>=definition.cost);assert.match(p.production.reason,/Unlock/i);assert.equal(g.recruitDetails(definition.unit,s.id).unlocked,false);
     const foreign=Object.values(CONQUEST_BUILDINGS).filter(d=>d.house!==sigil).map(d=>d.type);assert.ok(p.production.options.every(o=>!foreign.includes(o.type)));

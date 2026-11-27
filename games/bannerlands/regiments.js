@@ -1,7 +1,7 @@
 import {directionalShieldMultiplier} from './tactical-combat.js';
 // Additional regiments share the ordinary infantry/cavalry movement rules,
 // while their equipment and recruitment restrictions remain explicit.
-export const SHIELD_HOUSES=Object.freeze(['lion','dragon']);
+export const SHIELD_HOUSES=Object.freeze(['lion']);
 export const PIKE_HOUSES=Object.freeze(['wolf','rose']);
 export const CHAMPION_HOUSES=Object.freeze(['bear','sun','falcon']);
 export const CHAMPION_TRAINING_SECONDS=90;
@@ -17,7 +17,6 @@ export const REGIMENT_UNITS=Object.freeze({
 export const REGIMENT_BUILDINGS=Object.freeze(Object.fromEntries([
   ['wolf','winter_pike_hall','Winter Pike Hall'],
   ['lion','gilded_guard_hall','Gilded Guard Hall'],
-  ['dragon','dragonshield_foundry','Dragonshield Foundry'],
   ['rose','thornwall_pavilion','Thornwall Pike Pavilion'],
   ['bear','bear_lance_lodge','Bear Lance Lodge'],
   ['sun','sun_lance_court','Sun Lance Court'],
@@ -27,11 +26,13 @@ export const REGIMENT_BUILDINGS=Object.freeze(Object.fromEntries([
   return [house,{type,label,house,regimentBuilding:true,cost:foot?360:450,hp:foot?1150:1100,interval:foot?32:45,batch:foot?2:1,unit,trainingFactor:.5,radius:.62,role:pike?'Trains 2 pikemen every 64 seconds before house bonuses':shield?'Trains 2 shield bearers every 64 seconds before house bonuses':'Trains 1 lance champion every 90 seconds before house bonuses'}];
 })));
 export const CONQUEST_UNITS=Object.freeze({
+  dragon:{label:'Dragon',class:'siege',regiment:true,unique:true,ranged:true,fixedBatch:true,automatic:true,supply:50,cost:0,batch:1,hp:5400,damage:195,range:5.5,speed:1.6,rate:3.4,radius:.72,splashRadius:1.65,burnSeconds:5,burnDps:28,role:'A colossal fire-breathing dragon. One per army. Requires 50 supply.',impactName:'Dragon Breath',impact:'Scorches enemies across a widening cone and burns the ground at the impact site for 5 seconds. The Dragonspire incubates a replacement for 120 seconds after the dragon falls.'},
   trebuchet:{label:'Trebuchets',class:'siege',regiment:true,setupSeconds:15,cost:420,batch:1,hp:320,damage:180,range:10.5,speed:.52,rate:7.5,radius:.3,splashRadius:1.7,role:'Long-range siege · needs setup · slow, devastating stones',impactName:'Prepared Bombardment',impact:'Set up in 10s or take down in 5s. Shift-click Set up to deploy at the move destination. Heavy arcing stones splash enemy troops and deal triple damage to buildings.'},
   giant:{label:'Giants',class:'infantry',regiment:true,fixedBatch:true,musterSeconds:130,cost:600,batch:1,hp:1250,damage:54,range:1.05,speed:1,rate:2.6,radius:.32,splashRadius:1.35,role:'Very tough frontline · sweeping splash and knockback · one giant every 130 seconds',impactName:'Giant Sweep',impact:'Each swing pushes back its surviving target and splashes nearby enemy troops for 65% damage, shoving them away too. Heavy troops, frontal greatshields and defensive abilities resist the push; terrain still blocks displacement. Each Giant Camp can muster only one giant per 130 seconds; paid companies contain one giant and restart that camp\'s training cycle.'},
   sharpshooter:{label:'Sharpshooters',class:'archer',regiment:true,cost:260,batch:3,hp:95,damage:100,range:7.5,speed:1.28,rate:5,radius:.14,crossbow:true,reloadStyle:'windlass',cavalryBonus:2,projectile:'bolt',role:'Tully long-range crossbows · devastating cavalry hits · windlass reload',impactName:'Patient Aim',impact:'Fires 7.5 tiles for 100 base damage and double damage against cavalry. A windlass reload needs 5 seconds of stationary work. Movement preserves completed loading stages. Direct fire still needs a clear line of sight.'}
 });
 export const CONQUEST_BUILDINGS=Object.freeze({
+  dragon:{type:'dragonspire',label:'Dragonspire',house:'dragon',conquestBuilding:true,cost:750,hp:2400,interval:120,batch:1,unit:'dragon',radius:.92,role:'Hatches one dragon in 120 seconds. Requires 50 free supply. Incubation pauses while your dragon lives.'},
   flayed:{type:'dread_siege_yard',label:'Dreadfort Siege Yard',house:'flayed',conquestBuilding:true,cost:600,hp:1100,interval:85,batch:1,unit:'trebuchet',radius:.68,role:'Trains 1 trebuchet every 85 seconds · 10s setup / 5s takedown'},
   beacon:{type:'hightower_siege_yard',label:'Hightower Siege Yard',house:'beacon',conquestBuilding:true,cost:600,hp:1100,interval:85,batch:1,unit:'trebuchet',radius:.68,role:'Trains 1 trebuchet every 85 seconds; 10s setup / 5s takedown'},
   bone:{type:'giant_camp',label:'Giant Camp',house:'bone',conquestBuilding:true,cost:500,hp:1200,interval:130,batch:1,unit:'giant',radius:.68,role:'Very slow mustering: trains 1 giant every 130 seconds'},
@@ -64,15 +65,20 @@ export function migrateLegacyRegiments(state,definitions){
   for(const u of state.units||[]){
     if(u.type!=='shield_bearer')continue;
     const sigil=state.teams[u.team]?.sigil;
-    if(!PIKE_HOUSES.includes(sigil))continue;
+    if(sigil!=='dragon'&&!PIKE_HOUSES.includes(sigil))continue;
     const ratio=u.maxHp>0?Math.max(0,Math.min(1,u.hp/u.maxHp)):1,armorScale=u.maxHp>0?u.maxHp/260:1;
-    u.type=sigil==='wolf'?'winter_pikeman':'thornwall_pikeman';
+    u.type=sigil==='dragon'?'infantry':sigil==='wolf'?'winter_pikeman':'thornwall_pikeman';
     const d=definitions[u.type];u.maxHp=d.hp*armorScale;u.hp=u.maxHp*ratio;u.radius=d.radius;
-    delete u.shieldType;delete u.shieldGuard;u.braceTime=0;u.spearState='forming';
+    u.shieldType=d.shieldType;u.shieldGuard='lowered';u.braceTime=0;
+    if(d.spearBrace)u.spearState='forming';else delete u.spearState;
   }
   for(const b of state.buildings||[]){
+    if(b.type==='dragonshield_foundry'){
+      const spire=CONQUEST_BUILDINGS.dragon,health=b.maxHp>0?Math.max(0,Math.min(1,b.hp/b.maxHp)):1;
+      b.type=spire.type;b.maxHp=spire.hp;b.hp=health*spire.hp;b.radius=spire.radius;b.spawnTimer=0;
+    }
     if(b.type==='winter_shield_hall')b.type='winter_pike_hall';
     if(b.type==='rose_guard_pavilion')b.type='thornwall_pavilion';
   }
-  state.regimentSchemaVersion=2;return state;
+  state.regimentSchemaVersion=3;return state;
 }

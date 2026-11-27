@@ -10,7 +10,7 @@ import {PROTOCOL_VERSION,GAME_VERSION,ASSET_VERSION,compatible} from './protocol
 const fields=text=>text.split(' ');
 const TILE=fields('x y terrain feature featureAxis height value variation');
 const IDENTITY=fields('id name motto sigil color dark trait houseColor alliance teamColor teamName house castleName playstyle advantages weaknesses specialist production power');
-const PRIVATE_TEAM=fields('gold income count cap tiles alive kills upgrades home rally heroTimer powerReadyAt buffs kingId keeps value banners heroStandardIssued');
+const PRIVATE_TEAM=fields('gold income count cap tiles alive kills upgrades home rally heroTimer powerReadyAt buffs kingId dragonId keeps value banners heroStandardIssued');
 const UNIT=fields('id team type x y radius hp maxHp vx vy motionVX motionVY facingX facingY backpedaling attackAnim phase cooldown charging chargeSpeed chargeRunup chargeTravel chargeCooldown chargeElapsed chargeBlockedUntil momentum knockT spawn hit shieldType shieldGuard shieldGuardTime shieldLowerUntil spearState spearReadiness braceTime elite isKing royalReinforcement setupProgress trebuchetState trebuchetRemaining berserkUntil poisonUntil crippledUntil shockUntil snaredUntil stunUntil resolveUntil venomUntil specialGuardUntil stormUntil rushUntil harvestUntil bearUntil pathsUntil disciplineUntil heroProfile heroMode standardId standardBlocked crossbowState reloading aiming');
 const BUILDING=fields('id team type x y radius hp maxHp level castleId restoredCastle remembered lastSeen hit progress spawnTimer cooldown musterCooldown');
 const STANDARD=fields('id type team owner heroId carrierId x y facingX facingY hp maxHp radius state dormant handlingHeroId bornAt destroyedAt plantedAt');
@@ -72,8 +72,16 @@ function knownObjectives(game,team,fog){
   return values.map(value=>!fog||game.isVisibleTo(team,value)?pick(value,OBJECTIVE):{...pick(value,OBJECTIVE_PUBLIC),progress:[],controller:null,contested:false,cooldownUntil:0,unseen:true});
 }
 
-function publicUnit(value){
-  const out=pick(value,UNIT,true);
+function visibleCombatState(game,value,keys){
+  const out=pick(value,keys,true);
+  // Replicate the visible flame on its victim, not the hidden attacker or a
+  // live update to an enemy building remembered under fog.
+  const burn=!value.remembered&&game.dragonBurns?.get(value.id);
+  if(burn?.until>game.time)out.dragonBurnUntil=renderNumber(burn.until);
+  return out;
+}
+function publicUnit(game,value){
+  const out=visibleCombatState(game,value,UNIT);
   if(value.chargeDir)out.chargeDir=point(value.chargeDir);if(value.braceDir)out.braceDir=point(value.braceDir);
   if(value.attackVisual)out.attackVisual=pick(value.attackVisual,VISUAL,true);if(value.hitVisual)out.hitVisual=pick(value.hitVisual,VISUAL,true);
   if(value.reload)out.reload=pick(value.reload,RELOAD,true);
@@ -87,7 +95,7 @@ function publicUnit(value){
 // Its caller supplies an authority revision so commands made between ticks
 // invalidate it as well. Fog filtering and private orders are applied later.
 export function prepareSnapshotProjection(game){
-  return {game,unitViews:new Map(),unitPatchCache:new WeakMap(),buildings:new Map(game.buildings.map(value=>[value.id,pick(value,BUILDING,true)])),teams:new Map(game.teams.map(value=>[value.id,pick(value,IDENTITY)]))};
+  return {game,unitViews:new Map(),unitPatchCache:new WeakMap(),buildings:new Map(game.buildings.map(value=>[value.id,visibleCombatState(game,value,BUILDING)])),teams:new Map(game.teams.map(value=>[value.id,pick(value,IDENTITY)]))};
 }
 
 export function snapshotWorld(game,team,{initial=false,sequence=0,projection=null}={}){
@@ -111,7 +119,7 @@ export function snapshotWorld(game,team,{initial=false,sequence=0,projection=nul
       if(views?.[visibility])return views[visibility];
       if(!views){views=[];projection.unitViews.set(value.id,views);}
     }
-    const out=publicUnit(value);
+    const out=publicUnit(game,value);
     // Aiming animations use a boolean; the simulation's crossbowAim embeds a
     // private target reference and must never be serialized wholesale.
     if(value.order)out.order=pick(value.order,own?ORDER:PUBLIC_ORDER,true);
@@ -146,7 +154,7 @@ export function snapshotWorld(game,team,{initial=false,sequence=0,projection=nul
       return out;
     }),
     units:units.map(serializeUnit),
-    buildings:buildings.map(value=>({...(!value.remembered&&projection?.game===game?projection.buildings.get(value.id):pick(value,BUILDING,true)),...(ownEntity(value)?{rally:point(value.rally)}:{})})),
+    buildings:buildings.map(value=>({...(!value.remembered&&projection?.game===game?projection.buildings.get(value.id):visibleCombatState(game,value,BUILDING)),...(ownEntity(value)?{rally:point(value.rally)}:{})})),
     standards:standards.map(value=>{const out=pick(value,STANDARD,true);for(const key of ['heroId','carrierId','handlingHeroId'])if(out[key]!=null&&!knownIds.has(out[key]))out[key]=null;return out;}),
     standardRemains:(game.standardRemains||[]).filter(value=>allied(value)||visible(value)).map(value=>({...pick(value,STANDARD),inert:true})),
     placedFormations:[...(game.placedFormations?.values()||[])].filter(value=>value.members?.some(id=>game.allied(team,game.byId.get(id)?.team))).map(value=>({...pick(value,COHORT),slots:(value.slots||[]).map(slot=>pick(slot,SLOT)),standardAnchor:point(value.standardAnchor)})),

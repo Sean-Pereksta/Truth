@@ -85,17 +85,19 @@ await r.loadRegimentArt(sources);
 
 const productionSource=path.join(root,'assets/regiments/production-buildings.png'),productionDefinitions=Object.entries(BUILD_DEFS).filter(([,d])=>d.regimentBuilding);
 test('Dedicated regiment buildings cannot fall back to the original house production picture',()=>{
-  assert.equal(productionDefinitions.length,7);r.houseArtReady=true;r.houseProductionFrames.wolf={image:'wrong original building'};
+  assert.deepEqual(productionDefinitions.map(([,d])=>d.house).sort(),['bear','falcon','lion','rose','sun','wolf']);
+  assert.equal(BUILD_DEFS.dragonspire.unit,'dragon');
+  r.houseArtReady=true;r.houseProductionFrames.wolf={image:'wrong original building'};
   for(const [type,d]of productionDefinitions)assert.equal(r.getStructureFrame(type,d.house),null);r.houseArtReady=false;
 });
 await r.loadRegimentBuildings(productionSource);
-test('Seven dedicated production buildings use unique illustrated atlas cells',()=>{
+test('Each active shield, pike and lance building uses its own illustrated atlas cell',()=>{
   assert.equal(r.regimentBuildingsReady,true);assert.equal(r.regimentBuildingArtInfo.frames,7);assert.deepEqual(r.regimentBuildingArtInfo.houses,Object.keys(regiments));const artwork=[];
   for(const [type,d]of productionDefinitions){
     const f=r.getStructureFrame(type,d.house);assert.ok(f.regimentBuilding);assert.equal(f.house,d.house);assert.ok(f.drawWidth>40&&f.drawHeight>40);assert.ok(visible(f.image)>1500);artwork.push(digest(f.image));
     assert.equal(r.getStructureFrame(type,d.house==='wolf'?'lion':'wolf'),null);assert.equal(r.getStructureFrame(type),null);
   }
-  assert.equal(new Set(artwork).size,7,'Each house production building has a separate source drawing.');
+  assert.equal(new Set(artwork).size,productionDefinitions.length,'Each active building has a separate source drawing.');
 });
 test('Production portraits and world buildings keep their painted house architecture and colors',()=>{
   for(const [type,d]of productionDefinitions){
