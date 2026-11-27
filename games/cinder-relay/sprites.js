@@ -415,6 +415,126 @@
       o(0,0,3,3,INK);r(-1,-1,3,3,wind?'#fff4dc':'#ee99dc');r(0,-1,2,1,'#fff1ed');
     }
   }
+  function regionFoe(D,id,f,wind) {
+    const {rect:r,line:l,oval:o,plate:p,poly}=D;
+    const stride=[-2,0,2,0][f];
+    const glass='#41506f', bevel='#b5bddc', aqua='#9bfae9', lilac='#df9bfb';
+    const iron='#33464a', bronze='#9a664b', rust='#df9161', green='#60bfac', foam='#bffbe4';
+    const lens=wind?'#fff9dd':aqua, pressure=wind?'#fff0a6':foam;
+
+    switch(id){
+      case 39:{ // Prism Indexer: armored reference lens on a short tracked chassis.
+        for(const [x,y] of [[-8,6],[4,6]]){
+          p([[x-4,y-2],[x+4,y-3],[x+7,y-1],[x+6,y+3],[x-4,y+4]],glass,bevel);
+          for(let i=0;i<4;i++)r(x-2+i*2+(f%2),y+1,1,2,'#817fb1');
+        }
+        p([[-13,3],[-9,-1],[4,-2],[12,0],[14,4],[5,7],[-8,7]],glass,bevel);
+        const petals=wind?2:0;
+        p([[-10,-5],[-7,-10-petals],[-1,-13-petals],[6,-10-petals],[7,-6],[-1,-5]],'#7f7cae','#f1d9f8');
+        p([[-9,-6],[-4,-11],[5,-10],[12,-4],[9,2],[2,5],[-6,1]],'#65799a',bevel);
+        poly([[-7,-6],[-3,-9],[4,-8],[9,-3],[6,1],[1,2],[-4,-1]],INK);
+        poly([[-3,-6],[2,-8],[7,-4],[5,0],[1,1],[-3,-1]],'#467f8d');
+        r(2,-6,3,5,lens);r(1,-5,5,2,lens);r(3,-5,2,2,'#effff8');
+        l(-7,-5,-4,-8,lilac);l(-3,2,-1,4,aqua);
+        for(const y of [-8,1]){
+          l(8,y,14+(wind?2:0),y,INK,4);
+          l(9,y-1,13+(wind?2:0),y-1,bevel,2);
+          r(13+(wind?2:0),y,2,2,wind?lens:lilac);
+        }
+        break;
+      }
+      case 40:{ // Refraction Skater: swept runner with a readable charged fin flare.
+        const spread=wind?4:Math.abs(stride);
+        p([[-12,-3],[-13,-8-spread],[-8,-12-spread],[-3,-8],[-3,-4],[-8,0]],'#625a86',lilac);
+        p([[-10,4],[-12,9+spread],[-18,11+spread],[-14,4],[-10,0],[-5,1]],'#5b8495',aqua);
+        p([[-1,-3],[3,-8-spread],[8,-8-spread],[14,-4],[12,0],[5,0]],'#7181ad',bevel);
+        p([[-15,0],[-7,-5],[3,-4],[9,-1],[18,1],[10,4],[1,6],[-8,5]],glass,bevel);
+        poly([[-13,1],[-7,-3],[0,-2],[7,1],[13,2],[5,3],[-3,4]],'#87b8c0');
+        l(-10,1,-4,-1,lens,2);l(7,1,15,2,wind?lens:lilac,2);
+        p([[-5,6],[7,5],[11,3],[9,7],[-1,9],[-10,8]],'#8271a8','#d1b4da');
+        l(-12,4,-20,4+stride,wind?lens:'#679bb8');
+        r(-20,5+stride,3,1,wind?lilac:'#776ca3');
+        break;
+      }
+      case 41:{ // Facet Bailiff: long glass riot shield, hinge lugs and armored walker.
+        for(const side of [-1,1]){
+          const foot=side*stride;
+          l(-5,side*4,-9+foot,side*10,INK,6);l(-9+foot,side*10,-5+foot,side*12,glass,4);
+          r(-9+foot,side*12-1,6,3,bevel);r(-9+foot,side*12,4,2,'#61678b');
+        }
+        p([[-15,-3],[-11,-10],[-3,-13],[6,-10],[10,-3],[9,6],[2,10],[-10,8]],'#6c749d',bevel);
+        p([[-12,-2],[-9,-8],[-3,-8],[3,-5],[2,4],[-5,7],[-10,4]],glass,'#9b93b9');
+        r(-9,-4,7,2,INK);r(-7,-4,6,1,lens);r(-7,3,5,2,lilac);
+        const shieldX=wind?4:0;
+        D.offset(shieldX,0,()=>{
+          p([[6,-15],[11,-16],[16,-12],[18,-7],[18,8],[14,15],[7,15],[5,9],[5,-10]],'#718ea5',bevel);
+          poly([[7,-12],[11,-14],[15,-10],[16,-3],[12,1],[7,-2]],'#91b5c8');
+          poly([[7,0],[12,2],[16,-2],[16,7],[13,13],[8,13]],'#596c9b');
+          l(7,-11,8,10,wind?lens:'#e2dfef');l(8,-5,14,-10,bevel);l(10,9,15,5,lilac);
+          r(5,-10,3,3,INK);r(5,7,3,3,INK);r(6,-9,1,1,lens);r(6,8,1,1,lens);
+        });
+        break;
+      }
+      case 42:{ // Sluice Eel: hinged sections track down an undulating conduit.
+        for(let i=4;i>=0;i--){
+          const x=6-i*5,y=wind?0:Math.round(4*Math.sin((i+f)*TAU/7));
+          const size=i===4?3:5;
+          o(x,y,size,4,INK);o(x,y,size-1,3,iron);
+          r(x-2,y-2,4,3,i%2?bronze:green);
+          l(x-1,y-2,x-1,y+2,i%2?rust:'#8fe7d4');
+          if(i>1)l(x-1,y+3,x-3,y+5,bronze,2);
+        }
+        p([[1,-3],[4,-8],[9,-9],[14,-5],[17,-2],[15,2],[8,4],[3,2]],green,foam);
+        poly([[7,-7],[10,-7],[13,-5],[11,-3],[7,-4]],iron);
+        r(11,-5,3,2,pressure);r(11,-5,2,1,'#f1ffe5');
+        l(6,-2,13,0,INK,2);l(13,0,wind?19:16,wind?4:1,rust,2);
+        if(wind){l(13,-2,19,-4,foam);r(14,1,2,2,pressure);}
+        break;
+      }
+      case 43:{ // Bilge Bellows: shunting pressure chambers visibly compress before firing.
+        for(const side of [-1,1]){
+          const legY=side*7;
+          l(-8,legY,-11+stride,legY+side*3,INK,5);l(-11+stride,legY+side*3,-5+stride,legY+side*4,bronze,3);
+          l(3,legY,7-stride,legY+side*3,INK,5);l(7-stride,legY+side*3,11-stride,legY+side*3,green,2);
+        }
+        const seal=wind?4:0;
+        p([[-14+seal,-6],[-11+seal,-10],[-3,-9],[2,-7],[2,7],[-5,10],[-13+seal,8],[-16+seal,3]],iron,green);
+        for(let i=0;i<3;i++){
+          const x=-12+seal+i*(wind?2:4);
+          l(x,-6,x-1,6,INK,3);l(x+1,-6,x,6,bronze,2);r(x+1,-6,2,1,rust);
+        }
+        p([[-2,-10],[5,-11],[9,-8],[11,6],[6,11],[-1,10],[-4,5],[-4,-5]],bronze,rust);
+        o(3,-2,5,5,INK);o(3,-2,3,3,'#526b61');
+        l(3,-2,wind?5:2,-4,pressure);r(2,-2,2,2,'#d6c498');
+        p([[7,-5],[13,-6],[18,-4],[18,4],[13,6],[8,4]],iron,green);
+        l(13,-4,13,4,rust,2);l(16,-2,16,2,pressure,2);
+        if(wind){r(18,-3,2,6,foam);r(21,-1,2,2,pressure);}
+        break;
+      }
+      case 44:{ // Valveback Hauler: boiler stack over a broad, slow undercarriage.
+        for(const y of [-8,8]){
+          p([[-14,y-2],[-10,y-4],[8,y-3],[14,y-1],[13,y+3],[-11,y+4],[-15,y+1]],iron,'#778781');
+          for(let i=0;i<7;i++)r(-11+i*3+f%2,y+1,2,2,(i%2)?'#4a6664':'#705e52');
+        }
+        p([[-14,-5],[-10,-11],[3,-13],[12,-8],[15,1],[10,9],[-1,11],[-12,8],[-16,2]],bronze,rust);
+        poly([[-13,-4],[-8,-8],[2,-9],[11,-6],[12,1],[7,6],[-3,8],[-11,6]],'#5c7d70');
+        l(-10,-5,-4,-8,green,2);l(-10,5,-3,7,green,2);
+        l(-11,-4,-14,-11,INK,5);l(-14,-11,-9,-14,INK,5);
+        l(-11,-4,-14,-11,bronze,3);l(-14,-11,-9,-14,rust,3);r(-11,-15,4,2,green);
+        o(2,-1,8,8,INK);o(2,-1,7,7,'#68524a');o(2,-1,5,5,iron);
+        for(let i=0;i<4;i++){
+          const a=(i/4+f/16)*TAU,u=Math.cos(a),v=Math.sin(a);
+          l(2+u*2,-1+v*2,2+u*7,-1+v*7,wind?pressure:rust,2);
+        }
+        o(2,-1,2,2,wind?pressure:'#ebbe86');
+        p([[8,-6],[13,-8],[17,-5],[15,-2],[10,-1]],iron,green);
+        p([[9,1],[15,1],[18,5],[14,8],[8,6]],iron,green);
+        r(14,-5,3,2,pressure);r(15,4,3,2,pressure);
+        if(wind){r(-11,-18,3,2,foam);r(-13,-20,4,1,'#73bfb6');r(17,-5,3,1,foam);r(18,5,3,1,foam);}
+        break;
+      }
+    }
+  }
   function major(D,id,f,wind,phase,exposed) {
     const {rect:r,line:l,oval:o,ell,limb,plate:p,poly,offset}=D;
     const s=[0,2,0,-2][f], ready=wind||phase===3, eye=ready?'#fff2b5':'#ffae72';
@@ -661,7 +781,8 @@
     else if(id<12)foundry(D,id,f,wind);
     else if(id<24)orchard(D,id-12,f,wind);
     else if(id<36)relay(D,id-24,f,wind);
-    else fodder(D,id,f,wind);
+    else if(id<39)fodder(D,id,f,wind);
+    else regionFoe(D,id,f,wind);
     if(flash){const c2=c.getContext('2d');c2.globalCompositeOperation='source-atop';c2.fillStyle='rgba(255,237,190,0.55)';c2.fillRect(0,0,c.width,c.height);c2.globalCompositeOperation='source-over';}
     cache.set(key,c);return c;
   }
@@ -746,14 +867,17 @@
   }
   function enemy(ctx,e,t=0) {
     if(e.dead||e.hp<=0)return;
-    const b=!!e.boss, id=e.id??0,f=Math.floor(t*(b?4.5:id>=36?12:6)+(e.serial||0))%4;
+    const b=!!e.boss, id=e.id??0;
+    const fodder=!b&&id>=36&&id<39;
+    const f=Math.floor(t*(b?4.5:fodder?12:id===40||id===42?9:6)+(e.serial||0))%4;
     const wind=e.windup>0,exposed=b&&(e.recover>.16||e.stagger>0);
     const img=sprite(b?'boss':'enemy',id,f,wind,b?e.phase||1:1,false,false,e.flash>.02,exposed);
     const mirror=Math.cos(e.a||0)<0;
-    const hover=b?(id===3||id===4||id===6):(id===19||(id>=24&&id<36)||id===38);
+    const hover=b?(id===3||id===4||id===6):(id===19||(id>=24&&id<36)||id===38||id===40);
     const y=e.y+(hover?Math.sin(t*3+(e.serial||0))*1.4-1:0);
     const scale=b?1.45:(e.elite?1.13:1.0);
-    shadow(ctx,e.x,e.y+(b?13:id>=36?5:7),b?25:id>=36?7:id<12?11:9,b?7:3);
+    const heavy=!b&&(id===41||id===44);
+    shadow(ctx,e.x,e.y+(b?13:fodder?5:7),b?25:heavy?15:fodder?7:id<12?11:9,b?7:3);
     ctx.save();
     if(e.arrive>0)ctx.globalAlpha*=Math.max(.48,1-e.arrive*.4);
     place(ctx,img,e.x,y,scale,mirror);

@@ -807,7 +807,9 @@
     ['Slagworks Crown','Cross the forge roof under a curtain of falling ash.','Staggered press strikes and heavy crews.',['Stabilize','Transmit']],
     ['Dead Frequency','Watch the three arches between paired antenna courtyards.','Echo Scribes and relay sentries.',['Breach','Transmit']],
     ['Moonfall Dock','Cross long moonlit ramps to outmaneuver a dock commander.','Mobile elites and their escorts.',['Hunt','Intercept']],
-    ['The Lantern Vault','Enter the fuel chamber through four luminous storage bays.','Brood nests and close-range attackers.',['Purge','Hunt']]
+    ['The Lantern Vault','Enter the fuel chamber through four luminous storage bays.','Brood nests and close-range attackers.',['Purge','Hunt']],
+    ['Prism Archive','Take either gallery around the central stacks to reach the sealed index.','Skaters flank from adjacent lanes while Bailiffs hold long sightlines.',['Breach','Transmit']],
+    ['Brinepump Warrens','Follow a chain of narrow sluices and open side drains to cut between pump halls.','Sluice Eels and pressure crews advance in staggered surges.',['Stabilize','Intercept']]
   ];
   const modifiers=['Crosswind','Sleeping Relays','Red Shift'];
   function routes(g) {

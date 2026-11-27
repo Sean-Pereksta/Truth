@@ -1,4 +1,4 @@
-/* Large installations are built from chambers and three-tile service passages. */
+/* Large installations are built from chambers and service passages. */
 (() => {
   'use strict';
   const tile=32;
@@ -66,8 +66,9 @@
     const plan=legacy?plans[oldLayout]:LevelTopology.make(g);
     const route=g.mapId||0,{rows,cols}=plan,cells=new Uint8Array(rows*cols);
     const materials=['dock','flora','forge','signal','signal','dock','flora','forge','signal','dock','forge'];
-    const theme=legacy?skins[materials[g.mapId]||'dock']:routeskins[route]||skins.dock;
-    const id=legacy?oldLayout:[0,1,3,2,2,1,1,3,2,0,3][route]??0;
+    const style=legacy?null:window.RegionTerrain?.labStyle?.(route);
+    const theme=style?.theme||(legacy?skins[materials[g.mapId]||'dock']:routeskins[route]||skins.dock);
+    const id=style?.layout??(legacy?oldLayout:[0,1,3,2,2,1,1,3,2,0,3][route]??0);
     const rooms=plan.rooms.map(([id,name,x,y,w,h,ambush])=>{
       for(let j=0;j<h;j++)for(let i=0;i<w;i++){
         if((i===0||i===w-1)&&(j===0||j===h-1))continue;
@@ -78,11 +79,12 @@
         .map(([i,j])=>point([x+i,y+j]));
       return {id,name,x:x*tile,y:y*tile,w:w*tile,h:h*tile,center,vents,ambush:!!ambush,state:'idle',visited:false};
     });
-    for(const route of plan.halls){
-      for(let i=1;i<route.length;i++){
-        const [x,y]=route[i-1],[ex,ey]=route[i];
-        for(let j=Math.min(y,ey)-1;j<=Math.max(y,ey)+1;j++)
-          for(let k=Math.min(x,ex)-1;k<=Math.max(x,ex)+1;k++)cells[j*cols+k]=1;
+    for(let hallIndex=0;hallIndex<plan.halls.length;hallIndex++){
+      const hall=plan.halls[hallIndex],radius=(plan.hallWidths?.[hallIndex]??3)>>1;
+      for(let i=1;i<hall.length;i++){
+        const [x,y]=hall[i-1],[ex,ey]=hall[i];
+        for(let j=Math.min(y,ey)-radius;j<=Math.max(y,ey)+radius;j++)
+          for(let k=Math.min(x,ex)-radius;k<=Math.max(x,ex)+radius;k++)cells[j*cols+k]=1;
       }
     }
     for(const [x,y,w,h] of plan.piers)
@@ -93,7 +95,7 @@
       const c=cx+(axis==='y'?i:0),r=cy+(axis==='x'?i:0);
       door.cells.push({cx:c,cy:r});doorTiles[r*cols+c]=1;
     }
-    const lab={width:cols*tile,height:rows*tile,cols,rows,tile,cells,doorTiles,door,rooms,theme,layout:id,piers:plan.piers,
+    const lab={width:cols*tile,height:rows*tile,cols,rows,tile,cells,doorTiles,door,rooms,theme,style,layout:id,piers:plan.piers,
       generation:legacy?1:2,layoutId:legacy?'legacy-'+oldLayout:plan.identity,scheme:plan.scheme,
       seed:plan.seed||0,route,intro:!!plan.intro,cycles:plan.cycles,
       layoutName:plan.name,entry:point(plan.start),gate:point(plan.gate),cache:point(plan.cache),
@@ -322,6 +324,7 @@
       stroke(c,[[x+3,y+13],[x+9,y+13],[x+15,y+19],[x+29,y+19]],1,p.rim+'7a');
       rect(c,x+27,y+18,2,2,p.trim+'9c');
     }
+    return n;
   }
   function wallPanel(c,x,y,i,j,p,near,seed){
     const n=hash(i,j,seed),[north,east,south,west]=near;
@@ -350,6 +353,7 @@
       stroke(c,[[x+3,y],[x+8,y+7],[x+17,y+9],[x+21,y+20]],2,p.trim+'a0');
       ellipse(c,x+9,y+8,4,3,p.trim);rect(c,x+8,y+6,3,1,p.lamp);
     }
+    return n;
   }
   function grate(c,x,y,p){
     rect(c,x-14,y-11,28,22,p.shade);rect(c,x-13,y-10,26,2,p.rim);
@@ -699,12 +703,14 @@
     // Native pixel art is doubled on the 960×540 game surface.
     c0.width=lab.width/2;c0.height=lab.height/2;
     const c=c0.getContext('2d',{alpha:false}),p=lab.theme,seed=lab.seed||lab.layout*103+3;
+    const regional=lab.style?window.RegionTerrain:null;
     c.scale(.5,.5);c.lineJoin='bevel';c.imageSmoothingEnabled=false;
     rect(c,0,0,lab.width,lab.height,p.shade);
     const floor=(x,y)=>x>=0&&y>=0&&x<lab.cols&&y<lab.rows&&lab.cells[y*lab.cols+x];
     for(let j=0;j<lab.rows;j++)for(let i=0;i<lab.cols;i++)if(floor(i,j)){
       const x=i*tile,y=j*tile;
-      floorPanel(c,x,y,i,j,p,seed);
+      const n=floorPanel(c,x,y,i,j,p,seed);
+      regional?.labFloor?.(c,lab,x,y,n);
       if(!roomAt(lab,x+16,y+16)){
         // Embedded service conduits follow the turns; their short colored ties
         // let the pilot recognize a corridor while running at the light's edge.
@@ -720,20 +726,28 @@
         }
       }
     }
-    lab.rooms.forEach((r,i)=>roomArt(c,lab,r,i));
+    lab.rooms.forEach((r,i)=>{
+      if(!regional?.labRoom?.(c,lab,r,i))roomArt(c,lab,r,i);
+    });
     for(let j=0;j<lab.rows;j++)for(let i=0;i<lab.cols;i++)if(!floor(i,j)){
       const near=[floor(i,j-1),floor(i+1,j),floor(i,j+1),floor(i-1,j)];
-      if(near.some(Boolean))wallPanel(c,i*tile,j*tile,i,j,p,near,seed);
+      if(near.some(Boolean)){
+        const x=i*tile,y=j*tile,n=wallPanel(c,x,y,i,j,p,near,seed);
+        regional?.labWall?.(c,lab,x,y,n,near);
+      }
     }
     for(const r of lab.rooms){
       if(r.ambush)for(const v of r.vents)grate(c,v.x,v.y,p);
       // Put a larger landmark above the chamber, only if that cell is a solid north wall.
       for(let k=2;k<r.w/tile-1;k+=4){
         const i=r.x/tile+k,j=r.y/tile-1;
-        if(!floor(i,j)&&floor(i,j+1))fixture(c,(i+.5)*tile,(j+.52)*tile,p,k);
+        if(!floor(i,j)&&floor(i,j+1)){
+          const x=(i+.5)*tile,y=(j+.52)*tile;
+          if(!regional?.labFixture?.(c,lab,x,y,k))fixture(c,x,y,p,k);
+        }
       }
     }
-    pierArt(c,lab);
+    if(!regional?.labPiers?.(c,lab))pierArt(c,lab);
     return c0;
   }
   function draw(c,g){

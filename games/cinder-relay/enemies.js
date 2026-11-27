@@ -2,8 +2,8 @@
 (() => {
   'use strict';
   const TAU = Math.PI * 2;
-  const factions = ['Foundry garrison', 'Orchard brood', 'Relay constructs'];
-  const signal = ['#ff9561', '#ffe66f', '#ff9dda'];
+  const factions = ['Foundry garrison', 'Orchard brood', 'Relay constructs', 'Prism archive', 'Brinepump dredgers'];
+  const signal = ['#ff9561', '#ffe66f', '#ff9dda', '#aeeaff', '#74e9d8'];
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
   const dist = (a,b) => Math.hypot(a.x-b.x, a.y-b.y);
   const angle = (a,b) => Math.atan2(b.y-a.y,b.x-a.x);
@@ -99,19 +99,31 @@
     ['Phase Lantern','support','phase',39,12,71,175,4.2,'Teleports an ally to the marked landing ring after a bright pulse.'],
     ['Foundry Tack Hound','pursue','bite',12,7,133,13,1.55,'Low-slung wheel packs race straight down a lane. Their jaws flare amber before a short bite.'],
     ['Brood Needleling','pack','bite',10,6,147,15,1.69,'Pairs of small mantids fan around opposite shoulders, then snap their glowing mandibles.'],
-    ['Relay Glint Mite','skitter','bite',9,6,151,14,1.45,'Triprong drones drift, then dart in alternating beats. Turn as the violet core flashes.']
+    ['Relay Glint Mite','skitter','bite',9,6,151,14,1.45,'Triprong drones drift, then dart in alternating beats. Turn as the violet core flashes.'],
+    ['Prism Indexer','index','refraction',49,12,92,190,3.25,'Clicks between firing posts. Twin crystal bolts follow the dashed paths and converge.'],
+    ['Refraction Skater','glide','shardrush',38,11,101,89,3.4,'Glides from side to side, then dashes along a diagonal and sheds delayed crystal splinters.'],
+    ['Facet Bailiff','guardwalk','facetgate',94,17,46,128,4.8,'Advances behind a frontal plate. Break either crystal stake to collapse its cutoff beam.'],
+    ['Sluice Eel','slither','sluicelunge',42,11,109,47,2.68,'Weaves down corridors, pauses to show a straight channel, then surges through it.'],
+    ['Bilge Bellows','recoil','pressure',68,15,65,145,4.6,'Backpedals after priming two expanding pressure waves. Duck behind a wall or run past their outer edge.'],
+    ['Valveback Hauler','crank','ventline',103,17,53,144,4.7,'Advances in pumping strides. It pins three staggered steam vents down the lane it marked.']
   ];
-  const defs = profiles.map(([name,move,attack,hp,r,speed,range,interval,desc],id)=>({
-    id,name,move,attack,hp,r,speed,range,interval,desc,fodder:id>=36,
-    faction:factions[id>=36?id-36:Math.floor(id/12)],color:signal[id>=36?id-36:Math.floor(id/12)]
-  }));
+  const defs = profiles.map(([name,move,attack,hp,r,speed,range,interval,desc],id)=>{
+    const fodder=id>=36&&id<=38;
+    const faction=id>=42?4:id>=39?3:fodder?id-36:Math.floor(id/12);
+    return {id,name,move,attack,hp,r,speed,range,interval,desc,fodder,
+      faction:factions[faction],color:signal[faction]};
+  });
   // Firing range is deliberately independent of preferred movement range.
   // A fireteam suppresses an open lane while it advances to its assigned posts.
   const reach = [760,635,865,266,190,720,380,427,760,375,385,405,
     119,650,525,176,425,365,645,640,229,370,490,675,
-    730,575,680,645,495,715,685,490,293,475,680,415,30,33,32];
+    730,575,680,645,495,715,685,490,293,475,680,415,30,33,32,
+    425,113,287,86,166,260];
   const covering = new Set(['burst','fan','rail','wall','wake','prong','sapper','seedring','consume','bank','spiral','chord','hooks','echoes','gate','pane']);
   const responders = new Set([0,1,2,5,6,8,9,13,14,16,18,19,22,23,24,25,26,27,29,30,34,35]);
+  const dashAttacks = new Set(['leap','prong','ram','shardrush','sluicelunge']);
+  const regionAttacks = new Set(['refraction','shardrush','facetgate','sluicelunge','pressure','ventline']);
+  const pressureReach = 178;
   const bosses = [
     ['Breakwater Walker','Firing solution','Radiator sweep','Broken rivet rings','A dock hauler with a failing rivet turret.',1690,31,0],
     ['Brood Lantern','Nest choir','Curling spores','Inward bloom','A luminous heart suspended on four tall limbs.',2150,31,1],
@@ -174,6 +186,7 @@
     const frontal=Math.cos(attackAngle+Math.PI-e.a)>.42;
     if(!e.boss){
       if(e.id===1 && frontal && e.recover<=0 && e.stagger<=0)factor=.51;
+      if(e.def.move==='guardwalk' && frontal && e.recover<=0 && e.windup<=0 && e.stagger<=0)factor*=.56;
       if(e.id===29 && e.recover<=0 && e.windup<=0 && e.stagger<=0)factor=.63;
       if(e.id===7 && e.windup>.12 && frontal && (e.loadDamage=(e.loadDamage||0)+value)>15){e.stagger=.95;e.windup=0;e.cd=2;e.loadDamage=0;g.fx(e.x,e.y,'#ffd372',9);}
       if(e.elite && e.stagger>.18)factor=1.19;
@@ -265,6 +278,44 @@
     }
   }
   function dash(e,a,speed,time,finish=''){e.dash={a,speed,time,finish,hit:new Set(),wake:0};}
+  function refractionPaths(g,e,target){
+    const reach=clamp(dist(e,target)*.40,34,84);
+    const paths=[];
+    for(const side of [-1,1]){
+      const heading=e.lockA+side*.34;
+      const corner=polar(e,heading,reach);
+      if(!canSee(g,e,corner))continue;
+      const straight=dist(corner,target)<9;
+      const turn=straight?e.lockA:angle(corner,target);
+      const tip=clipLab(g,corner,polar(corner,turn,Math.min(120,dist(corner,target))));
+      paths.push({heading,corner,turn,reach,tip});
+    }
+    return paths;
+  }
+  function facetStakes(g,e,target){
+    const center=polar(e,e.lockA,clamp(dist(e,target)*.55,30,115));
+    if(!clearLab(g,e,center)||g.blocked(center.x,center.y,8))return null;
+    const stakes=[];
+    for(const side of [-1,1]){
+      const heading=e.lockA+side*Math.PI/2;
+      const end=clipLab(g,center,polar(center,heading,54));
+      let offset=dist(center,end)-7;
+      for(;offset>=13;offset-=5){
+        const at=polar(center,heading,offset);
+        if(!g.blocked(at.x,at.y,8)&&clearLab(g,e,at)){stakes.push(at);break;}
+      }
+    }
+    return stakes.length===2&&clearLab(g,stakes[0],stakes[1])?stakes:null;
+  }
+  function ventPoints(g,e,target){
+    const distance=dist(e,target),points=[];
+    const end=clamp(distance+30,91,248),start=Math.max(36,end-107);
+    for(let i=0;i<3;i++){
+      const center=polar(e,e.lockA,start+(end-start)*i/2);
+      if(!g.blocked(center.x,center.y,6)&&canSee(g,e,center))points.push({center,slot:i});
+    }
+    return points;
+  }
   function fire(g,e){
     const t=aimPoint(g,e),a=e.lockA,p={x:e.tx,y:e.ty},now={x:e.x,y:e.y};
     e.salvo++;e.attackAge=0;e.recover=e.boss?.78:.44;e.pulse=.18;
@@ -365,6 +416,30 @@
       case 'pane':{
         const pos=polar(e,a,47),pane=emitter(g,e,pos,17,'pane',{a:a+Math.PI/2,turnTo:a+.42*e.turn});
         for(let i=-1;i<=1;i++)shot(a+i*.13,135,{turnAt:.36,turnTo:a+.42*e.turn+i*.13,shape:'dart',pane});break;}
+      case 'refraction':{
+        const speed=188,adjustedSpeed=speed*(1+.0065*Math.min(26,Math.max(0,(g.stage||1)-1)));
+        const paths=e.windupGeometry;
+        if(!paths.length)shot(a,speed,{shape:'lance',life:2.6});
+        for(const path of paths)shot(path.heading,speed,{shape:'lance',life:2.6,
+          turnAt:Math.max(.02,(path.reach-e.r-3)/adjustedSpeed),turnTo:path.turn});
+        break;}
+      case 'shardrush':dash(e,a+.47*e.turn,241,.48,'shardrush');break;
+      case 'facetgate':{
+        const stakes=e.windupGeometry;
+        if(!stakes){fan(g,e,e,a,3,.51,143,{shape:'diamond'});break;}
+        const anchors=stakes.map(at=>emitter(g,e,at,7,'stake',{hp:24}));
+        if(anchors.every(anchor=>anchor.life>0))beam(g,e,stakes[0],stakes[1],.66,.74,5,{anchors,damage:14});
+        e.recover=.74;
+        break;}
+      case 'sluicelunge':dash(e,a,314,.38,'sluicelunge');break;
+      case 'pressure':{
+        for(const [warn,damage] of [[.24,11],[.79,14]])zone(g,e,'pressureRing',now,pressureReach,warn,1.12,{damage});
+        e.recover=.27;
+        break;}
+      case 'ventline':{
+        for(const {center,slot} of e.windupGeometry)zone(g,e,'steamVent',center,21,.62+slot*.26,.32,{damage:15});
+        e.recover=.64;
+        break;}
     }
     if(e.traits.includes('Foreman')){
       const ally=targetAlly(g,e);if(ally)ally.cd=Math.max(.4,ally.cd-.5);
@@ -717,6 +792,15 @@
       case 'support':{
         const friend=targetAlly(g,e);if(friend)return polar(friend,angle(t,friend)+e.turn*.52,31);direction=from+.41*rotate;break;}
       case 'edge':direction=from+e.turn*.76;d=Math.min(210,range+22*rotate);break;
+      case 'index':direction=from+e.turn*(e.salvo%2?.51:-.51);break;
+      case 'glide':direction=from+Math.sin(g.time*2.15+e.post)*.96;d+=16*rotate;break;
+      case 'guardwalk':direction=from+.18*rotate;break;
+      case 'slither':{
+        const bend=clamp((dist(e,t)-25)/85,0,1);
+        direction=from+Math.sin(g.time*6.8+e.post)*.84*bend;d+=bend*12;
+        break;}
+      case 'recoil':direction=from+rotate*.27;d+=e.attackAge<1.0?73:0;break;
+      case 'crank':direction=from+e.turn*(e.salvo%2?.32:.15);break;
       case 'boss':direction=from+e.turn*(e.id===6?.76:.46);d+=Math.sin(g.time*.7)*24;break;
     }
     const at=polar(t,direction,d);
@@ -735,6 +819,7 @@
     return r.point;
   }
   function walk(g,e,dt,t) {
+    if(e.windup>0&&regionAttacks.has(e.def.attack))return;
     let speed=e.boss?35:e.def.speed;
     if(e.boss && e.id===1 && e.phase===3)speed=58;
     if(e.boss){
@@ -744,6 +829,11 @@
     if(e.def.move==='skitter')speed*=(g.time+e.serial*.213)%.83<.32?1.48:.66;
     if(e.def.move==='beat' && (g.time+e.post)%.92>.43)speed=0;
     if(e.def.move==='chord' && (e.recover>0 || e.windup>0))speed=0;
+    if(e.def.move==='index')speed*=(g.time+e.serial*.083)%1.02<.61?1.24:.23;
+    if(e.def.move==='glide')speed*=.72+.47*Math.abs(Math.cos(g.time*2.15+e.post));
+    if(e.def.move==='slither')speed*=.82+.31*Math.sin(g.time*6.8+e.post);
+    if(e.def.move==='recoil'&&e.attackAge<1)speed*=1.55;
+    if(e.def.move==='crank')speed*=(g.time+e.serial*.14)%1.1<.51?1.48:.36;
     speed*=clamp(Number.isFinite(e.combatSlow)?e.combatSlow:1,.02,1.35);
     if(e.windup>0 || e.recover>0)speed*=e.boss?(e.signatureIndex!=null?.53:.17):.12;
     if(e.stagger>0 || e.stun>0)speed=0;
@@ -813,16 +903,19 @@
     d.time-=dt;d.wake-=dt;e.a=d.a;e.walk+=dt*15;
     for(const p of pilots(g)){
       if(active(p)&&insideRoom(e.chamber,p)&&!d.hit.has(p)&&dist(e,p)<e.r+(p.hitR??p.r)+1&&clearLab(g,e,p)){
-        hurtPilot(g,p,d.finish==='bite'?4:d.finish==='ram'?16:10);d.hit.add(p);
+        const damage=d.finish==='bite'?4:d.finish==='ram'?16:d.finish==='sluicelunge'?14:10;
+        hurtPilot(g,p,damage);d.hit.add(p);
       }
     }
     if(['wake','switch1','switch2','switch3','switch4'].includes(d.finish) && d.wake<=0){d.wake=.16;zone(g,e,'spark',{x,y},7,.19,.71,{damage:7});}
+    if(d.finish==='shardrush'&&d.wake<=0){d.wake=.14;zone(g,e,'blast',{x,y},13,.49,.20,{damage:8});}
     if(d.time>0 && Math.hypot(e.x-x,e.y-y)>d.speed*dt*.26)return;
     e.dash=null;e.recover=d.finish==='bite'?.38:.6;
     if(d.finish==='sapper')fan(g,e,e,angle(e,aimPoint(g,e)),5,.82,161);
     if(d.finish==='prong')fan(g,e,e,d.a,3,.87,132,{shape:'seed'});
     if(d.finish==='ram'){ring(g,e,e,13,115,d.a,3,{shape:'seed'});e.stagger=.66;g.fx(e.x,e.y,e.def.color,9);}
     if(d.finish==='leap')g.fx(e.x,e.y,e.def.color,5);
+    if(d.finish==='sluicelunge')g.fx(e.x,e.y,e.def.color,6);
     if(d.finish==='switch1')dash(e,d.a-.94*e.turn,235,.41,'switch2');
     if(d.finish==='switch2')dash(e,d.a+Math.PI,210,.38,'switch3');
     if(d.finish==='switch3')dash(e,d.a+.94*e.turn,210,.41,'switch4');
@@ -834,7 +927,14 @@
     if(['ram','burrow','crate','stitch','wall'].includes(type))delay=.82;
     if(type==='leap')delay=.50;
     if(type==='bite')delay=.30+e.serial%3*.04;
+    if(type==='refraction')delay=.78;
+    if(type==='facetgate'||type==='ventline')delay=.79;
+    if(type==='sluicelunge')delay=.53;
+    if(type==='pressure')delay=.74;
     e.windup=delay;e.windMax=delay;e.tx=t.x;e.ty=t.y;e.lockA=angle(e,t);e.a=e.lockA;e.loadDamage=0;
+    if(type==='refraction')e.windupGeometry=refractionPaths(g,e,t);
+    if(type==='facetgate')e.windupGeometry=facetStakes(g,e,t);
+    if(type==='ventline')e.windupGeometry=ventPoints(g,e,t);
     if(type==='echo'){const history=field(g).history.get(t)||[],at=history[Math.max(0,history.length-5)]||t;e.tx=at.x;e.ty=at.y;}
     if(type==='rail'||e.boss)g.sound(type==='rail'?'lock':'alarm',e.id);
   }
@@ -895,8 +995,7 @@
     e.a=angle(e,t);e.cd-=dt;
     if(e.cd>0||e.recover>0)return;
     const distance=dist(e,t);
-    const close=['leap','prong','ram'].includes(e.def.attack);
-    if(close && g.enemies.filter(o=>o!==e&&living(o)&&(o.windup>0||o.dash)&&['leap','prong','ram'].includes(o.def.attack)).length>=2){e.cd=.25;return;}
+    if(dashAttacks.has(e.def.attack)&&g.enemies.filter(o=>o!==e&&living(o)&&(o.windup>0||o.dash)&&dashAttacks.has(o.def.attack)).length>=2){e.cd=.25;return;}
     if(distance>reach[e.id])return;
     if(!canTelegraph(g,e,t)){e.cd=.23;return;}
     const ignoresCover=['nest','mine','echo','burrow','mortar','weld','link','supply','phase'].includes(e.def.attack);
@@ -987,6 +1086,7 @@
     for(const b of g.hostile)if(b.life>0&&b.hp>0&&dist(b,point)<=radius+b.r&&clearLab(g,point,b))damageObject(g,b,damage);
   }
   function spawnBudget(g){return g.enemies.reduce((sum,e)=>sum+(living(e)?1:0),0)<Math.min(18,9+(g.stage||1));}
+  function pressureRadius(b){return 18+(b.r-18)*clamp((b.age-b.warn)/b.duration,0,1);}
   function impact(g,b) {
     if(b.anchors?.some(anchor=>anchor.life<=0)){b.life=0;return;}
     for(const p of pilots(g)){
@@ -994,6 +1094,7 @@
       const rr=p.hitR??p.r??6,dx=p.x-b.x,dy=p.y-b.y;
       let hit;
       if(b.kind==='beam')hit=segmentDistance(p.x,p.y,b.x,b.y,b.x2,b.y2)<b.r+rr;
+      else if(b.kind==='pressureRing')hit=Math.abs(Math.hypot(dx,dy)-pressureRadius(b))<=rr+6;
       else if(b.kind==='sweep'){
         const a=b.a+b.swing*clamp((b.age-b.warn)/b.duration,0,1),at=polar(b,a,b.r);
         hit=segmentDistance(p.x,p.y,b.x,b.y,at.x,at.y)<rr+4;
@@ -1001,7 +1102,7 @@
       else hit=Math.hypot(dx,dy)<b.r+rr;
       if(hit&&b.damage>0&&clearLab(g,b,p)){
         hurtPilot(g,p,b.damage);
-        (b.hitTimes??=new WeakMap()).set(p,b.age+.33);
+        (b.hitTimes??=new WeakMap()).set(p,b.kind==='pressureRing'?Infinity:b.age+.33);
       }
     }
   }
@@ -1039,7 +1140,7 @@
     }
     if(b.damage<=0)return;
     impact(g,b);
-    if(!b.fired && ['crate','blast','ingot','echo','burrow'].includes(b.kind)){
+    if(!b.fired && ['crate','blast','ingot','echo','burrow','steamVent'].includes(b.kind)){
       b.fired=true;g.fx(b.x,b.y,b.color,7);if(b.kind==='ingot'||b.kind==='crate')g.sound('impact',0);
     }
   }
@@ -1143,6 +1244,36 @@
       c.beginPath();c.arc(x,y,r,b.a,b.a+b.swing);c.stroke();
       stroke(c,x,y,tip.x,tip.y,armed?color:color+'9a',armed?5:1);if(armed)circle(c,tip.x,tip.y,4,'#fff8e3',1,true);c.restore();return;
     }
+    if(k==='pressureRing'){
+      if(armed){
+        const radius=pressureRadius(b);
+        circle(c,x,y,radius,color+'65',12);
+        circle(c,x,y,radius,color,2.5);
+        circle(c,x,y,radius-5,'#e0fff5',1);
+      }else{
+        c.setLineDash([4,7]);c.lineDashOffset=-t*23;
+        circle(c,x,y,r,color+'93',1.4);
+        circle(c,x,y,18+5*(1-pct),'#ffcf97',1.7);
+      }
+      c.restore();return;
+    }
+    if(k==='steamVent'){
+      if(armed){
+        circle(c,x,y,r,'#e8fff472',1,true);
+        circle(c,x,y,r,color,1.5);
+        for(const side of [-1,0,1]){
+          const px=x+side*7,crest=y-9-5*Math.sin(t*17+side);
+          stroke(c,px,y+8,px-3,crest,color+'b9',4);
+          stroke(c,px-3,crest,px+1,crest-6,'#effff1',2);
+        }
+      }else{
+        const phase=5+pct*5;
+        c.setLineDash([3,3]);circle(c,x,y,r,'#ffcb83',1.5);c.setLineDash([]);
+        stroke(c,x-phase,y,x+phase,y,color);
+        stroke(c,x,y-phase,x,y+phase,color);
+      }
+      c.restore();return;
+    }
     if(['nest','portal','mine','mouth','stake','limb','pane'].includes(k)){
       const flash=b.hit>0?'#fff9dc':color;
       if(k==='nest'){
@@ -1245,8 +1376,53 @@
     if(e.windup<=0)return false;
     const type=e.def.attack;
     const range=type==='rail'?518:type==='ram'?239:type==='wake'?178:type==='switchback'?199:
-      type==='bank'?189:['leap','prong'].includes(type)?109:e.boss?149:e.r+28;
+      type==='refraction'?224:type==='facetgate'?175:type==='ventline'?249:type==='pressure'?pressureReach:
+      type==='sluicelunge'?124:type==='shardrush'?120:type==='bank'?189:['leap','prong'].includes(type)?109:e.boss?149:e.r+28;
     return inView(v,e.x,e.y,range)||inView(v,e.tx,e.ty,e.boss?135:21);
+  }
+  function regionTell(c,g,e,frac){
+    const {attack,color}=e.def,a=e.lockA;
+    c.save();
+    c.setLineDash(frac>.78?[]:[4,4]);
+    const col=frac>.78?'#fff4cc':color+'be';
+    if(attack==='refraction'){
+      const paths=e.windupGeometry;
+      if(!paths.length){const end=clipLab(g,e,polar(e,a,112));stroke(c,e.x,e.y,end.x,end.y,col,1.4);}
+      for(const path of paths){
+        stroke(c,e.x,e.y,path.corner.x,path.corner.y,col,1.3);
+        stroke(c,path.corner.x,path.corner.y,path.tip.x,path.tip.y,col,1.3);
+        square(c,path.corner.x,path.corner.y,3,color,1);
+      }
+    }else if(attack==='shardrush'||attack==='sluicelunge'){
+      const shard=attack==='shardrush',heading=a+(shard?.47*e.turn:0);
+      const end=clipLab(g,e,polar(e,heading,shard?116:119));
+      stroke(c,e.x,e.y,end.x,end.y,col,2);
+      for(const offset of [-.6,.6]){
+        const wing=polar(end,heading+Math.PI+offset,8);
+        stroke(c,end.x,end.y,wing.x,wing.y,color,1.4);
+      }
+    }else if(attack==='facetgate'){
+      const stakes=e.windupGeometry;
+      if(stakes){
+        stroke(c,stakes[0].x,stakes[0].y,stakes[1].x,stakes[1].y,col,1.5);
+        for(const at of stakes)square(c,at.x,at.y,6-frac*2,color,1.4);
+      }else{
+        const end=clipLab(g,e,polar(e,a,100));
+        stroke(c,e.x,e.y,end.x,end.y,col,1.4);
+      }
+    }else if(attack==='pressure'){
+      circle(c,e.x,e.y,e.r+9+7*frac,col,1.8);
+      circle(c,e.x,e.y,pressureReach,color+'72',1.2);
+    }else{
+      for(const {center,slot} of e.windupGeometry){
+        circle(c,center.x,center.y,21,col,1.2);
+        for(let tick=0;tick<=slot;tick++){
+          const x=center.x+(tick-slot/2)*4;
+          stroke(c,x,center.y+3,x,center.y-2,color,1.5);
+        }
+      }
+    }
+    c.restore();
   }
   function drawWarnings(c,g) {
     const v=visibleBounds(g);c.save();
@@ -1279,7 +1455,8 @@
       }
       if(e.windup<=0)continue;
       const p={x:e.tx,y:e.ty},a=e.lockA,type=e.def.attack,frac=1-e.windup/e.windMax,col=e.def.color;
-      if(type==='bite'){
+      if(regionAttacks.has(type))regionTell(c,g,e,frac);
+      else if(type==='bite'){
         c.save();c.translate(e.x,e.y);c.rotate(a);
         const jaw=e.r+3+frac*2,spread=5-frac*3;
         for(const side of [-1,1])stroke(c,jaw,side*spread,jaw+4,side*(spread-1),col,1.5);

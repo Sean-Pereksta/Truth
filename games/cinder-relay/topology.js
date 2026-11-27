@@ -109,6 +109,115 @@
     tunnels.push(keyLinks[0]);
     return {sites,tunnels,entry,first,key,anchor,maxX,sitesInOrder};
   }
+  function orient(cols,rows,flipX,flipY,transpose) {
+    const point=([x,y])=>{
+      const xx=flipX?cols-1-x:x,yy=flipY?rows-1-y:y;
+      return transpose?[yy,xx]:[xx,yy];
+    };
+    const box=([x,y,w,h])=>{
+      const [a,b]=point([x,y]),[e,f]=point([x+w-1,y+h-1]);
+      return [Math.min(a,e),Math.min(b,f),Math.abs(a-e)+1,Math.abs(b-f)+1];
+    };
+    return {point,box};
+  }
+  function regionalPlan(route,seed,run,stage,room,intro,boss) {
+    const roll=numbers(seed),rooms=[],halls=[],piers=[],sites=new Map();
+    const variant=roll(0,2);
+    function chamber(id,name,x,y,w,h,ambush=false) {
+      const r={x,y,w,h,center:[x+Math.floor(w/2),y+Math.floor(h/2)]};
+      rooms.push([id,name,x,y,w,h,+ambush]);
+      sites.set(id,r);
+      return r;
+    }
+    function tunnel(points,width=3) {halls.push({points,width});}
+    function across(a,b,y,width) {
+      const p=sites.get(a).center,q=sites.get(b).center;
+      tunnel([p,[p[0],y],[q[0],y],q],width);
+    }
+    function down(a,b,x,width) {
+      const p=sites.get(a).center,q=sites.get(b).center;
+      tunnel([p,[x,p[1]],[x,q[1]],q],width);
+    }
+    function columns(id,width,height) {
+      const {x,y,w}=sites.get(id);
+      piers.push([x+3,y+3,width,height],[x+w-3-width,y+3,width,height]);
+    }
+
+    let name,terminal,approach;
+    if(route===11){
+      // Parallel galleries reconnect beyond the sealed stacks. The key and
+      // supply room draw pilots toward opposite sides of the circuit.
+      const upper=roll(3,6),lower=roll(45,48),middle=roll(22,24),reach=roll(-2,2);
+      name=['Specular Stack Ring','Facet Gallery Circuit','Twin Index Galleries'][variant];
+      chamber('entry','Receiving dais',3,middle+2,12,12);
+      chamber('hall','Refraction hall',20,middle-1,16,18,true);
+      chamber('key','Master index alcove',4,upper,12,11);
+      chamber('cache','Restoration stores',4,lower+1,12,10);
+      chamber('loop','Lens reading gallery',23,upper,17,12);
+      chamber('gallery','Index reading gallery',23,lower,17,13);
+      chamber('annex-1','Polished stacks',49+reach,upper+1,16,12,variant!==2);
+      chamber('annex-2','Dark stacks',49+reach,lower-1,16,13,variant===2);
+      chamber('annex-3','Index junction',61+reach,middle-1,14,19);
+      across('entry','hall',middle+8,5);
+      down('hall','loop',30,5);
+      down('hall','gallery',30,5);
+      across('key','loop',upper+5);
+      across('cache','gallery',lower+6);
+      across('loop','annex-1',upper+6,5);
+      across('gallery','annex-2',lower+6,5);
+      down('annex-1','annex-3',62+reach,5);
+      down('annex-2','annex-3',62+reach,5);
+      for(const id of ['hall','loop','gallery','annex-1','annex-2'])columns(id,2,3);
+      terminal='Facet chamber';approach=sites.get('annex-3');
+    }else{
+      // The dry channels snake around sealed basins. A relief line and a
+      // lower catwalk offer different approaches to the discharge pump.
+      const shift=roll(0,2),elbow=roll(0,3),baffle=roll(0,2);
+      name=['Siphon Cut','Nine Pump Bypass','Settling Channel'][variant];
+      chamber('entry','Dry intake',3,5,12,10);
+      chamber('hall','Check-valve room',21,4,15,13,true);
+      chamber('key','Governor sump',3,49+shift,12,10);
+      chamber('cache','Tool float',48+elbow,4,12,10);
+      chamber('loop','Settling basin',5,28+shift,18,13);
+      chamber('gallery','Raised catwalk',35+elbow,40+shift,15,14,true);
+      chamber('annex-1','Relief manifold',48+elbow,22+baffle,13,11);
+      chamber('annex-2','Discharge pump',66,27+shift,14,15);
+      across('entry','hall',10);
+      across('hall','cache',9);
+      const inlet=sites.get('hall').center,basin=sites.get('loop').center;
+      tunnel([inlet,[inlet[0],20+baffle],[basin[0],20+baffle],basin]);
+      down('loop','key',10);
+      const catwalk=sites.get('gallery').center;
+      const bend=26+elbow;
+      tunnel([basin,[bend,basin[1]],[bend,catwalk[1]],catwalk]);
+      const relief=sites.get('annex-1').center,pump=sites.get('annex-2').center;
+      tunnel([catwalk,[catwalk[0],34+baffle],[relief[0],34+baffle],relief]);
+      across('annex-1','annex-2',28+baffle);
+      const bypass=55+elbow;
+      tunnel([catwalk,[bypass,catwalk[1]],[bypass,39+shift],[pump[0],39+shift],pump]);
+      for(const id of ['loop','gallery','annex-2'])columns(id,3,3);
+      terminal='Backflow chamber';approach=sites.get('annex-2');
+    }
+
+    const [approachX,approachY]=approach.center;
+    const exitW=boss?roll(30,32):roll(14,18),exitH=boss?roll(19,22):roll(13,16);
+    const exit=chamber('exit',boss?terminal+' core':terminal,approach.x+approach.w+6,
+      approachY-Math.floor(exitH/2),exitW,exitH,!boss);
+    // This hall is exactly three tiles wide where the bulkhead spans it.
+    tunnel([[approachX,approachY],[exit.x+4,approachY]]);
+    const cols=exit.x+exit.w+2,rows=Math.max(...rooms.map(([, , ,y, ,h])=>y+h))+2;
+    const flipX=!intro&&!!roll(0,1),flipY=!!roll(0,1),transpose=!intro&&!boss&&roll(0,2)===0;
+    const {point,box}=orient(cols,rows,flipX,flipY,transpose);
+    const [startX,startY]=sites.get('entry').center;
+    return {name,identity:'regional-1-'+route+'-'+run.toString(36)+'-'+stage+'-'+room,
+      scheme:variant,seed,boss,intro,cycles:1,cols:transpose?rows:cols,rows:transpose?cols:rows,
+      rooms:rooms.map(([id,n,x,y,w,h,ambush])=>[id,n,...box([x,y,w,h]),ambush]),
+      halls:halls.map(h=>h.points.map(point)),hallWidths:halls.map(h=>h.width),piers:piers.map(box),
+      door:[...point([exit.x-3,approachY]),transpose?'y':'x'],start:point([startX+2,startY]),
+      key:point(sites.get('key').center),cache:point(sites.get('cache').center),
+      gate:point([exit.x+exit.w-4,approachY]),bossEntry:point([exit.x+5,approachY]),
+      bossSpawn:point([exit.x+exit.w-8,approachY])};
+  }
   function make(g) {
     const stage=Math.max(1,Math.floor(g.stage||1)),room=Math.max(0,Math.floor(g.room||0));
     const route=Math.max(0,Math.floor(g.mapId||0)),run=Number(g.runSeed??g.seed??0)>>>0;
@@ -117,8 +226,9 @@
     // repeating any one. Later cycles still cut new rooms and tunnel networks.
     const scheme=(deck+ordinal*(1+2*((deck>>>6)%16)))&31;
     const seed=mix(run^Math.imul(stage,0x6c8e9cf5)^Math.imul(room+1,0x27d4eb2d)^Math.imul(route+1,0x165667b1));
-    const roll=numbers(seed),[name,footprint]=schemes[scheme],names=roomNames[route%roomNames.length];
     const intro=stage===1&&room===0,boss=room===3&&(stage<=5||stage%5===0);
+    if(route===11||route===12)return regionalPlan(route,seed,run,stage,room,intro,boss);
+    const roll=numbers(seed),[name,footprint]=schemes[scheme],names=roomNames[route%roomNames.length];
     let mask=intro?['###','###']:footprint;
     if(boss&&mask[0].length>4)mask=Array.from({length:mask[0].length},(_,i)=>mask.map(row=>row[i]).join(''));
     const {sites,tunnels,entry,first,key,anchor,maxX,sitesInOrder}=network(mask,roll);
@@ -179,14 +289,7 @@
     const lockX=ex-3;
     const flipX=!intro&&!!roll(0,1),flipY=!!roll(0,1);
     const transpose=!intro&&!boss&&cols<=75&&!!roll(0,1);
-    const transform=([x,y])=>{
-      const xx=flipX?cols-1-x:x,yy=flipY?rows-1-y:y;
-      return transpose?[yy,xx]:[xx,yy];
-    };
-    const box=([x,y,w,h])=>{
-      const [a,b]=transform([x,y]),[e,f]=transform([x+w-1,y+h-1]);
-      return [Math.min(a,e),Math.min(b,f),Math.abs(a-e)+1,Math.abs(b-f)+1];
-    };
+    const {point:transform,box}=orient(cols,rows,flipX,flipY,transpose);
     const finalRooms=rooms.map(([id,n,x,y,w,h,f])=>[id,n,...box([x,y,w,h]),f]);
     const roleOrder=id=>{const i=roles.indexOf(id);return i===6?999:i===-1?7+Number(id.slice(6)):i;};
     finalRooms.sort((a,b)=>roleOrder(a[0])-roleOrder(b[0]));

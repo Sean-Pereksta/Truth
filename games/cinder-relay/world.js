@@ -13,7 +13,11 @@
     {name:"Slagworks Crown", desc:"Open-air workstations rise above a glowing forge.", type:"crown", accent:"#ef8d76", rooms:["Roof Access","Upper Presses","Cinder Stair","Crown Spine"], enemies:[7,8,10,4,5,30,3,1], stamp:"SLAGWORKS"},
     {name:"Dead Frequency", desc:"Half-buried antennas link twin listening courts.", type:"signal", accent:"#c0b4e0", rooms:["Survey Post","Western Arches","Antenna Court","Silent Receiver"], enemies:[25,35,28,31,27,11,26,34], stamp:"FREQUENCY"},
     {name:"Moonfall Dock", desc:"A moonlit turntable feeds the orbital freight ramps.", type:"moon", accent:"#a8c7e8", rooms:["Landing Ramp","Cargo Turntable","Transfer Locks","Moonfall Ring"], enemies:[11,9,7,32,8,15,4,27], stamp:"MOONFALL"},
-    {name:"The Lantern Vault", desc:"Four luminous fuel bays feed a buried central hub.", type:"vault", accent:"#dbb978", rooms:["Vault Mouth","Lamp Bays","Pressure Hub","Reserve Chamber"], enemies:[18,14,16,26,19,30,21,35], stamp:"LANTERN"}
+    {name:"The Lantern Vault", desc:"Four luminous fuel bays feed a buried central hub.", type:"vault", accent:"#dbb978", rooms:["Vault Mouth","Lamp Bays","Pressure Hub","Reserve Chamber"], enemies:[18,14,16,26,19,30,21,35], stamp:"LANTERN"},
+    {name:"Prism Archive",desc:"Glass galleries loop around a sealed index. Construct patrols approach from neighboring galleries.",type:"prism",accent:"#83e4f4",
+      rooms:["Index Lift","Refraction Gallery","Cross-Reference Hall","The Sealed Index"],enemies:[39,40,41,26,32,28],stamp:"PRISM",packStyle:"flank"},
+    {name:"Brinepump Warrens",desc:"Narrow sluices and side drains link a chain of flooded pump halls. Defenders come in surges.",type:"brine",accent:"#7ed6b8",
+      rooms:["Drain Intake","Valve Crossing","Pressure Station","Main Pumpwell"],enemies:[42,43,44,14,9,19],stamp:"BRINEPUMP",packStyle:"surge"}
   ];
   const themes = {
     dock: ["#0a1d26","#13313a","#24505a","#273b42","#33494c","#13272e","#607173","#c78349"],
@@ -26,7 +30,9 @@
     crown:["#2a202c","#58383b","#a05a49","#40373c","#52474d","#28222c","#897373","#bc8272"],
     signal:["#282634","#49434c","#716476","#3e4048","#50545b","#282a33","#878b8e","#a49bab"],
     moon:["#111b30","#24354e","#506b83","#303e4e","#435266","#202c3c","#8194a2","#a0a7a0"],
-    vault:["#1e2529","#383d36","#67664b","#3b403c","#4b5149","#262b29","#858871","#b3a36c"]
+    vault:["#1e2529","#383d36","#67664b","#3b403c","#4b5149","#262b29","#858871","#b3a36c"],
+    prism:["#101727","#242d49","#577ba1","#25364c","#334960","#18253a","#7aadc2","#a3eff1"],
+    brine:["#101f20","#223c35","#4b6953","#30443f","#3e5348","#1b2d2b","#7b987d","#df9c64"]
   };
   const isOrganic = type => type === "grove" || type === "spore";
   const isOrbital = type => type === "moon" || type === "orbital";
@@ -72,7 +78,9 @@
     [[25,163],[88,107],[224,56],[859,56],[931,119],[935,387],[843,475],[738,497],[186,497],[81,460],[27,403]],
     [[24,141],[130,70],[333,51],[691,51],[847,85],[934,160],[936,381],[840,458],[677,489],[267,491],[113,460],[27,401]],
     [[25,217],[90,139],[230,71],[433,48],[680,57],[826,101],[931,194],[936,336],[850,424],[683,481],[504,499],[282,485],[125,435],[27,347]],
-    [[29,137],[102,71],[277,54],[771,54],[868,82],[932,152],[933,390],[857,465],[735,489],[204,489],[95,456],[29,397]]
+    [[29,137],[102,71],[277,54],[771,54],[868,82],[932,152],[933,390],[857,465],[735,489],[204,489],[95,456],[29,397]],
+    [[28,151],[125,58],[815,58],[929,151],[936,380],[826,484],[138,484],[28,385]],
+    [[26,158],[94,90],[217,60],[812,60],[933,123],[935,411],[830,479],[670,494],[193,494],[76,458],[26,398]]
   ];
   const deckEdges=new WeakMap();
   function insideDeck(x,y,r=0,outline=deck) {
@@ -85,7 +93,7 @@
     for(const e of edges)if(e[0]*x+e[1]*y+e[2]<r)return false;
     return true;
   }
-  const openPits = new Set(['hold','pool','slag','void','well']);
+  const openPits = new Set(['hold','pool','slag','void','well','brine-pool']);
   function blocked(g,x,y,r=0,projectile=false) {
     if(g.map?.lab)return Labyrinth.blocked(g.map.lab,x,y,r);
     if(!insideDeck(x,y,r+1,g.map?.outline||deck))return true;
@@ -120,6 +128,19 @@
     return pit("pool",[[x-w,y],[x-w*.70,y-h*.60],[x-w*.27,y-h],[x+w*.25,y-h*.64],[x+w*.72,y-h*.73],[x+w,y-h*.13],[x+w*.87,y+h*.60],[x+w*.26,y+h],[x-w*.36,y+h*.78],[x-w*.75,y+h*.37]]);
   }
   function shapes(id,room,stage) {
+    if(id===11){
+      if(room===3)return [shape("prism-stack",202,144,54,32),shape("prism-stack",705,364,54,32)];
+      const top=room===1?117:145,bottom=room===2?364:388;
+      return [shape("prism-stack",305,top,131,33),shape("prism-stack",532,top+16,134,33),
+        shape("prism-stack",282,bottom-18,134,33),shape("prism-stack",525,bottom,133,33),
+        shape("prism-stack",443,239,72,62)];
+    }
+    if(id===12){
+      if(room===3)return [shape("brine-pump",202,139,65,39),shape("brine-pump",696,361,65,39)];
+      const lower=room===1?332:354,upper=room===2?176:145;
+      return [shape("brine-pool",206,upper,230,47),shape("brine-pool",501,lower,245,46),
+        shape("brine-pump",306,315,68,46),shape("brine-pump",634,205,76,45)];
+    }
     const bossFloor=["hold","pool","slag","well","void","pool","root","slag","well","void","tank"];
     if(room===3){
       if(id===1)return [lake(478,180,66,27),lake(480,360,69,27)];
@@ -426,12 +447,15 @@
     const image=document.createElement("canvas");image.width=480;image.height=270;
     const c=image.getContext("2d");c.scale(.5,.5);c.lineJoin="bevel";
     const rng=seeded(74921+(m.id+1)*7859+m.room*2999);drawBackdrop(c,m,rng);
-    window.Art?.vista?.(c,m.id,W,H);
-    window.SectorArt?.draw(c,m);
+    if(!window.RegionTerrain?.arenaBackdrop(c,m)){
+      window.Art?.vista?.(c,m.id,W,H);
+      window.SectorArt?.draw(c,m);
+    }
     const offset=m.outline.map(([x,y])=>[x+4,y+11]);poly(c,offset,m.pal[0],m.pal[0],8);
-    floorLines(c,m,rng);serviceRuns(c,m,rng);deckEdge(c,m);
+    floorLines(c,m,rng);window.RegionTerrain?.arenaFloor(c,m);serviceRuns(c,m,rng);deckEdge(c,m);
     c.save();poly(c,m.outline,null);c.clip();cornerMachinery(c,m,rng);c.restore();
     for(const b of m.blockers){
+      if(window.RegionTerrain?.arenaBlocker(c,b,m))continue;
       if(b.verts){
         poly(c,b.verts,m.pal[5],m.pal[6],4);
         c.save();poly(c,b.verts,null);c.clip();cutaway(c,b,m,rng);c.restore();
@@ -741,7 +765,7 @@
   ];
   function chooseFoe(g,index) {
     const m=g.map,roster=m.def.enemies;
-    if(g.stage===1&&(m.id===0||!Number.isInteger(g.startRegion))){
+    if(g.stage===1&&!m.def.packStyle&&(m.id===0||!Number.isInteger(g.startRegion))){
       const candidates=openingPatrols[m.room]?.[m.wave-1];if(candidates)return candidates[index%candidates.length];
     }
     const unlocked=g.stage<6?Math.min(roster.length,4+m.room*2+m.wave*2):roster.length;
@@ -758,13 +782,14 @@
     m.waveSize=Math.ceil((m.baseWaveSize+chamberGrowth*(m.wave-1))*(m.crew?1.3:1)*(m.challenge?.wave??1));
     m.waveQueued=0;m.packDelay=0;m.packIndex=0;
     if((m.task==="Intercept"||m.task==="Hunt")&&!m.command && m.wave===1){
-      const id=g.huntCarry?.stage===g.stage?g.huntCarry.id:m.def.enemies[Math.min(m.def.enemies.length-1,4)];
+      const leader=m.def.packStyle?2:Math.min(m.def.enemies.length-1,4);
+      const id=g.huntCarry?.stage===g.stage?g.huntCarry.id:m.def.enemies[leader];
       queueFoe(g,id,.85,{elite:true},"command");
     }
   }
   function swarmType(m) {
     if(isOrganic(m.def.type))return 37;
-    if(isOrbital(m.def.type)||m.def.type==="array"||m.def.type==="signal"||m.def.type==="vault")return 38;
+    if(isOrbital(m.def.type)||["array","signal","vault","prism"].includes(m.def.type))return 38;
     return 36;
   }
   function queueWavePack(g,dt,liveCount) {
@@ -776,18 +801,23 @@
     const count=Math.min(m.packSize,remaining,slots);
     if(m.packDelay>0 || count<Math.min(2,remaining))return;
     const firstLane=(m.packIndex+m.room+m.wave-1)%4;
+    const flank=m.def.packStyle==="flank",surge=m.def.packStyle==="surge";
+    const middle=Math.ceil(count/2);
     for(let j=0;j<count;j++){
       const index=m.waveQueued+j;
       const elite=m.room===2 && m.wave===m.totalWaves && index===0 && m.task!=="Hunt"
         || g.stage>=20 && m.wave===2 && index===1;
-      const lane=(firstLane+(j%2)*2)%4;
+      const offset=flank?j%2:surge?(j>=middle?2:0):(j%2)*2;
+      const lane=(firstLane+offset)%4;
       const fodderShare=Math.min(7,3+Math.floor(g.stage/6));
       const rush=m.packIndex%3===0||(index+m.packIndex)%10<fodderShare;
-      const id=rush&&!elite?swarmType(m):chooseFoe(g,index);
-      queueFoe(g,id,.72+j*(rush?.075:.12),{elite},"",lane);
+      const signature=(flank||surge)&&(elite||j===0);
+      const id=signature?m.def.enemies[elite?2:m.packIndex%2]:rush&&!elite?swarmType(m):chooseFoe(g,index);
+      const delay=surge?.76+j*.07+(j>=middle?.32:0):.72+j*(rush?.075:.12);
+      queueFoe(g,id,delay,{elite},"",lane);
     }
     m.waveQueued+=count;m.packIndex++;
-    m.packDelay=(g.stage===1&&m.room===0?1.5:Math.max(.56,1.6-g.stage*.07))*(m.challenge?.packDelay??1);
+    m.packDelay=(g.stage===1&&m.room===0?1.5:Math.max(.56,1.6-g.stage*.07))*(m.challenge?.packDelay??1)*(surge?1.20:flank?.94:1);
   }
   function resolveArrivals(g,dt,squad,live) {
     const m=g.map;
