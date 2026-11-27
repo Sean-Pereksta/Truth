@@ -302,6 +302,73 @@
       d.magazine(34,20);d.path([[25,8],[32,5],[40,5],[45,8]],amber,2);
       d.path([[46,17],[51,12],[58,12],[63,17],[63,23],[59,27],[51,27],[48,24]],teal,2);
       d.path([[55,15],[55,20],[60,20]],ivory,2);d.plate([[48,20],[49,26],[44,23]],mint,teal);
+    },
+    'augment/12/1'(d){ // Wideband Flare: two receivers inside a wide rescue pulse.
+      d.ring(41,24,28,8,teal);d.ring(41,24,19,5,shadow);
+      d.mask(22,22,steel);d.mask(61,20,blue);d.line(38,17,44,9,light,3);
+      d.flare(45,8,mint,4);d.rect(39,26,6,2,mint);d.rect(41,24,2,6,mint);
+    },
+    'augment/12/2'(d){ // Trauma Seal: the repair signal adds a protective layer.
+      d.mask(33,22,steel);d.cross(24,10,mint);d.shield(52,19,blue);
+      d.path([[35,10],[42,7],[49,7]],teal,2);d.path([[59,11],[63,15],[63,22],[58,28]],ice);
+      d.rect(26,32,17,1,shadow);
+    },
+    'augment/13/1'(d){ // Counterbattery: an incoming amber round reflects off the blue vault.
+      d.path([[19,29],[21,20],[27,13],[34,10],[42,10],[50,15],[55,22],[57,29]],blue,2);
+      d.path([[22,30],[54,30]],teal,2);d.mask(37,23,steel);
+      d.dart(17,11,amber);d.flare(27,13,ivory,3);
+      d.path([[29,12],[45,5],[58,5]],ice,2);d.plate([[58,2],[65,5],[58,8]],mint,teal);
+    },
+    'augment/13/2'(d){ // Reserve Cell: a second power bank feeds the canopy.
+      for(const x of [16,23,30]){
+        d.plate([[x,17],[x+5,17],[x+5,27],[x,27]],teal,shadow);d.rect(x+1,15,3,2,light);
+        d.rect(x+1,19,3,4,mint);
+      }
+      d.path([[34,23],[41,23],[44,26],[51,26]],blue,2);
+      d.path([[41,21],[44,15],[49,11],[55,10],[62,13],[66,20]],blue,2);
+      d.path([[42,22],[65,22]],teal,2);d.bolt(51,14,5,7,ivory);
+    },
+    'augment/14/1'(d){ // Deep Magazine: cartridges refill the open ammunition box.
+      d.plate([[19,18],[30,14],[49,17],[55,23],[52,32],[27,33],[19,28]],steel);
+      d.plate([[18,17],[19,11],[29,7],[46,9],[48,13],[30,12]],amber,shadow);
+      d.rect(25,23,24,7,shadow);d.rect(35,24,5,5,gold);
+      for(const [x,y] of [[45,10],[50,8],[55,6],[60,4]]){
+        d.line(x,y,x+2,y+5,amber,2);d.rect(x+2,y+4,2,2,ivory);
+      }
+      d.path([[61,12],[60,18],[55,21]],teal,2);
+    },
+    'augment/14/2'(d){ // Hot Bus: the supply cable powers a tight rapid-fire salvo.
+      d.plate([[14,17],[25,17],[27,20],[25,29],[13,29]],amber,shadow);d.bolt(16,18,7,9,ivory);
+      d.path([[23,29],[28,32],[35,32],[39,27]],teal,2);d.rifle(43,20);
+      for(const [x,y] of [[60,14],[64,20],[59,26]])d.dart(x,y,gold);
+      d.rect(30,11,8,1,amber);d.rect(33,8,5,1,amber);
+    },
+    'augment/15/1'(d){ // Extra Brood: three pods hatch in a spreading fan.
+      d.path([[22,25],[31,25],[41,13],[54,8]],teal);
+      d.path([[31,25],[44,23],[57,21]],teal);d.path([[31,25],[43,30],[55,32]],teal);
+      d.plate([[17,29],[13,22],[18,20],[22,12],[27,21],[31,18],[28,28]],teal,shadow);
+      for(const [x,y] of [[56,7],[61,20],[57,31]]){
+        d.plate([[x-3,y+2],[x-4,y-1],[x,y-5],[x+4,y-2],[x+3,y+2],[x,y+4]],lime,shadow);
+        d.rect(x-2,y-2,2,2,mint);
+      }
+    },
+    'augment/15/2'(d){ // Frost Shell: a cracked pod releases a fan of ice splinters.
+      d.plate([[24,28],[19,23],[20,16],[27,9],[35,13],[38,22],[33,29]],lime,shadow);
+      d.path([[31,11],[27,18],[32,19],[27,27]],ice,2);
+      for(const [x,y] of [[46,12],[52,23],[60,9]])d.crystal(x,y,blue);
+      d.path([[38,17],[42,15]],mint);d.path([[39,23],[45,25]],mint);d.rect(54,31,3,1,ice);
+    },
+    'augment/16/1'(d){ // Forked Lens: one incoming ray becomes two separated beams.
+      d.rifle(21,20);d.line(35,18,42,18,ivory,2);
+      d.plate([[39,28],[45,8],[52,26],[48,29]],plum,blue);
+      d.line(45,12,46,25,ice);d.rect(39,30,14,2,steel);
+      d.path([[50,16],[66,8]],blue,2);d.path([[51,22],[67,29]],violet,2);
+    },
+    'augment/16/2'(d){ // Long Exposure: a sustained, luminous prism with a duration dial.
+      d.plate([[15,28],[24,8],[32,26],[26,30]],plum,blue);d.line(24,12,24,24,ice);
+      d.rect(15,31,17,2,steel);d.line(30,18,48,18,ivory,2);d.line(31,21,46,21,blue);
+      d.ring(58,20,9,9,teal,2);d.path([[58,13],[58,20],[63,22]],ivory,2);
+      d.rect(55,7,6,2,light);
     }
   };
   window.FieldArt = {draw(ctx,name){

@@ -163,7 +163,7 @@
     ctx.drawImage(img,-side/2,-side/2,side,side);ctx.restore();
   }
   function muzzle(c,p,w,d,bright){
-    const family=Math.floor(w.id/6),t=clamp(w.flash/.09);
+    const family=d.familyIndex,t=clamp(w.flash/.09);
     const len=([13,18,21,18,9,8][family]+(w.id%3)*2)*(.35+.65*t),col=d.color;
     c.save();
     c.translate(Math.round(p.x),Math.round(p.y));c.rotate(p.a);

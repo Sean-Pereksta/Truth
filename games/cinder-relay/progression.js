@@ -6,7 +6,11 @@
     {name:'Breach Trooper', gun:0, ability:0, suit:0, cost:0, desc:'Linebreaker rifle and Repulsor Sweep. A balanced kit for fighting through the docks.'},
     {name:'Field Scout', gun:13, ability:2, suit:1, cost:12, desc:'Horizon Nail and Slip Beacon. Tag one target, change angles and return to safety.'},
     {name:'Break Crew', gun:6, ability:1, suit:2, cost:16, desc:'Rivet Jaw and Bastion Screen. Lead the breach with a shield and a wall of pellets.'},
-    {name:'Signal Tender', gun:24, ability:3, suit:5, cost:20, desc:'Volt Arc and Arc Lattice. Draw a line across the floor and electrify the pack.'}
+    {name:'Signal Tender', gun:24, ability:3, suit:5, cost:20, desc:'Volt Arc and Arc Lattice. Draw a line across the floor and electrify the pack.'},
+    {name:'Field Medic',gun:36,ability:12,suit:12,cost:0,desc:'Suture Carbine and Rescue Flare. Your Field Surgeon plates pulse hull repairs after a wound.'},
+    {name:'Warden',gun:38,ability:13,suit:13,cost:0,desc:'Bulwark Repeater and Aegis Canopy. Hold the line with armor that can intercept a nearby partner’s hit.'},
+    {name:'Engineer',gun:37,ability:14,suit:14,cost:0,desc:'Switchyard Driver and Relay Overcharger. Every fifth kill powers nearby shields and readies crew equipment.'},
+    {name:'Fabricator',gun:40,ability:15,suit:7,cost:0,desc:'Honeycomb Harvester and Foamseed Nursery. Send out worker bees and grow pod mines. Your Sapper Exoframe extends deployable life by 35%.'}
   ].map((kit,id) => ({...kit,id}));
 
   const suits = [
@@ -21,7 +25,15 @@
     ['Surveyor Shell','Reconnaissance','Pickup range increases by 65%. Sensors warn of incoming hostiles earlier. Lose 4 shield.','#83ddd2',{pickup:.65,earlyWarn:.5,shield:-4}],
     ['Cryo Carapace','Thermal control','Guns cool 32% faster. Weapon swaps take 15% longer.','#9ed3ed',{cooling:.32,swapSpeed:-.13}],
     ['Voidglass Mantle','Precision','Two clean dodges charge a 35% bonus on the next precision hit. Lose 12 hull.','#a69bd8',{hull:-12}],
-    ['Field Medic Rig','Triage','Repair up to 6 hull when you complete a room objective. Lose 7 shield capacity.','#e4a1a0',{repairOnObjective:6,shield:-7}]
+    ['Field Medic Rig','Triage','Repair up to 6 hull when you complete a room objective. Lose 7 shield capacity.','#e4a1a0',{repairOnObjective:6,shield:-7}],
+    ['Field Surgeon','Trauma response','After losing hull, repair 3 hull each second for 3 seconds for yourself and allies within 175. Recharges in 14s. Lose 5 maximum shield.','#ffaaa1',{shield:-5}],
+    ['Brass Rampart','Interception','Every 9s, block up to 10 damage on your next hit or 6 on a teammate within 125. Gain 10 hull. Move 5% slower.','#eaba71',{hull:10,move:-.05}],
+    ['Switchyard Rigger','Crew supply','Every fifth kill restores 7 shields and removes 1.5s of active cooldown for yourself and allies within 170. Pulses at most once per 5s.','#75d7c5',{deployLife:.12}],
+    ['Capacitor Harness','Surge defense','Three hostile shots within 120 charge a 12-point barrier for 3s. Recharges in 10s. Lose 6 maximum hull.','#c4a6ff',{hull:-6}],
+    ['Lifeline Mantle','Escort','Losing hull gives a teammate within 190 a 4s guard. It halves their next hit, saving up to 9 damage. Protects you when no teammate is in reach. Recharges in 10s.','#ff8ca8',{move:.04}],
+    ['Reclaimer Shell','Counterattack','Kill within 3s of taking a hit to repair 5 hull and recover 1 scrap. Recharges in 3s. Gain 6 hull.','#daa77a',{hull:6}],
+    ['Resonance Greaves','Kinetic pulse','Every 7s of wear, a shockwave pushes enemies within 120. Elites resist the push. Bosses hold position. Gain 8 hull and move 4% slower.','#82cce7',{hull:8,move:-.04}],
+    ['Chorus Dynamo','Shield relay','Every 9s of wear, restore 8 shields to yourself and living allies in sight within 170. Gain 5 shield capacity and lose 5 hull.','#9de6cb',{shield:5,hull:-5}]
   ].map(([name,role,desc,color,mods],id) => ({id,name,role,desc,color,mods}));
 
   const contracts = [
@@ -157,7 +169,12 @@
     ['Return part of the cleared volley toward your aim.','Split the projectile clear across two successive pulses.'],
     ['The gravity field pulls for longer.','Enemies leaving the field take damage and are marked.'],
     ['The decoy sheds an acid pool as it expires.','The decoy copies your first volley at reduced power.'],
-    ['Dashing during Overdrive briefly accelerates gunfire.','Completing one reload refunds a little cooldown.']
+    ['Dashing during Overdrive briefly accelerates gunfire.','Completing one reload refunds a little cooldown.'],
+    ['Expand the rescue radius from 140 to 204.','Also grant 10 shields to rescued pilots.'],
+    ['Return up to four blocked shots at nearby enemies.','Raise the block limit from 16 to 24 and duration from 5s to 6.5s.'],
+    ['Increase dry-magazine and vent assistance from 40% to 75%.','Raise the overcharge cadence bonus from 25% to 40%.'],
+    ['Grow five pod mines instead of three.','Freeze nearby light enemies when pods detonate.'],
+    ['Split fire into two bolts at 73% output each.','Extend the deployment from 7s to 11s.']
   ];
 
   const random = (g,items) => items.length ? items[Math.min(items.length-1,Math.floor(g.rng()*items.length))] : undefined;
@@ -173,7 +190,7 @@
     const skill = Combat.makeAbility(kit.ability);
     skill.learned=[];
     const p = {
-      x:480,y:304,a:0,r:7,hp:100,maxHp:100,shield:25,maxShield:25,
+      kitId:kit.id,x:480,y:304,a:0,r:7,hp:100,maxHp:100,shield:25,maxShield:25,
       guns:[Combat.makeGun(kit.gun,Math.random,false)], ready:[0,-1],selected:0,
       abilities:[skill],activeSlots:[0,-1],suit:kit.suit,suits:[kit.suit],suitRolls:{},
       stats:{},scrap:0,xp:0,level:1,dashCharges:2,dashTime:0,invuln:0,
@@ -187,6 +204,11 @@
 
   function recalc(g) {
     const p=g.player;
+    if(p.activeArmorId!==p.suit){
+      const old=p.armorReactions?.[p.activeArmorId];
+      if(old){old.pulses=0;old.buffer=0;}
+      p.activeArmorId=p.suit;
+    }
     const stats = {hull:0,shield:0,move:0,dashRecovery:0,dashDistance:0,shieldRate:0,shieldDelay:0,pickup:0,
       damage:0,fireRate:0,magazine:0,reload:0,cooling:0,shotSpeed:0,abilityDamage:0,cdr:0,closeStagger:0,
       deployLife:0,swapSpeed:0,stableHeavy:0,slowResist:0,earlyWarn:0,repairOnObjective:0,
@@ -257,6 +279,7 @@
     const notes=[damage+' base hit',cadence.toFixed(1)+'/s',range+' range',stagger+' stagger',
       def.heat?'heat cycle':Combat.capacity(g,item)+' rounds',cycle.toFixed(1)+'s '+(def.heat?'vent':'reload')];
     if (bonus) notes.push((bonus>0?'+':'')+bonus+'% build damage');
+    if (item.id===36) notes.push('Stored healing charge '+Math.round(Math.max(0,Math.min(18,item.sutureCharge??12)))+'/18');
     if (item.chip) notes.push(item.chip);
     return notes.join(' · ');
   }
@@ -632,6 +655,136 @@
     }
     return amount;
   }
+  const standing=p=>p&&p.hp>0&&!p.downed;
+  const crewOf=(g,p)=>g.players?.length?g.players:[p];
+  function within(g,p,q,range){
+    if(p===q)return true;
+    return (q.x-p.x)**2+(q.y-p.y)**2<=range*range&&(!g.map?.lab||Labyrinth.clearLine(g.map.lab,p,q));
+  }
+  function armorState(p,id=p.suit){
+    const states=p.armorReactions??={};
+    return states[id]??={ready:0};
+  }
+  function armorSpark(g,p,id){
+    g.fx?.(p.x,p.y,suits[id].color,7);
+  }
+  function periodicPulse(g,p,dt){
+    const kinetic=p.suit===18,period=kinetic?7:9,radius=kinetic?120:170;
+    const state=armorState(p);
+    state.remaining=(state.remaining??period)-dt;
+    if(state.remaining>1e-7)return;
+    state.remaining=period+state.remaining%period;
+    p.armorPulse={x:p.x,y:p.y,t:g.time,id:p.suit,radius};
+    if(kinetic){
+      for(const e of g.enemies||[]){
+        if(e.boss||e.dead||e.hp<=0||!within(g,p,e,radius))continue;
+        const dx=e.x-p.x,dy=e.y-p.y,d=Math.hypot(dx,dy);
+        const nx=d>.01?dx/d:Math.cos(e.post||0),ny=d>.01?dy/d:Math.sin(e.post||0);
+        const impulse=(e.elite?82:225)*(1-.32*d/radius)/Math.sqrt(Math.max(1,e.mass||1));
+        const kx=e.kx||0,ky=e.ky||0,boost=Math.max(0,Math.min(impulse,impulse-(kx*nx+ky*ny)));
+        e.kx=kx+nx*boost;e.ky=ky+ny*boost;
+      }
+      armorSpark(g,p,18);
+    }else{
+      for(const q of crewOf(g,p))if(standing(q)&&within(g,p,q,radius)){
+        q.shield=Math.min(q.maxShield,q.shield+8);armorSpark(g,q,19);
+      }
+    }
+  }
+  function drawArmorPulse(c,p,time){
+    const wave=p.armorPulse;
+    if(!wave)return;
+    const t=(time-wave.t)/.42;
+    if(t<0||t>=1)return;
+    const r=4+(wave.radius-4)*(1-(1-t)**2);
+    const kinetic=wave.id===18,parts=kinetic?7:6;
+    c.save();c.translate(wave.x,wave.y);
+    c.globalAlpha*=.68*(1-t);c.lineWidth=kinetic?2.1:1.5;c.strokeStyle=suits[wave.id].color;
+    c.beginPath();
+    for(let i=0;i<parts;i++){
+      const a=i*Math.PI*2/parts;
+      c.moveTo(Math.cos(a)*r,Math.sin(a)*r);c.arc(0,0,r,a,a+(kinetic?.51:.36));
+      if(!kinetic){
+        const x=Math.cos(a+.52)*r,y=Math.sin(a+.52)*r;
+        c.moveTo(x-2.5,y);c.lineTo(x+2.5,y);c.moveTo(x,y-2.5);c.lineTo(x,y+2.5);
+      }
+    }
+    c.stroke();c.restore();
+  }
+  function armorTick(g,p,dt){
+    if(!standing(p)||dt<=0)return;
+    if(p.suit===18||p.suit===19){
+      periodicPulse(g,p,dt);
+    }else if(p.suit===12){
+      const state=armorState(p);
+      while(state.pulses>0&&g.time>=state.next){
+        state.pulses--;state.next+=1;
+        for(const q of crewOf(g,p))if(standing(q)&&q.hp<q.maxHp&&within(g,p,q,175)){
+          q.hp=Math.min(q.maxHp,q.hp+3);armorSpark(g,q,12);
+        }
+      }
+    }else if(p.suit===15){
+      const state=armorState(p);
+      if(g.time<state.ready||g.time<(state.scan||0))return;
+      state.scan=g.time+.14;
+      let n=0;
+      for(const b of g.hostile||[]){
+        if(b.life<=0||b.kind||!within(g,p,b,120))continue;
+        if(++n===3){
+          state.buffer=12;state.expires=g.time+3;state.ready=g.time+10;armorSpark(g,p,15);break;
+        }
+      }
+    }
+  }
+  function armorDamage(g,p,amount){
+    if(!standing(p)||!(amount>0))return amount;
+    if(p.lifelineUntil>g.time){
+      amount-=Math.min(9,amount*.5);p.lifelineUntil=0;armorSpark(g,p,16);
+    }
+    if(p.suit===15){
+      const state=armorState(p);
+      if(state.expires>g.time&&state.buffer>0){
+        const soak=Math.min(amount,state.buffer);amount-=soak;state.buffer-=soak;
+        if(soak>0)armorSpark(g,p,15);
+      }
+    }
+    // The struck pilot's own plate gets first refusal. One hit consumes at most one.
+    const plate=q=>standing(q)&&q.suit===13&&armorState(q).ready<=g.time&&within(g,p,q,125);
+    if(amount>0){
+      const warden=plate(p)?p:crewOf(g,p).find(plate);
+      if(warden){armorState(warden).ready=g.time+9;amount=Math.max(0,amount-(warden===p?10:6));armorSpark(g,p,13);}
+    }
+    return amount;
+  }
+  function armorHit(g,p,amount,hullDamage){
+    if(!standing(p)||!(amount>0)||!(hullDamage>0))return;
+    if(p.suit!==12&&p.suit!==16)return;
+    const state=armorState(p);
+    if(g.time<state.ready)return;
+    if(p.suit===12){
+      state.ready=g.time+14;state.pulses=3;state.next=g.time+1;armorSpark(g,p,12);
+    }else{
+      const target=crewOf(g,p).find(q=>q!==p&&standing(q)&&within(g,p,q,190))||p;
+      target.lifelineUntil=g.time+4;state.ready=g.time+10;armorSpark(g,target,16);
+    }
+  }
+  function armorKill(g,p,e){
+    if(!standing(p)||!e)return;
+    if(p.suit===14){
+      const state=armorState(p);state.kills=Math.min(5,(state.kills||0)+1);
+      if(state.kills<5||g.time<state.ready)return;
+      state.kills=0;state.ready=g.time+5;
+      for(const q of crewOf(g,p))if(standing(q)&&within(g,p,q,170)){
+        q.shield=Math.min(q.maxShield,q.shield+7);
+        for(const ab of q.abilities||[])ab.cd=Math.max(0,(ab.cd||0)-1.5);
+        armorSpark(g,q,14);
+      }
+    }else if(p.suit===17&&Number.isFinite(p.lastHit)&&g.time-p.lastHit>=0&&g.time-p.lastHit<=3){
+      const state=armorState(p);
+      if(g.time<state.ready)return;
+      state.ready=g.time+3;p.hp=Math.min(p.maxHp,p.hp+5);p.scrap=(p.scrap||0)+1;armorSpark(g,p,17);
+    }
+  }
 
   const routeMaps = [
     ['Saltglass Causeway','Floodlights cut across the reclaimed crane yards.','Rivet crews and pursuit skiffs.',['Intercept','Transmit']],
@@ -661,10 +814,11 @@
   }
 
   const recordKey='cinderRelay.records.v1';
+  const freeKits=kits.filter(k=>k.cost===0).map(k=>k.id);
   const freshMeta = () => ({
     version:1,data:0,best:0,deepest:0,clears:0,runs:0,last:null,lastRun:null,
-    unlocked:[0],unlockedKits:[0],cosmetics:[],contracts:[],seen:[],seenBosses:[],
-    firstClearTime:null,contractedStages:0,ledger:{}
+    unlocked:freeKits.slice(),unlockedKits:freeKits.slice(),cosmetics:[],contracts:[],seen:[],seenBosses:[],
+    firstClearTime:null,campaignCleared:false,highestClearedGate:0,contractedStages:0,ledger:{}
   });
   function loadMeta() {
     try {
@@ -673,12 +827,14 @@
       const data=JSON.parse(raw);
       if (!data || typeof data!=='object' || Array.isArray(data)) return freshMeta();
       const meta={...freshMeta(),...data};
-      meta.unlocked=Array.from(new Set([0,...(Array.isArray(data.unlocked)?data.unlocked:[]),
+      meta.unlocked=Array.from(new Set([...freeKits,...(Array.isArray(data.unlocked)?data.unlocked:[]),
         ...(Array.isArray(data.unlockedKits)?data.unlockedKits:[])]));
       meta.unlockedKits=meta.unlocked;
       for (const key of ['cosmetics','contracts','seen','seenBosses']) if (!Array.isArray(meta[key])) meta[key]=[];
       for (const key of ['data','best','deepest','clears','runs','contractedStages'])
         if (!Number.isFinite(meta[key]) || meta[key]<0) meta[key]=0;
+      if(!Object.hasOwn(data,'campaignCleared'))meta.campaignCleared=meta.best>=5||meta.deepest>=5||meta.firstClearTime!=null;
+      if(!Number.isFinite(data.highestClearedGate))meta.highestClearedGate=Math.max(meta.best,meta.deepest);
       if (!meta.ledger || typeof meta.ledger!=='object' || Array.isArray(meta.ledger)) meta.ledger={};
       return meta;
     } catch (_) {return freshMeta();}
@@ -718,22 +874,29 @@
   }
   function ledgerEntry(meta,g) {
     const key=String(g.runId || g.seed || 'local-expedition');
-    if (!Object.hasOwn(meta.ledger,key)) meta.ledger[key]={depth:0,data:0,finished:false};
-    return meta.ledger[key];
+    if (!Object.hasOwn(meta.ledger,key)) meta.ledger[key]={startGate:Math.max(1,Math.floor(g.startGate||1)),depth:0,data:0,finished:false};
+    const entry=meta.ledger[key];
+    entry.startGate??=1;
+    return entry;
   }
   function endlessUnlocked(meta) {
-    return Math.max(meta.best||0,meta.deepest||0)>=5||meta.firstClearTime!=null;
+    return meta.campaignCleared??(Math.max(meta.best||0,meta.deepest||0)>=5||meta.firstClearTime!=null);
   }
   function bankGate(meta,g) {
     const entry=ledgerEntry(meta,g);
-    const depth=Math.max(0,Math.floor(g.cleared ?? g.stage ?? 0));
+    const possible=Math.max(0,(g.stage??entry.startGate)-entry.startGate+1);
+    const reported=Math.max(0,Math.floor(g.cleared??possible));
+    const depth=entry.startGate===1?reported:Math.min(reported,possible);
     if (entry.finished || depth<=entry.depth) return 0;
     const oldDepth=entry.depth, contract=contractInfo(g.contract);
     const gates=depth-oldDepth;
-    const first=Math.min(oldDepth,8),last=Math.min(depth,8);
+    const firstGate=entry.startGate+oldDepth,lastGate=entry.startGate+depth-1;
+    const first=Math.min(firstGate-1,8),last=Math.min(lastGate,8);
     const openingBonus=(last*(last+1)-first*(first+1))/2;
     let earned=gates*(4+(contract?.bonus||0))+openingBonus+8*(gates-(last-first));
-    if (oldDepth<5 && depth>=5) {
+    meta.campaignCleared??=endlessUnlocked(meta);
+    if (entry.startGate===1&&oldDepth<5 && depth>=5) {
+      meta.campaignCleared=true;
       meta.clears++;
       if (meta.firstClearTime==null) {meta.firstClearTime=g.elapsed || 0; earned+=20;}
     }
@@ -743,6 +906,7 @@
     meta.data+=earned;
     meta.best=Math.max(meta.best,depth);
     meta.deepest=meta.best;
+    meta.highestClearedGate=Math.max(meta.highestClearedGate||0,lastGate);
     saveMeta(meta);
     return earned;
   }
@@ -751,7 +915,8 @@
     if (entry.finished) return entry.result;
     if ((g.cleared || 0)>entry.depth) bankGate(meta,g);
     const contract=contractInfo(g.contract);
-    const extra=extracted ? 4+Math.min(60,entry.depth*2)+(contract?.bonus||0):0;
+    const success=!!extracted&&entry.depth>0;
+    const extra=success ? 4+Math.min(60,entry.depth*2)+(contract?.bonus||0):0;
     entry.data+=extra; meta.data+=extra;
     const squad=g.players?.length ? g.players : [g.player];
     const loadouts=squad.map(p=>({
@@ -761,10 +926,11 @@
         return Combat.rarityOf(w)+' '+Combat.gunName(w)+(rank?' +'+rank:'');
       }),
       abilities:p.abilities.map(a=>Combat.abilities[a.id].name),
-      armor:suitName(p.suit,p.suitRolls[p.suit]),bounds:[p.maxHp,p.maxShield],level:p.level,
-      overclock:p.overclock || '',keystones:[...p.keystoneSlots]
+      armor:suitName(p.suit,p.suitRolls?.[p.suit]),bounds:[p.maxHp,p.maxShield],level:p.level,
+      overclock:p.overclock || '',keystones:[...(p.keystoneSlots||[])]
     }));
-    const result={depth:entry.depth,elapsed:g.elapsed||0,extracted:!!extracted,kills:g.kills||0,
+    const result={depth:entry.depth,startGate:entry.startGate,lastGate:entry.depth>0?entry.startGate+entry.depth-1:null,
+      elapsed:g.elapsed||0,extracted:success,kills:g.kills||0,
       loadout:loadouts[0],loadouts,contract:contract?.name || '',data:entry.data,extractBonus:extra};
     entry.finished=true; entry.result=result;
     meta.runs++; meta.last=result; meta.lastRun=result;
@@ -775,7 +941,7 @@
   window.Progress={
     kits,suits,passives,contracts,overclocks,chipInfo,affixInfo,armorPrefixes,armorSuffixes,newPlayer,recalc,levelXP,addXP,
     draft,take,salvage,refit,installChip,rollAffix,buyAffix,repair,repairCost,equippedName,weaponDetail,
-    onObjective,onElite,onDodge,onNearMiss,onGate,guardDamage,routes,
+    onObjective,onElite,onDodge,onNearMiss,onGate,guardDamage,armorTick,armorDamage,armorHit,armorKill,drawArmorPulse,routes,routeMaps,
     loadMeta,saveMeta,unlockKit,unlockContract,unlockCosmetic,setSkin,observe,bankGate,finish,endlessUnlocked
   };
 })();

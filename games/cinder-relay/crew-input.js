@@ -191,5 +191,10 @@
     if (nav && !adjustMenu(nav[0])) hooks.menuMove(...nav);
   }
 
-  window.CrewInput = {poll, count:() => connectedPads().length, status};
+  function usesController(g,index=0) {
+    const layout=layoutOf(g);
+    if(!pilotsFor(layout).includes(index))return false;
+    return layout===lastLayout&&lastRun===g.runId ? !!bindings[index] : status(g).assignments[index]!=null;
+  }
+  window.CrewInput = {poll, count:() => connectedPads().length, status, usesController};
 })();

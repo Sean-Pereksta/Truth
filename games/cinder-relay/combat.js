@@ -40,13 +40,22 @@
     ['Remora Caster','Attaches a drone to an enemy. The drone fires along your aim.','#ffa6c5',18,3,10,1.55,485,550],
     ['Fossil Engine','A burrower travels beneath cover, then erupts at the target point.','#f0d09a',80,1.35,6,1.6,475,390],
     ['Lantern Tick','Ticks retrace your footsteps and explode when approached.','#d7f48c',70,1.85,9,1.45,325,255],
-    ['Husk Loom','Place a pair of spool beetles. Their tripwire damages and slows.','#ffafba',32,2.8,10,1.45,405,465]
+    ['Husk Loom','Place a pair of spool beetles. Their tripwire damages and slows.','#ffafba',32,2.8,10,1.45,405,465],
+    ['Suture Carbine','Aim at a wounded ally to spend stored repair charge. Hitting enemies refills it and stitches your own hull every third hit.','#8cf0be',19,4.3,18,1.4,405,640],
+    ['Switchyard Driver','Print a crosswise electric fence. Two fences can stand at once, slowing enemies and absorbing three ordinary shots each.','#f6ce78',20,1.55,7,1.7,330,360],
+    ['Bulwark Repeater','Every third landed bolt restores shield to the most depleted visible pilot within 170 units of you.','#8dd5ff',16,6.1,27,1.4,455,590],
+    ['Lifeboat Mortar','Lob a capsule that explodes, then shelters pilots inside its landing ring from four ordinary shots.','#ffd7a6',58,1.35,5,1.85,410,390],
+    ['Honeycomb Harvester','Print two workers that sting foes and fly repair nectar to wounded pilots. Fire stingers while both workers are away.','#eac878',27,2.2,8,1.5,320,320],
+    ['Watchtower Press','Print an automatic gun tower. Print on its pedestal again for twin barrels. Two towers can stand at once.','#9ac9dd',23,1.7,8,1.65,330,470],
+    ['Gravwinch Mill','Install a winch that reels light foes toward its wheel in three damaging pulses. Heavy foes take damage in place.','#bea0ef',35,1.45,6,1.7,325,440]
   ];
-  const guns = weaponRows.map(([name,desc,color,damage,rate,mag,reload,range,speed],id)=>({
-    id,name,desc,color,damage,rate,mag,magazine:mag,reload,range,speed,family:families[Math.floor(id/6)],
-    heat:[24,25,26,28,29].includes(id),charged:[11,12,15].includes(id),
-    pointTargeted:[15,18,19,20,21,22,23,29,33,35].includes(id)
-  }));
+  const supportFamilies=['Assault','Fabricator','Assault','Ordnance','Fabricator','Fabricator','Fabricator'];
+  const guns = weaponRows.map(([name,desc,color,damage,rate,mag,reload,range,speed],id)=>{
+    const familyIndex=id<36?Math.floor(id/6):families.indexOf(supportFamilies[id-36]);
+    return {id,name,desc,color,damage,rate,mag,magazine:mag,reload,range,speed,family:families[familyIndex],familyIndex,
+      heat:[24,25,26,28,29].includes(id),charged:[11,12,15].includes(id),
+      pointTargeted:[15,18,19,20,21,22,23,29,33,35,37,39,40,41,42].includes(id)};
+  });
   const skillRows = [
     ['Repulsor Sweep','Push a cone of enemies and clear eight ordinary shots.',12,'#91efff','Wideband','Rebound'],
     ['Bastion Screen','Project a directional bullet barrier for 2.5 seconds.',20,'#a3e9ff','Stored Charge','Mobile Wall'],
@@ -59,7 +68,12 @@
     ['Null Halo','Expand a pulse to erase incoming ordinary bullets.',30,'#c7aeff','Counterpulse','Double Echo'],
     ['Gravity Fold','Compress light enemies into a small area and stagger heavy units.',24,'#ab9dff','Event Horizon','Shear Edge'],
     ['Brood Decoy','Deploy a fake target to distract ordinary enemies.',20,'#e0a1a0','Molt','Mirror Burst'],
-    ['Vector Overdrive','Boost movement, reload, and swap speed for five seconds.',26,'#ffdb80','Redline','Perfect Rhythm']
+    ['Vector Overdrive','Boost movement, reload, and swap speed for five seconds.',26,'#ffdb80','Redline','Perfect Rhythm'],
+    ['Rescue Flare','Repair 18 hull nearby. A remote link sends 9 hull to a distant or obscured living partner. Revives require sight within the flare.',38,'#85e5b1','Wideband Flare','Trauma Seal'],
+    ['Aegis Canopy','Deploy a five-second dome that blocks 16 ordinary shots. A partner outside it receives a mobile three-second shield for four ordinary shots, even across rooms.',25,'#91cdff','Counterbattery','Reserve Cell'],
+    ['Relay Overcharger','Refill 40% of the readied magazine or vent its heat. Nearby pilots also gain 25% firing cadence for four seconds.',25,'#ffc766','Deep Magazine','Hot Bus'],
+    ['Foamseed Nursery','Print a nursery that lays three proximity pods in a fan. Each pod bursts when a foe approaches.',24,'#a7e59c','Extra Brood','Frost Shell'],
+    ['Mirror Foundry','Build a relay prism. While you fire with a clear link within 320 units, it sends a piercing bolt along your aim.',23,'#a6b9ff','Forked Lens','Long Exposure']
   ];
   const abilities=skillRows.map(([name,desc,cooldown,color,a,b],id)=>({id,name,desc,cooldown,color,augments:[a,b]}));
   const chips=['Counterweight','Condensate Coil','Primer Cap','Split Fuse','Relay Antenna','Field Spool'];
@@ -201,6 +215,27 @@
     const items=state(g).entities.filter(q=>q.kind===kind&&q.life>0);
     if(items.length>=limit)items[0].life=0;
   }
+  function crewInRange(g,origin,radius){
+    return (g.players?.length?g.players:[g.player]).filter(p=>p.hp>0&&!p.downed&&distanceSq(origin,p)<=radius*radius&&clearLab(g,origin,p));
+  }
+  function neediest(pilots,key,maxKey){
+    let target=null,fraction=1;
+    for(const pilot of pilots){
+      const fill=pilot[key]/Math.max(1,pilot[maxKey]);
+      if(fill<fraction){target=pilot;fraction=fill;}
+    }
+    return target;
+  }
+  function repairHull(g,source,target,amount,color){
+    if(!target||target.hp<=0||target.downed)return 0;
+    const repair=Math.min(amount,Math.max(0,target.maxHp-target.hp));
+    if(repair>0){
+      target.hp+=repair;
+      if(source!==target)line(g,source,target,color,2,.2);
+      field(g,'repairPulse',target.x,target.y,14,.3,{color});
+    }
+    return repair;
+  }
   function targetPoint(g,range) {
     const p=g.player,aim=g.aim||p;
     const len=clamp(distance(p,aim),22,range),a=p.a;
@@ -338,7 +373,7 @@
       if(impacts.length<48){
         const a=s.a??p.a;
         impacts.push({x:e.x-Math.cos(a)*e.r*.7,y:e.y-Math.sin(a)*e.r*.7,a,
-          family:Math.floor(id/6),color:guns[id].color,life:.20});
+          family:guns[id].familyIndex,color:guns[id].color,life:.20});
         e.impactAt=g.time+.065;
       }
     }
@@ -364,7 +399,7 @@
   }
   function rateFor(g,w) {
     const d=guns[w.id];
-    return d.rate*weaponCadence(w)*(1+stat(g,'fireRate'))*(w.prefix==='Shortstroke'?1.12:w.prefix==='Heavy-Bore'?.88:1)
+    return d.rate*weaponCadence(w)*(1+stat(g,'fireRate'))*(g.combat?.overchargeUntil>g.time?1+g.combat.overchargeBoost:1)*(w.prefix==='Shortstroke'?1.12:w.prefix==='Heavy-Bore'?.88:1)
       *(stat(g,'overclock')==='Heavy Core'?.86:1)*(g.combat?.redline>0?1.28:1)*(w.recall>0?1.15:1)/(d.charged&&w.prefix==='Capacitor'?1.12:1);
   }
   function blastRadius(g,w,r) {
@@ -420,7 +455,7 @@
     const spawn=(spread=0,extra={},pos=f)=>makeShot(g,pos,a+spread,{...base,...extra,a:a+spread});
     const noise=x=>(g.rng()-.5)*2*x*spreadMod;
     const pt=d.pointTargeted?targetPoint(g,range):null;
-    g.sound('fire',id);
+    g.sound('fire',d.familyIndex*6+id%6);
     const pellet=(count,spread,extra={})=>{
       count+=(w.prefix==='Splitcore'?1:0)+(d.family==='Scatter'&&hand===3?1:0);
       for(let i=0;i<count;i++)spawn((i-(count-1)/2)*spread/Math.max(1,count-1)*spreadMod+noise(.019),{...extra,speed:speed*(.92+g.rng()*.13),shape:extra.shape||'pellet',r:extra.r||2});
@@ -504,6 +539,51 @@
       case 32:spawn(0,{shape:'clamp'});break;
       case 34:{const path=[p,...c.history.slice().reverse()].map(v=>({x:v.x,y:v.y}));capField(g,'tick',4);field(g,'tick',p.x,p.y,48,5,{path,i:1,damage,color:d.color,w});break;}
       case 35:{const places=c.entities.filter(v=>v.kind==='spool'&&v.life>0);if(places.length>=2)places[0].life=0;field(g,'spool',pt.x,pt.y,5,11*(1+stat(g,'deployLife')),{damage,color:d.color,w});break;}
+      case 36:{
+        const end=reachablePoint(g,p,beamEnd(g,p,a,range));
+        const hit=near(g,p,range+32,e=>touchesSegment(e,p,end,e.r+3));
+        const mate=crewInRange(g,p,range).find(q=>q!==p&&q.hp<q.maxHp&&touchesSegment(q,p,end,(q.bodyR||9)+7));
+        w.sutureCharge??=12;
+        const heal=mate&&w.sutureCharge>0&&(!hit||distanceSq(p,mate)<distanceSq(p,hit));
+        const dest=heal?mate:(hit||end),blocker=Foes.interceptLine(g,p,dest,damage);
+        line(g,f,blocker||dest,d.color,3,.15);
+        if(blocker)break;
+        if(heal){w.sutureCharge-=repairHull(g,p,mate,Math.min(w.sutureCharge,3*Math.sqrt(weaponPower(w))),d.color);break;}
+        if(hit&&!(hit.boss&&hit.arrive>0)){
+          statusHit(g,hit,base);w.sutureCharge=Math.min(18,w.sutureCharge+2);
+          w.sutureHits=((w.sutureHits||0)+1)%3;
+          if(!w.sutureHits)repairHull(g,hit,p,2,d.color);
+        }
+        break;
+      }
+      case 37:{
+        const rig={x:pt.x,y:pt.y,a,r:63},ends=geometry(rig).map(t=>reachablePoint(g,pt,t));
+        capField(g,'wireFence',2);
+        field(g,'wireFence',pt.x,pt.y,63,4.2*(1+stat(g,'deployLife')),{w,damage,color:d.color,ends,budget:3});
+        break;
+      }
+      case 38:spawn(0,{shape:'shieldBolt'});break;
+      case 39:{
+        const flight=clamp(distance(f,pt)/speed,.16,1.1);
+        field(g,'lifeboat',f.x,f.y,blastRadius(g,w,52),flight,{start:f,end:pt,color:d.color,damage,w});
+        break;
+      }
+      case 40:{
+        const workers=c.entities.filter(v=>v.kind==='workerBee'&&v.life>0);
+        if(workers.length<2)field(g,'workerBee',p.x,p.y,7,5.2*(1+stat(g,'deployLife')),{w,damage,color:d.color,goal:pt,a});
+        else spawn(0,{shape:'thorn',speed:530,damage:damage*.84});
+        break;
+      }
+      case 41:{
+        const prior=c.entities.find(v=>v.kind==='watchtower'&&v.life>0&&distanceSq(v,pt)<34*34&&clearLab(g,pt,v));
+        if(prior){
+          prior.tier=2;prior.life=prior.max;prior.w=w;prior.damage=damage;
+          field(g,'spark',prior.x,prior.y,22,.25,{color:d.color});
+        }else{
+          capField(g,'watchtower',2);field(g,'watchtower',pt.x,pt.y,210,6*(1+stat(g,'deployLife')),{w,damage,color:d.color,tier:1,a});
+        }break;
+      }
+      case 42:capField(g,'gravwinch',2);field(g,'gravwinch',pt.x,pt.y,90,3.4,{w,damage,color:d.color,a,tick:.24,pulses:3});break;
     }
     if(c.afterimage&&stat(g,'Relay Assassin')&&id===14){makeShot(g,c.afterimage,a,{...base,damage:damage*.5,shape:'rift',pierce:pierce+1});c.afterimage=null;}
     if(g.decoy?.aug===2&&!g.decoy.copied){g.decoy.copied=true;makeShot(g,g.decoy,a,{damage:damage*.55,speed:600,range,color:d.color,shape:'crystal'});}
@@ -517,6 +597,16 @@
     const w=s.w,p=g.player,marked=e.marked>0;
     if(s.id===19||s.id===20){ordnanceImpact(g,s);return true;}
     statusHit(g,e,s);
+    if(s.id===38&&w&&!(e.boss&&e.arrive>0)){
+      w.shieldHits=((w.shieldHits||0)+1)%3;
+      if(!w.shieldHits){
+        const target=neediest(crewInRange(g,p,170),'shield','maxShield');
+        if(target){
+          target.shield=Math.min(target.maxShield,target.shield+4*Math.sqrt(weaponPower(w)));
+          line(g,p,target,s.color,2,.22);field(g,'shieldPulse',target.x,target.y,19,.35,{color:s.color});
+        }
+      }
+    }
     if(s.id===2&&!s.offspring){makeShot(g,e,s.a+.32,{damage:s.damage*.65,shape:'thorn',color:s.color,speed:510,range:185,hit:new Set([e])});s.offspring=true;}
     if(s.split&&!s.offspring){for(const side of [-1,1])for(let j=0;j<2;j++)makeShot(g,e,s.a+side*(.38+j*.22),{shape:'shard',color:s.color,speed:510,range:145,damage:s.damage*.74,hit:new Set([e])});s.offspring=true;}
     if(s.acid){field(g,'acid',e.x,e.y,34,2.8,{color:'#aeeb64',damage:5*weaponPower(w)});s.acid=false;}
@@ -625,7 +715,7 @@
     const p=g.player,c=state(g),ab=p.abilities[p.activeSlots[slot]],a=p.a;
     if(!ab||c.gap>0)return false;
     const id=ab.id,def=abilities[id],aug=ab.augment||0, col=def.color;
-    const power=1+stat(g,'abilityDamage'),pt=id===3||id===4||id===9?targetPoint(g,285):null,r=x=>activeRadius(g,x);
+    const power=1+stat(g,'abilityDamage'),pt=[3,4,9,13,15,16].includes(id)?targetPoint(g,285):null,r=x=>activeRadius(g,x);
     if(id===2&&c.beacon?.life>0){
       if(window.World?.permitsRecall?.(g,c.beacon)===false){
         g.toast?.('Vault seal blocks recall to this beacon.');
@@ -660,6 +750,43 @@
       case 9:field(g,'gravity',pt.x,pt.y,r(112),aug===1?3.4:2.1,{color:col,aug,damage:14*power,held:new Set()});break;
       case 10:{const dest=targetPoint(g,135),at=g.blocked(dest.x,dest.y,7)?p:dest;g.decoy=field(g,'decoy',at.x,at.y,17,5,{color:col,aug,damage:8*power});break;}
       case 11:c.overdrive=5;c.overAug=aug;c.refund=false;field(g,'spark',p.x,p.y,43,.33,{color:col});break;
+      case 12:{
+        const radius=r(aug===1?204:140);
+        for(const pilot of g.players||[p]){
+          const nearby=distanceSq(p,pilot)<=radius*radius&&clearLab(g,p,pilot);
+          if(pilot.downed){
+            if(!nearby||pilot===p)continue;
+            g.revivePilot(pilot);
+          }else repairHull(g,nearby?p:pilot,pilot,(nearby?18:9)*power,col);
+          if(aug===2&&pilot.hp>0)pilot.shield=Math.min(pilot.maxShield,pilot.shield+(nearby?10:5));
+          if(!nearby&&pilot.hp>0)field(g,'repairPulse',pilot.x,pilot.y,34,.60,{color:col});
+        }
+        field(g,'repairPulse',p.x,p.y,radius,.60,{color:col});break;
+      }
+      case 13:{
+        const radius=r(85);
+        capField(g,'canopy',1);field(g,'canopy',pt.x,pt.y,radius,aug===2?6.5:5,{color:col,budget:aug===2?24:16,aug,echoes:4});
+        const partner=g.players?.find(q=>q!==p&&live(q)&&!q.downed);
+        if(partner&&(distanceSq(pt,partner)>radius*radius||!clearLab(g,pt,partner))){
+          capField(g,'linkShell',1);field(g,'linkShell',partner.x,partner.y,40,3,{target:partner,color:col,budget:4});
+        }break;
+      }
+      case 14:{
+        const radius=r(175),refill=aug===1?.75:.4;
+        for(const pilot of crewInRange(g,p,radius)){
+          const station=pilot===p?g:g.forPilot(pilot),weapon=currentGun(station);
+          if(!weapon)continue;
+          if(guns[weapon.id].heat)weapon.heat=Math.max(0,weapon.heat-refill);
+          else weapon.ammo=Math.min(weapon.capacity,weapon.ammo+Math.ceil(weapon.capacity*refill));
+          if(guns[weapon.id].heat?weapon.heat<.9:weapon.ammo>0)weapon.reload=0;
+          const local=state(station),boost=aug===2?.40:.25;
+          local.overchargeBoost=local.overchargeUntil>g.time?Math.max(boost,local.overchargeBoost):boost;
+          local.overchargeUntil=g.time+4;field(g,'shieldPulse',pilot.x,pilot.y,23,.42,{color:col});
+          if(pilot!==p)line(g,p,pilot,col,2,.27,'arc');
+        }field(g,'spark',p.x,p.y,radius,.42,{color:col});break;
+      }
+      case 15:capField(g,'nursery',1);field(g,'nursery',pt.x,pt.y,r(82),4,{a,aug,color:col,damage:40*power,produced:0,podLife:8*(1+stat(g,'deployLife'))});break;
+      case 16:capField(g,'mirrorforge',1);field(g,'mirrorforge',pt.x,pt.y,22,(aug===2?11:7)*(1+stat(g,'deployLife')),{a,aug,color:col,damage:27*power});break;
     }
     return true;
   }
@@ -697,6 +824,109 @@
     const tick=v.tick<=0;
     const closeTo=q=>live(q)&&distanceSq(v,q)<(v.r+q.r)**2&&clearLab(g,v,q);
     switch(v.kind){
+      case 'canopy':case 'shelter':case 'linkShell':{
+        if(v.target){
+          if(v.target.downed||v.target.hp<=0){v.life=0;break;}
+          v.x=v.target.x;v.y=v.target.y;
+        }
+        const blocks=clearBullets(g,h=>distanceSq(v,h)<(v.r+(h.r||0))**2&&clearLab(g,v,h),v.budget);
+        v.budget-=blocks;
+        if(blocks){
+          v.flash=.18;
+          if(v.aug===1&&v.echoes>0){
+            const target=near(g,v,230);
+            if(target){
+              const n=Math.min(v.echoes,blocks,3);v.echoes-=n;
+              for(let i=0;i<n;i++)makeShot(g,v,angle(v,target)+(i-(n-1)/2)*.09,{damage:13,speed:445,range:230,color:v.color,shape:'shieldBolt'});
+            }
+          }
+        }
+        v.flash=Math.max(0,(v.flash||0)-dt);if(v.budget<=0)v.life=0;break;
+      }
+      case 'wireFence':{
+        const [s,t]=v.ends;
+        if(v.budget>0)v.budget-=clearBullets(g,h=>touchesSegment(h,s,t,(h.r||3)+5)&&clearLab(g,v,h),v.budget);
+        if(!tick)break;
+        Foes.interceptLine(g,s,t,v.damage);
+        for(const foe of g.enemies)if(live(foe)&&touchesSegment(foe,s,t,foe.r+4)&&clearLab(g,v,foe)){
+          chill(foe,.32);foe.static=Math.max(foe.static||0,1.6);
+          statusHit(g,foe,{id:37,w:v.w,damage:v.damage,color:v.color,a:angle(v,foe),push:9});
+        }
+        v.tick=.6/weaponCadence(v.w);break;
+      }
+      case 'lifeboat':{
+        const k=clamp(v.age/v.max,0,1);
+        v.x=v.start.x+(v.end.x-v.start.x)*k;v.y=v.start.y+(v.end.y-v.start.y)*k;
+        if(v.life<=0){
+          blast(g,v,v.r,v.damage,v.color,75,'',v.w);capField(g,'shelter',1);
+          field(g,'shelter',v.x,v.y,v.r,2.2,{color:v.color,budget:4});
+        }break;
+      }
+      case 'workerBee':{
+        if(p.downed||p.hp<=0){v.life=0;break;}
+        if(tick){
+          v.target=v.returning?(neediest(crewInRange(g,v,230),'hp','maxHp')||p):near(g,v,167);
+          v.tick=.22;
+        }
+        const dest=v.target&&live(v.target)?v.target:v.returning?p:v.goal;
+        const d=distance(v,dest);
+        if(d>5&&clearLab(g,v,dest)){
+          v.a=angle(v,dest);const step=Math.min(d,dt*190);
+          v.x+=Math.cos(v.a)*step;v.y+=Math.sin(v.a)*step;
+        }
+        if(v.target&&d<18&&clearLab(g,v,v.target)){
+          if(v.returning){if(live(v.target))repairHull(g,v,v.target,2.5*Math.sqrt(weaponPower(v.w)),v.color);v.life=0;}
+          else if(live(v.target)&&!(v.target.boss&&v.target.arrive>0)){
+            statusHit(g,v.target,{id:40,w:v.w,a:v.a,damage:v.damage,push:18,color:v.color});
+            v.returning=true;v.target=null;v.tick=0;
+          }
+        }break;
+      }
+      case 'watchtower':{
+        if(!tick)break;
+        const enemy=near(g,v,v.r);v.tick=enemy?.66/weaponCadence(v.w):.21;
+        if(enemy){v.a=angle(v,enemy);
+          for(let i=0;i<v.tier;i++){
+            const shift=v.tier===2?(i-.5)*9:0;
+            const port=reachablePoint(g,v,{x:v.x-Math.sin(v.a)*shift,y:v.y+Math.cos(v.a)*shift});
+            makeShot(g,port,angle(port,enemy),{id:41,w:v.w,color:v.color,damage:v.damage*.68,shape:'needle',speed:450,range:v.r+15,push:15});
+          }
+        }break;
+      }
+      case 'gravwinch':{
+        if(!tick)break;
+        for(const foe of g.enemies)if(closeTo(foe)){
+          const a=angle(foe,v),d=Math.min(Math.max(0,distance(v,foe)-12),28/Math.max(1,foe.mass||1));
+          if(!foe.boss&&!foe.elite)g.move(foe,Math.cos(a)*d,Math.sin(a)*d);
+          statusHit(g,foe,{id:42,w:v.w,a,damage:v.damage*.77,push:0,color:v.color});
+        }
+        Foes.blast(g,v,v.r,v.damage*.77);field(g,'shieldPulse',v.x,v.y,v.r,.31,{color:v.color});
+        v.pulses--;v.tick=.75/weaponCadence(v.w);if(!v.pulses)v.life=0;break;
+      }
+      case 'nursery':{
+        if(!tick)break;
+        const total=v.aug===1?5:3,bearing=v.a+(v.produced-(total-1)/2)*(2.15/(total-1));
+        const dest=reachablePoint(g,v,{x:v.x+Math.cos(bearing)*v.r,y:v.y+Math.sin(bearing)*v.r});
+        capField(g,'foamPod',5);
+        field(g,'foamPod',dest.x,dest.y,37,v.podLife,{color:v.aug===2?'#9ce9fa':v.color,damage:v.damage,aug:v.aug});
+        line(g,v,dest,v.color,1,.24);v.produced++;v.tick=.58;if(v.produced>=total)v.life=0;break;
+      }
+      case 'foamPod':
+        if(tick&&v.age>.32){
+          const enemy=near(g,v,26);v.tick=.12;
+          if(enemy){
+            blast(g,v,v.r,v.damage,v.color,63);
+            if(v.aug===2)for(const foe of g.enemies)if(closeTo(foe))chill(foe,1.2);
+            v.life=0;
+          }
+        }break;
+      case 'mirrorforge':{
+        v.a=p.a;
+        if(!tick||!c.triggerHeld||p.hp<=0||distanceSq(v,p)>320*320||!clearLab(g,v,p))break;
+        const offsets=v.aug===1?[-.11,.11]:[0];
+        for(const offset of offsets)makeShot(g,v,p.a+offset,{color:v.color,damage:v.damage*(v.aug===1?.73:1),r:3,speed:550,range:350,pierce:1,shape:'rift'});
+        v.tick=.55;break;
+      }
       case 'mortar':case 'podlob':case 'skip':case 'burrow':{
         const t=clamp(1-v.life/v.max,0,1);v.x=v.start.x+(v.end.x-v.start.x)*t;v.y=v.start.y+(v.end.y-v.start.y)*t;
         if(v.life<=0){
@@ -769,6 +999,7 @@
     const p=g.player,c=state(g),w=currentGun(g);
     if(tickStatuses)updateStatuses(g,dt);
     if(!w)return;
+    c.triggerHeld=!!input.fire;
     c.gap=Math.max(0,c.gap-dt);c.wake-=dt;c.overdrive-=dt;c.redline=Math.max(0,(c.redline||0)-dt);
     const dash=!!(p.dashTime>0||p.dashing);if(dash&&!c.lastDash)dashStart(g,c);c.lastDash=dash;
     if(c.leaveTrail>0){c.leaveTrail-=dt;c.trailTick=(c.trailTick||0)-dt;if(c.trailTick<=0){field(g,'fire',p.x,p.y,24,2.5,{damage:5*c.wakePower,color:'#ff965c',aug:c.wakeAug});c.trailTick=.045;}}
@@ -836,6 +1067,7 @@
     ctx.save();ctx.translate(Math.round(s.x),Math.round(s.y));ctx.rotate(s.a);
     const bar=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(x,y,w,h);};
     switch(s.shape){
+      case 'shieldBolt':path(ctx,[[-7,-3],[-1,-3],[3,0],[-1,3],[-7,3],[-3,0]],col,1.7,true);bar(-4,-1,5,2,'#e1f6ff');break;
       case 'tracer':case 'needle':case 'rail':case 'rift':{
         const len=s.shape==='rail'?29:s.shape==='needle'?17:s.shape==='rift'?16:12;
         bar(-len,-2,len+2,4,col+'38');bar(-len+3,-1,len,2,col);bar(-3,-1,6,2,'#fff9df');if(s.shape==='rift')bar(-7,-3,2,6,col);break;
@@ -854,6 +1086,47 @@
     const x=Math.round(v.x),y=Math.round(v.y),col=v.color,t=clamp(v.age/v.max,0,1),p=g.player;
     const pulse=1+Math.sin(v.age*8)*.08;
     switch(v.kind){
+      case 'shieldPulse':case 'repairPulse':{
+        ring(ctx,x,y,Math.max(3,v.r*(.18+.82*t)),col,2*(1-t)+.4,24);
+        if(v.kind==='repairPulse'&&t<.78){
+          ctx.fillStyle=col;ctx.fillRect(x-1,y-5,3,10);ctx.fillRect(x-5,y-1,10,3);
+        }break;
+      }
+      case 'canopy':case 'shelter':case 'linkShell':{
+        const r=v.r;
+        fillDisk(ctx,x,y,r,col+(v.flash>0?'33':'12'));
+        ring(ctx,x,y,r,col+'b0',v.flash>0?3:1,32);
+        for(const side of [-1,1]){
+          path(ctx,[[x+side*r,y],[x+side*r*.76,y-r*.52],[x+side*r*.36,y-r*.82],[x,y-r]],col+'56',1);
+        }
+        if(v.kind!=='linkShell'){ring(ctx,x,y,6,col,2,6);square(ctx,x,y,4,'#edf9f3');}break;
+      }
+      case 'wireFence':{
+        const [s,t]=v.ends,dx=t.x-s.x,dy=t.y-s.y,n=Math.hypot(dx,dy)||1;
+        const points=[[s.x,s.y]];
+        for(let j=1;j<9;j++){
+          const bend=Math.sin(j*2.7+v.age*22)*(v.budget?4:2);
+          points.push([s.x+dx*j/9-dy/n*bend,s.y+dy*j/9+dx/n*bend]);
+        }points.push([t.x,t.y]);path(ctx,points,col+'58',4);path(ctx,points,v.budget?'#c8edff':col,1);
+        for(const end of v.ends){
+          square(ctx,end.x,end.y+2,10,'#283239');square(ctx,end.x,end.y,7,col);square(ctx,end.x,end.y-1,3,'#fff4c9');
+        }break;
+      }
+      case 'lifeboat':{
+        ring(ctx,v.end.x,v.end.y,v.r,col+'72',1,16);const h=Math.sin(t*Math.PI)*30;
+        fillDisk(ctx,x,y+2,4,'#1c253a88');ring(ctx,x,y-h,6,col,2,6);square(ctx,x,y-h,3,'#fff5df');break;
+      }
+      case 'workerBee':case 'watchtower':case 'gravwinch':case 'nursery':case 'mirrorforge':{
+        const id=v.kind==='workerBee'?40:v.kind==='watchtower'?41:v.kind==='gravwinch'?42:v.kind==='nursery'?15:16;
+        v.active=v.returning||v.tick>.38;v.tier??=v.aug===1?2:1;
+        Art.device(ctx,id,x,y,1,v.a||0,v);
+        if(v.kind==='workerBee'&&v.returning)fillDisk(ctx,x,y+5,2,'#b9f8bf');
+        break;
+      }
+      case 'foamPod':{
+        fillDisk(ctx,x,y+2,6,'#1e3633');ring(ctx,x,y,6,col,2,6);
+        square(ctx,x,y-2,3,v.age>.32?'#e6fad0':col);break;
+      }
       case 'spark':ring(ctx,x,y,v.r*t,col,2,12);break;
       case 'break':for(let i=0;i<6;i++){const a=i*TAU/6+.5;const r=v.r*(.67+t),dx=Math.cos(a),dy=Math.sin(a);path(ctx,[[x+dx*r+dy*5,y+dy*r-dx*5],[x+dx*(r+3),y+dy*(r+3)],[x+dx*r-dy*5,y+dy*r+dx*5]],col,2.5*(1-t)+.7);}break;
       case 'cone':ring(ctx,x,y,v.r*(.3+.7*t),col,3*(1-t)+1,18,v.a-v.half,v.a+v.half);for(let i=0;i<7;i++){const a=v.a-v.half+2*v.half*i/6;path(ctx,[[x+Math.cos(a)*v.r*(.2+.6*t),y+Math.sin(a)*v.r*(.2+.6*t)],[x+Math.cos(a)*v.r*(.3+.7*t),y+Math.sin(a)*v.r*(.3+.7*t)]],col+'99',2);}break;

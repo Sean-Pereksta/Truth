@@ -88,8 +88,8 @@
     byId('scrim').hidden=false;byId('app').inert=true;paintPanel();
     if(opening||oldTitle!==title)panel.scrollTop=0;
     if(document.body.classList.contains('pad-nav')||previous){
-      const buttons=[...panel.querySelectorAll('button:not(:disabled),input:not(:disabled)')];
-      const same=oldTitle===title&&buttons.find(b=>(oldControl&&b.dataset.op===oldControl&&b.dataset.value===oldValue)||(setting&&b.dataset.setting===setting));
+      const buttons=[...panel.querySelectorAll('button:not(:disabled),input:not(:disabled):not([hidden]),select:not(:disabled)')];
+      const same=oldTitle===title&&buttons.find(b=>(previous?.id&&b.id===previous.id)||(oldControl&&b.dataset.op===oldControl&&b.dataset.value===oldValue)||(setting&&b.dataset.setting===setting));
       const target=same||panel.querySelector('[data-op=choice],[data-op=route],.primary:enabled,.gear-card.selected:enabled,.filter.on:enabled')||panel.querySelector('.panel-body button:enabled,.panel-body input:enabled')||buttons[0];
       (target||panel).focus({preventScroll:!!same});
     }else if(opening)panel.focus({preventScroll:true});
@@ -101,14 +101,17 @@
     if(ui.screen==='play'&&document.activeElement instanceof HTMLElement)document.activeElement.blur();
   }
   function metric(label,value){return '<div class="metric"><small>'+escape(label)+'</small><strong>'+escape(value)+'</strong></div>'}
-  function kitOwned(g,id){return id===0||(g.meta.unlockedKits||g.meta.unlocked||[]).includes(id)}
+  function kitOwned(g,id){return Progress.kits[id]?.cost===0||(g.meta.unlockedKits||g.meta.unlocked||[]).includes(id)}
+  function abilityKeys(controller){return controller?['LB','RB']:['Q','E'];}
+  function activeKey(pilot,slot){return abilityKeys(Game.usesController(pilot))[slot];}
   function updateBay(g){
     const kit=Progress.kits[ui.kit]||Progress.kits[0];
     byId('bay-kit-name').textContent=kit.name;byId('bay-record').textContent=String(g.meta.best||g.meta.deepest||0).padStart(2,'0');
     byId('bay-data').textContent=g.meta.data||0;portrait(byId('bay-kit'),'suit',kit.suit);
     const endless=Progress.endlessUnlocked(g.meta)?act('endless-setup','Endless expedition','secondary'):'';
-    byId('launch-actions').innerHTML=(g.saved?act('resumeSave','Resume expedition','primary big')+act('newrun','New solo run','secondary'):act('deploy','Deploy solo','primary big'))+act('coop-setup','2-player co-op','secondary')+endless;
+    byId('launch-actions').innerHTML=(g.saved?act('resumeSave','Resume expedition','primary big')+act('newrun','New solo run','secondary'):act('deploy','Deploy solo','primary big'))+act('coop-setup','2-player co-op','secondary')+act('configure-expedition','Configure expedition','secondary')+endless;
     const saved=g.saveInfo, checkpoint=byId('checkpoint-summary');
+    updateControlHints();
     checkpoint.hidden=!saved;
     if(saved){
       const location=World.maps[saved.mapId]?.name||'Expedition';
@@ -133,7 +136,7 @@
     const layouts=[['keyboard-pad','Keyboard + controller','P1 uses keyboard and mouse or touch. P2 uses the first controller.'],['dual-pad','Two controllers','P1 uses the first controller. P2 uses the second.']];
     const options=layouts.map(([id,name,desc])=>'<button class="gear-card'+(id===ui.layout?' selected':'')+'" data-op="coop-layout" data-value="'+id+'" aria-pressed="'+(id===ui.layout)+'"><h3>'+name+'</h3><p>'+desc+'</p></button>').join('');
     const warning=g.saved?'<p class="msg">Deploying replaces your current checkpoint.</p>':'';
-    titled('LOCAL CO-OP',ui.endlessCrew?'Two-player endless expedition':'Two-player expedition','<div class="card-grid">'+options+'</div><p class="msg" id="pad-connection" aria-live="polite"></p><p class="detail-text">Press a button on each controller to connect. Use the D-pad or left stick to move through menus and A to select.</p><p class="detail-text">Each pilot drafts their own gear. If one pilot falls, stand beside them for two seconds to revive them.</p>'+warning+'<div class="panel-actions">'+act('deploy-coop','Deploy together','primary')+act('back',ui.endlessCrew?'Back':'Return to bay')+'</div>',{narrow:true});
+    titled('LOCAL CO-OP',ui.endlessCrew?'Two-player endless expedition':'Two-player expedition','<div class="card-grid">'+options+'</div><p class="msg" id="pad-connection" aria-live="polite"></p><p class="detail-text">Press a button on each controller to connect. Use the D-pad or left stick to move through menus and A to select.</p><p class="detail-text">Each pilot drafts their own gear. If one pilot falls, stand beside them for two seconds to revive them.</p>'+warning+'<div class="panel-actions">'+act('deploy-coop','Deploy together','primary')+act('configure-crew','Choose heroes & expedition')+act('back',ui.endlessCrew?'Back':'Return to bay')+'</div>',{narrow:true});
     updatePadConnection();
   }
   function updatePadConnection(){
@@ -145,6 +148,13 @@
     el.textContent=count+' controller'+(count===1?'':'s')+' connected · '+(count<required?'Connect '+(required-count)+(count===0?'':' more')+' to deploy':'Ready to deploy ('+required+' required)');
   }
   let controlMode=0;
+  function updateControlHints(){
+    const pad=CrewInput.count()>0,el=byId('bay-controls');
+    if(el&&el.dataset.pad!==String(pad)){
+      el.dataset.pad=String(pad);
+      el.innerHTML=pad?'<span><kbd>LS</kbd> Move</span><span><kbd>RS</kbd> Aim</span><span><kbd>RT</kbd> Fire</span><span><kbd>LB</kbd><kbd>RB</kbd> Actives</span>':'<span><kbd>WASD</kbd> Move</span><span><kbd>LMB</kbd> Fire</span><span><kbd>SPACE</kbd> Dash</span><span><kbd>Q</kbd><kbd>E</kbd> Actives</span>';
+    }
+  }
   function controls(){
     const modes=['Keyboard & mouse','Controller','Touch'];
     const tools='<div class="toolbar">'+modes.map((v,i)=>act('control-mode',v,'filter'+(controlMode===i?' on':''),i)).join('')+'</div>';
@@ -219,7 +229,7 @@
     const mapButton=g.map?.lab?act('survey','Exploration map'):'';
     const boss=g.map?.bossEntity;
     const bossButton=boss?.hp>0?act('boss-intel','Boss attack patterns','secondary',boss.id):'';
-    titled('EXPEDITION','Paused','<div class="pause-list">'+act('resume','Resume expedition','primary')+bossButton+mapButton+act('inventory','Equipment')+act('settings','Settings')+act('controls','Controls')+act('leave','Return to launch bay','quiet')+'</div>',{narrow:true});
+    titled('EXPEDITION','Paused','<div class="pause-list">'+act('resume','Resume expedition','primary')+bossButton+mapButton+act('inventory','Equipment')+act('hero-roster','Save & manage heroes')+act('settings','Settings')+act('controls','Controls')+act('leave','Return to launch bay','quiet')+'</div>',{narrow:true});
   }
   function survey(g){
     const lab=g.map.lab;
@@ -280,7 +290,8 @@
       const tier=v.kind==='gun'?' data-rarity="'+escape(Combat.rarityOf(v.item))+'"':'';
       return '<button class="gear-card" data-op="choice" data-value="'+i+'"'+tier+'>'+rewardArt(v)+tag+'<h3>'+escape(v.name)+'</h3><p>'+escape(v.desc)+'</p>'+(v.detail?'<span class="item-meta">'+escape(v.detail)+'</span>':'')+(v.traits?.length?'<p>'+escape(v.traits.join(' '))+'</p>':'')+'<span class="card-action">'+(v.kind==='tuneGun'?'Choose weapon':'Select')+' →</span></button>';
     }).join('');
-    const tools=act('reroll','Reroll · '+(g.rerolls??0),'secondary','',!(g.rerolls>0))+act('inventory','Inspect equipment','quiet');
+    const tools=act('reroll','Reroll · '+(g.rerolls??0),'secondary','',!(g.rerolls>0))+act('inventory','Inspect equipment','quiet')+
+      (cards.some(card=>card.kind==='gun')?act('decline-gun','Keep current weapons','secondary'):'');
     const owner=g.players?.length>1?'PLAYER '+((g.rewardOwner||0)+1)+'  /  ':'';
     titled(owner+'GATE '+String(g.stage).padStart(2,'0')+'  /  FIELD REQUISITION',title,'<div class="card-grid">'+list+'</div><div class="panel-actions">'+tools+'</div>',{close:false});
   }
@@ -320,7 +331,7 @@
       return '<article class="entry">'+art(v.artKind,v.id)+'<div class="entry-copy">'+header+'<h3>'+escape(v.name)+'</h3><p>'+escape(v.desc)+'</p><div class="item-meta">'+escape(v.detail)+'</div></div>'+act('replace','Replace','small-btn',i)+'</article>';
     }).join('');
     const owner=g.players?.length>1?'PLAYER '+((g.rewardOwner||0)+1)+'  /  ':'';
-    titled(owner+'INVENTORY FULL','Choose a trade',incoming+'<h3 class="subhead">Choose a carried item to replace</h3><div class="entry-list">'+list+'</div><div class="panel-actions">'+act('draft-back','Choose another','secondary')+act('salvage','Salvage new item','secondary')+'</div>',{close:false});
+    titled(owner+'INVENTORY FULL','Choose a trade',incoming+'<h3 class="subhead">Choose a carried item to replace</h3><div class="entry-list">'+list+'</div><div class="panel-actions">'+act('draft-back','Choose another','secondary')+act('salvage','Salvage new item','secondary')+(card.kind==='gun'?act('decline-gun','Keep current weapons','secondary'):'')+'</div>',{close:false});
   }
   function inventory(g){
     const p=g.player;if(!p)return;
@@ -347,12 +358,13 @@
     }else{
       const kind=['gun','active','armor'].includes(tab)?tab:'gun';
       const items=storageInfo(g,kind);
+      const keys=abilityKeys(CrewInput.status(g).assignments[g.players.indexOf(p)]!=null);
       body='<div class="entry-list">'+items.map((v,i)=>{
         const slots=kind==='gun'?p.ready:p.activeSlots;const idx=kind==='armor'?-1:slots.indexOf(i);
-        const tag=kind==='armor'?(p.suit===v.id?'WORN':'SPARE'):idx>=0?(kind==='gun'?'READY ':'ACTIVE ')+(idx+1):'RESERVE';
+        const tag=kind==='armor'?(p.suit===v.id?'WORN':'SPARE'):idx>=0?(kind==='gun'?'READY '+(idx+1):'ACTIVE '+(idx+1)+' · '+keys[idx]):'RESERVE';
         let buttons='';
         if(safe){
-          buttons=kind==='armor'?act('fit-armor','Wear','small-btn',i,p.suit===v.id):[0,1].map(slot=>act('fit-'+kind,(kind==='gun'?'Ready ':'Slot ')+(slot+1),'small-btn',i+','+slot,idx===slot)).join('');
+          buttons=kind==='armor'?act('fit-armor','Wear','small-btn',i,p.suit===v.id):[0,1].map(slot=>act('fit-'+kind,kind==='gun'?'Ready '+(slot+1):'Slot '+(slot+1)+' · '+keys[slot],'small-btn',i+','+slot,idx===slot)).join('');
           if(kind==='active'&&p.abilities[i].learned?.length){
             const item=p.abilities[i];
             buttons+=[0,...item.learned].map(n=>act('fit-augment',Combat.abilities[item.id].augments[n-1]||'Base','small-btn',i+','+n,item.augment===n)).join('');
@@ -406,7 +418,7 @@
     titled('GATE '+String(g.stage).padStart(2,'0')+'  /  BEACON',unlock?'Aperture cleared':'Choose a destination',body+checkpointExit(g),{close:false});
   }
   function checkpointExit(g){
-    return '<footer class="checkpoint-actions"><span>'+escape(g.saveIssue?'Checkpoint held for this session':'Checkpoint saved')+'</span>'+act('home','Return to launch bay','quiet')+'</footer>';
+    return '<footer class="checkpoint-actions"><span>'+escape(g.saveIssue?'Checkpoint held for this session':'Checkpoint saved')+'</span>'+act('hero-roster','Save heroes','quiet')+act('home','Return to launch bay','quiet')+'</footer>';
   }
   function pilotLoadouts(result){
     return result?.loadouts?.length>1?result.loadouts.map((load,i)=>loadoutSummary(load,'P'+(i+1)+' loadout')).join(''):loadoutSummary(result?.loadout);
@@ -422,7 +434,7 @@
     const r=g.result||g.meta.last||{};
     const content=(r.reason?'<p>'+escape(r.reason)+'</p>':'')+'<div class="metrics">'+metric('GATES CLEARED',r.depth??g.cleared??0)+metric('TIME',fmtTime(r.elapsed??g.elapsed))+metric('ELIMINATIONS',r.kills??g.kills??0)+metric('RELAY DATA','+'+(r.data||0))+'</div>'+
       pilotLoadouts(r.loadout||r.loadouts?r:g.meta.last)+
-      '<div class="panel-actions">'+act('restart','Deploy again','primary')+act('home','Launch bay')+'</div>';
+      '<div class="panel-actions">'+act('restart','Deploy again','primary')+act('hero-roster','Save heroes')+act('home','Launch bay')+'</div>';
     titled('EXPEDITION RECORD',r.extracted?'Extraction successful':'Signal lost',content,{close:false});
   }
   function renderLocal(screen,g){
@@ -432,7 +444,7 @@
     else if(screen==='endless-setup')titled('LAUNCH BAY','Endless expedition',
       '<p>Take your starter kit into a random sector. Clear each gate to choose another route or extract. The gates keep coming for as long as you survive.</p>'+
       (g.saved?'<p class="msg">Deploying replaces your current checkpoint.</p>':'')+
-      '<div class="panel-actions">'+act('endless-solo','Deploy solo','primary')+act('endless-coop','2-player co-op')+act('back','Return to bay','quiet')+'</div>',{narrow:true});
+      '<div class="panel-actions">'+act('endless-solo','Deploy solo','primary')+act('endless-coop','2-player co-op')+act('configure-endless','Choose heroes & expedition')+act('back','Return to bay','quiet')+'</div>',{narrow:true});
     else if(screen==='controls')controls();
     else if(screen==='survey')survey(g);
     else if(screen==='kits')kitPanel(g);
@@ -491,7 +503,7 @@
       setText('partner-weapon',(gunDef?.name||'Empty')+(partnerRank?' +'+partnerRank:'')+weaponState);
       setText('partner-actives',partner.activeSlots.map((slot,i)=>{
         const active=partner.abilities[slot];
-        return (i?'RB ':'LB ')+(active?Combat.abilities[active.id].name+' '+(active.cd>0?Math.ceil(active.cd)+'s':'✓'):'—');
+        return activeKey(1,i)+' '+(active?Combat.abilities[active.id].name+' '+(active.cd>0?Math.ceil(active.cd)+'s':'✓'):'—');
       }).join(' · '));
       setText('partner-dash',(partner.dashCharges??0)+' / '+(partner.maxDashCharges||2)+' · Lv '+partner.level);
     }
@@ -513,7 +525,7 @@
       }
     }
     const second=!!partner&&!g.prompts?.[0]&&!!g.prompts?.[1];
-    const binding=second?'P2 · A':g.coopLayout==='dual-pad'?'P1 · A':partner?'P1 · F':'F';
+    const binding=(second?'P2 · ':partner?'P1 · ':'')+(Game.usesController(second?1:0)?'A':'F');
     const cue=second?g.prompts[1]:(g.prompts?.[0]||g.prompt);
     const prompt=byId('interact-prompt');prompt.hidden=!cue||ui.screen!=='play';prompt.disabled=second;
     if(cue&&prompt.dataset.copy!==binding+cue){prompt.dataset.copy=binding+cue;prompt.innerHTML='<kbd>'+binding+'</kbd>'+escape(cue)}
@@ -538,8 +550,9 @@
           else if(def.heat)line=Math.round(Math.min(1,item.heat||0)*100)+'% heat';
           else if(def.charged&&item.charge>0)line='Charging';
           else line=Math.ceil(item.ammo)+' / '+Combat.capacity(g.forPilot(p),item);
-        }else line=(g.coopLayout==='dual-pad'?(i===2?'LB':'RB'):(i===2?'Q':'E'))+' · '+(item.cd>.05?Math.ceil(item.cd)+'s':'Ready');
+        }else line=activeKey(0,i-2)+' · '+(item.cd>.05?Math.ceil(item.cd)+'s':'Ready');
       }
+      if(i>=2){const key=activeKey(0,i-2);if(!def)line=key+' · Empty';el.title=(def?def.name:'Active '+(i-1))+' ('+key+')';el.setAttribute('aria-label',el.title);}
       const signature=title+'|'+line+'|'+rarity;
       if(el.dataset.state!==signature){
         el.dataset.state=signature;
@@ -561,6 +574,7 @@
   }
   function back(){
     const screen=ui.screen,g=ui.g;
+    if(heroMenus.goBack())return;
     if(screen==='boss-intel'){
       show(ui.parent==='pause'?'pause':'guide',g);
       byId('panel').querySelector('[data-op="boss-intel"][data-value="'+ui.bossId+'"]')?.focus();
@@ -576,11 +590,13 @@
   }
   function handle(op,v=''){
     const g=ui.g,p=g?.player;
+    if(heroMenus.handle(op))return;
     switch(op){
       case 'bay': return;
       case 'guide': case 'settings': return Game.open(op);
       case 'boss-intel':ui.bossId=Number(v);return local(op);
-      case 'kits': case 'contracts':case 'records':case 'controls':case 'appearance':case 'leave':case 'survey':return local(op);
+      case 'controls':controlMode=CrewInput.count()>0?1:matchMedia('(pointer: coarse)').matches?2:0;return local(op);
+      case 'kits': case 'contracts':case 'records':case 'appearance':case 'leave':case 'survey':return local(op);
       case 'newrun':return local('confirm-new');
       case 'endless-setup':return local(op);
       case 'endless-solo':return Game.start(ui.kit,ui.contract,'solo','endless');
@@ -644,6 +660,7 @@
       case 'tune-back':return leaveTuning(g);
       case 'replace':return Game.choose(ui.replacing,Number(v));
       case 'salvage':return Game.salvage(ui.replacing);
+      case 'decline-gun':return Game.declineGun();
       case 'draft-back':return show('draft',g);
       case 'inv-tab':ui.inventory=v;ui.reforge=null;return inventory(g);
       case 'inspect-pilot':ui.reforge=null;return Game.inspectPilot(Number(v));
@@ -667,6 +684,14 @@
     paintTitle();paintIcons();
     window.addEventListener('gamepadconnected',updatePadConnection);
     window.addEventListener('gamepaddisconnected',updatePadConnection);
+    for(const event of ['gamepadconnected','gamepaddisconnected'])window.addEventListener(event,()=>{
+      updateControlHints();
+      if(ui.screen==='controls'){
+        controlMode=CrewInput.count()>0?1:matchMedia('(pointer: coarse)').matches?2:0;
+        controls();
+      }
+      if(ui.screen==='inventory')inventory(ui.g);
+    });
     document.addEventListener('pointerdown',()=>document.body.classList.remove('pad-nav'),true);
     document.addEventListener('click',e=>{
       const b=e.target.closest?.('[data-op]');if(!b||b.disabled)return;
@@ -674,23 +699,31 @@
       if(ui.screen==='play'&&b.isConnected)b.blur();
     });
     document.addEventListener('input',e=>{
-      const el=e.target;if(!el.matches('[data-setting]'))return;
+      const el=e.target;if(el.matches('[data-hero-field]'))return heroMenus.change(el,true);
+      if(!el.matches('[data-setting]'))return;
       const val=el.type==='checkbox'?el.checked:Number(el.value)/100;
       if(el.type==='range'){const output=el.parentElement.querySelector('output');if(output)output.textContent=el.value+'%'}
       Game.setSetting(el.dataset.setting,val);
     });
+    document.addEventListener('change',e=>{
+      const el=e.target;
+      if(el.id==='hero-import-file')heroMenus.importFile(el.files?.[0]);
+      else if(el.matches('[data-hero-field]'))heroMenus.change(el,false);
+    });
+    for(const event of ['gamepadconnected','gamepaddisconnected'])window.addEventListener(event,heroMenus.refreshPads);
     document.addEventListener('keydown',e=>{
       if(byId('scrim').hidden)return;
       if(e.key==='Escape'){
         e.preventDefault();e.stopImmediatePropagation();back();return;
       }
       if(e.key==='Tab'){
-        const focusable=[...byId('panel').querySelectorAll('button:not(:disabled),input:not(:disabled),select,[tabindex="0"]')];if(!focusable.length)return;
+        const focusable=[...byId('panel').querySelectorAll('button:not(:disabled),input:not(:disabled):not([hidden]),select:not(:disabled),[tabindex="0"]')];if(!focusable.length)return;
         const i=focusable.indexOf(document.activeElement);
         e.preventDefault();e.stopImmediatePropagation();
         focusable[(i+(e.shiftKey?-1:1)+focusable.length)%focusable.length].focus();
       }
     },true);
   }
-  window.UI={init,show,hud,back,get current(){return ui.screen}};
+  const heroMenus=HeroMenus({ui,act,art,vista,escape,titled,show,renderLocal,kitOwned});
+  window.UI={init,show,hud,back,moveHeroFocus:heroMenus.moveFocus,get current(){return ui.screen}};
 })();
