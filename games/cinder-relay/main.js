@@ -9,7 +9,7 @@
   const read = key => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } };
   const write = (key,value) => { try { localStorage.setItem(key,JSON.stringify(value)); return true; } catch { return false; } };
   const forget = key => { try { localStorage.removeItem(key); } catch {} };
-  const defaults = {volume:.72,music:.34,shake:true,flashes:true,friendly:.86,outline:true,assist:.32,adaptiveResolution:true};
+  const defaults = {volume:.72,music:.34,shake:true,flashes:true,friendly:.86,outline:true,assist:0,adaptiveResolution:true};
   const g = {
     worldW:W,worldH:H,screen:'home',stage:1,room:0,mapId:0,route:null,routeOptions:[],
     time:0,elapsed:0,enemies:[],hostile:[],particles:[],drops:[],ghosts:[],floaters:[],
@@ -20,7 +20,7 @@
   let seedState = 1, checkpoint = null, continuation = null;
   const screens = [];
   const stations = new WeakMap();
-  const wingInput = {x:0,y:0,aimX:1,aimY:0,fire:false,pressed:false,released:false};
+  const wingInput = {x:0,y:0,aimX:1,aimY:0,steering:false,fire:false,pressed:false,released:false};
   const crewed = () => g.players.length === 2;
   function forPilot(p) {
     if(stations.has(p))return stations.get(p);
@@ -148,12 +148,14 @@
   g.hurtPlayer=amount=>hurtPilot(g.player,amount);
   const keys=new Set(), pointers=new Map();
   let aiming='mouse', heldFire=false, pressed=false,released=false, lastPointer={x:650,y:270};
-  let padMove={x:0,y:0},padFire=false, aimVector={x:1,y:0};
+  let padMove={x:0,y:0},padFire=false,padSteering=false,aimVector={x:1,y:0};
+  let lastMouseMotion=null;
   let touchMove=null,touchAim=null, lastHud=0, lastTime=0, frame=0;
   function releaseControls() {
     keys.clear(); heldFire=false; padFire=false; pressed=false; released=false;
     padMove={x:0,y:0}; touchMove=null; touchAim=null; pointers.clear();g.aimingAbility=null;
-    Object.assign(wingInput,{x:0,y:0,fire:false,pressed:false,released:false});
+    padSteering=false;
+    Object.assign(wingInput,{x:0,y:0,steering:false,fire:false,pressed:false,released:false});
     if(crewed())forPilot(g.players[1]).aimingAbility=null;
   }
   function setScreen(screen, data={}) {
@@ -231,13 +233,15 @@
     selectPilot();clearTransient();
     if(initial)saveAt('entry',entrySeed);
     World.build(g,{legacy:!!savedLab&&(!savedLab.labState?.generation||savedLab.labState.generation===1)});g.roomDone=false;
-    g.player.a=0;aimVector={x:1,y:0};
+    g.player.a=Number.isFinite(g.player.a)?g.player.a:0;
+    aimVector={x:Math.cos(g.player.a),y:Math.sin(g.player.a)};
+    if(g.coopLayout==='dual-pad')aiming='pad';
+    if(g.coopLayout==='keyboard-pad')aiming='mouse';
     if(crewed()){
       const partner=g.players[1],offsets=[[0,28],[0,-28],[28,0],[-28,0],[0,0]];
       const [dx,dy]=offsets.find(([x,y])=>!g.blocked(g.player.x+x,g.player.y+y,partner.bodyR));
-      partner.x=g.player.x+dx;partner.y=g.player.y+dy;partner.a=0;
-      forPilot(partner).aim={x:partner.x+180,y:partner.y};
-      wingInput.aimX=1;wingInput.aimY=0;
+      partner.x=g.player.x+dx;partner.y=g.player.y+dy;partner.a=Number.isFinite(partner.a)?partner.a:0;
+      wingInput.aimX=Math.cos(partner.a);wingInput.aimY=Math.sin(partner.a);
     }
     if(savedLab&&g.map.lab&&World.restoreLab(g,savedLab.labState)!==false){
       seedState=entrySeed;
@@ -248,7 +252,7 @@
       g.drops=savedLab.labDrops||[];
       Sight.restore(g,savedLab.sightMemory);
     }
-    for(const p of g.players)forPilot(p).aim={x:p.x+180,y:p.y};
+    for(const p of g.players)forPilot(p).aim={x:p.x+180*Math.cos(p.a),y:p.y+180*Math.sin(p.a)};
     RelayCamera.update(g,0,true);
     lastPointer=RelayCamera.screenPoint(g,g.aim.x,g.aim.y);
     showBase('play'); g.introTime=2.9; g.introTitle=g.encounter||World.maps[g.mapId].name;
@@ -427,7 +431,7 @@
   function dash(p) {
     if(!p||p.hp<=0||p.dashCharges<1||p.dashTime>0)return;
     const input=pilotMovement(p);let x=input.x,y=input.y;
-    if(Math.hypot(x,y)<.05){x=Math.cos(p.a);y=Math.sin(p.a);}
+    if(Math.hypot(x,y)<.05){aimPlayer(p);x=Math.cos(p.a);y=Math.sin(p.a);}
     const norm=Math.hypot(x,y);p.dashX=x/norm;p.dashY=y/norm;
     const longStep=p.dashCharges===2 && p.stats.armorMark==='of the Long Step';
     p.dashCharges--;p.dashTime=.155;p.dashLength=100*(1+(p.stats.dashDistance||0))*(longStep?1.1:1);
@@ -448,7 +452,7 @@
     if(name==='dash')dash(p);
     else if(name==='swap')Combat.swap(view);
     else if(name==='reload')Combat.reload(view);
-    else if(name==='active1'||name==='active2')Combat.cast(view,name==='active1'?0:1);
+    else if(name==='active1'||name==='active2'){aimPlayer(p);Combat.cast(view,name==='active1'?0:1);}
     else if(name==='interact')World.interact(view);
   }
   function armAbility(slot,index=0) {
@@ -478,7 +482,7 @@
     if(on&&!heldFire)pressed=true;if(!on&&heldFire)released=true;heldFire=on;
   }
   canvas.addEventListener('pointerdown',e=>{
-    if(g.screen!=='play')return;
+    if(g.screen!=='play'||g.coopLayout==='dual-pad')return;
     RelayAudio.unlock();canvas.setPointerCapture?.(e.pointerId);
     const pos=canvasPoint(e);
     if(e.pointerType==='touch') {
@@ -487,12 +491,19 @@
       if(pos.x<W*.5&&!touchMove)touchMove=stick;
       else if(!touchAim){touchAim=stick;const p=g.player,at=RelayCamera.worldPoint(g,pos.x,pos.y),mag=Math.hypot(at.x-p.x,at.y-p.y)||1;aimVector={x:(at.x-p.x)/mag,y:(at.y-p.y)/mag};captureFire(true);}
       pointers.set(e.pointerId,stick);
-    } else if(e.button===0){aiming='mouse';lastPointer=pos;captureFire(true);}
+    } else if(e.button===0){aiming='mouse';lastMouseMotion=lastPointer=pos;captureFire(true);}
     else if(e.button===2)action('dash');
   });
   canvas.addEventListener('pointermove',e=>{
     const pos=canvasPoint(e);
-    if(e.pointerType!=='touch'){if(g.screen==='play'){aiming='mouse';lastPointer=pos;}return;}
+    if(e.pointerType!=='touch'){
+      if(g.screen!=='play'||g.coopLayout==='dual-pad')return;
+      if(aiming==='pad'){
+        if(!lastMouseMotion){lastMouseMotion=pos;if(!e.movementX&&!e.movementY)return;}
+        if(Math.hypot(pos.x-lastMouseMotion.x,pos.y-lastMouseMotion.y)<3&&Math.hypot(e.movementX||0,e.movementY||0)<3)return;
+      }
+      aiming='mouse';lastMouseMotion=lastPointer=pos;return;
+    }
     const s=pointers.get(e.pointerId);if(!s)return;
     const x=pos.x-s.ox,y=pos.y-s.oy,mag=Math.hypot(x,y),v=Math.min(1,47/(mag||1));
     s.dx=x*v;s.dy=y*v;
@@ -591,14 +602,15 @@
     input(index,state){
       const aimLength=Math.hypot(state.aimX,state.aimY);
       if(index===1){
-        Object.assign(wingInput,{x:state.moveX,y:state.moveY,fire:state.fire});
+        Object.assign(wingInput,{x:state.moveX,y:state.moveY,steering:aimLength>0,fire:state.fire});
         wingInput.pressed||=state.firePressed;wingInput.released||=state.fireReleased;
         if(aimLength){wingInput.aimX=state.aimX/aimLength;wingInput.aimY=state.aimY/aimLength;}
       }else{
-        padMove={x:state.moveX,y:state.moveY};padFire=state.fire;
+        padMove={x:state.moveX,y:state.moveY};padFire=state.fire;padSteering=aimLength>0;
         pressed||=state.firePressed;released||=state.fireReleased;
         if(aimLength){aiming='pad';aimVector={x:state.aimX/aimLength,y:state.aimY/aimLength};}
-        if(state.firePressed){aiming='pad';RelayAudio.unlock();}
+        if(!aimLength&&(state.firePressed||state.moveX||state.moveY)&&aiming!=='pad'&&!heldFire)aiming='pad';
+        if(state.firePressed)RelayAudio.unlock();
       }
     },
     action:(i,name)=>action(name,i),
@@ -608,17 +620,29 @@
     menuBack:()=>UI.back(),
     menuAccept(){
       RelayAudio.unlock();
+      if(g.coopLayout!=='keyboard-pad')aiming='pad';
       const active=document.activeElement;
       if(active?.matches('button,input,select')&&active.offsetWidth&&!active.disabled&&!active.closest('[inert]'))active.click();
       else menuPad(0,1);
     }
   };
   function pollPad(){CrewInput.poll(g,padHooks);}
+  // Clip distance along one ray so an edge never turns a diagonal shot.
+  function rayLength(x,y,dx,dy,range,left,top,right,bottom){
+    const horizontal=dx>0?(right-x)/dx:dx<0?(left-x)/dx:Infinity;
+    const vertical=dy>0?(bottom-y)/dy:dy<0?(top-y)/dy:Infinity;
+    return Math.max(0,Math.min(range,horizontal,vertical));
+  }
+  function padAims(p){return p===g.players[1]||aiming==='pad';}
   function aimPlayer(p) {
     const wing=p===g.players[1],view=forPilot(p),aim=view.aim;
-    if(!wing&&aiming==='mouse')Object.assign(aim,RelayCamera.worldPoint(g,lastPointer.x,lastPointer.y));
-    else {
-      let a=wing?Math.atan2(wingInput.aimY,wingInput.aimX):Math.atan2(aimVector.y,aimVector.x);
+    if(!wing&&aiming==='mouse'){
+      Object.assign(aim,RelayCamera.worldPoint(g,lastPointer.x,lastPointer.y));
+      const dx=aim.x-p.x,dy=aim.y-p.y;
+      if(Math.abs(dx)+Math.abs(dy)>.02)p.a=Math.atan2(dy,dx);
+    }else{
+      const pad=padAims(p),steering=wing?wingInput.steering:padSteering;
+      let a=pad&&!steering?p.a:wing?Math.atan2(wingInput.aimY,wingInput.aimX):Math.atan2(aimVector.y,aimVector.x);
       let dist=280,best=Infinity,bestAngle=a;
       const assist=g.settings.assist;
       if(assist>0)for(const e of g.enemies) {
@@ -631,11 +655,11 @@
         const d=Math.sqrt(squared),rank=offset+d/20000;
         if(rank<best&&(!g.map.lab||Sight.line(g.map.lab,p.x,p.y,e.x,e.y))){best=rank;dist=d;bestAngle=angle;}
       }
-      if(best<Infinity)a+=Math.atan2(Math.sin(bestAngle-a),Math.cos(bestAngle-a))*Math.min(1,assist*1.5);
-      aim.x=clamp(p.x+Math.cos(a)*dist,1,g.worldW-1);aim.y=clamp(p.y+Math.sin(a)*dist,1,g.worldH-1);
+      if(best<Infinity&&(!pad||steering))a+=Math.atan2(Math.sin(bestAngle-a),Math.cos(bestAngle-a))*Math.min(1,assist*1.5);
+      const dx=Math.cos(a),dy=Math.sin(a);
+      dist=rayLength(p.x,p.y,dx,dy,dist,1,1,g.worldW-1,g.worldH-1);
+      aim.x=p.x+dx*dist;aim.y=p.y+dy*dist;p.a=a;
     }
-    const dx=aim.x-p.x,dy=aim.y-p.y;
-    if(Math.abs(dx)+Math.abs(dy)>.02)p.a=Math.atan2(dy,dx);
   }
   function pickupStep(dt) {
     const live=g.players.filter(p=>p.hp>0);
@@ -666,7 +690,7 @@
     if(p.dashCharges<2){p.dashTimer+=dt;if(p.dashTimer>=recharge){p.dashTimer-=recharge;p.dashCharges++;}}
     else p.dashTimer=0;
     if(g.time-p.lastHit>Math.max(1,6-(s.shieldDelay||0)))p.shield=Math.min(p.maxShield,p.shield+dt*5.4*(1+(s.shieldRate||0)));
-    const m=pilotMovement(p);aimPlayer(p);
+    const m=pilotMovement(p);
     p.moving=Math.hypot(m.x,m.y)>.04;
     p.moveX=m.x;p.moveY=m.y;
     if(p.dashTime>0){
@@ -681,6 +705,7 @@
       g.move(p,m.x*speed*dt,m.y*speed*dt);
       if(p.moving)p.walkCycle+=dt*10;
     }
+    aimPlayer(p);
     const input={fire:wing?wingInput.fire:heldFire||padFire,firePressed:wing?wingInput.pressed:pressed,
       fireReleased:wing?wingInput.released:released,moveX:m.x,moveY:m.y};
     Combat.update(view,dt,input,false);
@@ -742,9 +767,17 @@
       }
     }
   }
-  function drawReticle(p){
+  function drawReticle(p,camera){
     if(g.screen!=='play'||p.hp<=0)return;
-    const view=forPilot(p),gun=Combat.currentGun?.(view),x=Math.round(view.aim.x)+.5,y=Math.round(view.aim.y)+.5;
+    const view=forPilot(p),gun=Combat.currentGun?.(view);
+    let x=view.aim.x,y=view.aim.y;
+    if(padAims(p)){
+      const dx=Math.cos(p.a),dy=Math.sin(p.a),inset=10/camera.zoom;
+      const distance=rayLength(p.x,p.y,dx,dy,64/camera.zoom,camera.x+inset,camera.y+inset,
+        camera.x+camera.sw/camera.zoom-inset,camera.y+camera.sh/camera.zoom-inset);
+      x=p.x+dx*distance;y=p.y+dy*distance;
+    }
+    x=Math.round(x)+.5;y=Math.round(y)+.5;
     const color=gun?.reload>0?'#ffc37d':p===g.players[1]?'#ffb68a':'#c2e9dd';
     const d=4+Math.min(4,gun?.charge||0)*2;
     ctx.save();ctx.translate(x,y);
@@ -790,7 +823,7 @@
     const title=g.introTitle,lab=g.map.lab;
     const sub=lab?(g.map.bossRoom?'BOSS VAULT':'EXPLORATION')+'  /  '+lab.rooms.length+' CHAMBERS':'SECTOR ENTRY';
     const touch=matchMedia('(pointer: coarse)').matches;
-    const hint=g.stage===1&&g.room===0&&!lab?.key.taken?(touch?'Drag left to move  /  Drag right to fire':aiming==='pad'?'Left stick to move  /  Right stick to aim':'WASD to move  /  Hold left click to fire'):lab?Labyrinth.goal(lab):'';
+    const hint=g.stage===1&&g.room===0&&!lab?.key.taken?(aiming==='pad'?'Left stick moves  /  Right stick aims  /  RT fires':touch?'Drag left to move  /  Drag right to fire':'WASD to move  /  Hold left click to fire'):lab?Labyrinth.goal(lab):'';
     ctx.save();ctx.globalAlpha=Math.max(0,t);ctx.translate(45-Math.round(8*(1-t)),432);
     ctx.font='bold 17px Consolas, monospace';
     const titleWidth=ctx.measureText(title).width;
@@ -850,7 +883,7 @@
     ctx.restore();
     if(g.map.lab)Sight.shadeTerrain(ctx,g);
     BossTellArt.drawPilotCues(ctx,g,view);
-    if(view.pilot===null)g.players.forEach(drawReticle);else drawReticle(g.players[view.pilot]);
+    if(view.pilot===null)g.players.forEach(p=>drawReticle(p,view));else drawReticle(g.players[view.pilot],view);
     ctx.restore();
   }
   const battleWidths=[960,768,640];
