@@ -17,10 +17,14 @@
     ['#5c6358','#a3946d','#dfc892','#9bf8c1'], ['#68524e','#b47b5d','#e8a973','#ffe990'],
     ['#514868','#837599','#b9a9cd','#f7d8ff'], ['#675f49','#a79562','#d4bc82','#a7ead9'],
     ['#39626a','#67999b','#a5c8b9','#ffe78a'], ['#668295','#9dbcc9','#e1e5d4','#aefaff'],
-    ['#333344','#555a71','#9695ad','#f2e7ff'], ['#464853','#676d77','#b4bdba','#ff8c85']
+    ['#333344','#555a71','#9695ad','#f2e7ff'], ['#464853','#676d77','#b4bdba','#ff8c85'],
+    ['#495d65','#9faea7','#ecebd2','#fd927e'], ['#695644','#a38056','#e1ba7d','#ffe29a'],
+    ['#365d60','#588b86','#a1cdc0','#ffcf76'], ['#4d4369','#756590','#b29ac8','#e4bdff'],
+    ['#573e52','#946978','#d2a0a3','#ff9878'], ['#594f43','#947657','#cbaa7e','#d4ef95'],
+    ['#3f5369','#63829b','#abc3cd','#ffc57a'], ['#3e655f','#769a8a','#c0d7bc','#aef1df']
   ];
   const cache = new Map();
-  const keyColor = ['#ffaf77','#a9ebe7','#ffca91','#abf9ec','#b2ffe4','#ffe18e','#e9c0ff','#ffd89c','#a5ebe3','#d8fcff','#efe4ff','#ff9390'];
+  const keyColor = ['#ffaf77','#a9ebe7','#ffca91','#abf9ec','#b2ffe4','#ffe18e','#e9c0ff','#ffd89c','#a5ebe3','#d8fcff','#efe4ff','#ff9390','#ffb69f','#ffda89','#9eecd5','#d9b1ff','#ffae99','#cce79b','#ffc584','#aff3da'];
   function pixels(canvas, origin) {
     const ctx = canvas.getContext('2d');
     let ox=origin, oy=origin;
@@ -88,12 +92,17 @@
     const [dark,mid,hi,light]=suitColors[id]||suitColors[0];
     const {rect:r,line:l,oval:o,ell,limb,plate:p,poly,offset}=D;
     const step=walking?[0,2,0,-2][f]:0,bob=walking?(f%2):0;
-    const heavy=[2,3,7,9].includes(id), scout=[1,6,8,10].includes(id);
+    const heavy=[2,3,7,9,13,15,17,18,19].includes(id), scout=[1,6,8,10,14,16].includes(id);
     const shoulder=heavy?5:scout?2:3;
     const ceramic=id===0?'#e2dfc7':hi, trim=id===0?'#f29557':light;
     const lens=id===0?'#73e8db':light;
     // A split field tabard, stabilizer vanes or paired thrusters identify the suit at a glance.
-    if(heavy){
+    if(id===16){
+      const sway=walking?step:0;
+      p([[-8,-7],[-4,-5],[-7,5],[-13+sway,16],[-18+sway,18],[-17+sway,11],[-12,1]],'#ac5557','#f19a86');
+      p([[4,-5],[7,-6],[12,4],[16-sway,11],[14-sway,15],[7,6]],'#ba6965','#ffc295');
+      l(-16+sway,12,-13+sway,10,'#f0ba97',2);l(10,5,13-sway,9,'#edbba6',2);
+    }else if(heavy){
       for(const x of [-8,6]){
         p([[x-2,2],[x+2,1],[x+4,4],[x+3,12],[x,13],[x-2,10]],dark,ceramic);
         r(x,8,3,3,JOINT);r(x,10,3,1,lens);
@@ -116,6 +125,13 @@
     p([[-7,7],[-3,7],[-2,9],[-4,12],[-7,11]],mid,ceramic);
     r(-8-step,13+step*.5,7,4,INK);r(-7-step,13+step*.5,5,2,mid);r(-7-step,13+step*.5,4,1,hi);
     if([1,8,9].includes(id)){r(-6-step,11+step*.5,3,2,light);r(4+step,10-step*.5,2,2,light);}
+    if(id===18){ // Each resonance drum travels with its own armored boot.
+      for(const [x,y] of [[7+step,11-step*.5],[-8-step,11+step*.5]]){
+        o(x,y,6,6,INK);o(x,y-1,5,5,mid);o(x,y,4,4,dark);
+        o(x,y,3,3,'#a9b9bc');o(x,y,2,2,JOINT);r(x-1,y-1,3,1,light);
+        r(x-2,y+2,4,1,'#f0aa65');r(x-4,y+5,8,2,mid);
+      }
+    }
     offset(0,bob,()=>{
       // Backpack and silhouette-defining attachments.
       p([[-9,-7],[-6,-10],[-3,-8],[-2,4],[-6,6],[-10,3]],dark,hi);
@@ -177,6 +193,51 @@
         if(id===7){r(6,-15,4,4,INK);r(7,-14,3,2,light);}
       }
       r(-7,-11,4,5,INK);r(-7,-10,3,3,mid);r(-7,-10,2,1,hi);
+      switch(id){
+        case 12: // Field Surgeon: ceramic trauma visor and an outsized white medical satchel.
+          p([[-7,-16],[-4,-20],[2,-20],[6,-18],[9,-15],[7,-14],[-6,-14]],'#d2d4b9','#fff0d9');
+          r(-2,-19,3,5,'#ce6458');r(-12,0,7,3,JOINT);
+          p([[-17,1],[-7,1],[-6,4],[-7,10],[-16,11],[-18,8]],'#dcdcc6','#fff2d7');
+          r(-15,5,7,2,'#bc504e');r(-12,3,2,6,'#bc504e');break;
+        case 13: // Brass Rampart: tall, bevelled tower buckler with a riveted brass spine.
+          p([[-18,-13],[-12,-15],[-6,-11],[-6,5],[-10,13],[-16,10],[-19,4]],'#956d40','#ffdf97');
+          p([[-16,-9],[-12,-11],[-9,-8],[-9,4],[-11,9],[-15,6]],'#655741','#ce9f61');
+          l(-12,-12,-12,8,'#e2b878',2);r(-16,-8,2,2,light);r(-10,4,2,2,light);break;
+        case 14: // Switchyard Rigger: an articulated maintenance claw rises above the pack.
+          l(-10,-5,-16,-9,INK,5);l(-16,-9,-15,-17,INK,5);l(-15,-17,-10,-21,INK,4);
+          l(-10,-6,-15,-10,mid,3);l(-15,-10,-14,-17,hi,3);l(-14,-17,-10,-20,mid,2);
+          o(-15,-10,3,3,dark);o(-15,-10,1,1,light);
+          l(-10,-20,-11,-24,light,2);l(-10,-20,-6,-22,light,2);r(-8,-4,4,2,light);break;
+        case 15: // Capacitor Harness: stepped battery banks and a violet charge window.
+          for(const [x,y] of [[-18,-13],[-13,-19],[11,-12]]){
+            p([[x,y+2],[x+1,y],[x+4,y],[x+5,y+2],[x+5,3],[x+3,5],[x,3]],'#645581','#c2abdd');
+            r(x+1,y-2,3,2,hi);r(x+1,y+4,3,3,light);r(x+1,y+8,3,1,mid);
+          }
+          l(-1,2,2,0,light,2);l(2,0,4,1,light);break;
+        case 16: // Lifeline Mantle: a rose rescue yoke and twin tether couplings.
+          l(-12,-6,-8,-3,'#f2b2a1',3);l(-8,-3,-2,-1,'#ffe0bb',2);
+          l(3,-1,8,-4,'#f2b2a1',2);o(-10,-5,3,3,JOINT);o(-10,-5,2,2,'#e47d70');
+          r(-11,-6,2,1,hi);o(9,-5,2,2,'#f4bb95');l(-5,-16,-2,-18,'#ffbda4',2);break;
+        case 17: // Reclaimer Shell: exposed belt drum, cable, and a brass salvage grab.
+          o(-12,-3,7,7,INK);o(-12,-3,6,6,'#bc966a');o(-12,-3,4,4,'#685941');
+          o(-12,-3,2,2,light);r(-17,-6,3,2,hi);r(-10,0,3,1,hi);
+          l(-15,1,-18,6,mid,2);l(-18,6,-17,11,hi,2);l(-17,11,-14,12,hi,2);
+          l(-14,12,-12,8,'#e0ba86',2);r(0,-7,4,1,light);break;
+        case 18: // Acoustic baffles protect the helmet above the instrumented greaves.
+          p([[-9,-13],[-6,-15],[-4,-14],[-3,-8],[-7,-6],[-10,-8]],dark,hi);
+          r(-8,-12,3,1,light);r(-8,-10,3,1,light);
+          l(0,-3,3,-3,hi);l(3,-3,5,-5,light);break;
+        case 19: // Chorus Dynamo: scalloped induction coils rise into brass tuning fins.
+          for(const [x,y] of [[-13,-9],[12,-11]]){
+            p([[x-5,y+3],[x-5,y-3],[x-3,y-9],[x-1,y-7],[x-1,y+2]],'#ac8657','#e2c38b');
+            p([[x+1,y],[x+2,y-9],[x+4,y-12],[x+5,y-5],[x+4,y+2]],'#9a784e','#e2c38b');
+            for(const band of [3,0,-3]){
+              o(x,y+band,5,3,INK);o(x,y+band-1,4,2,'#77b3a3');r(x-3,y+band-2,4,1,light);
+            }
+            r(x-1,y-7,3,3,hi);
+          }
+          l(-5,1,-2,4,'#daba87',2);l(-2,4,3,3,light,2);break;
+      }
     });
   }
   const troopPalettes=[
@@ -503,7 +564,7 @@
     if(phase===3){p([[-25,-6],[-17,-4],[-16,-1],[-20,-1]],'#53474c','#c39979');r(-21,-5,3,1,coral[3]);}
   }
   function glyph(D,id) {
-    const {rect:r,line:l,oval:o,plate:p}=D,c=['#80e3d7','#94dbe8','#bbabf1','#95e5e0','#ffab75','#b1e6f3','#ffc071','#a4e2ae','#d5b2f0','#b89ee5','#a6d78b','#f4cd77'][id]||SILVER;
+    const {rect:r,line:l,oval:o,plate:p,poly}=D,c=['#80e3d7','#94dbe8','#bbabf1','#95e5e0','#ffab75','#b1e6f3','#ffc071','#a4e2ae','#d5b2f0','#b89ee5','#a6d78b','#f4cd77','#85e5b1','#91cdff','#ffc766','#a7e59c','#a6b9ff'][id]||SILVER;
     const hi='#f4ecda';
     function ring(x,y,rx,ry){o(x,y,rx,ry,c);o(x,y,rx-2,Math.max(1,ry-2),JOINT);}
     switch(id){
@@ -525,6 +586,33 @@
         break;
       case 10:p([[-9,7],[-7,-4],[-1,-11],[6,-7],[9,2],[6,8]],'#728c67',c);l(-6,2,5,-2,hi,2);break;
       case 11:for(let y of [-6,0,6]){l(-8,y+2,0,y-2,c,2);l(0,y-2,8,y+2,hi,2);}break;
+      case 12: // Rescue Flare: a burning signal stick beside the hull-repair mark.
+        p([[-10,7],[-7,9],[3,-2],[0,-5]],'#579e87',hi);l(-8,7,-4,3,hi);
+        poly([[-1,-6],[2,-11],[3,-7],[7,-10],[5,-4],[1,-2]],c);r(1,-6,3,3,hi);
+        r(4,4,8,2,c);r(7,1,2,8,c);r(-4,-9,2,2,c);break;
+      case 13: // Aegis Canopy: a shallow geodesic vault over two floor anchors.
+        poly([[-11,4],[-9,-2],[-5,-7],[0,-9],[5,-8],[10,-3],[12,4]],'#335771');
+        l(-11,4,-9,-2,c,2);l(-9,-2,-5,-7,c,2);l(-5,-7,0,-9,hi,2);
+        l(0,-9,5,-8,hi,2);l(5,-8,10,-3,c,2);l(10,-3,12,4,c,2);
+        l(-7,-2,7,-2,'#6098b8');l(-1,-8,-4,1,'#6098b8');l(0,-8,5,1,'#6098b8');
+        r(-11,5,23,2,'#6297a8');r(-9,4,4,4,c);r(6,4,4,4,c);break;
+      case 14: // Relay Overcharger: an amber supply cell, its face split by a voltage flash.
+        r(-6,-10,3,4,SILVER);r(3,-10,3,4,SILVER);
+        p([[-7,-7],[7,-7],[9,-5],[9,7],[6,9],[-7,9],[-9,6],[-9,-4]],'#89683f',c);
+        poly([[0,-5],[5,-5],[2,-1],[5,-1],[-3,7],[-1,2],[-5,2]],hi);
+        r(-7,6,3,1,c);r(4,6,3,1,c);break;
+      case 15: // Foamseed Nursery: a tall crowned pod framed by two fresh buds.
+        for(const [x,y,s] of [[-8,4,3],[8,4,3],[0,0,5]]){
+          o(x,y+1,s,s+1,'#497964');o(x-1,y,s-1,s,c);
+          l(x-1,y-s,x-3,y-s-2,hi);l(x,y-s,x+3,y-s-3,c);
+          r(x-2,y-1,1,2,hi);
+        }
+        l(-9,10,-3,8,'#75966c');l(-3,8,6,9,'#75966c');break;
+      case 16: // Mirror Foundry: a freestanding triangular prism splits an incident ray.
+        p([[-6,6],[0,-10],[7,5],[3,7]],'#526590',c);
+        l(0,-7,1,3,hi);l(-3,4,4,4,'#91a7ed');l(-12,0,-4,0,hi,2);
+        l(5,0,11,-3,c);l(6,2,12,4,'#dbb7ee');
+        r(-7,8,15,2,'#72829c');r(-5,10,10,1,c);break;
     }
   }
   function sprite(kind,id,f=0,wind=false,phase=1,back=false,walking=false,flash=false,exposed=false) {
@@ -555,7 +643,15 @@
     ctx.translate(Math.round(p.x),Math.round(p.y+4));
     ctx.rotate(Math.atan2(p.dashY||0,p.dashX||0));
     ctx.fillStyle=color;
-    if(suit===4||suit===6||suit===9||suit===10){
+    if(suit===18||suit===19){
+      ctx.fillStyle=color;
+      for(const side of [-1,1]){
+        const y=side*(suit===18?4:6);
+        ctx.fillRect(-17-phase,y,5,1);
+        ctx.fillRect(-22-phase,y+side*2,suit===18?2:4,2);
+        if(suit===18)ctx.fillRect(-25-phase,y+side*4,2,2);
+      }
+    }else if(suit===4||suit===6||suit===9||suit===10){
       // Droplets, weave motes, ice splinters and broken plates fall away from the boots.
       for(let i=0;i<5;i++){
         const x=-8-i*3-phase,y=(i%2?1:-1)*(2+i%3);
@@ -640,6 +736,71 @@
     const f=Math.floor(t*3)%4||0,s=sprite(kind,id||0,f);
     const native=kind==='boss'?80:kind==='ability'?26:kind==='suit'?36:38;
     place(ctx,s,x,y,size/native);
+  }
+  const deviceCells=[];
+  function deviceCell(id,twin,active,head) {
+    const key=id*8+(twin?4:0)+(active?2:0)+(head?1:0);
+    if(deviceCells[key])return deviceCells[key];
+    const cell=document.createElement('canvas');cell.width=cell.height=36;
+    const {rect:r,line:l,oval:o,plate:p,poly}=pixels(cell,18);
+    switch(id){
+      case 40: { // The worker carries a golden nectar sac between two translucent wings.
+        const lift=active?2:0;
+        p([[-3,-2],[-8,-6-lift],[-6,-9-lift],[-2,-8-lift],[1,-3]],'#9eada0','#e0ead5');
+        p([[-2,1],[-6,6+lift],[-3,8+lift],[1,6+lift],[2,2]],'#809c9d','#d2e4d5');
+        o(-2,0,6,4,INK);o(-2,0,5,3,'#dbb363');r(-5,-2,2,5,'#65583f');r(-2,-3,2,6,'#65583f');
+        o(4,-1,3,3,'#846946');r(5,-2,2,2,active?'#fff4b8':'#efdaa0');r(7,-1,2,1,SILVER);
+        o(-4,3,2,2,active?'#ddf194':'#b99a52');break;
+      }
+      case 41: // The tri-footed print pedestal stays planted while its turret tracks targets.
+        if(head){
+          if(twin){for(const y of [-4,2]){r(0,y,12,3,INK);r(1,y,10,2,'#9dc5d5');r(11,y,3,2,active?'#ecffdb':'#6792a2');}}
+          else{r(1,-2,12,5,INK);r(1,-1,11,3,'#82aec4');r(11,-1,3,2,active?'#ecffdb':'#a3c3cb');}
+          o(0,0,5,4,INK);o(0,-1,4,3,'#7895a2');r(-2,-2,3,1,'#d2deda');
+        }else{
+          for(const [x,y] of [[-9,7],[9,7],[2,-8]]){
+            l(0,1,x,y,INK,4);l(0,0,x,y-1,'#6c8793',2);r(x-2,y,5,2,'#a9c2be');
+          }
+          o(0,1,7,5,INK);o(0,0,6,4,'#4e6978');r(-5,2,2,1,'#e9c181');
+        }break;
+      case 42: { // A V-braced anchor holds the grooved reel above its foot.
+        l(-8,7,-5,-5,INK,4);l(10,7,4,-6,INK,4);l(-8,7,-5,-5,'#877a88',2);l(10,7,4,-6,'#877a88',2);
+        r(-11,7,6,3,'#b3a8b1');r(7,7,6,3,'#b3a8b1');
+        o(0,-1,8,7,INK);o(0,-2,7,6,'#ba9cd3');o(0,-2,5,4,'#5b4d72');
+        l(-4,-3,-1,-5,'#9181ad',2);l(-1,-5,3,-4,'#9181ad',2);
+        o(1,-2,2,2,active?'#fff3e7':'#c5aed6');
+        l(4,1,7,3,'#bf9cec',2);l(7,3,12,1,'#bf9cec',2);r(11,-2,2,4,SILVER);break;
+      }
+      case 15: { // Nursery: enamel cradle, leaf-shaped jaws, and a membrane filled with foam.
+        o(0,5,10,4,INK);o(0,4,9,3,'#698566');
+        p([[-9,5],[-11,-2],[-8,-5],[-3,0],[0,6]],'#75956c','#bdd6a5');
+        p([[2,5],[6,-3],[11,-5],[10,2],[6,6]],'#75956c','#bdd6a5');
+        o(0,-2,6,8,INK);o(0,-3,5,6,'#659b76');o(-1,-4,4,4,active?'#d5f1af':'#abd994');
+        r(-3,-7,3,2,'#e3f7ca');r(1,-3,2,2,'#6c9e75');
+        if(twin){o(-7,2,3,3,'#a4cc86');r(-8,0,2,1,'#e3f7ca');}
+        break;
+      }
+      case 16: // The mirror plane pivots independently of its three brass mounting feet.
+        if(head){
+          p([[-4,7],[-4,-7],[-1,-10],[3,-7],[4,6],[0,9]],'#7186b7','#d4dffa');
+          l(-2,-6,-1,6,active?'#fffbf0':'#b6cef1',2);l(1,-6,2,5,'#526394');
+          if(twin){l(3,-2,8,-7,'#b9a3ec',2);l(3,2,8,7,'#b9a3ec',2);}
+        }else{
+          p([[-11,7],[-7,1],[0,-5],[6,0],[11,7],[8,9],[-8,9]],'#626782','#b0a1a2');
+          r(-9,7,4,2,'#e2c995');r(6,7,4,2,'#e2c995');o(0,2,6,3,'#3e435b');
+        }break;
+    }
+    deviceCells[key]=cell;return cell;
+  }
+  function device(ctx,id,x,y,size=1,angle=0,state={}) {
+    const twin=state.tier>=2,active=!!state.active;
+    ctx.save();ctx.imageSmoothingEnabled=false;ctx.translate(Math.round(x),Math.round(y));ctx.scale(size,size);
+    if(id===40)ctx.rotate(angle);
+    ctx.drawImage(deviceCell(id,twin,active,false),-18,-18);
+    if(id===41||id===16){
+      ctx.rotate(angle);ctx.drawImage(deviceCell(id,twin,active,true),-18,-18);
+    }
+    ctx.restore();
   }
   const landscapes = new Map();
   const skies = [
@@ -738,5 +899,5 @@
     const shade=ctx.createLinearGradient(0,edge*.54,0,edge);shade.addColorStop(0,'rgba(14,28,37,0)');shade.addColorStop(1,'rgba(14,28,37,.24)');
     ctx.fillStyle=shade;ctx.fillRect(0,0,w,edge);
   }
-  window.Art={player,enemy,portrait,vista,landscape};
+  window.Art={player,enemy,portrait,device,vista,landscape};
 })();

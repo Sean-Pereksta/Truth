@@ -588,11 +588,13 @@
     const objectiveRoom=bossStage?2:3;
     const depth=Math.max(0,g.stage-1),crew=pilots(g).length>1;
     const growth=8.5*Math.min(depth,9)+6.6*Math.min(20,Math.max(0,depth-9))+16*Math.sqrt(Math.max(0,depth-29));
+    const challenge=window.ExpeditionRules?.difficulty(g.difficulty);
+    const baseLimit=Math.min(48,16+4*Math.min(depth,4)+Math.max(0,depth-4)*2)+(crew?8:0);
     const m=g.map={
       id,room,def,pal:themes[def.type],outline:decks[id],blockers:shapes(id,room,g.stage),boss,complete:false,left:false,age:0,
       wave:0,totalWaves:boss?1:3,arrivals:[],waveStarted:false,gap:.45,serial:0,
-      baseWaveSize:Math.floor(16+growth+room*3),crew,packSize:Math.min(15,5+Math.floor(g.stage/2))+(crew?2:0),
-      liveLimit:Math.min(48,16+4*Math.min(depth,4)+Math.max(0,depth-4)*2)+(crew?8:0),
+      baseWaveSize:Math.floor(16+growth+room*3),crew,challenge,packSize:Math.min(15,5+Math.floor(g.stage/2))+(crew?2:0),
+      liveLimit:Math.min(crew?56:48,Math.round(baseLimit*(challenge?.live??1))),
       waveSize:0,waveQueued:0,packDelay:0,packIndex:0,
       gate:point(873,271),side:null,nodes:[],route:hasRoute?(g.route||{}):{},task:"",command:null,
       modTimer:5.4,strip:null,signal:0,linkActive:false,modifierNode:null,weather:[],mapName:def.name
@@ -739,7 +741,7 @@
   ];
   function chooseFoe(g,index) {
     const m=g.map,roster=m.def.enemies;
-    if(g.stage===1){
+    if(g.stage===1&&(m.id===0||!Number.isInteger(g.startRegion))){
       const candidates=openingPatrols[m.room]?.[m.wave-1];if(candidates)return candidates[index%candidates.length];
     }
     const unlocked=g.stage<6?Math.min(roster.length,4+m.room*2+m.wave*2):roster.length;
@@ -753,7 +755,7 @@
       queueFoe(g,id,1.25,{boss:true},"boss");return;
     }
     const chamberGrowth=Math.max(6,Math.ceil(m.baseWaveSize*.16));
-    m.waveSize=Math.ceil((m.baseWaveSize+chamberGrowth*(m.wave-1))*(m.crew?1.3:1));
+    m.waveSize=Math.ceil((m.baseWaveSize+chamberGrowth*(m.wave-1))*(m.crew?1.3:1)*(m.challenge?.wave??1));
     m.waveQueued=0;m.packDelay=0;m.packIndex=0;
     if((m.task==="Intercept"||m.task==="Hunt")&&!m.command && m.wave===1){
       const id=g.huntCarry?.stage===g.stage?g.huntCarry.id:m.def.enemies[Math.min(m.def.enemies.length-1,4)];
@@ -785,7 +787,7 @@
       queueFoe(g,id,.72+j*(rush?.075:.12),{elite},"",lane);
     }
     m.waveQueued+=count;m.packIndex++;
-    m.packDelay=g.stage===1&&m.room===0?1.5:Math.max(.56,1.6-g.stage*.07);
+    m.packDelay=(g.stage===1&&m.room===0?1.5:Math.max(.56,1.6-g.stage*.07))*(m.challenge?.packDelay??1);
   }
   function resolveArrivals(g,dt,squad,live) {
     const m=g.map;

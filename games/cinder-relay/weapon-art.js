@@ -12,7 +12,8 @@
     [19,0],[19,-2],[18,0],[15,-1],[18,-2],[16,-2],
     [10,-8],[12,0],[14,-1],[13,-2],[16,0],[14,1],
     [16,0],[11,0],[12,-1],[12,0],[14,0],[16,0],
-    [12,0],[15,0],[15,0],[12,0],[10,-1],[13,0]];
+    [12,0],[15,0],[15,0],[12,0],[10,-1],[13,0],
+    [19,-1],[14,-1],[15,0],[11,-8],[12,-1],[14,0],[13,0]];
 
   function bake(id,accent){
     const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
@@ -201,6 +202,55 @@
         for(const q of [-1,1]){plate([[-1,q*2],[4,q*5],[9,q*9],[12,q*7],[9,q*3],[4,q]],bark,bone);
           drum(9,q*7,3,3,violet);rect(8,q*7,3,1,accent);}
         line(12,-6,12,6,'#deb6b8');rect(10,-1,4,2,bone);break;
+      case 36: // Suture Carbine: ceramic needle housing and a suspended glass repair ampoule.
+        stock(16,3,'#687f79');grip(-9,1);
+        plate([[-11,-4],[-5,-6],[4,-6],[9,-3],[9,1],[4,3],[-7,2]],'#c7d9c9','#f1f4dc');
+        tube(7,-3,7,5,steel);line(13,-1,19,-1,'#c0e4d5');rect(17,-1,3,1,accent);
+        plate([[-5,1],[2,1],[3,5],[1,9],[-3,10],[-6,7]],'#486b67','#b7e8d6');
+        fill([[-4,4],[1,4],[1,7],[-2,8],[-4,7]],accent);rect(-4,3,1,3,'#e8fff2');
+        rect(-6,-4,7,2,'#477e75');rect(-5,-4,4,1,accent);break;
+      case 37: // Switchyard Driver: a conductor bridge spans two blue ceramic insulators.
+        stock(14,4,brass);grip(-7,2);tube(-9,-2,24,6,cast);
+        plate([[-9,-3],[-7,-5],[8,-5],[11,-2],[8,3],[-8,3]],'#b78944','#ffe096');
+        for(const [x,h] of [[-5,9],[5,11]]){
+          block(x-2,-h,5,h-2,'#4892ad','#c4f1eb');
+          rect(x-3,-h+3,7,2,steel);rect(x-3,-h+3,6,1,'#a8def2');
+        }
+        line(-5,-10,5,-12,ink,2);line(-5,-10,5,-12,accent);
+        rect(-6,-1,12,2,cast);vents(-5,-1,4,accent);rect(13,-1,2,1,'#b8ebff');break;
+      case 38: // Bulwark Repeater: overlapping shield plates flank a bright central bore.
+        stock(15,3,cast);grip(-7,2);tube(-7,-2,24,6,'#4a798b');
+        plate([[-7,-5],[2,-9],[9,-8],[13,-4],[10,-1],[1,-1],[-5,1]],'#438ca0','#b9f4ed');
+        plate([[-6,0],[2,-2],[11,-2],[10,3],[4,8],[-2,7]],'#386d83','#84c5cc');
+        line(-4,-4,2,-6,accent,2);line(3,-6,8,-6,accent,2);
+        line(6,2,3,5,'#9adfdd');rect(13,0,4,2,accent);break;
+      case 39: // Lifeboat Mortar: a cream flotation collar around the orange rescue shell.
+        stock(15,5,'#84665a');grip(-8,3);drum(-5,3,5,5,copper,bone);
+        plate([[-6,1],[-3,-6],[4,-11],[9,-11],[13,-8],[13,-4],[7,2],[-1,6]],'#cf855a','#fff0c8');
+        plate([[0,-6],[4,-10],[8,-10],[10,-8],[6,-4],[2,-3]],'#e9d4aa','#fff4d2');
+        line(3,-5,8,-10,accent,2);line(-3,-1,2,3,'#f3dfbd',2);
+        block(-6,3,7,4,cast);rect(-4,4,3,1,'#ffd595');break;
+      case 40: // Honeycomb Harvester: open wax cells spill around a dark honey valve.
+        grip(-6,2,bark);stock(13,3,bark);
+        plate([[-9,-3],[-6,-7],[1,-8],[9,-5],[13,0],[8,4],[-2,5],[-9,2]],'#967344',bone);
+        for(const [x,y] of [[-5,-3],[1,-5],[7,-3],[-1,1],[5,1]]){
+          fill([[x-3,y],[x-2,y-2],[x+1,y-3],[x+3,y-1],[x+2,y+2],[x-1,y+2]],brass);
+          rect(x-1,y-1,3,2,'#594b3f');line(x-1,y+1,x+1,y+1,accent);
+        }
+        tube(9,-2,5,4,copper);rect(12,-1,2,2,accent);
+        line(-6,3,-3,6,bone,2);drum(-2,6,3,3,'#bd8a43',accent);break;
+      case 41: // Watchtower Press: overhead print gantry with an exposed hanging carriage.
+        grip(-7,2);plate([[-14,0],[-9,-4],[-5,-3],[-6,3],[-13,5]],cast);
+        tube(-8,0,23,5,steel);block(-8,-9,5,12,'#576d7d');block(8,-9,5,12,'#576d7d');
+        block(-9,-10,23,4,steel);block(-2,-8,6,5,'#52778b');rect(-1,-7,3,2,accent);
+        rect(0,-3,2,4,accent);rect(10,-7,2,2,brass);rect(2,1,9,1,'#c1e3df');
+        line(6,4,10,7,steel,2);line(10,7,14,7,ink,2);break;
+      case 42: // Gravwinch Mill: a violet cable winds around an exposed flanged spool.
+        stock(13,4,'#74677c');grip(-8,2);tube(-8,-2,22,5,cast);
+        drum(0,-1,8,8,'#847d98','#ddd5e6');drum(0,-1,6,6,'#493e61');
+        line(-4,-4,0,-6,accent);line(0,-6,4,-4,accent);line(-5,-1,-2,3,'#8f78b3');
+        drum(0,-1,2,2,steel);line(3,2,8,4,accent,2);line(8,4,12,2,accent,2);
+        plate([[9,-1],[13,-3],[16,-1],[15,3],[12,4],[14,1]],steel,'#e5d5ff');break;
     }
     return canvas;
   }
@@ -222,7 +272,8 @@
     if(firing){
       const q=id===5?(item.shots%2?'#8edfff':'#ff927c'):def.color;
       ctx.fillStyle=q;
-      if(id===18){ctx.fillRect(mx+1,my-4,3,4);ctx.fillRect(mx+4,my-6,2,3);}
+      if(id===18||id===39){ctx.fillRect(mx+1,my-4,3,4);ctx.fillRect(mx+4,my-6,2,3);}
+      else if(id===36){ctx.fillRect(mx,my,8,1);ctx.fillRect(mx+3,my-1,3,3);}
       else if(id===5||id===6||id===10||id===24||id===29){
         const gap=id===5?3:4;for(const side of [-1,1])if(id!==5||side===(item.shots%2?-1:1))ctx.fillRect(mx,my+side*gap,5,2);
       }else if(id<6||id>=12&&id<18){ctx.fillRect(mx,my-1,id>=12?8:5,2);ctx.fillRect(mx+1,my-2,2,4);}

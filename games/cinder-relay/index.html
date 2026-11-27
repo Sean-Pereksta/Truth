@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#101b1e">
   <title>Cinder Relay</title>
   <link rel="icon" type="image/png" href="art/relay-icon.png">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=hero-expedition">
 </head>
 <body>
   <main id="app">
@@ -16,6 +16,7 @@
         <nav class="main-nav" aria-label="Launch bay navigation">
           <button class="nav-btn current" data-op="bay">Launch bay</button>
           <button class="nav-btn" data-op="guide">Field guide</button>
+          <button class="nav-btn" data-op="hero-roster">Heroes</button>
           <button class="icon-btn" data-op="settings" aria-label="Settings" title="Settings"><span data-icon="settings"></span></button>
         </nav>
       </header>
@@ -36,7 +37,7 @@
         <button class="records-readout" data-op="records"><span class="records-icon" data-icon="flag"></span><span class="readout-copy"><small>DEEPEST GATE</small><strong id="bay-record"></strong></span><span class="open-arrow" aria-hidden="true">↗</span></button>
         <div class="data-readout"><span class="records-icon" data-icon="data"></span><span class="readout-copy"><small>RELAY DATA</small><strong id="bay-data"></strong></span></div>
       </div>
-      <div class="bay-foot"><div class="input-legend"><span><kbd>WASD</kbd> Move</span><span><kbd>LMB</kbd> Fire</span><span><kbd>SPACE</kbd> Dash</span><span><kbd>Q</kbd><kbd>E</kbd> Actives</span></div><button class="text-btn" data-op="controls">All controls <b>↗</b></button></div>
+      <div class="bay-foot"><div id="bay-controls" class="input-legend"></div><button class="text-btn" data-op="controls">All controls <b>↗</b></button></div>
     </section>
 
     <section id="flight" aria-label="Expedition" hidden>
@@ -59,8 +60,8 @@
         <div class="vitals"><strong id="pilot-label" hidden></strong><div class="pilot-icon"><canvas id="pilot-icon" width="42" height="44"></canvas></div><div class="vital-pairs"><div class="vital"><span data-icon="hull"></span><i><b id="hull-bar"></b></i><small id="hull-value"></small></div><div class="vital shield"><span data-icon="shield"></span><i><b id="shield-bar"></b></i><small id="shield-value"></small></div></div></div>
         <button class="weapon-slot" id="weapon-a" data-op="swap" title="Swap ready weapon (Tab)"><canvas width="49" height="28"></canvas><span></span></button>
         <button class="weapon-slot" id="weapon-b" data-op="swap" title="Swap ready weapon (Tab)"><canvas width="49" height="28"></canvas><span></span></button>
-        <button class="act-slot" id="act-a" data-op="active1" title="Active 1 (Q)"><canvas width="28" height="28"></canvas><span></span></button>
-        <button class="act-slot" id="act-b" data-op="active2" title="Active 2 (E)"><canvas width="28" height="28"></canvas><span></span></button>
+        <button class="act-slot" id="act-a" data-op="active1" title="Active 1"><canvas width="28" height="28"></canvas><span></span></button>
+        <button class="act-slot" id="act-b" data-op="active2" title="Active 2"><canvas width="28" height="28"></canvas><span></span></button>
         <button class="dash-slot" data-op="dash" title="Dash (Space)"><span data-icon="dash"></span><span><b>DASH</b><i id="dash-pips"></i></span></button>
         <button class="pack-btn" data-op="inventory" title="Equipment (I)" aria-label="Inspect equipment"><span data-icon="pack"></span></button>
       </div>
@@ -78,27 +79,30 @@
   </main>
   <div id="scrim" hidden><section id="panel" role="dialog" aria-modal="true" aria-label="Expedition menu" tabindex="-1"></section></div>
   <div id="relay-toast" role="status" aria-live="polite"></div>
-  <script defer src="weapon-art.js"></script>
-  <script defer src="effects.js"></script>
-  <script defer src="combat.js"></script>
+  <script defer src="weapon-art.js?v=hero-expedition"></script>
+  <script defer src="effects.js?v=hero-expedition"></script>
+  <script defer src="combat.js?v=hero-expedition"></script>
   <script defer src="boss-colony.js"></script>
   <script defer src="boss-relay.js"></script>
   <script defer src="boss-tell-art.js"></script>
-  <script defer src="enemies.js"></script>
-  <script defer src="sprites.js?v=gravity-disc"></script>
-  <script defer src="progression.js"></script>
+  <script defer src="expedition-rules.js"></script>
+  <script defer src="enemies.js?v=hero-expedition"></script>
+  <script defer src="sprites.js?v=hero-expedition"></script>
+  <script defer src="progression.js?v=hero-expedition"></script>
+  <script defer src="hero-roster.js"></script>
   <script defer src="sector-art.js"></script>
   <script defer src="topology.js"></script>
   <script defer src="labyrinth.js"></script>
   <script defer src="sight.js"></script>
   <script defer src="camera.js"></script>
-  <script defer src="world.js"></script>
+  <script defer src="world.js?v=hero-expedition"></script>
   <script defer src="chassis-art.js"></script>
   <script defer src="mechanic-art.js"></script>
-  <script defer src="field-art.js"></script>
-  <script defer src="interface.js"></script>
+  <script defer src="field-art.js?v=hero-expedition"></script>
+  <script defer src="hero-menus.js"></script>
+  <script defer src="interface.js?v=hero-expedition"></script>
   <script defer src="audio.js"></script>
-  <script defer src="crew-input.js"></script>
-  <script defer src="main.js"></script>
+  <script defer src="crew-input.js?v=hero-expedition"></script>
+  <script defer src="main.js?v=hero-expedition"></script>
 </body>
 </html>

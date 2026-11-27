@@ -20,12 +20,14 @@
   let seedState = 1, checkpoint = null, continuation = null;
   const screens = [];
   const stations = new WeakMap();
+  const resumedBuilds = new WeakMap();
   const wingInput = {x:0,y:0,aimX:1,aimY:0,steering:false,fire:false,pressed:false,released:false};
   const crewed = () => g.players.length === 2;
   function forPilot(p) {
     if(stations.has(p))return stations.get(p);
     const wing=p===g.players[1];
-    const local={player:p,hurtPlayer:amount=>hurtPilot(p,amount)};
+    const local={player:p,hurtPlayer:amount=>hurtPilot(p,amount),
+      hurtEnemy:(enemy,damage,angle,push,element)=>g.hurtEnemy(enemy,damage,angle,push,element,p)};
     if(wing)Object.assign(local,{aim:{x:p.x+180,y:p.y},combat:null,decoy:null,aimingAbility:null});
     const view=new Proxy(g,{
       get(target,key) {
@@ -91,7 +93,7 @@
     if(enemy)Progress.observe(g.meta,id,!!options?.boss);
     return enemy;
   };
-  g.hurtEnemy = (e,damage,angle=0,push=0,element='') => {
+  g.hurtEnemy = (e,damage,angle=0,push=0,element='',pilot=null) => {
     if(!e||e.dead||e.hp<=0||!(damage>0)||e.boss&&e.arrive>0) return 0;
     let delta=Foes.mitigate ? Foes.mitigate(g,e,damage,angle,element) : damage;
     if(!Number.isFinite(delta)) delta=damage;
@@ -119,6 +121,7 @@
       g.seenFoes[(boss?'b':'e')+e.id]=true;
       Progress.observe(g.meta,e.id,!!boss);
       if(!e.noReward) {
+        if(pilot?.hp>0)Progress.armorKill?.(forPilot(pilot),pilot,e);
         const fodder=e.def.fodder&&!elite&&!boss;
         const xp=boss?24:elite?9:fodder?1:2;
         g.drops.push({x:e.x,y:e.y,xp,scrap:boss?14:elite?5:(g.rng()<(fodder?.07:.22)?1:0),type:boss?'core':'xp',age:0});
@@ -131,12 +134,17 @@
   };
   function hurtPilot(p,amount) {
     if(g.screen!=='play'||!p||p.hp<=0||p.invuln>0||p.dashTime>0||amount<=0) return 0;
+    amount*=g.map?.challenge?.damage??1;
     amount=Progress.guardDamage?.(forPilot(p),amount)??amount;
+    amount=Progress.armorDamage?.(forPilot(p),p,amount)??amount;
+    if(amount<=0)return 0;
     const absorbed=Math.min(p.shield,amount), hull=amount-absorbed;
+    const hullDamage=Math.min(p.hp,hull);
     p.shield-=absorbed; p.hp=Math.max(0,p.hp-hull);
     p.invuln=.69; p.flash=g.settings.flashes?.13:0; p.lastHit=g.time;
     g.hurtTint=.2; g.shakePower=3.2; g.sound('hurt');
     g.fx(p.x,p.y,hull?'#ff7957':'#80e8df',11);
+    if(p.hp>0)Progress.armorHit?.(forPilot(p),p,amount,hullDamage);
     if(p.hp<=0) {
       p.downed=true;p.revive=0;p.dashTime=0;
       if(g.players.every(member=>member.hp<=0))endRun(false);
@@ -190,7 +198,8 @@
     g.saved=!!checkpoint;
   }
   function saveAt(screen,entrySeed=seedState,labState=null) {
-    const fields=['stage','room','mapId','route','routeOptions','player','kitId','contract','runId','elapsed','time','kills','cleared','rerolls','pendingLevels','dataEarned','seenFoes','runData','bankedStages','contractedStages','seed','huntCarry','lastBossId'];
+    saveRosterCrew();
+    const fields=['stage','room','mapId','difficulty','startGate','startRegion','route','routeOptions','player','kitId','contract','runId','elapsed','time','kills','cleared','rerolls','pendingLevels','dataEarned','seenFoes','runData','bankedStages','contractedStages','seed','huntCarry','lastBossId'];
     const snapshot={version:1,screen,seedState:entrySeed,expeditionMode:g.expeditionMode,waspBudget:g.combat?.healUsed||0};
     if(screen==='junction'||screen==='routes')snapshot.securedLayout=g.encounter;
     for(const field of fields) snapshot[field]=g[field];
@@ -257,14 +266,59 @@
     lastPointer=RelayCamera.screenPoint(g,g.aim.x,g.aim.y);
     showBase('play'); g.introTime=2.9; g.introTitle=g.encounter||World.maps[g.mapId].name;
   }
-  function start(kitId=0,contract=null,layout='solo',mode='campaign') {
+  function syncPilotRewards(pilot){
+    // Single-player XP queues live on the expedition. They belong to the
+    // character when moving that build between solo and a two-pilot crew.
+    if(!crewed())pilot.pendingLevels=g.pendingLevels||0;
+  }
+  function saveHero(index=0,name){
+    const pilot=g.players[index];
+    if(!pilot)throw new Error('Choose a pilot to save.');
+    syncPilotRewards(pilot);
+    const record=HeroRoster.save(pilot,name??pilot.heroName,pilot.heroId||null,pilot.heroRevision);
+    pilot.heroId=record.id;pilot.heroName=record.name;pilot.heroRevision=record.revision;
+    resumedBuilds.delete(pilot);
+    return record;
+  }
+  function saveRosterPilot(pilot){
+    if(!pilot.heroId&&!pilot.heroName)return;
+    try{
+      syncPilotRewards(pilot);
+      if(resumedBuilds.has(pilot)&&resumedBuilds.get(pilot)===HeroRoster.buildKey(pilot))return;
+      saveHero(g.players.indexOf(pilot));
+    }
+    catch(error){toast(error.message||'Hero could not be saved on this device.');}
+  }
+  function saveRosterCrew(){for(const p of g.players)saveRosterPilot(p);}
+  function startExpedition(options={}){
+    const layout=options.layout||'solo';
+    if(!['solo','keyboard-pad','dual-pad'].includes(layout)){toast('Choose a crew layout.');return false;}
+    const specs=options.pilots||[];
+    const count=layout==='solo'?1:2;
+    if(specs.length!==count){toast('Select a hero or a new class for each pilot.');return false;}
+    let pilots;
+    try{
+      HeroRoster.checkCrew(specs.map(s=>s.heroId||null));
+      pilots=specs.map(slot=>{
+        if(slot.heroId)return HeroRoster.load(slot.heroId);
+        const kit=Progress.kits[Number(slot.roleId??options.kit??0)];
+        if(!kit||kit.cost>0&&!g.meta.unlocked?.includes(kit.id))throw new Error('Choose an available class for each pilot.');
+        const pilot=Progress.newPlayer(kit.id);pilot.kitId=kit.id;
+        pilot.heroName=HeroRoster.nameFor(slot.name,kit.name);
+        return pilot;
+      });
+    }catch(error){toast(error.message||'The selected hero could not be loaded.');return false;}
+    return start(pilots[0].kitId,options.contract||null,layout,options.mode||'campaign',
+      {pilots,difficulty:options.difficulty,startGate:options.startGate??options.stage,startRegion:options.startRegion??options.mapId});
+  }
+  function start(kitId=0,contract=null,layout='solo',mode='campaign',setup=null) {
     RelayAudio.unlock();
-    if(mode==='endless'&&!Progress.endlessUnlocked(g.meta))return;
+    if(mode==='endless'&&!Progress.endlessUnlocked(g.meta)){toast('Clear five gates to unlock Endless.');return false;}
     if(layout!=='solo'&&CrewInput.status({coopLayout:layout}).missing.length){
       toast(layout==='dual-pad'?'Connect both controllers and press a button on each.':'Connect a controller and press a button to join.');
-      return;
+      return false;
     }
-    if(kitId!==0 && !(g.meta.unlocked||[0]).includes(Number(kitId))) { toast('Unlock this kit with Relay Data first.');return; }
+    if(!setup&&Progress.kits[kitId]?.cost>0&&!(g.meta.unlocked||[0]).includes(Number(kitId))) {toast('Unlock this kit with Relay Data first.');return false;}
     kitId=Number(kitId)||0;
     seedState=(Date.now()^Math.floor(Math.random()*0x7fffffff))>>>0;
     Object.assign(g,{stage:1,room:0,mapId:0,route:null,routeOptions:[],time:0,elapsed:0,seed:seedState,
@@ -272,16 +326,14 @@
       dataEarned:0,runData:0,bankedStages:0,contractedStages:0,kitId,contract,seenFoes:{},result:null,choices:[],draftQueue:[]});
     g.huntCarry=null;g.lastBossId=-1;g.combat=null;
     g.expeditionMode=mode==='endless'?'endless':'campaign';
-    if(g.expeditionMode==='endless'){
-      g.route=Progress.routes(g)[0];
-      g.mapId=g.route.mapId;
-    }
     g.coopLayout=['keyboard-pad','dual-pad'].includes(layout)?layout:'solo';
-    g.players=Array.from({length:g.coopLayout==='solo'?1:2},()=>Progress.newPlayer(kitId));
+    ExpeditionRules.start(g,setup||{});
+    g.players=setup?.pilots||Array.from({length:g.coopLayout==='solo'?1:2},()=>Progress.newPlayer(kitId));
     selectPilot();
-    for(const p of g.players){p.kitId=kitId;Progress.recalc(forPilot(p));initPlayer(p);}
+    for(const p of g.players){p.kitId??=kitId;Progress.recalc(forPilot(p));initPlayer(p);}
+    if(!crewed())g.pendingLevels=g.player.pendingLevels||0;
     continuation=null;
-    g.sound('gate');enterRoom(true);
+    g.sound('gate');enterRoom(true);return true;
   }
   function initPlayer(p) {
     p.guns.forEach(Combat.normalizeGun);
@@ -295,17 +347,24 @@
     const cached=JSON.parse(JSON.stringify(checkpoint));
     const {screen,version,seedState:state,labState,labDrops,sightMemory,securedLayout,...rest}=cached;
     Object.assign(g,rest);seedState=state;continuation=null;g.draftQueue=[];g.choices=[];
+    Object.assign(g,ExpeditionRules.normalize(cached));
     g.expeditionMode=cached.expeditionMode==='endless'?'endless':'campaign';
     g.players=cached.players?.length===2?cached.players:[cached.player];
     g.coopLayout=crewed()?(cached.coopLayout==='dual-pad'?'dual-pad':'keyboard-pad'):'solo';
     selectPilot();g.map=null;g.combat=null;
-    for(const p of g.players){initPlayer(p);Progress.recalc(forPilot(p));}
+    for(const p of g.players){
+      initPlayer(p);Progress.recalc(forPilot(p));syncPilotRewards(p);
+      // Leaving an unchanged checkpoint must not fork a hero whose roster
+      // already contains later progress. A genuinely different build still can.
+      if(p.heroId)resumedBuilds.set(p,HeroRoster.buildKey(p));
+    }
     if(screen==='entry'||screen==='lab') enterRoom(false,screen==='lab'?{labState,labDrops,sightMemory}:null);
     else {clearTransient();g.encounter=securedLayout||World.maps[g.mapId].rooms?.[g.room]||World.maps[g.mapId].name;g.objective='Sector secured';showBase(screen);}
     if(g.combat) g.combat.healUsed=cached.waspBudget||0;
     if(crewed())forPilot(g.players[1]).combat.healUsed=cached.wingBudget||0;
   }
   function home() {
+    if(g.screen!=='result')saveRosterCrew();
     continuation=null;g.draftQueue=[];g.choices=[];g.players=[];g.coopLayout='solo';selectPilot();g.result=null;
     g.map=null;g.camera=null;g.combat=null;
     g.enemies=[];g.hostile=[];g.drops=[];g.particles=[];g.ghosts=[];g.floaters=[];
@@ -313,7 +372,7 @@
   }
   function endRun(extracted) {
     if(!g.player||g.screen==='result')return;
-    selectPilot();
+    selectPilot();saveRosterCrew();
     const summary=Progress.finish(g.meta,g,extracted)||{};
     g.result={...summary,extracted,stage:g.stage,depth:g.cleared,kills:g.kills,elapsed:g.elapsed,
       data:summary.data??g.dataEarned,reason:extracted?'Beacon extraction complete':'Hull integrity lost'};
@@ -344,7 +403,11 @@
     if(typeof card==='number')card=g.choices[card];
     if(!g.choices.includes(card))return false;
     if(Progress.take(forPilot(g.player),card,index)===false)return false;
-    g.sound('equip');settleDrafts();return true;
+    saveRosterPilot(g.player);g.sound('equip');settleDrafts();return true;
+  }
+  function declineGun(){
+    if(g.screen!=='draft'||!g.choices.some(c=>c.kind==='gun'))return false;
+    saveRosterPilot(g.player);settleDrafts();return true;
   }
   function reroll() {
     if(g.screen!=='draft'||!g.rerolls)return;
@@ -353,6 +416,7 @@
   function salvage(card) {
     if(g.screen!=='draft'||!g.choices.includes(card))return;
     if(Progress.salvage)Progress.salvage(g,card);else g.player.scrap+=6;
+    saveRosterPilot(g.player);
     settleDrafts();
   }
   function queueCache(kind){
@@ -381,7 +445,7 @@
       if(g.room===2 && (g.stage%2===0||g.stage===3))queueCache(g.stage===3?'armor':'gun');
       continuation=()=>{saveAt('junction');showBase('junction');};
     } else {
-      g.cleared=g.stage;
+      g.cleared=Math.max(0,g.stage-(g.startGate||1)+1);
       for(const p of g.players)Progress.onGate?.(forPilot(p));
       g.dataEarned+=(Progress.bankGate(g.meta,g)||0);
       const beacon=g.stage>=5||g.expeditionMode==='endless';
@@ -403,7 +467,7 @@
     g.route=g.routeOptions[index];g.stage++;g.mapId=g.route.mapId;g.room=0;g.rerolls=1;
     enterRoom(true);
   }
-  function extract() {if(g.screen==='routes'&&(g.cleared>=5||g.expeditionMode==='endless'&&g.cleared>=1))endRun(true);}
+  function extract() {if(g.screen==='routes'&&g.cleared>=1&&(g.stage>=5||g.expeditionMode==='endless'))endRun(true);}
   function repair() {
     if(!g.safeRefit||!g.player||!Progress.repair(g))return;
     g.sound('heal');refreshSafe();
@@ -460,7 +524,7 @@
     if(g.screen!=='play'||!p||p.hp<=0)return;
     const view=forPilot(p),ab=p.abilities[p.activeSlots[slot]];
     if(!ab)return;
-    if([0,1,3,4,5,9,10].includes(ab.id) && ab.cd<=0)view.aimingAbility=slot;
+    if([0,1,3,4,5,9,10,13,15,16].includes(ab.id) && ab.cd<=0)view.aimingAbility=slot;
     else action(slot===0?'active1':'active2',index);
   }
   function castArmed(slot,index=0) {
@@ -573,6 +637,7 @@
 
   function menuPad(dx,dy) {
     document.body.classList.add('pad-nav');
+    if(dy&&UI.moveHeroFocus(dy))return;
     const modal=document.getElementById('scrim');
     const scope=modal&&!modal.hidden?modal:document;
     const nodes=Array.from(scope.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex="0"]'))
@@ -706,6 +771,7 @@
       if(p.moving)p.walkCycle+=dt*10;
     }
     aimPlayer(p);
+    Progress.armorTick?.(view,p,dt);
     const input={fire:wing?wingInput.fire:heldFire||padFire,firePressed:wing?wingInput.pressed:pressed,
       fireReleased:wing?wingInput.released:released,moveX:m.x,moveY:m.y};
     Combat.update(view,dt,input,false);
@@ -715,6 +781,7 @@
     p.invuln=2;p.lastHit=g.time;p.dashCharges=Math.max(1,p.dashCharges);
     g.fx(p.x,p.y,'#86eee3',18);float(p.x,p.y-18,'REVIVED','#a5fff0');g.sound('heal');
   }
+  g.revivePilot=revive;
   function step(dt) {
     if(g.screen!=='play')return;
     g.time+=dt;g.elapsed+=dt;g.introTime=Math.max(0,(g.introTime||0)-dt);
@@ -806,7 +873,10 @@
       const r=(id===1?53:59)*scale,dx=Math.sin(a)*r,dy=-Math.cos(a)*r;
       ctx.moveTo(px-dx,py-dy);ctx.lineTo(px+dx,py+dy);
       if(id===3&&ab.augment===1){ctx.lineTo(px+Math.cos(a)*r,py+Math.sin(a)*r);ctx.closePath();}
-    }else ctx.arc(x,y,(id===4?(ab.augment===2?57:77):id===9?112:17)*scale,0,Math.PI*2);
+    }else{
+      const radius=id===4?(ab.augment===2?57:77):id===9?112:id===13?85:id===15?82:id===16?22:17;
+      ctx.arc(x,y,radius*scale,0,Math.PI*2);
+    }
     ctx.fill();ctx.stroke();ctx.restore();
   }
   function sticks(){
@@ -848,7 +918,10 @@
     if(g.map.lab)Sight.clip(ctx,g);
     World.drawObjects(ctx,g);
     ctx.save();ctx.globalAlpha=g.settings.friendly;
-    for(const p of g.players)Combat.drawBlasts(ctx,forPilot(p));
+    for(const p of g.players){
+      Progress.drawArmorPulse(ctx,p,g.time);
+      Combat.drawBlasts(ctx,forPilot(p));
+    }
     ctx.restore();
     Foes.drawWarnings(ctx,g);drawDrops();g.players.forEach(drawAbilityAim);
     for(const gh of g.ghosts){
@@ -966,8 +1039,11 @@
     if(refresh)refreshSafe();return result;
   }
   window.Game={
-    state:g,start,startCoop:(kit,contract,layout,mode)=>start(kit,contract,layout,mode),inspectPilot,resumeSave,action,choose,reroll,salvage,resume:back,next,extract,route,home,open,back,refit,repair,buyKit,setSetting,
-    restart:()=>start(g.kitId,g.contract,g.coopLayout,g.expeditionMode),installChip:(...args)=>safeCall('installChip',args),
+    state:g,start,startExpedition,saveHero,declineGun,usesController:(index=0)=>CrewInput.usesController(g,index),
+    startCoop:(kit,contract,layout,mode)=>start(kit,contract,layout,mode),inspectPilot,resumeSave,action,choose,reroll,salvage,resume:back,next,extract,route,home,open,back,refit,repair,buyKit,setSetting,
+    restart:()=>g.players.some(p=>p.heroId)||g.startGate>1||g.startRegion!=='auto'||g.difficulty!=='standard'?
+      startExpedition({contract:g.contract,layout:g.coopLayout,mode:g.expeditionMode,difficulty:g.difficulty,startGate:g.startGate,startRegion:g.startRegion,pilots:g.players.map(p=>({heroId:p.heroId,roleId:p.kitId}))}):
+      start(g.kitId,g.contract,g.coopLayout,g.expeditionMode),installChip:(...args)=>safeCall('installChip',args),
     rollAffix:(...args)=>safeCall('rollAffix',args,false),buyAffix:(...args)=>safeCall('buyAffix',args),
     buyContract:id=>{const ok=Progress.unlockContract(g.meta,id);UI.show(g.screen,g);return ok;},
     buySkin:id=>{const ok=Progress.unlockCosmetic(g.meta,Number(id));UI.show(g.screen,g);return ok;},

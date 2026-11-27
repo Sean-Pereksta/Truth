@@ -150,7 +150,7 @@
     if(boss&&g.map?.lab)chamber=g.map.bossRoom||g.map.lab.bossRoom||null;
     const r=d.r*(elite&&!boss?1.12:1), p=floorPoint(g,x,y,r,true,chamber);
     const hullFactor=d.fodder?Math.min(1.4,factor):boss&&stage<=5?1:factor;
-    const standardHull=d.hp*hullFactor*(boss?1.22:elite?1.85:1);
+    const standardHull=d.hp*hullFactor*(boss?1.22:elite?1.85:1)*(g.map?.challenge?.hull??1);
     const crewHull=g.players?.length===2?(boss?1.78:elite?1.2:1):1;
     const serial=++f.serial;
     const e={...p,id,name:d.name,boss,elite,chamber,serial,r,def:d,a:0,arrive:boss?1.12:.72,windup:0,windMax:1,
