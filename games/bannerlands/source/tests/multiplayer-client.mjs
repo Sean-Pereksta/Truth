@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {PresentationBuffer,MultiplayerClient} from '../../multiplayer/client.js';
 import {createMatchServer} from '../multiplayer-server.mjs';
 import {COMPATIBILITY} from '../../multiplayer/protocol.js';
+import {unitPresentationPhase} from '../../local-presentation.js';
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 async function until(predicate){for(let i=0;i<100;i++){if(predicate())return;await sleep(30);}throw new Error('Timed out waiting for client recovery.');}
 const memory=new Map(),storage={getItem:key=>memory.get(key)||null,setItem:(key,value)=>memory.set(key,value),removeItem:key=>memory.delete(key)};
@@ -51,13 +52,21 @@ try{
  console.log('PASS client retries lost acknowledgements and rate limits, preserves ordered rejection recovery, reconnects one session without duplicate purchases.');
 }finally{client.close();await match.close();}
 
-const buffer=new PresentationBuffer({delay:.1}),unit={id:7,x:10,y:0},game={time:2,units:[unit]};
-buffer.push({sequence:1,time:1,units:[{id:7,x:0,y:0}]},1000);buffer.push({sequence:2,time:2,units:[{id:7,x:10,y:0}]},2000);
-buffer.draw(game,2000,()=>{assert.ok(unit.x>0&&unit.x<10);assert.ok(game.time>1&&game.time<2);});assert.equal(unit.x,10);assert.equal(game.time,2);
+const buffer=new PresentationBuffer({delay:.1}),unit={id:7,x:10,y:0,phase:9},game={time:2,units:[unit]};
+buffer.push({sequence:1,time:1,units:[{id:7,x:0,y:0,phase:4}]},1000);
+buffer.push({sequence:2,time:2,units:[{id:7,x:10,y:0,phase:9}]},2000);
+buffer.draw(game,2000,()=>{
+  assert.ok(unit.x>0&&unit.x<10);
+  assert.ok(game.time>1&&game.time<2);
+  assert.equal(unitPresentationPhase(game,unit,1),4+unit.x*.5,'Gait advances with position on the same presentation clock');
+  assert.equal(unit.phase,9,'The presentation leaves authoritative stride intact even during the draw');
+});
+assert.equal(unit.x,10);assert.equal(unit.phase,9);assert.equal(game.time,2);
 buffer.draw(game,10000,()=>assert.equal(unit.x,10,'A stale connection never extrapolates beyond the authoritative world'));
 buffer.push({sequence:3,time:2.1,units:[{id:7,x:20,y:0}]},10010);unit.x=20;game.time=2.1;
 buffer.draw(game,10010,()=>assert.ok(unit.x>=10,'A new update after a stall never reverses presentation time.'));
 assert.throws(()=>buffer.draw(game,2000,()=>{throw new Error('draw');}));assert.equal(unit.x,20);
+assert.equal(game.unitStrideBlend,undefined,'The stride clock is restored even on draw errors');
 const sharedId=unit.id;
 const building={id:sharedId,x:30,y:3},fx={id:sharedId,x:5,y:0};
 game.buildings=[building];game.effects=[fx];

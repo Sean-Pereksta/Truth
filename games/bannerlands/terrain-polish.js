@@ -10,6 +10,110 @@ const terrainPolishAt=(g,x,y)=>x>=0&&y>=0&&x<g.W&&y<g.H?g.tiles[y*g.W+x]:null;
 const terrainPolishLand=t=>!!t&&['grass','forest','hill'].includes(t.terrain)&&(!t.feature||t.feature==='road');
 const terrainPolishOpenLand=t=>terrainPolishLand(t)&&!t.feature;
 
+const routeWeatherByMap=new WeakMap();
+function routeWeather(g){
+  const saved=routeWeatherByMap.get(g);
+  if(saved?.tiles===g.tiles)return saved;
+  const mud=[];
+  if(g.landscape?.id==='riverlands'){
+    const addBank=(axis,along,across,sign)=>{
+      const center=along+sign*.45,radius=2.85;
+      const x=axis==='x'?center:across,y=axis==='x'?across:center;
+      mud.push({axis,x,y,radius,sign});
+    };
+    for(const span of bridgeCrossings(g).spans){
+      const mid=(span.lo+span.hi)/2;
+      addBank(span.axis,span.start,mid,-1);
+      addBank(span.axis,span.end,mid,1);
+    }
+    for(const crossing of g.landmarks||[]){
+      if(crossing.kind!=='ford')continue;
+      const alongX=crossing.axis==='x',mid=alongX?crossing.y:crossing.x;
+      const at=a=>alongX?terrainPolishAt(g,a,Math.floor(mid)):terrainPolishAt(g,Math.floor(mid),a);
+      const origin=Math.floor(alongX?crossing.x:crossing.y);
+      if(at(origin)?.feature!=='ford')continue;
+      for(const sign of [-1,1]){
+        let bank=origin;
+        while(at(bank)?.feature==='ford')bank+=sign;
+        if(terrainPolishLand(at(bank)))addBank(crossing.axis,bank+(sign<0?1:0),mid,sign);
+      }
+    }
+  }
+  const weather={tiles:g.tiles,width:g.W,height:g.H,mud};
+  routeWeatherByMap.set(g,weather);
+  return weather;
+}
+
+function climateInRange(height,range){
+  return range.y0<height*.36||range.y1>height*.64;
+}
+
+function mudInRange(bank,range){
+  const {x,y,radius}=bank;
+  return x+radius>range.x0&&x-radius<range.x1&&y+radius>range.y0&&y-radius<range.y1;
+}
+
+function paintRoadWear(c,weather,range){
+  const {tiles,width,height}=weather;
+  for(const cold of [true,false]){
+    const first=cold?range.y0:Math.max(range.y0,Math.floor(height*.7));
+    const limit=cold?Math.min(range.y1,Math.ceil(height*.3)):range.y1;
+    if(first>=limit)continue;
+    c.fillStyle=cold?'rgba(207,221,220,.38)':'rgba(245,198,127,.37)';
+    c.beginPath();
+    for(let y=first;y<limit;y++)for(let x=range.x0;x<range.x1;x++){
+      const tile=tiles[y*width+x];
+      if(tile?.feature!=='road')continue;
+      const latitude=(y+.5)/height,exposure=cold?.3-latitude:latitude-.7;
+      if(terrainPolishHash(x,y,85)>exposure*2)continue;
+      const along=.12+terrainPolishHash(x,y,86)*.62;
+      const across=terrainPolishHash(x,y,87)<.5?.16:.79;
+      const alongX=tile.featureAxis!=='y',length=cold?.09:.19,depth=cold?.024:.035;
+      const px=x+(alongX?along:across),py=y+(alongX?across:along);
+      c.rect(px,py,alongX?length:depth,alongX?depth:length);
+      c.rect(px+.04,py+.06,depth,depth);
+    }
+    c.fill();
+  }
+}
+
+// The road layer clips these washes to the same painted mask as the tracks.
+// World coordinates keep the color and puddles continuous at cache boundaries.
+function paintRouteWeather(c,weather,range,overview){
+  const {x0,y0,x1,y1}=range,{height,mud}=weather;
+  if(climateInRange(height,range)){
+    const color=c.createLinearGradient(0,0,0,height);
+    color.addColorStop(0,'rgba(133,164,186,.51)');
+    color.addColorStop(.15,'rgba(145,170,182,.34)');
+    color.addColorStop(.36,'rgba(145,170,182,0)');
+    color.addColorStop(.64,'rgba(212,160,89,0)');
+    color.addColorStop(.85,'rgba(212,160,89,.38)');
+    color.addColorStop(1,'rgba(222,170,94,.49)');
+    c.fillStyle=color;
+    c.fillRect(x0,y0,x1-x0,y1-y0);
+    if(!overview)paintRoadWear(c,weather,range);
+  }
+  for(const bank of mud){
+    if(!mudInRange(bank,range))continue;
+    const {axis,x,y,radius,sign}=bank;
+    const wash=c.createRadialGradient(x,y,0,x,y,radius);
+    wash.addColorStop(0,'rgba(63,49,37,.66)');
+    wash.addColorStop(.48,'rgba(76,58,42,.45)');
+    wash.addColorStop(1,'rgba(93,73,54,0)');
+    c.fillStyle=wash;
+    c.fillRect(x-radius,y-radius,radius*2,radius*2);
+    if(overview)continue;
+    const alongX=axis==='x',tilt=alongX?.08:Math.PI/2-.08;
+    for(const [along,across,length] of [[.35,-.72,.34],[.94,.68,.24]]){
+      const px=x+(alongX?sign*along:across),py=y+(alongX?across:sign*along);
+      c.fillStyle='rgba(49,42,34,.57)';
+      c.beginPath();c.ellipse(px,py,length+.08,.15,tilt,0,Math.PI*2);c.fill();
+      c.fillStyle='rgba(137,159,151,.57)';
+      c.beginPath();c.ellipse(px-.014,py-.026,length,.072,tilt,0,Math.PI*2);c.fill();
+    }
+  }
+}
+
 // Roadside field boundaries belong to the map. Their placement must not depend
 // on a living faction, a discovered building or any hidden settlement state.
 export function roadsideFields(g){
@@ -75,9 +179,12 @@ export function paintTerrainPolish(c,g,range={},options={}){
   const x1=Math.min(g.W,Math.ceil(range.x1??g.W)),y1=Math.min(g.H,Math.ceil(range.y1??g.H));
   const hw=options.halfWidth??28,hh=options.halfHeight??14,overview=options.detail==='overview';
   const stats={tiles:0,roadEdges:0,forestEdges:0,shoreEdges:0,ruts:0};
+  const weather=routeWeather(g),area={x0,y0,x1,y1};
+  const weatherRoads=climateInRange(g.H,area)||weather.mud.some(bank=>mudInRange(bank,area))?[]:null;
   c.save();c.transform(hw,hh,-hw,hh,0,0);
   for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){
     const t=terrainPolishAt(g,x,y),edges=terrainPolishEdges(g,t);if(!edges)continue;
+    if(edges.road)weatherRoads?.push(x,y);
     stats.tiles++;c.save();c.beginPath();c.rect(x,y,1,1);c.clip();
     // Gentle soil/grass variation breaks identical texture repetition without
     // replacing the painted ground or adding another decorative sprite layer.
@@ -134,6 +241,13 @@ export function paintTerrainPolish(c,g,range={},options={}){
     }
     c.restore();
   }
+  if(weatherRoads?.length){
+    c.save();c.beginPath();
+    for(let i=0;i<weatherRoads.length;i+=2)c.rect(weatherRoads[i],weatherRoads[i+1],1,1);
+    c.clip();
+    paintRouteWeather(c,weather,area,overview);
+    c.restore();
+  }
   c.restore();return stats;
 }
 
@@ -166,6 +280,7 @@ export function preparePaintedGround(g,renderer){
       tile.terrain==='forest'?WOODLAND:tile.terrain==='mountain'?SCREE:renderer.fieldTiles?.[i]?FIELD:PASTURE;
   }
   return {width:g.W,height:g.H,materials,ids,cartway:renderer.cartway,
+    weather:routeWeather(g),
     bridgeApproaches:bridgeApproachProfiles(g,ids),
     approaches:renderer.cartway?straightApproaches(g,ids):[]};
 }
@@ -336,7 +451,14 @@ export function bakePaintedGround(ctx,surface,range,overview=false,density=1){
     target.translate(-ox,-oy);target.fillStyle=target.createPattern(frame,'repeat');
     target.fillRect(ox,oy,spanX*frame.width/repeat,spanY*frame.height/repeat);
     target.restore();
-    if(kind===ROAD)paintWheelTracks(target,surface,range,scale);
+    if(kind!==ROAD)return;
+    paintWheelTracks(target,surface,range,scale);
+    const weather=surface.weather;
+    if(weather&&(climateInRange(weather.height,range)||weather.mud.some(bank=>mudInRange(bank,range)))){
+      target.save();target.scale(scale,scale);target.translate(-x0,-y0);
+      paintRouteWeather(target,weather,range,overview);
+      target.restore();
+    }
   }
   fill(outCtx,uniform??PASTURE);
   if(kinds.length){

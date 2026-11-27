@@ -41,6 +41,26 @@ test('Willow Bridge narrows into the meadow while its public road stays fully wa
   assert.ok(!onPaintedApproach(ground,31.5,17.5),'The travelled dirt has faded by the woodland.');
 });
 
+test('Wet road marks are deterministic and follow land on both sides of Riverlands crossings',()=>{
+  const make=landscape=>new Game({landscape,scale:'standard',seed:44277,enemies:1});
+  const material={sliceGround:{}},g=make('riverlands'),before=JSON.stringify(g.tiles);
+  const weather=preparePaintedGround(g,material).weather;
+  assert.ok(weather.mud.some(bank=>bank.axis==='x'));
+  assert.ok(weather.mud.some(bank=>bank.axis==='y'));
+  for(const bank of weather.mud){
+    assert.equal(g.tileAt(bank.x,bank.y).terrain==='water',false);
+  }
+  for(const ford of g.landmarks.filter(mark=>mark.kind==='ford')){
+    const alongX=ford.axis==='x',axis=alongX?'x':'y',across=alongX?'y':'x';
+    for(const sign of [-1,1])assert.ok(weather.mud.some(bank=>bank.axis===ford.axis&&bank.sign===sign&&bank[across]===ford[across]&&
+      (bank[axis]-ford[axis])*sign>0&&Math.abs(bank[axis]-ford[axis])<ford.length+2),ford.name);
+  }
+  assert.equal(JSON.stringify(g.tiles),before);
+  assert.equal(preparePaintedGround(g,material).weather,weather);
+  assert.deepEqual(preparePaintedGround(make('riverlands'),material).weather.mud,weather.mud);
+  assert.deepEqual(preparePaintedGround(make('highlands'),material).weather.mud,[]);
+});
+
 const require=createRequire(import.meta.url);let raster;
 test('Roadside parcels follow permanent roads and spare every non-grass or obstructed tile',()=>{
   const g=fixture();g.landscape={id:'riverlands'};
@@ -68,6 +88,18 @@ if(raster){
     assert.deepEqual([...first.c.getImageData(0,0,1,1).data],[255,0,153,255]);
     assert.ok(a.roadEdges>0&&a.forestEdges>0&&a.shoreEdges>0&&a.ruts>0);
     for(const t of g.tiles)if(t.terrain==='water'||t.terrain==='mountain')assert.equal(alphaAt(first.a,t.x+.5,t.y+.5),0);
+  });
+  test('Road color reads cool in the north and dusty in the south, sparing the crossing deck',()=>{
+    const g=fixture(),{a,c}=canvas();
+    for(const t of g.tiles)if(t.terrain==='grass'&&t.x>0&&t.x<7&&[1,6].includes(t.y))t.feature='road';
+    paintTerrainPolish(c,g);
+    function pixel(x,y){
+      return a.getContext('2d').getImageData(Math.floor(250+(x-y)*28),Math.floor(10+(x+y)*14),1,1).data;
+    }
+    const north=pixel(4.5,1.5),south=pixel(4.5,6.5);
+    assert.ok(north[2]>north[0]&&north[3]>0,'The northern road receives cool slate hues.');
+    assert.ok(south[0]>south[2]&&south[3]>0,'The southern road receives ochre dust hues.');
+    assert.equal(pixel(6.5,3.5)[3],0,'The crossing deck stays clear of the road weather layer.');
   });
   test('The bake scans only its requested exclusive tile range and reads a bounded neighbor halo',()=>{
     const g=fixture(),base=g.tiles;let reads=0;g.tiles=new Proxy(base,{get(target,key){if(/^\d+$/.test(String(key)))reads++;return Reflect.get(target,key);}});

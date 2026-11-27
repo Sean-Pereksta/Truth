@@ -1585,7 +1585,13 @@ export class Game {
     this.updateExpansionOrders();this.updatePatrolOrders();this.updateSpecialists(dt);updateFormationAdvances(this,dt,UNIT_DEFS);
     const collisionBuildings=this.buildingCollisionGrid(),emptyBuildings=[];
     for(const u of this.units)if(u.hp>0&&u.standardAction&&(u.knockT>0||u.shockUntil>this.time||u.stunUntil>this.time))BattleStandards.cancelStandard(this,u.id,true,'The standard interaction was interrupted.');
-    for(const u of this.units){if(u.hp<=0)continue;const d=this.unitDefinition(u),recoveryWork=dt*heroActionRate(this,u,'reload');if(!u.reload)u.cooldown-=recoveryWork;u.seek-=dt;u.attackAnim=Math.max(0,u.attackAnim-recoveryWork*3.6);if(u.attackVisual)u.attackVisual.elapsed=(u.attackVisual.elapsed??Math.max(0,this.time-dt-u.attackVisual.at))+recoveryWork;u.hit=Math.max(0,u.hit-dt);if(this.unitClass(u)==='cavalry')u.chargeCooldown=Math.max(0,(u.chargeCooldown||0)-dt*heroActionRate(this,u,'charge-recovery'));
+    const capturePresentation=this.captureUnitPresentation;
+    for(const u of this.units){
+      if(u.hp<=0)continue;
+      if(capturePresentation){
+        u.previousRenderX=u.x;u.previousRenderY=u.y;u.previousRenderPhase=u.phase;
+      }
+      const d=this.unitDefinition(u),recoveryWork=dt*heroActionRate(this,u,'reload');if(!u.reload)u.cooldown-=recoveryWork;u.seek-=dt;u.attackAnim=Math.max(0,u.attackAnim-recoveryWork*3.6);if(u.attackVisual)u.attackVisual.elapsed=(u.attackVisual.elapsed??Math.max(0,this.time-dt-u.attackVisual.at))+recoveryWork;u.hit=Math.max(0,u.hit-dt);if(this.unitClass(u)==='cavalry')u.chargeCooldown=Math.max(0,(u.chargeCooldown||0)-dt*heroActionRate(this,u,'charge-recovery'));
       const team=this.teams[u.team],range=this.unitRange(u);if(u.target&&(u.target.hp<=0||!this.isVisibleTo(u.team,u.target))){u.target=null;u.seek=0;}
       if(d.lanceChampion&&u.championCyclePending){u.championCyclePending=false;this.regroupChampion(u);}
       if(u.championRegroup&&ds(u,u.championRegroup.rally)<.65**2&&u.chargeCooldown<=0){

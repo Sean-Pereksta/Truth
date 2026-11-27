@@ -60,6 +60,7 @@ try{
       u.order={x:cx,y:cy,mode:'attack',formation:'line',groupX:cx,groupY:cy};
     }
     g.hash.rebuild(g.units);g.vision.update(true);
+    g.captureUnitPresentation=true;
     await r.loadDirectionalSheets(g);r.resize(1280,800,1);
     const camera={x:(cx-cy)*28,y:(cx+cy)*14,w:1280,h:800,zoom,dpr:1};
     const ui={selected:new Set(),selectedBuildings:new Set(),quality:'auto',lowDetail:false,showGrid:false,hover:null};
@@ -70,7 +71,11 @@ try{
       if(previous!==null){const elapsed=now-previous;smoothed=.95*smoothed+.05*Math.min(100,elapsed);if(i>=0)intervals.push(elapsed);}
       previous=now;ui.lowDetail=1000/smoothed<46;if(i>=0&&ui.lowDetail)reducedFrames++;
       if(i%2===0){const at=performance.now();g.update(1/30);if(i>=0)updates.push(performance.now()-at);}
-      const at=performance.now();r.draw(g,camera,ui);if(i>=0)renders.push(performance.now()-at);
+      // Sample both 60 Hz presentation frames around each 30 Hz simulation tick.
+      const at=performance.now();
+      ui.localPoseMix=i%2===0?0:.5;
+      r.draw(g,camera,ui);
+      if(i>=0)renders.push(performance.now()-at);
     }
     function stats(values){
       const sorted=values.slice().sort((a,b)=>a-b),pct=n=>Math.round(100*sorted[Math.floor(n*sorted.length)])/100;

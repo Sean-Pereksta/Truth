@@ -1,7 +1,30 @@
 // Rows turn clockwise in the isometric ground plane, starting at screen right.
 // Undo the diamond's vertical foreshortening before choosing the nearest octant.
+const octantAngle=Math.PI/4;
+const facingHoldSlope=Math.tan(.62*octantAngle);
+const facingHeadings=[[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1]];
+
+function facingOctant(x,y){
+  return Math.atan2(x+y,x-y)/octantAngle;
+}
+
 export function facingRow(x=1,y=0){
-  return (Math.round(Math.atan2(x+y,x-y)/(Math.PI/4))+8)%8;
+  return (Math.round(facingOctant(x,y))+8)%8;
+}
+
+export function stableFacingRow(x,y,previousRow){
+  const front=facingHeadings[previousRow];
+  if(front){
+    if(!x&&!y)return previousRow;
+    // A dot/cross test keeps the common straight march off the trigonometry path.
+    const along=x*front[0]+y*front[1],across=x*front[1]-y*front[0];
+    if(along>0&&Math.abs(across)<along*facingHoldSlope)return previousRow;
+  }
+  return facingRow(x,y);
+}
+
+export function directionalAnchor(row,angle,col){
+  return row.anchors?.[angle]?.[col];
 }
 
 export const DRAGON_BREATH_SECONDS=.85;
@@ -14,15 +37,24 @@ export function dragonBreathAge(u,g){
   return Number.isFinite(attack.at)&&Number.isFinite(g.time)?g.time-attack.at:attack.elapsed??Infinity;
 }
 
+const strikeAge=(attack,g)=>attack?(attack.elapsed??g.time-attack.at):Infinity;
+
+function capturedAttack(u,g){
+  const attack=u.attackVisual;
+  if(!attack||!Number.isFinite(attack.faceX)||!Number.isFinite(attack.faceY))return;
+  const dragon=u.type==='dragon';
+  const age=dragon?dragonBreathAge(u,g):strikeAge(attack,g);
+  if(age>=0&&age<(dragon?dragonRecoveryEnd:.32))return attack;
+}
+
 export function attackFacing(u,g,usual){
-  const a=u.attackVisual;
-  if(!a||!Number.isFinite(a.faceX)||!Number.isFinite(a.faceY))return usual;
-  if(u.type==='dragon'){
-    const age=dragonBreathAge(u,g);
-    return age>=0&&age<dragonRecoveryEnd?{x:a.faceX,y:a.faceY}:usual;
-  }
-  const age=a.elapsed??g.time-a.at;
-  return age>=0&&age<.32?{x:a.faceX,y:a.faceY}:usual;
+  const attack=capturedAttack(u,g);
+  return attack?{x:attack.faceX,y:attack.faceY}:usual;
+}
+
+export function attackFacingRow(u,g){
+  const attack=capturedAttack(u,g);
+  if(attack)return facingRow(attack.faceX,attack.faceY);
 }
 
 export const engineKits=new Set(['catapult','ballista','trebuchet','firepot']);
@@ -39,9 +71,7 @@ export function atlasPoses(kit,hero=false){
   return [...common,...extra];
 }
 
-export function atlasPose(u,g,moving,windup=0){
-  const stride=Math.floor((u.phase||0)/(Math.PI*2)*4)&3;
-  const step=u.backpedaling?3-stride:stride;
+export function atlasPose(u,g,moving,windup=0,phase=u.phase){
   const carry=u.type==='hero'&&u.heroMode!=='signature';
   if(u.hp<=0){
     const early=(g.time||0)-(u.bornAt??0)<.3;
@@ -68,7 +98,7 @@ export function atlasPose(u,g,moving,windup=0){
     return (a.kind==='pickup'?1-progress:progress)>.52?'plant':'kneel';
   }
   if(u.hitVisual&&g.time>=u.hitVisual.at&&g.time-u.hitVisual.at<.15&&!carry)return u.hitVisual.blocked?'block':'hit';
-  const strike=u.attackVisual,age=strike?(strike.elapsed??g.time-strike.at):Infinity;
+  const age=strikeAge(u.attackVisual,g);
   if(age>=0&&age<(u.reloading ? .1 : .32)){
     return carry?'carryStrike':age<.14?'strike':'recover';
   }
@@ -82,7 +112,11 @@ export function atlasPose(u,g,moving,windup=0){
   if(u.spearState==='braced')return 'brace';
   if(u.spearState==='lowering'||u.charging&&!moving)return 'lower';
   if(u.shieldGuard==='guard'||u.shieldGuard==='raising')return 'guard';
-  if(moving)return (carry?'carry':'walk')+step;
+  if(moving){
+    const stride=Math.floor((phase||0)/(Math.PI*2)*4)&3;
+    const step=u.backpedaling?3-stride:stride;
+    return (carry?'carry':'walk')+step;
+  }
   if(u.type==='trebuchet'&&(u.trebuchetState==='deployed'||!u.trebuchetState&&u.setupProgress>=15))return 'deployed';
   return carry?'carry':'idle';
 }

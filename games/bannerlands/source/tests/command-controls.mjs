@@ -4,6 +4,7 @@ import vm from 'node:vm';
 import {Game,HOUSES,UNIT_DEFS,BUILD_DEFS} from '../../core.js';
 import {isPassableTile} from '../../lands.js';
 import {worldToScreen,screenToWorld} from '../../render.js';
+import {unitPresentationMix} from '../../local-presentation.js';
 import {regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit,trebuchetOrderLocked} from '../../regiments.js';
 import {formationPreview,formationRole,placeFormation} from '../../formation-placement.js';
 import {HERO_PROFILES,heroProfile} from '../../heroes.js';
@@ -47,7 +48,7 @@ function fixture({house=0,realMenu=false}={}){
   const canvas=element('battleCanvas'),win=new Element('window'),ui={selected:new Set(),selectedBuildings:new Set(),formation:'line',formationOptions:{ranks:2,width:null,lockFacing:false},formMode:false,formPreview:null,advanceMode:false,buildMode:null,rallyMode:false,teamOrderMode:null,facingMode:false,facingPreview:null,drag:null,hover:null};
   element('resultOverlay').hidden=true;
   element('mobileOptionsMenu').hidden=true;
-  const context={console,Math,Map,Set,String,Array,HOUSES,HERO_PROFILES,heroProfile,UNIT_DEFS,BUILD_DEFS,isPassableTile,worldToScreen,screenToWorld,regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit,trebuchetOrderLocked,formationPreview,formationRole,placeFormation,game,canvas,window:win,performance:{now:()=>100},standardTapBlock:null,
+  const context={console,Math,Map,Set,String,Array,HOUSES,HERO_PROFILES,heroProfile,UNIT_DEFS,BUILD_DEFS,isPassableTile,worldToScreen,screenToWorld,unitPresentationMix,regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit,trebuchetOrderLocked,formationPreview,formationRole,placeFormation,game,canvas,window:win,performance:{now:()=>100},standardTapBlock:null,
     troopFilter:createTroopSelectionFilter(),troopFilterShortcut,isLivingSelectedUnit:id=>{const u=game.byId.get(id);return !!(u&&u.team===(game.playerTeam??0)&&u.hp>0&&UNIT_DEFS[u.type]);},
     ui,view:{x:0,y:840,w:800,h:600,zoom:1},battleHud:{open(){},close(){},isOpen:false,touchSelect:false,syncSelection(){}},started:true,menuOpen:false,orderMode:'attack',tab:'army',allSelected:false,allBuildingsSelected:false,
     pointers:new Map(),keys:new Set(),groups:new Map(),gesture:null,pinch:null,edgeMouse:null,
@@ -63,7 +64,7 @@ function fixture({house=0,realMenu=false}={}){
     const line=source.split('\n').find(line=>line.startsWith(prefix));assert.ok(line,prefix);vm.runInContext(line,context);
   }
   const actionsStart=source.indexOf('const MENU_ACTIONS='),actionsEnd=source.indexOf('\n};',actionsStart);vm.runInContext(source.slice(actionsStart,actionsEnd+3),context);
-  for(const name of ['filterTroops','clearBuildingSelection','selectTroopType','commandGroup','cancelBuild','showTab','activateMenuAction','handleMenuHotkey','beginFacing','beginForm','refreshFormationPreview','confirmFormation','formPointer','patrolBorder','issue','issueTarget','unitAt','buildingAt','standardAt','selectedHero','standardCommand','performStandardAction','placeStandard','cancelStandardInteraction','beginFormAtStandard','setSelectedRally','pointerPos','rememberMouse','finishPointer','bonusText','upgradeSummary','specialistTooltip','labelMenuHotkeys','buildActionLists'])vm.runInContext(extract(name),context);
+  for(const name of ['filterTroops','clearBuildingSelection','selectTroopType','commandGroup','cancelBuild','showTab','activateMenuAction','handleMenuHotkey','beginFacing','beginForm','refreshFormationPreview','confirmFormation','formPointer','patrolBorder','issue','issueTarget','unitScreenFoot','unitAt','buildingAt','standardAt','selectedHero','standardCommand','performStandardAction','placeStandard','cancelStandardInteraction','beginFormAtStandard','setSelectedRally','pointerPos','rememberMouse','finishPointer','bonusText','upgradeSummary','specialistTooltip','labelMenuHotkeys','buildActionLists'])vm.runInContext(extract(name),context);
   vm.runInContext(listener('canvas','pointerdown'),context);vm.runInContext(listener('canvas','pointermove'),context);vm.runInContext(listener('window','keydown'),context);
   const cancelLine=source.split('\n').find(line=>line.startsWith("canvas.addEventListener('pointerup'"));vm.runInContext(cancelLine,context);
   const blurLine=source.split('\n').find(line=>line.startsWith("window.addEventListener('keyup'"));vm.runInContext(blurLine,context);
@@ -89,6 +90,15 @@ function fixture({house=0,realMenu=false}={}){
   return {game,ui,context,canvas,win,element,actions,messages,effects,commands,event,refreshMenu};
 }
 const ids=value=>[...value].sort((a,b)=>a-b);
+
+test('Offline unit picking follows the rendered stance without mutating game coordinates',()=>{
+  const f=fixture(),unit=f.game.addUnit(0,'infantry',21,20);
+  unit.previousRenderX=20.5;unit.previousRenderY=20;
+  f.ui.localPoseMix=.5;
+  const point=worldToScreen(20.75,20,f.context.view);
+  assert.equal(f.context.unitAt(point,false,false,1,0),unit);
+  assert.equal(unit.x,21);
+});
 
 test('Bolton trebuchet buttons follow selection, setup and takedown',()=>{
   const f=fixture({house:HOUSES.findIndex(h=>h.sigil==='flayed')});

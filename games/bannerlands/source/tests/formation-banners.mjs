@@ -71,4 +71,24 @@ test('Cached linking avoids per-frame regrouping while moving centroids and fog 
   result=layer.draw(c,units,teams,{...options,time:5.04,visible:u=>u.id==null||u.id>9});assert.equal(result.length,0,'Fewer than six currently visible troops hides a cached crest immediately.');assert.equal(layer.anchors.size,0);
   layer.draw(c,units,teams,{...options,time:5.15});assert.equal(layer.rebuilds,2);
 });
+test('Only a consistent selected formation shows its cue beneath the crest',()=>{
+  const layer=new FormationBannerLayer(),units=company(),source={},strokes=[];
+  const c={globalAlpha:1};
+  for(const name of ['save','restore','translate','scale','beginPath','ellipse','lineTo'])c[name]=()=>{};
+  c.stroke=()=>strokes.push(c.strokeStyle);
+  c.moveTo=()=>{};
+  for(const member of units)member.order={formationPreset:'pike'};
+  const options={source,time:5,zoom:.46,drawCrest:()=>{}};
+  layer.draw(c,units,teams,options);
+  assert.deepEqual(strokes,[]);
+  const selected=new Set(units.map(u=>u.id));
+  const [selectedGroup]=layer.draw(c,units,teams,{...options,selected});
+  assert.equal(selectedGroup.preset,'pike');
+  assert.ok(strokes.includes('#f0d49a'));
+  units[0].order.formationPreset='shield';
+  strokes.length=0;
+  const [mixedGroup]=layer.draw(c,units,teams,{...options,selected});
+  assert.equal(mixedGroup.preset,null);
+  assert.ok(!strokes.includes('#f0d49a'));
+});
 console.log(`${checks} formation crest checks passed.`);

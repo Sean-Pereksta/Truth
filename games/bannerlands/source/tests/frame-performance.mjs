@@ -62,6 +62,18 @@ test('Repeated overload keeps input frames moving and clears debt after recovery
   assert.ok(f.context.accumulator<1/30+1e-9);assert.equal(f.calls.draws,140);
 });
 
+test('Offline interpolation samples each fixed step and resets while paused',()=>{
+  const f=fixture();
+  f.frame(17);assert.equal(f.context.ui.localPoseMix,null);
+  f.frame(35);const firstMix=f.context.ui.localPoseMix;
+  assert.ok(firstMix>=0&&firstMix<.1);assert.equal(f.calls.ticks.length,1);
+  f.frame(51);assert.ok(f.context.ui.localPoseMix>.5);assert.equal(f.calls.ticks.length,1);
+  f.context.game.paused=true;f.frame(60);
+  assert.equal(f.context.ui.localPoseMix,null);assert.equal(f.context.game.captureUnitPresentation,false);
+  f.context.game.paused=false;f.frame(77);assert.equal(f.context.ui.localPoseMix,null);
+  f.frame(95);assert.ok(f.context.ui.localPoseMix>=0&&f.context.ui.localPoseMix<.1);
+});
+
 test('Paused, menu, unstarted and finished games never advance the simulation',()=>{
   for(const state of ['paused','menu','unstarted','finished']){
     const f=fixture({speed:2});
