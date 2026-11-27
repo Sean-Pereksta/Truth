@@ -1,6 +1,6 @@
 // Formation geometry belongs to the simulation. Nothing here selects a new
 // character-facing image; the renderer continues to use its existing two views.
-import {trebuchetAnchored} from './regiments.js';
+import {trebuchetOrderLocked} from './regiments.js';
 
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
@@ -140,7 +140,7 @@ export function formationPreview(g,troops,options={},defs={}){
   return {...settings,...center,angle,faceX:fx,faceY:fy,standardAnchor:options.standardAnchor||null,slots,blocked:slots.filter(s=>s.blocked).length};
 }
 export function placeFormation(g,ids,options,defs){
-  const troops=[...new Set(ids||[])].map(id=>g.byId.get(id)).filter(u=>u?.hp>0&&defs[u.type]&&g.teams[u.team]?.alive&&!trebuchetAnchored(u));
+  const troops=[...new Set(ids||[])].map(id=>g.byId.get(id)).filter(u=>u?.hp>0&&defs[u.type]&&g.teams[u.team]?.alive&&!trebuchetOrderLocked(u));
   if(!troops.length)return {ok:false,message:'Select soldiers first.'};
   if(!Number.isFinite(options.x)||!Number.isFinite(options.y)||!g.isWalkable(options.x,options.y))return {ok:false,message:'Choose reachable ground for the formation center.'};
   // Keep a surviving soldier's lane when a group is rotated or repositioned.

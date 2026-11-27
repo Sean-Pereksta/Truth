@@ -52,6 +52,21 @@ test('a Bolton guest controls only its own trebuchet and receives the authoritat
   assert.equal(update().trebuchetRemaining,undefined);
   assert.equal(send(1,5,'command',[[engine.id],x+3,y,'move']).ok,true);
 });
+test('Hightower guest can queue setup, see its order, and withdraw it before arrival',()=>{
+  const h=HOUSES.findIndex(h=>h.sigil==='beacon');
+  const match=createAuthority({...config,houses:[0,h,2,3]},{humanTeams:[0,1]});
+  const {x,y}=match.game.teams[1].home;
+  const u=match.game.addUnit(1,'trebuchet',x+2,y);
+  const send=(seq,type,args)=>match.command(1,{v:PROTOCOL_VERSION,seq,type,args});
+  assert.ok(send(1,'command',[[u.id],x+5,y,'move']).ok);
+  assert.ok(send(2,'setTrebuchetDeployment',[[u.id],true,true]).ok);
+  const guest=createRemoteGame(match.snapshot(1,{initial:true}));
+  assert.equal(guest.byId.get(u.id).order.setupOnArrival,true);
+  assert.equal(guest.byId.get(u.id).trebuchetState,'packed');
+  assert.ok(send(3,'setTrebuchetDeployment',[[u.id],false]).ok);
+  applySnapshot(guest,match.snapshot(1));
+  assert.equal(guest.byId.get(u.id).order.setupOnArrival,undefined);
+});
 test('foreign, allied and mixed ownership cannot be commanded',()=>{
   const other=game.heroFor(0),own=game.heroFor(1),old=own.order;
   for(const type of ['hold','retreat','idle','advance','expand','patrol','attackNearest','useHousePower'])assert.equal(command(1,type,[[own.id,other.id]]).ok,false,type);

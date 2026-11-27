@@ -86,7 +86,7 @@ export function executePlayerCommand(game,team,type,args){
       case 'hold':response=game.hold(ids(args[0]));break;
       case 'retreat':response=game.retreat(ids(args[0]));break;
       case 'expand':response=game.expand(ids(args[0]));break;
-      case 'setTrebuchetDeployment':response=game.setTrebuchetDeployment(ids(args[0]),args[1]);break;
+      case 'setTrebuchetDeployment':response=game.setTrebuchetDeployment(ids(args[0]),args[1],args[2]);break;
       case 'patrol':response=game.patrol(ids(args[0]),team);break;
       case 'advance':{
         const destination=args[3];

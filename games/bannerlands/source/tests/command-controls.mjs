@@ -4,7 +4,7 @@ import vm from 'node:vm';
 import {Game,HOUSES,UNIT_DEFS,BUILD_DEFS} from '../../core.js';
 import {isPassableTile} from '../../lands.js';
 import {worldToScreen,screenToWorld} from '../../render.js';
-import {regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit,trebuchetAnchored} from '../../regiments.js';
+import {regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit,trebuchetOrderLocked} from '../../regiments.js';
 import {formationPreview,formationRole,placeFormation} from '../../formation-placement.js';
 import {HERO_PROFILES,heroProfile} from '../../heroes.js';
 import {createTroopSelectionFilter,troopFilterShortcut} from '../../troop-selection.js';
@@ -47,7 +47,7 @@ function fixture({house=0,realMenu=false}={}){
   const canvas=element('battleCanvas'),win=new Element('window'),ui={selected:new Set(),selectedBuildings:new Set(),formation:'line',formationOptions:{ranks:2,width:null,lockFacing:false},formMode:false,formPreview:null,advanceMode:false,buildMode:null,rallyMode:false,teamOrderMode:null,facingMode:false,facingPreview:null,drag:null,hover:null};
   element('resultOverlay').hidden=true;
   element('mobileOptionsMenu').hidden=true;
-  const context={console,Math,Map,Set,String,Array,HOUSES,HERO_PROFILES,heroProfile,UNIT_DEFS,BUILD_DEFS,isPassableTile,worldToScreen,screenToWorld,regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit,trebuchetAnchored,formationPreview,formationRole,placeFormation,game,canvas,window:win,performance:{now:()=>100},standardTapBlock:null,
+  const context={console,Math,Map,Set,String,Array,HOUSES,HERO_PROFILES,heroProfile,UNIT_DEFS,BUILD_DEFS,isPassableTile,worldToScreen,screenToWorld,regimentForHouse,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,regimentRequiredBuilding,houseCanBuild,houseCanRecruit,trebuchetOrderLocked,formationPreview,formationRole,placeFormation,game,canvas,window:win,performance:{now:()=>100},standardTapBlock:null,
     troopFilter:createTroopSelectionFilter(),troopFilterShortcut,isLivingSelectedUnit:id=>{const u=game.byId.get(id);return !!(u&&u.team===(game.playerTeam??0)&&u.hp>0&&UNIT_DEFS[u.type]);},
     ui,view:{x:0,y:840,w:800,h:600,zoom:1},battleHud:{open(){},close(){},isOpen:false,touchSelect:false,syncSelection(){}},started:true,menuOpen:false,orderMode:'attack',tab:'army',allSelected:false,allBuildingsSelected:false,
     pointers:new Map(),keys:new Set(),groups:new Map(),gesture:null,pinch:null,edgeMouse:null,
@@ -103,13 +103,13 @@ test('Bolton trebuchet buttons follow selection, setup and takedown',()=>{
   assert.equal(panel.hidden,true);
   f.ui.selected=new Set([engine.id,other.id]);
   f.context.updateTrebuchetHud([engine,other]);
-  assert.equal(panel.hidden,false);assert.equal(setup.disabled,false);assert.equal(takeDown.disabled,true);
-  setup.onclick();f.context.updateTrebuchetHud([engine,other]);
-  assert.equal(status.textContent,'Setting up 10s');assert.ok(setup.disabled&&takeDown.disabled);
+  assert.equal(panel.hidden,false);assert.equal(setup.hidden,false);assert.equal(takeDown.hidden,true);
+  setup.onclick({shiftKey:false});f.context.updateTrebuchetHud([engine,other]);
+  assert.equal(status.textContent,'Setting up 10s');assert.ok(setup.hidden&&!takeDown.hidden);
   f.game.updateUnits(10);f.context.updateTrebuchetHud([engine,other]);
-  assert.equal(status.textContent,'Deployed');assert.equal(takeDown.disabled,false);
+  assert.equal(status.textContent,'Deployed');assert.equal(takeDown.hidden,false);
   takeDown.onclick();f.context.updateTrebuchetHud([engine,other]);
-  assert.equal(status.textContent,'Taking down 5s');assert.ok(setup.disabled&&takeDown.disabled);
+  assert.equal(status.textContent,'Taking down 5s');assert.ok(setup.hidden&&takeDown.hidden);
 });
 
 test('Shift troop filters preserve and restore the selected group, and open menus keep recruitment shortcuts',()=>{
@@ -340,11 +340,11 @@ test('All sixteen houses retain their original menus while eligible houses gain 
 });
 
 await testAsync('Play Solo waits for critical art and a load failure offers a retry',async()=>{
-  for(const failed of [null,'loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt','loadPaintedBridge','loadCavalryCharge','loadBattlefieldProjectiles','loadPaintedTroops','loadPikeBuildings','loadPaintedHeroes']){
+  for(const failed of [null,'loadDirectionalSheets','loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt','loadPaintedBridge','loadCavalryCharge','loadBattlefieldProjectiles','loadPaintedTroops','loadPikeBuildings','loadPaintedHeroes']){
     const f=fixture({realMenu:true}),loads=[],errors=[],effects=[];
-    f.context.console={warn(){},error:(...args)=>errors.push(args)};f.context.renderer={};
+    f.context.console={warn(){},error:(...args)=>errors.push(args)};f.context.renderer={};f.context.lastArtworkFailure=()=>null;
     f.context.renderer.refreshLandscape=()=>{assert.equal(f.context.renderer.deferLandscapeRefresh,false);effects.push('landscape');};
-    for(const method of ['loadTroops','loadStructures','loadCampaignArt','loadTerrain','loadHouseArt','loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt','loadPaintedBridge','loadCavalryCharge','loadBattlefieldProjectiles','loadPaintedTroops','loadPikeBuildings','loadPaintedHeroes','loadLandsArt','loadLandsGround','loadRiverMaterials','loadHighlandCrags','loadCartway','loadBattlefieldArt'])f.context.renderer[method]=(...args)=>{loads.push({method,args});return method===failed?Promise.reject(new Error('Missing test artwork')):Promise.resolve();};
+    for(const method of ['loadTroops','loadDirectionalSheets','loadStructures','loadCampaignArt','loadTerrain','loadHouseArt','loadRegimentArt','loadRegimentBuildings','loadConquestArt','loadReinforcementArt','loadHouseEmblems','loadBridgeArt','loadPaintedBridge','loadCavalryCharge','loadBattlefieldProjectiles','loadPaintedTroops','loadPikeBuildings','loadPaintedHeroes','loadLandsArt','loadLandsGround','loadRiverMaterials','loadHighlandCrags','loadCartway','loadBattlefieldArt'])f.context.renderer[method]=(...args)=>{loads.push({method,args});return method===failed?Promise.reject(new Error('Missing test artwork')):Promise.resolve();};
     for(const name of ['paintBuildingIcons','paintHousePreview','paintTownHall','fitMap','updateHud'])f.context[name]=()=>effects.push(name);
     f.context.online=null;f.context.performance={mark:()=>{}};f.context.frame=()=>{};f.context.requestAnimationFrame=()=>effects.push('frame');
     for(const prefix of ['const HOUSE_ART_SOURCES=','const REGIMENT_ART_SOURCES=','const CONQUEST_ART_SOURCES=','const REINFORCEMENT_ART_SOURCES=','const PAINTED_TROOP_SOURCES=','const HERO_ART_SOURCES=']){const line=source.split('\n').find(line=>line.startsWith(prefix));assert.ok(line);vm.runInContext(line,f.context);}

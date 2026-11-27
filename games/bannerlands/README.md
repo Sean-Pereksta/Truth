@@ -102,9 +102,10 @@ become neutral ruins again. A faction survives while it has at least one castle,
 and its home moves to a surviving castle if the original capital falls.
 
 Bolton and Hightower can build dedicated siege yards for long-range trebuchets.
-When playing Bolton, select a trebuchet and choose **Set up** (10 seconds) to
-bombard. It ignores movement orders until **Take down** finishes (5 seconds).
-Hightower trebuchets deploy automatically after 15 stationary seconds.
+Select a player-controlled trebuchet and choose **Set up** (10 seconds), or
+right-click a destination and **Shift-click Set up** to deploy on arrival.
+Group orders leave a committed engine alone. **Take down** cancels a queued
+deployment or packs a setting-up/deployed engine in 5 seconds.
 Free Folk Giant Camps muster one
 high-health giant with splash damage and knockback per 130 seconds; paid and automatic mustering
 share each camp's cadence. Tully Sharpshooter Lodges train marksmen with longer
@@ -212,3 +213,7 @@ danger and campaign risk. Their current role adapts to objectives, visible dange
 scouting and losses, with commitment periods for workable orders. Hard and Warlord
 make better use of the same information and resources. See
 `docs/Living-Rivals-and-Performance.md` for behavior, validation and measurements.
+
+Each troop and house hero has a separate painted battlefield sheet in
+`assets/directions/`. Its eight rows run clockwise from screen right.
+Each row shares a ground anchor across movement, attacks and recovery.

@@ -12,7 +12,7 @@ import {evaluateRivals,observedStrength,campaignRoute} from './rival-intelligenc
 import {BattleAftermath} from './aftermath.js';
 import {startFormationAdvance,updateFormationAdvances} from './formation-advance.js';
 import {assignFormationSlots,marchSlot} from './formation-placement.js';
-import {registerRegiments,regimentForHouse,regimentAllowed,regimentRequiredBuilding,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,houseCanRecruit,houseCanBuild,shieldFacingMultiplier,migrateLegacyRegiments,BOLTON_TREBUCHET_TIMES,trebuchetAnchored} from './regiments.js';
+import {registerRegiments,regimentForHouse,regimentAllowed,regimentRequiredBuilding,regimentBuildingForHouse,regimentsForHouse,regimentBuildingsForHouse,houseCanRecruit,houseCanBuild,shieldFacingMultiplier,migrateLegacyRegiments,TREBUCHET_TIMES,trebuchetAnchored,trebuchetOrderLocked} from './regiments.js';
 export const HOUSES = [
   {name:'House Stark',motto:'Winter is coming',sigil:'wolf',color:'#8ac9e8',dark:'#234c61',trait:'Steadfast in the North'},
   {name:'House Lannister',motto:'Hear me roar',sigil:'lion',color:'#ef7165',dark:'#672e31',trait:'The pride of the West'},
@@ -555,29 +555,45 @@ export class Game {
   addUnit(team,type,x,y){
     if(type==='hero'){const existing=this.heroFor(team);if(existing)return existing;}
     const d=UNIT_DEFS[type],s=this.teams[team],armor=this.upgradeMultiplier('armor',s.upgrades.armor),angle=Math.atan2(this.H/2-y,this.W/2-x);const u={id:this.nextId++,team,type,x,y,radius:d.radius,hp:d.hp*armor,maxHp:d.hp*armor,vx:0,vy:0,facingX:Math.cos(angle),facingY:Math.sin(angle),backpedaling:false,attackAnim:0,phase:this.random()*6.28,cooldown:this.random()*d.rate,seek:this.random()*.2,target:null,order:null,charge:0,momentum:0,charging:false,chargeSpeed:0,chargeDir:{x:1,y:0},chargeRunup:0,chargeTravel:0,chargeCooldown:0,chargeElapsed:0,chargeHits:this.unitClass(type)==='cavalry'?new Map():null,knockT:0,knockVX:0,knockVY:0,alive:true,spawn:this.time,hit:0,shieldType:d.shieldType,shieldGuard:'lowered',shieldGuardTime:0,spearState:d.spearBrace?'moving':undefined};this.bound(u);if(!this.isWalkable(u.x,u.y))Object.assign(u,this.navigation.nearestPassable(u));this.units.push(u);this.byId.set(u.id,u);s.count++;if(d.setupSeconds){
-      if(s.sigil==='flayed'&&this.isHuman(team))u.trebuchetState='packed';
+      if(this.isHuman(team))u.trebuchetState='packed';
       else{u.setupProgress=0;u.setupX=u.x;u.setupY=u.y;}
     }if(type==='hero')BattleStandards.attachHero(this,u);return u;
   }
   addBuilding(team,type,x,y){const d=BUILD_DEFS[type],rally=this.teams[team]?.rally,b={id:this.nextId++,team,type,x,y,hp:d.hp,maxHp:d.hp,level:type==='keep'||type==='tower'?1:undefined,radius:d.radius,spawnTimer:0,cooldown:this.random(),hit:0,progress:1,rally:rally?{...rally}:null};this.bound(b);this.buildings.push(b);this.byId.set(b.id,b);if(type==='keep'){const site=this.castles.find(c=>c.ruined&&ds(c,b)<.01)||this.createCastleSite(b,team,b.id);Object.assign(site,{team,buildingId:b.id,ruined:false});b.castleId=site.id;}return b;}
   group(team){return this.units.filter(u=>u.team===team&&u.hp>0);}
-  setTrebuchetDeployment(ids,deploy){
-    if(typeof deploy!=='boolean')return result(false,'Choose Set up or Take down.');
-    const from=deploy?'packed':'deployed',duration=BOLTON_TREBUCHET_TIMES[deploy?'setup':'takedown'];
-    const engines=[...new Set(ids||[])].map(id=>this.byId.get(id)).filter(u=>u?.hp>0&&u.trebuchetState===from&&this.teams[u.team]?.alive);
-    if(!engines.length)return result(false,deploy?'Select packed Bolton trebuchets.':'Select deployed Bolton trebuchets.');
-    this.hold(engines.map(u=>u.id));
-    for(const u of engines){
-      u.trebuchetState=deploy?'settingUp':'takingDown';
-      u.trebuchetRemaining=duration;
-      u.order={x:u.x,y:u.y,mode:'hold',formation:'spread'};
-      u.vx=u.vy=0;
+  beginTrebuchetTransition(u,deploy){
+    this.interruptAction(u);
+    u.target=null;u.aggroAnchor=null;u.seek=0;
+    u.trebuchetState=deploy?'settingUp':'takingDown';
+    u.trebuchetRemaining=TREBUCHET_TIMES[deploy?'setup':'takedown'];
+    u.order={x:u.x,y:u.y,mode:'hold',formation:'spread'};
+    u.vx=u.vy=u.knockT=u.knockVX=u.knockVY=0;
+  }
+  setTrebuchetDeployment(ids,deploy,queue=false){
+    if(typeof deploy!=='boolean'||typeof queue!=='boolean')return result(false,'Choose Set up or Take down.');
+    let count=0,queued=0;
+    for(const id of new Set(ids||[])){
+      const u=this.byId.get(id);
+      if(u?.type!=='trebuchet'||u.hp<=0||!this.teams[u.team]?.alive)continue;
+      if(deploy){
+        if(u.trebuchetState!=='packed'||u.order?.setupOnArrival)continue;
+        if(queue&&u.order?.mode==='move'&&Math.hypot(u.x-u.order.x,u.y-u.order.y)>.16){
+          u.order.setupOnArrival=true;
+          queued++;
+        }else this.beginTrebuchetTransition(u,true);
+      }else if(u.order?.setupOnArrival){
+        delete u.order.setupOnArrival;
+      }else if(['settingUp','deployed'].includes(u.trebuchetState)){
+        this.beginTrebuchetTransition(u,false);
+      }else continue;
+      count++;
     }
-    return {...result(true,`${deploy?'Setting up':'Taking down'} trebuchets (${duration}s).`),count:engines.length};
+    if(!count)return result(false,'No selected trebuchet can take that order.');
+    return {...result(true,queued?'Set up queued at destination.':deploy?'Setting up trebuchets.':'Deployment withdrawn.'),count};
   }
   idle(ids){
     for(const id of ids){const u=this.byId.get(id);if(!u||u.hp<=0||!UNIT_DEFS[u.type])continue;
-      if(trebuchetAnchored(u))continue;
+      if(trebuchetOrderLocked(u))continue;
       if(this.unitClass(u)==='cavalry')this.stopCharge(u);
       this.interruptAction(u);u.order={x:u.x,y:u.y,mode:'idle',formation:u.order?.formation||'line'};u.target=null;u.seek=0;u.aggroAnchor=null;u.braceDir=null;u.braceTime=0;u.championRegroup=null;u.championCyclePending=false;
     }
@@ -621,7 +637,7 @@ export class Game {
 
   command(ids,x,y,mode='attack',formation='line',facing=null){
     const troops=[...new Set(ids||[])].map(id=>this.byId.get(id)).filter(u=>u?.hp>0&&UNIT_DEFS[u.type]);
-    const arr=troops.filter(u=>!trebuchetAnchored(u));
+    const arr=troops.filter(u=>!trebuchetOrderLocked(u));
     if(!arr.length)return troops.length?result(false,packTrebuchetsMessage):undefined;
     if(!Number.isFinite(x)||!Number.isFinite(y))return;
     x=clamp(x,1.4,this.W-1.4);y=clamp(y,1.4,this.H-1.4);
@@ -649,14 +665,14 @@ export class Game {
     if(typeof locked!=='boolean')return result(false,'Choose a facing lock setting.');
     let count=0;
     for(const id of new Set(ids||[])){
-      const u=this.byId.get(id);if(!u||u.hp<=0||!UNIT_DEFS[u.type]||!u.order||trebuchetAnchored(u))continue;
+      const u=this.byId.get(id);if(!u||u.hp<=0||!UNIT_DEFS[u.type]||!u.order||trebuchetOrderLocked(u))continue;
       u.order.lockFacing=locked;const cohort=this.formationAdvances?.get(u.order.advanceId)||this.placedFormations?.get(u.order.placementId);if(cohort)cohort.lockFacing=locked;
       if(locked){u.order.facingX=u.order.facingX??u.facingX??1;u.order.facingY=u.order.facingY??u.facingY??0;}else if(!u.order.advanceId){delete u.order.facingX;delete u.order.facingY;}count++;
     }
     return {...result(!!count,locked?'Facing locked.':'Facing released.'),count};
   }
   attackNearest(ids,formation='line'){
-    const troops=[...new Set(ids||[])].map(id=>this.byId.get(id)).filter(u=>u?.hp>0&&UNIT_DEFS[u.type]&&this.teams[u.team]?.alive&&!trebuchetAnchored(u));
+    const troops=[...new Set(ids||[])].map(id=>this.byId.get(id)).filter(u=>u?.hp>0&&UNIT_DEFS[u.type]&&this.teams[u.team]?.alive&&!trebuchetOrderLocked(u));
     if(!troops.length)return {...result(false,'Select soldiers first.'),count:0};
     const candidates=new Map();let count=0,structures=0;
     for(const u of troops){
@@ -678,9 +694,9 @@ export class Game {
     const target=this.byId.get(targetId),troops=[...new Set(ids||[])].map(id=>this.byId.get(id)).filter(u=>u?.hp>0&&UNIT_DEFS[u.type]&&this.teams[u.team]?.alive);
     if(!target||target.hp<=0||!this.teams[target.team]?.alive||!UNIT_DEFS[target.type]&&!BUILD_DEFS[target.type]&&!BattleStandards.standardGround(target))return {...result(false,'Choose a living enemy target.'),count:0};
     const attackers=troops.filter(u=>this.hostile(u.team,target.team)&&this.isVisibleTo(u.team,target)&&
-      (!trebuchetAnchored(u)||u.trebuchetState==='deployed'&&this.trebuchetTargetInRange(u,target)));
+      (!trebuchetOrderLocked(u)||u.trebuchetState==='deployed'&&this.trebuchetTargetInRange(u,target)));
     if(!attackers.length)return {...result(false,'Select troops and a visible enemy target.'),count:0};
-    this.command(attackers.filter(u=>!trebuchetAnchored(u)).map(u=>u.id),target.x,target.y,'attack',formation);
+    this.command(attackers.filter(u=>!trebuchetOrderLocked(u)).map(u=>u.id),target.x,target.y,'attack',formation);
     for(const u of attackers){u.order.targetId=target.id;u.target=target;}
     return {...result(true,`Attack the enemy ${target.type==='standard'?'battle standard':BUILD_DEFS[target.type]?.label.toLowerCase()||'troop'}.`),count:attackers.length};
   }
@@ -735,7 +751,7 @@ export class Game {
     const teams=new Map();let locked=false,moving=false;
     for(const id of new Set(ids||[])){
       const u=this.byId.get(id);if(!u||u.hp<=0||!UNIT_DEFS[u.type])continue;
-      if(trebuchetAnchored(u)){locked=true;continue;}
+      if(trebuchetOrderLocked(u)){locked=true;continue;}
       moving=true;
       if(UNIT_DEFS[u.type].lanceChampion){
         const rally=this.championRally(u);this.command([id],rally.x,rally.y,'move','spread');u.order.championWithdraw=true;
@@ -804,7 +820,7 @@ export class Game {
     }
   }
   expand(ids){
-    const troops=[...new Set(ids)].map(id=>this.byId.get(id)).filter(u=>u&&u.hp>0&&UNIT_DEFS[u.type]&&this.teams[u.team]?.alive&&!trebuchetAnchored(u));
+    const troops=[...new Set(ids)].map(id=>this.byId.get(id)).filter(u=>u&&u.hp>0&&UNIT_DEFS[u.type]&&this.teams[u.team]?.alive&&!trebuchetOrderLocked(u));
     if(!troops.length)return result(false,'Select troops to expand your territory.');
     const cohorts=new Map();for(const u of troops){if(!cohorts.has(u.team))cohorts.set(u.team,this.nextExpansionId=(this.nextExpansionId||0)+1);if(this.unitClass(u)==='cavalry')this.stopCharge(u);u.championRegroup=null;u.championCyclePending=false;this.interruptAction(u);u.target=null;u.aggroAnchor=null;u.seek=0;u.order={x:u.x,y:u.y,mode:'expand',formation:'spread',expandId:cohorts.get(u.team),expandTile:null};}
     this.expansionPlanAt=0;this.updateExpansionOrders();
@@ -1165,7 +1181,7 @@ export class Game {
     if(this.unitClass(u)==='cavalry'&&u.charging)u.momentum=Math.max(0,u.momentum-.04);
     const building=!!BUILD_DEFS[target.type];if(building)amount*=this.unitClass(u)==='siege'?3:this.isRanged(u)?.5:.8;
     const disciplined=s.sigil==='huntsman'&&this.unitClass(u)==='infantry'&&u.order?.formation==='line',woodland=s.sigil==='frog'&&this.unitClass(u)==='archer'&&this.tileAt(u.x,u.y)?.terrain==='forest';amount*=counter;if(d.hammer&&!building&&this.isSpearBraced(target,{x:target.x-u.x,y:target.y-u.y}))amount*=1.25;u.cooldown=d.rate/(!d.crossbow&&(disciplined||woodland)?1.15:1);u.attackAnim=1;
-    const visualDX=target.x-u.x,visualDY=target.y-u.y,visualDistance=Math.hypot(visualDX,visualDY)||1;u.attackVisual={at:this.time,elapsed:0,cycle:u.cooldown,dx:visualDX/visualDistance,dy:visualDY/visualDistance,distance:visualDistance,action:d.crossbow||this.isRanged(u)?'fire':d.weaponKind==='halberd'?((u.weaponSwings=(u.weaponSwings||0)+1)%2===0?'swing':'thrust'):'thrust'};
+    const visualDX=target.x-u.x,visualDY=target.y-u.y,visualDistance=Math.hypot(visualDX,visualDY)||1;u.attackVisual={at:this.time,elapsed:0,faceX:u.facingX,faceY:u.facingY,cycle:u.cooldown,dx:visualDX/visualDistance,dy:visualDY/visualDistance,distance:visualDistance,action:d.crossbow||this.isRanged(u)?'fire':d.weaponKind==='halberd'?((u.weaponSwings=(u.weaponSwings||0)+1)%2===0?'swing':'thrust'):'thrust'};
     if(d.crossbow){u.reload={progress:0,duration:u.cooldown,baseDuration:d.rate,stage:'lower',completedStage:-1};u.reloading=true;u.crossbowState='fire';u.reloadX=u.x;u.reloadY=u.y;}
     if(this.isRanged(u)||this.unitClass(u)==='siege'){
       const type=d.projectile||(u.type==='beacon_engineer'?'bolt':this.unitClass(u)==='siege'?'rock':'arrow');
@@ -1265,7 +1281,7 @@ export class Game {
       const firstLance=champion&&u.lanceFirstStrike,amount=(24+62*power)*this.upgradeMultiplier('weapons',this.teams[u.team].upgrades.weapons)*resistance*(UNIT_DEFS[e.type].shieldType?1:rear?1.45:flank?1.15:1)*(lancer?1.2:1)*(lancer&&braced?1.25:1)*(champion?(firstLance?1.8:.5):1);
       if(champion){u.lanceFirstStrike=false;u.championChargeHit=true;}
       u.chargeHits.set(e.id,this.time);this.damage(e,amount,{...this.unitSource(u,'charge'),originX:e.x-dir.x,originY:e.y-dir.y});this.stats.chargeImpacts++;
-      if(u.type==='cavalry')u.attackVisual={at:this.time,elapsed:0,cycle:.4,dx:dir.x,dy:dir.y,distance:Math.hypot(e.x-u.x,e.y-u.y),action:'charge'};
+      if(u.type==='cavalry')u.attackVisual={at:this.time,elapsed:0,faceX:u.facingX,faceY:u.facingY,cycle:.4,dx:dir.x,dy:dir.y,distance:Math.hypot(e.x-u.x,e.y-u.y),action:'charge'};
       if(u.type==='storm_rider'&&e.hp>0){e.shockUntil=this.time+.65;this.specialCue('shock',e,u.team);}
       const distance=(braced?.6+.5*power:this.unitClass(e)==='archer'?1.1+1.05*power:this.unitClass(e)==='infantry'?.8+.85*power:this.unitClass(e)==='hero'?.35+.3*power:this.unitClass(e)==='siege'?.3+.2*power:.7+.65*power)*this.knockbackFactor(e,frontal)*(this.teams[u.team].sigil==='stag'?1.2:1)*(lancer?1.3:1)*(firstLance?1.5:1)*(UNIT_DEFS[e.type].shieldType&&e.shieldGuard==='guard'&&frontal?(UNIT_DEFS[e.type].shieldType==='heavy'?.45:.8):1);
       const lateral=(e.x-u.x)*-dir.y+(e.y-u.y)*dir.x,side=Math.abs(lateral)>.04?Math.sign(lateral):e.id%2?1:-1,scatter=braced?.45:this.unitClass(e)==='archer'?.9:this.unitClass(e)==='infantry'?.72:.45;
@@ -1319,7 +1335,7 @@ export class Game {
       horse.spearContacts.set(e.id,this.time);
       this.damage(horse,(full?34+26*power:18+12*power)*this.upgradeMultiplier('weapons',this.teams[e.team].upgrades.weapons),{...this.unitSource(e,'brace'),bracedContact:full,secondary:true});
       horse.momentum=Math.max(0,power*(1-reduction));horse.motionVX=(horse.motionVX||0)*(1-reduction);horse.motionVY=(horse.motionVY||0)*(1-reduction);
-      e.attackVisual={at:this.time,cycle:.3,dx:e.facingX,dy:e.facingY,distance:d.weaponReach||d.range,action:'thrust'};
+      e.attackVisual={at:this.time,faceX:e.facingX,faceY:e.facingY,cycle:.3,dx:e.facingX,dy:e.facingY,distance:d.weaponReach||d.range,action:'thrust'};
       if(full&&reduction>=.8){
         horse.chargeBlockedUntil=this.time+.9;horse.snaredUntil=this.time+(e.type==='dread_pike'?.9:.35);this.stopCharge(horse);
         horse.x=contact.x-dir.x*.015;horse.y=contact.y-dir.y*.015;horse.motionVX=horse.motionVY=0;
@@ -1474,9 +1490,19 @@ export class Game {
         if(stale){this.idle([u.id]);u.order.aiTask='muster';}
         else{u.order={...resume};u.championRegroup=null;u.target=null;u.seek=0;}
       }
+      if(d.setupSeconds&&!u.trebuchetState&&this.isHuman(u.team)){
+        // A restored campaign may predate manual deployment for both houses.
+        const work=Math.min(1,(u.setupProgress||0)/d.setupSeconds);
+        if(work>0){
+          this.beginTrebuchetTransition(u,true);
+          if(work===1){u.trebuchetState='deployed';delete u.trebuchetRemaining;}
+          else u.trebuchetRemaining=TREBUCHET_TIMES.setup*(1-work);
+        }else u.trebuchetState='packed';
+        delete u.setupProgress;
+      }
       const trebuchetLocked=trebuchetAnchored(u);
       if(u.trebuchetRemaining>0){
-        u.trebuchetRemaining-=dt;
+        u.trebuchetRemaining-=dt*(u.trebuchetState==='settingUp'?heroActionRate(this,u,'setup'):1);
         if(u.trebuchetRemaining<=1e-7){
           u.trebuchetState=u.trebuchetState==='settingUp'?'deployed':'packed';
           delete u.trebuchetRemaining;
@@ -1601,7 +1627,7 @@ export class Game {
         for(const b of collisionBuildings.bins.get(Math.floor(u.y/collisionBuildings.size)*collisionBuildings.stride+Math.floor(u.x/collisionBuildings.size))||emptyBuildings){if(b.hp<=0)continue;const rad=this.buildingRadius(b)+d.radius,dx=u.x-b.x,dy=u.y-b.y,dd=dx*dx+dy*dy;if(dd<rad*rad&&dd>.000001){const len=Math.sqrt(dd),force=(rad-len)/rad*3.5;pushX+=dx/len*force;pushY+=dy/len*force;}}
         mx+=pushX;my+=pushY;const speed=Math.hypot(mx,my),limit=(u.charging?d.speed*(1+.9*u.momentum):d.speed*1.3*(d.lanceChampion&&mode==='move'?d.withdrawSpeed:1))*this.specialistSpeed(u);if(speed>limit){mx*=limit/speed;my*=limit/speed;}
       }
-      if(stagger){const fade=u.knockT/(u.knockDuration||.34);mx+=(u.knockVX||0)*fade;my+=(u.knockVY||0)*fade;u.knockT=Math.max(0,u.knockT-dt);if(!u.knockT){u.knockVX=0;u.knockVY=0;}}
+      if(stagger){const fade=trebuchetLocked?0:u.knockT/(u.knockDuration||.34);mx+=(u.knockVX||0)*fade;my+=(u.knockVY||0)*fade;u.knockT=Math.max(0,u.knockT-dt);if(!u.knockT){u.knockVX=0;u.knockVY=0;}}
       const oldX=u.x,oldY=u.y;u.x+=mx*dt;u.y+=my*dt;this.bound(u);
       if(this.navigation.constrain(u,oldX,oldY)&&u.charging)this.stopCharge(u);
       if(u.charging){this.chargeContact(u,oldX,oldY,dt);this.navigation.constrain(u,oldX,oldY);}
@@ -1619,7 +1645,7 @@ export class Game {
         }
         u.charge=u.momentum;u.chargeSpeed=u.charging?actual:0;
       }
-      if(mode==='move'&&u.order===order&&Math.hypot(u.x-order.x,u.y-order.y)<(preciseSlot?.08:.22)){order.mode=locked||order.placementId!=null?'hold':'idle';u.aggroAnchor=null;u.seek=0;u.target=null;}
+      if(mode==='move'&&u.order===order&&Math.hypot(u.x-order.x,u.y-order.y)<(preciseSlot?.08:.22)){if(order.setupOnArrival){this.beginTrebuchetTransition(u,true);continue;}order.mode=locked||order.placementId!=null?'hold':'idle';u.aggroAnchor=null;u.seek=0;u.target=null;}
     }
     // Symmetric positional relaxation prevents front ranks from occupying the same ground.
     this.hash.rebuild(this.units);
@@ -1640,7 +1666,7 @@ export class Game {
       // becoming an unlimited forward-moving bulldozer for the whole charge.
       const horse=this.hostile(u.team,o.team)?(u.charging?u:o.charging?o:null):null,foe=horse===u?o:u;
       const ux=u.x,uy=u.y,ox=o.x,oy=o.y;
-      if(horse&&foe.knockT>0&&(horse.chargeHits.get(foe.id)??-Infinity)>this.time-.5){const dir=horse.chargeDir,lateral=(foe.x-horse.x)*-dir.y+(foe.y-horse.y)*dir.x,side=Math.abs(lateral)>.03?Math.sign(lateral):foe.id%2?1:-1;foe.x-=dir.y*side*shift*2;foe.y+=dir.x*side*shift*2;this.bound(foe);this.navigation.constrain(foe,foe===u?ux:ox,foe===u?uy:oy);return;}
+      if(horse&&!trebuchetAnchored(foe)&&foe.knockT>0&&(horse.chargeHits.get(foe.id)??-Infinity)>this.time-.5){const dir=horse.chargeDir,lateral=(foe.x-horse.x)*-dir.y+(foe.y-horse.y)*dir.x,side=Math.abs(lateral)>.03?Math.sign(lateral):foe.id%2?1:-1;foe.x-=dir.y*side*shift*2;foe.y+=dir.x*side*shift*2;this.bound(foe);this.navigation.constrain(foe,foe===u?ux:ox,foe===u?uy:oy);return;}
       const fixedU=trebuchetAnchored(u),fixedO=trebuchetAnchored(o);
       if(fixedU&&fixedO)return;
       dx=dx/len*shift;dy=dy/len*shift;const pullingU=!!UNIT_DEFS[u.type].lanceChampion&&u.order?.mode==='move',pullingO=!!UNIT_DEFS[o.type].lanceChampion&&o.order?.mode==='move',anchoredU=this.unitClass(u)==='infantry'&&u.order?.formation!=='spread'&&this.formationSettled(u)&&!(u.knockT>0),anchoredO=this.unitClass(o)==='infantry'&&o.order?.formation!=='spread'&&this.formationSettled(o)&&!(o.knockT>0),weight=fixedU?0:fixedO?1:pullingU!==pullingO?(pullingU?.2:.8):anchoredU!==anchoredO?(anchoredU?.2:.8):this.hostile(u.team,o.team)?(u.charging?.2:o.charging?.8:.5):.5;u.x+=dx*weight*2;u.y+=dy*weight*2;o.x-=dx*(1-weight)*2;o.y-=dy*(1-weight)*2;this.bound(u);this.bound(o);this.navigation.constrain(u,ux,uy);this.navigation.constrain(o,ox,oy);});}

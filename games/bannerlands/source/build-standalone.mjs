@@ -70,7 +70,7 @@ for(const [name,module]of modules){
   }
   // The app passes embedded sources to all loaders. Keep module defaults and
   // provenance filenames readable instead of duplicating every large atlas.
-  if(name==='app.js')code=embedImageLiterals(code);
+  if(name==='app.js'||name==='directional-sheets.js')code=embedImageLiterals(code);
   if(/^\s*(?:import|export)\s/m.test(code))throw new Error('Unsupported module syntax in '+name);
   const imports=module.imports.map(importBinding).join('\n');
   const asyncEntry=name==='app.js';

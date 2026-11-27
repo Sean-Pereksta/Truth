@@ -1,7 +1,7 @@
 // Cohorts share a destination, front and pace. Individual soldiers retain their
 // slot and may strike nearby enemies, but never choose where the cohort turns.
 import {assignFormationSlots,formationPreview,formationRole,marchSlot,releaseFormationSlots,fillFormationGaps,updatePlacedFormations} from './formation-placement.js';
-import {trebuchetAnchored} from './regiments.js';
+import {trebuchetOrderLocked} from './regiments.js';
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 
@@ -155,7 +155,7 @@ function updateDirectedAdvance(g,c,members,defs,dt){
 }
 
 export function startFormationAdvance(g,ids,formation,defs,options={},point){
-  const troops=[...new Set(ids||[])].map(id=>g.byId.get(id)).filter(u=>u?.hp>0&&defs[u.type]&&g.teams[u.team]?.alive&&!trebuchetAnchored(u));
+  const troops=[...new Set(ids||[])].map(id=>g.byId.get(id)).filter(u=>u?.hp>0&&defs[u.type]&&g.teams[u.team]?.alive&&!trebuchetOrderLocked(u));
   if(!troops.length)return {ok:false,message:'Select soldiers first.',count:0};
   const unreachable={ok:false,message:'Choose reachable ground for the advance.',count:0};
   let destination;
