@@ -620,6 +620,7 @@
     menuBack:()=>UI.back(),
     menuAccept(){
       RelayAudio.unlock();
+      if(g.coopLayout!=='keyboard-pad')aiming='pad';
       const active=document.activeElement;
       if(active?.matches('button,input,select')&&active.offsetWidth&&!active.disabled&&!active.closest('[inert]'))active.click();
       else menuPad(0,1);
