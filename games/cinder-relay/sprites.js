@@ -516,7 +516,13 @@
       case 6:p([[-9,8],[-9,1],[-4,-5],[-3,0],[3,-11],[4,-1],[9,-4],[8,4],[3,9]],'#d77d53',c);r(-2,1,4,6,hi);break;
       case 7:for(let q of [-1,1]){p([[q*2,-2],[q*5,-8],[q*12,-5],[q*7,0]],'#769282',c);}o(0,3,4,6,c);r(-3,2,6,2,JOINT);break;
       case 8:ring(0,0,11,6);ring(0,0,6,10);r(-1,-1,3,3,hi);break;
-      case 9:for(let i=0;i<4;i++){let a=i*TAU/4;l(Math.cos(a)*10,Math.sin(a)*10,Math.cos(a+.7)*7,Math.sin(a+.7)*7,c,2);l(Math.cos(a+.7)*7,Math.sin(a+.7)*7,0,0,hi);}break;
+      case 9: // Gravity Fold: an eclipsed core above a luminous accretion disk.
+        o(0,1,12,4,'#776796');o(0,1,10,2,JOINT);
+        o(0,-2,7,7,c);o(1,-1,6,6,INK);
+        r(-3,-8,4,1,hi);
+        l(-12,1,-7,4,c,2);l(-7,4,4,4,c,2);l(4,4,11,1,c,2);
+        l(-6,4,2,4,hi);r(8,-8,2,1,c);
+        break;
       case 10:p([[-9,7],[-7,-4],[-1,-11],[6,-7],[9,2],[6,8]],'#728c67',c);l(-6,2,5,-2,hi,2);break;
       case 11:for(let y of [-6,0,6]){l(-8,y+2,0,y-2,c,2);l(0,y-2,8,y+2,hi,2);}break;
     }
