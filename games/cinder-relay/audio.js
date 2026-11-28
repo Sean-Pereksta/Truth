@@ -62,10 +62,14 @@
     if (!audio || audio.state !== 'running' || effects.gain.value < .001) return;
     const now = audio.currentTime, s = String(name).toLowerCase();
     const kind = typeof variant === 'number' ? variant : 0;
-    const wait = s.endsWith('-blast') ? .12 : /hit|spark|impact|shot|rifle|fire/.test(s) ? .038 : .064;
+    const wait = s==='god-beam' ? .17 : s.endsWith('-blast') ? .12 : /hit|spark|impact|shot|rifle|fire/.test(s) ? .038 : .064;
     if (now - (gates.get(s) ?? -100) < wait) return;
     gates.set(s, now);
-    if (/gun|shoot|shot|fire|rifle|scatter|ordnance|emitter|fabricator|precision|assault/.test(s)) {
+    if(s==='god-beam'){
+      tone(122,61,.32,'sawtooth',.085,effects,now,.055);
+      tone(384,192,.24,'sine',.12,effects,now,.022);
+      hiss(1380,.26,.13);
+    } else if (/gun|shoot|shot|fire|rifle|scatter|ordnance|emitter|fabricator|precision|assault/.test(s)) {
       const family = /scatter/.test(s) ? 1 : /precision/.test(s) ? 2 : /ordnance/.test(s) ? 3 : /emitter/.test(s) ? 4 : /fabricator/.test(s) ? 5 : Math.min(5, Math.floor(kind / 6));
       const pitch = 1 + (kind % 6) * .075;
       tone([165,104,760,75,460,610][family]*pitch, [42,32,105,27,215,280][family], [.09,.19,.17,.33,.075,.083][family],

@@ -211,13 +211,15 @@
     const list=coll.slice(start,start+guidePageSize).map((v,offset)=>{
       const i=start+offset;
       const tag=(tab==='gun'?weaponType(v):v.family)||v.role||v.faction||(tab==='ability'?'Cooldown '+v.cooldown+'s':tab==='map'?(i<5?'Opening sector':'Route sector'):'Major encounter');
+      const label=v.forgeTier?'<div class="eyeline forge-tier-label" data-rarity="'+escape(v.forgeTier)+'">'+escape(v.forgeTier+' · '+tag)+'</div>':'<div class="eyeline">'+escape(String(tag).toUpperCase())+'</div>';
       const notes=[v.desc||v.description||'',tab==='ability'&&v.augments?'Augments · '+v.augments.join(' / '):'',tab==='boss'&&v.phases?'Phases · '+v.phases.join(' / '):''].filter(Boolean).join(' ');
       const inspect=tab==='boss'?act('boss-intel','Attack patterns','small-btn',i):'';
-      return '<article class="entry"'+(inspect?'':' tabindex="0"')+'>'+(tab==='map'?vista(i,'map-thumb'):art(tab,i))+'<div class="entry-copy"><div class="eyeline">'+escape(String(tag).toUpperCase())+'</div><h3>'+escape(v.name)+'</h3><p>'+escape(notes)+'</p></div>'+inspect+'</article>';
+      return '<article class="entry"'+(inspect?'':' tabindex="0"')+'>'+(tab==='map'?vista(i,'map-thumb'):art(tab,i))+'<div class="entry-copy">'+label+'<h3>'+escape(v.name)+'</h3><p>'+escape(notes)+'</p></div>'+inspect+'</article>';
     }).join('');
     const pager='<nav class="guide-pager" aria-label="Field guide pages">'+act('guide-page','Previous','small-btn','prev',ui.guidePage===0)+'<span aria-live="polite">Page '+(ui.guidePage+1)+' of '+pages+'</span>'+act('guide-page','Next','small-btn','next',ui.guidePage===pages-1)+'</nav>';
-    const odds=tab==='gun'?'<div class="rarity-odds" aria-label="Drop chance and base power by rarity">'+Combat.rarityOdds.map(tier=>
-      '<div data-rarity="'+escape(tier.name)+'"><strong>'+escape(tier.name)+'</strong><span>'+tier.chance+'% drop</span><span>'+Number((1+tier.damageBonus).toFixed(2))+'× hit damage</span></div>').join('')+'</div>':'';
+    const odds=tab==='gun'?'<div class="rarity-odds" aria-label="Weapon rarities">'+Combat.rarityOdds.map(tier=>
+      '<div data-rarity="'+escape(tier.name)+'"><strong>'+escape(tier.name)+'</strong><span>'+tier.chance+'% drop</span><span>'+Number((1+tier.damageBonus).toFixed(2))+'× hit damage</span></div>').join('')+
+      Combat.forgeTiers.map(tier=>'<div data-rarity="'+escape(tier.name)+'"><strong>'+escape(tier.name)+'</strong><span>Trade 2 '+escape(Game.forgeRecipes[tier.name])+' guns</span><span>'+Number((1+tier.damageBonus).toFixed(2))+'× hit damage</span></div>').join('')+'</div>':'';
     titled('FIELD MANUAL','Field guide','<div class="toolbar">'+Object.entries(guideTabs).map(([key,label])=>act('guide-tab',label,'filter'+(key===tab?' on':''),key)).join('')+'<span class="catalog-total">'+coll.length+' ENTRIES</span></div>'+odds+pager+'<div class="entry-list">'+list+'</div>');
   }
   function bossIntel(id){
@@ -288,7 +290,7 @@
   }
   function draft(g){
     const cards=g.choices||[];const type=g.draftKind||cards[0]?.kind;
-    const title={gun:'Weapon cache',active:'Active cache',armor:'Armor locker',chip:'Weapon chip',level:'Choose an upgrade',overclock:'Overclock'}[type]||'Choose an upgrade';
+    const title={gun:'Weapon cache',legendary:'Legendary cache',active:'Active cache',armor:'Armor locker',chip:'Weapon chip',level:'Choose an upgrade',overclock:'Overclock'}[type]||'Choose an upgrade';
     const list=cards.map((v,i)=>{
       const tag=v.kind==='gun'?gunMeta(v.item,weaponType(Combat.guns[v.id])):'<span class="eyeline">'+escape(String(v.tag||v.kind||'').toUpperCase())+'</span>';
       const tier=v.kind==='gun'?' data-rarity="'+escape(Combat.rarityOf(v.item))+'"':'';
@@ -401,9 +403,31 @@
     }).join('');
     titled('FIELD EQUIPMENT  /  '+g.meta.data+' RELAY DATA','Armor appearance','<p>Choose how your trooper looks. Armor stats come from the suit in your loadout.</p><div class="toolbar">'+act('skin','Use equipped suit','filter','default',g.player.skin==null)+'</div><div class="card-grid">'+cards+'</div>');
   }
+  function forge(g){
+    const {pilot,tier,selected,result}=ui.forge,p=g.players[pilot];
+    const material=Game.forgeRecipes[tier];
+    const owners=g.players.length>1?'<div class="toolbar pilot-tabs" aria-label="Pilot loadout">'+g.players.map((_,i)=>
+      act('forge-pilot','P'+(i+1)+' Loadout','filter'+(i===pilot?' on':''),i,i===pilot)).join('')+'</div>':'';
+    const recipes='<div class="toolbar" aria-label="Forge recipes">'+Object.entries(Game.forgeRecipes).map(([name,cost])=>
+      '<button class="filter forge-recipe'+(name===tier?' on':'')+'" data-rarity="'+escape(name)+'" data-op="forge-tier" data-value="'+escape(name)+'" aria-pressed="'+(name===tier)+'"><strong>'+escape(name==='God'?'God Gun':'Random Mythic')+'</strong><span>2 '+escape(cost)+' guns</span></button>').join('')+'</div>';
+    const eligible=p.guns.map((gun,i)=>({gun,i})).filter(({gun})=>Combat.rarityOf(gun)===material);
+    const weapons=eligible.map(({gun,i})=>{
+      const slot=p.ready.indexOf(i),checked=selected.includes(i),def=Combat.guns[gun.id];
+      return '<button class="gear-card forge-material'+(checked?' selected':'')+'" data-rarity="'+escape(material)+'" data-op="forge-material" data-value="'+i+'" aria-pressed="'+checked+'"'+(!checked&&selected.length===2?' disabled':'')+'>'+art('gun',gun.id,'card-art')+
+        gunMeta(gun,slot<0?'Reserve':'Ready '+(slot+1))+'<h3>'+escape(gunName(gun))+'</h3><p>'+escape(def.desc)+'</p></button>';
+    }).join('');
+    const resultTier=result?Combat.rarityOf(result):'';
+    const outcome=result?'<article class="entry forge-result" data-rarity="'+escape(resultTier)+'" role="status">'+art('gun',result.id)+
+      '<div class="entry-copy"><div class="eyeline forge-tier-label">FORGED · '+escape(resultTier.toUpperCase())+'</div><h3>'+escape(gunName(result))+'</h3><p>'+escape(Combat.guns[result.id].desc)+'</p></div></article>':'';
+    const instruction=eligible.length<2?'You carry '+eligible.length+' of the 2 '+material+' guns required.':'Select exactly two '+material+' guns to trade. Installed chips return to your inventory.';
+    const source=tier==='Mythic'&&eligible.length<2?'<p class="detail-text">A Legendary cache is awarded after every third gate you clear.</p>':'';
+    titled('SAFE REFIT  /  WEAPON EXCHANGE','Weapon forge',owners+outcome+recipes+
+      '<p>'+escape(instruction)+'</p>'+(weapons?'<div class="card-grid">'+weapons+'</div>':'')+source+
+      '<div class="panel-actions">'+act('forge-commit','Trade for '+(tier==='God'?'the God Gun':'a Mythic'),'primary','',selected.length!==2)+'</div>');
+  }
   function junction(g){
     const p=g.player;const cost=Progress.repairCost?.(g)??12;
-    const body=vista(g.mapId)+'<p>'+escape(g.encounter||World.maps[g.mapId].name)+' secured. Refit your equipment before the next engagement.</p><div class="metrics">'+metric('HULL',Math.ceil(p.hp)+' / '+p.maxHp)+metric('SCRAP',p.scrap)+metric('LEVEL',p.level)+'</div><div class="panel-actions">'+act('next','Continue →','primary')+act('inventory','Refit equipment')+act('repair','Repair +30 hull · '+cost+' scrap','secondary','',p.hp>=p.maxHp||p.scrap<cost)+'</div>';
+    const body=vista(g.mapId)+'<p>'+escape(g.encounter||World.maps[g.mapId].name)+' secured. Refit your equipment before the next engagement.</p><div class="metrics">'+metric('HULL',Math.ceil(p.hp)+' / '+p.maxHp)+metric('SCRAP',p.scrap)+metric('LEVEL',p.level)+'</div><div class="panel-actions">'+act('next','Continue →','primary')+act('inventory','Refit equipment')+act('forge','Weapon forge')+act('repair','Repair +30 hull · '+cost+' scrap','secondary','',p.hp>=p.maxHp||p.scrap<cost)+'</div>';
     const owner=g.players?.length>1?'PLAYER '+((g.rewardOwner||0)+1)+'  /  ':'';
     titled(owner+'GATE '+String(g.stage).padStart(2,'0')+'  /  SAFE JUNCTION','Field refit',body+checkpointExit(g),{close:false});
   }
@@ -418,7 +442,7 @@
         '<p>'+escape(route.threat||route.desc)+'</p><span class="card-action">Enter sector →</span></button>';
     }).join('');
     const unlock=g.stage===5&&g.expeditionMode!=='endless';
-    const body='<p>'+(unlock?'Endless expeditions are now available in the launch bay. ':'')+'Keep your loadout and choose the next gate, or extract here.</p>'+(options?'<div class="card-grid">'+options+'</div>':'')+'<div class="panel-actions">'+act('inventory','Refit equipment')+act('extract','Extract and bank','secondary')+'</div>';
+    const body='<p>'+(unlock?'Endless expeditions are now available in the launch bay. ':'')+'Keep your loadout and choose the next gate, or extract here.</p>'+(options?'<div class="card-grid">'+options+'</div>':'')+'<div class="panel-actions">'+act('inventory','Refit equipment')+act('forge','Weapon forge')+act('extract','Extract and bank','secondary')+'</div>';
     titled('GATE '+String(g.stage).padStart(2,'0')+'  /  BEACON',unlock?'Aperture cleared':'Choose a destination',body+checkpointExit(g),{close:false});
   }
   function checkpointExit(g){
@@ -480,6 +504,11 @@
     else if(screen==='pause')pause(g);
     else if(screen==='inventory'){if(previous!=='inventory'){ui.inventory='gun';ui.reforge=null}inventory(g)}
     else if(screen==='draft'){ui.replacing=null;draft(g)}
+    else if(screen==='forge'){
+      if(previous!=='forge')ui.forge={pilot:0,tier:'Mythic',selected:[],result:null};
+      if(data.forged)Object.assign(ui.forge,{selected:[],result:data.forged});
+      forge(g);
+    }
     else if(screen==='junction')junction(g);
     else if(screen==='routes')routes(g);
     else if(screen==='result')result(g);
@@ -620,6 +649,15 @@
       case 'repair':return Game.repair();
       case 'extract':return Game.extract();
       case 'route':return Game.route(Number(v));
+      case 'forge':return Game.open('forge');
+      case 'forge-pilot':Object.assign(ui.forge,{pilot:Number(v),selected:[],result:null});return forge(g);
+      case 'forge-tier':Object.assign(ui.forge,{tier:v,selected:[]});return forge(g);
+      case 'forge-material':{
+        const index=Number(v),selected=ui.forge.selected;
+        ui.forge.selected=selected.includes(index)?selected.filter(i=>i!==index):[...selected,index];
+        return forge(g);
+      }
+      case 'forge-commit':return Game.forge(ui.forge.pilot,ui.forge.tier,ui.forge.selected);
       case 'weapon':if(p&&p.selected!==Number(v)&&p.guns[p.ready[Number(v)]])return Game.action('swap');return;
       case 'reroll':return Game.reroll();
       case 'inventory':return ui.screen==='play'?Game.action('inventory'):Game.open('inventory');

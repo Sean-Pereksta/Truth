@@ -115,6 +115,8 @@ kbd{font:650 10px/1 var(--mono);display:inline-block;padding:4px 5px;background:
 [data-rarity="Rare"]{--gun-color:#86c8ff}
 [data-rarity="Epic"]{--gun-color:#d4a3ff}
 [data-rarity="Legendary"]{--gun-color:#ffbe65}
+[data-rarity="Mythic"]{--gun-color:#ff8ebb}
+[data-rarity="God"]{--gun-color:#fff0a6}
 .gun-meta{display:inline-flex;align-items:center;flex-wrap:wrap;gap:3px 9px;font:650 10px/1.35 var(--mono);color:#aec2be}
 .gun-meta strong{text-transform:uppercase;letter-spacing:.055em;color:var(--gun-color)}
 .gun-meta strong::before{content:"";display:inline-block;width:6px;height:6px;background:var(--gun-color);margin-right:5px;transform:rotate(45deg)}
@@ -198,10 +200,15 @@ button.gear-card:hover,.gear-card.selected{background:#283a3a;border-color:#8cb7
 }
 .gear-card .effect-art{height:84px;padding:1px 2px;object-fit:contain}
 .gear-card[data-rarity] .card-art{border-bottom:2px solid var(--gun-color)}
-.gear-card:is([data-rarity="Epic"],[data-rarity="Legendary"]) .card-art{
+.gear-card:is([data-rarity="Epic"],[data-rarity="Legendary"],[data-rarity="Mythic"],[data-rarity="God"]) .card-art{
   background:radial-gradient(ellipse, color-mix(in srgb,var(--gun-color) 19%,#172429),#142227 78%);
   box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--gun-color) 44%,#25383c)
 }
+.forge-recipe{display:grid;gap:3px;min-width:120px;padding:8px 12px;text-align:left}
+.forge-recipe strong,.forge-tier-label[data-rarity],.entry .forge-tier-label{color:var(--gun-color)}
+.forge-recipe span{color:var(--sub);font:11px var(--mono)}
+.forge-recipe.on,.forge-material.selected{border-color:var(--gun-color);background:color-mix(in srgb,var(--gun-color) 12%,#203136)}
+.forge-result{margin-bottom:14px;border-left:3px solid var(--gun-color);background:color-mix(in srgb,var(--gun-color) 12%,#203136)}
 .owned-upgrades{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,285px),1fr));gap:7px}
 .entry.owned-effect{flex-wrap:nowrap;gap:10px}
 .entry .loadout-art{width:76px;height:42px;object-fit:contain;flex:none}

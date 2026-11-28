@@ -16,6 +16,8 @@
     [19,-1],[14,-1],[15,0],[11,-8],[12,-1],[14,0],[13,0]];
 
   const creatureMuzzle={catLauncher:30,unicornSniper:36,unicornStream:28,rainbowLaser:30,rainbowExploder:33};
+  const forgeMuzzle={starbreaker:[22,0],'red-dwarf':[19,0],thunderhead:[19,0],
+    'winter-crown':[17,0],'seraph-foundry':[20,0],'god-gun':[22,0]};
 
   function drawCreatureGun(ctx,def,x,y,scale,angle,item){
     const art=window.CinderCreatureArt;
@@ -273,13 +275,75 @@
         line(-4,-4,0,-6,accent);line(0,-6,4,-4,accent);line(-5,-1,-2,3,'#8f78b3');
         drum(0,-1,2,2,steel);line(3,2,8,4,accent,2);line(8,4,12,2,accent,2);
         plate([[9,-1],[13,-3],[16,-1],[15,3],[12,4],[14,1]],steel,'#e5d5ff');break;
+      case 'starbreaker': {
+        stock(22,4,'#2f6270');grip(-9,3,'#426d75');tube(-14,-3,36,7,'#577b84','#9bc9d0');
+        for(const side of [-1,1]){
+          plate([[-8,side*4],[-3,side*8],[12,side*6],[22,side*3],[17,side*2],[-5,side*3]],'#3f626c','#e8d19b');
+          line(-4,side*6,17,side*3,accent);
+          rect(11,side>0?4:-5,3,1,'#fff1bf');
+        }
+        plate([[-9,0],[-4,-5],[2,0],[-4,5]],'#59c1c5','#e5fff0');
+        ellipse(-4,0,2,1,'#faffeb');line(2,0,21,0,'#f0fff3');break;
+      }
+      case 'red-dwarf': {
+        stock(16,5,'#704449');grip(-8,3,copper);tube(-11,-4,32,9,'#75404a','#ffac77');
+        drum(1,0,11,10,'#7f4657','#e89c7f');drum(1,0,9,8,'#491f36');
+        ellipse(2,0,6,5,accent);ellipse(3,-1,4,3,'#ffbc7e');ellipse(4,-1,2,1,'#fff2bb');
+        for(const side of [-1,1]){
+          plate([[0,side*7],[7,side*11],[15,side*7],[18,side*3],[14,side*2],[9,side*5]],'#9c514f','#ffd193');
+          line(8,side*8,15,side*5,'#ffae6e');
+        }
+        block(16,-3,5,7,'#ac6356','#ffe0a5');rect(18,-1,2,3,'#fa9366');break;
+      }
+      case 'thunderhead': {
+        stock(17,4,'#4d4a7c');grip(-6,2,'#4d4a7c');tube(-9,-3,30,7,'#536285','#b4bafb');
+        for(const [x,h] of [[-8,7],[-2,12],[5,14],[12,10]]){
+          block(x,-h,5,h+2,'#574e91','#ceccff');
+          rect(x+1,-h+2,3,1,accent);rect(x+1,-h+5,3,1,'#e8f5ff');rect(x+2,-h+8,1,2,accent);
+        }
+        for(const [x,y] of [[-8,1],[-3,4],[3,1],[8,3],[15,0]])rect(x,y,4,2,accent);
+        block(17,-4,4,9,'#6c72a4','#e8e5ff');rect(19,-1,2,3,'#f0fbff');break;
+      }
+      case 'winter-crown': {
+        stock(16,4,'#427887');grip(-7,4,'#3c596f');tube(-11,-3,27,8,'#4b8092','#c1f6ff');
+        for(const [x,y,h] of [[-8,-6,7],[-2,-9,11],[4,-11,10],[10,-9,8],[13,-6,5]]){
+          plate([[x-3,y+6],[x,y+6-h],[x+3,y+5],[x+1,y+9]],'#65a9b8',accent);
+          line(x,y+7-h,x,y+4,'#e7ffff');
+        }
+        for(const side of [-1,1]){
+          plate([[5,side*2],[13,side*6],[19,side*4],[19,side*1],[14,side*2],[8,side]],'#79b9c6','#d5ffff');
+        }
+        ellipse(11,0,4,2,'#4f6e9b');rect(10,-1,6,2,accent);break;
+      }
+      case 'seraph-foundry': {
+        stock(15,5,'#58706b');grip(-8,2,'#5f7a71');tube(-10,0,30,5,'#548477','#c6e0ab');
+        for(const side of [-1,1]){
+          plate([[-13,side*3],[-6,side*10],[9,side*11],[19,side*6],[15,side*3],[8,side*6],[-4,side*6]],'#658f77','#f2db95');
+          line(-7,side*7,8,side*9,accent);line(9,side*9,16,side*6,'#c6e7b2');
+        }
+        plate([[-5,0],[2,-6],[9,0],[2,6]],'#76b88e','#e4ffe2');
+        plate([[-1,0],[3,-3],[7,0],[3,3]],accent,'#efffdd');
+        block(16,-3,5,7,'#b2a46d','#fff0b1');rect(18,-1,3,2,accent);break;
+      }
+      case 'god-gun': {
+        stock(22,5,'#8a6e67');grip(-9,4,'#6e5775');tube(-15,-3,36,7,'#816c8c','#e9c5ef');
+        for(const side of [-1,1]){
+          plate([[-14,side*3],[-6,side*13],[4,side*12],[13,side*8],[22,side*5],[20,side*2],[12,side*5],[3,side*7],[-5,side*7]],'#ad815c','#fff0aa');
+          line(-6,side*11,4,side*10,accent);line(4,side*10,19,side*5,'#fff8d5');
+          rect(-7,side>0?8:-10,2,2,'#fff5a0');rect(2,side>0?8:-10,3,1,'#f6c3ff');
+        }
+        drum(0,0,8,8,'#746096','#f0affe');drum(0,0,6,6,'#a27b9e',accent);
+        plate([[-6,0],[0,-5],[6,0],[0,5]],accent,'#fff9e1');
+        line(-3,0,5,0,'#fffdf0',2);line(6,0,22,0,'#fff3bc');rect(21,-1,2,3,'#fffff3');break;
+      }
     }
     return canvas;
   }
 
   function draw(ctx,def,x,y,scale=1,angle=0,item=null){
     if(def.creatureId){drawCreatureGun(ctx,def,x,y,scale,angle,item);return;}
-    const id=def.id,sprite=cells[id]||(cells[id]=bake(id,def.color)),[mx,my]=muzzle[id];
+    const id=def.id,key=def.forgeId??id,sprite=cells[id]||(cells[id]=bake(key,def.color));
+    const [mx,my]=def.forgeId?forgeMuzzle[key]:muzzle[id];
     ctx.save();ctx.imageSmoothingEnabled=false;ctx.translate(Math.round(x),Math.round(y));ctx.rotate(angle);
     ctx.scale(scale,Math.cos(angle)<0?-scale:scale);
     const firing=item?.flash>0;
@@ -295,7 +359,10 @@
     if(firing){
       const q=id===5?(item.shots%2?'#8edfff':'#ff927c'):def.color;
       ctx.fillStyle=q;
-      if(id===18||id===39){ctx.fillRect(mx+1,my-4,3,4);ctx.fillRect(mx+4,my-6,2,3);}
+      if(def.forgeId){
+        ctx.fillRect(mx,my-3,6,7);ctx.fillRect(mx+6,my-1,4,3);
+        ctx.fillStyle='#fffbee';ctx.fillRect(mx+1,my-1,7,3);ctx.fillRect(mx+3,my-5,1,11);
+      }else if(id===18||id===39){ctx.fillRect(mx+1,my-4,3,4);ctx.fillRect(mx+4,my-6,2,3);}
       else if(id===36){ctx.fillRect(mx,my,8,1);ctx.fillRect(mx+3,my-1,3,3);}
       else if(id===5||id===6||id===10||id===24||id===29){
         const gap=id===5?3:4;for(const side of [-1,1])if(id!==5||side===(item.shots%2?-1:1))ctx.fillRect(mx,my+side*gap,5,2);

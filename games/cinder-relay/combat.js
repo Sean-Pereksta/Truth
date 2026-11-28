@@ -60,6 +60,9 @@
   for (const weapon of creatureGear.weapons) {
     guns.push({...weapon,id:guns.length,familyIndex:families.indexOf(weapon.family),magazine:weapon.mag,heat:!!weapon.heat});
   }
+  for (const weapon of window.CinderMythicGear.weapons) {
+    guns.push({...weapon,id:guns.length,familyIndex:families.indexOf(weapon.family),magazine:weapon.mag,heat:!!weapon.heat});
+  }
   const skillRows = [
     ['Repulsor Sweep','Push a cone of enemies and clear eight ordinary shots.',12,'#91efff','Wideband','Rebound'],
     ['Bastion Screen','Project a directional bullet barrier for 2.5 seconds.',20,'#a3e9ff','Stored Charge','Mobile Wall'],
@@ -96,6 +99,10 @@
   };
   function eligibleAffixes(id) {
     const d=guns[id];
+    if(d.forgeTier){
+      const prefix=d.heat?['Heavy-Bore','Cold-Jacket']:['Heavy-Bore','Shortstroke','Drumfed','Quickdraw'];
+      return {prefix,suffix:['of the Hunter','of Cinders','of Scavenging']};
+    }
     if(d.creatureId){
       const prefix=d.heat?['Heavy-Bore','Cold-Jacket']:['Heavy-Bore','Shortstroke','Drumfed','Quickdraw'];
       if(d.creatureId==='unicorn-sniper')prefix.push('Threaded','Longglass','Compact');
@@ -106,7 +113,7 @@
   }
   function compatibleChips(id) {
     const d=guns[id];
-    if(d.creatureId)return d.heat?['Condensate Coil']:d.family==='Ordnance'?['Split Fuse','Primer Cap']:d.family==='Fabricator'?['Relay Antenna','Primer Cap']:['Primer Cap'];
+    if(d.forgeTier||d.creatureId)return d.heat?['Condensate Coil']:d.family==='Ordnance'?['Split Fuse','Primer Cap']:d.family==='Fabricator'?['Relay Antenna','Primer Cap']:['Primer Cap'];
     return chips.filter(c=>c==='Condensate Coil'?d.heat:c==='Split Fuse'?d.family==='Ordnance':c==='Relay Antenna'?d.family==='Fabricator':c==='Primer Cap'||c==='Field Spool'?!d.heat:true);
   }
   const pick=(a,r)=>a[Math.min(a.length-1,Math.floor(r()*a.length))];
@@ -127,7 +134,11 @@
     {name:'Epic',chance:.45,damageBonus:1.32,cadenceBonus:.15},
     {name:'Legendary',chance:.05,damageBonus:2.10,cadenceBonus:.24}
   ];
-  const tierByName=new Map(rarityOdds.map(tier=>[tier.name,tier]));
+  const forgeTiers=[
+    {name:'Mythic',chance:0,damageBonus:3.20,cadenceBonus:.25},
+    {name:'God',chance:0,damageBonus:4.70,cadenceBonus:.30}
+  ];
+  const tierByName=new Map([...rarityOdds,...forgeTiers].map(tier=>[tier.name,tier]));
   function rollRarity(rng){
     let ticket=Math.min(9999,Math.floor(rng()*10000));
     for(const tier of rarityOdds){
@@ -137,7 +148,9 @@
     return 'Legendary';
   }
   function rarityOf(w){
-    if(tierByName.has(w.rarity))return w.rarity;
+    const forgeTier=guns[w.id]?.forgeTier;
+    if(forgeTier)return forgeTier;
+    if(tierByName.get(w.rarity)?.chance>0)return w.rarity;
     // Legacy Standard / Tuned / Prototype items had zero / one / two affixes.
     if(w.prefix&&w.suffix)return 'Rare';
     return w.prefix||w.suffix?'Uncommon':'Common';
@@ -152,10 +165,11 @@
   function weaponCadence(w){
     return (1+tierByName.get(rarityOf(w)).cadenceBonus)*(1+.06*rankOf(w));
   }
-  function makeGun(id,rng=Math.random,roll=false) {
+  function makeGun(id,rng=Math.random,roll=false,guaranteedLegendary=false) {
     const d=guns[id]||guns[0];
-    const w={id:d.id,rarity:roll?rollRarity(rng):'Common',upgradeLevel:0,ammo:d.mag,capacity:d.mag,heat:0,reload:0,reloadTotal:0,charge:0,cd:0,prefix:'',suffix:'',chip:'',shots:0};
-    if (roll) {
+    const rarity=d.forgeTier||(guaranteedLegendary?'Legendary':roll?rollRarity(rng):'Common');
+    const w={id:d.id,rarity,upgradeLevel:0,ammo:d.mag,capacity:d.mag,heat:0,reload:0,reloadTotal:0,charge:0,cd:0,prefix:'',suffix:'',chip:'',shots:0};
+    if ((roll||guaranteedLegendary)&&!d.forgeTier) {
       const aff=eligibleAffixes(d.id),quality=rng();
       const paired=w.rarity==='Epic'||w.rarity==='Legendary'||(w.rarity==='Rare'&&quality<.55)||(w.rarity==='Uncommon'&&quality<.15);
       if(paired){
@@ -261,6 +275,49 @@
     const dx=b.x-a.x,dy=b.y-a.y,t=clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/(dx*dx+dy*dy||1),0,1);
     const x=p.x-a.x-dx*t,y=p.y-a.y-dy*t;
     return x*x+y*y<r*r;
+  }
+  function forgeRay(g,origin,a,range) {
+    const dx=Math.cos(a),dy=Math.sin(a),end={x:origin.x+dx*range,y:origin.y+dy*range};
+    if(g.map?.lab)return reachablePoint(g,origin,end);
+    const blocked=g.shotBlocked||g.blocked;
+    for(let d=Math.min(6,range);;d=Math.min(d+6,range)){
+      if(blocked(origin.x+dx*d,origin.y+dy*d,0)){
+        const back=Math.max(0,d-6);
+        return{x:origin.x+dx*back,y:origin.y+dy*back};
+      }
+      if(d>=range)return end;
+    }
+  }
+  function forgeVisible(g,from,to) {
+    if(g.map?.lab)return clearLab(g,from,to);
+    const range=distance(from,to);
+    return distanceSq(forgeRay(g,from,angle(from,to),range),to)<.01;
+  }
+  function forgeTarget(g,range,deploy=false) {
+    const p=g.player,a=p.a;
+    let length=clamp(distance(p,g.aim||p),22,range),at=forgeRay(g,p,a,length);
+    if(deploy&&g.blocked(at.x,at.y,7)){
+      length=distance(p,at);
+      const dx=Math.cos(a),dy=Math.sin(a);
+      do {
+        length=Math.max(0,length-8);
+        at={x:p.x+dx*length,y:p.y+dy*length};
+      }while(length>0&&g.blocked(at.x,at.y,7));
+    }
+    return at;
+  }
+  const forgeFoe=e=>live(e)&&!(e.boss&&e.arrive>0);
+  function forgeBeam(g,origin,a,range,attack,width,element='') {
+    const end=forgeRay(g,origin,a,range);
+    const blocker=Foes.interceptLine(g,origin,end,attack.damage);
+    const to=blocker||end,length=distance(origin,to),dx=Math.cos(a),dy=Math.sin(a);
+    for(const e of g.enemies){
+      if(!forgeFoe(e)||!length||!touchesSegment(e,origin,to,e.r+width))continue;
+      const along=(e.x-origin.x)*dx+(e.y-origin.y)*dy;
+      if(along<0||along>length+(blocker?0:Math.min(8,e.r))||!forgeVisible(g,origin,e))continue;
+      statusHit(g,e,{...attack,a,element});
+    }
+    return to;
   }
   function makeShot(g,p,a,opts) {
     const c=state(g);if(c.shots.length>=260)return;
@@ -474,6 +531,107 @@
       movementRay:(x,y,dx,dy,range)=>rayLength(x,y,dx,dy,range,g.blocked)
     });
   }
+  function thunderhead(g,p,a,range,attack) {
+    const end=forgeRay(g,p,a,range),dx=Math.cos(a),dy=Math.sin(a);
+    const first=near(g,p,range+1,e=>forgeFoe(e)&&(e.x-p.x)*dx+(e.y-p.y)*dy>0&&
+      touchesSegment(e,p,end,e.r+22)&&forgeVisible(g,p,e));
+    if(!first){
+      const block=Foes.interceptLine(g,p,end,attack.damage);
+      line(g,p,block||end,attack.color,3,.18,'forgeArc');
+      return;
+    }
+    const seen=new Set([first]);
+    const arcs=[{from:p,to:first,damage:attack.damage}];
+    // Two branches leave the first strike, then jump to one untouched target each.
+    for(let i=0;i<arcs.length;i++){
+      const {from,to,damage}=arcs[i];
+      const block=Foes.interceptLine(g,from,to,damage);
+      line(g,from,block||to,attack.color,i===0?6:3.5,.21,'forgeArc');
+      if(block)continue;
+      if(to.shield>0)to.shield=Math.max(0,to.shield-damage*.28);
+      statusHit(g,to,{...attack,damage,a:angle(from,to),element:'static',wasStatic:to.static>0});
+      for(let branch=i===0?2:1;branch>0&&arcs.length<9;branch--){
+        const next=near(g,to,190,e=>forgeFoe(e)&&!seen.has(e)&&forgeVisible(g,to,e));
+        if(!next)break;
+        seen.add(next);arcs.push({from:to,to:next,damage:Math.max(damage*.83,attack.damage*.56)});
+      }
+    }
+  }
+  function winterCrown(g,p,a,range,attack) {
+    const half=.66,shattered=[],touched=new Set(),objects=new Set();
+    const edges=Array.from({length:9},(_,i)=>forgeRay(g,p,a-half+half*i/4,range));
+    field(g,'winterCone',p.x,p.y,range,.29,{color:attack.color,edges});
+    for(const e of g.enemies){
+      if(!forgeFoe(e)||distanceSq(p,e)>(range+e.r)**2)continue;
+      const bearing=angle(p,e);
+      if(Math.abs(wrap(bearing-a))>half||!forgeVisible(g,p,e)||Foes.interceptLine(g,p,e,attack.damage,objects))continue;
+      const fracture=e.frozen>0||e.frost>=.58;
+      if(fracture){
+        e.frozen=0;e.frost=0;
+        if(shattered.length<3)shattered.push(e);
+      }
+      touched.add(e);
+      statusHit(g,e,{...attack,a:bearing,damage:attack.damage*(fracture?2.2:1),push:fracture?105:44,
+        element:'chill',chill:fracture?.12:1.12});
+    }
+    Foes.interceptLine(g,p,forgeRay(g,p,a,range),attack.damage,objects);
+    for(const center of shattered){
+      blastFX(g,center.x,center.y,72,'cryo',2);
+      for(const e of g.enemies){
+        if(touched.has(e)||!forgeFoe(e)||distanceSq(center,e)>(72+e.r)**2||!forgeVisible(g,center,e))continue;
+        touched.add(e);
+        statusHit(g,e,{...attack,damage:attack.damage*.66,a:angle(center,e),push:48,element:'chill',chill:.70});
+      }
+    }
+    if(shattered.length)g.sound('cryo-blast');
+  }
+  function fireForgeGun(g,d,w,p,a,range,attack) {
+    const c=state(g);
+    switch(d.forgeId){
+      case 'starbreaker':{
+        const end=forgeBeam(g,p,a,range,{...attack,push:132},18);
+        line(g,p,end,d.color,18,.34,'forgeLance');
+        if(g.settings?.shake)g.shakePower=Math.max(g.shakePower||0,2.7);
+        break;
+      }
+      case 'red-dwarf':{
+        const at=forgeTarget(g,range);
+        capField(g,'redDwarf',2);
+        const radius=blastRadius(g,w,142)*(w.chip==='Split Fuse'?1.15:1);
+        field(g,'redDwarf',at.x,at.y,radius,.94,{attack,color:d.color,tick:.14});
+        line(g,p,at,d.color,3,.20,'forgeLance');
+        break;
+      }
+      case 'thunderhead':thunderhead(g,p,a,range,attack);break;
+      case 'winter-crown':winterCrown(g,p,a,range,attack);break;
+      case 'seraph-foundry':{
+        const at=forgeTarget(g,range,true);
+        capField(g,'seraphPrism',3);
+        const radius=w.chip==='Relay Antenna'?400:340;
+        field(g,'seraphPrism',at.x,at.y,radius,7.5*(1+stat(g,'deployLife')),{attack,a,color:d.color,tick:.26});
+        line(g,p,at,d.color,2,.25,'forgeLance');
+        break;
+      }
+      case 'god-gun':{
+        const end=forgeBeam(g,p,a,range,{...attack,push:82},22,'burn');
+        const duration=Math.max(.12,w.cd+.045),radius=118;
+        c.godBeam={x:p.x,y:p.y,tx:end.x,ty:end.y,a,radius,life:duration,duration};
+        clearBullets(g,h=>{
+          const nearPilot=distanceSq(p,h)<radius*radius;
+          return (nearPilot||touchesSegment(h,p,end,(h.r||3)+21))&&forgeVisible(g,p,h);
+        },12);
+        if((c.godAuraAt??-1)<=g.time){
+          c.godAuraAt=g.time+.21;
+          for(const e of g.enemies){
+            if(!forgeFoe(e)||distanceSq(p,e)>(radius+e.r)**2||!forgeVisible(g,p,e))continue;
+            statusHit(g,e,{...attack,damage:attack.damage*.86,a:angle(p,e),push:95,element:'burn'});
+          }
+        }
+        if((c.godSoundAt??-1)<=g.time){c.godSoundAt=g.time+.20;g.sound('god-beam');}
+        break;
+      }
+    }
+  }
   function fire(g,w,charge=0) {
     const p=g.player,d=guns[w.id],c=state(g),m=weaponMemory(w),id=w.id;
     if(w.reload>0||w.cd>0||m.burst)return;
@@ -481,7 +639,7 @@
     const hand=handling(g,d), heavy=stat(g,'overclock')==='Heavy Core',longCut=stat(g,'overclock')==='Long Cut';
     w.cd=1/rateFor(g,w);
     const last=!d.heat&&w.ammo===1,first=!!w.fresh;
-    if(d.heat){w.heat=clamp((w.heat||0)+(id===28?.19:id===29?.13:id===24?.065:.036)/(1+.12*hand)/(w.chip==='Condensate Coil'?1.2:1)/(w.prefix==='Cold-Jacket'?1.25:1),0,1);w.heatDelay=.24;}
+    if(d.heat){w.heat=clamp((w.heat||0)+(id===28?.19:id===29?.13:id===24?.065:d.forgeId==='god-gun'?.025:.036)/(1+.12*hand)/(w.chip==='Condensate Coil'?1.2:1)/(w.prefix==='Cold-Jacket'?1.25:1),0,1);w.heatDelay=.24;}
     else w.ammo--;
     w.shots=(w.shots||0)+1;w.fresh=false;
     w.flash=.09;
@@ -497,6 +655,12 @@
     const base={id,w,damage,color:d.color,speed,range,push,pierce,first,last,firstMark:first&&!!stat(g,'Fresh Paint'),ricochet:w.suffix==='of Ricochet',a};
     const spawn=(spread=0,extra={},pos=f)=>makeShot(g,pos,a+spread,{...base,...extra,a:a+spread});
     const noise=x=>(g.rng()-.5)*2*x*spreadMod;
+    if(d.forgeId){
+      if(d.forgeId!=='god-gun')g.sound('fire',d.familyIndex*6+id%6);
+      fireForgeGun(g,d,w,p,a,range,base);
+      if(d.heat&&w.heat>=1)reload(g,false);
+      return;
+    }
     const pt=d.pointTargeted?targetPoint(g,range):null;
     g.sound('fire',d.familyIndex*6+id%6);
     if(d.creatureId){
@@ -869,12 +1033,43 @@
     if(shield)target.shield+=amount;else target.hp+=amount;
     c.healUsed+=amount;v.left-=amount;line(g,v,target,v.color,1,.34,'arc');
   }
+  function updateRedDwarf(g,v,dt,tick) {
+    const collapse=v.life<=0,hit=collapse||tick,radius=collapse?v.r:v.r*.84;
+    const damage=v.attack.damage*(collapse?1.28:.24);
+    for(const e of g.enemies){
+      if(!forgeFoe(e)||distanceSq(v,e)>(radius+e.r)**2||!forgeVisible(g,v,e))continue;
+      const toward=angle(e,v);
+      if(!collapse&&!e.boss){
+        const strength=Math.min(300,Math.max(0,distance(v,e)-13)*5)*dt/Math.max(1,e.mass||1);
+        g.move(e,Math.cos(toward)*strength,Math.sin(toward)*strength);
+      }
+      if(hit)statusHit(g,e,{...v.attack,damage,a:toward+(collapse?Math.PI:0),push:collapse?215:0,element:'burn'});
+    }
+    if(tick)v.tick=.22;
+    if(!collapse)return;
+    Foes.blast(g,v,radius,damage);
+    blastFX(g,v.x,v.y,radius,'thermal',3);
+    blastFX(g,v.x,v.y,radius*.74,'ion',3,.09);
+    g.sound('thermal-blast');
+    if(g.settings?.shake)g.shakePower=Math.max(g.shakePower||0,5);
+  }
   function updateEntity(g,v,dt) {
     const c=state(g),p=g.player;
     v.age+=dt;v.life-=dt;v.tick-=dt;
     const tick=v.tick<=0;
     const closeTo=q=>live(q)&&distanceSq(v,q)<(v.r+q.r)**2&&clearLab(g,v,q);
     switch(v.kind){
+      case 'redDwarf':updateRedDwarf(g,v,dt,tick);break;
+      case 'seraphPrism':{
+        if(!tick||v.life<=0)break;
+        const e=near(g,v,v.r,target=>forgeFoe(target)&&forgeVisible(g,v,target));
+        v.tick=e?.31:.16;
+        if(!e)break;
+        v.a=angle(v,e);
+        const end=forgeBeam(g,v,v.a,v.r,{...v.attack,damage:v.attack.damage*.58,push:34},7,'static');
+        line(g,v,end,v.color,6,.19,'forgeLance');
+        break;
+      }
       case 'canopy':case 'shelter':case 'linkShell':{
         if(v.target){
           if(v.target.downed||v.target.hp<=0){v.life=0;break;}
@@ -1051,6 +1246,7 @@
     if(tickStatuses)updateStatuses(g,dt);
     if(!w)return;
     c.triggerHeld=!!input.fire;
+    if(c.godBeam&&(c.godBeam.life-=dt)<=0)c.godBeam=null;
     c.gap=Math.max(0,c.gap-dt);c.wake-=dt;c.overdrive-=dt;c.redline=Math.max(0,(c.redline||0)-dt);
     const dash=!!(p.dashTime>0||p.dashing);if(dash&&!c.lastDash)dashStart(g,c);c.lastDash=dash;
     if(c.leaveTrail>0){c.leaveTrail-=dt;c.trailTick=(c.trailTick||0)-dt;if(c.trailTick<=0){field(g,'fire',p.x,p.y,24,2.5,{damage:5*c.wakePower,color:'#ff965c',aug:c.wakeAug});c.trailTick=.045;}}
@@ -1114,6 +1310,62 @@
   }
   function fillDisk(ctx,x,y,r,col){ctx.fillStyle=col;ctx.beginPath();ctx.arc(x,y,Math.max(0,r),0,TAU);ctx.fill();}
   function square(ctx,x,y,size,col){ctx.fillStyle=col;ctx.fillRect(Math.round(x-size/2),Math.round(y-size/2),size,size);}
+  function drawForgeRay(ctx,l,time,bright) {
+    const dx=l.tx-l.x,dy=l.ty-l.y,len=Math.hypot(dx,dy);
+    if(len<1)return;
+    ctx.translate(l.x,l.y);ctx.rotate(Math.atan2(dy,dx));
+    const col=l.color;
+    if(l.kind==='forgeArc'){
+      const wave=bright?8:5,points=[[0,0]];
+      for(let i=1;i<7;i++)points.push([len*i/7,Math.sin(i*2.4+time*24)*wave]);
+      points.push([len,0]);
+      path(ctx,points,col+'44',l.width+8);
+      path(ctx,points,col,l.width);
+      path(ctx,points,'#ecfdff',1.25);
+      return;
+    }
+    const points=[[0,0],[len,0]];
+    path(ctx,points,col+'55',l.width*2.4);
+    path(ctx,points,col,l.width);
+    path(ctx,points,'#fcfff4',Math.max(1,l.width*.38));
+    if(l.width<10)return;
+    for(let i=0;i<7;i++){
+      const x=len*((i/7+time*2.5)%1),edge=l.width*(i%2?1:-1);
+      path(ctx,[[x*.96,edge],[x,edge],[Math.min(len,x+len*.065),edge*.7]],'#fff1a3',bright?1.7:1);
+    }
+  }
+  function drawGodBeam(ctx,p,b,time,bright) {
+    const fade=Math.min(1,b.life/b.duration*2.9),{x,y,tx,ty}=b;
+    const len=Math.hypot(tx-x,ty-y),r=b.radius;
+    ctx.save();ctx.globalAlpha*=fade;
+    fillDisk(ctx,p.x,p.y,r,'#ffd47812');
+    for(let i=0;i<8;i++){
+      const a=i*TAU/8+time*.84;
+      ring(ctx,p.x,p.y,r,'#dcb279a6',1.65,5,a,a+.54);
+      ring(ctx,p.x,p.y,r*.71,'#c692ff84',1.35,5,-a,-a+.40);
+      const d=r*(.44+.46*((time*.54+i/8)%1));
+      square(ctx,p.x+Math.cos(a)*d,p.y+Math.sin(a)*d,bright?3:2,i%2?'#fff4b4':'#d1a0ff');
+    }
+    ring(ctx,p.x,p.y,19,'#fff0adce',2.6,8,time,-TAU+time);
+    if(len>1){
+      ctx.translate(x,y);ctx.rotate(b.a);
+      const from=Math.min(16,len*.33),points=[[from,0],[len,0]];
+      path(ctx,points,'#ab63da28',61);
+      path(ctx,points,'#fc9b5267',44);
+      path(ctx,points,'#ffdc857e',34);
+      path(ctx,points,'#ffe497',20);
+      path(ctx,points,bright?'#fffdf5':'#fff2bc',bright?11:7);
+      for(let i=0;i<9;i++){
+        const across=from+(len-from)*((i/9+time*2)%1),side=i%2?1:-1;
+        const tail=Math.min(len,across+30),height=side*(15+i%3*3);
+        path(ctx,[[across,height],[tail,height]],i%3?'#fff4bc':'#e6b9ff',bright?2.2:1.2);
+      }
+      fillDisk(ctx,from,0,12,'#ffdf7ca8');
+      ring(ctx,from,0,17,'#fff2bda9',2,8,time*3,time*3+TAU);
+      ring(ctx,len,0,12+Math.sin(time*18)*3,'#fff0b89b',1.6,8);
+    }
+    ctx.restore();
+  }
   function drawShot(ctx,s,time){
     const col=s.color;
     ctx.save();ctx.translate(Math.round(s.x),Math.round(s.y));ctx.rotate(s.a);
@@ -1138,6 +1390,47 @@
     const x=Math.round(v.x),y=Math.round(v.y),col=v.color,t=clamp(v.age/v.max,0,1),p=g.player;
     const pulse=1+Math.sin(v.age*8)*.08;
     switch(v.kind){
+      case 'redDwarf':{
+        const body=5+15*t,bright=g.settings?.flashes!==false;
+        fillDisk(ctx,x,y,v.r*.84,'#fe5b4523');
+        for(let i=0;i<6;i++){
+          const a=i*TAU/6+v.age*2.9,r=v.r*(.91-.49*((v.age*1.35+i/6)%1));
+          ring(ctx,x,y,r,col+'99',1.7,7,a,a+1.05);
+          square(ctx,x+Math.cos(a)*r,y+Math.sin(a)*r,bright?3:2,'#ffad77');
+        }
+        fillDisk(ctx,x,y,body+5,'#f152494e');
+        ring(ctx,x,y,body+2,'#ff8969',3,12);
+        fillDisk(ctx,x,y,body,'#411e39');
+        const accretion=v.age*4.4;
+        ring(ctx,x,y,body*.56,'#ffe3a8',2,7,accretion,accretion+4.3);
+        break;
+      }
+      case 'winterCone':{
+        ctx.save();ctx.globalAlpha*=1-t;
+        const edges=v.edges.map(e=>[x+(e.x-x)*(.5+.5*t),y+(e.y-y)*(.5+.5*t)]);
+        ctx.beginPath();ctx.moveTo(x,y);
+        for(const [ex,ey] of edges)ctx.lineTo(ex,ey);
+        ctx.closePath();ctx.fillStyle=col+'39';ctx.fill();
+        path(ctx,edges,col+'b3',3);
+        edges.forEach(([ex,ey],i)=>{
+          const factor=.31+(i%3)*.14+t*.13,cx=x+(ex-x)*factor,cy=y+(ey-y)*factor;
+          path(ctx,[[cx,cy-5],[cx+3,cy],[cx,cy+5],[cx-3,cy]],i%2?col:'#f1ffff',1.5,true);
+        });
+        ctx.restore();break;
+      }
+      case 'seraphPrism':{
+        const h=8+Math.sin(v.age*6)*2,spin=v.age*2.5;
+        fillDisk(ctx,x,y+4,14,'#0f2725a8');
+        ring(ctx,x,y+4,16,col+'73',1.6,10);
+        ring(ctx,x,y-h,18,col+'8c',1.1,8,spin,spin+4.5);
+        for(let i=0;i<3;i++){
+          const a=spin+i*TAU/3;
+          square(ctx,x+Math.cos(a)*18,y-h+Math.sin(a)*9,3,'#ffe6a6');
+        }
+        path(ctx,[[x,y-h-13],[x+8,y-h],[x,y-h+12],[x-8,y-h]],col,3,true);
+        path(ctx,[[x,y-h-8],[x,y-h+7]],'#ffedba',2);
+        break;
+      }
       case 'shieldPulse':case 'repairPulse':{
         ring(ctx,x,y,Math.max(3,v.r*(.18+.82*t)),col,2*(1-t)+.4,24);
         if(v.kind==='repairPulse'&&t<.78){
@@ -1255,11 +1548,16 @@
     const c=state(g),p=g.player;if(!p)return;const w=currentGun(g);if(!w)return;
     ctx.save();ctx.lineCap='butt';
     for(const v of c.entities)drawEntity(ctx,g,v);
-    if(w.flash>0&&!p.downed)window.BlastArt?.muzzle(ctx,p,w,guns[w.id],g.settings?.flashes!==false);
+    const d=guns[w.id],bright=g.settings?.flashes!==false;
+    if(!p.downed&&d.forgeId==='god-gun'&&c.godBeam)drawGodBeam(ctx,p,c.godBeam,g.time,bright);
+    else if(w.flash>0&&!p.downed)window.BlastArt?.muzzle(ctx,p,w,d,bright);
     for(const s of c.shots)drawShot(ctx,s,g.time);
     c.creatures?.draw(ctx);
-    for(const impact of c.impacts)drawImpact(ctx,impact,g.settings?.flashes!==false);
+    for(const impact of c.impacts)drawImpact(ctx,impact,bright);
     for(const l of c.lines){const t=l.life/l.max;ctx.save();ctx.globalAlpha*=Math.min(1,t*2);
+      if(l.kind==='forgeLance'||l.kind==='forgeArc'){
+        drawForgeRay(ctx,l,g.time,bright);ctx.restore();continue;
+      }
       let pts=[[l.x,l.y],[l.tx,l.ty]];
       if(l.kind==='arc'){const a=Math.atan2(l.ty-l.y,l.tx-l.x);pts=[pts[0],...[.25,.5,.75].map((k,i)=>[l.x+(l.tx-l.x)*k+Math.sin(a)*(i%2?4:-4),l.y+(l.ty-l.y)*k-Math.cos(a)*(i%2?4:-4)]),pts[1]];}
       path(ctx,pts,l.color+'48',l.width+4);path(ctx,pts,l.color,l.width);if(l.width>=2)path(ctx,pts,'#efffff',.85);ctx.restore();
@@ -1267,6 +1565,11 @@
     const m=weaponMemory(w);if(w.id===15&&m.tags){for(let i=0;i<m.tags.length;i++){const v=m.tags[i];if(!live(v.e)||v.until<g.time)continue;ring(ctx,v.e.x,v.e.y,v.e.r+5,'#98ffdc',1.5,4);ctx.fillStyle='#effff2';ctx.font='bold 9px monospace';ctx.fillText(String(i+1),v.e.x+v.e.r+3,v.e.y-5);}}
     if(w.id===16&&m.stake&&m.stake.until>g.time){const s=m.stake;ring(ctx,s.x,s.y,7,'#98eaff',1.5,4);if(Math.abs(wrap(angle(p,s)-p.a))<.12){const a=s.flat?Math.PI-p.a:-p.a;path(ctx,[[s.x,s.y],[s.x+Math.cos(a)*75,s.y+Math.sin(a)*75]],'#8ee7ff77',1);}}
     if([18,21,22,33].includes(w.id)){const pt=targetPoint(g,guns[w.id].range);ring(ctx,pt.x,pt.y,9,'#efd7a47d',1,12);if(w.id===22)ring(ctx,(pt.x+p.x)/2,(pt.y+p.y)/2,6,'#efd7a47d',1,12);}
+    if(d.forgeId&&d.pointTargeted&&!p.downed){
+      const pt=forgeTarget(g,d.range,d.forgeId==='seraph-foundry');
+      ring(ctx,pt.x,pt.y,12,d.color+'bd',1.6,8);
+      ring(ctx,pt.x,pt.y,4,d.color,1,4);
+    }
     if(w.charge>0&&w.id===12){const end=beamEnd(g,p,p.a,Math.min(guns[12].range,100+300*w.charge));path(ctx,[[p.x,p.y],[end.x,end.y]],'#8ee7ff83',1);}
     for(const e of g.enemies){if(!live(e))continue;const x=e.x,y=e.y,r=e.r;
       if((e.elite||e.boss)&&(e.breakValue>.008||e.breakVisible>0)){
@@ -1284,5 +1587,5 @@
   function drawBlasts(ctx,g) {
     for(const fx of g.combat?.blasts||[])if(fx.age>=0)window.BlastArt?.draw(ctx,fx,g.settings?.flashes!==false);
   }
-  window.Combat={guns,abilities,rarityOdds,rarityOf,rankOf,normalizeGun,makeGun,makeAbility,eligibleAffixes,compatibleChips,chips,gunName,currentGun,capacity,damageFor,rateFor,targetPoint,deathFX,drawBlasts,update,updateStatuses,draw,drawGun,cast,reload,swap,reset};
+  window.Combat={guns,abilities,rarityOdds,forgeTiers,rarityOf,rankOf,normalizeGun,makeGun,makeAbility,eligibleAffixes,compatibleChips,chips,gunName,currentGun,capacity,damageFor,rateFor,targetPoint,deathFX,drawBlasts,update,updateStatuses,draw,drawGun,cast,reload,swap,reset};
 })();
