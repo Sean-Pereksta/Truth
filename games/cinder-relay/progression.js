@@ -265,8 +265,8 @@
     return levels;
   }
 
-  function gunCard(g,id) {
-    const item=Combat.makeGun(id,()=>g.rng(),true);
+  function gunCard(g,id,guaranteedLegendary) {
+    const item=Combat.makeGun(id,()=>g.rng(),true,guaranteedLegendary);
     const def=Combat.guns[id];
     const rarity=Combat.rarityOf(item);
     return {kind:'gun',id,item,name:Combat.gunName(item),tag:rarity+' · '+def.family,desc:def.desc,
@@ -291,17 +291,17 @@
     if (item.chip) notes.push(item.chip);
     return notes.join(' · ');
   }
-  function gunDraft(g,available) {
+  function gunDraft(g,available,guaranteedLegendary=false) {
     const owned=g.player.guns.map(w=>w.id);
     const familiesHeld=new Set(owned.map(id=>Combat.guns[id].family));
-    const pool=Combat.guns.filter(def=>!owned.includes(def.id) && available('gun',def.id));
+    const pool=Combat.guns.filter(def=>!def.forgeTier && !owned.includes(def.id) && available('gun',def.id));
     const matched=random(g,pool.filter(d=>familiesHeld.has(d.family)));
     const other=random(g,pool.filter(d=>!familiesHeld.has(d.family)));
     const creatureClass = suits[g.player.suit]?.creatureClass;
     const matchingCreature = creatureClass && random(g,pool.filter(d=>d.creatureClass===creatureClass && d!==matched));
     const chosen=[...new Set([matched,other,matchingCreature].filter(Boolean))];
     chosen.push(...sample(g,pool.filter(d=>!chosen.includes(d)),3-chosen.length));
-    return chosen.map(d=>gunCard(g,d.id));
+    return chosen.map(d=>gunCard(g,d.id,guaranteedLegendary));
   }
   function abilityCard(id) {
     const def=Combat.abilities[id];
@@ -423,6 +423,7 @@
     let cards;
     switch (kind) {
       case 'gun': cards=gunDraft(g,available); break;
+      case 'legendary': cards=gunDraft(g,available,true); break;
       case 'active': cards=activeDraft(g,available); break;
       case 'armor': cards=armorDraft(g,available); break;
       case 'chip': cards=chipDraft(g,available); break;

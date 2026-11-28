@@ -10,6 +10,7 @@
   const write = (key,value) => { try { localStorage.setItem(key,JSON.stringify(value)); return true; } catch { return false; } };
   const forget = key => { try { localStorage.removeItem(key); } catch {} };
   const defaults = {volume:.72,music:.34,shake:true,flashes:true,friendly:.86,outline:true,assist:0,adaptiveResolution:true};
+  const forgeRecipes = Object.freeze({Mythic:'Legendary',God:'Mythic'});
   const g = {
     worldW:W,worldH:H,screen:'home',stage:1,room:0,mapId:0,route:null,routeOptions:[],
     time:0,elapsed:0,enemies:[],hostile:[],particles:[],drops:[],ghosts:[],floaters:[],
@@ -175,6 +176,10 @@
   }
   function showBase(screen,data) { screens.length=0; setScreen(screen,data); }
   function open(screen) {
+    if(screen==='forge'){
+      if(g.screen!=='junction'&&g.screen!=='routes')return;
+      screens.push(g.screen);setScreen(screen);return;
+    }
     if(!['inventory','guide','settings','pause','records'].includes(screen)||g.screen===screen)return;
     if(screen==='inventory'&&!g.player)return;
     if(screen==='pause'&&g.screen!=='play')return;
@@ -452,6 +457,7 @@
       if(beacon)g.routeOptions=Progress.routes(g);
       if(g.stage===1)queueCache('gun');
       if(g.route?.reward)queueCache(g.route.reward);
+      if(g.cleared%3===0)queueCache('legendary');
       continuation=()=>{const screen=beacon?'routes':'junction';saveAt(screen);showBase(screen);};
     }
     settleDrafts();
@@ -472,10 +478,41 @@
     if(!g.safeRefit||!g.player||!Progress.repair(g))return;
     g.sound('heal');refreshSafe();
   }
-  function refreshSafe() {
+  function refreshSafe(data) {
     const base=screens[0]||g.screen;
     if(base==='junction'||base==='routes') saveAt(base);
-    UI.show(g.screen,g);UI.hud(g);
+    UI.show(g.screen,g,data);UI.hud(g);
+  }
+  function forge(owner,tier,indices) {
+    const base=screens[0],pilot=g.players[owner];
+    if(g.screen!=='forge'||(base!=='junction'&&base!=='routes')||!Number.isInteger(owner)||!pilot||
+      !Object.hasOwn(forgeRecipes,tier)||!Array.isArray(indices)||indices.length!==2||
+      indices[0]===indices[1]||![...indices].every(i=>Number.isInteger(i)&&pilot.guns[i]&&
+        Combat.rarityOf(pilot.guns[i])===forgeRecipes[tier]))return false;
+
+    const pool=Combat.guns.filter(def=>def.forgeTier===tier);
+    if(!pool.length)return false;
+    const def=pool.length===1?pool[0]:pool[Math.floor(g.rng()*pool.length)];
+    const reward=Combat.makeGun(def.id);
+    const guns=[],keptIndices=new Map();
+    pilot.guns.forEach((gun,i)=>{
+      if(indices.includes(i)){
+        if(gun.chip)pilot.chips.push(gun.chip);
+      }else{
+        keptIndices.set(i,guns.length);
+        guns.push(gun);
+      }
+    });
+    const ready=pilot.ready.map(i=>keptIndices.get(i)??-1);
+    const vacant=ready[pilot.selected]<0?pilot.selected:ready.indexOf(-1);
+    if(vacant>=0)ready[vacant]=guns.length;
+    guns.push(reward);
+    pilot.guns=guns;pilot.ready=ready;
+    const view=forPilot(pilot);
+    Progress.recalc(view);
+    reward.ammo=reward.capacity=Combat.capacity(view,reward);
+    g.sound('equip');refreshSafe({forged:reward});
+    return true;
   }
   function refit(kind,index,slot) {
     if(!g.safeRefit)return false;
@@ -1039,7 +1076,7 @@
     if(refresh)refreshSafe();return result;
   }
   window.Game={
-    state:g,start,startExpedition,saveHero,declineGun,usesController:(index=0)=>CrewInput.usesController(g,index),
+    state:g,start,startExpedition,saveHero,declineGun,forge,forgeRecipes,usesController:(index=0)=>CrewInput.usesController(g,index),
     startCoop:(kit,contract,layout,mode)=>start(kit,contract,layout,mode),inspectPilot,resumeSave,action,choose,reroll,salvage,resume:back,next,extract,route,home,open,back,refit,repair,buyKit,setSetting,
     restart:()=>g.players.some(p=>p.heroId)||g.startGate>1||g.startRegion!=='auto'||g.difficulty!=='standard'?
       startExpedition({contract:g.contract,layout:g.coopLayout,mode:g.expeditionMode,difficulty:g.difficulty,startGate:g.startGate,startRegion:g.startRegion,pilots:g.players.map(p=>({heroId:p.heroId,roleId:p.kitId}))}):

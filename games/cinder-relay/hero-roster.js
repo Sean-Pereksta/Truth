@@ -44,10 +44,12 @@
   }
   function readGun(value,local){
     const w=object(value,'gun'),id=catalogId(w.id,Combat.guns,'gun model');
+    const {forgeTier}=Combat.guns[id];
     const affixes=Combat.eligibleAffixes(id);
-    const rarity=w.rarity??(local?Combat.rarityOf(w):undefined);
+    const rarity=local?Combat.rarityOf(w):w.rarity;
+    const rarities=forgeTier?[forgeTier]:Combat.rarityOdds.map(t=>t.name);
     return {id,
-      rarity:choices(rarity,Combat.rarityOdds.map(t=>t.name),'gun rarity'),
+      rarity:choices(rarity,rarities,'gun rarity'),
       upgradeLevel:integer(w.upgradeLevel??(local?Combat.rankOf(w):undefined),0,3,'gun upgrade'),
       prefix:choices(w.prefix??'',['',...affixes.prefix],'gun prefix'),
       suffix:choices(w.suffix??'',['',...affixes.suffix],'gun suffix'),
